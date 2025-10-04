@@ -113,42 +113,40 @@ public final class FileTypePolicies {
      * 파일 타입에 따라 정책을 검증합니다.
      *
      * @param fileType 파일 타입
-     * @param fileSizeBytes 파일 크기 (bytes)
-     * @param fileCount 파일 개수
+     * @param attributes 파일 속성
      * @throws IllegalArgumentException 정책 위반 시
      */
-    public void validate(FileType fileType, long fileSizeBytes, int fileCount) {
+    public void validate(FileType fileType, FileAttributes attributes) {
         validateFileType(fileType);
+        Objects.requireNonNull(attributes, "FileAttributes must not be null");
 
         switch (fileType) {
             case IMAGE:
                 if (imagePolicy == null) {
                     throw new IllegalArgumentException("No IMAGE policy configured");
                 }
-                // ImagePolicy는 validate(format, sizeBytes, dimension) 메서드를 제공
-                // 여기서는 파일 크기만 검증
-                imagePolicy.validate("jpg", fileSizeBytes, null);
+                imagePolicy.validate(attributes.format(), attributes.sizeBytes(), attributes.dimension());
                 break;
 
             case HTML:
                 if (htmlPolicy == null) {
                     throw new IllegalArgumentException("No HTML policy configured");
                 }
-                htmlPolicy.validate(fileSizeBytes, 0);
+                htmlPolicy.validate(attributes.sizeBytes(), attributes.imageCount() != null ? attributes.imageCount() : 0);
                 break;
 
             case EXCEL:
                 if (excelPolicy == null) {
                     throw new IllegalArgumentException("No EXCEL policy configured");
                 }
-                excelPolicy.validate(fileSizeBytes, 1);
+                excelPolicy.validate(attributes.sizeBytes(), attributes.sheetCount() != null ? attributes.sheetCount() : 1);
                 break;
 
             case PDF:
                 if (pdfPolicy == null) {
                     throw new IllegalArgumentException("No PDF policy configured");
                 }
-                pdfPolicy.validate(fileSizeBytes, 1);
+                pdfPolicy.validate(attributes.sizeBytes(), attributes.pageCount() != null ? attributes.pageCount() : 1);
                 break;
 
             default:

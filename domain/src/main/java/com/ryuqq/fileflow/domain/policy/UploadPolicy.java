@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException.ViolationType;
 import com.ryuqq.fileflow.domain.policy.event.PolicyActivatedEvent;
 import com.ryuqq.fileflow.domain.policy.event.PolicyUpdatedEvent;
+import com.ryuqq.fileflow.domain.policy.vo.FileAttributes;
 import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
 import com.ryuqq.fileflow.domain.policy.vo.RateLimiting;
 
@@ -141,7 +142,11 @@ public final class UploadPolicy {
         validateFileTypeSupported(fileType);
 
         try {
-            fileTypePolicies.validate(fileType, fileSizeBytes, fileCount);
+            FileAttributes attributes = FileAttributes.builder()
+                .sizeBytes(fileSizeBytes)
+                .fileCount(fileCount)
+                .build();
+            fileTypePolicies.validate(fileType, attributes);
         } catch (IllegalArgumentException e) {
             throw new PolicyViolationException(
                     ViolationType.FILE_SIZE_EXCEEDED,

@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.policy.event;
 
+import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -16,28 +17,26 @@ import java.util.Objects;
  * - 외부 시스템과의 정책 동기화
  * - 활성화 이력 추적
  */
-public record PolicyActivatedEvent(String policyKey, int version, String activatedBy, LocalDateTime activatedAt) {
+public record PolicyActivatedEvent(String policyKey, int version, String activatedBy, LocalDateTime activatedAt) implements DomainEvent {
 
-    public PolicyActivatedEvent(
-        String policyKey,
-        int version,
-        String activatedBy,
-        LocalDateTime activatedAt
-    ) {
-        this.policyKey = Objects.requireNonNull(policyKey, "policyKey must not be null");
-        this.version = version;
-        this.activatedBy = Objects.requireNonNull(activatedBy, "activatedBy must not be null");
-        this.activatedAt = Objects.requireNonNull(activatedAt, "activatedAt must not be null");
+    public PolicyActivatedEvent {
+        Objects.requireNonNull(policyKey, "policyKey must not be null");
+        Objects.requireNonNull(activatedBy, "activatedBy must not be null");
+        Objects.requireNonNull(activatedAt, "activatedAt must not be null");
 
-        validateVersion();
+        if (version < 0) {
+            throw new IllegalArgumentException("version must not be negative: " + version);
+        }
     }
 
-    private void validateVersion() {
-        if (version
-            < 0) {
-            throw new IllegalArgumentException("version must not be negative: "
-                + version);
-        }
+    @Override
+    public LocalDateTime occurredOn() {
+        return activatedAt;
+    }
+
+    @Override
+    public String eventType() {
+        return getClass().getSimpleName();
     }
 
     @Override

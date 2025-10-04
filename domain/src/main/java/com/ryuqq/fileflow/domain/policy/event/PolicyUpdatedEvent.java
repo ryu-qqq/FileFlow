@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.policy.event;
 
+import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -16,36 +17,31 @@ import java.util.Objects;
  * - 캐시 무효화 (Cache Invalidation)
  */
 public record PolicyUpdatedEvent(String policyKey, int oldVersion, int newVersion, String changedBy,
-                                 LocalDateTime changedAt) {
+                                 LocalDateTime changedAt) implements DomainEvent {
 
-    public PolicyUpdatedEvent(
-        String policyKey,
-        int oldVersion,
-        int newVersion,
-        String changedBy,
-        LocalDateTime changedAt
-    ) {
-        this.policyKey = Objects.requireNonNull(policyKey, "policyKey must not be null");
-        this.oldVersion = oldVersion;
-        this.newVersion = newVersion;
-        this.changedBy = Objects.requireNonNull(changedBy, "changedBy must not be null");
-        this.changedAt = Objects.requireNonNull(changedAt, "changedAt must not be null");
+    public PolicyUpdatedEvent {
+        Objects.requireNonNull(policyKey, "policyKey must not be null");
+        Objects.requireNonNull(changedBy, "changedBy must not be null");
+        Objects.requireNonNull(changedAt, "changedAt must not be null");
 
-        validateVersions();
-    }
-
-    private void validateVersions() {
-        if (oldVersion
-            < 0) {
-            throw new IllegalArgumentException("oldVersion must not be negative: "
-                + oldVersion);
+        if (oldVersion < 0) {
+            throw new IllegalArgumentException("oldVersion must not be negative: " + oldVersion);
         }
-        if (newVersion
-            <= oldVersion) {
+        if (newVersion <= oldVersion) {
             throw new IllegalArgumentException(
                 String.format("newVersion (%d) must be greater than oldVersion (%d)", newVersion, oldVersion)
             );
         }
+    }
+
+    @Override
+    public LocalDateTime occurredOn() {
+        return changedAt;
+    }
+
+    @Override
+    public String eventType() {
+        return getClass().getSimpleName();
     }
 
     @Override

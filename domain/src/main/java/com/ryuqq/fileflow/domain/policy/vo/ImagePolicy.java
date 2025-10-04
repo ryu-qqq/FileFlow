@@ -23,31 +23,20 @@ public record ImagePolicy(int maxFileSizeMB, int maxFileCount, List<String> allo
         return Collections.unmodifiableList(formats);
     }
 
-    public ImagePolicy(int maxFileSizeMB, int maxFileCount, List<String> allowedFormats, Dimension maxDimension) {
-        if (maxFileSizeMB
-            <= 0) {
-            throw new IllegalArgumentException("Max file size must be positive: "
-                + maxFileSizeMB);
+    public ImagePolicy {
+        if (maxFileSizeMB <= 0) {
+            throw new IllegalArgumentException("Max file size must be positive: " + maxFileSizeMB);
         }
-        if (maxFileCount
-            <= 0) {
-            throw new IllegalArgumentException("Max file count must be positive: "
-                + maxFileCount);
+        if (maxFileCount <= 0) {
+            throw new IllegalArgumentException("Max file count must be positive: " + maxFileCount);
         }
-        if (allowedFormats
-            == null
-            || allowedFormats.isEmpty()) {
+        if (allowedFormats == null || allowedFormats.isEmpty()) {
             throw new IllegalArgumentException("Allowed formats cannot be null or empty");
         }
-        if (maxDimension
-            == null) {
+        if (maxDimension == null) {
             throw new IllegalArgumentException("Max dimension cannot be null");
         }
-
-        this.maxFileSizeMB = maxFileSizeMB;
-        this.maxFileCount = maxFileCount;
-        this.allowedFormats = Collections.unmodifiableList(new ArrayList<>(allowedFormats));
-        this.maxDimension = maxDimension;
+        allowedFormats = Collections.unmodifiableList(new ArrayList<>(allowedFormats));
     }
 
     /**
@@ -71,84 +60,49 @@ public record ImagePolicy(int maxFileSizeMB, int maxFileCount, List<String> allo
      * @throws IllegalArgumentException 정책 위반 시
      */
     public void validate(String format, long sizeBytes, Dimension dimension) {
-        if (format
-            == null
-            || format.trim().isEmpty()) {
+        if (format == null || format.trim().isEmpty()) {
             throw new IllegalArgumentException("Format cannot be null or empty");
         }
 
         String normalizedFormat = format.toLowerCase(Locale.ROOT).trim();
         if (!allowedFormats.contains(normalizedFormat)) {
             throw new IllegalArgumentException(
-                "Format not allowed: "
-                    + format
-                    + ". Allowed formats: "
-                    + allowedFormats
+                "Format not allowed: " + format + ". Allowed formats: " + allowedFormats
             );
         }
 
-        long maxSizeBytes = (long) maxFileSizeMB
-            * 1024
-            * 1024;
-        if (sizeBytes
-            > maxSizeBytes) {
+        long maxSizeBytes = (long) maxFileSizeMB * 1024 * 1024;
+        if (sizeBytes > maxSizeBytes) {
             throw new IllegalArgumentException(
-                "File size exceeds limit: "
-                    + sizeBytes
-                    + " bytes. Max allowed: "
-                    + maxSizeBytes
-                    + " bytes"
+                "File size exceeds limit: " + sizeBytes + " bytes. Max allowed: " + maxSizeBytes + " bytes"
             );
         }
 
-        if (dimension
-            != null
-            && !dimension.isWithin(maxDimension)) {
+        if (dimension != null && !dimension.isWithin(maxDimension)) {
             throw new IllegalArgumentException(
-                "Image dimension exceeds limit: "
-                    + dimension
-                    + ". Max allowed: "
-                    + maxDimension
+                "Image dimension exceeds limit: " + dimension + ". Max allowed: " + maxDimension
             );
         }
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this
-            == o) return true;
-        if (o
-            == null
-            || getClass()
-            != o.getClass()) return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         ImagePolicy that = (ImagePolicy) o;
-        return maxFileSizeMB
-            == that.maxFileSizeMB
-            &&
-            maxFileCount
-                == that.maxFileCount
-            &&
-            allowedFormats.equals(that.allowedFormats)
-            &&
+        return maxFileSizeMB == that.maxFileSizeMB &&
+            maxFileCount == that.maxFileCount &&
+            allowedFormats.equals(that.allowedFormats) &&
             maxDimension.equals(that.maxDimension);
     }
 
     @Override
     public String toString() {
-        return "ImagePolicy{"
-            +
-            "maxFileSizeMB="
-            + maxFileSizeMB
-            +
-            ", maxFileCount="
-            + maxFileCount
-            +
-            ", allowedFormats="
-            + allowedFormats
-            +
-            ", maxDimension="
-            + maxDimension
-            +
+        return "ImagePolicy{" +
+            "maxFileSizeMB=" + maxFileSizeMB +
+            ", maxFileCount=" + maxFileCount +
+            ", allowedFormats=" + allowedFormats +
+            ", maxDimension=" + maxDimension +
             '}';
     }
 }
