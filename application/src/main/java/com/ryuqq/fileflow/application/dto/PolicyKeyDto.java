@@ -34,7 +34,10 @@ public record PolicyKeyDto(
      * @return PolicyKeyDto
      */
     public static PolicyKeyDto from(PolicyKey policyKey) {
-        String[] parts = policyKey.getValue().split(":");
-        return new PolicyKeyDto(parts[0], parts[1], parts[2]);
+        return new PolicyKeyDto(
+                policyKey.getTenantId(),
+                policyKey.getUserType(),
+                policyKey.getServiceType()
+        );
     }
 }

@@ -73,6 +73,26 @@ class DeactivateUploadPolicyServiceTest {
         assertThrows(PolicyNotFoundException.class, () -> service.deactivatePolicy(policyKeyDto));
     }
 
+    @Test
+    @DisplayName("이미 비활성화된 정책 재비활성화 시 예외 발생")
+    void deactivatePolicy_alreadyInactive_throwsException() {
+        // Given
+        PolicyKeyDto policyKeyDto = new PolicyKeyDto("b2c", "CONSUMER", "REVIEW");
+        PolicyKey policyKey = policyKeyDto.toDomain();
+
+        UploadPolicy policy = UploadPolicy.create(
+                policyKey,
+                FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                new RateLimiting(100, 1000),
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(30)
+        ); // 기본 상태는 비활성
+        loadPort.setPolicy(policy);
+
+        // When & Then
+        assertThrows(IllegalStateException.class, () -> service.deactivatePolicy(policyKeyDto));
+    }
+
     // Test Doubles
     static class TestLoadUploadPolicyPort implements LoadUploadPolicyPort {
         private UploadPolicy policy;
