@@ -9,7 +9,19 @@
 
 set -e  # Exit on first error
 
-HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolve symlink for macOS compatibility
+if [ -L "${BASH_SOURCE[0]}" ]; then
+    # Follow symlink
+    HOOK_SCRIPT="$(readlink "${BASH_SOURCE[0]}")"
+    if [[ "$HOOK_SCRIPT" != /* ]]; then
+        # Relative path, resolve it
+        HOOK_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd "$(dirname "$HOOK_SCRIPT")" && pwd)/$(basename "$HOOK_SCRIPT")"
+    fi
+else
+    HOOK_SCRIPT="${BASH_SOURCE[0]}"
+fi
+
+HOOKS_DIR="$(cd "$(dirname "$HOOK_SCRIPT")" && pwd)"
 VALIDATORS_DIR="$HOOKS_DIR/validators"
 PROJECT_ROOT="$(cd "$HOOKS_DIR/.." && pwd)"
 
