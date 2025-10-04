@@ -101,6 +101,26 @@ class GetUploadPolicyServiceTest {
         assertThrows(NullPointerException.class, () -> service.getPolicy(null));
     }
 
+    @Test
+    @DisplayName("비활성 정책에 대한 getActivePolicy 호출 시 예외 발생")
+    void getActivePolicy_inactivePolicy_throwsException() {
+        // Given
+        PolicyKeyDto policyKeyDto = new PolicyKeyDto("b2c", "CONSUMER", "REVIEW");
+        PolicyKey policyKey = policyKeyDto.toDomain();
+
+        UploadPolicy policy = UploadPolicy.create(
+                policyKey,
+                FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                new RateLimiting(100, 1000),
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(30)
+        ); // 기본 상태는 비활성
+        loadPort.setPolicy(policy);
+
+        // When & Then
+        assertThrows(PolicyNotFoundException.class, () -> service.getActivePolicy(policyKeyDto));
+    }
+
     // Test Double
     static class TestLoadUploadPolicyPort implements LoadUploadPolicyPort {
         private UploadPolicy policy;
