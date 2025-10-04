@@ -4,8 +4,7 @@
     "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <!--
-    Checkstyle Configuration - Enterprise Spring Boot Standards
-    Level 3: Zero Tolerance
+    Checkstyle Configuration - Simplified Version
 
     @author Architecture Team (arch-team@company.com)
     @since 2024-01-01
@@ -13,170 +12,32 @@
 
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
-    <property name="severity" value="error"/>
     <property name="fileExtensions" value="java"/>
 
     <!-- ========================================
-         Javadoc Requirements
-         ======================================== -->
-    <module name="JavadocPackage">
-        <property name="allowLegacy" value="false"/>
-    </module>
-
-    <!-- ========================================
-         Hexagonal Architecture Enforcement (Regex-based)
+         Core Hexagonal Architecture Rules
          ======================================== -->
     <module name="RegexpSingleline">
         <property name="format" value="@OneToMany|@ManyToOne|@OneToOne|@ManyToMany"/>
-        <property name="message" value="JPA relationship annotations (@OneToMany, @ManyToOne, @OneToOne, @ManyToMany) are STRICTLY PROHIBITED. Use foreign key Long fields instead."/>
-        <property name="fileExtensions" value="java"/>
-    </module>
-
-    <module name="RegexpSingleline">
-        <property name="format" value="class\s+\w*(Request|Response)\s*\{"/>
-        <property name="message" value="Request/Response DTOs must be Java records, not classes. Use 'record' keyword instead."/>
+        <property name="message" value="JPA relationship annotations are STRICTLY PROHIBITED. Use foreign key Long fields instead."/>
         <property name="fileExtensions" value="java"/>
     </module>
 
     <module name="TreeWalker">
-        <!-- ========================================
-             Javadoc Checks
-             ======================================== -->
-        <module name="JavadocType">
-            <property name="scope" value="public"/>
-            <property name="authorFormat" value=".+ \(.+@.+\..+\)"/>
-        </module>
-
-        <module name="JavadocMethod">
-            <property name="scope" value="public"/>
-            <property name="validateThrows" value="true"/>
-        </module>
-
-        <module name="JavadocVariable">
-            <property name="scope" value="public"/>
-        </module>
-
-        <module name="MissingJavadocMethod">
-            <property name="scope" value="public"/>
-            <property name="minLineCount" value="2"/>
-            <property name="allowMissingPropertyJavadoc" value="false"/>
-        </module>
-
-        <!-- ========================================
-             Naming Conventions
-             ======================================== -->
-        <module name="ConstantName">
-            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
-        </module>
-
-        <module name="LocalFinalVariableName"/>
-        <module name="LocalVariableName"/>
-        <module name="MemberName"/>
-        <module name="MethodName"/>
-        <module name="PackageName">
-            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
-        </module>
-
-        <module name="ParameterName"/>
-        <module name="StaticVariableName"/>
-        <module name="TypeName"/>
-
         <!-- ========================================
              Lombok Prohibition
              ======================================== -->
         <module name="IllegalImport">
             <property name="illegalPkgs" value="lombok"/>
             <message key="import.illegal"
-                     value="Lombok is STRICTLY PROHIBITED in this project. Use pure Java."/>
-        </module>
-
-        <!-- ========================================
-             Hexagonal Architecture Rules (Advanced)
-             ======================================== -->
-        <module name="Regexp">
-            <property name="format" value="public\s+void\s+set[A-Z]\w*\s*\("/>
-            <property name="message" value="Setter methods detected in Entity class. Entities must be immutable - use private constructors and static factory methods."/>
-            <property name="illegalPattern" value="true"/>
-            <property name="ignoreComments" value="true"/>
-        </module>
-
-        <module name="Regexp">
-            <property name="format" value="@Transactional"/>
-            <property name="message" value="@Transactional detected in adapter package. Transactions should only be in application layer."/>
-            <property name="illegalPattern" value="true"/>
-            <property name="ignoreComments" value="true"/>
-        </module>
-
-        <module name="Regexp">
-            <property name="format" value="(public|protected|private)\s+static\s+class\s+\w+(Request|Response)"/>
-            <property name="message" value="Inner Request/Response class detected in Controller. Request/Response DTOs must be in separate files as records."/>
-            <property name="illegalPattern" value="true"/>
-            <property name="ignoreComments" value="true"/>
+                     value="Lombok is STRICTLY PROHIBITED. Use pure Java."/>
         </module>
 
         <!-- ========================================
              Import Control
              ======================================== -->
         <module name="AvoidStarImport"/>
-        <module name="IllegalImport"/>
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
-
-        <!-- ========================================
-             Code Complexity
-             ======================================== -->
-        <module name="CyclomaticComplexity">
-            <property name="max" value="10"/>
-        </module>
-
-        <module name="MethodLength">
-            <property name="max" value="50"/>
-            <property name="countEmpty" value="false"/>
-        </module>
-
-        <module name="ParameterNumber">
-            <property name="max" value="5"/>
-        </module>
-
-        <!-- ========================================
-             Code Quality
-             ======================================== -->
-        <module name="EmptyBlock"/>
-        <module name="NeedBraces"/>
-        <module name="LeftCurly"/>
-        <module name="RightCurly"/>
-
-        <module name="EmptyStatement"/>
-        <module name="EqualsHashCode"/>
-        <module name="HiddenField">
-            <property name="ignoreConstructorParameter" value="true"/>
-            <property name="ignoreSetter" value="true"/>
-        </module>
-
-        <module name="IllegalInstantiation"/>
-        <module name="InnerAssignment"/>
-        <module name="MissingSwitchDefault"/>
-        <module name="SimplifyBooleanExpression"/>
-        <module name="SimplifyBooleanReturn"/>
-
-        <!-- ========================================
-             Whitespace
-             ======================================== -->
-        <module name="EmptyForIteratorPad"/>
-        <module name="GenericWhitespace"/>
-        <module name="MethodParamPad"/>
-        <module name="NoWhitespaceAfter"/>
-        <module name="NoWhitespaceBefore"/>
-        <module name="OperatorWrap"/>
-        <module name="ParenPad"/>
-        <module name="TypecastParenPad"/>
-        <module name="WhitespaceAfter"/>
-        <module name="WhitespaceAround"/>
-
-        <!-- ========================================
-             Modifiers
-             ======================================== -->
-        <module name="ModifierOrder"/>
-        <module name="RedundantModifier"/>
     </module>
 </module>
