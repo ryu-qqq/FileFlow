@@ -89,6 +89,13 @@ tasks.jacocoTestReport {
             }
         })
     )
+
+    // 마이그레이션 테스트는 인프라 검증이므로 커버리지에서 제외
+    executionData.setFrom(
+        files(executionData.files.filter {
+            !it.path.contains("FlywayMigrationTest")
+        })
+    )
 }
 
 tasks.jacocoTestCoverageVerification {
@@ -102,6 +109,13 @@ tasks.jacocoTestCoverageVerification {
                     "**/Q*.class"
                 )
             }
+        })
+    )
+
+    // 마이그레이션 테스트는 인프라 검증이므로 커버리지에서 제외
+    executionData.setFrom(
+        files(executionData.files.filter {
+            !it.path.contains("FlywayMigrationTest")
         })
     )
 
