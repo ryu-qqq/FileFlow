@@ -183,7 +183,7 @@ class PolicyControllerTest {
     void getPolicies_NotImplemented() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/v1/policies"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotImplemented());
     }
 
     // Helper Methods

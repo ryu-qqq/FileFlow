@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.application.policy.port.in.ActivateUploadPolicyUseCase
 import com.ryuqq.fileflow.application.policy.port.in.GetUploadPolicyUseCase;
 import com.ryuqq.fileflow.application.policy.port.in.UpdateUploadPolicyUseCase;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +37,8 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/v1/policies")
 public class PolicyController {
+
+    private static final int POLICY_KEY_PARTS_COUNT = 3;
 
     private final GetUploadPolicyUseCase getUploadPolicyUseCase;
     private final UpdateUploadPolicyUseCase updateUploadPolicyUseCase;
@@ -92,13 +95,12 @@ public class PolicyController {
      * Note: 향후 전체 정책 목록 조회 기능으로 확장 가능
      *
      * @param policyKey 정책 키 (쿼리 파라미터로 전달 예정, 현재는 기본값 사용)
-     * @return 200 OK with PolicyResponse
+     * @return 501 NOT_IMPLEMENTED
      */
     @GetMapping
     public ResponseEntity<PolicyResponse> getPolicies() {
         // TODO: 향후 전체 정책 목록 조회 기능 구현 필요
-        // 현재는 단일 정책 조회를 위한 placeholder
-        throw new UnsupportedOperationException("List policies endpoint not yet implemented");
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     /**
@@ -151,9 +153,9 @@ public class PolicyController {
      */
     private PolicyKeyDto parsePolicyKey(String policyKey) {
         String[] parts = policyKey.split(":");
-        if (parts.length != 3) {
+        if (parts.length != POLICY_KEY_PARTS_COUNT) {
             throw new IllegalArgumentException(
-                    "Invalid policyKey format. Expected format: {tenantId}:{userType}:{serviceType}, but got: " + policyKey
+                    String.format("Invalid policyKey format. Expected format: {tenantId}:{userType}:{serviceType}, but got: %s", policyKey)
             );
         }
         return new PolicyKeyDto(parts[0], parts[1], parts[2]);

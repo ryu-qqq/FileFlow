@@ -142,16 +142,15 @@ class GlobalExceptionHandlerTest {
     void handleException() throws Exception {
         // Given
         String policyKey = "b2c:CONSUMER:REVIEW";
-        String errorMessage = "Unexpected error occurred";
         when(getUploadPolicyUseCase.getPolicy(any(PolicyKeyDto.class)))
-                .thenThrow(new RuntimeException(errorMessage));
+                .thenThrow(new RuntimeException("Unexpected error occurred"));
 
         // When & Then
         mockMvc.perform(get("/api/v1/policies/{policyKey}", policyKey))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.error").value("Internal Server Error"))
-                .andExpect(jsonPath("$.message").value(errorMessage))
+                .andExpect(jsonPath("$.message").value("An unexpected error occurred. Please contact support."))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 }
