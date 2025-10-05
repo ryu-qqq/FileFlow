@@ -46,8 +46,6 @@ public class TenantEntity {
     protected TenantEntity(String tenantId, String name) {
         this.tenantId = tenantId;
         this.name = name;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     /**
