@@ -35,7 +35,7 @@ dependencies {
     annotationProcessor(libs.jakarta.persistence.api)
 
     // Database Drivers (Runtime)
-    runtimeOnly(libs.postgresql)
+    runtimeOnly(libs.mysql.connector)
     runtimeOnly(libs.h2) // For testing
 
     // Connection Pooling
@@ -43,13 +43,13 @@ dependencies {
 
     // Flyway Migration
     implementation(libs.flyway.core)
-    runtimeOnly(libs.flyway.postgresql)
+    runtimeOnly(libs.flyway.mysql)
 
     // ========================================
     // Test Dependencies
     // ========================================
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.mysql)
     testImplementation(libs.testcontainers.junit)
 }
 
@@ -73,24 +73,56 @@ tasks.withType<JavaCompile> {
 // ========================================
 // Test Coverage (70% for adapters)
 // ========================================
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/entity/**",
+                    "**/Q*.class"
+                )
+            }
+        })
+    )
+}
+
 tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/entity/**",
+                    "**/Q*.class"
+                )
+            }
+        })
+    )
+
     violationRules {
         rule {
+            element = "BUNDLE"
             limit {
                 minimum = "0.70".toBigDecimal()
             }
         }
         rule {
             element = "CLASS"
-            excludes = listOf(
-                "*.entity.*", // JPA entities excluded
-                "*.Q*" // QueryDSL generated classes excluded
-            )
+            limit {
+                minimum = "0.50".toBigDecimal()
+            }
         }
     }
 }
 
 tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
     finalizedBy(tasks.jacocoTestCoverageVerification)
 }
 
