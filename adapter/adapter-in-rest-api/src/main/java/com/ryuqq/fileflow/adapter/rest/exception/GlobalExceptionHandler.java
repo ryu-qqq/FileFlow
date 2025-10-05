@@ -94,6 +94,27 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * MissingHeaderException 처리
+     *
+     * @param ex MissingHeaderException
+     * @param request HttpServletRequest
+     * @return 400 BAD_REQUEST 응답
+     */
+    @ExceptionHandler(MissingHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingHeaderException(
+            MissingHeaderException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "Missing Required Header",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
      * IllegalArgumentException 처리
      *
      * @param ex IllegalArgumentException
