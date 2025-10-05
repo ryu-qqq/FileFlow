@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.redis.adapter;
 
 import com.ryuqq.fileflow.adapter.redis.config.RedisConfig;
+import com.ryuqq.fileflow.adapter.redis.dto.UploadPolicyDto;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
 import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
@@ -76,17 +77,11 @@ class RedisPolicyCacheAdapterTest {
         REDIS_CONTAINER.stop();
     }
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.redis.host", REDIS_CONTAINER::getHost);
-        registry.add("spring.data.redis.port", REDIS_CONTAINER::getFirstMappedPort);
-    }
-
     @Autowired
     private RedisPolicyCacheAdapter adapter;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, UploadPolicyDto> redisTemplate;
 
     private PolicyKey testPolicyKey;
     private UploadPolicy testPolicy;
@@ -235,21 +230,6 @@ class RedisPolicyCacheAdapterTest {
         assertThatThrownBy(() -> adapter.evict(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("PolicyKey cannot be null");
-    }
-
-    @Test
-    @DisplayName("잘못된 타입의 캐시 데이터는 삭제되고 empty를 반환한다")
-    void get_deletes_invalid_type_and_returns_empty() {
-        // given
-        String redisKey = "policy:" + testPolicyKey.getValue();
-        redisTemplate.opsForValue().set(redisKey, "invalid-string-data");
-
-        // when
-        Optional<UploadPolicy> result = adapter.get(testPolicyKey);
-
-        // then
-        assertThat(result).isEmpty();
-        assertThat(redisTemplate.hasKey(redisKey)).isFalse();
     }
 
     private UploadPolicy createTestPolicy(PolicyKey policyKey) {
