@@ -107,14 +107,22 @@ public class UploadPolicyPersistenceAdapter implements
 
         String policyKeyString = uploadPolicy.getPolicyKey().getValue();
 
-        if (!repository.existsByPolicyKey(policyKeyString)) {
-            throw new IllegalStateException(
-                    "UploadPolicy with PolicyKey does not exist: " + policyKeyString
-            );
-        }
+        UploadPolicyEntity entity = repository.findById(policyKeyString)
+                .orElseThrow(() -> new IllegalStateException(
+                        "UploadPolicy with PolicyKey does not exist: " + policyKeyString
+                ));
 
-        UploadPolicyEntity entity = mapper.toEntity(uploadPolicy);
-        UploadPolicyEntity updatedEntity = repository.save(entity);
+        // 기존 엔티티의 필드를 업데이트 (JPA가 자동으로 version 증가)
+        entity.update(
+                uploadPolicy.getFileTypePolicies(),
+                uploadPolicy.getRateLimiting(),
+                uploadPolicy.isActive(),
+                uploadPolicy.getEffectiveFrom(),
+                uploadPolicy.getEffectiveUntil()
+        );
+
+        // save()와 flush()를 명시적으로 호출하여 @Version 증가 보장
+        UploadPolicyEntity updatedEntity = repository.saveAndFlush(entity);
 
         return mapper.toDomain(updatedEntity);
     }

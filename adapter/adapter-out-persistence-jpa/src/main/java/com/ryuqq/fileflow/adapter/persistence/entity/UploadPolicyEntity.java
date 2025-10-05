@@ -38,6 +38,7 @@ public class UploadPolicyEntity {
     @Column(name = "rate_limiting", columnDefinition = "TEXT", nullable = false)
     private RateLimiting rateLimiting;
 
+    @Version
     @Column(name = "version", nullable = false)
     private int version;
 
@@ -72,8 +73,6 @@ public class UploadPolicyEntity {
      * @param isActive 활성 상태
      * @param effectiveFrom 유효 시작 일시
      * @param effectiveUntil 유효 종료 일시
-     * @param createdAt 생성 일시
-     * @param updatedAt 수정 일시
      */
     protected UploadPolicyEntity(
             String policyKey,
@@ -82,9 +81,7 @@ public class UploadPolicyEntity {
             int version,
             boolean isActive,
             LocalDateTime effectiveFrom,
-            LocalDateTime effectiveUntil,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime effectiveUntil
     ) {
         this.policyKey = policyKey;
         this.fileTypePolicies = fileTypePolicies;
@@ -93,8 +90,6 @@ public class UploadPolicyEntity {
         this.isActive = isActive;
         this.effectiveFrom = effectiveFrom;
         this.effectiveUntil = effectiveUntil;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     /**
@@ -107,8 +102,6 @@ public class UploadPolicyEntity {
      * @param isActive 활성 상태
      * @param effectiveFrom 유효 시작 일시
      * @param effectiveUntil 유효 종료 일시
-     * @param createdAt 생성 일시
-     * @param updatedAt 수정 일시
      * @return 생성된 UploadPolicyEntity
      */
     public static UploadPolicyEntity of(
@@ -118,9 +111,7 @@ public class UploadPolicyEntity {
             int version,
             boolean isActive,
             LocalDateTime effectiveFrom,
-            LocalDateTime effectiveUntil,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime effectiveUntil
     ) {
         return new UploadPolicyEntity(
                 policyKey,
@@ -129,9 +120,7 @@ public class UploadPolicyEntity {
                 version,
                 isActive,
                 effectiveFrom,
-                effectiveUntil,
-                createdAt,
-                updatedAt
+                effectiveUntil
         );
     }
 
@@ -148,6 +137,31 @@ public class UploadPolicyEntity {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // ========== Business Methods ==========
+
+    /**
+     * 정책 정보를 업데이트 (JPA가 자동으로 version 증가)
+     *
+     * @param fileTypePolicies 파일 타입별 정책
+     * @param rateLimiting Rate Limiting 정책
+     * @param isActive 활성 상태
+     * @param effectiveFrom 유효 시작 일시
+     * @param effectiveUntil 유효 종료 일시
+     */
+    public void update(
+            FileTypePolicies fileTypePolicies,
+            RateLimiting rateLimiting,
+            boolean isActive,
+            LocalDateTime effectiveFrom,
+            LocalDateTime effectiveUntil
+    ) {
+        this.fileTypePolicies = fileTypePolicies;
+        this.rateLimiting = rateLimiting;
+        this.isActive = isActive;
+        this.effectiveFrom = effectiveFrom;
+        this.effectiveUntil = effectiveUntil;
     }
 
     // ========== Getters ==========
@@ -195,12 +209,12 @@ public class UploadPolicyEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UploadPolicyEntity that = (UploadPolicyEntity) o;
-        return Objects.equals(policyKey, that.policyKey) && version == that.version;
+        return Objects.equals(policyKey, that.policyKey);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(policyKey, version);
+        return Objects.hash(policyKey);
     }
 
     @Override

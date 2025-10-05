@@ -52,8 +52,6 @@ public class ProcessingPolicyEntity {
         this.policyKey = policyKey;
         this.processingConfig = processingConfig;
         this.isActive = isActive;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     /**

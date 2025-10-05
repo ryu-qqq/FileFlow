@@ -84,7 +84,6 @@ public class PolicyChangeLogEntity {
         this.oldValue = oldValue;
         this.newValue = newValue;
         this.changedBy = changedBy;
-        this.changedAt = LocalDateTime.now();
     }
 
     /**

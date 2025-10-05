@@ -29,7 +29,7 @@ public class UploadPolicyMapper {
             return null;
         }
 
-        // Entity의 @PrePersist가 createdAt/updatedAt을 설정하므로 null 전달
+        // Entity의 @PrePersist가 createdAt/updatedAt을 자동 설정
         return UploadPolicyEntity.of(
                 domain.getPolicyKey().getValue(),
                 domain.getFileTypePolicies(),
@@ -37,9 +37,7 @@ public class UploadPolicyMapper {
                 domain.getVersion(),
                 domain.isActive(),
                 domain.getEffectiveFrom(),
-                domain.getEffectiveUntil(),
-                null,  // createdAt - @PrePersist에서 설정
-                null   // updatedAt - @PrePersist/@PreUpdate에서 설정
+                domain.getEffectiveUntil()
         );
     }
 
