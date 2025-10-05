@@ -9,9 +9,12 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("io.lettuce:lettuce-core")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
+    testImplementation("org.awaitility:awaitility:4.2.0")
 }
 
 tasks.jacocoTestCoverageVerification {
