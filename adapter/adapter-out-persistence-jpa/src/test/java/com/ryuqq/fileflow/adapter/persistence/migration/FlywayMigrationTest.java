@@ -13,6 +13,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
@@ -34,8 +36,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Import({com.ryuqq.fileflow.adapter.persistence.TestApplication.class})
 @ActiveProfiles("test")
+@Testcontainers
 class FlywayMigrationTest {
 
+    @Container
     private static final MySQLContainer<?> MYSQL_CONTAINER =
             new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
                     .withDatabaseName("testdb")
@@ -105,7 +109,7 @@ class FlywayMigrationTest {
         assertThat(columns.get(3))
                 .containsEntry("COLUMN_NAME", "updated_at")
                 .containsEntry("COLUMN_TYPE", "datetime")
-                .containsEntry("IS_NULLABLE", "YES");
+                .containsEntry("IS_NULLABLE", "NO");
     }
 
     @Test
@@ -131,12 +135,12 @@ class FlywayMigrationTest {
         // file_type_policies (JSON)
         assertThat(columns.get(1))
                 .containsEntry("COLUMN_NAME", "file_type_policies")
-                .containsEntry("COLUMN_TYPE", "text");
+                .containsEntry("COLUMN_TYPE", "json");
 
         // rate_limiting (JSON)
         assertThat(columns.get(2))
                 .containsEntry("COLUMN_NAME", "rate_limiting")
-                .containsEntry("COLUMN_TYPE", "text");
+                .containsEntry("COLUMN_TYPE", "json");
 
         // version (default 1)
         assertThat(columns.get(3))
@@ -314,7 +318,7 @@ class FlywayMigrationTest {
     void flyway_migration_applied_successfully() {
         // when
         Integer currentVersion = jdbcTemplate.queryForObject(
-                "SELECT MAX(CAST(SUBSTRING(version, 1, 1) AS UNSIGNED)) FROM flyway_schema_history",
+                "SELECT MAX(CAST(version AS UNSIGNED)) FROM flyway_schema_history WHERE success = 1",
                 Integer.class
         );
 

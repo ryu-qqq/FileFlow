@@ -11,10 +11,10 @@ CREATE TABLE policy_change_log (
     change_type     VARCHAR(50)     NOT NULL COMMENT '변경 유형 (CREATE, UPDATE, DELETE, ACTIVATE, DEACTIVATE)',
     old_version     INT             NULL COMMENT '이전 버전',
     new_version     INT             NULL COMMENT '새 버전',
-    old_value       TEXT            NULL COMMENT '이전 값 (JSON)',
-    new_value       TEXT            NULL COMMENT '새 값 (JSON)',
+    old_value       JSON            NULL COMMENT '이전 값 (JSON)',
+    new_value       JSON            NULL COMMENT '새 값 (JSON)',
     changed_by      VARCHAR(100)    NULL COMMENT '변경자',
-    changed_at      DATETIME        NOT NULL COMMENT '변경 시각',
+    changed_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '변경 시각',
     PRIMARY KEY (id),
     INDEX idx_policy_change_log_policy_key (policy_key),
     INDEX idx_policy_change_log_changed_at (changed_at)
