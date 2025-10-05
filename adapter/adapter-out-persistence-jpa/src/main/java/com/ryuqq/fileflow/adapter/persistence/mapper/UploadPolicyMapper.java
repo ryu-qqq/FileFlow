@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.persistence.mapper;
 import com.ryuqq.fileflow.adapter.persistence.entity.UploadPolicyEntity;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
+
 import org.springframework.stereotype.Component;
 
 /**
