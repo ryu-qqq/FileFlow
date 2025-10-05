@@ -2,7 +2,12 @@ package com.ryuqq.fileflow.adapter.persistence.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ryuqq.fileflow.domain.policy.vo.*;
+import com.ryuqq.fileflow.domain.policy.vo.Dimension;
+import com.ryuqq.fileflow.domain.policy.vo.ExcelPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
+import com.ryuqq.fileflow.domain.policy.vo.HtmlPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.ImagePolicy;
+import com.ryuqq.fileflow.domain.policy.vo.PdfPolicy;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
