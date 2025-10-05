@@ -35,7 +35,7 @@ dependencies {
     annotationProcessor(libs.jakarta.persistence.api)
 
     // Database Drivers (Runtime)
-    runtimeOnly(libs.postgresql)
+    runtimeOnly(libs.mysql.connector)
     runtimeOnly(libs.h2) // For testing
 
     // Connection Pooling
@@ -43,13 +43,13 @@ dependencies {
 
     // Flyway Migration
     implementation(libs.flyway.core)
-    runtimeOnly(libs.flyway.postgresql)
+    runtimeOnly(libs.flyway.mysql)
 
     // ========================================
     // Test Dependencies
     // ========================================
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.mysql)
     testImplementation(libs.testcontainers.junit)
 }
 

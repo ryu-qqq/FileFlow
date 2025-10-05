@@ -1,36 +1,36 @@
 package com.ryuqq.fileflow.adapter.persistence;
 
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
  * Testcontainers 통합 테스트 설정
  *
- * Testcontainers를 사용하여 실제 PostgreSQL 컨테이너에서 테스트합니다.
- * - PostgreSQL 15 이미지 사용
+ * Testcontainers를 사용하여 실제 MySQL 컨테이너에서 테스트합니다.
+ * - MySQL 8.0 이미지 사용
  *
  * @author sangwon-ryu
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class PersistenceTestConfiguration {
 
-    @Bean
-    public PostgreSQLContainer<?> postgresContainer() {
-        PostgreSQLContainer<?> container = new PostgreSQLContainer<>(DockerImageName.parse("postgres:15-alpine"))
-                .withDatabaseName("testdb")
-                .withUsername("test")
-                .withPassword("test")
-                .withReuse(true);
+    private static final MySQLContainer<?> MYSQL_CONTAINER =
+            new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
+                    .withDatabaseName("testdb")
+                    .withUsername("test")
+                    .withPassword("test");
 
-        container.start();
+    static {
+        MYSQL_CONTAINER.start();
+    }
 
-        // 환경 변수 설정
-        System.setProperty("spring.datasource.url", container.getJdbcUrl());
-        System.setProperty("spring.datasource.username", container.getUsername());
-        System.setProperty("spring.datasource.password", container.getPassword());
-
-        return container;
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", MYSQL_CONTAINER::getJdbcUrl);
+        registry.add("spring.datasource.username", MYSQL_CONTAINER::getUsername);
+        registry.add("spring.datasource.password", MYSQL_CONTAINER::getPassword);
     }
 }

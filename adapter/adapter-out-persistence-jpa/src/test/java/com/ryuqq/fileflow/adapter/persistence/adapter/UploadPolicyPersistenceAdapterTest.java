@@ -1,30 +1,36 @@
 package com.ryuqq.fileflow.adapter.persistence.adapter;
 
-import com.ryuqq.fileflow.adapter.persistence.PersistenceTestConfiguration;
-import com.ryuqq.fileflow.adapter.persistence.mapper.UploadPolicyMapper;
 import com.ryuqq.fileflow.adapter.persistence.repository.UploadPolicyJpaRepository;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
-import com.ryuqq.fileflow.domain.policy.vo.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ActiveProfiles;
+import com.ryuqq.fileflow.domain.policy.vo.Dimension;
+import com.ryuqq.fileflow.domain.policy.vo.ExcelPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
+import com.ryuqq.fileflow.domain.policy.vo.HtmlPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.ImagePolicy;
+import com.ryuqq.fileflow.domain.policy.vo.PdfPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.RateLimiting;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.utility.DockerImageName;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * UploadPolicyPersistenceAdapter 통합 테스트
  *
- * Testcontainers를 사용하여 실제 PostgreSQL 환경에서 테스트합니다.
+ * Testcontainers를 사용하여 실제 MySQL 환경에서 테스트합니다.
  * - 커버리지 70% 이상 달성 목표
  * - Entity, Mapper, Adapter의 전체 플로우 검증
  *
@@ -32,9 +38,26 @@ import static org.assertj.core.api.Assertions.*;
  */
 @org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase(replace = org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE)
 @org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-@org.springframework.context.annotation.Import({com.ryuqq.fileflow.adapter.persistence.PersistenceTestConfiguration.class, com.ryuqq.fileflow.adapter.persistence.mapper.UploadPolicyMapper.class, com.ryuqq.fileflow.adapter.persistence.adapter.UploadPolicyPersistenceAdapter.class, com.ryuqq.fileflow.adapter.persistence.TestApplication.class})
+@org.springframework.context.annotation.Import({com.ryuqq.fileflow.adapter.persistence.mapper.UploadPolicyMapper.class, com.ryuqq.fileflow.adapter.persistence.adapter.UploadPolicyPersistenceAdapter.class, com.ryuqq.fileflow.adapter.persistence.TestApplication.class})
 @org.springframework.test.context.ActiveProfiles("test")
 class UploadPolicyPersistenceAdapterTest {
+
+    private static final MySQLContainer<?> MYSQL_CONTAINER =
+            new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
+                    .withDatabaseName("testdb")
+                    .withUsername("test")
+                    .withPassword("test");
+
+    static {
+        MYSQL_CONTAINER.start();
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", MYSQL_CONTAINER::getJdbcUrl);
+        registry.add("spring.datasource.username", MYSQL_CONTAINER::getUsername);
+        registry.add("spring.datasource.password", MYSQL_CONTAINER::getPassword);
+    }
 
     @Autowired
     private UploadPolicyPersistenceAdapter adapter;
