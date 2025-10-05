@@ -25,39 +25,19 @@ public class FileTypePoliciesDeserializer extends JsonDeserializer<FileTypePolic
     public FileTypePolicies deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         JsonNode node = p.getCodec().readTree(p);
 
-        ImagePolicy imagePolicy = deserializeImagePolicy(node.get("imagePolicy"), p);
-        HtmlPolicy htmlPolicy = deserializeHtmlPolicy(node.get("htmlPolicy"), p);
-        ExcelPolicy excelPolicy = deserializeExcelPolicy(node.get("excelPolicy"), p);
-        PdfPolicy pdfPolicy = deserializePdfPolicy(node.get("pdfPolicy"), p);
+        ImagePolicy imagePolicy = deserializePolicy(node, "imagePolicy", p, ImagePolicy.class);
+        HtmlPolicy htmlPolicy = deserializePolicy(node, "htmlPolicy", p, HtmlPolicy.class);
+        ExcelPolicy excelPolicy = deserializePolicy(node, "excelPolicy", p, ExcelPolicy.class);
+        PdfPolicy pdfPolicy = deserializePolicy(node, "pdfPolicy", p, PdfPolicy.class);
 
         return FileTypePolicies.of(imagePolicy, htmlPolicy, excelPolicy, pdfPolicy);
     }
 
-    private ImagePolicy deserializeImagePolicy(JsonNode node, JsonParser p) throws IOException {
+    private <T> T deserializePolicy(JsonNode parentNode, String fieldName, JsonParser p, Class<T> policyClass) throws IOException {
+        JsonNode node = parentNode.get(fieldName);
         if (node == null || node.isNull()) {
             return null;
         }
-        return p.getCodec().treeToValue(node, ImagePolicy.class);
-    }
-
-    private HtmlPolicy deserializeHtmlPolicy(JsonNode node, JsonParser p) throws IOException {
-        if (node == null || node.isNull()) {
-            return null;
-        }
-        return p.getCodec().treeToValue(node, HtmlPolicy.class);
-    }
-
-    private ExcelPolicy deserializeExcelPolicy(JsonNode node, JsonParser p) throws IOException {
-        if (node == null || node.isNull()) {
-            return null;
-        }
-        return p.getCodec().treeToValue(node, ExcelPolicy.class);
-    }
-
-    private PdfPolicy deserializePdfPolicy(JsonNode node, JsonParser p) throws IOException {
-        if (node == null || node.isNull()) {
-            return null;
-        }
-        return p.getCodec().treeToValue(node, PdfPolicy.class);
+        return p.getCodec().treeToValue(node, policyClass);
     }
 }

@@ -4,6 +4,8 @@ import com.ryuqq.fileflow.adapter.redis.dto.UploadPolicyDto;
 import com.ryuqq.fileflow.application.policy.port.out.CachePolicyPort;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -31,13 +33,14 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class RedisPolicyCacheAdapter implements CachePolicyPort {
 
+    private static final Logger log = LoggerFactory.getLogger(RedisPolicyCacheAdapter.class);
     private static final String KEY_PREFIX = "policy:";
     private static final long TTL_HOURS = 1;
     private static final long TTL_SECONDS = TTL_HOURS * 3600;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, UploadPolicyDto> redisTemplate;
 
-    public RedisPolicyCacheAdapter(RedisTemplate<String, Object> redisTemplate) {
+    public RedisPolicyCacheAdapter(RedisTemplate<String, UploadPolicyDto> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
@@ -50,21 +53,15 @@ public class RedisPolicyCacheAdapter implements CachePolicyPort {
         String redisKey = buildKey(policyKey);
 
         try {
-            Object cached = redisTemplate.opsForValue().get(redisKey);
+            UploadPolicyDto cached = redisTemplate.opsForValue().get(redisKey);
 
             if (cached == null) {
                 return Optional.empty();
             }
 
-            if (!(cached instanceof UploadPolicyDto)) {
-                // 타입이 맞지 않으면 캐시 삭제하고 empty 반환
-                redisTemplate.delete(redisKey);
-                return Optional.empty();
-            }
-
-            UploadPolicyDto dto = (UploadPolicyDto) cached;
-            return Optional.of(dto.toDomain());
+            return Optional.of(cached.toDomain());
         } catch (Exception e) {
+            log.warn("Failed to deserialize cache for key '{}', removing it. Error: {}", redisKey, e.getMessage());
             // 직렬화 실패 시 캐시 삭제하고 empty 반환
             redisTemplate.delete(redisKey);
             return Optional.empty();
@@ -96,7 +93,23 @@ public class RedisPolicyCacheAdapter implements CachePolicyPort {
     @Override
     public void evictAll() {
         String pattern = KEY_PREFIX + "*";
-        redisTemplate.keys(pattern).forEach(redisTemplate::delete);
+        // SCAN 명령어를 사용하여 블로킹 없이 키 삭제
+        redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Object>) connection -> {
+            org.springframework.data.redis.core.ScanOptions options =
+                    org.springframework.data.redis.core.ScanOptions.scanOptions()
+                            .match(pattern)
+                            .count(100)
+                            .build();
+
+            try (org.springframework.data.redis.core.Cursor<byte[]> cursor = connection.scan(options)) {
+                while (cursor.hasNext()) {
+                    connection.del(cursor.next());
+                }
+            } catch (Exception e) {
+                log.warn("Error during evictAll: {}", e.getMessage());
+            }
+            return null;
+        });
     }
 
     /**

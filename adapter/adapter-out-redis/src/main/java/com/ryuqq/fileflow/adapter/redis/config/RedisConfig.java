@@ -25,7 +25,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  *
  * 직렬화 전략:
  * - Key Serializer: StringRedisSerializer (UTF-8)
- * - Value Serializer: GenericJackson2JsonRedisSerializer (JSON)
+ * - Value Serializer: Jackson2JsonRedisSerializer (JSON)
  *
  * @author sangwon-ryu
  */
@@ -33,8 +33,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
+    public RedisTemplate<String, UploadPolicyDto> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, UploadPolicyDto> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
         // Key Serializer: String (UTF-8)
