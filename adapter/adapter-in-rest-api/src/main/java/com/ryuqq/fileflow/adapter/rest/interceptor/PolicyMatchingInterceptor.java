@@ -63,6 +63,10 @@ public class PolicyMatchingInterceptor implements HandlerInterceptor {
             HttpServletResponse response,
             Object handler
     ) {
+        if (!(handler instanceof org.springframework.web.method.HandlerMethod)) {
+            return true;
+        }
+
         log.debug("PolicyMatchingInterceptor.preHandle() called for URI: {}", request.getRequestURI());
 
         // 1. 헤더 추출
