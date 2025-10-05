@@ -48,6 +48,12 @@ spring:
     validate-on-migrate: true
     out-of-order: false
     placeholder-replacement: false
+    encoding: UTF-8
+    table: flyway_schema_history
+    sql-migration-prefix: V
+    sql-migration-separator: __
+    sql-migration-suffixes: .sql
+    clean-disabled: true  # 프로덕션 환경 보호
 
 # ========================================
 # Logging Configuration
