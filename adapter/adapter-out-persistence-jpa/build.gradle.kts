@@ -73,24 +73,56 @@ tasks.withType<JavaCompile> {
 // ========================================
 // Test Coverage (70% for adapters)
 // ========================================
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/entity/**",
+                    "**/Q*.class"
+                )
+            }
+        })
+    )
+}
+
 tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/entity/**",
+                    "**/Q*.class"
+                )
+            }
+        })
+    )
+
     violationRules {
         rule {
+            element = "BUNDLE"
             limit {
                 minimum = "0.70".toBigDecimal()
             }
         }
         rule {
             element = "CLASS"
-            excludes = listOf(
-                "*.entity.*", // JPA entities excluded
-                "*.Q*" // QueryDSL generated classes excluded
-            )
+            limit {
+                minimum = "0.50".toBigDecimal()
+            }
         }
     }
 }
 
 tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
     finalizedBy(tasks.jacocoTestCoverageVerification)
 }
 
