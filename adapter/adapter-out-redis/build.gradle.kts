@@ -12,6 +12,10 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
+    // SpotBugs annotations (for @SuppressFBWarnings)
+    compileOnly(libs.spotbugs.annotations)
+    testCompileOnly(libs.spotbugs.annotations)
+
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
     testImplementation("org.awaitility:awaitility:4.2.0")

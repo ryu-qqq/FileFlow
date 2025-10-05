@@ -31,6 +31,10 @@ dependencies {
     // ========================================
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(project(":domain"))
+
+    // SpotBugs annotations (for @SuppressFBWarnings)
+    compileOnly(libs.spotbugs.annotations)
+    testCompileOnly(libs.spotbugs.annotations)
 }
 
 // ========================================

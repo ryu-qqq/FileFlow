@@ -26,6 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *
  * @author sangwon-ryu
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "UwF",
+        justification = "service 필드는 @BeforeEach setUp()에서 초기화됩니다."
+)
 class DeactivateUploadPolicyServiceTest {
 
     private DeactivateUploadPolicyService service;

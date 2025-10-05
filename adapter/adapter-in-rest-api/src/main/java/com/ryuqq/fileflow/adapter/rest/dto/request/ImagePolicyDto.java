@@ -41,6 +41,25 @@ public record ImagePolicyDto(
         Integer maxHeight
 ) {
     /**
+     * 방어적 복사를 수행하는 Compact Constructor
+     * SpotBugs EI2 경고 방지
+     */
+    public ImagePolicyDto {
+        allowedFormats = allowedFormats == null ? null : List.copyOf(allowedFormats);
+    }
+
+    /**
+     * allowedFormats의 방어적 복사본을 반환합니다.
+     * SpotBugs EI 경고 방지
+     *
+     * @return 허용된 포맷 목록의 불변 복사본
+     */
+    @Override
+    public List<String> allowedFormats() {
+        return allowedFormats == null ? null : List.copyOf(allowedFormats);
+    }
+
+    /**
      * DTO를 Domain ImagePolicy로 변환합니다.
      *
      * @return ImagePolicy
@@ -49,7 +68,7 @@ public record ImagePolicyDto(
         return new ImagePolicy(
                 maxFileSizeMB,
                 maxFileCount,
-                allowedFormats,
+                List.copyOf(allowedFormats),
                 Dimension.of(maxWidth, maxHeight)
         );
     }

@@ -40,6 +40,15 @@ public class RedisPolicyCacheAdapter implements CachePolicyPort {
 
     private final RedisTemplate<String, UploadPolicyDto> redisTemplate;
 
+    /**
+     * RedisPolicyCacheAdapter 생성자
+     *
+     * @param redisTemplate Spring이 관리하는 RedisTemplate 빈
+     */
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "RedisTemplate은 Spring이 관리하는 싱글톤 빈이며, 외부에서 변경되지 않습니다."
+    )
     public RedisPolicyCacheAdapter(RedisTemplate<String, UploadPolicyDto> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }

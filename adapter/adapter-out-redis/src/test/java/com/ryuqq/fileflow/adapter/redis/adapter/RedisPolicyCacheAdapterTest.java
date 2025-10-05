@@ -46,6 +46,10 @@ import static org.awaitility.Awaitility.await;
         RedisPolicyCacheAdapter.class,
         RedisPolicyCacheAdapterTest.TestRedisConfig.class
 })
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "UwF",
+        justification = "testPolicyKey와 testPolicy 필드는 @BeforeEach setUp()에서 초기화됩니다."
+)
 class RedisPolicyCacheAdapterTest {
 
     @TestConfiguration
@@ -87,7 +91,10 @@ class RedisPolicyCacheAdapterTest {
     @BeforeEach
     void setUp() {
         // Redis 전체 캐시 삭제
-        redisTemplate.keys("*").forEach(redisTemplate::delete);
+        java.util.Set<String> keys = redisTemplate.keys("*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
 
         testPolicyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
 
