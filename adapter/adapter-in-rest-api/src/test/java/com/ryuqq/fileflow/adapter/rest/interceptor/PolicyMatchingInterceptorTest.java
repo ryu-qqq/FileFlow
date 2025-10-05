@@ -18,7 +18,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.method.HandlerMethod;
 
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -46,12 +48,24 @@ class PolicyMatchingInterceptorTest {
 
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
+    private HandlerMethod handlerMethod;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws NoSuchMethodException {
         interceptor = new PolicyMatchingInterceptor(getUploadPolicyUseCase);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
+
+        // Create a HandlerMethod for testing
+        Method method = this.getClass().getMethod("dummyMethod");
+        handlerMethod = new HandlerMethod(this, method);
+    }
+
+    /**
+     * Dummy method for HandlerMethod creation in tests
+     */
+    public void dummyMethod() {
+        // This method is only used to create HandlerMethod instances in tests
     }
 
     @Test
@@ -67,7 +81,7 @@ class PolicyMatchingInterceptorTest {
                 .thenReturn(mockPolicy);
 
         // When
-        boolean result = interceptor.preHandle(request, response, new Object());
+        boolean result = interceptor.preHandle(request, response, handlerMethod);
 
         // Then
         assertThat(result).isTrue();
@@ -84,7 +98,7 @@ class PolicyMatchingInterceptorTest {
         request.addHeader("X-Service-Type", "REVIEW");
 
         // When & Then
-        assertThatThrownBy(() -> interceptor.preHandle(request, response, new Object()))
+        assertThatThrownBy(() -> interceptor.preHandle(request, response, handlerMethod))
                 .isInstanceOf(MissingHeaderException.class)
                 .hasMessageContaining("X-Tenant-Id");
     }
@@ -97,7 +111,7 @@ class PolicyMatchingInterceptorTest {
         request.addHeader("X-Service-Type", "REVIEW");
 
         // When & Then
-        assertThatThrownBy(() -> interceptor.preHandle(request, response, new Object()))
+        assertThatThrownBy(() -> interceptor.preHandle(request, response, handlerMethod))
                 .isInstanceOf(MissingHeaderException.class)
                 .hasMessageContaining("X-User-Type");
     }
@@ -110,7 +124,7 @@ class PolicyMatchingInterceptorTest {
         request.addHeader("X-User-Type", "CONSUMER");
 
         // When & Then
-        assertThatThrownBy(() -> interceptor.preHandle(request, response, new Object()))
+        assertThatThrownBy(() -> interceptor.preHandle(request, response, handlerMethod))
                 .isInstanceOf(MissingHeaderException.class)
                 .hasMessageContaining("X-Service-Type");
     }
@@ -124,7 +138,7 @@ class PolicyMatchingInterceptorTest {
         request.addHeader("X-Service-Type", "REVIEW");
 
         // When & Then
-        assertThatThrownBy(() -> interceptor.preHandle(request, response, new Object()))
+        assertThatThrownBy(() -> interceptor.preHandle(request, response, handlerMethod))
                 .isInstanceOf(MissingHeaderException.class)
                 .hasMessageContaining("X-Tenant-Id");
     }
@@ -138,7 +152,7 @@ class PolicyMatchingInterceptorTest {
         request.addHeader("X-Service-Type", "REVIEW");
 
         // When & Then
-        assertThatThrownBy(() -> interceptor.preHandle(request, response, new Object()))
+        assertThatThrownBy(() -> interceptor.preHandle(request, response, handlerMethod))
                 .isInstanceOf(MissingHeaderException.class)
                 .hasMessageContaining("X-Tenant-Id");
     }
@@ -155,7 +169,7 @@ class PolicyMatchingInterceptorTest {
                 .thenThrow(new PolicyNotFoundException("non-existent:CONSUMER:REVIEW"));
 
         // When & Then
-        assertThatThrownBy(() -> interceptor.preHandle(request, response, new Object()))
+        assertThatThrownBy(() -> interceptor.preHandle(request, response, handlerMethod))
                 .isInstanceOf(PolicyNotFoundException.class);
     }
 
@@ -172,11 +186,25 @@ class PolicyMatchingInterceptorTest {
                 .thenReturn(mockPolicy);
 
         // When
-        boolean result = interceptor.preHandle(request, response, new Object());
+        boolean result = interceptor.preHandle(request, response, handlerMethod);
 
         // Then
         assertThat(result).isTrue();
         verify(getUploadPolicyUseCase).getActivePolicy(new PolicyKeyDto("b2c", "CONSUMER", "REVIEW"));
+    }
+
+    @Test
+    @DisplayName("HandlerMethod가 아닌 경우 검증 없이 통과")
+    void preHandle_WithNonHandlerMethod_SkipsValidation() throws Exception {
+        // Given
+        Object nonHandlerMethod = new Object();
+
+        // When
+        boolean result = interceptor.preHandle(request, response, nonHandlerMethod);
+
+        // Then
+        assertThat(result).isTrue();
+        assertThat(request.getAttribute("uploadPolicy")).isNull();
     }
 
     /**
