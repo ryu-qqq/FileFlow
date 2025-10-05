@@ -9,8 +9,8 @@
 CREATE TABLE tenant (
     tenant_id   VARCHAR(50)     NOT NULL COMMENT '테넌트 ID (예: b2c, b2b)',
     name        VARCHAR(100)    NOT NULL COMMENT '테넌트 이름',
-    created_at  DATETIME        NOT NULL COMMENT '생성 시각',
-    updated_at  DATETIME        NULL COMMENT '수정 시각',
+    created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 시각',
+    updated_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 시각',
     PRIMARY KEY (tenant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 COMMENT='테넌트 정보';

@@ -8,10 +8,10 @@
 
 CREATE TABLE processing_policy (
     policy_key          VARCHAR(200)    NOT NULL COMMENT '정책 키 (tenantId:userType:serviceType)',
-    processing_config   TEXT            NULL COMMENT '처리 설정 (JSON)',
+    processing_config   JSON            NULL COMMENT '처리 설정 (JSON)',
     is_active           BOOLEAN         NOT NULL DEFAULT FALSE COMMENT '활성 상태',
-    created_at          DATETIME        NOT NULL COMMENT '생성 시각',
-    updated_at          DATETIME        NULL COMMENT '수정 시각',
+    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 시각',
+    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 시각',
     PRIMARY KEY (policy_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 COMMENT='처리 정책 (향후 확장용)';
