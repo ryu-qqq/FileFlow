@@ -52,7 +52,10 @@ class S3PresignedUrlAdapterTest {
                 "test-bucket",
                 "ap-northeast-2",
                 15L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         );
         adapter = new S3PresignedUrlAdapter(s3Presigner, s3Properties);
     }
@@ -93,7 +96,10 @@ class S3PresignedUrlAdapterTest {
                 "test-bucket",
                 "ap-northeast-2",
                 15L,
-                ""
+                "",
+                100,
+                10000L,
+                30000L
         );
         adapter = new S3PresignedUrlAdapter(s3Presigner, propertiesWithoutPrefix);
 
