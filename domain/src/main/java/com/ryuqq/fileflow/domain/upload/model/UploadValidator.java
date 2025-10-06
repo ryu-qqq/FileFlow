@@ -63,6 +63,7 @@ public final class UploadValidator {
         try {
             policy.validateFile(
                     command.fileType(),
+                    null, // fileFormat은 command에 없으므로 null 전달
                     command.fileSizeBytes(),
                     1 // 단일 파일 업로드
             );
@@ -135,6 +136,7 @@ public final class UploadValidator {
             case FILE_COUNT_EXCEEDED -> UploadValidationException.ValidationType.POLICY_VIOLATION;
             case INVALID_FORMAT -> UploadValidationException.ValidationType.INVALID_FILE_TYPE;
             case DIMENSION_EXCEEDED -> UploadValidationException.ValidationType.POLICY_VIOLATION;
+            case RATE_LIMIT_EXCEEDED -> UploadValidationException.ValidationType.POLICY_VIOLATION;
         };
     }
 }

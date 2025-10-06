@@ -132,20 +132,29 @@ public final class UploadPolicy {
      * 5. 파일 개수가 허용 범위 내인지
      *
      * @param fileType 파일 타입
+     * @param fileFormat 파일 포맷 (예: "jpg", "png", "pdf", Optional)
      * @param fileSizeBytes 파일 크기 (bytes)
      * @param fileCount 파일 개수
      * @throws PolicyViolationException 정책 위반 시
      */
-    public void validateFile(FileType fileType, long fileSizeBytes, int fileCount) {
+    public void validateFile(FileType fileType, String fileFormat, long fileSizeBytes, int fileCount) {
         validatePolicyIsActive();
         validateEffectiveNow();
         validateFileTypeSupported(fileType);
 
         try {
-            FileAttributes attributes = FileAttributes.builder()
+            FileAttributes.Builder builder = FileAttributes.builder()
                 .sizeBytes(fileSizeBytes)
-                .fileCount(fileCount)
-                .build();
+                .fileCount(fileCount);
+
+            // fileFormat이 제공되면 사용, 아니면 IMAGE 타입의 경우 기본값 설정
+            if (fileFormat != null && !fileFormat.isBlank()) {
+                builder.format(fileFormat);
+            } else if (fileType == FileType.IMAGE) {
+                builder.format("jpg"); // IMAGE 타입 기본 format
+            }
+
+            FileAttributes attributes = builder.build();
             fileTypePolicies.validate(fileType, attributes);
         } catch (IllegalArgumentException e) {
             throw new PolicyViolationException(
@@ -168,7 +177,7 @@ public final class UploadPolicy {
 
         if (!rateLimiting.isAllowed(currentRequestCount, currentUploadCount)) {
             throw new PolicyViolationException(
-                    ViolationType.FILE_COUNT_EXCEEDED,
+                    ViolationType.RATE_LIMIT_EXCEEDED,
                     String.format("Rate limit exceeded. Current: requests=%d, uploads=%d. Limits: requestsPerHour=%d, uploadsPerDay=%d",
                             currentRequestCount, currentUploadCount,
                             rateLimiting.requestsPerHour(), rateLimiting.uploadsPerDay())
