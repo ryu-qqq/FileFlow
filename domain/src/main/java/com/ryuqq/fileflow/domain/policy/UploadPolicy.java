@@ -142,10 +142,16 @@ public final class UploadPolicy {
         validateFileTypeSupported(fileType);
 
         try {
-            FileAttributes attributes = FileAttributes.builder()
+            FileAttributes.Builder builder = FileAttributes.builder()
                 .sizeBytes(fileSizeBytes)
-                .fileCount(fileCount)
-                .build();
+                .fileCount(fileCount);
+
+            // IMAGE 타입의 경우 기본 format 설정
+            if (fileType == FileType.IMAGE) {
+                builder.format("jpg"); // 기본 format
+            }
+
+            FileAttributes attributes = builder.build();
             fileTypePolicies.validate(fileType, attributes);
         } catch (IllegalArgumentException e) {
             throw new PolicyViolationException(
