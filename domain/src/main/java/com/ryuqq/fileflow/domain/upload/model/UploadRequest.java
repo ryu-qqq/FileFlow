@@ -2,33 +2,29 @@ package com.ryuqq.fileflow.domain.upload.model;
 
 import com.ryuqq.fileflow.domain.policy.FileType;
 
-import java.util.Objects;
-
 /**
  * 파일 업로드 요청 정보를 나타내는 Value Object
  * Presigned URL 발급을 위한 필수 정보를 포함합니다.
  *
  * 불변성:
- * - 모든 필드는 final이며 생성 후 변경 불가
+ * - record 타입으로 모든 필드는 final이며 생성 후 변경 불가
  * - 방어적 복사를 통해 외부 변경으로부터 보호
  */
-public final class UploadRequest {
+public record UploadRequest(
+        String fileName,
+        FileType fileType,
+        long fileSizeBytes,
+        String contentType
+) {
 
-    private final String fileName;
-    private final FileType fileType;
-    private final long fileSizeBytes;
-    private final String contentType;
-
-    private UploadRequest(
-            String fileName,
-            FileType fileType,
-            long fileSizeBytes,
-            String contentType
-    ) {
-        this.fileName = fileName;
-        this.fileType = fileType;
-        this.fileSizeBytes = fileSizeBytes;
-        this.contentType = contentType;
+    /**
+     * Compact constructor로 검증 로직 수행
+     */
+    public UploadRequest {
+        validateFileName(fileName);
+        validateFileType(fileType);
+        validateFileSizeBytes(fileSizeBytes);
+        validateContentType(contentType);
     }
 
     /**
@@ -47,11 +43,6 @@ public final class UploadRequest {
             long fileSizeBytes,
             String contentType
     ) {
-        validateFileName(fileName);
-        validateFileType(fileType);
-        validateFileSizeBytes(fileSizeBytes);
-        validateContentType(contentType);
-
         return new UploadRequest(fileName, fileType, fileSizeBytes, contentType);
     }
 
@@ -82,51 +73,5 @@ public final class UploadRequest {
         if (contentType == null || contentType.trim().isEmpty()) {
             throw new IllegalArgumentException("ContentType cannot be null or empty");
         }
-    }
-
-    // ========== Getters ==========
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public FileType getFileType() {
-        return fileType;
-    }
-
-    public long getFileSizeBytes() {
-        return fileSizeBytes;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    // ========== Object Methods ==========
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UploadRequest that = (UploadRequest) o;
-        return fileSizeBytes == that.fileSizeBytes &&
-               Objects.equals(fileName, that.fileName) &&
-               fileType == that.fileType &&
-               Objects.equals(contentType, that.contentType);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(fileName, fileType, fileSizeBytes, contentType);
-    }
-
-    @Override
-    public String toString() {
-        return "UploadRequest{" +
-                "fileName='" + fileName + '\'' +
-                ", fileType=" + fileType +
-                ", fileSizeBytes=" + fileSizeBytes +
-                ", contentType='" + contentType + '\'' +
-                '}';
     }
 }

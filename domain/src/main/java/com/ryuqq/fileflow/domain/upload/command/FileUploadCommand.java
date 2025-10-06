@@ -3,8 +3,6 @@ package com.ryuqq.fileflow.domain.upload.command;
 import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 
-import java.util.Objects;
-
 /**
  * 파일 업로드 명령을 나타내는 Command Object
  * Presigned URL 발급 요청을 캡슐화합니다.
@@ -13,29 +11,25 @@ import java.util.Objects;
  * - Command와 Query를 명확히 분리
  * - 의도를 명시적으로 표현
  */
-public final class FileUploadCommand {
+public record FileUploadCommand(
+        PolicyKey policyKey,
+        String uploaderId,
+        String fileName,
+        FileType fileType,
+        long fileSizeBytes,
+        String contentType
+) {
 
-    private final PolicyKey policyKey;
-    private final String uploaderId;
-    private final String fileName;
-    private final FileType fileType;
-    private final long fileSizeBytes;
-    private final String contentType;
-
-    private FileUploadCommand(
-            PolicyKey policyKey,
-            String uploaderId,
-            String fileName,
-            FileType fileType,
-            long fileSizeBytes,
-            String contentType
-    ) {
-        this.policyKey = policyKey;
-        this.uploaderId = uploaderId;
-        this.fileName = fileName;
-        this.fileType = fileType;
-        this.fileSizeBytes = fileSizeBytes;
-        this.contentType = contentType;
+    /**
+     * Compact constructor로 검증 로직 수행
+     */
+    public FileUploadCommand {
+        validatePolicyKey(policyKey);
+        validateUploaderId(uploaderId);
+        validateFileName(fileName);
+        validateFileType(fileType);
+        validateFileSizeBytes(fileSizeBytes);
+        validateContentType(contentType);
     }
 
     /**
@@ -58,13 +52,6 @@ public final class FileUploadCommand {
             long fileSizeBytes,
             String contentType
     ) {
-        validatePolicyKey(policyKey);
-        validateUploaderId(uploaderId);
-        validateFileName(fileName);
-        validateFileType(fileType);
-        validateFileSizeBytes(fileSizeBytes);
-        validateContentType(contentType);
-
         return new FileUploadCommand(
                 policyKey,
                 uploaderId,
@@ -114,63 +101,5 @@ public final class FileUploadCommand {
         if (contentType == null || contentType.trim().isEmpty()) {
             throw new IllegalArgumentException("ContentType cannot be null or empty");
         }
-    }
-
-    // ========== Getters ==========
-
-    public PolicyKey getPolicyKey() {
-        return policyKey;
-    }
-
-    public String getUploaderId() {
-        return uploaderId;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public FileType getFileType() {
-        return fileType;
-    }
-
-    public long getFileSizeBytes() {
-        return fileSizeBytes;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    // ========== Object Methods ==========
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FileUploadCommand that = (FileUploadCommand) o;
-        return fileSizeBytes == that.fileSizeBytes &&
-               Objects.equals(policyKey, that.policyKey) &&
-               Objects.equals(uploaderId, that.uploaderId) &&
-               Objects.equals(fileName, that.fileName) &&
-               fileType == that.fileType &&
-               Objects.equals(contentType, that.contentType);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(policyKey, uploaderId, fileName, fileType, fileSizeBytes, contentType);
-    }
-
-    @Override
-    public String toString() {
-        return "FileUploadCommand{" +
-                "policyKey=" + policyKey +
-                ", uploaderId='" + uploaderId + '\'' +
-                ", fileName='" + fileName + '\'' +
-                ", fileType=" + fileType +
-                ", fileSizeBytes=" + fileSizeBytes +
-                ", contentType='" + contentType + '\'' +
-                '}';
     }
 }

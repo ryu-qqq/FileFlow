@@ -21,10 +21,10 @@ class UploadRequestTest {
         UploadRequest uploadRequest = UploadRequest.of(fileName, fileType, fileSizeBytes, contentType);
 
         // then
-        assertThat(uploadRequest.getFileName()).isEqualTo(fileName);
-        assertThat(uploadRequest.getFileType()).isEqualTo(fileType);
-        assertThat(uploadRequest.getFileSizeBytes()).isEqualTo(fileSizeBytes);
-        assertThat(uploadRequest.getContentType()).isEqualTo(contentType);
+        assertThat(uploadRequest.fileName()).isEqualTo(fileName);
+        assertThat(uploadRequest.fileType()).isEqualTo(fileType);
+        assertThat(uploadRequest.fileSizeBytes()).isEqualTo(fileSizeBytes);
+        assertThat(uploadRequest.contentType()).isEqualTo(contentType);
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.upload.model;
 
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
+import com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.exception.UploadValidationException;
 
@@ -61,13 +62,14 @@ public final class UploadValidator {
     private static void validateFileAttributes(FileUploadCommand command, UploadPolicy policy) {
         try {
             policy.validateFile(
-                    command.getFileType(),
-                    command.getFileSizeBytes(),
+                    command.fileType(),
+                    command.fileSizeBytes(),
                     1 // 단일 파일 업로드
             );
-        } catch (Exception e) {
+        } catch (PolicyViolationException e) {
+            UploadValidationException.ValidationType validationType = mapViolationType(e.getViolationType());
             throw new UploadValidationException(
-                    UploadValidationException.ValidationType.FILE_SIZE_EXCEEDED,
+                    validationType,
                     "File validation failed: " + e.getMessage()
             );
         }
@@ -88,7 +90,7 @@ public final class UploadValidator {
     ) {
         try {
             policy.validateRateLimit(currentRequestCount, currentUploadCount);
-        } catch (Exception e) {
+        } catch (PolicyViolationException e) {
             throw new UploadValidationException(
                     UploadValidationException.ValidationType.RATE_LIMIT_EXCEEDED,
                     "Rate limit validation failed: " + e.getMessage()
@@ -117,5 +119,22 @@ public final class UploadValidator {
                     ", Status: " + session.getStatus()
             );
         }
+    }
+
+    /**
+     * PolicyViolationException의 ViolationType을 UploadValidationException의 ValidationType으로 매핑합니다.
+     *
+     * @param violationType PolicyViolationException의 위반 유형
+     * @return 매핑된 UploadValidationException의 검증 유형
+     */
+    private static UploadValidationException.ValidationType mapViolationType(
+            PolicyViolationException.ViolationType violationType
+    ) {
+        return switch (violationType) {
+            case FILE_SIZE_EXCEEDED -> UploadValidationException.ValidationType.FILE_SIZE_EXCEEDED;
+            case FILE_COUNT_EXCEEDED -> UploadValidationException.ValidationType.POLICY_VIOLATION;
+            case INVALID_FORMAT -> UploadValidationException.ValidationType.INVALID_FILE_TYPE;
+            case DIMENSION_EXCEEDED -> UploadValidationException.ValidationType.POLICY_VIOLATION;
+        };
     }
 }

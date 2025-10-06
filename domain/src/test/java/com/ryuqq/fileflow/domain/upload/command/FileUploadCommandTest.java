@@ -30,12 +30,12 @@ class FileUploadCommandTest {
         );
 
         // then
-        assertThat(command.getPolicyKey()).isEqualTo(policyKey);
-        assertThat(command.getUploaderId()).isEqualTo(uploaderId);
-        assertThat(command.getFileName()).isEqualTo(fileName);
-        assertThat(command.getFileType()).isEqualTo(fileType);
-        assertThat(command.getFileSizeBytes()).isEqualTo(fileSizeBytes);
-        assertThat(command.getContentType()).isEqualTo(contentType);
+        assertThat(command.policyKey()).isEqualTo(policyKey);
+        assertThat(command.uploaderId()).isEqualTo(uploaderId);
+        assertThat(command.fileName()).isEqualTo(fileName);
+        assertThat(command.fileType()).isEqualTo(fileType);
+        assertThat(command.fileSizeBytes()).isEqualTo(fileSizeBytes);
+        assertThat(command.contentType()).isEqualTo(contentType);
     }
 
     @Test

@@ -21,9 +21,9 @@ class PresignedUrlInfoTest {
         PresignedUrlInfo urlInfo = PresignedUrlInfo.of(presignedUrl, uploadPath, expiresAt);
 
         // then
-        assertThat(urlInfo.getPresignedUrl()).isEqualTo(presignedUrl);
-        assertThat(urlInfo.getUploadPath()).isEqualTo(uploadPath);
-        assertThat(urlInfo.getExpiresAt()).isEqualTo(expiresAt);
+        assertThat(urlInfo.presignedUrl()).isEqualTo(presignedUrl);
+        assertThat(urlInfo.uploadPath()).isEqualTo(uploadPath);
+        assertThat(urlInfo.expiresAt()).isEqualTo(expiresAt);
     }
 
     @Test

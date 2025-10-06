@@ -1,30 +1,28 @@
 package com.ryuqq.fileflow.domain.upload.model;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * Presigned URL 정보를 나타내는 Value Object
  * S3 등의 스토리지에 업로드하기 위한 임시 URL 정보를 포함합니다.
  *
  * 불변성:
- * - 모든 필드는 final이며 생성 후 변경 불가
+ * - record 타입으로 모든 필드는 final이며 생성 후 변경 불가
  * - URL과 메타데이터를 안전하게 캡슐화
  */
-public final class PresignedUrlInfo {
+public record PresignedUrlInfo(
+        String presignedUrl,
+        String uploadPath,
+        LocalDateTime expiresAt
+) {
 
-    private final String presignedUrl;
-    private final String uploadPath;
-    private final LocalDateTime expiresAt;
-
-    private PresignedUrlInfo(
-            String presignedUrl,
-            String uploadPath,
-            LocalDateTime expiresAt
-    ) {
-        this.presignedUrl = presignedUrl;
-        this.uploadPath = uploadPath;
-        this.expiresAt = expiresAt;
+    /**
+     * Compact constructor로 검증 로직 수행
+     */
+    public PresignedUrlInfo {
+        validatePresignedUrl(presignedUrl);
+        validateUploadPath(uploadPath);
+        validateExpiresAt(expiresAt);
     }
 
     /**
@@ -41,10 +39,6 @@ public final class PresignedUrlInfo {
             String uploadPath,
             LocalDateTime expiresAt
     ) {
-        validatePresignedUrl(presignedUrl);
-        validateUploadPath(uploadPath);
-        validateExpiresAt(expiresAt);
-
         return new PresignedUrlInfo(presignedUrl, uploadPath, expiresAt);
     }
 
@@ -90,45 +84,5 @@ public final class PresignedUrlInfo {
         if (expiresAt.isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("ExpiresAt cannot be in the past");
         }
-    }
-
-    // ========== Getters ==========
-
-    public String getPresignedUrl() {
-        return presignedUrl;
-    }
-
-    public String getUploadPath() {
-        return uploadPath;
-    }
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    // ========== Object Methods ==========
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PresignedUrlInfo that = (PresignedUrlInfo) o;
-        return Objects.equals(presignedUrl, that.presignedUrl) &&
-               Objects.equals(uploadPath, that.uploadPath) &&
-               Objects.equals(expiresAt, that.expiresAt);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(presignedUrl, uploadPath, expiresAt);
-    }
-
-    @Override
-    public String toString() {
-        return "PresignedUrlInfo{" +
-                "uploadPath='" + uploadPath + '\'' +
-                ", expiresAt=" + expiresAt +
-                ", isExpired=" + isExpired() +
-                '}';
     }
 }
