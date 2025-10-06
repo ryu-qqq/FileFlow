@@ -36,7 +36,8 @@ public final class UploadSession {
             String uploaderId,
             UploadStatus status,
             LocalDateTime createdAt,
-            LocalDateTime expiresAt
+            LocalDateTime expiresAt,
+            List<Object> domainEvents
     ) {
         this.sessionId = sessionId;
         this.policyKey = policyKey;
@@ -45,7 +46,7 @@ public final class UploadSession {
         this.status = status;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
-        this.domainEvents = new ArrayList<>();
+        this.domainEvents = new ArrayList<>(domainEvents);
     }
 
     /**
@@ -73,6 +74,8 @@ public final class UploadSession {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = now.plusMinutes(expirationMinutes);
 
+        List<Object> events = new ArrayList<>();
+
         UploadSession session = new UploadSession(
                 sessionId,
                 policyKey,
@@ -80,7 +83,8 @@ public final class UploadSession {
                 uploaderId,
                 UploadStatus.PENDING,
                 now,
-                expiresAt
+                expiresAt,
+                events
         );
 
         // UploadSessionCreated 이벤트 발행
@@ -123,7 +127,8 @@ public final class UploadSession {
                 uploaderId,
                 status,
                 createdAt,
-                expiresAt
+                expiresAt,
+                new ArrayList<>()
         );
     }
 
@@ -168,7 +173,8 @@ public final class UploadSession {
                 this.uploaderId,
                 UploadStatus.COMPLETED,
                 this.createdAt,
-                this.expiresAt
+                this.expiresAt,
+                this.domainEvents
         );
     }
 
@@ -185,7 +191,8 @@ public final class UploadSession {
                 this.uploaderId,
                 UploadStatus.FAILED,
                 this.createdAt,
-                this.expiresAt
+                this.expiresAt,
+                this.domainEvents
         );
     }
 
