@@ -61,4 +61,36 @@ public enum FileType {
     public boolean isDocument() {
         return this == HTML || this == EXCEL || this == PDF;
     }
+
+    /**
+     * Content-Type으로부터 FileType을 추출합니다.
+     *
+     * @param contentType MIME Content-Type
+     * @return FileType
+     * @throws IllegalArgumentException 지원하지 않는 Content-Type인 경우
+     */
+    public static FileType fromContentType(String contentType) {
+        if (contentType == null || contentType.trim().isEmpty()) {
+            throw new IllegalArgumentException("ContentType must not be null or empty");
+        }
+
+        String normalizedContentType = contentType.toLowerCase().trim();
+
+        if (normalizedContentType.startsWith("image/")) {
+            return IMAGE;
+        }
+        if (normalizedContentType.equals("text/html")) {
+            return HTML;
+        }
+        if (normalizedContentType.contains("spreadsheetml") ||
+            normalizedContentType.contains("excel") ||
+            normalizedContentType.equals("application/vnd.ms-excel")) {
+            return EXCEL;
+        }
+        if (normalizedContentType.equals("application/pdf")) {
+            return PDF;
+        }
+
+        throw new IllegalArgumentException("Unsupported content type: " + contentType);
+    }
 }

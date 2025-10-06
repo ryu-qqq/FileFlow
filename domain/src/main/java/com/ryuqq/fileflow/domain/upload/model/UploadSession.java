@@ -157,7 +157,7 @@ public final class UploadSession {
      * @throws IllegalStateException 완료 가능한 상태가 아닌 경우
      */
     public UploadSession complete() {
-        if (status != UploadStatus.PENDING) {
+        if (status != UploadStatus.PENDING && status != UploadStatus.UPLOADING) {
             throw new IllegalStateException(
                     "Cannot complete upload. Current status: " + status
             );
@@ -190,6 +190,59 @@ public final class UploadSession {
                 this.uploadRequest,
                 this.uploaderId,
                 UploadStatus.FAILED,
+                this.createdAt,
+                this.expiresAt,
+                this.domainEvents
+        );
+    }
+
+    /**
+     * 업로드를 진행 중 상태로 전환합니다.
+     *
+     * @return 진행 중 상태의 새로운 UploadSession 인스턴스
+     * @throws IllegalStateException 진행 중으로 전환할 수 없는 상태인 경우
+     */
+    public UploadSession startUploading() {
+        if (status != UploadStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Cannot start uploading. Current status: " + status
+            );
+        }
+        if (isExpired()) {
+            throw new IllegalStateException("Session has expired");
+        }
+
+        return new UploadSession(
+                this.sessionId,
+                this.policyKey,
+                this.uploadRequest,
+                this.uploaderId,
+                UploadStatus.UPLOADING,
+                this.createdAt,
+                this.expiresAt,
+                this.domainEvents
+        );
+    }
+
+    /**
+     * 업로드를 취소 상태로 전환합니다.
+     *
+     * @return 취소 상태의 새로운 UploadSession 인스턴스
+     * @throws IllegalStateException 취소할 수 없는 상태인 경우
+     */
+    public UploadSession cancel() {
+        if (status == UploadStatus.COMPLETED || status == UploadStatus.FAILED) {
+            throw new IllegalStateException(
+                    "Cannot cancel upload. Current status: " + status
+            );
+        }
+
+        return new UploadSession(
+                this.sessionId,
+                this.policyKey,
+                this.uploadRequest,
+                this.uploaderId,
+                UploadStatus.CANCELLED,
                 this.createdAt,
                 this.expiresAt,
                 this.domainEvents
