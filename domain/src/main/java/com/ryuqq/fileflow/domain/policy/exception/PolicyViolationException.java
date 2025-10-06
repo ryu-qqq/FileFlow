@@ -71,6 +71,12 @@ public class PolicyViolationException extends RuntimeException {
          * 이미지 크기(dimension) 초과
          * 예: "Image dimension 5000x5000 exceeds limit of 4096x4096"
          */
-        DIMENSION_EXCEEDED
+        DIMENSION_EXCEEDED,
+
+        /**
+         * Rate Limit 초과
+         * 예: "Rate limit exceeded: 150 requests/hour (limit: 100)"
+         */
+        RATE_LIMIT_EXCEEDED
     }
 }

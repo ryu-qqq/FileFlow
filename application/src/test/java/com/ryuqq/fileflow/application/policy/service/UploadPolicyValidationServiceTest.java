@@ -62,6 +62,7 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     5_000_000L, // 5MB
                     3,
                     null,
@@ -81,6 +82,7 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     5_000_000L,
                     3,
                     null,
@@ -109,6 +111,7 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     15_000_000L, // 15MB (limit: 10MB)
                     3,
                     null,
@@ -137,6 +140,7 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     20_000_000L, // 20MB (limit: 10MB)
                     3,
                     null,
@@ -165,14 +169,15 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     5_000_000L,
                     3,
                     null,
                     null
             );
 
-            // When & Then - loadActiveByKey가 비활성화 정책을 반환하지 않으므로 PolicyNotFoundException 발생
-            assertThrows(
+            // When & Then
+            PolicyNotFoundException exception = assertThrows(
                     PolicyNotFoundException.class,
                     () -> service.validate(command)
             );
@@ -196,6 +201,7 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     5_000_000L,
                     3,
                     50,  // requestsPerHour limit: 100
@@ -219,6 +225,7 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     5_000_000L,
                     3,
                     150,  // requestsPerHour limit: 100 (exceeded)
@@ -231,7 +238,7 @@ class UploadPolicyValidationServiceTest {
                     () -> service.validate(command)
             );
 
-            assertEquals(PolicyViolationException.ViolationType.FILE_COUNT_EXCEEDED, exception.getViolationType());
+            assertEquals(PolicyViolationException.ViolationType.RATE_LIMIT_EXCEEDED, exception.getViolationType());
         }
     }
 
@@ -252,6 +259,7 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     5_000_000L,
                     3,
                     null,
@@ -279,6 +287,7 @@ class UploadPolicyValidationServiceTest {
                     "CONSUMER",
                     "REVIEW",
                     FileType.IMAGE,
+                    null, // fileFormat (optional)
                     5_000_000L,
                     3,
                     null,

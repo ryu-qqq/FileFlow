@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.application.policy.service;
 import com.ryuqq.fileflow.application.policy.port.in.ValidateUploadPolicyUseCase;
 import com.ryuqq.fileflow.application.policy.port.out.CachePolicyPort;
 import com.ryuqq.fileflow.application.policy.port.out.LoadUploadPolicyPort;
-import com.ryuqq.fileflow.application.policy.port.out.PolicyValidationPort;
+import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException;
@@ -25,7 +25,7 @@ import java.util.Optional;
  *
  * @author sangwon-ryu
  */
-public class UploadPolicyValidationService implements ValidateUploadPolicyUseCase, PolicyValidationPort {
+public class UploadPolicyValidationService implements ValidateUploadPolicyUseCase {
 
     private final LoadUploadPolicyPort loadUploadPolicyPort;
     private final CachePolicyPort cachePolicyPort;
@@ -59,6 +59,7 @@ public class UploadPolicyValidationService implements ValidateUploadPolicyUseCas
         validateUploadPolicy(
                 policyKey,
                 command.fileType(),
+                command.fileFormat(),
                 command.fileSizeBytes(),
                 command.fileCount()
         );
@@ -74,19 +75,20 @@ public class UploadPolicyValidationService implements ValidateUploadPolicyUseCas
     }
 
     /**
-     * 파일 업로드 정책을 검증합니다 (Port 구현).
+     * 파일 업로드 정책을 검증합니다.
      *
      * @param policyKey 정책 식별자
      * @param fileType 파일 타입
+     * @param fileFormat 파일 포맷 (Optional)
      * @param fileSizeBytes 파일 크기 (bytes)
      * @param fileCount 파일 개수
      * @throws PolicyNotFoundException 정책을 찾을 수 없는 경우
      * @throws com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException 정책 위반 시
      */
-    @Override
-    public void validateUploadPolicy(
+    private void validateUploadPolicy(
             PolicyKey policyKey,
-            com.ryuqq.fileflow.domain.policy.FileType fileType,
+            FileType fileType,
+            String fileFormat,
             long fileSizeBytes,
             int fileCount
     ) {
@@ -94,11 +96,11 @@ public class UploadPolicyValidationService implements ValidateUploadPolicyUseCas
         Objects.requireNonNull(fileType, "fileType must not be null");
 
         UploadPolicy policy = loadPolicyWithCache(policyKey);
-        policy.validateFile(fileType, fileSizeBytes, fileCount);
+        policy.validateFile(fileType, fileFormat, fileSizeBytes, fileCount);
     }
 
     /**
-     * Rate Limiting 정책을 검증합니다 (Port 구현).
+     * Rate Limiting 정책을 검증합니다.
      *
      * @param policyKey 정책 식별자
      * @param currentRequestCount 현재 시간당 요청 횟수
@@ -106,8 +108,7 @@ public class UploadPolicyValidationService implements ValidateUploadPolicyUseCas
      * @throws PolicyNotFoundException 정책을 찾을 수 없는 경우
      * @throws com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException Rate Limit 초과 시
      */
-    @Override
-    public void validateRateLimit(
+    private void validateRateLimit(
             PolicyKey policyKey,
             int currentRequestCount,
             int currentUploadCount

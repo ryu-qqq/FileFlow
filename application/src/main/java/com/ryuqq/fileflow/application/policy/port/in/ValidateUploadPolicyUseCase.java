@@ -34,6 +34,7 @@ public interface ValidateUploadPolicyUseCase {
      * @param userType 사용자 타입
      * @param serviceType 서비스 타입
      * @param fileType 파일 타입
+     * @param fileFormat 파일 포맷 (예: "jpg", "png", "pdf", Optional)
      * @param fileSizeBytes 파일 크기 (bytes)
      * @param fileCount 파일 개수
      * @param currentRequestCount 현재 시간당 요청 횟수 (Rate Limiting 검증용, Optional)
@@ -44,21 +45,14 @@ public interface ValidateUploadPolicyUseCase {
             String userType,
             String serviceType,
             FileType fileType,
+            String fileFormat,
             long fileSizeBytes,
             int fileCount,
             Integer currentRequestCount,
             Integer currentUploadCount
     ) {
         public ValidateUploadPolicyCommand {
-            if (tenantId == null || tenantId.isBlank()) {
-                throw new IllegalArgumentException("TenantId must not be null or blank");
-            }
-            if (userType == null || userType.isBlank()) {
-                throw new IllegalArgumentException("UserType must not be null or blank");
-            }
-            if (serviceType == null || serviceType.isBlank()) {
-                throw new IllegalArgumentException("ServiceType must not be null or blank");
-            }
+            // tenantId, userType, serviceType 검증은 PolicyKey.of()에서 수행됨
             if (fileType == null) {
                 throw new IllegalArgumentException("FileType must not be null");
             }
