@@ -33,6 +33,8 @@ public class UploadSessionService implements
         CompleteUploadSessionUseCase,
         CancelUploadSessionUseCase {
 
+    private static final int SINGLE_FILE_UPLOAD_COUNT = 1;
+
     private final UploadSessionRepository uploadSessionRepository;
     private final PresignedUrlGenerator presignedUrlGenerator;
     private final ValidateUploadPolicyUseCase validateUploadPolicyUseCase;
@@ -97,7 +99,7 @@ public class UploadSessionService implements
                         fileType,
                         extractFileFormat(command.fileName()),
                         command.fileSize(),
-                        1, // 단일 파일 업로드
+                        SINGLE_FILE_UPLOAD_COUNT,
                         null, // Rate limiting은 별도로 체크
                         null
                 );
