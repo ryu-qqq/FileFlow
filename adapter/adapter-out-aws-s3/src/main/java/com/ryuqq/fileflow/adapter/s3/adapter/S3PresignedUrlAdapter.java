@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 /**
@@ -162,8 +163,10 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
             String uploadPath
     ) {
         String presignedUrl = presignedRequest.url().toString();
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusMinutes(s3Properties.getPresignedUrlExpirationMinutes());
+        LocalDateTime expiresAt = LocalDateTime.ofInstant(
+                presignedRequest.expiration(),
+                ZoneId.systemDefault()
+        );
 
         return PresignedUrlInfo.of(presignedUrl, uploadPath, expiresAt);
     }

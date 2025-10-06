@@ -41,9 +41,7 @@ public class S3Properties {
         this.bucketName = bucketName;
         this.region = region;
         this.presignedUrlExpirationMinutes = presignedUrlExpirationMinutes;
-        this.pathPrefix = (pathPrefix != null && !pathPrefix.trim().isEmpty())
-            ? pathPrefix.trim()
-            : "";
+        this.pathPrefix = pathPrefix.trim();
     }
 
     public String getBucketName() {

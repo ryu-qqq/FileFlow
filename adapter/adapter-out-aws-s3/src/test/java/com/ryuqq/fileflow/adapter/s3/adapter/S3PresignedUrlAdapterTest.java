@@ -15,6 +15,10 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 import java.net.URL;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
 
 /**
  * S3PresignedUrlAdapter 단위 테스트
@@ -58,9 +63,11 @@ class S3PresignedUrlAdapterTest {
         // Given
         FileUploadCommand command = createTestCommand();
         URL mockUrl = new URL("https://test-bucket.s3.ap-northeast-2.amazonaws.com/uploads/user123/uuid/test.jpg?signature=xxx");
+        Instant fixedExpiration = Instant.now().plus(15, ChronoUnit.MINUTES);
 
         PresignedPutObjectRequest mockPresignedRequest = mock(PresignedPutObjectRequest.class);
         when(mockPresignedRequest.url()).thenReturn(mockUrl);
+        when(mockPresignedRequest.expiration()).thenReturn(fixedExpiration);
         when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
                 .thenReturn(mockPresignedRequest);
 
@@ -92,9 +99,11 @@ class S3PresignedUrlAdapterTest {
 
         FileUploadCommand command = createTestCommand();
         URL mockUrl = new URL("https://test-bucket.s3.ap-northeast-2.amazonaws.com/user123/uuid/test.jpg?signature=xxx");
+        Instant fixedExpiration = Instant.now().plus(15, ChronoUnit.MINUTES);
 
         PresignedPutObjectRequest mockPresignedRequest = mock(PresignedPutObjectRequest.class);
         when(mockPresignedRequest.url()).thenReturn(mockUrl);
+        when(mockPresignedRequest.expiration()).thenReturn(fixedExpiration);
         when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
                 .thenReturn(mockPresignedRequest);
 
@@ -112,18 +121,26 @@ class S3PresignedUrlAdapterTest {
         // Given
         FileUploadCommand command = createTestCommand();
         URL mockUrl = new URL("https://test-bucket.s3.ap-northeast-2.amazonaws.com/test.jpg");
+        Instant fixedExpiration = Instant.now().plus(15, ChronoUnit.MINUTES);
+        ArgumentCaptor<PutObjectPresignRequest> captor = ArgumentCaptor.forClass(PutObjectPresignRequest.class);
 
         PresignedPutObjectRequest mockPresignedRequest = mock(PresignedPutObjectRequest.class);
         when(mockPresignedRequest.url()).thenReturn(mockUrl);
-        when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
+        when(mockPresignedRequest.expiration()).thenReturn(fixedExpiration);
+        when(s3Presigner.presignPutObject(captor.capture()))
                 .thenReturn(mockPresignedRequest);
 
         // When
         adapter.generate(command);
 
         // Then
-        verify(s3Presigner).presignPutObject(any(PutObjectPresignRequest.class));
-        // Note: 실제 PutObjectRequest 내용 검증은 통합 테스트에서 수행
+        PutObjectRequest capturedRequest = captor.getValue().putObjectRequest();
+        assertThat(capturedRequest.contentType()).isEqualTo(command.contentType());
+        assertThat(capturedRequest.contentLength()).isEqualTo(command.fileSizeBytes());
+        assertThat(capturedRequest.metadata()).hasSize(3)
+                .containsEntry("x-amz-meta-uploader-id", command.uploaderId())
+                .containsEntry("x-amz-meta-original-filename", command.fileName())
+                .containsEntry("x-amz-meta-file-type", command.fileType().name());
     }
 
     @Test
@@ -159,9 +176,12 @@ class S3PresignedUrlAdapterTest {
         // Given
         FileUploadCommand command = createTestCommand();
         URL mockUrl = new URL("https://test-bucket.s3.ap-northeast-2.amazonaws.com/test.jpg");
+        Instant fixedExpiration = Instant.now().plus(15, ChronoUnit.MINUTES);
+        LocalDateTime expectedExpiration = LocalDateTime.ofInstant(fixedExpiration, ZoneId.systemDefault());
 
         PresignedPutObjectRequest mockPresignedRequest = mock(PresignedPutObjectRequest.class);
         when(mockPresignedRequest.url()).thenReturn(mockUrl);
+        when(mockPresignedRequest.expiration()).thenReturn(fixedExpiration);
         when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
                 .thenReturn(mockPresignedRequest);
 
@@ -169,8 +189,7 @@ class S3PresignedUrlAdapterTest {
         PresignedUrlInfo result = adapter.generate(command);
 
         // Then
-        assertThat(result.expiresAt()).isAfter(java.time.LocalDateTime.now().plusMinutes(14));
-        assertThat(result.expiresAt()).isBefore(java.time.LocalDateTime.now().plusMinutes(16));
+        assertThat(result.expiresAt()).isEqualTo(expectedExpiration);
     }
 
     /**
