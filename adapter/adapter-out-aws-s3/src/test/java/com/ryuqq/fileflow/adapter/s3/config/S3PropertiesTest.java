@@ -25,7 +25,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 15L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         );
 
         // Then
@@ -43,7 +46,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 15L,
-                "   "
+                "   ",
+                100,
+                10000L,
+                30000L
         );
 
         // Then
@@ -58,7 +64,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 15L,
-                null
+                null,
+                100,
+                10000L,
+                30000L
         );
 
         // Then
@@ -73,7 +82,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 15L,
-                "  uploads  "
+                "  uploads  ",
+                100,
+                10000L,
+                30000L
         );
 
         // Then
@@ -88,7 +100,10 @@ class S3PropertiesTest {
                 null,
                 "ap-northeast-2",
                 15L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("bucket name cannot be null or empty");
@@ -102,7 +117,10 @@ class S3PropertiesTest {
                 "   ",
                 "ap-northeast-2",
                 15L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("bucket name cannot be null or empty");
@@ -116,7 +134,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 null,
                 15L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("region cannot be null or empty");
@@ -130,7 +151,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "   ",
                 15L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("region cannot be null or empty");
@@ -144,7 +168,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 0L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("expiration minutes must be positive");
@@ -153,7 +180,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 -1L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("expiration minutes must be positive");
@@ -167,7 +197,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 61L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("expiration minutes cannot exceed 60 minutes");
@@ -181,7 +214,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 1L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         );
         assertThat(properties1.getPresignedUrlExpirationMinutes()).isEqualTo(1L);
 
@@ -190,7 +226,10 @@ class S3PropertiesTest {
                 "my-bucket",
                 "ap-northeast-2",
                 60L,
-                "uploads"
+                "uploads",
+                100,
+                10000L,
+                30000L
         );
         assertThat(properties60.getPresignedUrlExpirationMinutes()).isEqualTo(60L);
     }

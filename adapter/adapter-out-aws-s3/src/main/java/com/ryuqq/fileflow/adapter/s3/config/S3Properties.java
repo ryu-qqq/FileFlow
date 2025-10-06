@@ -18,6 +18,9 @@ public class S3Properties {
     private final String region;
     private final long presignedUrlExpirationMinutes;
     private final String pathPrefix;
+    private final int maxConnections;
+    private final long connectionTimeoutMillis;
+    private final long socketTimeoutMillis;
 
     /**
      * S3 프로퍼티를 생성합니다.
@@ -26,13 +29,19 @@ public class S3Properties {
      * @param region AWS 리전
      * @param presignedUrlExpirationMinutes Presigned URL 만료 시간(분)
      * @param pathPrefix S3 경로 접두사
+     * @param maxConnections HTTP 클라이언트 최대 연결 수
+     * @param connectionTimeoutMillis 연결 타임아웃(밀리초)
+     * @param socketTimeoutMillis 소켓 타임아웃(밀리초)
      * @throws IllegalArgumentException 유효하지 않은 설정값인 경우
      */
     public S3Properties(
             @Value("${aws.s3.bucket-name}") String bucketName,
             @Value("${aws.s3.region}") String region,
             @Value("${aws.s3.presigned-url-expiration-minutes:15}") long presignedUrlExpirationMinutes,
-            @Value("${aws.s3.path-prefix:}") String pathPrefix
+            @Value("${aws.s3.path-prefix:}") String pathPrefix,
+            @Value("${aws.s3.http.max-connections:100}") int maxConnections,
+            @Value("${aws.s3.http.connection-timeout-millis:10000}") long connectionTimeoutMillis,
+            @Value("${aws.s3.http.socket-timeout-millis:30000}") long socketTimeoutMillis
     ) {
         validateBucketName(bucketName);
         validateRegion(region);
@@ -41,7 +50,10 @@ public class S3Properties {
         this.bucketName = bucketName;
         this.region = region;
         this.presignedUrlExpirationMinutes = presignedUrlExpirationMinutes;
-        this.pathPrefix = pathPrefix.trim();
+        this.pathPrefix = (pathPrefix == null || pathPrefix.isBlank()) ? "" : pathPrefix.trim();
+        this.maxConnections = maxConnections;
+        this.connectionTimeoutMillis = connectionTimeoutMillis;
+        this.socketTimeoutMillis = socketTimeoutMillis;
     }
 
     public String getBucketName() {
@@ -58,6 +70,18 @@ public class S3Properties {
 
     public String getPathPrefix() {
         return pathPrefix;
+    }
+
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    public long getConnectionTimeoutMillis() {
+        return connectionTimeoutMillis;
+    }
+
+    public long getSocketTimeoutMillis() {
+        return socketTimeoutMillis;
     }
 
     // ========== Validation Methods ==========

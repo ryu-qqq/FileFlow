@@ -18,13 +18,14 @@ import java.time.Duration;
  * - DefaultCredentialsProvider를 사용하여 AWS 자격 증명 관리
  * - HTTPS 강제 사용
  * - Apache HTTP Client를 통한 커넥션 풀 관리
+ *
+ * HTTP 클라이언트 설정:
+ * - maxConnections: application.yml에서 설정 가능 (기본값: 100)
+ * - connectionTimeout: application.yml에서 설정 가능 (기본값: 10초)
+ * - socketTimeout: application.yml에서 설정 가능 (기본값: 30초)
  */
 @Configuration
 public class S3Config {
-
-    private static final int MAX_CONNECTIONS = 100;
-    private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(10);
-    private static final Duration SOCKET_TIMEOUT = Duration.ofSeconds(30);
 
     private final S3Properties s3Properties;
 
@@ -53,9 +54,9 @@ public class S3Config {
                 .region(Region.of(s3Properties.getRegion()))
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .httpClientBuilder(ApacheHttpClient.builder()
-                        .maxConnections(MAX_CONNECTIONS)
-                        .connectionTimeout(CONNECTION_TIMEOUT)
-                        .socketTimeout(SOCKET_TIMEOUT)
+                        .maxConnections(s3Properties.getMaxConnections())
+                        .connectionTimeout(Duration.ofMillis(s3Properties.getConnectionTimeoutMillis()))
+                        .socketTimeout(Duration.ofMillis(s3Properties.getSocketTimeoutMillis()))
                 )
                 .build();
     }
