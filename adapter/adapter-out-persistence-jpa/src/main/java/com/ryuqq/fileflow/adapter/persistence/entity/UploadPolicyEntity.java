@@ -4,7 +4,15 @@ import com.ryuqq.fileflow.adapter.persistence.converter.FileTypePoliciesConverte
 import com.ryuqq.fileflow.adapter.persistence.converter.RateLimitingConverter;
 import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
 import com.ryuqq.fileflow.domain.policy.vo.RateLimiting;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
