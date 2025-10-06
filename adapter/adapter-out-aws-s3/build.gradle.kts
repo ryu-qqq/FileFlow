@@ -24,8 +24,9 @@ dependencies {
     implementation(libs.aws.s3.transfer)
     implementation(libs.aws.apache.client)
 
-    // Spring Context
+    // Spring Framework
     implementation(libs.spring.context)
+    implementation(libs.spring.boot.configuration.processor)
 
     // ========================================
     // Test Dependencies
