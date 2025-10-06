@@ -4,7 +4,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.ryuqq.fileflow.domain.policy.vo.*;
+import com.ryuqq.fileflow.domain.policy.vo.ExcelPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
+import com.ryuqq.fileflow.domain.policy.vo.HtmlPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.ImagePolicy;
+import com.ryuqq.fileflow.domain.policy.vo.PdfPolicy;
 
 import java.io.IOException;
 

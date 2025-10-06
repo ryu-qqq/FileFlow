@@ -59,7 +59,7 @@ dependencies {
     // ========================================
     // Database
     // ========================================
-    runtimeOnly(libs.postgresql)
+    runtimeOnly(libs.mysql.connector)
 
     // ========================================
     // AWS SDK (from adapters)
@@ -71,7 +71,7 @@ dependencies {
     // ========================================
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.security.test)
-    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.mysql)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.rest.assured)
 }
