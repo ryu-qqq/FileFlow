@@ -113,7 +113,7 @@ public class UploadSessionService implements
                 command.contentType()
         );
 
-        // 3. UploadSession 생성
+        // 4. UploadSession 생성
         UploadSession session = UploadSession.create(
                 policyKey,
                 uploadRequest,
@@ -121,17 +121,17 @@ public class UploadSessionService implements
                 command.expirationMinutes()
         );
 
-        // 4. Presigned URL 발급
+        // 5. Presigned URL 발급
         PresignedUrlInfo presignedUrlInfo = presignedUrlGenerator.generatePresignedUrl(
                 command.fileName(),
                 command.contentType(),
                 command.expirationMinutes()
         );
 
-        // 5. 세션 저장
+        // 6. 세션 저장
         UploadSession savedSession = uploadSessionRepository.save(session);
 
-        // 6. Response 생성
+        // 7. Response 생성
         return new UploadSessionWithUrlResponse(
                 UploadSessionResponse.from(savedSession),
                 PresignedUrlResponse.from(presignedUrlInfo)
@@ -148,11 +148,7 @@ public class UploadSessionService implements
      */
     @Override
     public UploadSessionResponse getSession(String sessionId) {
-        validateSessionId(sessionId);
-
-        UploadSession session = uploadSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new UploadSessionNotFoundException(sessionId));
-
+        UploadSession session = findSessionById(sessionId);
         return UploadSessionResponse.from(session);
     }
 
@@ -167,10 +163,7 @@ public class UploadSessionService implements
      */
     @Override
     public UploadSessionResponse completeSession(String sessionId) {
-        validateSessionId(sessionId);
-
-        UploadSession session = uploadSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new UploadSessionNotFoundException(sessionId));
+        UploadSession session = findSessionById(sessionId);
 
         // 도메인 로직으로 상태 전이 (검증 포함)
         UploadSession completedSession = session.complete();
@@ -192,10 +185,7 @@ public class UploadSessionService implements
      */
     @Override
     public UploadSessionResponse cancelSession(String sessionId) {
-        validateSessionId(sessionId);
-
-        UploadSession session = uploadSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new UploadSessionNotFoundException(sessionId));
+        UploadSession session = findSessionById(sessionId);
 
         // 도메인 로직으로 상태 전이 (검증 포함)
         UploadSession cancelledSession = session.cancel();
@@ -212,6 +202,20 @@ public class UploadSessionService implements
         if (sessionId == null || sessionId.trim().isEmpty()) {
             throw new IllegalArgumentException("SessionId must not be null or empty");
         }
+    }
+
+    /**
+     * 세션 ID를 검증하고 세션을 조회합니다.
+     *
+     * @param sessionId 세션 ID
+     * @return 조회된 UploadSession
+     * @throws IllegalArgumentException sessionId가 null이거나 빈 문자열인 경우
+     * @throws UploadSessionNotFoundException 세션을 찾을 수 없는 경우
+     */
+    private UploadSession findSessionById(String sessionId) {
+        validateSessionId(sessionId);
+        return uploadSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new UploadSessionNotFoundException(sessionId));
     }
 
     // ========== Helper Methods ==========
