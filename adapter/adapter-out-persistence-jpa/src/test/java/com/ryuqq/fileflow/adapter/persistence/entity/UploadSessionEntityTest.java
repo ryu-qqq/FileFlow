@@ -191,8 +191,8 @@ class UploadSessionEntityTest {
     }
 
     @Test
-    @DisplayName("동일한 ID와 sessionId를 가진 엔티티는 같다고 판단한다")
-    void equals_sameIdAndSessionId() {
+    @DisplayName("동일한 sessionId를 가진 엔티티는 같다고 판단한다")
+    void equals_sameSessionId() {
         // given
         UploadSessionEntity entity1 = createInitiatedSession();
         UploadSessionEntity entity2 = createInitiatedSession();
