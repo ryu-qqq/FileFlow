@@ -23,6 +23,7 @@ public record CreateUploadSessionCommand(
         String uploaderId,
         int expirationMinutes
 ) {
+    private static final int MAX_EXPIRATION_MINUTES = 24 * 60; // 24 hours
     /**
      * Command를 검증하고 도메인 객체 생성에 필요한 PolicyKey를 반환합니다.
      * PolicyKeyValue 형식: {tenantId}:{userType}:{serviceType}
@@ -83,8 +84,8 @@ public record CreateUploadSessionCommand(
         if (expirationMinutes <= 0) {
             throw new IllegalArgumentException("ExpirationMinutes must be positive");
         }
-        if (expirationMinutes > 1440) { // 24시간
-            throw new IllegalArgumentException("ExpirationMinutes cannot exceed 1440 (24 hours)");
+        if (expirationMinutes > MAX_EXPIRATION_MINUTES) {
+            throw new IllegalArgumentException("ExpirationMinutes cannot exceed " + MAX_EXPIRATION_MINUTES + " (24 hours)");
         }
     }
 }

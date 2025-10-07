@@ -231,7 +231,7 @@ public final class UploadSession {
      * @throws IllegalStateException 취소할 수 없는 상태인 경우
      */
     public UploadSession cancel() {
-        if (status == UploadStatus.COMPLETED || status == UploadStatus.FAILED) {
+        if (status != UploadStatus.PENDING && status != UploadStatus.UPLOADING) {
             throw new IllegalStateException(
                     "Cannot cancel upload. Current status: " + status
             );
