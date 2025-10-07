@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.application.upload.port.out;
 
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
-import com.ryuqq.fileflow.domain.upload.model.PresignedUrlInfo;
+import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 
 /**
  * Presigned URL 생성을 위한 Output Port

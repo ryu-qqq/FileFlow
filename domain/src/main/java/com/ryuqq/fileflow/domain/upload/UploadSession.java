@@ -1,7 +1,9 @@
-package com.ryuqq.fileflow.domain.upload.model;
+package com.ryuqq.fileflow.domain.upload;
 
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.event.UploadSessionCreated;
+import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
+import com.ryuqq.fileflow.domain.upload.vo.UploadStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
