@@ -36,24 +36,24 @@ public class UploadSessionService implements
 
     private static final int SINGLE_FILE_UPLOAD_COUNT = 1;
 
-    private final UploadSessionPort uploadSessionRepository;
+    private final UploadSessionPort uploadSessionPort;
     private final GeneratePresignedUrlPort generatePresignedUrlPort;
     private final ValidateUploadPolicyUseCase validateUploadPolicyUseCase;
 
     /**
      * Constructor Injection (NO Lombok)
      *
-     * @param uploadSessionRepository 세션 저장소
+     * @param uploadSessionPort 세션 저장소
      * @param generatePresignedUrlPort Presigned URL 생성 Port
      * @param validateUploadPolicyUseCase 정책 검증 UseCase
      */
     public UploadSessionService(
-            UploadSessionPort uploadSessionRepository,
+            UploadSessionPort uploadSessionPort,
             GeneratePresignedUrlPort generatePresignedUrlPort,
             ValidateUploadPolicyUseCase validateUploadPolicyUseCase
     ) {
-        this.uploadSessionRepository = Objects.requireNonNull(
-                uploadSessionRepository,
+        this.uploadSessionPort = Objects.requireNonNull(
+            uploadSessionPort,
                 " must not be null"
         );
         this.generatePresignedUrlPort = Objects.requireNonNull(
@@ -136,7 +136,7 @@ public class UploadSessionService implements
         PresignedUrlInfo presignedUrlInfo = generatePresignedUrlPort.generate(fileUploadCommand);
 
         // 7. 세션 저장
-        UploadSession savedSession = uploadSessionRepository.save(session);
+        UploadSession savedSession = uploadSessionPort.save(session);
 
         // 8. Response 생성
         return new UploadSessionWithUrlResponse(
@@ -176,7 +176,7 @@ public class UploadSessionService implements
         UploadSession completedSession = session.complete();
 
         // 변경된 세션 저장
-        UploadSession savedSession = uploadSessionRepository.save(completedSession);
+        UploadSession savedSession = uploadSessionPort.save(completedSession);
 
         return UploadSessionResponse.from(savedSession);
     }
@@ -198,7 +198,7 @@ public class UploadSessionService implements
         UploadSession cancelledSession = session.cancel();
 
         // 변경된 세션 저장
-        UploadSession savedSession = uploadSessionRepository.save(cancelledSession);
+        UploadSession savedSession = uploadSessionPort.save(cancelledSession);
 
         return UploadSessionResponse.from(savedSession);
     }
@@ -217,7 +217,7 @@ public class UploadSessionService implements
         if (sessionId == null || sessionId.trim().isEmpty()) {
             throw new IllegalArgumentException("SessionId must not be null or empty");
         }
-        return uploadSessionRepository.findById(sessionId)
+        return uploadSessionPort.findById(sessionId)
                 .orElseThrow(() -> new UploadSessionNotFoundException(sessionId));
     }
 
