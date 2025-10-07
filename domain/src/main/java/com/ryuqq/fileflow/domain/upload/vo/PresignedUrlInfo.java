@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.upload.model;
+package com.ryuqq.fileflow.domain.upload.vo;
 
 import java.time.LocalDateTime;
 

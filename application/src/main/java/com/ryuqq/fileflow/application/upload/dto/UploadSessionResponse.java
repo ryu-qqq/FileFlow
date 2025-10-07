@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.application.upload.dto;
 
-import com.ryuqq.fileflow.domain.upload.model.UploadSession;
-import com.ryuqq.fileflow.domain.upload.model.UploadStatus;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
+import com.ryuqq.fileflow.domain.upload.vo.UploadStatus;
 
 import java.time.LocalDateTime;
 

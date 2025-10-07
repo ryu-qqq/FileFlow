@@ -1,7 +1,8 @@
-package com.ryuqq.fileflow.domain.upload.model;
+package com.ryuqq.fileflow.domain.upload.vo;
 
 import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.event.UploadSessionCreated;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

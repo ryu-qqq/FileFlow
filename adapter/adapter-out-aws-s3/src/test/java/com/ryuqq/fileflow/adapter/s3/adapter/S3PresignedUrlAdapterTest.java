@@ -4,7 +4,7 @@ import com.ryuqq.fileflow.adapter.s3.config.S3Properties;
 import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
-import com.ryuqq.fileflow.domain.upload.model.PresignedUrlInfo;
+import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
