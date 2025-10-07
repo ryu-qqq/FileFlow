@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.adapter.s3.adapter;
 import com.ryuqq.fileflow.adapter.s3.config.S3Properties;
 import com.ryuqq.fileflow.application.upload.port.out.GeneratePresignedUrlPort;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
-import com.ryuqq.fileflow.domain.upload.model.PresignedUrlInfo;
+import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -91,13 +91,7 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
         return convertToPresignedUrlInfo(presignedRequest, uploadPath);
     }
 
-    /**
-     * 업로드 경로를 생성합니다.
-     * 형식: {pathPrefix}/{uploaderId}/{UUID}/{fileName}
-     *
-     * @param command 파일 업로드 명령
-     * @return S3 업로드 경로
-     */
+    // 형식: {pathPrefix}/{uploaderId}/{UUID}/{fileName}
     private String buildUploadPath(FileUploadCommand command) {
         String prefix = s3Properties.getPathPrefix();
         String uploaderId = command.uploaderId();
@@ -111,14 +105,6 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
         return String.format("%s/%s/%s/%s", prefix, uploaderId, uniqueId, fileName);
     }
 
-    /**
-     * PutObjectRequest를 생성합니다.
-     * Content-Type, Content-Length, 커스텀 메타데이터를 포함합니다.
-     *
-     * @param uploadPath S3 업로드 경로
-     * @param command 파일 업로드 명령
-     * @return PutObjectRequest
-     */
     private PutObjectRequest buildPutObjectRequest(String uploadPath, FileUploadCommand command) {
         return PutObjectRequest.builder()
                 .bucket(s3Properties.getBucketName())
@@ -133,13 +119,6 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
                 .build();
     }
 
-    /**
-     * Presigned URL 요청을 생성합니다.
-     * 설정된 만료 시간으로 서명된 URL을 생성합니다.
-     *
-     * @param putObjectRequest PutObject 요청
-     * @return Presigned PutObject 요청
-     */
     private PresignedPutObjectRequest generatePresignedRequest(PutObjectRequest putObjectRequest) {
         Duration signatureDuration = Duration.ofMinutes(s3Properties.getPresignedUrlExpirationMinutes());
 
@@ -151,13 +130,6 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
         return s3Presigner.presignPutObject(presignRequest);
     }
 
-    /**
-     * PresignedPutObjectRequest를 PresignedUrlInfo 도메인 객체로 변환합니다.
-     *
-     * @param presignedRequest Presigned 요청
-     * @param uploadPath 업로드 경로
-     * @return PresignedUrlInfo 도메인 객체
-     */
     private PresignedUrlInfo convertToPresignedUrlInfo(
             PresignedPutObjectRequest presignedRequest,
             String uploadPath
@@ -171,12 +143,6 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
         return PresignedUrlInfo.of(presignedUrl, uploadPath, expiresAt);
     }
 
-    /**
-     * FileUploadCommand를 검증합니다.
-     *
-     * @param command 검증할 명령
-     * @throws IllegalArgumentException command가 null인 경우
-     */
     private static void validateCommand(FileUploadCommand command) {
         if (command == null) {
             throw new IllegalArgumentException("FileUploadCommand cannot be null");

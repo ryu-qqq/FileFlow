@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.upload.model;
+package com.ryuqq.fileflow.domain.upload.vo;
 
 import com.ryuqq.fileflow.domain.policy.FileType;
 import org.junit.jupiter.api.DisplayName;
