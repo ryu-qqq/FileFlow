@@ -298,12 +298,12 @@ public class UploadSessionEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UploadSessionEntity that = (UploadSessionEntity) o;
-        return Objects.equals(id, that.id) && Objects.equals(sessionId, that.sessionId);
+        return Objects.equals(sessionId, that.sessionId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, sessionId);
+        return Objects.hash(sessionId);
     }
 
     @Override
