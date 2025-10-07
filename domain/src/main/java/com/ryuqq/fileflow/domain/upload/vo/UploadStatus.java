@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.upload.model;
+package com.ryuqq.fileflow.domain.upload.vo;
 
 /**
  * 업로드 세션의 상태를 나타내는 Enum

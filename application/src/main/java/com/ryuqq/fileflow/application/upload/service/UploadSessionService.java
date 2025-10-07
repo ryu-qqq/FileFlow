@@ -8,14 +8,15 @@ import com.ryuqq.fileflow.application.upload.port.in.CancelUploadSessionUseCase;
 import com.ryuqq.fileflow.application.upload.port.in.CompleteUploadSessionUseCase;
 import com.ryuqq.fileflow.application.upload.port.in.CreateUploadSessionUseCase;
 import com.ryuqq.fileflow.application.upload.port.in.GetUploadSessionUseCase;
-import com.ryuqq.fileflow.application.upload.port.out.PresignedUrlGenerator;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionRepository;
+import com.ryuqq.fileflow.application.upload.port.out.GeneratePresignedUrlPort;
+import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
+import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
-import com.ryuqq.fileflow.domain.upload.model.PresignedUrlInfo;
-import com.ryuqq.fileflow.domain.upload.model.UploadRequest;
-import com.ryuqq.fileflow.domain.upload.model.UploadSession;
+import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
+import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
 
 import java.util.Objects;
 
@@ -35,29 +36,29 @@ public class UploadSessionService implements
 
     private static final int SINGLE_FILE_UPLOAD_COUNT = 1;
 
-    private final UploadSessionRepository uploadSessionRepository;
-    private final PresignedUrlGenerator presignedUrlGenerator;
+    private final UploadSessionPort uploadSessionRepository;
+    private final GeneratePresignedUrlPort generatePresignedUrlPort;
     private final ValidateUploadPolicyUseCase validateUploadPolicyUseCase;
 
     /**
      * Constructor Injection (NO Lombok)
      *
      * @param uploadSessionRepository 세션 저장소
-     * @param presignedUrlGenerator Presigned URL 생성기
+     * @param generatePresignedUrlPort Presigned URL 생성 Port
      * @param validateUploadPolicyUseCase 정책 검증 UseCase
      */
     public UploadSessionService(
-            UploadSessionRepository uploadSessionRepository,
-            PresignedUrlGenerator presignedUrlGenerator,
+            UploadSessionPort uploadSessionRepository,
+            GeneratePresignedUrlPort generatePresignedUrlPort,
             ValidateUploadPolicyUseCase validateUploadPolicyUseCase
     ) {
         this.uploadSessionRepository = Objects.requireNonNull(
                 uploadSessionRepository,
-                "UploadSessionRepository must not be null"
+                " must not be null"
         );
-        this.presignedUrlGenerator = Objects.requireNonNull(
-                presignedUrlGenerator,
-                "PresignedUrlGenerator must not be null"
+        this.generatePresignedUrlPort = Objects.requireNonNull(
+                generatePresignedUrlPort,
+                "GeneratePresignedUrlPort must not be null"
         );
         this.validateUploadPolicyUseCase = Objects.requireNonNull(
                 validateUploadPolicyUseCase,
@@ -121,17 +122,23 @@ public class UploadSessionService implements
                 command.expirationMinutes()
         );
 
-        // 5. Presigned URL 발급
-        PresignedUrlInfo presignedUrlInfo = presignedUrlGenerator.generatePresignedUrl(
+        // 5. FileUploadCommand 생성
+        FileUploadCommand fileUploadCommand = FileUploadCommand.of(
+                policyKey,
+                command.uploaderId(),
                 command.fileName(),
-                command.contentType(),
-                command.expirationMinutes()
+                fileType,
+                command.fileSize(),
+                command.contentType()
         );
 
-        // 6. 세션 저장
+        // 6. Presigned URL 발급
+        PresignedUrlInfo presignedUrlInfo = generatePresignedUrlPort.generate(fileUploadCommand);
+
+        // 7. 세션 저장
         UploadSession savedSession = uploadSessionRepository.save(session);
 
-        // 7. Response 생성
+        // 8. Response 생성
         return new UploadSessionWithUrlResponse(
                 UploadSessionResponse.from(savedSession),
                 PresignedUrlResponse.from(presignedUrlInfo)
@@ -196,13 +203,7 @@ public class UploadSessionService implements
         return UploadSessionResponse.from(savedSession);
     }
 
-    // ========== Validation Methods ==========
-
-    private void validateSessionId(String sessionId) {
-        if (sessionId == null || sessionId.trim().isEmpty()) {
-            throw new IllegalArgumentException("SessionId must not be null or empty");
-        }
-    }
+    // ========== Helper Methods ==========
 
     /**
      * 세션 ID를 검증하고 세션을 조회합니다.
@@ -213,12 +214,12 @@ public class UploadSessionService implements
      * @throws UploadSessionNotFoundException 세션을 찾을 수 없는 경우
      */
     private UploadSession findSessionById(String sessionId) {
-        validateSessionId(sessionId);
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new IllegalArgumentException("SessionId must not be null or empty");
+        }
         return uploadSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new UploadSessionNotFoundException(sessionId));
     }
-
-    // ========== Helper Methods ==========
 
     /**
      * 파일명에서 파일 포맷을 추출합니다.

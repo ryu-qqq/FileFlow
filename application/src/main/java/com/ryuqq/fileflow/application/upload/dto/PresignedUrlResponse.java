@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.upload.dto;
 
-import com.ryuqq.fileflow.domain.upload.model.PresignedUrlInfo;
+import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 
 import java.time.LocalDateTime;
 

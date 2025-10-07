@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.persistence.entity;
 
+import com.ryuqq.fileflow.domain.upload.vo.UploadStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,8 +20,8 @@ import java.util.Objects;
  *
  * 비즈니스 규칙:
  * - 세션은 Presigned URL 발급 시 생성됩니다
- * - 세션 상태는 INITIATED → IN_PROGRESS → COMPLETED/FAILED/EXPIRED 순으로 전환됩니다
- * - 만료된 세션은 자동으로 정리될 수 있습니다
+ * - 세션 상태는 UploadSession 도메인 모델에서 관리됩니다
+ * - Entity는 데이터 저장을 위한 매핑만 담당합니다
  * - Lombok을 사용하지 않으므로 모든 메서드를 수동으로 구현합니다
  *
  * @author sangwon-ryu
@@ -176,59 +177,6 @@ public class UploadSessionEntity {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // ========== Business Methods ==========
-
-    /**
-     * 업로드 시작
-     *
-     * @param s3Key S3 객체 키
-     */
-    public void startUpload(String s3Key) {
-        this.status = UploadStatus.IN_PROGRESS;
-        this.s3Key = s3Key;
-        this.uploadStartedAt = LocalDateTime.now();
-    }
-
-    /**
-     * 업로드 완료
-     */
-    public void completeUpload() {
-        this.status = UploadStatus.COMPLETED;
-        this.uploadCompletedAt = LocalDateTime.now();
-    }
-
-    /**
-     * 업로드 실패
-     */
-    public void failUpload() {
-        this.status = UploadStatus.FAILED;
-    }
-
-    /**
-     * 세션 만료
-     */
-    public void expireSession() {
-        this.status = UploadStatus.EXPIRED;
-    }
-
-    /**
-     * 세션이 만료되었는지 확인
-     *
-     * @return 만료 여부
-     */
-    public boolean isExpired() {
-        return LocalDateTime.now().isAfter(this.expiresAt);
-    }
-
-    /**
-     * 업로드가 완료되었는지 확인
-     *
-     * @return 완료 여부
-     */
-    public boolean isCompleted() {
-        return this.status == UploadStatus.COMPLETED;
-    }
-
     // ========== Getters ==========
 
     public Long getId() {
@@ -324,16 +272,5 @@ public class UploadSessionEntity {
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';
-    }
-
-    /**
-     * 업로드 세션 상태
-     */
-    public enum UploadStatus {
-        INITIATED,      // 세션 생성됨 (Presigned URL 발급)
-        IN_PROGRESS,    // 업로드 진행 중
-        COMPLETED,      // 업로드 완료
-        FAILED,         // 업로드 실패
-        EXPIRED         // 세션 만료
     }
 }

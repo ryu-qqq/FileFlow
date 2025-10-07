@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.upload.port.out;
 
-import com.ryuqq.fileflow.domain.upload.model.UploadSession;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
 
 import java.util.Optional;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
  *
  * @author sangwon-ryu
  */
-public interface UploadSessionRepository {
+public interface UploadSessionPort {
 
     /**
      * 업로드 세션을 저장합니다.
