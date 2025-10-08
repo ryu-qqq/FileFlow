@@ -199,9 +199,10 @@ public class S3MultipartAdapter {
         while (remainingBytes > 0) {
             long partSize = Math.min(TARGET_PART_SIZE, remainingBytes);
 
-            // 마지막 파트가 너무 작은 경우 이전 파트와 병합
-            if (remainingBytes - partSize > 0 && remainingBytes - partSize < MIN_PART_SIZE) {
-                partSize = remainingBytes;
+            // 마지막 파트가 MIN_PART_SIZE보다 작아지는 것을 방지하기 위해 파트 크기를 조정합니다.
+            if (remainingBytes > partSize && remainingBytes - partSize < MIN_PART_SIZE) {
+                // 남은 용량을 두 개의 파트로 균등하게 분할
+                partSize = (long) Math.ceil((double) remainingBytes / 2.0);
             }
 
             long startByte = currentOffset;
