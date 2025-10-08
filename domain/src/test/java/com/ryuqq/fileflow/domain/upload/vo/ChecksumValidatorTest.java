@@ -1,7 +1,6 @@
 package com.ryuqq.fileflow.domain.upload.vo;
 
 import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,13 +9,7 @@ import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("ChecksumValidator 테스트")
 class ChecksumValidatorTest {
-
-    private ChecksumValidator validator;
-
-    @BeforeEach
-    void setUp() {
-        validator = new ChecksumValidator();
-    }
+    // ChecksumValidator는 static 유틸리티 클래스이므로 인스턴스 생성 불필요
 
     @Nested
     @DisplayName("기본 검증 테스트")
@@ -30,7 +23,7 @@ class ChecksumValidatorTest {
             CheckSum checksum2 = CheckSum.sha256("a".repeat(64));
 
             // when
-            boolean result = validator.validate(checksum1, checksum2);
+            boolean result = ChecksumValidator.validate(checksum1, checksum2);
 
             // then
             assertThat(result).isTrue();
@@ -44,7 +37,7 @@ class ChecksumValidatorTest {
             CheckSum checksum2 = CheckSum.sha256("b".repeat(64));
 
             // when
-            boolean result = validator.validate(checksum1, checksum2);
+            boolean result = ChecksumValidator.validate(checksum1, checksum2);
 
             // then
             assertThat(result).isFalse();
@@ -58,7 +51,7 @@ class ChecksumValidatorTest {
             CheckSum upperCase = CheckSum.sha256("A".repeat(64));
 
             // when
-            boolean result = validator.validate(lowerCase, upperCase);
+            boolean result = ChecksumValidator.validate(lowerCase, upperCase);
 
             // then
             assertThat(result).isTrue();
@@ -72,7 +65,7 @@ class ChecksumValidatorTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    validator.validate(null, actual)
+                    ChecksumValidator.validate(null, actual)
             ).isInstanceOf(IllegalArgumentException.class)
              .hasMessageContaining("Expected checksum cannot be null");
         }
@@ -85,7 +78,7 @@ class ChecksumValidatorTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    validator.validate(expected, null)
+                    ChecksumValidator.validate(expected, null)
             ).isInstanceOf(IllegalArgumentException.class)
              .hasMessageContaining("Actual checksum cannot be null");
         }
@@ -104,7 +97,7 @@ class ChecksumValidatorTest {
 
             // when & then
             assertThatNoException().isThrownBy(() ->
-                    validator.validateOrThrow(checksum1, checksum2)
+                    ChecksumValidator.validateOrThrow(checksum1, checksum2)
             );
         }
 
@@ -117,7 +110,7 @@ class ChecksumValidatorTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    validator.validateOrThrow(expected, actual)
+                    ChecksumValidator.validateOrThrow(expected, actual)
             ).isInstanceOf(ChecksumValidator.ChecksumMismatchException.class)
              .hasMessageContaining("Checksum mismatch")
              .hasMessageContaining("SHA-256");
@@ -132,7 +125,7 @@ class ChecksumValidatorTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    validator.validateOrThrow(sha256, md5)
+                    ChecksumValidator.validateOrThrow(sha256, md5)
             ).isInstanceOf(ChecksumValidator.ChecksumMismatchException.class);
         }
     }
@@ -153,7 +146,7 @@ class ChecksumValidatorTest {
             CheckSum actual = CheckSum.sha256("b".repeat(64));
 
             // when
-            boolean result = validator.validateAny(expected, actual);
+            boolean result = ChecksumValidator.validateAny(expected, actual);
 
             // then
             assertThat(result).isTrue();
@@ -171,7 +164,7 @@ class ChecksumValidatorTest {
             CheckSum actual = CheckSum.sha256("d".repeat(64));
 
             // when
-            boolean result = validator.validateAny(expected, actual);
+            boolean result = ChecksumValidator.validateAny(expected, actual);
 
             // then
             assertThat(result).isFalse();
@@ -185,7 +178,7 @@ class ChecksumValidatorTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    validator.validateAny(null, actual)
+                    ChecksumValidator.validateAny(null, actual)
             ).isInstanceOf(IllegalArgumentException.class)
              .hasMessageContaining("Expected checksums cannot be null or empty");
         }
@@ -199,7 +192,7 @@ class ChecksumValidatorTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    validator.validateAny(expected, actual)
+                    ChecksumValidator.validateAny(expected, actual)
             ).isInstanceOf(IllegalArgumentException.class)
              .hasMessageContaining("Expected checksums cannot be null or empty");
         }
@@ -216,7 +209,7 @@ class ChecksumValidatorTest {
             CheckSum actual = CheckSum.sha256("b".repeat(64));
 
             // when
-            boolean result = validator.validateAny(expected, actual);
+            boolean result = ChecksumValidator.validateAny(expected, actual);
 
             // then
             assertThat(result).isTrue();
@@ -235,7 +228,7 @@ class ChecksumValidatorTest {
             CheckSum checksum2 = CheckSum.sha256("b".repeat(64));
 
             // when
-            boolean result = validator.hasSameAlgorithm(checksum1, checksum2);
+            boolean result = ChecksumValidator.hasSameAlgorithm(checksum1, checksum2);
 
             // then
             assertThat(result).isTrue();
@@ -249,7 +242,7 @@ class ChecksumValidatorTest {
             CheckSum md5 = CheckSum.md5("b".repeat(32));
 
             // when
-            boolean result = validator.hasSameAlgorithm(sha256, md5);
+            boolean result = ChecksumValidator.hasSameAlgorithm(sha256, md5);
 
             // then
             assertThat(result).isFalse();
@@ -262,7 +255,7 @@ class ChecksumValidatorTest {
             CheckSum checksum = CheckSum.sha256("a".repeat(64));
 
             // when
-            boolean result = validator.isRecommendedAlgorithm(checksum);
+            boolean result = ChecksumValidator.isRecommendedAlgorithm(checksum);
 
             // then
             assertThat(result).isTrue();
@@ -275,7 +268,7 @@ class ChecksumValidatorTest {
             CheckSum checksum = CheckSum.sha512("a".repeat(128));
 
             // when
-            boolean result = validator.isRecommendedAlgorithm(checksum);
+            boolean result = ChecksumValidator.isRecommendedAlgorithm(checksum);
 
             // then
             assertThat(result).isTrue();
@@ -288,7 +281,7 @@ class ChecksumValidatorTest {
             CheckSum checksum = CheckSum.md5("a".repeat(32));
 
             // when
-            boolean result = validator.isRecommendedAlgorithm(checksum);
+            boolean result = ChecksumValidator.isRecommendedAlgorithm(checksum);
 
             // then
             assertThat(result).isFalse();
@@ -302,7 +295,7 @@ class ChecksumValidatorTest {
 
             // when & then
             assertThatThrownBy(() ->
-                    validator.hasSameAlgorithm(checksum, null)
+                    ChecksumValidator.hasSameAlgorithm(checksum, null)
             ).isInstanceOf(IllegalArgumentException.class)
              .hasMessageContaining("cannot be null");
         }

@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.upload.vo;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * 파일 MIME 타입 Value Object
@@ -14,6 +15,11 @@ import java.util.Set;
  * - Content-Type 헤더 설정
  */
 public record ContentType(String value) {
+
+    // MIME 타입 형식 검증용 Pattern (성능 최적화)
+    private static final Pattern MIME_TYPE_PATTERN = Pattern.compile(
+            "^[a-zA-Z0-9][a-zA-Z0-9!#$&^_.+-]*/[a-zA-Z0-9][a-zA-Z0-9!#$&^_.+-]*$"
+    );
 
     // 일반적인 이미지 MIME 타입
     private static final Set<String> IMAGE_TYPES = Set.of(
@@ -119,8 +125,8 @@ public record ContentType(String value) {
             throw new IllegalArgumentException("ContentType cannot be null or empty");
         }
 
-        // MIME 타입 형식 검증: type/subtype
-        if (!value.matches("^[a-zA-Z0-9][a-zA-Z0-9!#$&^_.+-]*/[a-zA-Z0-9][a-zA-Z0-9!#$&^_.+-]*$")) {
+        // MIME 타입 형식 검증: type/subtype (컴파일된 Pattern 사용으로 성능 최적화)
+        if (!MIME_TYPE_PATTERN.matcher(value).matches()) {
             throw new IllegalArgumentException(
                     "ContentType must follow MIME type format (e.g., 'image/jpeg')"
             );
