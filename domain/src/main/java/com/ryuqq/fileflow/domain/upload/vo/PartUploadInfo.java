@@ -131,19 +131,15 @@ public record PartUploadInfo(
         long partSize = endByte - startByte + 1;
 
         // AWS S3 제약: 파트 크기는 5MB 이상, 5GB 이하
-        // 단, 마지막 파트는 5MB 미만 가능 (partNumber만으로는 마지막 파트 판단 불가하므로 경고만)
+        // 단, 마지막 파트는 5MB 미만 가능
         if (partSize > MAX_PART_SIZE) {
             throw new IllegalArgumentException(
                     "Part size (" + partSize + " bytes) exceeds maximum allowed size (" +
                     MAX_PART_SIZE + " bytes = 5GB)"
             );
         }
-
-        // 5MB 미만인 경우 경고 (마지막 파트가 아닌 경우 AWS S3에서 거부됨)
-        if (partSize < MIN_PART_SIZE) {
-            // 마지막 파트가 아닌 경우를 판단할 수 없으므로 경고만 출력
-            // 실제 업로드 시 AWS S3에서 검증됨
-        }
+        // Note: MIN_PART_SIZE(5MB) 미만 검증은 S3MultipartAdapter에서 파트 생성 시 처리됨
+        // PartUploadInfo는 마지막 파트 여부를 판단할 수 없으므로 여기서는 검증하지 않음
     }
 
     private static void validateExpiresAt(LocalDateTime expiresAt) {

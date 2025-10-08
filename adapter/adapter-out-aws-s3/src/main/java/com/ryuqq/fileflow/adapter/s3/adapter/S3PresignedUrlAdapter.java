@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -62,19 +63,9 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
             S3Properties s3Properties,
             S3MultipartAdapter s3MultipartAdapter
     ) {
-        if (s3Presigner == null) {
-            throw new IllegalArgumentException("S3Presigner cannot be null");
-        }
-        if (s3Properties == null) {
-            throw new IllegalArgumentException("S3Properties cannot be null");
-        }
-        if (s3MultipartAdapter == null) {
-            throw new IllegalArgumentException("S3MultipartAdapter cannot be null");
-        }
-
-        this.s3Presigner = s3Presigner;
-        this.s3Properties = s3Properties;
-        this.s3MultipartAdapter = s3MultipartAdapter;
+        this.s3Presigner = Objects.requireNonNull(s3Presigner, "S3Presigner cannot be null");
+        this.s3Properties = Objects.requireNonNull(s3Properties, "S3Properties cannot be null");
+        this.s3MultipartAdapter = Objects.requireNonNull(s3MultipartAdapter, "S3MultipartAdapter cannot be null");
     }
 
     /**
