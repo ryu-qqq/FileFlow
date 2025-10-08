@@ -88,10 +88,47 @@ public class UploadSessionService implements
             throw new IllegalArgumentException("CreateUploadSessionCommand must not be null");
         }
 
-        // 1. FileType 추출
+        // 1. 멱등성 키 생성 또는 추출
+        IdempotencyKey idempotencyKey = command.getOrGenerateIdempotencyKey();
+
+        // 2. 멱등성 키로 기존 세션 확인
+        if (command.hasIdempotencyKey()) {
+            java.util.Optional<UploadSession> existingSession = uploadSessionPort.findByIdempotencyKey(idempotencyKey);
+
+            if (existingSession.isPresent()) {
+                UploadSession session = existingSession.get();
+
+                // 이미 완료된 세션이면 에러
+                if (session.getStatus() == com.ryuqq.fileflow.domain.upload.vo.UploadStatus.COMPLETED) {
+                    throw new IllegalStateException(
+                            "Session already completed for idempotency key: " + idempotencyKey.value()
+                    );
+                }
+
+                // 기존 세션과 URL 정보 반환 (만료 여부와 관계없이 새 URL 발급)
+                PolicyKey policyKey = command.getPolicyKey();
+                FileType fileType = FileType.fromContentType(command.contentType());
+                FileUploadCommand fileUploadCommand = FileUploadCommand.of(
+                        policyKey,
+                        command.uploaderId(),
+                        command.fileName(),
+                        fileType,
+                        command.fileSize(),
+                        command.contentType()
+                );
+                PresignedUrlInfo presignedUrlInfo = generatePresignedUrlPort.generate(fileUploadCommand);
+
+                return new UploadSessionWithUrlResponse(
+                        UploadSessionResponse.from(session),
+                        PresignedUrlResponse.from(presignedUrlInfo)
+                );
+            }
+        }
+
+        // 3. FileType 추출
         FileType fileType = FileType.fromContentType(command.contentType());
 
-        // 2. 정책 검증 (Epic 1)
+        // 4. 정책 검증 (Epic 1)
         PolicyKey policyKey = command.getPolicyKey();
         ValidateUploadPolicyUseCase.ValidateUploadPolicyCommand validateCommand =
                 new ValidateUploadPolicyUseCase.ValidateUploadPolicyCommand(
@@ -107,16 +144,16 @@ public class UploadSessionService implements
                 );
         validateUploadPolicyUseCase.validate(validateCommand);
 
-        // 3. UploadRequest 생성
+        // 5. UploadRequest 생성 (멱등성 키 사용)
         UploadRequest uploadRequest = UploadRequest.of(
                 command.fileName(),
                 fileType,
                 command.fileSize(),
                 command.contentType(),
-                IdempotencyKey.generate()
+                idempotencyKey
         );
 
-        // 4. UploadSession 생성
+        // 6. UploadSession 생성
         UploadSession session = UploadSession.create(
                 policyKey,
                 uploadRequest,
@@ -124,7 +161,7 @@ public class UploadSessionService implements
                 command.expirationMinutes()
         );
 
-        // 5. FileUploadCommand 생성
+        // 7. FileUploadCommand 생성
         FileUploadCommand fileUploadCommand = FileUploadCommand.of(
                 policyKey,
                 command.uploaderId(),
@@ -134,13 +171,13 @@ public class UploadSessionService implements
                 command.contentType()
         );
 
-        // 6. Presigned URL 발급
+        // 8. Presigned URL 발급
         PresignedUrlInfo presignedUrlInfo = generatePresignedUrlPort.generate(fileUploadCommand);
 
-        // 7. 세션 저장
+        // 9. 세션 저장
         UploadSession savedSession = uploadSessionPort.save(session);
 
-        // 8. Response 생성
+        // 10. Response 생성
         return new UploadSessionWithUrlResponse(
                 UploadSessionResponse.from(savedSession),
                 PresignedUrlResponse.from(presignedUrlInfo)
@@ -232,7 +269,7 @@ public class UploadSessionService implements
     private String extractFileFormat(String fileName) {
         int lastDotIndex = fileName.lastIndexOf('.');
         if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
-            return fileName.substring(lastDotIndex + 1).toLowerCase();
+            return fileName.substring(lastDotIndex + 1).toLowerCase(java.util.Locale.ROOT);
         }
         return "";
     }

@@ -181,6 +181,38 @@ public final class UploadSession {
     }
 
     /**
+     * 클라이언트의 업로드 완료 확인을 처리합니다.
+     *
+     * S3 Event보다 먼저 클라이언트가 업로드 완료를 알릴 때 사용합니다.
+     * PENDING 상태에서만 COMPLETED로 전환 가능합니다.
+     *
+     * @return 완료 상태의 새로운 UploadSession 인스턴스
+     * @throws IllegalStateException 확인 가능한 상태가 아닌 경우
+     */
+    public UploadSession confirmUpload() {
+        if (status != UploadStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Cannot confirm upload. Current status: " + status +
+                    ". Only PENDING sessions can be confirmed."
+            );
+        }
+        if (isExpired()) {
+            throw new IllegalStateException("Session has expired");
+        }
+
+        return new UploadSession(
+                this.sessionId,
+                this.policyKey,
+                this.uploadRequest,
+                this.uploaderId,
+                UploadStatus.COMPLETED,
+                this.createdAt,
+                this.expiresAt,
+                this.domainEvents
+        );
+    }
+
+    /**
      * 업로드를 실패 상태로 전환합니다.
      *
      * @return 실패 상태의 새로운 UploadSession 인스턴스
