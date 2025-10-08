@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.domain.upload.vo;
 
 import com.ryuqq.fileflow.domain.upload.vo.*;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -71,6 +72,31 @@ public final class FileAsset {
             FileSize fileSize,
             ContentType contentType
     ) {
+        return create(sessionId, tenantId, s3Location, checksum, fileSize, contentType, Clock.systemDefaultZone());
+    }
+
+    /**
+     * 새로운 FileAsset을 생성합니다 (테스트용 Clock 주입).
+     *
+     * @param sessionId 업로드 세션 ID
+     * @param tenantId 테넌트 ID
+     * @param s3Location S3 위치 정보
+     * @param checksum 파일 체크섬
+     * @param fileSize 파일 크기
+     * @param contentType 콘텐츠 타입
+     * @param clock 시간 생성용 Clock
+     * @return FileAsset 인스턴스
+     * @throws IllegalArgumentException 유효하지 않은 입력 시
+     */
+    public static FileAsset create(
+            String sessionId,
+            TenantId tenantId,
+            S3Location s3Location,
+            CheckSum checksum,
+            FileSize fileSize,
+            ContentType contentType,
+            Clock clock
+    ) {
         validateSessionId(sessionId);
         validateTenantId(tenantId);
         validateS3Location(s3Location);
@@ -79,7 +105,7 @@ public final class FileAsset {
         validateContentType(contentType);
 
         FileId fileId = FileId.generate();
-        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime createdAt = LocalDateTime.now(clock);
 
         return new FileAsset(
                 fileId,
