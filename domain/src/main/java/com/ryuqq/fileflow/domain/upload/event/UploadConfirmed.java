@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.upload.event;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 /**
@@ -41,6 +42,37 @@ public record UploadConfirmed(
             String etag,
             LocalDateTime uploadedAt
     ) {
+        return of(sessionId, s3Bucket, s3Key, fileSizeBytes, etag, uploadedAt, Clock.systemDefaultZone());
+    }
+
+    /**
+     * UploadConfirmed 이벤트를 생성합니다 (테스트용 Clock 주입).
+     *
+     * @param sessionId 업로드 세션 ID
+     * @param s3Bucket S3 버킷명
+     * @param s3Key S3 객체 키
+     * @param fileSizeBytes 실제 업로드된 파일 크기
+     * @param etag S3 ETag (MD5 해시)
+     * @param uploadedAt 업로드 완료 시간
+     * @param clock 시간 검증용 Clock
+     * @return UploadConfirmed 인스턴스
+     * @throws IllegalArgumentException 유효하지 않은 입력 시
+     */
+    public static UploadConfirmed of(
+            String sessionId,
+            String s3Bucket,
+            String s3Key,
+            long fileSizeBytes,
+            String etag,
+            LocalDateTime uploadedAt,
+            Clock clock
+    ) {
+        validateSessionId(sessionId);
+        validateS3Bucket(s3Bucket);
+        validateS3Key(s3Key);
+        validateFileSizeBytes(fileSizeBytes);
+        validateEtag(etag);
+        validateUploadedAt(uploadedAt, clock);
         return new UploadConfirmed(sessionId, s3Bucket, s3Key, fileSizeBytes, etag, uploadedAt);
     }
 
@@ -48,12 +80,8 @@ public record UploadConfirmed(
      * Compact constructor로 검증 로직 수행
      */
     public UploadConfirmed {
-        validateSessionId(sessionId);
-        validateS3Bucket(s3Bucket);
-        validateS3Key(s3Key);
-        validateFileSizeBytes(fileSizeBytes);
-        validateEtag(etag);
-        validateUploadedAt(uploadedAt);
+        // Note: Validation은 factory method에서 수행
+        // Record는 불변이므로 생성 후 검증 불필요
     }
 
     // ========== Validation Methods ==========
@@ -88,11 +116,11 @@ public record UploadConfirmed(
         }
     }
 
-    private static void validateUploadedAt(LocalDateTime uploadedAt) {
+    private static void validateUploadedAt(LocalDateTime uploadedAt, Clock clock) {
         if (uploadedAt == null) {
             throw new IllegalArgumentException("UploadedAt cannot be null");
         }
-        if (uploadedAt.isAfter(LocalDateTime.now())) {
+        if (uploadedAt.isAfter(LocalDateTime.now(clock))) {
             throw new IllegalArgumentException("UploadedAt cannot be in the future");
         }
     }
