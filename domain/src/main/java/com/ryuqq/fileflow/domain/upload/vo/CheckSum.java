@@ -17,10 +17,14 @@ import java.util.Set;
  */
 public record CheckSum(String value, String algorithm) {
 
+    public static final String ALGORITHM_SHA256 = "SHA-256";
+    public static final String ALGORITHM_SHA512 = "SHA-512";
+    public static final String ALGORITHM_MD5 = "MD5";
+
     private static final Set<String> SUPPORTED_ALGORITHMS = Set.of(
-            "SHA-256",
-            "SHA-512",
-            "MD5"
+            ALGORITHM_SHA256,
+            ALGORITHM_SHA512,
+            ALGORITHM_MD5
     );
 
     private static final int SHA256_LENGTH = 64;  // 32 bytes * 2 (hex)
@@ -44,7 +48,7 @@ public record CheckSum(String value, String algorithm) {
      * @throws IllegalArgumentException 유효하지 않은 해시 값인 경우
      */
     public static CheckSum sha256(String value) {
-        return new CheckSum(value, "SHA-256");
+        return new CheckSum(value, ALGORITHM_SHA256);
     }
 
     /**
@@ -55,7 +59,7 @@ public record CheckSum(String value, String algorithm) {
      * @throws IllegalArgumentException 유효하지 않은 해시 값인 경우
      */
     public static CheckSum sha512(String value) {
-        return new CheckSum(value, "SHA-512");
+        return new CheckSum(value, ALGORITHM_SHA512);
     }
 
     /**
@@ -68,7 +72,7 @@ public record CheckSum(String value, String algorithm) {
      * @throws IllegalArgumentException 유효하지 않은 해시 값인 경우
      */
     public static CheckSum md5(String value) {
-        return new CheckSum(value, "MD5");
+        return new CheckSum(value, ALGORITHM_MD5);
     }
 
     /**
@@ -117,9 +121,9 @@ public record CheckSum(String value, String algorithm) {
 
         // 알고리즘별 길이 검증
         int expectedLength = switch (algorithm) {
-            case "SHA-256" -> SHA256_LENGTH;
-            case "SHA-512" -> SHA512_LENGTH;
-            case "MD5" -> MD5_LENGTH;
+            case ALGORITHM_SHA256 -> SHA256_LENGTH;
+            case ALGORITHM_SHA512 -> SHA512_LENGTH;
+            case ALGORITHM_MD5 -> MD5_LENGTH;
             default -> throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
         };
 

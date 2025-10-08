@@ -3,6 +3,8 @@ package com.ryuqq.fileflow.adapter.s3.adapter;
 import com.ryuqq.fileflow.adapter.s3.config.S3Properties;
 import com.ryuqq.fileflow.application.upload.port.out.GeneratePresignedUrlPort;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
+import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
+import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -13,6 +15,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -40,30 +43,29 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
     private static final String METADATA_UPLOADER_ID = "x-amz-meta-uploader-id";
     private static final String METADATA_ORIGINAL_FILENAME = "x-amz-meta-original-filename";
     private static final String METADATA_FILE_TYPE = "x-amz-meta-file-type";
+    private static final String METADATA_CHECKSUM_ALGORITHM = "x-amz-meta-checksum-algorithm";
+    private static final String METADATA_CHECKSUM_VALUE = "x-amz-meta-checksum-value";
 
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
+    private final S3MultipartAdapter s3MultipartAdapter;
 
     /**
      * S3PresignedUrlAdapter 생성자
      *
      * @param s3Presigner AWS S3 Presigner
      * @param s3Properties S3 설정 프로퍼티
-     * @throws IllegalArgumentException s3Presigner 또는 s3Properties가 null인 경우
+     * @param s3MultipartAdapter S3 멀티파트 업로드 Adapter
+     * @throws IllegalArgumentException 파라미터가 null인 경우
      */
     public S3PresignedUrlAdapter(
             S3Presigner s3Presigner,
-            S3Properties s3Properties
+            S3Properties s3Properties,
+            S3MultipartAdapter s3MultipartAdapter
     ) {
-        if (s3Presigner == null) {
-            throw new IllegalArgumentException("S3Presigner cannot be null");
-        }
-        if (s3Properties == null) {
-            throw new IllegalArgumentException("S3Properties cannot be null");
-        }
-
-        this.s3Presigner = s3Presigner;
-        this.s3Properties = s3Properties;
+        this.s3Presigner = Objects.requireNonNull(s3Presigner, "S3Presigner cannot be null");
+        this.s3Properties = Objects.requireNonNull(s3Properties, "S3Properties cannot be null");
+        this.s3MultipartAdapter = Objects.requireNonNull(s3MultipartAdapter, "S3MultipartAdapter cannot be null");
     }
 
     /**
@@ -106,17 +108,31 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
     }
 
     private PutObjectRequest buildPutObjectRequest(String uploadPath, FileUploadCommand command) {
-        return PutObjectRequest.builder()
+        java.util.Map<String, String> metadata = new java.util.HashMap<>();
+        metadata.put(METADATA_UPLOADER_ID, command.uploaderId());
+        metadata.put(METADATA_ORIGINAL_FILENAME, command.fileName());
+        metadata.put(METADATA_FILE_TYPE, command.fileType().name());
+
+        // CheckSum이 제공된 경우 메타데이터에 추가
+        if (command.checkSum() != null) {
+            metadata.put(METADATA_CHECKSUM_ALGORITHM, command.checkSum().algorithm());
+            metadata.put(METADATA_CHECKSUM_VALUE, command.checkSum().normalizedValue());
+        }
+
+        PutObjectRequest.Builder builder = PutObjectRequest.builder()
                 .bucket(s3Properties.getBucketName())
                 .key(uploadPath)
                 .contentType(command.contentType())
                 .contentLength(command.fileSizeBytes())
-                .metadata(java.util.Map.of(
-                        METADATA_UPLOADER_ID, command.uploaderId(),
-                        METADATA_ORIGINAL_FILENAME, command.fileName(),
-                        METADATA_FILE_TYPE, command.fileType().name()
-                ))
-                .build();
+                .metadata(metadata);
+
+        // CheckSum이 SHA-256인 경우 x-amz-checksum-sha256 헤더 추가
+        if (command.checkSum() != null && CheckSum.ALGORITHM_SHA256.equals(command.checkSum().algorithm())) {
+            // AWS S3는 PUT 요청 시 x-amz-checksum-sha256 헤더로 SHA256 체크섬을 검증합니다.
+            builder.checksumSHA256(command.checkSum().normalizedValue());
+        }
+
+        return builder.build();
     }
 
     private PresignedPutObjectRequest generatePresignedRequest(PutObjectRequest putObjectRequest) {
@@ -141,6 +157,21 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
         );
 
         return PresignedUrlInfo.of(presignedUrl, uploadPath, expiresAt);
+    }
+
+    /**
+     * 멀티파트 업로드를 시작합니다.
+     * S3MultipartAdapter에 위임하여 대용량 파일 업로드를 처리합니다.
+     *
+     * @param command 파일 업로드 명령
+     * @return 멀티파트 업로드 정보 (uploadId와 파트별 Presigned URL 포함)
+     * @throws IllegalArgumentException command가 null이거나 유효하지 않은 경우
+     * @throws RuntimeException 멀티파트 업로드 시작 실패 시
+     */
+    @Override
+    public MultipartUploadInfo initiateMultipartUpload(FileUploadCommand command) {
+        validateCommand(command);
+        return s3MultipartAdapter.initiateMultipartUpload(command);
     }
 
     private static void validateCommand(FileUploadCommand command) {
