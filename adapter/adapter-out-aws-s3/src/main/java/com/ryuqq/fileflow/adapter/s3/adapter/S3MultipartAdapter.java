@@ -14,8 +14,10 @@ import software.amazon.awssdk.services.s3.presigner.model.UploadPartPresignReque
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -70,19 +72,9 @@ public class S3MultipartAdapter {
             software.amazon.awssdk.services.s3.S3Client s3Client,
             S3Properties s3Properties
     ) {
-        if (s3Presigner == null) {
-            throw new IllegalArgumentException("S3Presigner cannot be null");
-        }
-        if (s3Client == null) {
-            throw new IllegalArgumentException("S3Client cannot be null");
-        }
-        if (s3Properties == null) {
-            throw new IllegalArgumentException("S3Properties cannot be null");
-        }
-
-        this.s3Presigner = s3Presigner;
-        this.s3Client = s3Client;
-        this.s3Properties = s3Properties;
+        this.s3Presigner = Objects.requireNonNull(s3Presigner, "S3Presigner cannot be null");
+        this.s3Client = Objects.requireNonNull(s3Client, "S3Client cannot be null");
+        this.s3Properties = Objects.requireNonNull(s3Properties, "S3Properties cannot be null");
     }
 
     /**
@@ -181,7 +173,7 @@ public class S3MultipartAdapter {
                     signatureDuration
             );
 
-            LocalDateTime expiresAt = LocalDateTime.now().plus(signatureDuration);
+            LocalDateTime expiresAt = LocalDateTime.now(ZoneOffset.UTC).plus(signatureDuration);
 
             PartUploadInfo partUploadInfo = PartUploadInfo.of(
                     partInfo.partNumber(),

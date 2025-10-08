@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.upload.vo;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 /**
  * 멀티파트 업로드의 개별 파트 정보를 나타내는 Value Object
@@ -87,7 +88,7 @@ public record PartUploadInfo(
      * @return 만료 여부
      */
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
+        return LocalDateTime.now(ZoneOffset.UTC).isAfter(expiresAt);
     }
 
     // ========== Validation Methods ==========
@@ -151,7 +152,7 @@ public record PartUploadInfo(
         }
 
         // 과거 시간은 허용하지 않음
-        if (expiresAt.isBefore(LocalDateTime.now())) {
+        if (expiresAt.isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
             throw new IllegalArgumentException(
                     "ExpiresAt must be in the future. Got: " + expiresAt
             );
