@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.domain.upload.command;
 
 import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
+import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
 
 /**
  * 파일 업로드 명령을 나타내는 Command Object
@@ -17,7 +18,8 @@ public record FileUploadCommand(
         String fileName,
         FileType fileType,
         long fileSizeBytes,
-        String contentType
+        String contentType,
+        CheckSum checkSum
 ) {
 
     /**
@@ -30,6 +32,7 @@ public record FileUploadCommand(
         validateFileType(fileType);
         validateFileSizeBytes(fileSizeBytes);
         validateContentType(contentType);
+        // CheckSum은 optional이므로 null 허용
     }
 
     /**
@@ -58,7 +61,41 @@ public record FileUploadCommand(
                 fileName,
                 fileType,
                 fileSizeBytes,
-                contentType
+                contentType,
+                null
+        );
+    }
+
+    /**
+     * CheckSum을 포함한 FileUploadCommand를 생성합니다.
+     *
+     * @param policyKey 정책 키
+     * @param uploaderId 업로더 ID
+     * @param fileName 파일명
+     * @param fileType 파일 타입
+     * @param fileSizeBytes 파일 크기 (bytes)
+     * @param contentType MIME 타입
+     * @param checkSum 파일 체크섬 (optional)
+     * @return FileUploadCommand 인스턴스
+     * @throws IllegalArgumentException 유효하지 않은 입력 시
+     */
+    public static FileUploadCommand of(
+            PolicyKey policyKey,
+            String uploaderId,
+            String fileName,
+            FileType fileType,
+            long fileSizeBytes,
+            String contentType,
+            CheckSum checkSum
+    ) {
+        return new FileUploadCommand(
+                policyKey,
+                uploaderId,
+                fileName,
+                fileType,
+                fileSizeBytes,
+                contentType,
+                checkSum
         );
     }
 

@@ -1,13 +1,13 @@
 package com.ryuqq.fileflow.domain.upload.vo;
 
-import com.ryuqq.fileflow.domain.upload.vo.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("FileAsset Domain Entity 테스트")
 class FileAssetTest {

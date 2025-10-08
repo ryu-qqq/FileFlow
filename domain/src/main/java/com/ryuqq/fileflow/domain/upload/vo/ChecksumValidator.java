@@ -1,7 +1,5 @@
 package com.ryuqq.fileflow.domain.upload.vo;
 
-import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
-
 /**
  * 체크섬 검증 비즈니스 규칙
  *

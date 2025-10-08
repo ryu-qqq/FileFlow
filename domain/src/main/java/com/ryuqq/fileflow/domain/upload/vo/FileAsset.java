@@ -1,7 +1,5 @@
 package com.ryuqq.fileflow.domain.upload.vo;
 
-import com.ryuqq.fileflow.domain.upload.vo.*;
-
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Objects;
