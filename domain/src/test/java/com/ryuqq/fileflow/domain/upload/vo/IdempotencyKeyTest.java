@@ -8,7 +8,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("IdempotencyKey Value Object 테스트")
 class IdempotencyKeyTest {

@@ -1,8 +1,6 @@
 package com.ryuqq.fileflow.domain.upload.vo;
 
 import com.ryuqq.fileflow.domain.policy.FileType;
-import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
-import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 
 /**
  * 파일 업로드 요청 정보를 나타내는 Value Object
