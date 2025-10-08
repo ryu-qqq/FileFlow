@@ -19,7 +19,7 @@ class UploadRequestTest {
         String contentType = "image/jpeg";
 
         // when
-        UploadRequest uploadRequest = UploadRequest.of(fileName, fileType, fileSizeBytes, contentType);
+        UploadRequest uploadRequest = UploadRequest.of(fileName, fileType, fileSizeBytes, contentType, IdempotencyKey.generate());
 
         // then
         assertThat(uploadRequest.fileName()).isEqualTo(fileName);
@@ -32,7 +32,7 @@ class UploadRequestTest {
     @DisplayName("파일명이 null이면 예외가 발생한다")
     void createUploadRequest_withNullFileName() {
         assertThatThrownBy(() ->
-                UploadRequest.of(null, FileType.IMAGE, 1024L, "image/jpeg")
+                UploadRequest.of(null, FileType.IMAGE, 1024L, "image/jpeg", IdempotencyKey.generate())
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileName cannot be null or empty");
     }
@@ -41,7 +41,7 @@ class UploadRequestTest {
     @DisplayName("파일명이 빈 문자열이면 예외가 발생한다")
     void createUploadRequest_withEmptyFileName() {
         assertThatThrownBy(() ->
-                UploadRequest.of("   ", FileType.IMAGE, 1024L, "image/jpeg")
+                UploadRequest.of("   ", FileType.IMAGE, 1024L, "image/jpeg", IdempotencyKey.generate())
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileName cannot be null or empty");
     }
@@ -52,7 +52,7 @@ class UploadRequestTest {
         String longFileName = "a".repeat(256);
 
         assertThatThrownBy(() ->
-                UploadRequest.of(longFileName, FileType.IMAGE, 1024L, "image/jpeg")
+                UploadRequest.of(longFileName, FileType.IMAGE, 1024L, "image/jpeg", IdempotencyKey.generate())
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileName cannot exceed 255 characters");
     }
@@ -61,7 +61,7 @@ class UploadRequestTest {
     @DisplayName("파일 타입이 null이면 예외가 발생한다")
     void createUploadRequest_withNullFileType() {
         assertThatThrownBy(() ->
-                UploadRequest.of("test.jpg", null, 1024L, "image/jpeg")
+                UploadRequest.of("test.jpg", null, 1024L, "image/jpeg", IdempotencyKey.generate())
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileType cannot be null");
     }
@@ -70,12 +70,12 @@ class UploadRequestTest {
     @DisplayName("파일 크기가 0 이하면 예외가 발생한다")
     void createUploadRequest_withNonPositiveFileSize() {
         assertThatThrownBy(() ->
-                UploadRequest.of("test.jpg", FileType.IMAGE, 0L, "image/jpeg")
+                UploadRequest.of("test.jpg", FileType.IMAGE, 0L, "image/jpeg", IdempotencyKey.generate())
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileSizeBytes must be positive");
 
         assertThatThrownBy(() ->
-                UploadRequest.of("test.jpg", FileType.IMAGE, -1L, "image/jpeg")
+                UploadRequest.of("test.jpg", FileType.IMAGE, -1L, "image/jpeg", IdempotencyKey.generate())
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileSizeBytes must be positive");
     }
@@ -84,7 +84,7 @@ class UploadRequestTest {
     @DisplayName("Content Type이 null이면 예외가 발생한다")
     void createUploadRequest_withNullContentType() {
         assertThatThrownBy(() ->
-                UploadRequest.of("test.jpg", FileType.IMAGE, 1024L, null)
+                UploadRequest.of("test.jpg", FileType.IMAGE, 1024L, null, IdempotencyKey.generate())
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("ContentType cannot be null or empty");
     }
@@ -92,8 +92,9 @@ class UploadRequestTest {
     @Test
     @DisplayName("동일한 값을 가진 UploadRequest는 equals로 같다고 판단된다")
     void uploadRequest_equality() {
-        UploadRequest request1 = UploadRequest.of("test.jpg", FileType.IMAGE, 1024L, "image/jpeg");
-        UploadRequest request2 = UploadRequest.of("test.jpg", FileType.IMAGE, 1024L, "image/jpeg");
+        IdempotencyKey key = IdempotencyKey.generate();
+        UploadRequest request1 = UploadRequest.of("test.jpg", FileType.IMAGE, 1024L, "image/jpeg", key);
+        UploadRequest request2 = UploadRequest.of("test.jpg", FileType.IMAGE, 1024L, "image/jpeg", key);
 
         assertThat(request1).isEqualTo(request2);
         assertThat(request1.hashCode()).isEqualTo(request2.hashCode());
