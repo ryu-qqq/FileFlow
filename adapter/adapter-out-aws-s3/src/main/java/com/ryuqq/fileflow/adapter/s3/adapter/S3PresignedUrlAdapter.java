@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.s3.adapter;
 import com.ryuqq.fileflow.adapter.s3.config.S3Properties;
 import com.ryuqq.fileflow.application.upload.port.out.GeneratePresignedUrlPort;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
+import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -40,6 +41,8 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
     private static final String METADATA_UPLOADER_ID = "x-amz-meta-uploader-id";
     private static final String METADATA_ORIGINAL_FILENAME = "x-amz-meta-original-filename";
     private static final String METADATA_FILE_TYPE = "x-amz-meta-file-type";
+    private static final String METADATA_CHECKSUM_ALGORITHM = "x-amz-meta-checksum-algorithm";
+    private static final String METADATA_CHECKSUM_VALUE = "x-amz-meta-checksum-value";
 
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
@@ -106,17 +109,32 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
     }
 
     private PutObjectRequest buildPutObjectRequest(String uploadPath, FileUploadCommand command) {
-        return PutObjectRequest.builder()
+        java.util.Map<String, String> metadata = new java.util.HashMap<>();
+        metadata.put(METADATA_UPLOADER_ID, command.uploaderId());
+        metadata.put(METADATA_ORIGINAL_FILENAME, command.fileName());
+        metadata.put(METADATA_FILE_TYPE, command.fileType().name());
+
+        // CheckSum이 제공된 경우 메타데이터에 추가
+        if (command.checkSum() != null) {
+            metadata.put(METADATA_CHECKSUM_ALGORITHM, command.checkSum().algorithm());
+            metadata.put(METADATA_CHECKSUM_VALUE, command.checkSum().normalizedValue());
+        }
+
+        PutObjectRequest.Builder builder = PutObjectRequest.builder()
                 .bucket(s3Properties.getBucketName())
                 .key(uploadPath)
                 .contentType(command.contentType())
                 .contentLength(command.fileSizeBytes())
-                .metadata(java.util.Map.of(
-                        METADATA_UPLOADER_ID, command.uploaderId(),
-                        METADATA_ORIGINAL_FILENAME, command.fileName(),
-                        METADATA_FILE_TYPE, command.fileType().name()
-                ))
-                .build();
+                .metadata(metadata);
+
+        // CheckSum이 제공된 경우 Content-MD5 헤더 추가 (SHA-256인 경우)
+        if (command.checkSum() != null && "SHA-256".equals(command.checkSum().algorithm())) {
+            // AWS S3는 Content-MD5를 Base64 인코딩된 MD5 해시로 요구
+            // SHA-256을 사용하는 경우 x-amz-checksum-sha256 헤더 사용
+            builder.checksumSHA256(command.checkSum().normalizedValue());
+        }
+
+        return builder.build();
     }
 
     private PresignedPutObjectRequest generatePresignedRequest(PutObjectRequest putObjectRequest) {
@@ -141,6 +159,22 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
         );
 
         return PresignedUrlInfo.of(presignedUrl, uploadPath, expiresAt);
+    }
+
+    /**
+     * 멀티파트 업로드를 시작합니다.
+     * 현재는 stub 구현으로, 향후 S3MultipartAdapter로 위임할 예정입니다.
+     *
+     * @param command 파일 업로드 명령
+     * @return 멀티파트 업로드 정보
+     * @throws UnsupportedOperationException 아직 구현되지 않음
+     */
+    @Override
+    public MultipartUploadInfo initiateMultipartUpload(FileUploadCommand command) {
+        throw new UnsupportedOperationException(
+                "Multipart upload is not yet implemented. " +
+                "This will be delegated to S3MultipartAdapter."
+        );
     }
 
     private static void validateCommand(FileUploadCommand command) {

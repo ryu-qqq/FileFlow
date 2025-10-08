@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.upload.port.out;
 
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
+import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 
 /**
@@ -15,7 +16,8 @@ import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 public interface GeneratePresignedUrlPort {
 
     /**
-     * 파일 업로드를 위한 Presigned URL을 생성합니다.
+     * 단일 파일 업로드를 위한 Presigned URL을 생성합니다.
+     * 파일 크기가 100MB 미만인 경우 사용합니다.
      *
      * @param command 파일 업로드 명령
      * @return Presigned URL 정보
@@ -23,4 +25,15 @@ public interface GeneratePresignedUrlPort {
      * @throws RuntimeException URL 생성 실패 시
      */
     PresignedUrlInfo generate(FileUploadCommand command);
+
+    /**
+     * 멀티파트 업로드를 시작하고 파트별 Presigned URL을 생성합니다.
+     * 파일 크기가 100MB 이상인 경우 사용합니다.
+     *
+     * @param command 파일 업로드 명령
+     * @return 멀티파트 업로드 정보 (uploadId와 파트별 Presigned URL 포함)
+     * @throws IllegalArgumentException command가 null이거나 유효하지 않은 경우
+     * @throws RuntimeException 멀티파트 업로드 시작 실패 시
+     */
+    MultipartUploadInfo initiateMultipartUpload(FileUploadCommand command);
 }
