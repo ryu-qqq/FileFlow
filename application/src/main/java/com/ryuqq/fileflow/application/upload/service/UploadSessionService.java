@@ -106,17 +106,7 @@ public class UploadSessionService implements
                 }
 
                 // 기존 세션과 URL 정보 반환 (만료 여부와 관계없이 새 URL 발급)
-                PolicyKey policyKey = command.getPolicyKey();
-                FileType fileType = FileType.fromContentType(command.contentType());
-                FileUploadCommand fileUploadCommand = FileUploadCommand.of(
-                        policyKey,
-                        command.uploaderId(),
-                        command.fileName(),
-                        fileType,
-                        command.fileSize(),
-                        command.contentType()
-                );
-                PresignedUrlInfo presignedUrlInfo = generatePresignedUrlPort.generate(fileUploadCommand);
+                PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);
 
                 return new UploadSessionWithUrlResponse(
                         UploadSessionResponse.from(session),
@@ -161,23 +151,13 @@ public class UploadSessionService implements
                 command.expirationMinutes()
         );
 
-        // 7. FileUploadCommand 생성
-        FileUploadCommand fileUploadCommand = FileUploadCommand.of(
-                policyKey,
-                command.uploaderId(),
-                command.fileName(),
-                fileType,
-                command.fileSize(),
-                command.contentType()
-        );
+        // 7. Presigned URL 발급
+        PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);
 
-        // 8. Presigned URL 발급
-        PresignedUrlInfo presignedUrlInfo = generatePresignedUrlPort.generate(fileUploadCommand);
-
-        // 9. 세션 저장
+        // 8. 세션 저장
         UploadSession savedSession = uploadSessionPort.save(session);
 
-        // 10. Response 생성
+        // 9. Response 생성
         return new UploadSessionWithUrlResponse(
                 UploadSessionResponse.from(savedSession),
                 PresignedUrlResponse.from(presignedUrlInfo)
@@ -272,5 +252,27 @@ public class UploadSessionService implements
             return fileName.substring(lastDotIndex + 1).toLowerCase(java.util.Locale.ROOT);
         }
         return "";
+    }
+
+    /**
+     * CreateUploadSessionCommand로부터 Presigned URL을 생성합니다.
+     * 기존 세션과 신규 세션 생성 시 공통으로 사용되는 로직을 추출하여
+     * 코드 중복을 제거합니다.
+     *
+     * @param command 세션 생성 Command
+     * @return 생성된 Presigned URL 정보
+     */
+    private PresignedUrlInfo generatePresignedUrlForCommand(CreateUploadSessionCommand command) {
+        PolicyKey policyKey = command.getPolicyKey();
+        FileType fileType = FileType.fromContentType(command.contentType());
+        FileUploadCommand fileUploadCommand = FileUploadCommand.of(
+                policyKey,
+                command.uploaderId(),
+                command.fileName(),
+                fileType,
+                command.fileSize(),
+                command.contentType()
+        );
+        return generatePresignedUrlPort.generate(fileUploadCommand);
     }
 }

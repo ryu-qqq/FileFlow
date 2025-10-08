@@ -32,16 +32,19 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
 
     private final UploadSessionPort uploadSessionPort;
     private final VerifyS3ObjectPort verifyS3ObjectPort;
+    private final String s3BucketName;
 
     /**
      * Constructor Injection (NO Lombok)
      *
      * @param uploadSessionPort 세션 저장소
      * @param verifyS3ObjectPort S3 검증 Port
+     * @param s3BucketName S3 버킷명 (외부 설정에서 주입)
      */
     public ConfirmUploadService(
             UploadSessionPort uploadSessionPort,
-            VerifyS3ObjectPort verifyS3ObjectPort
+            VerifyS3ObjectPort verifyS3ObjectPort,
+            String s3BucketName
     ) {
         this.uploadSessionPort = Objects.requireNonNull(
                 uploadSessionPort,
@@ -50,6 +53,10 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
         this.verifyS3ObjectPort = Objects.requireNonNull(
                 verifyS3ObjectPort,
                 "VerifyS3ObjectPort must not be null"
+        );
+        this.s3BucketName = Objects.requireNonNull(
+                s3BucketName,
+                "s3BucketName must not be null"
         );
     }
 
@@ -110,7 +117,7 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
                     s3Location.key()
             );
 
-            if (actualEtag != null && !actualEtag.equals(command.etag())) {
+            if (actualEtag != null && !normalizeEtag(actualEtag).equals(normalizeEtag(command.etag()))) {
                 throw new ChecksumMismatchException(
                         session.getSessionId(),
                         command.etag(),
@@ -155,14 +162,15 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
      *
      * TODO: 실제 구현에서는 UploadSession에 S3Location을 추가하거나,
      *       별도 저장소에서 조회해야 합니다.
+     *       현재는 생성자에서 주입받은 버킷명을 사용합니다.
      *
      * @param session 업로드 세션
      * @return S3 버킷명
      */
     private String extractBucketFromSession(UploadSession session) {
-        // 임시 구현: 환경 변수나 설정에서 버킷명 가져오기
+        // 생성자에서 주입받은 버킷명 사용
         // 실제로는 UploadSession에 S3Location 필드가 있어야 함
-        return System.getenv("S3_BUCKET_NAME");
+        return this.s3BucketName;
     }
 
     /**
@@ -183,5 +191,17 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
                 session.getSessionId(),
                 session.getUploadRequest().fileName()
         );
+    }
+
+    /**
+     * ETag를 정규화합니다.
+     * S3 ETag는 큰따옴표로 감싸져 반환되므로 (예: "md5hash"),
+     * 비교를 위해 큰따옴표를 제거합니다.
+     *
+     * @param etag 원본 ETag
+     * @return 정규화된 ETag (큰따옴표 제거)
+     */
+    private String normalizeEtag(String etag) {
+        return etag != null ? etag.replace("\"", "") : null;
     }
 }
