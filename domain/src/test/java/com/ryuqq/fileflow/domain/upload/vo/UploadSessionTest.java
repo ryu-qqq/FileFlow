@@ -19,7 +19,7 @@ class UploadSessionTest {
     }
 
     private UploadRequest createUploadRequest() {
-        return UploadRequest.of("test.jpg", FileType.IMAGE, 1024L, "image/jpeg");
+        return UploadRequest.of("test.jpg", FileType.IMAGE, 1024L, "image/jpeg", IdempotencyKey.generate());
     }
 
     @Test
