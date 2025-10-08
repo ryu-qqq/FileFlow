@@ -127,10 +127,8 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
                 .contentLength(command.fileSizeBytes())
                 .metadata(metadata);
 
-        // CheckSum이 제공된 경우 Content-MD5 헤더 추가 (SHA-256인 경우)
+        // CheckSum이 제공된 경우 x-amz-checksum-sha256 헤더 추가 (SHA-256인 경우)
         if (command.checkSum() != null && "SHA-256".equals(command.checkSum().algorithm())) {
-            // AWS S3는 Content-MD5를 Base64 인코딩된 MD5 해시로 요구
-            // SHA-256을 사용하는 경우 x-amz-checksum-sha256 헤더 사용
             builder.checksumSHA256(command.checkSum().normalizedValue());
         }
 
