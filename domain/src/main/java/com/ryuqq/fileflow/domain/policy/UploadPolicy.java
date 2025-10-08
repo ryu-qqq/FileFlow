@@ -158,7 +158,7 @@ public final class UploadPolicy {
             fileTypePolicies.validate(fileType, attributes);
         } catch (IllegalArgumentException e) {
             throw new PolicyViolationException(
-                    ViolationType.FILE_SIZE_EXCEEDED,
+                    determineViolationType(e.getMessage()),
                     e.getMessage()
             );
         }
@@ -374,6 +374,36 @@ public final class UploadPolicy {
         if (changedBy == null || changedBy.trim().isEmpty()) {
             throw new IllegalArgumentException("ChangedBy cannot be null or empty");
         }
+    }
+
+    /**
+     * 예외 메시지를 기반으로 적절한 ViolationType을 결정합니다.
+     *
+     * @param errorMessage 예외 메시지
+     * @return ViolationType
+     */
+    private static ViolationType determineViolationType(String errorMessage) {
+        if (errorMessage == null) {
+            return ViolationType.FILE_SIZE_EXCEEDED;
+        }
+
+        String lowerMessage = errorMessage.toLowerCase();
+
+        if (lowerMessage.contains("format not allowed") || lowerMessage.contains("format cannot")) {
+            return ViolationType.INVALID_FORMAT;
+        }
+        if (lowerMessage.contains("file size exceeds") || lowerMessage.contains("size exceeds")) {
+            return ViolationType.FILE_SIZE_EXCEEDED;
+        }
+        if (lowerMessage.contains("file count exceeds") || lowerMessage.contains("count exceeds")) {
+            return ViolationType.FILE_COUNT_EXCEEDED;
+        }
+        if (lowerMessage.contains("dimension exceeds") || lowerMessage.contains("image dimension")) {
+            return ViolationType.DIMENSION_EXCEEDED;
+        }
+
+        // 기본값
+        return ViolationType.FILE_SIZE_EXCEEDED;
     }
 
     // ========== Domain Events ==========

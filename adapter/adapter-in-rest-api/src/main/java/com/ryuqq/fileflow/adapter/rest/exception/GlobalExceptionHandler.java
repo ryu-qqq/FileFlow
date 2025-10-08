@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.rest.exception;
 
 import com.ryuqq.fileflow.adapter.rest.dto.response.ErrorResponse;
+import com.ryuqq.fileflow.adapter.rest.dto.response.PolicyViolationErrorResponse;
 import com.ryuqq.fileflow.domain.policy.exception.InvalidPolicyException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException;
@@ -75,19 +76,20 @@ public class GlobalExceptionHandler {
     /**
      * PolicyViolationException 처리
      *
+     * 표준화된 정책 위반 에러 응답을 반환합니다.
+     * 에러 타입, 사용자 친화적 메시지, 상세 정보를 포함합니다.
+     *
      * @param ex PolicyViolationException
      * @param request HttpServletRequest
      * @return 400 BAD_REQUEST 응답
      */
     @ExceptionHandler(PolicyViolationException.class)
-    public ResponseEntity<ErrorResponse> handlePolicyViolationException(
+    public ResponseEntity<PolicyViolationErrorResponse> handlePolicyViolationException(
             PolicyViolationException ex,
             HttpServletRequest request
     ) {
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                "Policy Violation",
-                ex.getMessage(),
+        PolicyViolationErrorResponse errorResponse = PolicyViolationErrorResponse.from(
+                ex,
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
