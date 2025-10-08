@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.s3.adapter;
 import com.ryuqq.fileflow.adapter.s3.config.S3Properties;
 import com.ryuqq.fileflow.application.upload.port.out.GeneratePresignedUrlPort;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
+import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
 import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 import org.springframework.stereotype.Component;
@@ -46,17 +47,20 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
 
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
+    private final S3MultipartAdapter s3MultipartAdapter;
 
     /**
      * S3PresignedUrlAdapter 생성자
      *
      * @param s3Presigner AWS S3 Presigner
      * @param s3Properties S3 설정 프로퍼티
-     * @throws IllegalArgumentException s3Presigner 또는 s3Properties가 null인 경우
+     * @param s3MultipartAdapter S3 멀티파트 업로드 Adapter
+     * @throws IllegalArgumentException 파라미터가 null인 경우
      */
     public S3PresignedUrlAdapter(
             S3Presigner s3Presigner,
-            S3Properties s3Properties
+            S3Properties s3Properties,
+            S3MultipartAdapter s3MultipartAdapter
     ) {
         if (s3Presigner == null) {
             throw new IllegalArgumentException("S3Presigner cannot be null");
@@ -64,9 +68,13 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
         if (s3Properties == null) {
             throw new IllegalArgumentException("S3Properties cannot be null");
         }
+        if (s3MultipartAdapter == null) {
+            throw new IllegalArgumentException("S3MultipartAdapter cannot be null");
+        }
 
         this.s3Presigner = s3Presigner;
         this.s3Properties = s3Properties;
+        this.s3MultipartAdapter = s3MultipartAdapter;
     }
 
     /**
@@ -127,8 +135,9 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
                 .contentLength(command.fileSizeBytes())
                 .metadata(metadata);
 
-        // CheckSum이 제공된 경우 x-amz-checksum-sha256 헤더 추가 (SHA-256인 경우)
-        if (command.checkSum() != null && "SHA-256".equals(command.checkSum().algorithm())) {
+        // CheckSum이 SHA-256인 경우 x-amz-checksum-sha256 헤더 추가
+        if (command.checkSum() != null && CheckSum.ALGORITHM_SHA256.equals(command.checkSum().algorithm())) {
+            // AWS S3는 PUT 요청 시 x-amz-checksum-sha256 헤더로 SHA256 체크섬을 검증합니다.
             builder.checksumSHA256(command.checkSum().normalizedValue());
         }
 
@@ -161,18 +170,17 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
 
     /**
      * 멀티파트 업로드를 시작합니다.
-     * 현재는 stub 구현으로, 향후 S3MultipartAdapter로 위임할 예정입니다.
+     * S3MultipartAdapter에 위임하여 대용량 파일 업로드를 처리합니다.
      *
      * @param command 파일 업로드 명령
-     * @return 멀티파트 업로드 정보
-     * @throws UnsupportedOperationException 아직 구현되지 않음
+     * @return 멀티파트 업로드 정보 (uploadId와 파트별 Presigned URL 포함)
+     * @throws IllegalArgumentException command가 null이거나 유효하지 않은 경우
+     * @throws RuntimeException 멀티파트 업로드 시작 실패 시
      */
     @Override
     public MultipartUploadInfo initiateMultipartUpload(FileUploadCommand command) {
-        throw new UnsupportedOperationException(
-                "Multipart upload is not yet implemented. " +
-                "This will be delegated to S3MultipartAdapter."
-        );
+        validateCommand(command);
+        return s3MultipartAdapter.initiateMultipartUpload(command);
     }
 
     private static void validateCommand(FileUploadCommand command) {

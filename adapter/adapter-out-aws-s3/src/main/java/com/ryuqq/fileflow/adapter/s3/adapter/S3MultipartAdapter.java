@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.s3.adapter;
 
 import com.ryuqq.fileflow.adapter.s3.config.S3Properties;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
+import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
 import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PartUploadInfo;
 import org.springframework.stereotype.Component;
@@ -144,7 +145,7 @@ public class S3MultipartAdapter {
                 .metadata(metadata);
 
         // CheckSum이 제공된 경우 checksum 알고리즘 지정
-        if (command.checkSum() != null && "SHA-256".equals(command.checkSum().algorithm())) {
+        if (command.checkSum() != null && CheckSum.ALGORITHM_SHA256.equals(command.checkSum().algorithm())) {
             builder.checksumAlgorithm(software.amazon.awssdk.services.s3.model.ChecksumAlgorithm.SHA256);
         }
 

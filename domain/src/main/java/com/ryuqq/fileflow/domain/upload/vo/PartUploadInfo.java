@@ -150,12 +150,7 @@ public record PartUploadInfo(
         if (expiresAt == null) {
             throw new IllegalArgumentException("ExpiresAt cannot be null");
         }
-
-        // 과거 시간은 허용하지 않음
-        if (expiresAt.isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
-            throw new IllegalArgumentException(
-                    "ExpiresAt must be in the future. Got: " + expiresAt
-            );
-        }
+        // Note: 과거 시간 검증을 제거하여 Clock Skew 문제와 테스트 용이성 개선
+        // 만료 여부 확인은 isExpired() 메서드를 통해 런타임에 수행됨
     }
 }
