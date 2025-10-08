@@ -157,6 +157,35 @@ class UploadPolicyValidationServiceTest {
         }
 
         @Test
+        @DisplayName("허용되지 않은 파일 형식 시 PolicyViolationException 발생")
+        void validateUploadPolicy_invalidFileFormat() {
+            // Given
+            PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
+            UploadPolicy policy = createActivePolicy(policyKey);
+            loadPort.save(policy);
+
+            ValidateUploadPolicyCommand command = new ValidateUploadPolicyCommand(
+                    "b2c",
+                    "CONSUMER",
+                    "REVIEW",
+                    FileType.IMAGE,
+                    "bmp", // Not allowed (allowed: jpg, jpeg, png)
+                    5_000_000L,
+                    3,
+                    null,
+                    null
+            );
+
+            // When & Then
+            PolicyViolationException exception = assertThrows(
+                    PolicyViolationException.class,
+                    () -> service.validate(command)
+            );
+
+            assertEquals(PolicyViolationException.ViolationType.INVALID_FORMAT, exception.getViolationType());
+        }
+
+        @Test
         @DisplayName("비활성화된 정책은 검증 실패")
         void validateUploadPolicy_inactivePolicy() {
             // Given

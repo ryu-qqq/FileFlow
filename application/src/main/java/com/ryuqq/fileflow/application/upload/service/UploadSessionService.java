@@ -14,6 +14,7 @@ import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
+import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
@@ -111,7 +112,8 @@ public class UploadSessionService implements
                 command.fileName(),
                 fileType,
                 command.fileSize(),
-                command.contentType()
+                command.contentType(),
+                IdempotencyKey.generate()
         );
 
         // 4. UploadSession 생성
