@@ -303,6 +303,7 @@ public final class FileAsset {
                 ", sessionId='" + sessionId + '\'' +
                 ", tenantId=" + tenantId +
                 ", s3Location=" + s3Location +
+                ", checksum=" + checksum +
                 ", fileSize=" + fileSize +
                 ", contentType=" + contentType +
                 ", createdAt=" + createdAt +

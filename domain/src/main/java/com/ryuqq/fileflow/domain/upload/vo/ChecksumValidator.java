@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
 /**
  * 체크섬 검증 비즈니스 규칙
  *
+ * 상태가 없는 유틸리티 클래스로 모든 메서드는 static입니다.
+ *
  * 책임:
  * - 업로드된 파일의 체크섬과 기대 체크섬의 일치 여부 검증
  * - 파일 무결성 보장
@@ -14,7 +16,14 @@ import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
  * - 알고리즘이 동일한 체크섬만 비교 가능
  * - 검증 실패 시 명확한 오류 메시지 제공
  */
-public class ChecksumValidator {
+public final class ChecksumValidator {
+
+    /**
+     * 유틸리티 클래스는 인스턴스화를 방지합니다.
+     */
+    private ChecksumValidator() {
+        throw new AssertionError("Utility class should not be instantiated");
+    }
 
     /**
      * 예상 체크섬과 실제 체크섬이 일치하는지 검증합니다.
@@ -24,7 +33,7 @@ public class ChecksumValidator {
      * @return 일치하면 true
      * @throws IllegalArgumentException 체크섬이 null인 경우
      */
-    public boolean validate(CheckSum expected, CheckSum actual) {
+    public static boolean validate(CheckSum expected, CheckSum actual) {
         validateNotNull(expected, "Expected checksum");
         validateNotNull(actual, "Actual checksum");
 
@@ -39,7 +48,7 @@ public class ChecksumValidator {
      * @throws ChecksumMismatchException 체크섬이 일치하지 않는 경우
      * @throws IllegalArgumentException 체크섬이 null인 경우
      */
-    public void validateOrThrow(CheckSum expected, CheckSum actual) {
+    public static void validateOrThrow(CheckSum expected, CheckSum actual) {
         validateNotNull(expected, "Expected checksum");
         validateNotNull(actual, "Actual checksum");
 
@@ -64,7 +73,7 @@ public class ChecksumValidator {
      * @return 하나라도 일치하면 true
      * @throws IllegalArgumentException 체크섬이 null이거나 배열이 비어있는 경우
      */
-    public boolean validateAny(CheckSum[] expected, CheckSum actual) {
+    public static boolean validateAny(CheckSum[] expected, CheckSum actual) {
         validateNotNull(actual, "Actual checksum");
 
         if (expected == null || expected.length == 0) {
@@ -88,7 +97,7 @@ public class ChecksumValidator {
      * @return 알고리즘이 동일하면 true
      * @throws IllegalArgumentException 체크섬이 null인 경우
      */
-    public boolean hasSameAlgorithm(CheckSum checksum1, CheckSum checksum2) {
+    public static boolean hasSameAlgorithm(CheckSum checksum1, CheckSum checksum2) {
         validateNotNull(checksum1, "First checksum");
         validateNotNull(checksum2, "Second checksum");
 
@@ -105,7 +114,7 @@ public class ChecksumValidator {
      * @return 권장 알고리즘이면 true
      * @throws IllegalArgumentException 체크섬이 null인 경우
      */
-    public boolean isRecommendedAlgorithm(CheckSum checksum) {
+    public static boolean isRecommendedAlgorithm(CheckSum checksum) {
         validateNotNull(checksum, "Checksum");
 
         String algorithm = checksum.algorithm();
@@ -114,7 +123,7 @@ public class ChecksumValidator {
 
     // ========== Private Helper Methods ==========
 
-    private void validateNotNull(CheckSum checksum, String paramName) {
+    private static void validateNotNull(CheckSum checksum, String paramName) {
         if (checksum == null) {
             throw new IllegalArgumentException(paramName + " cannot be null");
         }
