@@ -42,6 +42,8 @@ public enum MetadataType {
     /**
      * 주어진 값이 이 타입과 호환되는지 검증합니다.
      *
+     * 검증 로직은 {@link MetadataValueValidator}에 위임합니다.
+     *
      * @param value 검증할 값
      * @return 호환되면 true
      */
@@ -52,81 +54,10 @@ public enum MetadataType {
 
         return switch (this) {
             case STRING -> true; // 모든 문자열(빈 문자열 포함)은 STRING 타입과 호환
-            case NUMBER -> !value.trim().isEmpty() && isNumeric(value);
-            case BOOLEAN -> !value.trim().isEmpty() && isBoolean(value);
-            case JSON -> !value.trim().isEmpty() && isJson(value);
+            case NUMBER -> !value.trim().isEmpty() && MetadataValueValidator.isNumeric(value);
+            case BOOLEAN -> !value.trim().isEmpty() && MetadataValueValidator.isBoolean(value);
+            case JSON -> !value.trim().isEmpty() && MetadataValueValidator.isJson(value);
         };
-    }
-
-    /**
-     * 문자열이 숫자인지 확인합니다.
-     */
-    private boolean isNumeric(String value) {
-        try {
-            Double.parseDouble(value);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-    /**
-     * 문자열이 불리언 값인지 확인합니다.
-     */
-    private boolean isBoolean(String value) {
-        String lower = value.toLowerCase();
-        return "true".equals(lower) || "false".equals(lower);
-    }
-
-    /**
-     * 문자열이 JSON 형식인지 확인합니다.
-     *
-     * 검증 규칙:
-     * - JSON 객체: '{' 로 시작하고 '}' 로 끝남
-     * - JSON 배열: '[' 로 시작하고 ']' 로 끝남
-     * - 최소 길이: 2자 이상 (빈 객체 {}, 빈 배열 [] 포함)
-     * - 따옴표 불일치 검증: 홀수개의 따옴표가 없어야 함
-     *
-     * 참고: 완전한 JSON 파싱은 infrastructure 계층에서 수행
-     *       (Domain은 순수 Java만 사용, Jackson 같은 외부 의존성 불허)
-     */
-    private boolean isJson(String value) {
-        String trimmed = value.trim();
-
-        // JSON 객체 또는 배열 형식 확인
-        boolean isObject = trimmed.startsWith("{") && trimmed.endsWith("}");
-        boolean isArray = trimmed.startsWith("[") && trimmed.endsWith("]");
-
-        if (!isObject && !isArray) {
-            return false;
-        }
-
-        // 최소 길이 검증 (빈 객체 {} 또는 빈 배열 [] 포함)
-        if (trimmed.length() < 2) {
-            return false;
-        }
-
-        // 따옴표 불일치 검증: escape되지 않은 따옴표가 짝수개여야 함
-        int quoteCount = 0;
-        boolean escaped = false;
-
-        for (int i = 0; i < trimmed.length(); i++) {
-            char c = trimmed.charAt(i);
-
-            if (escaped) {
-                escaped = false;
-                continue;
-            }
-
-            if (c == '\\') {
-                escaped = true;
-            } else if (c == '"') {
-                quoteCount++;
-            }
-        }
-
-        // 따옴표가 홀수개면 잘못된 JSON
-        return quoteCount % 2 == 0;
     }
 
     /**
