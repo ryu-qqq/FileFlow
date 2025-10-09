@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.upload.dto;
 
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
+import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 
 /**
  * 업로드 세션 생성 Command
@@ -13,6 +14,7 @@ import com.ryuqq.fileflow.domain.policy.PolicyKey;
  * @param contentType 파일 Content-Type
  * @param uploaderId 업로더 ID
  * @param expirationMinutes 세션 만료 시간 (분)
+ * @param idempotencyKey 멱등성 키 (선택적 - null이면 자동 생성)
  * @author sangwon-ryu
  */
 public record CreateUploadSessionCommand(
@@ -21,7 +23,8 @@ public record CreateUploadSessionCommand(
         long fileSize,
         String contentType,
         String uploaderId,
-        int expirationMinutes
+        int expirationMinutes,
+        String idempotencyKey
 ) {
     private static final int MAX_EXPIRATION_MINUTES = 24 * 60; // 24 hours
     /**
@@ -39,6 +42,27 @@ public record CreateUploadSessionCommand(
     }
 
     /**
+     * 멱등성 키를 생성하거나 검증합니다.
+     *
+     * @return IdempotencyKey 인스턴스
+     */
+    public IdempotencyKey getOrGenerateIdempotencyKey() {
+        if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
+            return IdempotencyKey.generate();
+        }
+        return IdempotencyKey.of(idempotencyKey);
+    }
+
+    /**
+     * 멱등성 키가 제공되었는지 확인합니다.
+     *
+     * @return 멱등성 키 존재 여부
+     */
+    public boolean hasIdempotencyKey() {
+        return idempotencyKey != null && !idempotencyKey.trim().isEmpty();
+    }
+
+    /**
      * Compact constructor로 검증 로직 수행
      */
     public CreateUploadSessionCommand {
@@ -48,6 +72,7 @@ public record CreateUploadSessionCommand(
         validateContentType(contentType);
         validateUploaderId(uploaderId);
         validateExpirationMinutes(expirationMinutes);
+        // idempotencyKey는 선택적이므로 null 허용
     }
 
     private static void validatePolicyKeyValue(String policyKeyValue) {
