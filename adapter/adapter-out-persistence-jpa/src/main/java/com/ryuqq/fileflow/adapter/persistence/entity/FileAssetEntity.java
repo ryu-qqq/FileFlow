@@ -57,13 +57,13 @@ public class FileAssetEntity {
     @Column(name = "s3_bucket", nullable = false, length = 100)
     private String s3Bucket;
 
-    @Column(name = "s3_key", nullable = false, length = 500)
+    @Column(name = "s3_key", nullable = false, length = 1024)
     private String s3Key;
 
     @Column(name = "s3_region", nullable = false, length = 50)
     private String s3Region;
 
-    @Column(name = "cdn_url", length = 500)
+    @Column(name = "cdn_url", length = 2048)
     private String cdnUrl;
 
     @Column(name = "file_size", nullable = false)
@@ -321,7 +321,7 @@ public class FileAssetEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof FileAssetEntity)) return false;
         FileAssetEntity that = (FileAssetEntity) o;
         return Objects.equals(fileId, that.fileId);
     }
