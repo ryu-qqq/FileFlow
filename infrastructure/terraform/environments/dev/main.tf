@@ -12,6 +12,7 @@ module "upload_events_queue" {
   message_retention_seconds  = 1209600 # 14 days
   visibility_timeout_seconds = 30
   max_receive_count          = 3
+  s3_bucket_arn              = data.aws_s3_bucket.uploads.arn
 
   tags = {
     Project = var.project_name
@@ -45,7 +46,7 @@ module "app_iam_role" {
   role_name       = "${var.project_name}-${var.environment}-${var.app_role_name}"
   environment     = var.environment
   queue_arn       = module.upload_events_queue.queue_arn
-  trusted_service = "ec2.amazonaws.com" # Change to appropriate service (e.g., ecs-tasks.amazonaws.com for ECS)
+  trusted_service = var.app_trusted_service
 
   tags = {
     Project = var.project_name

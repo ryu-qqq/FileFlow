@@ -51,8 +51,8 @@ resource "aws_sqs_queue_policy" "main" {
         Action   = "sqs:SendMessage"
         Resource = aws_sqs_queue.main.arn
         Condition = {
-          ArnLike = {
-            "aws:SourceArn" = "arn:aws:s3:::*"
+          ArnEquals = {
+            "aws:SourceArn" = var.s3_bucket_arn
           }
         }
       }
