@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.upload.port.out;
 
 import com.ryuqq.fileflow.domain.upload.UploadSession;
+import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 
 import java.util.Optional;
 
@@ -29,6 +30,16 @@ public interface UploadSessionPort {
      * @return 조회된 업로드 세션 (Optional)
      */
     Optional<UploadSession> findById(String sessionId);
+
+    /**
+     * 멱등성 키로 업로드 세션을 조회합니다.
+     *
+     * 중복 요청 방지를 위해 멱등성 키로 기존 세션을 검색합니다.
+     *
+     * @param idempotencyKey 멱등성 키
+     * @return 조회된 업로드 세션 (Optional)
+     */
+    Optional<UploadSession> findByIdempotencyKey(IdempotencyKey idempotencyKey);
 
     /**
      * 업로드 세션이 존재하는지 확인합니다.
