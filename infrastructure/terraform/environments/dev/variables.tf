@@ -24,11 +24,17 @@ variable "s3_bucket_name" {
 variable "queue_name" {
   description = "Name of the SQS queue"
   type        = string
-  default     = "fileflow-upload-events"
+  default     = "upload-events"
 }
 
 variable "app_role_name" {
   description = "Name of the IAM role for the application"
   type        = string
-  default     = "fileflow-app-role"
+  default     = "app-role"
+}
+
+variable "app_trusted_service" {
+  description = "AWS service that can assume the application IAM role"
+  type        = string
+  default     = "ec2.amazonaws.com"
 }
