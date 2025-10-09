@@ -353,28 +353,31 @@ class FileRelationshipTest {
     }
 
     @Nested
-    @DisplayName("동등성 테스트")
+    @DisplayName("동등성 테스트 (비즈니스 키 기반)")
     class EqualityTest {
 
         @Test
-        @DisplayName("같은 id를 가진 FileRelationship은 동일하다")
-        void equalsBySameId() {
+        @DisplayName("같은 비즈니스 키(sourceFileId + targetFileId + relationshipType)를 가진 FileRelationship은 동일하다")
+        void equalsBySameBusinessKey() {
             // given
-            Long id = 1L;
+            FileId sourceFileId = FileId.generate();
+            FileId targetFileId = FileId.generate();
+            FileRelationshipType type = FileRelationshipType.THUMBNAIL;
+
             FileRelationship relationship1 = FileRelationship.reconstitute(
-                    id,
-                    FileId.generate(),
-                    FileId.generate(),
-                    FileRelationshipType.THUMBNAIL,
+                    1L,
+                    sourceFileId,
+                    targetFileId,
+                    type,
                     Map.of("width", 100),
                     LocalDateTime.now()
             );
             FileRelationship relationship2 = FileRelationship.reconstitute(
-                    id,
-                    FileId.generate(),
-                    FileId.generate(),
-                    FileRelationshipType.CONVERTED,
-                    Map.of("format", "webp"),
+                    2L, // 다른 ID
+                    sourceFileId,
+                    targetFileId,
+                    type,
+                    Map.of("format", "webp"), // 다른 메타데이터
                     LocalDateTime.now()
             );
 
@@ -384,22 +387,25 @@ class FileRelationshipTest {
         }
 
         @Test
-        @DisplayName("다른 id를 가진 FileRelationship은 다르다")
-        void notEqualsByDifferentId() {
+        @DisplayName("다른 sourceFileId를 가진 FileRelationship은 다르다")
+        void notEqualsByDifferentSourceFileId() {
             // given
+            FileId targetFileId = FileId.generate();
+            FileRelationshipType type = FileRelationshipType.THUMBNAIL;
+
             FileRelationship relationship1 = FileRelationship.reconstitute(
                     1L,
                     FileId.generate(),
-                    FileId.generate(),
-                    FileRelationshipType.THUMBNAIL,
+                    targetFileId,
+                    type,
                     Map.of(),
                     LocalDateTime.now()
             );
             FileRelationship relationship2 = FileRelationship.reconstitute(
-                    2L,
-                    FileId.generate(),
-                    FileId.generate(),
-                    FileRelationshipType.THUMBNAIL,
+                    1L,
+                    FileId.generate(), // 다른 sourceFileId
+                    targetFileId,
+                    type,
                     Map.of(),
                     LocalDateTime.now()
             );
@@ -409,14 +415,85 @@ class FileRelationshipTest {
         }
 
         @Test
-        @DisplayName("id가 null인 새로 생성된 FileRelationship은 다르다")
-        void notEqualsByNullId() {
+        @DisplayName("다른 targetFileId를 가진 FileRelationship은 다르다")
+        void notEqualsByDifferentTargetFileId() {
             // given
-            FileRelationship relationship1 = createRelationship(FileRelationshipType.THUMBNAIL);
-            FileRelationship relationship2 = createRelationship(FileRelationshipType.THUMBNAIL);
+            FileId sourceFileId = FileId.generate();
+            FileRelationshipType type = FileRelationshipType.THUMBNAIL;
+
+            FileRelationship relationship1 = FileRelationship.reconstitute(
+                    1L,
+                    sourceFileId,
+                    FileId.generate(),
+                    type,
+                    Map.of(),
+                    LocalDateTime.now()
+            );
+            FileRelationship relationship2 = FileRelationship.reconstitute(
+                    1L,
+                    sourceFileId,
+                    FileId.generate(), // 다른 targetFileId
+                    type,
+                    Map.of(),
+                    LocalDateTime.now()
+            );
 
             // when & then
             assertThat(relationship1).isNotEqualTo(relationship2);
+        }
+
+        @Test
+        @DisplayName("다른 relationshipType을 가진 FileRelationship은 다르다")
+        void notEqualsByDifferentRelationshipType() {
+            // given
+            FileId sourceFileId = FileId.generate();
+            FileId targetFileId = FileId.generate();
+
+            FileRelationship relationship1 = FileRelationship.reconstitute(
+                    1L,
+                    sourceFileId,
+                    targetFileId,
+                    FileRelationshipType.THUMBNAIL,
+                    Map.of(),
+                    LocalDateTime.now()
+            );
+            FileRelationship relationship2 = FileRelationship.reconstitute(
+                    1L,
+                    sourceFileId,
+                    targetFileId,
+                    FileRelationshipType.CONVERTED, // 다른 type
+                    Map.of(),
+                    LocalDateTime.now()
+            );
+
+            // when & then
+            assertThat(relationship1).isNotEqualTo(relationship2);
+        }
+
+        @Test
+        @DisplayName("새로 생성된 FileRelationship도 같은 비즈니스 키면 동일하다")
+        void equalsForNewlyCreatedRelationships() {
+            // given
+            FileId sourceFileId = FileId.generate();
+            FileId targetFileId = FileId.generate();
+            FileRelationshipType type = FileRelationshipType.THUMBNAIL;
+
+            FileRelationship relationship1 = FileRelationship.create(
+                    sourceFileId,
+                    targetFileId,
+                    type,
+                    Map.of("width", 100)
+            );
+            FileRelationship relationship2 = FileRelationship.create(
+                    sourceFileId,
+                    targetFileId,
+                    type,
+                    Map.of("height", 200) // 다른 메타데이터
+            );
+
+            // when & then
+            assertThat(relationship1).isEqualTo(relationship2);
+            assertThat(relationship1.hashCode()).isEqualTo(relationship2.hashCode());
         }
     }
 
