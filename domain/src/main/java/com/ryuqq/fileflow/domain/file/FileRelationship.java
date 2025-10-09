@@ -131,7 +131,7 @@ public final class FileRelationship {
         validateDifferentFiles(sourceFileId, targetFileId);
         validateRelationshipType(relationshipType);
         validateRelationshipMetadata(relationshipMetadata);
-        validateCreatedAt(createdAt);
+        validateCreatedAt(createdAt, Clock.systemDefaultZone());
 
         return new FileRelationship(
                 id,
@@ -268,11 +268,11 @@ public final class FileRelationship {
         }
     }
 
-    private static void validateCreatedAt(LocalDateTime createdAt) {
+    private static void validateCreatedAt(LocalDateTime createdAt, Clock clock) {
         if (createdAt == null) {
             throw new IllegalArgumentException("CreatedAt cannot be null");
         }
-        if (createdAt.isAfter(LocalDateTime.now())) {
+        if (createdAt.isAfter(LocalDateTime.now(clock))) {
             throw new IllegalArgumentException("CreatedAt cannot be in the future");
         }
     }
@@ -305,17 +305,27 @@ public final class FileRelationship {
 
     // ========== Override Methods ==========
 
+    /**
+     * 비즈니스 키 기반 equals: sourceFileId + targetFileId + relationshipType 조합으로 동등성 판단
+     *
+     * 동일한 원본 파일과 대상 파일 사이에 동일한 관계 유형은 하나만 존재해야 합니다.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FileRelationship that = (FileRelationship) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(sourceFileId, that.sourceFileId)
+                && Objects.equals(targetFileId, that.targetFileId)
+                && relationshipType == that.relationshipType;
     }
 
+    /**
+     * 비즈니스 키 기반 hashCode: sourceFileId + targetFileId + relationshipType 조합
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(sourceFileId, targetFileId, relationshipType);
     }
 
     @Override
