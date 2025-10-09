@@ -31,3 +31,8 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "s3_bucket_arn" {
+  description = "ARN of the S3 bucket allowed to send messages to this queue"
+  type        = string
+}
