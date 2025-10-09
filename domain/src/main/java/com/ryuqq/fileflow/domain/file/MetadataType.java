@@ -46,15 +46,15 @@ public enum MetadataType {
      * @return 호환되면 true
      */
     public boolean isCompatible(String value) {
-        if (value == null || value.trim().isEmpty()) {
+        if (value == null) {
             return false;
         }
 
         return switch (this) {
-            case STRING -> true; // 모든 문자열은 STRING 타입과 호환
-            case NUMBER -> isNumeric(value);
-            case BOOLEAN -> isBoolean(value);
-            case JSON -> isJson(value);
+            case STRING -> true; // 모든 문자열(빈 문자열 포함)은 STRING 타입과 호환
+            case NUMBER -> !value.trim().isEmpty() && isNumeric(value);
+            case BOOLEAN -> !value.trim().isEmpty() && isBoolean(value);
+            case JSON -> !value.trim().isEmpty() && isJson(value);
         };
     }
 
@@ -80,12 +80,49 @@ public enum MetadataType {
 
     /**
      * 문자열이 JSON 형식인지 확인합니다.
-     * 간단한 검증: { 또는 [로 시작하는지 확인
+     *
+     * 검증 항목:
+     * - JSON 객체({...}) 또는 배열([...]) 형식
+     * - 최소 길이 검증 (빈 객체/배열 {} [] 포함)
+     * - 따옴표 쌍 일치 검증 (escape되지 않은 따옴표가 짝수개)
      */
     private boolean isJson(String value) {
         String trimmed = value.trim();
-        return (trimmed.startsWith("{") && trimmed.endsWith("}"))
-                || (trimmed.startsWith("[") && trimmed.endsWith("]"));
+
+        // JSON 객체 또는 배열 형식 확인
+        boolean isObject = trimmed.startsWith("{") && trimmed.endsWith("}");
+        boolean isArray = trimmed.startsWith("[") && trimmed.endsWith("]");
+
+        if (!isObject && !isArray) {
+            return false;
+        }
+
+        // 최소 길이 검증 (빈 객체 {} 또는 빈 배열 [] 포함)
+        if (trimmed.length() < 2) {
+            return false;
+        }
+
+        // 따옴표 불일치 검증: escape되지 않은 따옴표가 짝수개여야 함
+        int quoteCount = 0;
+        boolean escaped = false;
+
+        for (int i = 0; i < trimmed.length(); i++) {
+            char c = trimmed.charAt(i);
+
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                escaped = true;
+            } else if (c == '"') {
+                quoteCount++;
+            }
+        }
+
+        // 따옴표가 홀수개면 잘못된 JSON
+        return quoteCount % 2 == 0;
     }
 
     /**

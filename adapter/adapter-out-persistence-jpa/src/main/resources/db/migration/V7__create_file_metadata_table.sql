@@ -19,7 +19,7 @@ CREATE TABLE file_metadata (
     id              BIGINT          NOT NULL AUTO_INCREMENT COMMENT '메타데이터 레코드 ID',
     file_id         VARCHAR(36)     NOT NULL COMMENT '파일 ID (UUID, FK to file_asset)',
     metadata_key    VARCHAR(100)    NOT NULL COMMENT '메타데이터 키 (예: width, height, duration)',
-    metadata_value  TEXT            NULL COMMENT '메타데이터 값 (문자열 형태로 저장)',
+    metadata_value  TEXT            NOT NULL COMMENT '메타데이터 값 (문자열 형태로 저장)',
     value_type      VARCHAR(20)     NOT NULL COMMENT '값의 데이터 타입 (STRING, NUMBER, BOOLEAN, JSON)',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 시각',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 시각',
