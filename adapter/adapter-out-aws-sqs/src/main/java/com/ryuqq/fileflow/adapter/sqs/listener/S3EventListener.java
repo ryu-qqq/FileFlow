@@ -4,9 +4,11 @@ import com.ryuqq.fileflow.adapter.sqs.config.SqsProperties;
 import com.ryuqq.fileflow.adapter.sqs.handler.S3UploadEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -15,6 +17,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * S3 Event SQS Listener
@@ -32,15 +35,18 @@ public class S3EventListener {
     private final SqsAsyncClient sqsAsyncClient;
     private final SqsProperties sqsProperties;
     private final S3UploadEventHandler eventHandler;
+    private final Executor messageProcessorExecutor;
 
     public S3EventListener(
             SqsAsyncClient sqsAsyncClient,
             SqsProperties sqsProperties,
-            S3UploadEventHandler eventHandler
+            S3UploadEventHandler eventHandler,
+            @Qualifier("sqsMessageProcessorExecutor") Executor messageProcessorExecutor
     ) {
         this.sqsAsyncClient = sqsAsyncClient;
         this.sqsProperties = sqsProperties;
         this.eventHandler = eventHandler;
+        this.messageProcessorExecutor = messageProcessorExecutor;
     }
 
     /**
@@ -53,7 +59,7 @@ public class S3EventListener {
     public void pollMessages() {
         String queueUrl = sqsProperties.getS3EventQueueUrl();
 
-        if (queueUrl == null || queueUrl.isEmpty()) {
+        if (!StringUtils.hasText(queueUrl)) {
             log.warn("S3 Event Queue URL is not configured. Skipping message polling.");
             return;
         }
@@ -125,7 +131,7 @@ public class S3EventListener {
                 // 메시지 처리 실패 시 visibility timeout 후 재시도
                 // DLQ는 SQS 설정에서 처리
             }
-        });
+        }, messageProcessorExecutor);
     }
 
     /**

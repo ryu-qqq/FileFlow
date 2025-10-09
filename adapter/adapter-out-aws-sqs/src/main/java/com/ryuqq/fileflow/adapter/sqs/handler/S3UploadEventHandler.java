@@ -151,18 +151,15 @@ public class S3UploadEventHandler {
             S3EventNotification.S3EventRecord record
     ) {
         // 1. 세션 조회
-        Optional<UploadSession> sessionOptional = uploadSessionPort.findById(sessionId);
-
-        if (sessionOptional.isEmpty()) {
-            String errorMsg = String.format(
-                    "Upload session not found for ID: %s. S3 object: %s",
-                    sessionId, s3Location.toUri()
-            );
-            log.error(errorMsg);
-            throw new SessionMatchingException(errorMsg);
-        }
-
-        UploadSession session = sessionOptional.get();
+        UploadSession session = uploadSessionPort.findById(sessionId)
+                .orElseThrow(() -> {
+                    String errorMsg = String.format(
+                            "Upload session not found for ID: %s. S3 object: %s",
+                            sessionId, s3Location.toUri()
+                    );
+                    log.error(errorMsg);
+                    return new SessionMatchingException(errorMsg);
+                });
 
         // 2. 세션 상태 검증
         if (!session.isActive()) {
