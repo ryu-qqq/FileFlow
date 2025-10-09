@@ -1,0 +1,13 @@
+# AWS Configuration
+aws_region = "ap-northeast-2"
+environment = "dev"
+project_name = "fileflow"
+
+# S3 Bucket (must already exist)
+s3_bucket_name = "fileflow-dev-uploads"
+
+# SQS Queue
+queue_name = "upload-events"
+
+# IAM Role
+app_role_name = "app-role"
