@@ -1,35 +1,27 @@
 package com.ryuqq.fileflow.adapter.sqs.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
  * SQS 설정 속성
  *
  * application.yml의 aws.sqs 설정을 바인딩합니다.
+ * @ConfigurationProperties를 사용하여 타입 안정성을 높이고,
+ * 관련 설정을 하나의 클래스로 캡슐화합니다.
  *
  * @author sangwon-ryu
  */
 @Component
+@ConfigurationProperties(prefix = "aws.sqs")
 public class SqsProperties {
 
-    @Value("${aws.sqs.region:ap-northeast-2}")
-    private String region;
-
-    @Value("${aws.sqs.endpoint:}")
+    private String region = "ap-northeast-2";
     private String endpoint;
-
-    @Value("${aws.sqs.s3-event-queue-url:}")
     private String s3EventQueueUrl;
-
-    @Value("${aws.sqs.wait-time-seconds:20}")
-    private Integer waitTimeSeconds;
-
-    @Value("${aws.sqs.max-number-of-messages:10}")
-    private Integer maxNumberOfMessages;
-
-    @Value("${aws.sqs.visibility-timeout:30}")
-    private Integer visibilityTimeout;
+    private Integer waitTimeSeconds = 20;
+    private Integer maxNumberOfMessages = 10;
+    private Integer visibilityTimeout = 30;
 
     public SqsProperties() {
     }
