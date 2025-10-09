@@ -110,15 +110,14 @@ public interface FileMetadataJpaRepository extends JpaRepository<FileMetadataEnt
 
     /**
      * 여러 메타데이터 키를 가진 파일의 메타데이터를 조회합니다.
+     * Spring Data JPA의 쿼리 메서드 파생 기능을 사용합니다.
      *
      * @param fileId 파일 ID
      * @param metadataKeys 메타데이터 키 리스트
      * @return 메타데이터 리스트
      */
-    @Query("SELECT fm FROM FileMetadataEntity fm " +
-            "WHERE fm.fileId = :fileId AND fm.metadataKey IN :metadataKeys")
     List<FileMetadataEntity> findByFileIdAndMetadataKeyIn(
-            @Param("fileId") String fileId,
-            @Param("metadataKeys") List<String> metadataKeys
+            String fileId,
+            List<String> metadataKeys
     );
 }
