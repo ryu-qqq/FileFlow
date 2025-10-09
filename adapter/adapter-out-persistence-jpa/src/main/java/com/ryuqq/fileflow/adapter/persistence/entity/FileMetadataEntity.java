@@ -50,7 +50,7 @@ public class FileMetadataEntity {
     @Column(name = "metadata_key", nullable = false, length = 100)
     private String metadataKey;
 
-    @Column(name = "metadata_value", columnDefinition = "TEXT")
+    @Column(name = "metadata_value", columnDefinition = "TEXT", nullable = false)
     private String metadataValue;
 
     @Enumerated(EnumType.STRING)
@@ -123,12 +123,9 @@ public class FileMetadataEntity {
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
-        if (this.updatedAt == null) {
-            this.updatedAt = LocalDateTime.now();
-        }
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     @PreUpdate
