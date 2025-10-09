@@ -69,10 +69,11 @@ public class FileRelationshipMapper {
      *
      * @param domainType Domain enum
      * @return Entity enum
+     * @throws IllegalArgumentException if domainType is null
      */
     private FileRelationshipEntity.FileRelationshipTypeEntity toEntityType(FileRelationshipType domainType) {
         if (domainType == null) {
-            return null;
+            throw new IllegalArgumentException("Domain relationship type cannot be null");
         }
 
         return switch (domainType) {
@@ -89,10 +90,11 @@ public class FileRelationshipMapper {
      *
      * @param entityType Entity enum
      * @return Domain enum
+     * @throws IllegalArgumentException if entityType is null
      */
     private FileRelationshipType toDomainType(FileRelationshipEntity.FileRelationshipTypeEntity entityType) {
         if (entityType == null) {
-            return null;
+            throw new IllegalArgumentException("Entity relationship type cannot be null");
         }
 
         return switch (entityType) {
