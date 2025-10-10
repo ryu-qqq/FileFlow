@@ -57,6 +57,12 @@ logstashLogback = "7.4"
 micrometer = "1.12.4"
 
 # ========================================
+# Resilience & Retry
+# ========================================
+springRetry = "2.0.5"
+resilience4j = "2.2.0"
+
+# ========================================
 # Utilities
 # ========================================
 commonsLang3 = "3.14.0"
@@ -81,6 +87,7 @@ spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
+spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
 
 # ========================================
 # Spring Framework
@@ -149,6 +156,15 @@ logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-enc
 micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
 
 # ========================================
+# Resilience & Retry
+# ========================================
+spring-retry = { module = "org.springframework.retry:spring-retry", version.ref = "springRetry" }
+resilience4j-spring-boot3 = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
+resilience4j-circuitbreaker = { module = "io.github.resilience4j:resilience4j-circuitbreaker", version.ref = "resilience4j" }
+resilience4j-retry = { module = "io.github.resilience4j:resilience4j-retry", version.ref = "resilience4j" }
+resilience4j-micrometer = { module = "io.github.resilience4j:resilience4j-micrometer", version.ref = "resilience4j" }
+
+# ========================================
 # Utilities
 # ========================================
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }
@@ -209,6 +225,14 @@ observability = [
     "spring-boot-starter-actuator",
     "micrometer-prometheus",
     "logstash-logback-encoder"
+]
+
+resilience = [
+    "spring-retry",
+    "resilience4j-spring-boot3",
+    "resilience4j-circuitbreaker",
+    "resilience4j-retry",
+    "resilience4j-micrometer"
 ]
 
 [plugins]
