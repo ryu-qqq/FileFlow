@@ -50,8 +50,8 @@ public class GetUploadStatusService implements GetUploadStatusUseCase {
     @Override
     public UploadStatusResponse getUploadStatus(String sessionId) {
         // 1. 세션 ID 검증
-        if (sessionId == null || sessionId.trim().isEmpty()) {
-            throw new IllegalArgumentException("SessionId must not be null or empty");
+        if (sessionId == null || sessionId.isBlank()) {
+            throw new IllegalArgumentException("SessionId must not be null or blank");
         }
 
         // 2. 세션 조회

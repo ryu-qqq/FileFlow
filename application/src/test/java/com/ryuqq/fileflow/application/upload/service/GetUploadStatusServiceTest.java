@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * GetUploadStatusService 단위 테스트
@@ -140,6 +141,46 @@ class GetUploadStatusServiceTest {
         // When & Then
         assertThrows(IllegalArgumentException.class,
                 () -> service.getUploadStatus("   "));
+    }
+
+    @Test
+    @DisplayName("만료된 세션 조회 성공 - isExpired true")
+    void getUploadStatus_expiredSession_success() {
+        // Given
+        String sessionId = "expired-session-id";
+        PolicyKey policyKey = PolicyKey.of("test-tenant", "CONSUMER", "REVIEW");
+        com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey idempotencyKey =
+                com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey.generate();
+        UploadRequest uploadRequest = UploadRequest.of(
+                "test-file.jpg",
+                FileType.IMAGE,
+                1024L,
+                "image/jpeg",
+                idempotencyKey
+        );
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime pastExpiry = now.minusHours(1); // 이미 만료된 시간
+
+        UploadSession expiredSession = UploadSession.reconstitute(
+                sessionId,
+                policyKey,
+                uploadRequest,
+                "test-uploader",
+                UploadStatus.COMPLETED,
+                now.minusHours(2),
+                pastExpiry
+        );
+        uploadSessionPort.setSession(expiredSession);
+
+        // When
+        UploadStatusResponse response = service.getUploadStatus(sessionId);
+
+        // Then
+        assertNotNull(response);
+        assertTrue(response.isExpired());
+        assertEquals(sessionId, response.sessionId());
+        assertEquals(UploadStatus.COMPLETED, response.status());
     }
 
     // Helper Methods

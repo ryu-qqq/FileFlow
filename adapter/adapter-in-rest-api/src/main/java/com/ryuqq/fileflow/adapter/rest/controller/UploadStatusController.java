@@ -53,10 +53,7 @@ public class UploadStatusController {
      */
     @GetMapping("/{sessionId}/status")
     public ResponseEntity<UploadStatusApiResponse> getUploadStatus(@PathVariable String sessionId) {
-        Objects.requireNonNull(sessionId, "sessionId must not be null");
-
         UploadStatusResponse response = getUploadStatusUseCase.getUploadStatus(sessionId);
-
         return ResponseEntity.ok(UploadStatusApiResponse.from(response));
     }
 }
