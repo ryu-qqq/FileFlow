@@ -87,8 +87,7 @@ public class ExpiredUploadSessionBatchService {
                     log.debug("Successfully failed expired session: {}", session.getSessionId());
                 } catch (Exception e) {
                     failureCount++;
-                    log.error("Failed to process expired session: {}, error: {}",
-                            session.getSessionId(), e.getMessage(), e);
+                    log.error("Failed to process expired session: {}", session.getSessionId(), e);
                 }
             }
 
