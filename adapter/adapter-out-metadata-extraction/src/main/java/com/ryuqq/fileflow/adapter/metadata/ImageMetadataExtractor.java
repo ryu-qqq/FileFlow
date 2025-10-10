@@ -2,9 +2,7 @@ package com.ryuqq.fileflow.adapter.metadata;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
-import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
-import com.drew.metadata.Tag;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.png.PngDirectory;
 import com.drew.metadata.jpeg.JpegDirectory;

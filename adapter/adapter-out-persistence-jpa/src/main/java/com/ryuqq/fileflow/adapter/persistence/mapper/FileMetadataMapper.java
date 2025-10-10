@@ -33,7 +33,7 @@ public class FileMetadataMapper {
         }
 
         return FileMetadataEntity.of(
-                domain.getFileId().getValue(),
+                domain.getFileId().value(),
                 domain.getMetadataKey(),
                 domain.getMetadataValue(),
                 domain.getValueType()
@@ -51,7 +51,7 @@ public class FileMetadataMapper {
             return null;
         }
 
-        FileId fileId = FileId.reconstitute(entity.getFileId());
+        FileId fileId = FileId.of(entity.getFileId());
 
         return FileMetadata.reconstitute(
                 fileId,
