@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.event.UploadCompletedEvent;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 import com.ryuqq.fileflow.domain.upload.vo.*;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
@@ -28,6 +29,7 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
+@Service
 public class CompleteUploadSessionService implements CompleteUploadSessionUseCase {
 
     private final UploadSessionPort uploadSessionPort;
