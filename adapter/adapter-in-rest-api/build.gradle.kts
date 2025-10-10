@@ -39,6 +39,20 @@ dependencies {
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.security.test)
     testImplementation(libs.rest.assured)
+
+    // Testcontainers for integration tests
+    testImplementation(libs.testcontainers.junit)
+    testImplementation(libs.testcontainers.localstack)
+    testImplementation(libs.testcontainers.mysql)
+
+    // AWS SDK for S3 integration tests
+    testImplementation(platform(libs.aws.bom))
+    testImplementation(libs.aws.s3)
+    testImplementation(libs.aws.sqs)
+
+    // Adapter dependencies for integration tests
+    testImplementation(project(":adapter:adapter-out-persistence-jpa"))
+    testImplementation(project(":adapter:adapter-out-aws-s3"))
 }
 
 // ========================================
