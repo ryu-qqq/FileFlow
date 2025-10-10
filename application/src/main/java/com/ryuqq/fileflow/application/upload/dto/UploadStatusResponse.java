@@ -33,44 +33,22 @@ public record UploadStatusResponse(
     /**
      * UploadSession 도메인 객체로부터 Response DTO를 생성합니다.
      *
-     * 진행률은 상태 기반으로 계산됩니다:
-     * - PENDING: 0%
-     * - UPLOADING: 50%
-     * - COMPLETED: 100%
-     * - FAILED/CANCELLED: 0%
+     * 진행률은 UploadStatus enum에서 제공하는 값을 사용합니다.
+     * S3 Presigned URL 직접 업로드 방식에서는 실시간 바이트 추적이 불가능하므로,
+     * 상태 기반의 추정 진행률을 제공합니다.
      *
      * @param session 업로드 세션 도메인 객체
      * @return UploadStatusResponse
      */
     public static UploadStatusResponse from(UploadSession session) {
-        int calculatedProgress = calculateProgress(session.getStatus());
-
         return new UploadStatusResponse(
                 session.getSessionId(),
                 session.getStatus(),
-                calculatedProgress,
+                session.getStatus().getProgress(),
                 session.getUploadRequest().fileSizeBytes(),
                 session.getCreatedAt(),
                 session.getExpiresAt(),
                 session.isExpired()
         );
-    }
-
-    /**
-     * 업로드 상태 기반으로 진행률을 계산합니다.
-     *
-     * S3 Presigned URL 직접 업로드 방식에서는 실시간 업로드 바이트 추적이 불가능하므로,
-     * 상태 기반의 간단한 진행률 계산을 제공합니다.
-     *
-     * @param status 업로드 상태
-     * @return 진행률 (0-100)
-     */
-    private static int calculateProgress(UploadStatus status) {
-        return switch (status) {
-            case PENDING -> 0;
-            case UPLOADING -> 50;
-            case COMPLETED -> 100;
-            case FAILED, CANCELLED -> 0;
-        };
     }
 }

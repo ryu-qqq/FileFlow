@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
+import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
 import com.ryuqq.fileflow.domain.upload.vo.UploadStatus;
 import com.ryuqq.fileflow.domain.policy.FileType;
@@ -149,8 +150,7 @@ class GetUploadStatusServiceTest {
         // Given
         String sessionId = "expired-session-id";
         PolicyKey policyKey = PolicyKey.of("test-tenant", "CONSUMER", "REVIEW");
-        com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey idempotencyKey =
-                com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey.generate();
+        IdempotencyKey idempotencyKey = IdempotencyKey.generate();
         UploadRequest uploadRequest = UploadRequest.of(
                 "test-file.jpg",
                 FileType.IMAGE,
@@ -187,8 +187,7 @@ class GetUploadStatusServiceTest {
 
     private UploadSession createTestSession(String sessionId, UploadStatus status) {
         PolicyKey policyKey = PolicyKey.of("test-tenant", "CONSUMER", "REVIEW");
-        com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey idempotencyKey =
-                com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey.generate();
+        IdempotencyKey idempotencyKey = IdempotencyKey.generate();
         UploadRequest uploadRequest = UploadRequest.of(
                 "test-file.jpg",
                 FileType.IMAGE,
@@ -234,7 +233,7 @@ class GetUploadStatusServiceTest {
         }
 
         @Override
-        public Optional<UploadSession> findByIdempotencyKey(com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey idempotencyKey) {
+        public Optional<UploadSession> findByIdempotencyKey(IdempotencyKey idempotencyKey) {
             return Optional.empty();
         }
 
