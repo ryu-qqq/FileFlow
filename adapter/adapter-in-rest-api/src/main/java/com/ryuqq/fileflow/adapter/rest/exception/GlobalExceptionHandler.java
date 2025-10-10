@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.adapter.rest.dto.response.PolicyViolationErrorResponse
 import com.ryuqq.fileflow.domain.policy.exception.InvalidPolicyException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException;
+import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +72,27 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * UploadSessionNotFoundException 처리
+     *
+     * @param ex UploadSessionNotFoundException
+     * @param request HttpServletRequest
+     * @return 404 NOT_FOUND 응답
+     */
+    @ExceptionHandler(UploadSessionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUploadSessionNotFoundException(
+            UploadSessionNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(),
+                "Upload Session Not Found",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
     /**
