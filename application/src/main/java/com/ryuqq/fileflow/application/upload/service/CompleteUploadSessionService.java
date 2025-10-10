@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.event.UploadCompletedEvent;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 import com.ryuqq.fileflow.domain.upload.vo.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
@@ -76,6 +77,7 @@ public class CompleteUploadSessionService implements CompleteUploadSessionUseCas
      * @throws IllegalStateException 완료 가능한 상태가 아니거나 세션이 만료된 경우
      */
     @Override
+    @Transactional
     public UploadSessionResponse completeSession(String sessionId) {
         // 1. 세션 조회
         UploadSession session = findSessionById(sessionId);
@@ -164,8 +166,8 @@ public class CompleteUploadSessionService implements CompleteUploadSessionUseCas
      * @return S3 객체 키
      */
     private String buildS3Key(UploadSession session) {
-        return String.format(
-                "%s/%s/%s",
+        return String.join(
+                "/",
                 session.getPolicyKey().getTenantId(),
                 session.getSessionId(),
                 session.getUploadRequest().fileName()

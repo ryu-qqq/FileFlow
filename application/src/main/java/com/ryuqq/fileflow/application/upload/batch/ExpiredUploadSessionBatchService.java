@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -61,10 +60,10 @@ public class ExpiredUploadSessionBatchService {
      * fixedDelay: 이전 작업 완료 후 5분 후 다음 작업 시작 (겹침 방지)
      * initialDelay: 애플리케이션 시작 후 1분 후 첫 실행
      *
-     * @Transactional: 각 배치 실행을 하나의 트랜잭션으로 처리
+     * Note: 각 세션 처리는 FailUploadService의 개별 트랜잭션으로 실행됩니다.
+     *       배치 메서드 자체에는 @Transactional을 적용하지 않습니다.
      */
     @Scheduled(fixedDelay = 300000, initialDelay = 60000)
-    @Transactional
     public void processExpiredSessions() {
         log.info("Starting expired upload session batch processing");
 
@@ -99,7 +98,6 @@ public class ExpiredUploadSessionBatchService {
 
         } catch (Exception e) {
             log.error("Unexpected error during expired session batch processing", e);
-            throw e; // 트랜잭션 롤백을 위해 예외 재발생
         }
     }
 }
