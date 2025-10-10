@@ -22,9 +22,18 @@ dependencies {
     // Spring Context (Dependency Injection only)
     implementation(libs.spring.context)
     implementation(libs.spring.tx)
+    implementation(libs.spring.boot.autoconfigure)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+
+    // AWS SDK (for retry error classification)
+    implementation(platform(libs.aws.bom))
+    implementation("software.amazon.awssdk:aws-core")
 
     // Validation
     implementation(libs.spring.boot.starter.validation)
+
+    // Resilience & Retry
+    implementation(libs.bundles.resilience)
 
     // ========================================
     // Test Dependencies

@@ -25,10 +25,14 @@ dependencies {
     // Spring Context & Messaging
     implementation(libs.spring.context)
     implementation(libs.spring.messaging)
-    implementation(libs.spring.boot.configuration.processor)
+    implementation(libs.spring.boot.autoconfigure)
+    annotationProcessor(libs.spring.boot.configuration.processor)
 
     // JSON Processing
     implementation(libs.jackson.databind)
+
+    // Resilience & Retry
+    implementation(libs.bundles.resilience)
 
     // ========================================
     // Test Dependencies

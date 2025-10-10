@@ -26,7 +26,11 @@ dependencies {
 
     // Spring Framework
     implementation(libs.spring.context)
-    implementation(libs.spring.boot.configuration.processor)
+    implementation(libs.spring.boot.autoconfigure)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+
+    // Resilience & Retry
+    implementation(libs.bundles.resilience)
 
     // ========================================
     // Test Dependencies
