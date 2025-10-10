@@ -7,6 +7,7 @@ import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.event.UploadFailedEvent;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
@@ -60,6 +61,7 @@ public class FailUploadService implements FailUploadUseCase {
      * @throws IllegalStateException 실패 처리 가능한 상태가 아니거나 세션이 만료된 경우
      */
     @Override
+    @Transactional
     public UploadSessionResponse failSession(String sessionId, String reason) {
         // 1. 세션 조회 및 reason 검증
         UploadSession session = findSessionById(sessionId);
