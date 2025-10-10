@@ -25,6 +25,7 @@ include("adapter:adapter-out-redis")
 include("adapter:adapter-out-aws-s3")
 include("adapter:adapter-out-aws-sqs")
 include("adapter:adapter-out-aws-textract")
+include("adapter:adapter-out-metadata-extraction")
 
 // ========================================
 // Bootstrap Modules (Runnable Applications)
