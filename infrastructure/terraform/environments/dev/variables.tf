@@ -36,5 +36,5 @@ variable "app_role_name" {
 variable "app_trusted_service" {
   description = "AWS service that can assume the application IAM role"
   type        = string
-  default     = "ec2.amazonaws.com"
+  default     = null
 }
