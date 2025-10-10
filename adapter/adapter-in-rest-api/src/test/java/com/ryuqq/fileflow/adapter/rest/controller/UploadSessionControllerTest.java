@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @author sangwon-ryu
  */
-@WebMvcTest(controllers = {UploadSessionController.class, com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler.class})
+@WebMvcTest(UploadSessionController.class)
 @DisplayName("UploadSessionController 테스트")
 @WithMockUser
 class UploadSessionControllerTest {

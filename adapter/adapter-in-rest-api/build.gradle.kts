@@ -49,6 +49,10 @@ dependencies {
     testImplementation(platform(libs.aws.bom))
     testImplementation(libs.aws.s3)
     testImplementation(libs.aws.sqs)
+
+    // Adapter dependencies for integration tests
+    testImplementation(project(":adapter:adapter-out-persistence-jpa"))
+    testImplementation(project(":adapter:adapter-out-aws-s3"))
 }
 
 // ========================================
