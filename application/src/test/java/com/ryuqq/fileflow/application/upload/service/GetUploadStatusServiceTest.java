@@ -248,5 +248,10 @@ class GetUploadStatusServiceTest {
                 session = null;
             }
         }
+
+        @Override
+        public java.util.List<UploadSession> findExpiredSessions() {
+            return java.util.List.of();
+        }
     }
 }
