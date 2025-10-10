@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.application.upload.port.out;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -55,4 +56,17 @@ public interface UploadSessionPort {
      * @param sessionId 세션 ID
      */
     void deleteById(String sessionId);
+
+    /**
+     * 만료된 업로드 세션 목록을 조회합니다.
+     *
+     * 다음 조건을 만족하는 세션들을 반환합니다:
+     * - 상태가 PENDING 또는 UPLOADING
+     * - expiresAt이 현재 시간보다 이전 (만료됨)
+     *
+     * 배치 작업에서 만료된 세션들을 자동으로 FAILED 상태로 전환하기 위해 사용됩니다.
+     *
+     * @return 만료된 업로드 세션 목록
+     */
+    List<UploadSession> findExpiredSessions();
 }
