@@ -26,6 +26,9 @@ dependencies {
     // Validation
     implementation(libs.spring.boot.starter.validation)
 
+    // Resilience & Retry
+    implementation(libs.bundles.resilience)
+
     // ========================================
     // Test Dependencies
     // ========================================
