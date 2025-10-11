@@ -56,18 +56,14 @@ class SqsRetryConfigTest {
 
     @Test
     @DisplayName("ExponentialBackOffPolicy 설정 검증 - initialInterval")
-    void sqsRetryTemplate_exponentialBackOffPolicy_initialInterval() throws Exception {
+    void sqsRetryTemplate_exponentialBackOffPolicy_initialInterval() throws ReflectiveOperationException {
         // When
         RetryTemplate retryTemplate = config.sqsRetryTemplate(meterRegistry);
 
-        // Then - Use reflection to access private backOffPolicy field
-        Field backOffPolicyField = RetryTemplate.class.getDeclaredField("backOffPolicy");
-        backOffPolicyField.setAccessible(true);
-        BackOffPolicy backOffPolicy = (BackOffPolicy) backOffPolicyField.get(retryTemplate);
+        // Then
+        ExponentialBackOffPolicy exponentialPolicy = getBackOffPolicy(retryTemplate);
+        assertThat(exponentialPolicy).isNotNull();
 
-        assertThat(backOffPolicy).isInstanceOf(ExponentialBackOffPolicy.class);
-
-        ExponentialBackOffPolicy exponentialPolicy = (ExponentialBackOffPolicy) backOffPolicy;
         Field initialIntervalField = ExponentialBackOffPolicy.class.getDeclaredField("initialInterval");
         initialIntervalField.setAccessible(true);
         long initialInterval = (long) initialIntervalField.get(exponentialPolicy);
@@ -77,16 +73,12 @@ class SqsRetryConfigTest {
 
     @Test
     @DisplayName("ExponentialBackOffPolicy 설정 검증 - maxInterval")
-    void sqsRetryTemplate_exponentialBackOffPolicy_maxInterval() throws Exception {
+    void sqsRetryTemplate_exponentialBackOffPolicy_maxInterval() throws ReflectiveOperationException {
         // When
         RetryTemplate retryTemplate = config.sqsRetryTemplate(meterRegistry);
 
         // Then
-        Field backOffPolicyField = RetryTemplate.class.getDeclaredField("backOffPolicy");
-        backOffPolicyField.setAccessible(true);
-        BackOffPolicy backOffPolicy = (BackOffPolicy) backOffPolicyField.get(retryTemplate);
-
-        ExponentialBackOffPolicy exponentialPolicy = (ExponentialBackOffPolicy) backOffPolicy;
+        ExponentialBackOffPolicy exponentialPolicy = getBackOffPolicy(retryTemplate);
         Field maxIntervalField = ExponentialBackOffPolicy.class.getDeclaredField("maxInterval");
         maxIntervalField.setAccessible(true);
         long maxInterval = (long) maxIntervalField.get(exponentialPolicy);
@@ -96,16 +88,12 @@ class SqsRetryConfigTest {
 
     @Test
     @DisplayName("ExponentialBackOffPolicy 설정 검증 - multiplier")
-    void sqsRetryTemplate_exponentialBackOffPolicy_multiplier() throws Exception {
+    void sqsRetryTemplate_exponentialBackOffPolicy_multiplier() throws ReflectiveOperationException {
         // When
         RetryTemplate retryTemplate = config.sqsRetryTemplate(meterRegistry);
 
         // Then
-        Field backOffPolicyField = RetryTemplate.class.getDeclaredField("backOffPolicy");
-        backOffPolicyField.setAccessible(true);
-        BackOffPolicy backOffPolicy = (BackOffPolicy) backOffPolicyField.get(retryTemplate);
-
-        ExponentialBackOffPolicy exponentialPolicy = (ExponentialBackOffPolicy) backOffPolicy;
+        ExponentialBackOffPolicy exponentialPolicy = getBackOffPolicy(retryTemplate);
         Field multiplierField = ExponentialBackOffPolicy.class.getDeclaredField("multiplier");
         multiplierField.setAccessible(true);
         double multiplier = (double) multiplierField.get(exponentialPolicy);
@@ -115,18 +103,14 @@ class SqsRetryConfigTest {
 
     @Test
     @DisplayName("SimpleRetryPolicy 설정 검증 - maxAttempts")
-    void sqsRetryTemplate_simpleRetryPolicy_maxAttempts() throws Exception {
+    void sqsRetryTemplate_simpleRetryPolicy_maxAttempts() throws ReflectiveOperationException {
         // When
         RetryTemplate retryTemplate = config.sqsRetryTemplate(meterRegistry);
 
         // Then
-        Field retryPolicyField = RetryTemplate.class.getDeclaredField("retryPolicy");
-        retryPolicyField.setAccessible(true);
-        RetryPolicy retryPolicy = (RetryPolicy) retryPolicyField.get(retryTemplate);
+        SimpleRetryPolicy simplePolicy = getRetryPolicy(retryTemplate);
+        assertThat(simplePolicy).isNotNull();
 
-        assertThat(retryPolicy).isInstanceOf(SimpleRetryPolicy.class);
-
-        SimpleRetryPolicy simplePolicy = (SimpleRetryPolicy) retryPolicy;
         Field maxAttemptsField = SimpleRetryPolicy.class.getDeclaredField("maxAttempts");
         maxAttemptsField.setAccessible(true);
         int maxAttempts = (int) maxAttemptsField.get(simplePolicy);
@@ -136,7 +120,7 @@ class SqsRetryConfigTest {
 
     @Test
     @DisplayName("커스텀 RetryProperties 설정 적용 검증")
-    void sqsRetryTemplate_customRetryProperties_applied() throws Exception {
+    void sqsRetryTemplate_customRetryProperties_applied() throws ReflectiveOperationException {
         // Given
         RetryProperties.Retry customRetry = retryProperties.getRetry();
         customRetry.setMaxAttempts(5);
@@ -148,19 +132,12 @@ class SqsRetryConfigTest {
         RetryTemplate retryTemplate = config.sqsRetryTemplate(meterRegistry);
 
         // Then
-        Field retryPolicyField = RetryTemplate.class.getDeclaredField("retryPolicy");
-        retryPolicyField.setAccessible(true);
-        RetryPolicy retryPolicy = (RetryPolicy) retryPolicyField.get(retryTemplate);
-
+        SimpleRetryPolicy simplePolicy = getRetryPolicy(retryTemplate);
         Field maxAttemptsField = SimpleRetryPolicy.class.getDeclaredField("maxAttempts");
         maxAttemptsField.setAccessible(true);
-        int maxAttempts = (int) maxAttemptsField.get(retryPolicy);
+        int maxAttempts = (int) maxAttemptsField.get(simplePolicy);
 
-        Field backOffPolicyField = RetryTemplate.class.getDeclaredField("backOffPolicy");
-        backOffPolicyField.setAccessible(true);
-        BackOffPolicy backOffPolicy = (BackOffPolicy) backOffPolicyField.get(retryTemplate);
-
-        ExponentialBackOffPolicy exponentialPolicy = (ExponentialBackOffPolicy) backOffPolicy;
+        ExponentialBackOffPolicy exponentialPolicy = getBackOffPolicy(retryTemplate);
         Field initialIntervalField = ExponentialBackOffPolicy.class.getDeclaredField("initialInterval");
         initialIntervalField.setAccessible(true);
         long initialInterval = (long) initialIntervalField.get(exponentialPolicy);
@@ -264,5 +241,18 @@ class SqsRetryConfigTest {
 
         // Then
         assertThat(result).isEqualTo(AwsRetryableErrorClassifier.isRetryable(exception));
+    }
+
+    // Helper methods for reflection
+    private ExponentialBackOffPolicy getBackOffPolicy(RetryTemplate retryTemplate) throws ReflectiveOperationException {
+        Field field = RetryTemplate.class.getDeclaredField("backOffPolicy");
+        field.setAccessible(true);
+        return (ExponentialBackOffPolicy) field.get(retryTemplate);
+    }
+
+    private SimpleRetryPolicy getRetryPolicy(RetryTemplate retryTemplate) throws ReflectiveOperationException {
+        Field field = RetryTemplate.class.getDeclaredField("retryPolicy");
+        field.setAccessible(true);
+        return (SimpleRetryPolicy) field.get(retryTemplate);
     }
 }
