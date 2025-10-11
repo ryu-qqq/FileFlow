@@ -106,32 +106,4 @@ public class UploadSessionMapper {
         return PolicyKey.of(parts[0], parts[1], parts[2]);
     }
 
-    /**
-     * CheckSum 문자열을 파싱하여 CheckSum VO로 변환
-     *
-     * @param checksumString "algorithm:value" 형식 (예: "SHA-256:abc123...")
-     * @return CheckSum VO
-     */
-    private CheckSum parseCheckSum(String checksumString) {
-        if (checksumString == null || checksumString.isEmpty()) {
-            throw new IllegalArgumentException("Checksum string cannot be null or empty");
-        }
-
-        String[] parts = checksumString.split(":", 2);
-        if (parts.length != 2) {
-            throw new IllegalArgumentException(
-                    "Invalid checksum format. Expected 'algorithm:value', got: " + checksumString
-            );
-        }
-
-        String algorithm = parts[0];
-        String value = parts[1];
-
-        return switch (algorithm) {
-            case "SHA-256" -> CheckSum.sha256(value);
-            case "SHA-512" -> CheckSum.sha512(value);
-            case "MD5" -> CheckSum.md5(value);
-            default -> throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
-        };
-    }
 }
