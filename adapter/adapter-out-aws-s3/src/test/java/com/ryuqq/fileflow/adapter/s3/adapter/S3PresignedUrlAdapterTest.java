@@ -42,11 +42,13 @@ class S3PresignedUrlAdapterTest {
 
     private S3Presigner s3Presigner;
     private S3Properties s3Properties;
+    private S3MultipartAdapter s3MultipartAdapter;
     private S3PresignedUrlAdapter adapter;
 
     @BeforeEach
     void setUp() {
         s3Presigner = mock(S3Presigner.class);
+        s3MultipartAdapter = mock(S3MultipartAdapter.class);
         s3Properties = new S3Properties(
                 "test-bucket",
                 "ap-northeast-2",
@@ -56,7 +58,7 @@ class S3PresignedUrlAdapterTest {
                 10000L,
                 30000L
         );
-        adapter = new S3PresignedUrlAdapter(s3Presigner, s3Properties);
+        adapter = new S3PresignedUrlAdapter(s3Presigner, s3Properties, s3MultipartAdapter);
     }
 
     @Test
@@ -100,7 +102,7 @@ class S3PresignedUrlAdapterTest {
                 10000L,
                 30000L
         );
-        adapter = new S3PresignedUrlAdapter(s3Presigner, propertiesWithoutPrefix);
+        adapter = new S3PresignedUrlAdapter(s3Presigner, propertiesWithoutPrefix, s3MultipartAdapter);
 
         FileUploadCommand command = createTestCommand();
         URL mockUrl = new URL("https://test-bucket.s3.ap-northeast-2.amazonaws.com/user123/uuid/test.jpg?signature=xxx");
@@ -161,7 +163,7 @@ class S3PresignedUrlAdapterTest {
     @DisplayName("null S3Presigner로 생성 시 예외 발생")
     void shouldThrowExceptionWhenS3PresignerIsNull() {
         // When & Then
-        assertThatThrownBy(() -> new S3PresignedUrlAdapter(null, s3Properties))
+        assertThatThrownBy(() -> new S3PresignedUrlAdapter(null, s3Properties, s3MultipartAdapter))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("S3Presigner cannot be null");
     }
@@ -170,7 +172,7 @@ class S3PresignedUrlAdapterTest {
     @DisplayName("null S3Properties로 생성 시 예외 발생")
     void shouldThrowExceptionWhenS3PropertiesIsNull() {
         // When & Then
-        assertThatThrownBy(() -> new S3PresignedUrlAdapter(s3Presigner, null))
+        assertThatThrownBy(() -> new S3PresignedUrlAdapter(s3Presigner, null, s3MultipartAdapter))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("S3Properties cannot be null");
     }
@@ -207,7 +209,8 @@ class S3PresignedUrlAdapterTest {
                 "test.jpg",
                 FileType.IMAGE,
                 1024L,
-                "image/jpeg"
+                "image/jpeg",
+                60
         );
     }
 }
