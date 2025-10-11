@@ -28,6 +28,7 @@ import java.net.URL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mock;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 /**
@@ -107,7 +108,8 @@ class S3PresignedUrlAdapterIntegrationTest {
                 30000L
         );
 
-        adapter = new S3PresignedUrlAdapter(s3Presigner, properties);
+        S3MultipartAdapter s3MultipartAdapter = mock(S3MultipartAdapter.class);
+        adapter = new S3PresignedUrlAdapter(s3Presigner, properties, s3MultipartAdapter);
     }
 
     @Test
@@ -120,7 +122,8 @@ class S3PresignedUrlAdapterIntegrationTest {
                 "test-image.jpg",
                 FileType.IMAGE,
                 1024L,
-                "image/jpeg"
+                "image/jpeg",
+                60
         );
 
         // When
@@ -151,7 +154,8 @@ class S3PresignedUrlAdapterIntegrationTest {
                 "document.pdf",
                 FileType.PDF,
                 2048L,
-                "application/pdf"
+                "application/pdf",
+                60
         );
 
         // When
@@ -178,7 +182,8 @@ class S3PresignedUrlAdapterIntegrationTest {
                 "test.jpg",
                 FileType.IMAGE,
                 1024L,
-                "image/jpeg"
+                "image/jpeg",
+                60
         );
 
         // When
@@ -186,7 +191,7 @@ class S3PresignedUrlAdapterIntegrationTest {
 
         // Then
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        java.time.LocalDateTime expectedExpiration = now.plusMinutes(15);
+        java.time.LocalDateTime expectedExpiration = now.plusMinutes(60);
 
         assertThat(result.expiresAt()).isAfter(now);
         assertThat(result.expiresAt()).isBeforeOrEqualTo(expectedExpiration.plusSeconds(5));
@@ -202,7 +207,8 @@ class S3PresignedUrlAdapterIntegrationTest {
                 "file1.jpg",
                 FileType.IMAGE,
                 1024L,
-                "image/jpeg"
+                "image/jpeg",
+                60
         );
 
         FileUploadCommand command2 = FileUploadCommand.of(
@@ -211,7 +217,8 @@ class S3PresignedUrlAdapterIntegrationTest {
                 "file1.jpg", // 동일한 파일명
                 FileType.IMAGE,
                 1024L,
-                "image/jpeg"
+                "image/jpeg",
+                60
         );
 
         // When
