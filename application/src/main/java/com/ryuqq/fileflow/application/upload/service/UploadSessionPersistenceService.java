@@ -6,6 +6,8 @@ import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.Objects;
 
@@ -76,8 +78,15 @@ public class UploadSessionPersistenceService {
         // 1. DB에 저장 (트랜잭션 내)
         UploadSession savedSession = uploadSessionPort.save(session);
 
-        // 2. Redis에 TTL과 함께 저장 (Best Effort - 트랜잭션 커밋 후)
-        uploadSessionCachePort.saveWithTtl(savedSession);
+        // 2. Redis에 TTL과 함께 저장 (트랜잭션 커밋 후)
+        // TransactionSynchronizationManager를 사용하여 DB 트랜잭션 커밋 후에 Redis 저장 수행
+        // 이를 통해 DB 롤백 시 Redis 데이터 불일치 방지
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                uploadSessionCachePort.saveWithTtl(savedSession);
+            }
+        });
 
         return savedSession;
     }
@@ -107,7 +116,17 @@ public class UploadSessionPersistenceService {
         UploadSession session = uploadSessionPort.findById(sessionId)
                 .orElseThrow(() -> new UploadSessionNotFoundException(sessionId));
 
+        // PENDING 또는 UPLOADING 상태가 아니면, 작업을 건너뜁니다 (이미 최종 상태)
+        if (!session.getStatus().canTransitionToFailed()) {
+            return session;
+        }
+
         UploadSession failedSession = session.fail();
-        return uploadSessionPort.save(failedSession);
+        UploadSession savedSession = uploadSessionPort.save(failedSession);
+
+        // 중복 이벤트를 방지하기 위해 Redis 키를 삭제합니다
+        uploadSessionCachePort.delete(sessionId);
+
+        return savedSession;
     }
 }
