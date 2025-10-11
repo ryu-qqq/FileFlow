@@ -27,7 +27,7 @@ class FileUploadCommandTest {
 
         // when
         FileUploadCommand command = FileUploadCommand.of(
-                policyKey, uploaderId, fileName, fileType, fileSizeBytes, contentType
+                policyKey, uploaderId, fileName, fileType, fileSizeBytes, contentType, 60
         );
 
         // then
@@ -43,7 +43,7 @@ class FileUploadCommandTest {
     @DisplayName("PolicyKey가 null이면 예외가 발생한다")
     void createFileUploadCommand_withNullPolicyKey() {
         assertThatThrownBy(() ->
-                FileUploadCommand.of(null, "user123", "test.jpg", FileType.IMAGE, 1024L, "image/jpeg")
+                FileUploadCommand.of(null, "user123", "test.jpg", FileType.IMAGE, 1024L, "image/jpeg", 60)
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("PolicyKey cannot be null");
     }
@@ -52,7 +52,7 @@ class FileUploadCommandTest {
     @DisplayName("UploaderId가 null이면 예외가 발생한다")
     void createFileUploadCommand_withNullUploaderId() {
         assertThatThrownBy(() ->
-                FileUploadCommand.of(createPolicyKey(), null, "test.jpg", FileType.IMAGE, 1024L, "image/jpeg")
+                FileUploadCommand.of(createPolicyKey(), null, "test.jpg", FileType.IMAGE, 1024L, "image/jpeg", 60)
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("UploaderId cannot be null or empty");
     }
@@ -61,7 +61,7 @@ class FileUploadCommandTest {
     @DisplayName("FileName이 null이면 예외가 발생한다")
     void createFileUploadCommand_withNullFileName() {
         assertThatThrownBy(() ->
-                FileUploadCommand.of(createPolicyKey(), "user123", null, FileType.IMAGE, 1024L, "image/jpeg")
+                FileUploadCommand.of(createPolicyKey(), "user123", null, FileType.IMAGE, 1024L, "image/jpeg", 60)
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileName cannot be null or empty");
     }
@@ -70,7 +70,7 @@ class FileUploadCommandTest {
     @DisplayName("FileType이 null이면 예외가 발생한다")
     void createFileUploadCommand_withNullFileType() {
         assertThatThrownBy(() ->
-                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", null, 1024L, "image/jpeg")
+                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", null, 1024L, "image/jpeg", 60)
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileType cannot be null");
     }
@@ -79,7 +79,7 @@ class FileUploadCommandTest {
     @DisplayName("FileSizeBytes가 0 이하면 예외가 발생한다")
     void createFileUploadCommand_withNonPositiveFileSize() {
         assertThatThrownBy(() ->
-                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", FileType.IMAGE, 0L, "image/jpeg")
+                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", FileType.IMAGE, 0L, "image/jpeg", 60)
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("FileSizeBytes must be positive");
     }
@@ -88,8 +88,47 @@ class FileUploadCommandTest {
     @DisplayName("ContentType이 null이면 예외가 발생한다")
     void createFileUploadCommand_withNullContentType() {
         assertThatThrownBy(() ->
-                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", FileType.IMAGE, 1024L, null)
+                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", FileType.IMAGE, 1024L, null, 60)
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("ContentType cannot be null or empty");
+    }
+
+    @Test
+    @DisplayName("ExpirationMinutes가 0 이하면 예외가 발생한다")
+    void createFileUploadCommand_withNonPositiveExpirationMinutes() {
+        assertThatThrownBy(() ->
+                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", FileType.IMAGE, 1024L, "image/jpeg", 0)
+        ).isInstanceOf(IllegalArgumentException.class)
+         .hasMessageContaining("ExpirationMinutes must be positive");
+
+        assertThatThrownBy(() ->
+                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", FileType.IMAGE, 1024L, "image/jpeg", -1)
+        ).isInstanceOf(IllegalArgumentException.class)
+         .hasMessageContaining("ExpirationMinutes must be positive");
+    }
+
+    @Test
+    @DisplayName("ExpirationMinutes가 1440(24시간)을 초과하면 예외가 발생한다")
+    void createFileUploadCommand_withExcessiveExpirationMinutes() {
+        assertThatThrownBy(() ->
+                FileUploadCommand.of(createPolicyKey(), "user123", "test.jpg", FileType.IMAGE, 1024L, "image/jpeg", 1441)
+        ).isInstanceOf(IllegalArgumentException.class)
+         .hasMessageContaining("ExpirationMinutes cannot exceed 1440");
+    }
+
+    @Test
+    @DisplayName("유효한 ExpirationMinutes로 Command를 생성할 수 있다")
+    void createFileUploadCommand_withValidExpirationMinutes() {
+        // given
+        PolicyKey policyKey = createPolicyKey();
+        int expirationMinutes = 60;
+
+        // when
+        FileUploadCommand command = FileUploadCommand.of(
+                policyKey, "user123", "test.jpg", FileType.IMAGE, 1024L, "image/jpeg", expirationMinutes
+        );
+
+        // then
+        assertThat(command.expirationMinutes()).isEqualTo(expirationMinutes);
     }
 }

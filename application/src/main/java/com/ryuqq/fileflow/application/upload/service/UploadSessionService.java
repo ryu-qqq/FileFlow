@@ -18,6 +18,7 @@ import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
+import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
@@ -29,6 +30,7 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
+@Service
 public class UploadSessionService implements
         CreateUploadSessionUseCase,
         GetUploadSessionUseCase,
@@ -40,6 +42,7 @@ public class UploadSessionService implements
     private final UploadSessionPort uploadSessionPort;
     private final GeneratePresignedUrlPort generatePresignedUrlPort;
     private final ValidateUploadPolicyUseCase validateUploadPolicyUseCase;
+    private final UploadSessionPersistenceService persistenceService;
 
     /**
      * Constructor Injection (NO Lombok)
@@ -47,15 +50,17 @@ public class UploadSessionService implements
      * @param uploadSessionPort 세션 저장소
      * @param generatePresignedUrlPort Presigned URL 생성 Port
      * @param validateUploadPolicyUseCase 정책 검증 UseCase
+     * @param persistenceService 영속성 전용 Service
      */
     public UploadSessionService(
             UploadSessionPort uploadSessionPort,
             GeneratePresignedUrlPort generatePresignedUrlPort,
-            ValidateUploadPolicyUseCase validateUploadPolicyUseCase
+            ValidateUploadPolicyUseCase validateUploadPolicyUseCase,
+            UploadSessionPersistenceService persistenceService
     ) {
         this.uploadSessionPort = Objects.requireNonNull(
             uploadSessionPort,
-                " must not be null"
+                "UploadSessionPort must not be null"
         );
         this.generatePresignedUrlPort = Objects.requireNonNull(
                 generatePresignedUrlPort,
@@ -65,24 +70,35 @@ public class UploadSessionService implements
                 validateUploadPolicyUseCase,
                 "ValidateUploadPolicyUseCase must not be null"
         );
+        this.persistenceService = Objects.requireNonNull(
+                persistenceService,
+                "UploadSessionPersistenceService must not be null"
+        );
     }
 
     /**
      * 새로운 업로드 세션을 생성하고 Presigned URL을 발급합니다.
      *
-     * 비즈니스 로직:
-     * 1. 정책 검증 (Epic 1 정책 검증 UseCase 사용)
-     * 2. UploadSession 도메인 객체 생성
-     * 3. Presigned URL 발급
-     * 4. 세션 정보 저장
+     * 트랜잭션 처리 전략:
+     * 1. 정책 검증 (외부 호출 없음)
+     * 2. 도메인 객체 생성 (메모리 작업)
+     * 3. S3 Presigned URL 발급 (외부 API 호출 - 트랜잭션 밖)
+     * 4. DB 저장 (별도 트랜잭션 - persistenceService)
+     *
+     * 장점:
+     * - S3 API 호출이 DB 커넥션을 점유하지 않음
+     * - 트랜잭션이 빠르게 커밋됨
+     * - 각 단계의 실패를 명확하게 처리 가능
      *
      * @param command 세션 생성 Command
      * @return 생성된 세션 정보와 Presigned URL
      * @throws IllegalArgumentException command가 null이거나 유효하지 않은 경우
      * @throws com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException 정책을 찾을 수 없는 경우
      * @throws com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException 정책 검증 실패 시
+     * @throws com.ryuqq.fileflow.domain.upload.exception.PresignedUrlGenerationException Presigned URL 생성 실패 시
      */
     @Override
+    // ❌ @Transactional 제거 - 외부 API 호출이 있으므로 트랜잭션 범위에 포함시키면 안 됨
     public UploadSessionWithUrlResponse createSession(CreateUploadSessionCommand command) {
         if (command == null) {
             throw new IllegalArgumentException("CreateUploadSessionCommand must not be null");
@@ -93,25 +109,9 @@ public class UploadSessionService implements
 
         // 2. 멱등성 키로 기존 세션 확인
         if (command.hasIdempotencyKey()) {
-            java.util.Optional<UploadSession> existingSession = uploadSessionPort.findByIdempotencyKey(idempotencyKey);
-
-            if (existingSession.isPresent()) {
-                UploadSession session = existingSession.get();
-
-                // 이미 완료된 세션이면 에러
-                if (session.getStatus() == com.ryuqq.fileflow.domain.upload.vo.UploadStatus.COMPLETED) {
-                    throw new IllegalStateException(
-                            "Session already completed for idempotency key: " + idempotencyKey.value()
-                    );
-                }
-
-                // 기존 세션과 URL 정보 반환 (만료 여부와 관계없이 새 URL 발급)
-                PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);
-
-                return new UploadSessionWithUrlResponse(
-                        UploadSessionResponse.from(session),
-                        PresignedUrlResponse.from(presignedUrlInfo)
-                );
+            UploadSessionWithUrlResponse existingResponse = handleExistingSession(idempotencyKey, command);
+            if (existingResponse != null) {
+                return existingResponse;
             }
         }
 
@@ -143,7 +143,7 @@ public class UploadSessionService implements
                 idempotencyKey
         );
 
-        // 6. UploadSession 생성
+        // 6. UploadSession 생성 (메모리 작업)
         UploadSession session = UploadSession.create(
                 policyKey,
                 uploadRequest,
@@ -151,11 +151,19 @@ public class UploadSessionService implements
                 command.expirationMinutes()
         );
 
-        // 7. Presigned URL 발급
-        PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);
+        // 7. Presigned URL 발급 (외부 API 호출 - 트랜잭션 밖에서 실행)
+        PresignedUrlInfo presignedUrlInfo;
+        try {
+            presignedUrlInfo = generatePresignedUrlForCommand(command);
+        } catch (Exception e) {
+            throw new com.ryuqq.fileflow.domain.upload.exception.PresignedUrlGenerationException(
+                    "Failed to generate presigned URL for session: " + session.getSessionId(),
+                    e
+            );
+        }
 
-        // 8. 세션 저장
-        UploadSession savedSession = uploadSessionPort.save(session);
+        // 8. 세션 저장 (별도 트랜잭션 - persistenceService 사용)
+        UploadSession savedSession = persistenceService.saveSession(session);
 
         // 9. Response 생성
         return new UploadSessionWithUrlResponse(
@@ -225,6 +233,43 @@ public class UploadSessionService implements
     // ========== Helper Methods ==========
 
     /**
+     * 기존 세션을 처리합니다.
+     *
+     * @param idempotencyKey 멱등성 키
+     * @param command 세션 생성 Command
+     * @return 기존 세션이 있으면 Response, 없으면 null
+     * @throws IllegalStateException 완료된 세션인 경우
+     */
+    private UploadSessionWithUrlResponse handleExistingSession(
+            IdempotencyKey idempotencyKey,
+            CreateUploadSessionCommand command
+    ) {
+        java.util.Optional<UploadSession> existingSession =
+                uploadSessionPort.findByIdempotencyKey(idempotencyKey);
+
+        if (existingSession.isEmpty()) {
+            return null;
+        }
+
+        UploadSession session = existingSession.get();
+
+        // 이미 완료된 세션이면 에러
+        if (session.getStatus() == com.ryuqq.fileflow.domain.upload.vo.UploadStatus.COMPLETED) {
+            throw new IllegalStateException(
+                    "Session already completed for idempotency key: " + idempotencyKey.value()
+            );
+        }
+
+        // 기존 세션과 URL 정보 반환 (만료 여부와 관계없이 새 URL 발급)
+        PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);
+
+        return new UploadSessionWithUrlResponse(
+                UploadSessionResponse.from(session),
+                PresignedUrlResponse.from(presignedUrlInfo)
+        );
+    }
+
+    /**
      * 세션 ID를 검증하고 세션을 조회합니다.
      *
      * @param sessionId 세션 ID
@@ -271,7 +316,8 @@ public class UploadSessionService implements
                 command.fileName(),
                 fileType,
                 command.fileSize(),
-                command.contentType()
+                command.contentType(),
+                command.expirationMinutes()
         );
         return generatePresignedUrlPort.generate(fileUploadCommand);
     }
