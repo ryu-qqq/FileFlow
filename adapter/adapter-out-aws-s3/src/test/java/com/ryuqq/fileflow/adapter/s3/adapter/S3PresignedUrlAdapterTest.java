@@ -164,7 +164,7 @@ class S3PresignedUrlAdapterTest {
     void shouldThrowExceptionWhenS3PresignerIsNull() {
         // When & Then
         assertThatThrownBy(() -> new S3PresignedUrlAdapter(null, s3Properties, s3MultipartAdapter))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("S3Presigner cannot be null");
     }
 
@@ -173,7 +173,7 @@ class S3PresignedUrlAdapterTest {
     void shouldThrowExceptionWhenS3PropertiesIsNull() {
         // When & Then
         assertThatThrownBy(() -> new S3PresignedUrlAdapter(s3Presigner, null, s3MultipartAdapter))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("S3Properties cannot be null");
     }
 

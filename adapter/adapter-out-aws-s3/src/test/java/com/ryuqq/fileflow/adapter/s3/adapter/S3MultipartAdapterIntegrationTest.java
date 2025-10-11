@@ -27,10 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
