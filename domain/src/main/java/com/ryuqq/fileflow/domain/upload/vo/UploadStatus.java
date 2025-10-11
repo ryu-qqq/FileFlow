@@ -53,4 +53,15 @@ public enum UploadStatus {
     public int getProgress() {
         return progress;
     }
+
+    /**
+     * FAILED 상태로 전이 가능한지 확인합니다.
+     * PENDING 또는 UPLOADING 상태인 경우에만 FAILED로 전이할 수 있습니다.
+     * COMPLETED, FAILED, CANCELLED와 같은 최종 상태는 전이할 수 없습니다.
+     *
+     * @return FAILED로 전이 가능하면 true, 아니면 false
+     */
+    public boolean canTransitionToFailed() {
+        return this == PENDING || this == UPLOADING;
+    }
 }

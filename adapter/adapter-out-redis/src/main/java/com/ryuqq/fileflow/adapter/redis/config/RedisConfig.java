@@ -55,8 +55,8 @@ public class RedisConfig {
      */
     @PostConstruct
     public void enableKeyspaceNotifications() {
-        try {
-            redisConnectionFactory.getConnection().serverCommands()
+        try (var connection = redisConnectionFactory.getConnection()) {
+            connection.serverCommands()
                     .setConfig("notify-keyspace-events", "Ex");
             log.info("Redis keyspace notifications enabled: Ex");
         } catch (Exception e) {
