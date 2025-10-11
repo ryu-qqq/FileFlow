@@ -68,6 +68,30 @@ logging:
     org.flywaydb: INFO
 
 # ========================================
+# Redis Configuration
+# ========================================
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+
+# Redis KeyspaceNotification 설정
+# Ex: 만료 이벤트(expired)와 제거 이벤트(evicted) 활성화
+# E: Keyevent 이벤트
+# x: 만료된 키 이벤트
+redis:
+  keyspace-notifications: Ex
+
+# ========================================
 # Management & Actuator Configuration
 # ========================================
 management:

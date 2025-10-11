@@ -12,6 +12,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
+    // Redisson for distributed lock
+    implementation("org.redisson:redisson-spring-boot-starter:3.24.3")
+
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
     testImplementation("org.awaitility:awaitility:4.2.0")
