@@ -19,7 +19,8 @@ public record FileUploadCommand(
         FileType fileType,
         long fileSizeBytes,
         String contentType,
-        CheckSum checkSum
+        CheckSum checksum,
+        int expirationMinutes
 ) {
 
     /**
@@ -32,6 +33,7 @@ public record FileUploadCommand(
         validateFileType(fileType);
         validateFileSizeBytes(fileSizeBytes);
         validateContentType(contentType);
+        validateExpirationMinutes(expirationMinutes);
         // CheckSum은 optional이므로 null 허용
     }
 
@@ -44,6 +46,7 @@ public record FileUploadCommand(
      * @param fileType 파일 타입
      * @param fileSizeBytes 파일 크기 (bytes)
      * @param contentType MIME 타입
+     * @param expirationMinutes 만료 시간 (분)
      * @return FileUploadCommand 인스턴스
      * @throws IllegalArgumentException 유효하지 않은 입력 시
      */
@@ -53,7 +56,8 @@ public record FileUploadCommand(
             String fileName,
             FileType fileType,
             long fileSizeBytes,
-            String contentType
+            String contentType,
+            int expirationMinutes
     ) {
         return new FileUploadCommand(
                 policyKey,
@@ -62,7 +66,8 @@ public record FileUploadCommand(
                 fileType,
                 fileSizeBytes,
                 contentType,
-                null
+                null,
+                expirationMinutes
         );
     }
 
@@ -75,7 +80,8 @@ public record FileUploadCommand(
      * @param fileType 파일 타입
      * @param fileSizeBytes 파일 크기 (bytes)
      * @param contentType MIME 타입
-     * @param checkSum 파일 체크섬 (optional)
+     * @param checksum 파일 체크섬 (optional)
+     * @param expirationMinutes 만료 시간 (분)
      * @return FileUploadCommand 인스턴스
      * @throws IllegalArgumentException 유효하지 않은 입력 시
      */
@@ -86,7 +92,8 @@ public record FileUploadCommand(
             FileType fileType,
             long fileSizeBytes,
             String contentType,
-            CheckSum checkSum
+            CheckSum checksum,
+            int expirationMinutes
     ) {
         return new FileUploadCommand(
                 policyKey,
@@ -95,7 +102,8 @@ public record FileUploadCommand(
                 fileType,
                 fileSizeBytes,
                 contentType,
-                checkSum
+                checksum,
+                expirationMinutes
         );
     }
 
@@ -137,6 +145,15 @@ public record FileUploadCommand(
     private static void validateContentType(String contentType) {
         if (contentType == null || contentType.trim().isEmpty()) {
             throw new IllegalArgumentException("ContentType cannot be null or empty");
+        }
+    }
+
+    private static void validateExpirationMinutes(int expirationMinutes) {
+        if (expirationMinutes <= 0) {
+            throw new IllegalArgumentException("ExpirationMinutes must be positive");
+        }
+        if (expirationMinutes > 1440) { // 24시간
+            throw new IllegalArgumentException("ExpirationMinutes cannot exceed 1440 (24 hours)");
         }
     }
 }

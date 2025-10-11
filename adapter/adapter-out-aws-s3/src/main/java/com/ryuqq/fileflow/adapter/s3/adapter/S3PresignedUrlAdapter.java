@@ -56,7 +56,7 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
      * @param s3Presigner AWS S3 Presigner
      * @param s3Properties S3 설정 프로퍼티
      * @param s3MultipartAdapter S3 멀티파트 업로드 Adapter
-     * @throws IllegalArgumentException 파라미터가 null인 경우
+     * @throws NullPointerException 파라미터가 null인 경우
      */
     public S3PresignedUrlAdapter(
             S3Presigner s3Presigner,
@@ -88,7 +88,10 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
 
         String uploadPath = buildUploadPath(command);
         PutObjectRequest putObjectRequest = buildPutObjectRequest(uploadPath, command);
-        PresignedPutObjectRequest presignedRequest = generatePresignedRequest(putObjectRequest);
+        PresignedPutObjectRequest presignedRequest = generatePresignedRequest(
+                putObjectRequest,
+                command.expirationMinutes()
+        );
 
         return convertToPresignedUrlInfo(presignedRequest, uploadPath);
     }
@@ -114,9 +117,9 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
         metadata.put(METADATA_FILE_TYPE, command.fileType().name());
 
         // CheckSum이 제공된 경우 메타데이터에 추가
-        if (command.checkSum() != null) {
-            metadata.put(METADATA_CHECKSUM_ALGORITHM, command.checkSum().algorithm());
-            metadata.put(METADATA_CHECKSUM_VALUE, command.checkSum().normalizedValue());
+        if (command.checksum() != null) {
+            metadata.put(METADATA_CHECKSUM_ALGORITHM, command.checksum().algorithm());
+            metadata.put(METADATA_CHECKSUM_VALUE, command.checksum().normalizedValue());
         }
 
         PutObjectRequest.Builder builder = PutObjectRequest.builder()
@@ -127,16 +130,19 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
                 .metadata(metadata);
 
         // CheckSum이 SHA-256인 경우 x-amz-checksum-sha256 헤더 추가
-        if (command.checkSum() != null && CheckSum.ALGORITHM_SHA256.equals(command.checkSum().algorithm())) {
+        if (command.checksum() != null && CheckSum.ALGORITHM_SHA256.equals(command.checksum().algorithm())) {
             // AWS S3는 PUT 요청 시 x-amz-checksum-sha256 헤더로 SHA256 체크섬을 검증합니다.
-            builder.checksumSHA256(command.checkSum().normalizedValue());
+            builder.checksumSHA256(command.checksum().normalizedValue());
         }
 
         return builder.build();
     }
 
-    private PresignedPutObjectRequest generatePresignedRequest(PutObjectRequest putObjectRequest) {
-        Duration signatureDuration = Duration.ofMinutes(s3Properties.getPresignedUrlExpirationMinutes());
+    private PresignedPutObjectRequest generatePresignedRequest(
+            PutObjectRequest putObjectRequest,
+            int expirationMinutes
+    ) {
+        Duration signatureDuration = Duration.ofMinutes(expirationMinutes);
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
                 .signatureDuration(signatureDuration)
