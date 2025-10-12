@@ -59,27 +59,20 @@ public class RedisUploadSessionAdapter implements UploadSessionCachePort {
 
         try {
             String key = buildKey(session.getSessionId());
-            UploadSessionDto dto = UploadSessionDto.from(
-                    session.getSessionId(),
-                    session.getUploaderId(),
-                    session.getStatus().name(),
-                    session.getCreatedAt(),
-                    session.getExpiresAt()
-            );
+            UploadSessionDto dto = UploadSessionDto.from(session);
 
-            // TTL 계산 (초 단위)
+            // TTL 계산
             Duration ttl = Duration.between(LocalDateTime.now(), session.getExpiresAt());
-            long ttlSeconds = ttl.getSeconds();
 
-            if (ttlSeconds <= 0) {
-                log.warn("Session {} already expired, TTL: {} seconds", session.getSessionId(), ttlSeconds);
+            if (ttl.isNegative() || ttl.isZero()) {
+                log.warn("Session {} already expired or has no TTL, skipping Redis save.", session.getSessionId());
                 return;
             }
 
             // Redis에 저장 (TTL 설정)
             uploadSessionRedisTemplate.opsForValue().set(key, dto, ttl);
 
-            log.info("Saved session {} to Redis with TTL: {} seconds", session.getSessionId(), ttlSeconds);
+            log.info("Saved session {} to Redis with TTL: {} seconds", session.getSessionId(), ttl.toSeconds());
         } catch (Exception e) {
             // Redis 저장 실패는 로그만 남기고 예외를 전파하지 않음 (Best Effort)
             log.error("Failed to save session {} to Redis: {}", session.getSessionId(), e.getMessage(), e);

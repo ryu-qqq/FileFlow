@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.adapter.redis.dto;
 
+import com.ryuqq.fileflow.domain.upload.UploadSession;
+
 import java.time.LocalDateTime;
 
 /**
@@ -43,20 +45,17 @@ public class UploadSessionDto {
 
     /**
      * Factory Method - Domain UploadSession에서 DTO 생성
+     *
+     * @param session 도메인 UploadSession 객체
+     * @return UploadSessionDto
      */
-    public static UploadSessionDto from(
-            String sessionId,
-            String uploaderId,
-            String status,
-            LocalDateTime createdAt,
-            LocalDateTime expiresAt
-    ) {
+    public static UploadSessionDto from(UploadSession session) {
         return new UploadSessionDto(
-                sessionId,
-                uploaderId,
-                status,
-                createdAt,
-                expiresAt
+                session.getSessionId(),
+                session.getUploaderId(),
+                session.getStatus().name(),
+                session.getCreatedAt(),
+                session.getExpiresAt()
         );
     }
 

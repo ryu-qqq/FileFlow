@@ -76,12 +76,27 @@ public class RedisConfig {
     }
 
     /**
-     * UploadPolicyDto용 RedisTemplate
-     * 정책 캐시 용도로 사용됩니다.
+     * 기본 ObjectMapper 생성 헬퍼 메서드
+     * JavaTimeModule과 기본 설정을 포함합니다.
      */
-    @Bean
-    public RedisTemplate<String, UploadPolicyDto> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, UploadPolicyDto> template = new RedisTemplate<>();
+    private ObjectMapper createBaseObjectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.findAndRegisterModules();
+        return objectMapper;
+    }
+
+    /**
+     * RedisTemplate 생성 헬퍼 메서드
+     * 제네릭을 사용하여 중복 코드를 제거합니다.
+     */
+    private <T> RedisTemplate<String, T> createRedisTemplate(
+            RedisConnectionFactory connectionFactory,
+            Class<T> valueType,
+            ObjectMapper objectMapper
+    ) {
+        RedisTemplate<String, T> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
         // Key Serializer: String (UTF-8)
@@ -89,11 +104,24 @@ public class RedisConfig {
         template.setKeySerializer(stringSerializer);
         template.setHashKeySerializer(stringSerializer);
 
-        // Value Serializer: UploadPolicyDto 전용 직렬화
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.findAndRegisterModules();
+        // Value Serializer: JSON
+        Jackson2JsonRedisSerializer<T> jsonSerializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, valueType);
+
+        template.setValueSerializer(jsonSerializer);
+        template.setHashValueSerializer(jsonSerializer);
+
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    /**
+     * UploadPolicyDto용 RedisTemplate
+     * 정책 캐시 용도로 사용됩니다.
+     */
+    @Bean
+    public RedisTemplate<String, UploadPolicyDto> redisTemplate(RedisConnectionFactory connectionFactory) {
+        ObjectMapper objectMapper = createBaseObjectMapper();
 
         // 커스텀 디시리얼라이저 등록
         SimpleModule customModule = new SimpleModule();
@@ -101,14 +129,7 @@ public class RedisConfig {
         customModule.addDeserializer(Dimension.class, new DimensionDeserializer());
         objectMapper.registerModule(customModule);
 
-        Jackson2JsonRedisSerializer<UploadPolicyDto> jsonSerializer =
-                new Jackson2JsonRedisSerializer<>(objectMapper, UploadPolicyDto.class);
-
-        template.setValueSerializer(jsonSerializer);
-        template.setHashValueSerializer(jsonSerializer);
-
-        template.afterPropertiesSet();
-        return template;
+        return createRedisTemplate(connectionFactory, UploadPolicyDto.class, objectMapper);
     }
 
     /**
@@ -119,27 +140,7 @@ public class RedisConfig {
     public RedisTemplate<String, UploadSessionDto> uploadSessionRedisTemplate(
             RedisConnectionFactory connectionFactory
     ) {
-        RedisTemplate<String, UploadSessionDto> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-
-        // Key Serializer: String (UTF-8)
-        StringRedisSerializer stringSerializer = new StringRedisSerializer();
-        template.setKeySerializer(stringSerializer);
-        template.setHashKeySerializer(stringSerializer);
-
-        // Value Serializer: UploadSessionDto 전용 직렬화
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.findAndRegisterModules();
-
-        Jackson2JsonRedisSerializer<UploadSessionDto> jsonSerializer =
-                new Jackson2JsonRedisSerializer<>(objectMapper, UploadSessionDto.class);
-
-        template.setValueSerializer(jsonSerializer);
-        template.setHashValueSerializer(jsonSerializer);
-
-        template.afterPropertiesSet();
-        return template;
+        ObjectMapper objectMapper = createBaseObjectMapper();
+        return createRedisTemplate(connectionFactory, UploadSessionDto.class, objectMapper);
     }
 }
