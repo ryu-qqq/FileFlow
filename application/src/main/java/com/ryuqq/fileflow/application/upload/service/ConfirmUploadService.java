@@ -6,10 +6,15 @@ import com.ryuqq.fileflow.application.upload.port.in.ConfirmUploadUseCase;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.application.upload.port.out.VerifyS3ObjectPort;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.upload.exception.ChecksumMismatchException;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.upload.exception.FileNotFoundInS3Exception;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.upload.vo.S3Location;
+import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
@@ -28,6 +33,7 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
+@Service
 public class ConfirmUploadService implements ConfirmUploadUseCase {
 
     private final UploadSessionPort uploadSessionPort;

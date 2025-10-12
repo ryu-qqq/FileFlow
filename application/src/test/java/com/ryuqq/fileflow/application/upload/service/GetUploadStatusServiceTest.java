@@ -1,19 +1,22 @@
 package com.ryuqq.fileflow.application.upload.service;
 
 import com.ryuqq.fileflow.application.upload.dto.UploadStatusResponse;
+import com.ryuqq.fileflow.application.upload.port.out.MultipartProgressPort;
+import com.ryuqq.fileflow.application.upload.port.out.MultipartProgressPort.MultipartProgress;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
-import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
-import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
-import com.ryuqq.fileflow.domain.upload.vo.UploadStatus;
+import com.ryuqq.fileflow.domain.upload.vo.*;
 import com.ryuqq.fileflow.domain.policy.FileType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,11 +34,13 @@ class GetUploadStatusServiceTest {
 
     private GetUploadStatusService service;
     private TestUploadSessionPort uploadSessionPort;
+    private TestMultipartProgressPort multipartProgressPort;
 
     @BeforeEach
     void setUp() {
         uploadSessionPort = new TestUploadSessionPort();
-        service = new GetUploadStatusService(uploadSessionPort);
+        multipartProgressPort = new TestMultipartProgressPort();
+        service = new GetUploadStatusService(uploadSessionPort, multipartProgressPort);
     }
 
     @Test
@@ -183,6 +188,84 @@ class GetUploadStatusServiceTest {
         assertEquals(UploadStatus.COMPLETED, response.status());
     }
 
+    @Test
+    @DisplayName("멀티파트 업로드 진행률 조회 성공 - Redis 기반 실시간 진행률")
+    void getUploadStatus_multipart_realTimeProgress() {
+        // Given
+        String sessionId = "multipart-session-id";
+        UploadSession multipartSession = createTestMultipartSession(sessionId, UploadStatus.UPLOADING, 10);
+        uploadSessionPort.setSession(multipartSession);
+
+        // Redis에 5개 파트 완료 상태 설정
+        multipartProgressPort.setProgress(sessionId, new MultipartProgress(5, 10));
+
+        // When
+        UploadStatusResponse response = service.getUploadStatus(sessionId);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(sessionId, response.sessionId());
+        assertEquals(UploadStatus.UPLOADING, response.status());
+        assertEquals(50, response.progress()); // 5/10 = 50%
+    }
+
+    @Test
+    @DisplayName("멀티파트 업로드 진행률 조회 - Redis 없으면 상태 기반 진행률 폴백")
+    void getUploadStatus_multipart_fallbackToStatusBased() {
+        // Given
+        String sessionId = "multipart-session-id";
+        UploadSession multipartSession = createTestMultipartSession(sessionId, UploadStatus.UPLOADING, 10);
+        uploadSessionPort.setSession(multipartSession);
+
+        // Redis에 진행 상태 없음 (multipartProgressPort에 설정하지 않음)
+
+        // When
+        UploadStatusResponse response = service.getUploadStatus(sessionId);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(UploadStatus.UPLOADING, response.status());
+        assertEquals(50, response.progress()); // 상태 기반 진행률 폴백 (UPLOADING = 50%)
+    }
+
+    @Test
+    @DisplayName("멀티파트 업로드 진행률 조회 - 모든 파트 완료 시 100%")
+    void getUploadStatus_multipart_allPartsCompleted() {
+        // Given
+        String sessionId = "multipart-session-id";
+        UploadSession multipartSession = createTestMultipartSession(sessionId, UploadStatus.UPLOADING, 5);
+        uploadSessionPort.setSession(multipartSession);
+
+        // Redis에 모든 파트 완료 상태 설정
+        multipartProgressPort.setProgress(sessionId, new MultipartProgress(5, 5));
+
+        // When
+        UploadStatusResponse response = service.getUploadStatus(sessionId);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(100, response.progress()); // 5/5 = 100%
+    }
+
+    @Test
+    @DisplayName("멀티파트 업로드 진행률 조회 - 아직 시작 안 함 (0개 완료)")
+    void getUploadStatus_multipart_noneCompleted() {
+        // Given
+        String sessionId = "multipart-session-id";
+        UploadSession multipartSession = createTestMultipartSession(sessionId, UploadStatus.PENDING, 10);
+        uploadSessionPort.setSession(multipartSession);
+
+        // Redis에 0개 파트 완료 상태 설정
+        multipartProgressPort.setProgress(sessionId, new MultipartProgress(0, 10));
+
+        // When
+        UploadStatusResponse response = service.getUploadStatus(sessionId);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(0, response.progress()); // 0/10 = 0%
+    }
+
     // Helper Methods
 
     private UploadSession createTestSession(String sessionId, UploadStatus status) {
@@ -207,6 +290,50 @@ class GetUploadStatusServiceTest {
                 status,
                 now,
                 expiresAt
+        );
+    }
+
+    private UploadSession createTestMultipartSession(String sessionId, UploadStatus status, int totalParts) {
+        PolicyKey policyKey = PolicyKey.of("test-tenant", "CONSUMER", "REVIEW");
+        IdempotencyKey idempotencyKey = IdempotencyKey.generate();
+        UploadRequest uploadRequest = UploadRequest.of(
+                "large-file.mp4",
+                FileType.IMAGE,
+                100 * 1024 * 1024L, // 100MB
+                "image/jpeg",
+                idempotencyKey
+        );
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiresAt = now.plusHours(1);
+
+        // Create MultipartUploadInfo
+        List<PartUploadInfo> parts = new ArrayList<>();
+        for (int i = 1; i <= totalParts; i++) {
+            parts.add(PartUploadInfo.of(
+                    i,
+                    "https://s3.amazonaws.com/test-bucket/test-file?partNumber=" + i,
+                    (i - 1) * 10 * 1024 * 1024L,
+                    i * 10 * 1024 * 1024L,
+                    expiresAt
+            ));
+        }
+
+        MultipartUploadInfo multipartInfo = MultipartUploadInfo.of(
+                "test-upload-id",
+                "s3://test-bucket/test-path/large-file.mp4",
+                parts
+        );
+
+        return UploadSession.reconstituteWithMultipart(
+                sessionId,
+                policyKey,
+                uploadRequest,
+                "test-uploader",
+                status,
+                now,
+                expiresAt,
+                multipartInfo
         );
     }
 
@@ -252,6 +379,41 @@ class GetUploadStatusServiceTest {
         @Override
         public java.util.List<UploadSession> findExpiredSessions() {
             return java.util.List.of();
+        }
+    }
+
+    // Test Double for MultipartProgressPort
+    static class TestMultipartProgressPort implements MultipartProgressPort {
+        private final java.util.Map<String, MultipartProgress> progressMap = new java.util.HashMap<>();
+
+        void setProgress(String sessionId, MultipartProgress progress) {
+            progressMap.put(sessionId, progress);
+        }
+
+        @Override
+        public void initializeProgress(String sessionId, int totalParts, Duration ttl) {
+            progressMap.put(sessionId, new MultipartProgress(0, totalParts));
+        }
+
+        @Override
+        public void markPartCompleted(String sessionId, int partNumber) {
+            MultipartProgress current = progressMap.get(sessionId);
+            if (current != null) {
+                progressMap.put(sessionId, new MultipartProgress(
+                        current.completedParts() + 1,
+                        current.totalParts()
+                ));
+            }
+        }
+
+        @Override
+        public MultipartProgress getProgress(String sessionId) {
+            return progressMap.getOrDefault(sessionId, new MultipartProgress(0, 0));
+        }
+
+        @Override
+        public void deleteProgress(String sessionId) {
+            progressMap.remove(sessionId);
         }
     }
 }

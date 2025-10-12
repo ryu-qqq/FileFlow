@@ -7,7 +7,7 @@ import com.ryuqq.fileflow.domain.policy.FileType;
  * FileTypePolicies - 파일 타입별 정책을 그룹화하는 복합 Value Object
  *
  * 목적:
- * - 다양한 파일 타입(IMAGE, HTML, EXCEL, PDF)의 정책을 하나의 응집된 객체로 관리
+ * - 다양한 파일 타입(IMAGE, VIDEO, HTML, EXCEL, PDF)의 정책을 하나의 응집된 객체로 관리
  * - 정책 존재 여부 검증 및 타입별 정책 조회 기능 제공
  * - DDD Aggregate 내에서 정책 컬렉션의 Value Object 역할
  *
@@ -20,6 +20,7 @@ import com.ryuqq.fileflow.domain.policy.FileType;
  * <pre>{@code
  * FileTypePolicies policies = FileTypePolicies.of(
  *     ImagePolicy.of(...),
+ *     VideoPolicy.of(...),
  *     HtmlPolicy.of(...),
  *     null,  // excelPolicy 없음
  *     null   // pdfPolicy 없음
@@ -38,19 +39,22 @@ import com.ryuqq.fileflow.domain.policy.FileType;
 public final class FileTypePolicies {
 
     private final ImagePolicy imagePolicy;
+    private final VideoPolicy videoPolicy;
     private final HtmlPolicy htmlPolicy;
     private final ExcelPolicy excelPolicy;
     private final PdfPolicy pdfPolicy;
 
     private FileTypePolicies(
         ImagePolicy imagePolicy,
+        VideoPolicy videoPolicy,
         HtmlPolicy htmlPolicy,
         ExcelPolicy excelPolicy,
         PdfPolicy pdfPolicy
     ) {
-        validateAtLeastOnePolicy(imagePolicy, htmlPolicy, excelPolicy, pdfPolicy);
+        validateAtLeastOnePolicy(imagePolicy, videoPolicy, htmlPolicy, excelPolicy, pdfPolicy);
 
         this.imagePolicy = imagePolicy;
+        this.videoPolicy = videoPolicy;
         this.htmlPolicy = htmlPolicy;
         this.excelPolicy = excelPolicy;
         this.pdfPolicy = pdfPolicy;
@@ -60,6 +64,7 @@ public final class FileTypePolicies {
      * FileTypePolicies 생성 팩토리 메서드
      *
      * @param imagePolicy 이미지 정책 (nullable)
+     * @param videoPolicy 비디오 정책 (nullable)
      * @param htmlPolicy HTML 정책 (nullable)
      * @param excelPolicy Excel 정책 (nullable)
      * @param pdfPolicy PDF 정책 (nullable)
@@ -68,11 +73,12 @@ public final class FileTypePolicies {
      */
     public static FileTypePolicies of(
         ImagePolicy imagePolicy,
+        VideoPolicy videoPolicy,
         HtmlPolicy htmlPolicy,
         ExcelPolicy excelPolicy,
         PdfPolicy pdfPolicy
     ) {
-        return new FileTypePolicies(imagePolicy, htmlPolicy, excelPolicy, pdfPolicy);
+        return new FileTypePolicies(imagePolicy, videoPolicy, htmlPolicy, excelPolicy, pdfPolicy);
     }
 
     /**
@@ -103,6 +109,7 @@ public final class FileTypePolicies {
 
         return switch (fileType) {
             case IMAGE -> imagePolicy;
+            case VIDEO -> videoPolicy;
             case HTML -> htmlPolicy;
             case EXCEL -> excelPolicy;
             case PDF -> pdfPolicy;
@@ -126,6 +133,13 @@ public final class FileTypePolicies {
                     throw new IllegalArgumentException("No IMAGE policy configured");
                 }
                 imagePolicy.validate(attributes.format(), attributes.sizeBytes(), attributes.dimension());
+                break;
+
+            case VIDEO:
+                if (videoPolicy == null) {
+                    throw new IllegalArgumentException("No VIDEO policy configured");
+                }
+                videoPolicy.validate(attributes.format(), attributes.sizeBytes(), attributes.durationSeconds());
                 break;
 
             case HTML:
@@ -157,11 +171,12 @@ public final class FileTypePolicies {
     /**
      * 설정된 정책의 개수를 반환합니다.
      *
-     * @return 정책 개수 (1-4)
+     * @return 정책 개수 (1-5)
      */
     public int size() {
         int count = 0;
         if (imagePolicy != null) count++;
+        if (videoPolicy != null) count++;
         if (htmlPolicy != null) count++;
         if (excelPolicy != null) count++;
         if (pdfPolicy != null) count++;
@@ -175,6 +190,10 @@ public final class FileTypePolicies {
      */
     public ImagePolicy getImagePolicy() {
         return imagePolicy;
+    }
+
+    public VideoPolicy getVideoPolicy() {
+        return videoPolicy;
     }
 
     public HtmlPolicy getHtmlPolicy() {
@@ -194,11 +213,12 @@ public final class FileTypePolicies {
      */
     private void validateAtLeastOnePolicy(
         ImagePolicy imagePolicy,
+        VideoPolicy videoPolicy,
         HtmlPolicy htmlPolicy,
         ExcelPolicy excelPolicy,
         PdfPolicy pdfPolicy
     ) {
-        if (imagePolicy == null && htmlPolicy == null &&
+        if (imagePolicy == null && videoPolicy == null && htmlPolicy == null &&
             excelPolicy == null && pdfPolicy == null) {
             throw new IllegalArgumentException(
                 "At least one policy must be provided. All policies are null."
@@ -224,6 +244,7 @@ public final class FileTypePolicies {
         if (o == null || getClass() != o.getClass()) return false;
         FileTypePolicies that = (FileTypePolicies) o;
         return Objects.equals(imagePolicy, that.imagePolicy) &&
+               Objects.equals(videoPolicy, that.videoPolicy) &&
                Objects.equals(htmlPolicy, that.htmlPolicy) &&
                Objects.equals(excelPolicy, that.excelPolicy) &&
                Objects.equals(pdfPolicy, that.pdfPolicy);
@@ -231,14 +252,15 @@ public final class FileTypePolicies {
 
     @Override
     public int hashCode() {
-        return Objects.hash(imagePolicy, htmlPolicy, excelPolicy, pdfPolicy);
+        return Objects.hash(imagePolicy, videoPolicy, htmlPolicy, excelPolicy, pdfPolicy);
     }
 
     @Override
     public String toString() {
         return String.format(
-            "FileTypePolicies{imagePolicy=%s, htmlPolicy=%s, excelPolicy=%s, pdfPolicy=%s}",
+            "FileTypePolicies{imagePolicy=%s, videoPolicy=%s, htmlPolicy=%s, excelPolicy=%s, pdfPolicy=%s}",
             imagePolicy != null ? "present" : "null",
+            videoPolicy != null ? "present" : "null",
             htmlPolicy != null ? "present" : "null",
             excelPolicy != null ? "present" : "null",
             pdfPolicy != null ? "present" : "null"

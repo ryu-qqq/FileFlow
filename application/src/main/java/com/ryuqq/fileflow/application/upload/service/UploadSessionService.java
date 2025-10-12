@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.application.upload.service;
 
 import com.ryuqq.fileflow.application.policy.port.in.ValidateUploadPolicyUseCase;
 import com.ryuqq.fileflow.application.upload.dto.CreateUploadSessionCommand;
+import com.ryuqq.fileflow.application.upload.dto.MultipartUploadResponse;
 import com.ryuqq.fileflow.application.upload.dto.PresignedUrlResponse;
 import com.ryuqq.fileflow.application.upload.dto.UploadSessionResponse;
 import com.ryuqq.fileflow.application.upload.port.in.CancelUploadSessionUseCase;
@@ -15,6 +16,7 @@ import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
+import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
 import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
@@ -38,6 +40,7 @@ public class UploadSessionService implements
         CancelUploadSessionUseCase {
 
     private static final int SINGLE_FILE_UPLOAD_COUNT = 1;
+    private static final long MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024; // 100MB
 
     private final UploadSessionPort uploadSessionPort;
     private final GeneratePresignedUrlPort generatePresignedUrlPort;
@@ -151,13 +154,29 @@ public class UploadSessionService implements
                 command.expirationMinutes()
         );
 
-        // 7. Presigned URL 발급 (외부 API 호출 - 트랜잭션 밖에서 실행)
-        PresignedUrlInfo presignedUrlInfo;
+        // 7. 파일 크기에 따라 단일 파일 업로드 또는 멀티파트 업로드 선택
+        boolean isMultipart = command.fileSize() >= MULTIPART_THRESHOLD_BYTES;
+
+        PresignedUrlResponse presignedUrlResponse = null;
+        MultipartUploadResponse multipartUploadResponse = null;
+
         try {
-            presignedUrlInfo = generatePresignedUrlForCommand(command);
+            if (isMultipart) {
+                // 멀티파트 업로드 (100MB 이상)
+                MultipartUploadInfo multipartInfo = initiateMultipartUploadForCommand(command);
+                multipartUploadResponse = MultipartUploadResponse.from(multipartInfo);
+
+                // ✅ 세션에 멀티파트 정보 설정
+                session = session.withMultipartInfo(multipartInfo);
+            } else {
+                // 단일 파일 업로드 (100MB 미만)
+                PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);
+                presignedUrlResponse = PresignedUrlResponse.from(presignedUrlInfo);
+            }
         } catch (Exception e) {
             throw new com.ryuqq.fileflow.domain.upload.exception.PresignedUrlGenerationException(
-                    "Failed to generate presigned URL for session: " + session.getSessionId(),
+                    "Failed to generate " + (isMultipart ? "multipart upload" : "presigned URL") +
+                    " for session: " + session.getSessionId(),
                     e
             );
         }
@@ -168,7 +187,8 @@ public class UploadSessionService implements
         // 9. Response 생성
         return new UploadSessionWithUrlResponse(
                 UploadSessionResponse.from(savedSession),
-                PresignedUrlResponse.from(presignedUrlInfo)
+                presignedUrlResponse,
+                multipartUploadResponse
         );
     }
 
@@ -261,11 +281,24 @@ public class UploadSessionService implements
         }
 
         // 기존 세션과 URL 정보 반환 (만료 여부와 관계없이 새 URL 발급)
-        PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);
+        // 파일 크기에 따라 단일/멀티파트 업로드 선택
+        boolean isMultipart = command.fileSize() >= MULTIPART_THRESHOLD_BYTES;
+
+        PresignedUrlResponse presignedUrlResponse = null;
+        MultipartUploadResponse multipartUploadResponse = null;
+
+        if (isMultipart) {
+            MultipartUploadInfo multipartInfo = initiateMultipartUploadForCommand(command);
+            multipartUploadResponse = MultipartUploadResponse.from(multipartInfo);
+        } else {
+            PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);
+            presignedUrlResponse = PresignedUrlResponse.from(presignedUrlInfo);
+        }
 
         return new UploadSessionWithUrlResponse(
                 UploadSessionResponse.from(session),
-                PresignedUrlResponse.from(presignedUrlInfo)
+                presignedUrlResponse,
+                multipartUploadResponse
         );
     }
 
@@ -320,5 +353,27 @@ public class UploadSessionService implements
                 command.expirationMinutes()
         );
         return generatePresignedUrlPort.generate(fileUploadCommand);
+    }
+
+    /**
+     * CreateUploadSessionCommand로부터 멀티파트 업로드를 시작합니다.
+     * 100MB 이상 대용량 파일 업로드 시 사용됩니다.
+     *
+     * @param command 세션 생성 Command
+     * @return 멀티파트 업로드 정보
+     */
+    private MultipartUploadInfo initiateMultipartUploadForCommand(CreateUploadSessionCommand command) {
+        PolicyKey policyKey = command.getPolicyKey();
+        FileType fileType = FileType.fromContentType(command.contentType());
+        FileUploadCommand fileUploadCommand = FileUploadCommand.of(
+                policyKey,
+                command.uploaderId(),
+                command.fileName(),
+                fileType,
+                command.fileSize(),
+                command.contentType(),
+                command.expirationMinutes()
+        );
+        return generatePresignedUrlPort.initiateMultipartUpload(fileUploadCommand);
     }
 }

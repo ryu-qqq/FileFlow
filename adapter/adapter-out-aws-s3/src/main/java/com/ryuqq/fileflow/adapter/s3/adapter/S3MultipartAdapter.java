@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
 import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PartUploadInfo;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
@@ -59,6 +61,8 @@ public class S3MultipartAdapter {
     private final S3Presigner s3Presigner;
     private final software.amazon.awssdk.services.s3.S3Client s3Client;
     private final S3Properties s3Properties;
+    private final RetryTemplate retryTemplate;
+    private final CircuitBreaker circuitBreaker;
 
     /**
      * S3MultipartAdapter 생성자
@@ -66,16 +70,22 @@ public class S3MultipartAdapter {
      * @param s3Presigner AWS S3 Presigner
      * @param s3Client AWS S3 Client
      * @param s3Properties S3 설정 프로퍼티
+     * @param retryTemplate S3 재시도 템플릿
+     * @param circuitBreaker S3 Circuit Breaker
      * @throws IllegalArgumentException 파라미터가 null인 경우
      */
     public S3MultipartAdapter(
             S3Presigner s3Presigner,
             software.amazon.awssdk.services.s3.S3Client s3Client,
-            S3Properties s3Properties
+            S3Properties s3Properties,
+            RetryTemplate retryTemplate,
+            CircuitBreaker circuitBreaker
     ) {
         this.s3Presigner = Objects.requireNonNull(s3Presigner, "S3Presigner cannot be null");
         this.s3Client = Objects.requireNonNull(s3Client, "S3Client cannot be null");
         this.s3Properties = Objects.requireNonNull(s3Properties, "S3Properties cannot be null");
+        this.retryTemplate = Objects.requireNonNull(retryTemplate, "RetryTemplate cannot be null");
+        this.circuitBreaker = Objects.requireNonNull(circuitBreaker, "CircuitBreaker cannot be null");
     }
 
     /**
@@ -133,9 +143,9 @@ public class S3MultipartAdapter {
         metadata.put(METADATA_FILE_TYPE, command.fileType().name());
 
         // CheckSum이 제공된 경우 메타데이터에 추가
-        if (command.checkSum() != null) {
-            metadata.put(METADATA_CHECKSUM_ALGORITHM, command.checkSum().algorithm());
-            metadata.put(METADATA_CHECKSUM_VALUE, command.checkSum().normalizedValue());
+        if (command.checksum() != null) {
+            metadata.put(METADATA_CHECKSUM_ALGORITHM, command.checksum().algorithm());
+            metadata.put(METADATA_CHECKSUM_VALUE, command.checksum().normalizedValue());
         }
 
         CreateMultipartUploadRequest.Builder builder = CreateMultipartUploadRequest.builder()
@@ -145,14 +155,19 @@ public class S3MultipartAdapter {
                 .metadata(metadata);
 
         // CheckSum이 제공된 경우 checksum 알고리즘 지정
-        if (command.checkSum() != null && CheckSum.ALGORITHM_SHA256.equals(command.checkSum().algorithm())) {
+        if (command.checksum() != null && CheckSum.ALGORITHM_SHA256.equals(command.checksum().algorithm())) {
             builder.checksumAlgorithm(software.amazon.awssdk.services.s3.model.ChecksumAlgorithm.SHA256);
         }
 
         CreateMultipartUploadRequest request = builder.build();
-        CreateMultipartUploadResponse response = s3Client.createMultipartUpload(request);
 
-        return response.uploadId();
+        // Circuit Breaker와 Retry를 적용하여 S3 호출
+        return circuitBreaker.executeSupplier(() ->
+                retryTemplate.execute(context -> {
+                    CreateMultipartUploadResponse response = s3Client.createMultipartUpload(request);
+                    return response.uploadId();
+                })
+        );
     }
 
     // ========== Part Info Generation ==========

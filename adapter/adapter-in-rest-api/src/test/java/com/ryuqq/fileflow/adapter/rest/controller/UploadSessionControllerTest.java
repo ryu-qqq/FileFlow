@@ -306,7 +306,8 @@ class UploadSessionControllerTest {
 
         return new CreateUploadSessionUseCase.UploadSessionWithUrlResponse(
                 sessionResponse,
-                presignedUrlResponse
+                presignedUrlResponse,
+                null  // multipartUpload: 단일 파일 업로드이므로 null
         );
     }
 }

@@ -37,7 +37,8 @@ public record FileAttributes(
     Dimension dimension,
     Integer imageCount,
     Integer sheetCount,
-    Integer pageCount
+    Integer pageCount,
+    Integer durationSeconds
 ) {
 
     public FileAttributes {
@@ -67,6 +68,7 @@ public record FileAttributes(
         private Integer imageCount;
         private Integer sheetCount;
         private Integer pageCount;
+        private Integer durationSeconds;
 
         public Builder sizeBytes(long sizeBytes) {
             this.sizeBytes = sizeBytes;
@@ -103,6 +105,11 @@ public record FileAttributes(
             return this;
         }
 
+        public Builder durationSeconds(Integer durationSeconds) {
+            this.durationSeconds = durationSeconds;
+            return this;
+        }
+
         public FileAttributes build() {
             return new FileAttributes(
                 sizeBytes,
@@ -111,7 +118,8 @@ public record FileAttributes(
                 dimension,
                 imageCount,
                 sheetCount,
-                pageCount
+                pageCount,
+                durationSeconds
             );
         }
     }

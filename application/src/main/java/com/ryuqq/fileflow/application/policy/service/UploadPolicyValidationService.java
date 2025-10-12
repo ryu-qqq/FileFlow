@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.policy.port.out.CachePolicyPort;
 import com.ryuqq.fileflow.application.policy.port.out.LoadUploadPolicyPort;
 import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException;
 
@@ -25,6 +26,7 @@ import java.util.Optional;
  *
  * @author sangwon-ryu
  */
+@Service
 public class UploadPolicyValidationService implements ValidateUploadPolicyUseCase {
 
     private final LoadUploadPolicyPort loadUploadPolicyPort;

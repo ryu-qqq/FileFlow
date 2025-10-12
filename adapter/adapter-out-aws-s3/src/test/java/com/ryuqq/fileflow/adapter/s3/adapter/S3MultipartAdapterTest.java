@@ -7,11 +7,13 @@ import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
 import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PartUploadInfo;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.retry.support.RetryTemplate;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -51,6 +53,8 @@ class S3MultipartAdapterTest {
     private S3Presigner s3Presigner;
     private S3Client s3Client;
     private S3Properties s3Properties;
+    private RetryTemplate retryTemplate;
+    private CircuitBreaker circuitBreaker;
     private S3MultipartAdapter adapter;
 
     private static final long MB = 1024 * 1024;
@@ -62,6 +66,8 @@ class S3MultipartAdapterTest {
     void setUp() {
         s3Presigner = mock(S3Presigner.class);
         s3Client = mock(S3Client.class);
+        retryTemplate = mock(RetryTemplate.class);
+        circuitBreaker = mock(CircuitBreaker.class);
         s3Properties = new S3Properties(
                 "test-bucket",
                 "ap-northeast-2",
@@ -71,7 +77,7 @@ class S3MultipartAdapterTest {
                 10000L,
                 30000L
         );
-        adapter = new S3MultipartAdapter(s3Presigner, s3Client, s3Properties);
+        adapter = new S3MultipartAdapter(s3Presigner, s3Client, s3Properties, retryTemplate, circuitBreaker);
     }
 
     // ==========================================================================
@@ -86,7 +92,7 @@ class S3MultipartAdapterTest {
         @DisplayName("null S3Presigner로 생성 시 예외 발생")
         void shouldThrowExceptionWhenS3PresignerIsNull() {
             // When & Then
-            assertThatThrownBy(() -> new S3MultipartAdapter(null, s3Client, s3Properties))
+            assertThatThrownBy(() -> new S3MultipartAdapter(null, s3Client, s3Properties, retryTemplate, circuitBreaker))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("S3Presigner cannot be null");
         }
@@ -95,7 +101,7 @@ class S3MultipartAdapterTest {
         @DisplayName("null S3Client로 생성 시 예외 발생")
         void shouldThrowExceptionWhenS3ClientIsNull() {
             // When & Then
-            assertThatThrownBy(() -> new S3MultipartAdapter(s3Presigner, null, s3Properties))
+            assertThatThrownBy(() -> new S3MultipartAdapter(s3Presigner, null, s3Properties, retryTemplate, circuitBreaker))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("S3Client cannot be null");
         }
@@ -104,7 +110,7 @@ class S3MultipartAdapterTest {
         @DisplayName("null S3Properties로 생성 시 예외 발생")
         void shouldThrowExceptionWhenS3PropertiesIsNull() {
             // When & Then
-            assertThatThrownBy(() -> new S3MultipartAdapter(s3Presigner, s3Client, null))
+            assertThatThrownBy(() -> new S3MultipartAdapter(s3Presigner, s3Client, null, retryTemplate, circuitBreaker))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("S3Properties cannot be null");
         }
@@ -613,7 +619,7 @@ class S3MultipartAdapterTest {
                     10000L,
                     30000L
             );
-            adapter = new S3MultipartAdapter(s3Presigner, s3Client, propertiesWithoutPrefix);
+            adapter = new S3MultipartAdapter(s3Presigner, s3Client, propertiesWithoutPrefix, retryTemplate, circuitBreaker);
 
             FileUploadCommand command = createTestCommand(10 * MB);
             setupMocks("test-upload-id");

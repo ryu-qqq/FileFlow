@@ -6,6 +6,8 @@ import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
 import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -49,6 +51,8 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
     private final S3MultipartAdapter s3MultipartAdapter;
+    private final RetryTemplate retryTemplate;
+    private final CircuitBreaker circuitBreaker;
 
     /**
      * S3PresignedUrlAdapter 생성자
@@ -56,16 +60,22 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
      * @param s3Presigner AWS S3 Presigner
      * @param s3Properties S3 설정 프로퍼티
      * @param s3MultipartAdapter S3 멀티파트 업로드 Adapter
+     * @param retryTemplate S3 재시도 템플릿
+     * @param circuitBreaker S3 Circuit Breaker
      * @throws NullPointerException 파라미터가 null인 경우
      */
     public S3PresignedUrlAdapter(
             S3Presigner s3Presigner,
             S3Properties s3Properties,
-            S3MultipartAdapter s3MultipartAdapter
+            S3MultipartAdapter s3MultipartAdapter,
+            RetryTemplate retryTemplate,
+            CircuitBreaker circuitBreaker
     ) {
         this.s3Presigner = Objects.requireNonNull(s3Presigner, "S3Presigner cannot be null");
         this.s3Properties = Objects.requireNonNull(s3Properties, "S3Properties cannot be null");
         this.s3MultipartAdapter = Objects.requireNonNull(s3MultipartAdapter, "S3MultipartAdapter cannot be null");
+        this.retryTemplate = Objects.requireNonNull(retryTemplate, "RetryTemplate cannot be null");
+        this.circuitBreaker = Objects.requireNonNull(circuitBreaker, "CircuitBreaker cannot be null");
     }
 
     /**
@@ -149,7 +159,12 @@ public class S3PresignedUrlAdapter implements GeneratePresignedUrlPort {
                 .putObjectRequest(putObjectRequest)
                 .build();
 
-        return s3Presigner.presignPutObject(presignRequest);
+        // Circuit Breaker와 Retry를 적용하여 S3 Presigner 호출
+        return circuitBreaker.executeSupplier(() ->
+                retryTemplate.execute(context ->
+                        s3Presigner.presignPutObject(presignRequest)
+                )
+        );
     }
 
     private PresignedUrlInfo convertToPresignedUrlInfo(

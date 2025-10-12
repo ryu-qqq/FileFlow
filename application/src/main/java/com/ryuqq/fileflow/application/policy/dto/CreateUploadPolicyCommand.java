@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
 import com.ryuqq.fileflow.domain.policy.vo.HtmlPolicy;
 import com.ryuqq.fileflow.domain.policy.vo.ImagePolicy;
 import com.ryuqq.fileflow.domain.policy.vo.PdfPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.VideoPolicy;
 import com.ryuqq.fileflow.domain.policy.vo.RateLimiting;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
  *
  * @param policyKeyDto 정책 식별자
  * @param imagePolicy 이미지 정책 (nullable)
+ * @param videoPolicy 비디오 정책 (nullable)
  * @param htmlPolicy HTML 정책 (nullable)
  * @param excelPolicy Excel 정책 (nullable)
  * @param pdfPolicy PDF 정책 (nullable)
@@ -29,6 +31,7 @@ import java.time.LocalDateTime;
 public record CreateUploadPolicyCommand(
         PolicyKeyDto policyKeyDto,
         ImagePolicy imagePolicy,
+        VideoPolicy videoPolicy,
         HtmlPolicy htmlPolicy,
         ExcelPolicy excelPolicy,
         PdfPolicy pdfPolicy,
@@ -45,7 +48,7 @@ public record CreateUploadPolicyCommand(
     }
 
     public FileTypePolicies getFileTypePolicies() {
-        return FileTypePolicies.of(imagePolicy, htmlPolicy, excelPolicy, pdfPolicy);
+        return FileTypePolicies.of(imagePolicy, videoPolicy, htmlPolicy, excelPolicy, pdfPolicy);
     }
 
     public RateLimiting getRateLimiting() {

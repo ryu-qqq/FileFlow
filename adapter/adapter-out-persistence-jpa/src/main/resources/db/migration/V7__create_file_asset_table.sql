@@ -29,7 +29,7 @@ CREATE TABLE file_asset (
     UNIQUE KEY uk_file_id (file_id),
     INDEX idx_session_id (session_id),
     INDEX idx_tenant_id (tenant_id),
-    INDEX idx_s3_key (s3_key),
+    INDEX idx_s3_key (s3_key(255)),
     INDEX idx_deleted_at (deleted_at),
     INDEX idx_created_at (created_at),
     CONSTRAINT fk_file_asset_tenant FOREIGN KEY (tenant_id) REFERENCES tenant(tenant_id),
