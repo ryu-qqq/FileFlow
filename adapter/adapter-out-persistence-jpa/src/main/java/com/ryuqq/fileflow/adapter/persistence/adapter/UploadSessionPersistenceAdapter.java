@@ -71,8 +71,10 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
         if (logger.isDebugEnabled()) {
             String json = entity.getMultipartUploadInfoJson();
             if (json != null && !json.trim().isEmpty()) {
-                logger.debug("✅ [ADAPTER-SAVE] Entity has JSON! Length: {}, Content: {}",
-                        json.length(), json.substring(0, Math.min(200, json.length())));
+                logger.debug("✅ [ADAPTER-SAVE] Entity has JSON! Length: {}", json.length());
+                if (logger.isTraceEnabled()) {
+                    logger.trace("JSON Content: {}", json.substring(0, Math.min(200, json.length())));
+                }
             } else {
                 logger.debug("❌ [ADAPTER-SAVE] Entity JSON is NULL or EMPTY!");
             }
@@ -97,8 +99,10 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
 
             // 🔍 CRITICAL DEBUG: JSON 저장 확인
             if (json != null && !json.trim().isEmpty()) {
-                logger.debug("✅ [ADAPTER-FIND] MultipartUploadInfo JSON found! Length: {}, Content: {}",
-                        json.length(), json.substring(0, Math.min(200, json.length())));
+                logger.debug("✅ [ADAPTER-FIND] MultipartUploadInfo JSON found! Length: {}", json.length());
+                if (logger.isTraceEnabled()) {
+                    logger.trace("JSON Content: {}", json.substring(0, Math.min(200, json.length())));
+                }
             } else {
                 logger.debug("❌ [ADAPTER-FIND] MultipartUploadInfo JSON is NULL or EMPTY!");
             }
