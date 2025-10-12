@@ -46,14 +46,14 @@ public class UploadSessionMapper {
      * @return UploadSessionEntity
      */
     public UploadSessionEntity toEntity(UploadSession domain, String tenantId) {
-        System.out.println("========== [MAPPER-TO-ENTITY] UploadSessionMapper.toEntity() called ==========");
+        logger.debug("========== [MAPPER-TO-ENTITY] UploadSessionMapper.toEntity() called ==========");
         if (domain == null) {
-            System.out.println("[MAPPER-TO-ENTITY] domain is null");
+            logger.debug("[MAPPER-TO-ENTITY] domain is null");
             return null;
         }
 
-        System.out.println("[MAPPER-TO-ENTITY] SessionId: " + domain.getSessionId());
-        System.out.println("[MAPPER-TO-ENTITY] HasMultipartInfo: " + domain.getMultipartUploadInfo().isPresent());
+        logger.debug("[MAPPER-TO-ENTITY] SessionId: {}", domain.getSessionId());
+        logger.debug("[MAPPER-TO-ENTITY] HasMultipartInfo: {}", domain.getMultipartUploadInfo().isPresent());
 
         UploadRequest request = domain.getUploadRequest();
 
@@ -63,11 +63,11 @@ public class UploadSessionMapper {
                 : null;
 
         // MultipartUploadInfo를 JSON으로 직렬화 (nullable)
-        System.out.println("[MAPPER-TO-ENTITY] Calling serializeMultipartUploadInfo");
+        logger.debug("[MAPPER-TO-ENTITY] Calling serializeMultipartUploadInfo");
         String multipartUploadInfoJson = serializeMultipartUploadInfo(
                 domain.getMultipartUploadInfo().orElse(null)
         );
-        System.out.println("[MAPPER-TO-ENTITY] Serialization result - JSON is null: " + (multipartUploadInfoJson == null));
+        logger.debug("[MAPPER-TO-ENTITY] Serialization result - JSON is null: {}", (multipartUploadInfoJson == null));
 
         return UploadSessionEntity.of(
                 domain.getSessionId(),
@@ -91,14 +91,14 @@ public class UploadSessionMapper {
      * @return UploadSession 도메인 객체
      */
     public UploadSession toDomain(UploadSessionEntity entity) {
-        System.out.println("========== [MAPPER-TO-DOMAIN] UploadSessionMapper.toDomain() called ==========");
+        logger.debug("========== [MAPPER-TO-DOMAIN] UploadSessionMapper.toDomain() called ==========");
         if (entity == null) {
-            System.out.println("[MAPPER-TO-DOMAIN] entity is null");
+            logger.debug("[MAPPER-TO-DOMAIN] entity is null");
             return null;
         }
 
-        System.out.println("[MAPPER-TO-DOMAIN] SessionId: " + entity.getSessionId());
-        System.out.println("[MAPPER-TO-DOMAIN] Entity has JSON: " + (entity.getMultipartUploadInfoJson() != null));
+        logger.debug("[MAPPER-TO-DOMAIN] SessionId: {}", entity.getSessionId());
+        logger.debug("[MAPPER-TO-DOMAIN] Entity has JSON: {}", (entity.getMultipartUploadInfoJson() != null));
 
         PolicyKey policyKey = parsePolicyKey(entity.getPolicyKey());
 
@@ -122,15 +122,15 @@ public class UploadSessionMapper {
         );
 
         // JSON에서 MultipartUploadInfo 역직렬화 (nullable)
-        System.out.println("[MAPPER-TO-DOMAIN] Calling deserializeMultipartUploadInfo");
+        logger.debug("[MAPPER-TO-DOMAIN] Calling deserializeMultipartUploadInfo");
         MultipartUploadInfo multipartUploadInfo = deserializeMultipartUploadInfo(
                 entity.getMultipartUploadInfoJson()
         );
-        System.out.println("[MAPPER-TO-DOMAIN] Deserialization result - multipartUploadInfo is null: " + (multipartUploadInfo == null));
+        logger.debug("[MAPPER-TO-DOMAIN] Deserialization result - multipartUploadInfo is null: {}", (multipartUploadInfo == null));
 
         // MultipartUploadInfo가 있으면 reconstituteWithMultipart() 사용
         if (multipartUploadInfo != null) {
-            System.out.println("[MAPPER-TO-DOMAIN] Using reconstituteWithMultipart()");
+            logger.debug("[MAPPER-TO-DOMAIN] Using reconstituteWithMultipart()");
             return UploadSession.reconstituteWithMultipart(
                     entity.getSessionId(),
                     policyKey,
@@ -144,7 +144,7 @@ public class UploadSessionMapper {
         }
 
         // 일반 업로드는 기존 reconstitute() 사용
-        System.out.println("[MAPPER-TO-DOMAIN] Using reconstitute()");
+        logger.debug("[MAPPER-TO-DOMAIN] Using reconstitute()");
         return UploadSession.reconstitute(
                 entity.getSessionId(),
                 policyKey,
@@ -184,26 +184,25 @@ public class UploadSessionMapper {
      * @return JSON 문자열 (null이면 null 반환)
      */
     private String serializeMultipartUploadInfo(MultipartUploadInfo multipartUploadInfo) {
-        System.out.println("========== [JSON-SERIAL] serializeMultipartUploadInfo called ==========");
+        logger.debug("========== [JSON-SERIAL] serializeMultipartUploadInfo called ==========");
         if (multipartUploadInfo == null) {
-            System.out.println("[JSON-SERIAL] MultipartUploadInfo is null");
+            logger.debug("[JSON-SERIAL] MultipartUploadInfo is null");
             return null;
         }
 
         try {
-            System.out.println("[JSON-SERIAL] Serializing with " + multipartUploadInfo.totalParts() + " parts");
+            logger.debug("[JSON-SERIAL] Serializing with {} parts", multipartUploadInfo.totalParts());
 
             // Domain VO → DTO 변환
             MultipartUploadInfoDto dto = toDtoFromDomain(multipartUploadInfo);
 
             // DTO → JSON
             String json = objectMapper.writeValueAsString(dto);
-            System.out.println("[JSON-SERIAL] SUCCESS! JSON length: " + json.length());
-            System.out.println("[JSON-SERIAL] JSON content: " + json);
+            logger.debug("[JSON-SERIAL] SUCCESS! JSON length: {}", json.length());
+            logger.debug("[JSON-SERIAL] JSON content: {}", json);
             return json;
         } catch (JsonProcessingException e) {
-            System.err.println("[JSON-SERIAL] FAILED: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to serialize MultipartUploadInfo to JSON", e);
             throw new IllegalStateException(
                     "Failed to serialize MultipartUploadInfo to JSON: " + e.getMessage(),
                     e
@@ -218,26 +217,25 @@ public class UploadSessionMapper {
      * @return MultipartUploadInfo (null이면 null 반환)
      */
     private MultipartUploadInfo deserializeMultipartUploadInfo(String json) {
-        System.out.println("========== [JSON-DESERIAL] deserializeMultipartUploadInfo called ==========");
+        logger.debug("========== [JSON-DESERIAL] deserializeMultipartUploadInfo called ==========");
         if (json == null || json.trim().isEmpty()) {
-            System.out.println("[JSON-DESERIAL] JSON is null or empty");
+            logger.debug("[JSON-DESERIAL] JSON is null or empty");
             return null;
         }
 
         try {
-            System.out.println("[JSON-DESERIAL] JSON length: " + json.length());
-            System.out.println("[JSON-DESERIAL] JSON content: " + json);
+            logger.debug("[JSON-DESERIAL] JSON length: {}", json.length());
+            logger.debug("[JSON-DESERIAL] JSON content: {}", json);
 
             // JSON → DTO
             MultipartUploadInfoDto dto = objectMapper.readValue(json, MultipartUploadInfoDto.class);
 
             // DTO → Domain VO
             MultipartUploadInfo result = toDomainFromDto(dto);
-            System.out.println("[JSON-DESERIAL] SUCCESS! Parts count: " + (result != null ? result.totalParts() : 0));
+            logger.debug("[JSON-DESERIAL] SUCCESS! Parts count: {}", (result != null ? result.totalParts() : 0));
             return result;
         } catch (JsonProcessingException e) {
-            System.err.println("[JSON-DESERIAL] FAILED: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to deserialize MultipartUploadInfo from JSON", e);
             throw new IllegalStateException(
                     "Failed to deserialize MultipartUploadInfo from JSON: " + e.getMessage(),
                     e

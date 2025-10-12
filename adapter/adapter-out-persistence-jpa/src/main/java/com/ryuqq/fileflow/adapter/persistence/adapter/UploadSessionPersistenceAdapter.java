@@ -68,12 +68,14 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
                 .map(existing -> updateExistingEntity(existing, session, tenantId))
                 .orElseGet(() -> mapper.toEntity(session, tenantId));
 
-        String json = entity.getMultipartUploadInfoJson();
-        if (json != null && !json.trim().isEmpty()) {
-            logger.info("✅ [ADAPTER-SAVE] Entity has JSON! Length: {}, Content: {}",
-                    json.length(), json.substring(0, Math.min(200, json.length())));
-        } else {
-            logger.warn("❌ [ADAPTER-SAVE] Entity JSON is NULL or EMPTY!");
+        if (logger.isDebugEnabled()) {
+            String json = entity.getMultipartUploadInfoJson();
+            if (json != null && !json.trim().isEmpty()) {
+                logger.debug("✅ [ADAPTER-SAVE] Entity has JSON! Length: {}, Content: {}",
+                        json.length(), json.substring(0, Math.min(200, json.length())));
+            } else {
+                logger.debug("❌ [ADAPTER-SAVE] Entity JSON is NULL or EMPTY!");
+            }
         }
 
         UploadSessionEntity savedEntity = repository.save(entity);
@@ -89,16 +91,16 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
 
         Optional<UploadSessionEntity> entityOpt = repository.findBySessionId(sessionId);
 
-        if (entityOpt.isPresent()) {
+        if (logger.isDebugEnabled() && entityOpt.isPresent()) {
             UploadSessionEntity entity = entityOpt.get();
             String json = entity.getMultipartUploadInfoJson();
 
             // 🔍 CRITICAL DEBUG: JSON 저장 확인
             if (json != null && !json.trim().isEmpty()) {
-                logger.info("✅ [ADAPTER-FIND] MultipartUploadInfo JSON found! Length: {}, Content: {}",
+                logger.debug("✅ [ADAPTER-FIND] MultipartUploadInfo JSON found! Length: {}, Content: {}",
                         json.length(), json.substring(0, Math.min(200, json.length())));
             } else {
-                logger.warn("❌ [ADAPTER-FIND] MultipartUploadInfo JSON is NULL or EMPTY!");
+                logger.debug("❌ [ADAPTER-FIND] MultipartUploadInfo JSON is NULL or EMPTY!");
             }
         }
 
