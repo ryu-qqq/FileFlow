@@ -1,10 +1,18 @@
 package com.ryuqq.fileflow.adapter.persistence.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ryuqq.fileflow.adapter.persistence.dto.MultipartUploadInfoDto;
+import com.ryuqq.fileflow.adapter.persistence.dto.PartUploadInfoDto;
 import com.ryuqq.fileflow.adapter.persistence.entity.UploadSessionEntity;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
+import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
+import com.ryuqq.fileflow.domain.upload.vo.PartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,11 +23,20 @@ import org.springframework.stereotype.Component;
  * - UploadRequest: Domain VO ↔ Entity fields (fileName, fileType, contentType, fileSize, checksum, idempotencyKey)
  * - IdempotencyKey: Domain VO ↔ Entity String (nullable)
  * - CheckSum: Domain VO ↔ Entity String (nullable)
+ * - MultipartUploadInfo: Domain VO ↔ Entity JSON String (nullable)
  *
  * @author sangwon-ryu
  */
 @Component
 public class UploadSessionMapper {
+
+    private static final Logger logger = LoggerFactory.getLogger(UploadSessionMapper.class);
+
+    private final ObjectMapper objectMapper;
+
+    public UploadSessionMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Domain → Entity 변환
@@ -29,9 +46,14 @@ public class UploadSessionMapper {
      * @return UploadSessionEntity
      */
     public UploadSessionEntity toEntity(UploadSession domain, String tenantId) {
+        System.out.println("========== [MAPPER-TO-ENTITY] UploadSessionMapper.toEntity() called ==========");
         if (domain == null) {
+            System.out.println("[MAPPER-TO-ENTITY] domain is null");
             return null;
         }
+
+        System.out.println("[MAPPER-TO-ENTITY] SessionId: " + domain.getSessionId());
+        System.out.println("[MAPPER-TO-ENTITY] HasMultipartInfo: " + domain.getMultipartUploadInfo().isPresent());
 
         UploadRequest request = domain.getUploadRequest();
 
@@ -39,6 +61,13 @@ public class UploadSessionMapper {
         String idempotencyKeyValue = request.idempotencyKey() != null
                 ? request.idempotencyKey().value()
                 : null;
+
+        // MultipartUploadInfo를 JSON으로 직렬화 (nullable)
+        System.out.println("[MAPPER-TO-ENTITY] Calling serializeMultipartUploadInfo");
+        String multipartUploadInfoJson = serializeMultipartUploadInfo(
+                domain.getMultipartUploadInfo().orElse(null)
+        );
+        System.out.println("[MAPPER-TO-ENTITY] Serialization result - JSON is null: " + (multipartUploadInfoJson == null));
 
         return UploadSessionEntity.of(
                 domain.getSessionId(),
@@ -50,6 +79,7 @@ public class UploadSessionMapper {
                 request.fileSizeBytes(),
                 domain.getStatus(),
                 null, // presignedUrl will be set separately
+                multipartUploadInfoJson,
                 domain.getExpiresAt()
         );
     }
@@ -61,9 +91,14 @@ public class UploadSessionMapper {
      * @return UploadSession 도메인 객체
      */
     public UploadSession toDomain(UploadSessionEntity entity) {
+        System.out.println("========== [MAPPER-TO-DOMAIN] UploadSessionMapper.toDomain() called ==========");
         if (entity == null) {
+            System.out.println("[MAPPER-TO-DOMAIN] entity is null");
             return null;
         }
+
+        System.out.println("[MAPPER-TO-DOMAIN] SessionId: " + entity.getSessionId());
+        System.out.println("[MAPPER-TO-DOMAIN] Entity has JSON: " + (entity.getMultipartUploadInfoJson() != null));
 
         PolicyKey policyKey = parsePolicyKey(entity.getPolicyKey());
 
@@ -86,6 +121,30 @@ public class UploadSessionMapper {
                 idempotencyKey
         );
 
+        // JSON에서 MultipartUploadInfo 역직렬화 (nullable)
+        System.out.println("[MAPPER-TO-DOMAIN] Calling deserializeMultipartUploadInfo");
+        MultipartUploadInfo multipartUploadInfo = deserializeMultipartUploadInfo(
+                entity.getMultipartUploadInfoJson()
+        );
+        System.out.println("[MAPPER-TO-DOMAIN] Deserialization result - multipartUploadInfo is null: " + (multipartUploadInfo == null));
+
+        // MultipartUploadInfo가 있으면 reconstituteWithMultipart() 사용
+        if (multipartUploadInfo != null) {
+            System.out.println("[MAPPER-TO-DOMAIN] Using reconstituteWithMultipart()");
+            return UploadSession.reconstituteWithMultipart(
+                    entity.getSessionId(),
+                    policyKey,
+                    uploadRequest,
+                    entity.getTenantId(), // use tenantId as uploaderId temporarily
+                    entity.getStatus(),
+                    entity.getCreatedAt(),
+                    entity.getExpiresAt(),
+                    multipartUploadInfo
+            );
+        }
+
+        // 일반 업로드는 기존 reconstitute() 사용
+        System.out.println("[MAPPER-TO-DOMAIN] Using reconstitute()");
         return UploadSession.reconstitute(
                 entity.getSessionId(),
                 policyKey,
@@ -116,6 +175,160 @@ public class UploadSessionMapper {
         }
 
         return PolicyKey.of(parts[0], parts[1], parts[2]);
+    }
+
+    /**
+     * MultipartUploadInfo를 JSON 문자열로 직렬화
+     *
+     * @param multipartUploadInfo 멀티파트 업로드 정보 (nullable)
+     * @return JSON 문자열 (null이면 null 반환)
+     */
+    private String serializeMultipartUploadInfo(MultipartUploadInfo multipartUploadInfo) {
+        System.out.println("========== [JSON-SERIAL] serializeMultipartUploadInfo called ==========");
+        if (multipartUploadInfo == null) {
+            System.out.println("[JSON-SERIAL] MultipartUploadInfo is null");
+            return null;
+        }
+
+        try {
+            System.out.println("[JSON-SERIAL] Serializing with " + multipartUploadInfo.totalParts() + " parts");
+
+            // Domain VO → DTO 변환
+            MultipartUploadInfoDto dto = toDtoFromDomain(multipartUploadInfo);
+
+            // DTO → JSON
+            String json = objectMapper.writeValueAsString(dto);
+            System.out.println("[JSON-SERIAL] SUCCESS! JSON length: " + json.length());
+            System.out.println("[JSON-SERIAL] JSON content: " + json);
+            return json;
+        } catch (JsonProcessingException e) {
+            System.err.println("[JSON-SERIAL] FAILED: " + e.getMessage());
+            e.printStackTrace();
+            throw new IllegalStateException(
+                    "Failed to serialize MultipartUploadInfo to JSON: " + e.getMessage(),
+                    e
+            );
+        }
+    }
+
+    /**
+     * JSON 문자열을 MultipartUploadInfo로 역직렬화
+     *
+     * @param json JSON 문자열 (nullable)
+     * @return MultipartUploadInfo (null이면 null 반환)
+     */
+    private MultipartUploadInfo deserializeMultipartUploadInfo(String json) {
+        System.out.println("========== [JSON-DESERIAL] deserializeMultipartUploadInfo called ==========");
+        if (json == null || json.trim().isEmpty()) {
+            System.out.println("[JSON-DESERIAL] JSON is null or empty");
+            return null;
+        }
+
+        try {
+            System.out.println("[JSON-DESERIAL] JSON length: " + json.length());
+            System.out.println("[JSON-DESERIAL] JSON content: " + json);
+
+            // JSON → DTO
+            MultipartUploadInfoDto dto = objectMapper.readValue(json, MultipartUploadInfoDto.class);
+
+            // DTO → Domain VO
+            MultipartUploadInfo result = toDomainFromDto(dto);
+            System.out.println("[JSON-DESERIAL] SUCCESS! Parts count: " + (result != null ? result.totalParts() : 0));
+            return result;
+        } catch (JsonProcessingException e) {
+            System.err.println("[JSON-DESERIAL] FAILED: " + e.getMessage());
+            e.printStackTrace();
+            throw new IllegalStateException(
+                    "Failed to deserialize MultipartUploadInfo from JSON: " + e.getMessage(),
+                    e
+            );
+        }
+    }
+
+    // ========== Domain VO ↔ DTO Conversion Methods ==========
+
+    /**
+     * Domain VO → DTO 변환
+     *
+     * @param domain MultipartUploadInfo Domain VO
+     * @return MultipartUploadInfoDto
+     */
+    private MultipartUploadInfoDto toDtoFromDomain(MultipartUploadInfo domain) {
+        if (domain == null) {
+            return null;
+        }
+
+        var partDtos = domain.parts().stream()
+                .map(this::toDtoFromDomain)
+                .toList();
+
+        return new MultipartUploadInfoDto(
+                domain.uploadId(),
+                domain.uploadPath(),
+                partDtos
+        );
+    }
+
+    /**
+     * Domain VO → DTO 변환 (Part)
+     *
+     * @param domain PartUploadInfo Domain VO
+     * @return PartUploadInfoDto
+     */
+    private PartUploadInfoDto toDtoFromDomain(PartUploadInfo domain) {
+        if (domain == null) {
+            return null;
+        }
+
+        return new PartUploadInfoDto(
+                domain.partNumber(),
+                domain.presignedUrl(),
+                domain.startByte(),
+                domain.endByte(),
+                domain.expiresAt()
+        );
+    }
+
+    /**
+     * DTO → Domain VO 변환
+     *
+     * @param dto MultipartUploadInfoDto
+     * @return MultipartUploadInfo Domain VO
+     */
+    private MultipartUploadInfo toDomainFromDto(MultipartUploadInfoDto dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        var parts = dto.parts().stream()
+                .map(this::toDomainFromDto)
+                .toList();
+
+        return MultipartUploadInfo.of(
+                dto.uploadId(),
+                dto.uploadPath(),
+                parts
+        );
+    }
+
+    /**
+     * DTO → Domain VO 변환 (Part)
+     *
+     * @param dto PartUploadInfoDto
+     * @return PartUploadInfo Domain VO
+     */
+    private PartUploadInfo toDomainFromDto(PartUploadInfoDto dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        return PartUploadInfo.of(
+                dto.partNumber(),
+                dto.presignedUrl(),
+                dto.startByte(),
+                dto.endByte(),
+                dto.expiresAt()
+        );
     }
 
 }

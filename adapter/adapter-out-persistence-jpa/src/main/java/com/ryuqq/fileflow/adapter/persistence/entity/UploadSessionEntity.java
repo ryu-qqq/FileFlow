@@ -71,6 +71,9 @@ public class UploadSessionEntity {
     @Column(name = "s3_key", length = 500)
     private String s3Key;
 
+    @Column(name = "multipart_upload_info", columnDefinition = "JSON")
+    private String multipartUploadInfoJson;
+
     @Column(name = "upload_started_at")
     private LocalDateTime uploadStartedAt;
 
@@ -104,6 +107,7 @@ public class UploadSessionEntity {
      * @param fileSize 파일 크기
      * @param status 업로드 상태
      * @param presignedUrl S3 Presigned URL
+     * @param multipartUploadInfoJson 멀티파트 업로드 정보 JSON
      * @param expiresAt 세션 만료 시각
      */
     protected UploadSessionEntity(
@@ -116,6 +120,7 @@ public class UploadSessionEntity {
             Long fileSize,
             UploadStatus status,
             String presignedUrl,
+            String multipartUploadInfoJson,
             LocalDateTime expiresAt
     ) {
         this.sessionId = sessionId;
@@ -127,6 +132,7 @@ public class UploadSessionEntity {
         this.fileSize = fileSize;
         this.status = status;
         this.presignedUrl = presignedUrl;
+        this.multipartUploadInfoJson = multipartUploadInfoJson;
         this.expiresAt = expiresAt;
     }
 
@@ -142,6 +148,7 @@ public class UploadSessionEntity {
      * @param fileSize 파일 크기
      * @param status 업로드 상태
      * @param presignedUrl S3 Presigned URL
+     * @param multipartUploadInfoJson 멀티파트 업로드 정보 JSON
      * @param expiresAt 세션 만료 시각
      * @return 생성된 UploadSessionEntity
      */
@@ -155,6 +162,7 @@ public class UploadSessionEntity {
             Long fileSize,
             UploadStatus status,
             String presignedUrl,
+            String multipartUploadInfoJson,
             LocalDateTime expiresAt
     ) {
         return new UploadSessionEntity(
@@ -167,6 +175,7 @@ public class UploadSessionEntity {
                 fileSize,
                 status,
                 presignedUrl,
+                multipartUploadInfoJson,
                 expiresAt
         );
     }
@@ -185,6 +194,7 @@ public class UploadSessionEntity {
      * @param fileSize 파일 크기
      * @param status 업로드 상태
      * @param presignedUrl S3 Presigned URL
+     * @param multipartUploadInfoJson 멀티파트 업로드 정보 JSON
      * @param expiresAt 세션 만료 시각
      * @param createdAt 생성 시각 (기존 값 유지)
      * @return 재구성된 UploadSessionEntity
@@ -200,6 +210,7 @@ public class UploadSessionEntity {
             Long fileSize,
             UploadStatus status,
             String presignedUrl,
+            String multipartUploadInfoJson,
             LocalDateTime expiresAt,
             LocalDateTime createdAt
     ) {
@@ -213,6 +224,7 @@ public class UploadSessionEntity {
                 fileSize,
                 status,
                 presignedUrl,
+                multipartUploadInfoJson,
                 expiresAt
         );
         entity.id = id; // 기존 ID 설정 (JPA가 UPDATE로 인식)
@@ -279,6 +291,10 @@ public class UploadSessionEntity {
 
     public String getS3Key() {
         return s3Key;
+    }
+
+    public String getMultipartUploadInfoJson() {
+        return multipartUploadInfoJson;
     }
 
     public LocalDateTime getUploadStartedAt() {
