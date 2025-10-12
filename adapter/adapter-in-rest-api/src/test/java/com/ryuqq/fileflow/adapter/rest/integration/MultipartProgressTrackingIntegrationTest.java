@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.adapter.rest.dto.request.CreateUploadSessionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -58,6 +60,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Sql(scripts = "/sql/cleanup-upload-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "/sql/insert-upload-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class MultipartProgressTrackingIntegrationTest {
+
+    private static final Logger log = LoggerFactory.getLogger(MultipartProgressTrackingIntegrationTest.class);
 
     @Container
     static LocalStackContainer localStack = new LocalStackContainer(
@@ -324,7 +328,7 @@ class MultipartProgressTrackingIntegrationTest {
                                             .with(csrf()))
                             .andExpect(status().isNoContent());
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("Error during concurrent part completion test", e);
                 } finally {
                     latch.countDown();
                 }
