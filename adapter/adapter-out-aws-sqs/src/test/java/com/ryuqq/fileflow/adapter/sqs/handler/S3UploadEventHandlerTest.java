@@ -21,6 +21,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import org.springframework.retry.support.RetryTemplate;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("S3UploadEventHandler 단위 테스트")
 class S3UploadEventHandlerTest {
@@ -28,13 +31,19 @@ class S3UploadEventHandlerTest {
     @Mock
     private UploadSessionPort uploadSessionPort;
 
+    @Mock
+    private RetryTemplate retryTemplate;
+
+    @Mock
+    private CircuitBreaker circuitBreaker;
+
     private ObjectMapper objectMapper;
     private S3UploadEventHandler handler;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        handler = new S3UploadEventHandler(objectMapper, uploadSessionPort);
+        handler = new S3UploadEventHandler(objectMapper, uploadSessionPort, retryTemplate, circuitBreaker);
     }
 
     @Test

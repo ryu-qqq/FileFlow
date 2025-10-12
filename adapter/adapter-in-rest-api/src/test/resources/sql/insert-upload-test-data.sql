@@ -109,17 +109,15 @@ INSERT INTO file_asset (
     file_id,
     session_id,
     tenant_id,
-    file_name,
     original_file_name,
+    stored_file_name,
     content_type,
     file_size,
     s3_bucket,
     s3_key,
-    s3_version_id,
-    status,
-    checksum_type,
-    checksum_value,
-    uploaded_at,
+    s3_region,
+    checksum,
+    is_public,
     created_at,
     updated_at
 ) VALUES (
@@ -127,16 +125,14 @@ INSERT INTO file_asset (
     '22222222-2222-2222-2222-222222222222',
     'b2c',
     'completed-test.jpg',
-    'completed-test.jpg',
+    'stored-completed-test.jpg',
     'image/jpeg',
     2048000,
     'test-bucket',
     'test/completed-test.jpg',
-    'version-123',
-    'ACTIVE',
-    'SHA256',
+    'us-east-1',
     'abc123def456',
-    DATE_SUB(NOW(), INTERVAL 5 MINUTE),
+    FALSE,
     DATE_SUB(NOW(), INTERVAL 15 MINUTE),
     NOW()
 );
@@ -145,23 +141,53 @@ INSERT INTO file_asset (
 -- 3. Test File Metadata (for completed uploads)
 -- ========================================
 
+-- Width metadata
 INSERT INTO file_metadata (
     file_id,
-    metadata_type,
+    metadata_key,
     metadata_value,
-    extracted_at,
+    value_type,
     created_at,
     updated_at
 ) VALUES (
     '44444444-4444-4444-4444-444444444444',
-    'IMAGE_BASIC',
-    '{
-        "width": 1920,
-        "height": 1080,
-        "format": "JPEG",
-        "colorSpace": "RGB"
-    }',
+    'width',
+    '1920',
+    'NUMBER',
     DATE_SUB(NOW(), INTERVAL 5 MINUTE),
+    NOW()
+);
+
+-- Height metadata
+INSERT INTO file_metadata (
+    file_id,
+    metadata_key,
+    metadata_value,
+    value_type,
+    created_at,
+    updated_at
+) VALUES (
+    '44444444-4444-4444-4444-444444444444',
+    'height',
+    '1080',
+    'NUMBER',
+    DATE_SUB(NOW(), INTERVAL 5 MINUTE),
+    NOW()
+);
+
+-- Format metadata
+INSERT INTO file_metadata (
+    file_id,
+    metadata_key,
+    metadata_value,
+    value_type,
+    created_at,
+    updated_at
+) VALUES (
+    '44444444-4444-4444-4444-444444444444',
+    'format',
+    'JPEG',
+    'STRING',
     DATE_SUB(NOW(), INTERVAL 5 MINUTE),
     NOW()
 );

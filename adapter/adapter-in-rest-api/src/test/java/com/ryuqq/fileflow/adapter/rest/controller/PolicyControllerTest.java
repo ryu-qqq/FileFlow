@@ -130,7 +130,7 @@ class PolicyControllerTest {
         // Given
         String policyKey = "b2c:CONSUMER:REVIEW";
         UpdatePolicyRequest invalidRequest = new UpdatePolicyRequest(
-                null, null, null, null, "" // changedBy가 blank
+                null, null, null, null, null, "" // changedBy가 blank
         );
 
         // When & Then
@@ -207,6 +207,7 @@ class PolicyControllerTest {
     private UpdatePolicyRequest createUpdatePolicyRequest() {
         return new UpdatePolicyRequest(
                 new ImagePolicyDto(10, 5, List.of("jpg", "png"), 4096, 4096),
+                null, // videoPolicy
                 new HtmlPolicyDto(5, 10, true),
                 new ExcelPolicyDto(20, 5),
                 new PdfPolicyDto(15, 100),

@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.application.policy.port.in.CreateUploadPolicyUseCase;
 import com.ryuqq.fileflow.application.policy.port.out.LoadUploadPolicyPort;
 import com.ryuqq.fileflow.application.policy.port.out.SaveUploadPolicyPort;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
 
 import java.util.Objects;
@@ -18,6 +19,7 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
+@Service
 public class CreateUploadPolicyService implements CreateUploadPolicyUseCase {
 
     private final LoadUploadPolicyPort loadUploadPolicyPort;

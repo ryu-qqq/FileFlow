@@ -7,11 +7,12 @@ import com.ryuqq.fileflow.adapter.sqs.exception.SessionMatchingException;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.vo.S3Location;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,13 +36,19 @@ public class S3UploadEventHandler {
 
     private final ObjectMapper objectMapper;
     private final UploadSessionPort uploadSessionPort;
+    private final RetryTemplate retryTemplate;
+    private final CircuitBreaker circuitBreaker;
 
     public S3UploadEventHandler(
             ObjectMapper objectMapper,
-            UploadSessionPort uploadSessionPort
+            UploadSessionPort uploadSessionPort,
+            RetryTemplate retryTemplate,
+            CircuitBreaker circuitBreaker
     ) {
         this.objectMapper = objectMapper;
         this.uploadSessionPort = uploadSessionPort;
+        this.retryTemplate = retryTemplate;
+        this.circuitBreaker = circuitBreaker;
     }
 
     /**
@@ -171,7 +178,14 @@ public class S3UploadEventHandler {
         // 3. 세션 완료 처리
         try {
             UploadSession completedSession = session.complete();
-            uploadSessionPort.save(completedSession);
+
+            // Circuit Breaker와 Retry를 적용하여 세션 저장
+            circuitBreaker.executeSupplier(() ->
+                    retryTemplate.execute(context -> {
+                        uploadSessionPort.save(completedSession);
+                        return completedSession;
+                    })
+            );
 
             log.info("Successfully updated upload session: {} to COMPLETED. " +
                     "S3 object: {}, Size: {} bytes, ETag: {}",

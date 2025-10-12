@@ -15,6 +15,11 @@ public enum FileType {
     IMAGE("image/*", "Image files"),
 
     /**
+     * 비디오 파일 (mp4, avi, mov 등)
+     */
+    VIDEO("video/*", "Video files"),
+
+    /**
      * HTML 파일
      */
     HTML("text/html", "HTML files"),
@@ -48,6 +53,7 @@ public enum FileType {
     public String getTypeName() {
         return switch (this) {
             case IMAGE -> "Image";
+            case VIDEO -> "Video";
             case HTML -> "HTML";
             case EXCEL -> "Excel";
             case PDF -> "PDF";
@@ -56,6 +62,10 @@ public enum FileType {
 
     public boolean isImage() {
         return this == IMAGE;
+    }
+
+    public boolean isVideo() {
+        return this == VIDEO;
     }
 
     public boolean isDocument() {
@@ -78,6 +88,9 @@ public enum FileType {
 
         if (normalizedContentType.startsWith("image/")) {
             return IMAGE;
+        }
+        if (normalizedContentType.startsWith("video/")) {
+            return VIDEO;
         }
         if (normalizedContentType.equals("text/html")) {
             return HTML;

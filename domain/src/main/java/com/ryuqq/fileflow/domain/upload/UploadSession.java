@@ -331,6 +331,33 @@ public final class UploadSession {
         );
     }
 
+    /**
+     * 멀티파트 업로드 정보를 설정한 새로운 세션을 반환합니다.
+     *
+     * 세션 생성 후 멀티파트 업로드를 시작할 때 사용됩니다.
+     *
+     * @param multipartUploadInfo 멀티파트 업로드 정보
+     * @return 멀티파트 업로드 정보가 설정된 새로운 UploadSession 인스턴스
+     * @throws IllegalArgumentException multipartUploadInfo가 null인 경우
+     */
+    public UploadSession withMultipartInfo(MultipartUploadInfo multipartUploadInfo) {
+        if (multipartUploadInfo == null) {
+            throw new IllegalArgumentException("MultipartUploadInfo cannot be null");
+        }
+
+        return new UploadSession(
+                this.sessionId,
+                this.policyKey,
+                this.uploadRequest,
+                this.uploaderId,
+                this.status,
+                this.createdAt,
+                this.expiresAt,
+                multipartUploadInfo,
+                this.domainEvents
+        );
+    }
+
     // ========== Validation Methods ==========
 
     private static void validatePolicyKey(PolicyKey policyKey) {

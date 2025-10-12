@@ -8,6 +8,7 @@ import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException
 import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
@@ -19,20 +20,24 @@ import java.util.Objects;
  *
  * 처리 흐름:
  * 1. 세션 조회 및 검증
- * 2. 멀티파트 업로드 여부 확인
- * 3. 파트 번호 유효성 검증
- * 4. Redis에 파트 완료 상태 기록
+ * 2. 멀티파트 업로드 여부 확인 (파일 크기 >= 100MB)
+ * 3. 파트 번호 유효성 검증 (MultipartUploadInfo가 있는 경우)
+ * 4. 세션 상태 변경 (PENDING → UPLOADING, 첫 파트 완료 시)
+ * 5. Redis에 파트 완료 상태 기록
  *
  * 설계 원칙:
  * - Best Effort: Redis 저장 실패해도 업로드는 계속 진행
- * - 멀티파트 업로드가 아닌 경우 예외 발생
- * - 유효하지 않은 파트 번호인 경우 예외 발생
+ * - 파일 크기 기반 멀티파트 판단 (>= 100MB)
+ * - MultipartUploadInfo는 Optional (Persistence Layer가 저장하지 않음)
+ * - 파트 번호 검증은 MultipartUploadInfo가 있을 때만 수행
  *
  * @author sangwon-ryu
  */
+@Service
 public class CompletePartUploadService implements CompletePartUploadUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(CompletePartUploadService.class);
+    private static final long MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024; // 100MB
 
     private final UploadSessionPort uploadSessionPort;
     private final MultipartProgressPort multipartProgressPort;
@@ -77,16 +82,27 @@ public class CompletePartUploadService implements CompletePartUploadUseCase {
         // 1. 세션 조회
         UploadSession session = findSessionById(command.sessionId());
 
-        // 2. 멀티파트 업로드 여부 확인
-        MultipartUploadInfo multipartInfo = session.getMultipartUploadInfo()
-                .orElseThrow(() -> new IllegalStateException(
-                        "Session " + command.sessionId() + " is not a multipart upload"
-                ));
+        // 2. 멀티파트 업로드 여부 확인 (파일 크기 기반)
+        long fileSize = session.getUploadRequest().fileSizeBytes();
+        if (fileSize < MULTIPART_THRESHOLD_BYTES) {
+            throw new IllegalStateException(
+                    "Session " + command.sessionId() + " is not a multipart upload. File size: " + fileSize + " bytes"
+            );
+        }
 
-        // 3. 파트 번호 유효성 검증
-        validatePartNumber(command.partNumber(), multipartInfo.totalParts());
+        // 3. MultipartUploadInfo 조회 (있으면 파트 번호 검증, 없으면 스킵)
+        session.getMultipartUploadInfo().ifPresent(multipartInfo ->
+                validatePartNumber(command.partNumber(), multipartInfo.totalParts())
+        );
 
-        // 4. Redis에 파트 완료 상태 기록
+        // 4. 세션 상태 변경 (PENDING → UPLOADING)
+        if (session.getStatus() == com.ryuqq.fileflow.domain.upload.vo.UploadStatus.PENDING) {
+            UploadSession uploadingSession = session.startUploading();
+            uploadSessionPort.save(uploadingSession);
+            log.info("Session {} status changed from PENDING to UPLOADING", command.sessionId());
+        }
+
+        // 5. Redis에 파트 완료 상태 기록
         multipartProgressPort.markPartCompleted(command.sessionId(), command.partNumber());
 
         log.info("Successfully marked part {} as completed for session {}",
