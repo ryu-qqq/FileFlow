@@ -4,7 +4,7 @@ environment = "prod"
 project_name = "fileflow"
 
 # S3 Bucket (must already exist)
-s3_bucket_name = "fileflow-prod-uploads"
+s3_bucket_name = "prod-connectly"
 
 # SQS Queue
 queue_name = "upload-events"
