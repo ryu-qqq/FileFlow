@@ -35,10 +35,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @author sangwon-ryu
  */
-@WebMvcTest(UploadSessionController.class)
+@WebMvcTest(controllers = {
+        UploadSessionController.class,
+        com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler.class
+})
 @DisplayName("UploadSessionController 테스트")
 @WithMockUser
 class UploadSessionControllerTest {
+
+    @org.springframework.boot.autoconfigure.EnableAutoConfiguration(
+            exclude = {
+                    org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class,
+                    org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class
+            }
+    )
+    @org.springframework.boot.autoconfigure.SpringBootApplication
+    static class TestConfig {
+        // Minimal test configuration for unit test
+    }
 
     @Autowired
     private MockMvc mockMvc;

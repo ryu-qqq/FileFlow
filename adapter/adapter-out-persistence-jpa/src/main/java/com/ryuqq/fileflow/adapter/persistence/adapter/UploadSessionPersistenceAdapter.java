@@ -7,6 +7,8 @@ import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -31,6 +33,8 @@ import java.util.Optional;
 @Component
 public class UploadSessionPersistenceAdapter implements UploadSessionPort {
 
+    private static final Logger logger = LoggerFactory.getLogger(UploadSessionPersistenceAdapter.class);
+
     private final UploadSessionJpaRepository repository;
     private final UploadSessionMapper mapper;
 
@@ -50,13 +54,27 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
             throw new IllegalArgumentException("UploadSession cannot be null");
         }
 
+        boolean hasMultipartInfo = session.getMultipartUploadInfo().isPresent();
+        logger.info("💾 [ADAPTER-SAVE] Saving session: {}, HasMultipartInfo: {}",
+                session.getSessionId(), hasMultipartInfo);
+
         // PolicyKey에서 tenantId 추출 (tenantId:userType:serviceType)
         String tenantId = session.getPolicyKey().getValue().split(":")[0];
 
         // 기존 엔티티 조회 (UPDATE 시) 또는 새 엔티티 생성 (INSERT 시)
-        UploadSessionEntity entity = repository.findBySessionId(session.getSessionId())
+        Optional<UploadSessionEntity> existingOpt = repository.findBySessionId(session.getSessionId());
+
+        UploadSessionEntity entity = existingOpt
                 .map(existing -> updateExistingEntity(existing, session, tenantId))
                 .orElseGet(() -> mapper.toEntity(session, tenantId));
+
+        String json = entity.getMultipartUploadInfoJson();
+        if (json != null && !json.trim().isEmpty()) {
+            logger.info("✅ [ADAPTER-SAVE] Entity has JSON! Length: {}, Content: {}",
+                    json.length(), json.substring(0, Math.min(200, json.length())));
+        } else {
+            logger.warn("❌ [ADAPTER-SAVE] Entity JSON is NULL or EMPTY!");
+        }
 
         UploadSessionEntity savedEntity = repository.save(entity);
 
@@ -69,8 +87,22 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
             throw new IllegalArgumentException("SessionId cannot be null or empty");
         }
 
-        return repository.findBySessionId(sessionId)
-                .map(mapper::toDomain);
+        Optional<UploadSessionEntity> entityOpt = repository.findBySessionId(sessionId);
+
+        if (entityOpt.isPresent()) {
+            UploadSessionEntity entity = entityOpt.get();
+            String json = entity.getMultipartUploadInfoJson();
+
+            // 🔍 CRITICAL DEBUG: JSON 저장 확인
+            if (json != null && !json.trim().isEmpty()) {
+                logger.info("✅ [ADAPTER-FIND] MultipartUploadInfo JSON found! Length: {}, Content: {}",
+                        json.length(), json.substring(0, Math.min(200, json.length())));
+            } else {
+                logger.warn("❌ [ADAPTER-FIND] MultipartUploadInfo JSON is NULL or EMPTY!");
+            }
+        }
+
+        return entityOpt.map(mapper::toDomain);
     }
 
     @Override
@@ -136,6 +168,10 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
                 ? request.idempotencyKey().value()
                 : null;
 
+        // MultipartUploadInfo는 nullable이므로, mapper가 이미 처리한 엔티티에서 가져오기
+        // 새로운 엔티티를 생성할 때는 mapper.toEntity()를 통해 JSON으로 변환된 값을 가져와야 함
+        UploadSessionEntity newEntity = mapper.toEntity(session, tenantId);
+
         // 기존 엔티티의 필드를 업데이트 (ID는 유지)
         // NOTE: UploadSessionEntity에는 setter가 없으므로,
         // 동일한 ID를 가진 새 엔티티를 생성하는 방식 사용
@@ -150,6 +186,7 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
                 request.fileSizeBytes(),
                 session.getStatus(),
                 null, // presignedUrl will be set separately
+                newEntity.getMultipartUploadInfoJson(), // multipartUploadInfo JSON
                 session.getExpiresAt(),
                 existing.getCreatedAt() // 생성 시간 유지
         );
