@@ -124,8 +124,13 @@ public class UploadSessionPersistenceService {
         UploadSession failedSession = session.fail();
         UploadSession savedSession = uploadSessionPort.save(failedSession);
 
-        // 중복 이벤트를 방지하기 위해 Redis 키를 삭제합니다
-        uploadSessionCachePort.delete(sessionId);
+        // 트랜잭션 커밋 후 Redis 키를 삭제하도록 등록 (데이터 정합성 보장)
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                uploadSessionCachePort.delete(sessionId);
+            }
+        });
 
         return savedSession;
     }
