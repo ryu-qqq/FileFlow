@@ -148,10 +148,10 @@ class DistributedLockConcurrencyTest {
 
         executorService.shutdown();
 
-        // then: 하나의 스레드만 성공 (또는 소수만 성공)
+        // then: 정확히 하나의 스레드만 성공 (분산 락이 올바르게 동작)
         assertThat(completed).isTrue();
-        assertThat(successCount.get()).isLessThanOrEqualTo(2); // 동시성 이슈로 최대 2개까지 허용
-        assertThat(successCount.get()).isGreaterThan(0); // 최소 1개는 성공
+        assertThat(successCount.get()).isEqualTo(1); // 정확히 하나만 성공
+        assertThat(failureCount.get()).isEqualTo(threadCount - 1); // 나머지는 모두 실패
 
         // persistenceService.failSession()은 소수만 호출됨
         verify(persistenceService, times(successCount.get()))
@@ -325,15 +325,16 @@ class DistributedLockConcurrencyTest {
     }
 
     /**
-     * 짧은 대기 시간으로 락 획득을 시도합니다 (동시성 테스트용).
+     * 대기 시간 없이 락 획득을 시도합니다 (동시성 테스트용).
+     * waitTime을 0으로 설정하여 즉시 실패하도록 하여 결정론적 테스트를 보장합니다.
      */
     private boolean tryProcessExpiredSessionWithShortWait(String sessionId) {
         String lockKey = LOCK_PREFIX + sessionId;
         RLock lock = redissonClient.getLock(lockKey);
 
         try {
-            // 분산 락 획득 시도 (waitTime: 100ms, leaseTime: 2초)
-            boolean acquired = lock.tryLock(100, 2000, TimeUnit.MILLISECONDS);
+            // 분산 락 획득 시도 (waitTime: 0ms → 즉시 실패, leaseTime: 2초)
+            boolean acquired = lock.tryLock(0, 2000, TimeUnit.MILLISECONDS);
 
             if (!acquired) {
                 return false; // 락 획득 실패
