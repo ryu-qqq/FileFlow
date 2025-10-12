@@ -1,9 +1,10 @@
 package com.ryuqq.fileflow.adapter.redis.adapter;
 
 import com.ryuqq.fileflow.application.upload.port.out.MultipartProgressPort;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -13,7 +14,7 @@ import java.util.Objects;
 /**
  * Redis 기반 멀티파트 업로드 진행률 추적 어댑터
  *
- * Redis Hash를 활용하여 각 파트의 완료 상태를 추적합니다.
+ * Redisson Native API를 사용하여 각 파트의 완료 상태를 추적합니다.
  *
  * Redis 구조:
  * - Key: "upload:multipart:progress:{sessionId}"
@@ -27,6 +28,7 @@ import java.util.Objects;
  * - Best Effort: Redis 저장 실패해도 업로드는 계속 진행
  * - TTL 기반 자동 만료: 세션 만료 시 진행 상태도 자동 삭제
  * - 원자적 연산: HSET을 사용하여 동시성 보장
+ * - Redisson Native API: Spring Data Redis의 pExpire 버그 우회
  *
  * @author sangwon-ryu
  */
@@ -38,15 +40,15 @@ public class RedisMultipartProgressAdapter implements MultipartProgressPort {
     private static final String TOTAL_PARTS_FIELD = "total_parts";
     private static final String PART_FIELD_PREFIX = "part:";
 
-    private final StringRedisTemplate stringRedisTemplate;
+    private final RedissonClient redissonClient;
 
     /**
      * Constructor Injection (NO Lombok)
      */
-    public RedisMultipartProgressAdapter(StringRedisTemplate stringRedisTemplate) {
-        this.stringRedisTemplate = Objects.requireNonNull(
-                stringRedisTemplate,
-                "stringRedisTemplate must not be null"
+    public RedisMultipartProgressAdapter(RedissonClient redissonClient) {
+        this.redissonClient = Objects.requireNonNull(
+                redissonClient,
+                "redissonClient must not be null"
         );
     }
 
@@ -69,20 +71,21 @@ public class RedisMultipartProgressAdapter implements MultipartProgressPort {
 
         try {
             String key = buildKey(sessionId);
+            RMap<String, String> map = redissonClient.getMap(key);
 
             // Hash 초기화: total_parts 설정
-            stringRedisTemplate.opsForHash().put(key, TOTAL_PARTS_FIELD, String.valueOf(totalParts));
+            map.put(TOTAL_PARTS_FIELD, String.valueOf(totalParts));
 
             // 모든 파트를 "false"로 초기화
             for (int i = 1; i <= totalParts; i++) {
-                stringRedisTemplate.opsForHash().put(key, buildPartField(i), "false");
+                map.put(buildPartField(i), "false");
             }
 
-            // TTL 설정
-            stringRedisTemplate.expire(key, ttl);
+            // TTL 설정 - Redisson Native API 사용 (pExpire 버그 우회)
+            map.expire(ttl);
 
             log.info("Initialized multipart progress for session {} with {} parts, TTL: {} seconds",
-                    sessionId, totalParts, ttl.toSeconds());
+                    sessionId, totalParts, ttl.getSeconds());
         } catch (Exception e) {
             // Best Effort: 실패해도 업로드는 계속 진행
             log.error("Failed to initialize progress for session {}: {}", sessionId, e.getMessage(), e);
@@ -104,9 +107,10 @@ public class RedisMultipartProgressAdapter implements MultipartProgressPort {
         try {
             String key = buildKey(sessionId);
             String partField = buildPartField(partNumber);
+            RMap<String, String> map = redissonClient.getMap(key);
 
             // 원자적 연산: 해당 파트를 "true"로 설정
-            stringRedisTemplate.opsForHash().put(key, partField, "true");
+            map.put(partField, "true");
 
             log.info("Marked part {} as completed for session {}", partNumber, sessionId);
         } catch (Exception e) {
@@ -124,9 +128,10 @@ public class RedisMultipartProgressAdapter implements MultipartProgressPort {
 
         try {
             String key = buildKey(sessionId);
+            RMap<String, String> map = redissonClient.getMap(key);
 
             // Redis Hash 전체 조회
-            Map<Object, Object> hashEntries = stringRedisTemplate.opsForHash().entries(key);
+            Map<String, String> hashEntries = map.readAllMap();
 
             if (hashEntries.isEmpty()) {
                 log.debug("No progress found for session {}", sessionId);
@@ -134,7 +139,7 @@ public class RedisMultipartProgressAdapter implements MultipartProgressPort {
             }
 
             // total_parts 파싱
-            String totalPartsStr = (String) hashEntries.get(TOTAL_PARTS_FIELD);
+            String totalPartsStr = hashEntries.get(TOTAL_PARTS_FIELD);
             if (totalPartsStr == null) {
                 log.warn("total_parts field not found for session {}", sessionId);
                 return new MultipartProgress(0, 0);
@@ -146,7 +151,7 @@ public class RedisMultipartProgressAdapter implements MultipartProgressPort {
             int completedParts = 0;
             for (int i = 1; i <= totalParts; i++) {
                 String partField = buildPartField(i);
-                String value = (String) hashEntries.get(partField);
+                String value = hashEntries.get(partField);
                 if ("true".equals(value)) {
                     completedParts++;
                 }
@@ -172,7 +177,8 @@ public class RedisMultipartProgressAdapter implements MultipartProgressPort {
 
         try {
             String key = buildKey(sessionId);
-            Boolean deleted = stringRedisTemplate.delete(key);
+            RMap<String, String> map = redissonClient.getMap(key);
+            boolean deleted = map.delete();
             log.info("Deleted multipart progress for session {}: {}", sessionId, deleted);
         } catch (Exception e) {
             log.error("Failed to delete progress for session {}: {}", sessionId, e.getMessage(), e);

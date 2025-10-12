@@ -10,6 +10,7 @@ import com.ryuqq.fileflow.application.upload.port.in.CompleteUploadSessionUseCas
 import com.ryuqq.fileflow.application.upload.port.in.CreateUploadSessionUseCase;
 import com.ryuqq.fileflow.application.upload.port.in.GetUploadSessionUseCase;
 import com.ryuqq.fileflow.application.upload.port.out.GeneratePresignedUrlPort;
+import com.ryuqq.fileflow.application.upload.port.out.MultipartProgressPort;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
@@ -22,6 +23,8 @@ import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -46,6 +49,7 @@ public class UploadSessionService implements
     private final GeneratePresignedUrlPort generatePresignedUrlPort;
     private final ValidateUploadPolicyUseCase validateUploadPolicyUseCase;
     private final UploadSessionPersistenceService persistenceService;
+    private final MultipartProgressPort multipartProgressPort;
 
     /**
      * Constructor Injection (NO Lombok)
@@ -54,12 +58,14 @@ public class UploadSessionService implements
      * @param generatePresignedUrlPort Presigned URL 생성 Port
      * @param validateUploadPolicyUseCase 정책 검증 UseCase
      * @param persistenceService 영속성 전용 Service
+     * @param multipartProgressPort 멀티파트 진행률 추적 Port
      */
     public UploadSessionService(
             UploadSessionPort uploadSessionPort,
             GeneratePresignedUrlPort generatePresignedUrlPort,
             ValidateUploadPolicyUseCase validateUploadPolicyUseCase,
-            UploadSessionPersistenceService persistenceService
+            UploadSessionPersistenceService persistenceService,
+            MultipartProgressPort multipartProgressPort
     ) {
         this.uploadSessionPort = Objects.requireNonNull(
             uploadSessionPort,
@@ -76,6 +82,10 @@ public class UploadSessionService implements
         this.persistenceService = Objects.requireNonNull(
                 persistenceService,
                 "UploadSessionPersistenceService must not be null"
+        );
+        this.multipartProgressPort = Objects.requireNonNull(
+                multipartProgressPort,
+                "MultipartProgressPort must not be null"
         );
     }
 
@@ -168,6 +178,15 @@ public class UploadSessionService implements
 
                 // ✅ 세션에 멀티파트 정보 설정
                 session = session.withMultipartInfo(multipartInfo);
+
+                // ✅ Redis에 멀티파트 진행 상태 초기화 (새 세션에만 적용)
+                // TTL은 세션의 실제 만료 시간 기준으로 계산
+                Duration ttl = Duration.between(LocalDateTime.now(), session.getExpiresAt());
+                multipartProgressPort.initializeProgress(
+                        session.getSessionId(),
+                        multipartInfo.totalParts(),
+                        ttl
+                );
             } else {
                 // 단일 파일 업로드 (100MB 미만)
                 PresignedUrlInfo presignedUrlInfo = generatePresignedUrlForCommand(command);

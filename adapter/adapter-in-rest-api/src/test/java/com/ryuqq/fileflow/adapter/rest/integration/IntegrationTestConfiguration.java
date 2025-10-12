@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest;
+package com.ryuqq.fileflow.adapter.rest.integration;
 
 import com.ryuqq.fileflow.application.common.port.out.DomainEventPublisher;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * Test Configuration for REST Adapter Integration Tests
+ * Integration Test Configuration for REST Adapter Integration Tests
  *
  * Spring Boot Application Context for integration tests.
  * Scans all necessary packages to load application services,
@@ -18,7 +18,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(scanBasePackages = {"com.ryuqq.fileflow"})
 @EnableJpaRepositories(basePackages = {"com.ryuqq.fileflow.adapter.persistence.repository"})
 @EntityScan(basePackages = {"com.ryuqq.fileflow.adapter.persistence.entity"})
-public class TestConfiguration {
+public class IntegrationTestConfiguration {
     // Full application context for integration tests
     // Scans entire com.ryuqq.fileflow package for components
     // Enables JPA repositories and entity scanning for database integration

@@ -160,7 +160,7 @@ class UploadSessionIntegrationTest {
     @DisplayName("E2E: 멱등성 키로 중복 요청 방지")
     void endToEndUploadFlow_IdempotencyKey_PreventsDuplicates() throws Exception {
         // Given: 동일한 멱등성 키로 2번 요청
-        String idempotencyKey = "test-idempotency-key-001";
+        String idempotencyKey = java.util.UUID.randomUUID().toString();
         CreateUploadSessionRequest request = new CreateUploadSessionRequest(
                 "b2c:CONSUMER:REVIEW",
                 "test-image.jpg",
