@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.application.policy.port.in.UpdateUploadPolicyUseCase;
 import com.ryuqq.fileflow.application.policy.port.out.LoadUploadPolicyPort;
 import com.ryuqq.fileflow.application.policy.port.out.UpdateUploadPolicyPort;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException;
 
@@ -19,6 +20,7 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
+@Service
 public class UpdateUploadPolicyService implements UpdateUploadPolicyUseCase {
 
     private final LoadUploadPolicyPort loadUploadPolicyPort;

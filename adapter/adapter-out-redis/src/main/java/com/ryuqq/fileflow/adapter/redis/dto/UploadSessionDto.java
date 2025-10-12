@@ -5,44 +5,31 @@ import com.ryuqq.fileflow.domain.upload.UploadSession;
 import java.time.LocalDateTime;
 
 /**
- * Redis에 저장될 UploadSession DTO
+ * Redis에 저장될 UploadSession DTO (Java Record)
  *
  * TTL 기반 만료 감지를 위한 최소 정보만 포함합니다.
  * 실제 영구 데이터는 DB에 저장되며, Redis는 만료 이벤트 발생용으로만 사용됩니다.
  *
+ * Java record 사용으로 다음과 같은 이점을 제공합니다:
+ * - 불변성(Immutability) 자동 보장
+ * - equals(), hashCode(), toString() 자동 생성
+ * - Boilerplate 코드 제거 (104줄 → 27줄)
+ * - Jackson 직렬화/역직렬화 자동 지원 (Java 17+)
+ *
+ * @param sessionId 세션 ID
+ * @param uploaderId 업로더 ID
+ * @param status 세션 상태
+ * @param createdAt 생성 시간
+ * @param expiresAt 만료 시간
  * @author sangwon-ryu
  */
-public class UploadSessionDto {
-
-    private String sessionId;
-    private String uploaderId;
-    private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime expiresAt;
-
-    /**
-     * Default Constructor (Jackson 직렬화용)
-     */
-    public UploadSessionDto() {
-    }
-
-    /**
-     * All-Args Constructor
-     */
-    public UploadSessionDto(
-            String sessionId,
-            String uploaderId,
-            String status,
-            LocalDateTime createdAt,
-            LocalDateTime expiresAt
-    ) {
-        this.sessionId = sessionId;
-        this.uploaderId = uploaderId;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.expiresAt = expiresAt;
-    }
-
+public record UploadSessionDto(
+        String sessionId,
+        String uploaderId,
+        String status,
+        LocalDateTime createdAt,
+        LocalDateTime expiresAt
+) {
     /**
      * Factory Method - Domain UploadSession에서 DTO 생성
      *
@@ -57,47 +44,5 @@ public class UploadSessionDto {
                 session.getCreatedAt(),
                 session.getExpiresAt()
         );
-    }
-
-    // ========== Getters and Setters ==========
-
-    public String getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
-
-    public String getUploaderId() {
-        return uploaderId;
-    }
-
-    public void setUploaderId(String uploaderId) {
-        this.uploaderId = uploaderId;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(LocalDateTime expiresAt) {
-        this.expiresAt = expiresAt;
     }
 }

@@ -39,6 +39,7 @@ dependencies {
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.security.test)
     testImplementation(libs.rest.assured)
+    testImplementation(libs.spring.boot.starter.data.jpa)
 
     // Testcontainers for integration tests
     testImplementation(libs.testcontainers.junit)
@@ -53,6 +54,7 @@ dependencies {
     // Adapter dependencies for integration tests
     testImplementation(project(":adapter:adapter-out-persistence-jpa"))
     testImplementation(project(":adapter:adapter-out-aws-s3"))
+    testImplementation(project(":adapter:adapter-out-redis"))
 }
 
 // ========================================

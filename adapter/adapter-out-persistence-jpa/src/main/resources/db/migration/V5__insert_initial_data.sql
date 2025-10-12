@@ -34,12 +34,14 @@ INSERT INTO upload_policy (
 ) VALUES (
     'b2c:CONSUMER:REVIEW',
     '{
-        "IMAGE": {
-            "maxSizeBytes": 10485760,
+        "imagePolicy": {
+            "maxFileSizeMB": 10,
             "maxFileCount": 5,
-            "allowedFormats": ["JPG", "PNG", "WEBP"],
-            "maxWidth": 2048,
-            "maxHeight": 2048
+            "allowedFormats": ["jpg", "png", "webp"],
+            "maxDimension": {
+                "width": 2048,
+                "height": 2048
+            }
         }
     }',
     '{
@@ -68,17 +70,25 @@ INSERT INTO upload_policy (
 ) VALUES (
     'b2c:SELLER:PRODUCT',
     '{
-        "IMAGE": {
-            "maxSizeBytes": 20971520,
+        "imagePolicy": {
+            "maxFileSizeMB": 20,
             "maxFileCount": 10,
-            "allowedFormats": ["JPG", "PNG", "WEBP"],
-            "maxWidth": 4096,
-            "maxHeight": 4096
+            "allowedFormats": ["jpg", "png", "webp"],
+            "maxDimension": {
+                "width": 4096,
+                "height": 4096
+            }
         },
-        "PDF": {
-            "maxSizeBytes": 52428800,
+        "videoPolicy": {
+            "maxFileSizeMB": 500,
+            "maxFileCount": 5,
+            "allowedFormats": ["mp4", "avi", "mov"],
+            "maxDurationSeconds": 600
+        },
+        "pdfPolicy": {
+            "maxFileSizeMB": 50,
             "maxFileCount": 3,
-            "maxPages": 50
+            "maxPageCount": 50
         }
     }',
     '{
@@ -107,16 +117,19 @@ INSERT INTO upload_policy (
 ) VALUES (
     'b2c:CRAWLER:PRODUCT',
     '{
-        "HTML": {
-            "maxSizeBytes": 1048576,
-            "maxFileCount": 100
+        "htmlPolicy": {
+            "maxFileSizeMB": 1,
+            "maxImageCount": 100,
+            "downloadExternalImages": false
         },
-        "IMAGE": {
-            "maxSizeBytes": 5242880,
+        "imagePolicy": {
+            "maxFileSizeMB": 5,
             "maxFileCount": 50,
-            "allowedFormats": ["JPG", "PNG", "WEBP"],
-            "maxWidth": 2048,
-            "maxHeight": 2048
+            "allowedFormats": ["jpg", "png", "webp"],
+            "maxDimension": {
+                "width": 2048,
+                "height": 2048
+            }
         }
     }',
     '{
@@ -145,16 +158,13 @@ INSERT INTO upload_policy (
 ) VALUES (
     'b2b:BUYER:ORDER_SHEET',
     '{
-        "EXCEL": {
-            "maxSizeBytes": 10485760,
-            "maxFileCount": 5,
-            "maxRows": 10000,
-            "maxColumns": 100
+        "excelPolicy": {
+            "maxFileSizeMB": 10,
+            "maxSheetCount": 5
         },
-        "PDF": {
-            "maxSizeBytes": 20971520,
-            "maxFileCount": 3,
-            "maxPages": 100
+        "pdfPolicy": {
+            "maxFileSizeMB": 20,
+            "maxPageCount": 100
         }
     }',
     '{

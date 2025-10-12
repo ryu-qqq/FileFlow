@@ -5,11 +5,13 @@ import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.retry.support.RetryTemplate;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -109,7 +111,9 @@ class S3PresignedUrlAdapterIntegrationTest {
         );
 
         S3MultipartAdapter s3MultipartAdapter = mock(S3MultipartAdapter.class);
-        adapter = new S3PresignedUrlAdapter(s3Presigner, properties, s3MultipartAdapter);
+        RetryTemplate retryTemplate = mock(RetryTemplate.class);
+        CircuitBreaker circuitBreaker = mock(CircuitBreaker.class);
+        adapter = new S3PresignedUrlAdapter(s3Presigner, properties, s3MultipartAdapter, retryTemplate, circuitBreaker);
     }
 
     @Test

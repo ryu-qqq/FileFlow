@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.domain.upload;
 
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.event.UploadSessionCreated;
+import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
 import com.ryuqq.fileflow.domain.upload.vo.UploadStatus;
 
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -29,6 +31,7 @@ public final class UploadSession {
     private final UploadStatus status;
     private final LocalDateTime createdAt;
     private final LocalDateTime expiresAt;
+    private final MultipartUploadInfo multipartUploadInfo; // nullable for single file uploads
     private final List<Object> domainEvents;
 
     private UploadSession(
@@ -39,6 +42,7 @@ public final class UploadSession {
             UploadStatus status,
             LocalDateTime createdAt,
             LocalDateTime expiresAt,
+            MultipartUploadInfo multipartUploadInfo,
             List<Object> domainEvents
     ) {
         this.sessionId = sessionId;
@@ -48,6 +52,7 @@ public final class UploadSession {
         this.status = status;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
+        this.multipartUploadInfo = multipartUploadInfo;
         this.domainEvents = new ArrayList<>(domainEvents);
     }
 
@@ -86,6 +91,7 @@ public final class UploadSession {
                 UploadStatus.PENDING,
                 now,
                 expiresAt,
+                null, // multipartUploadInfo - set later for multipart uploads
                 events
         );
 
@@ -130,6 +136,43 @@ public final class UploadSession {
                 status,
                 createdAt,
                 expiresAt,
+                null, // multipartUploadInfo - set separately if needed
+                new ArrayList<>()
+        );
+    }
+
+    /**
+     * 멀티파트 업로드 정보와 함께 세션을 재구성합니다.
+     *
+     * @param sessionId 세션 ID
+     * @param policyKey 정책 키
+     * @param uploadRequest 업로드 요청 정보
+     * @param uploaderId 업로더 ID
+     * @param status 상태
+     * @param createdAt 생성 시간
+     * @param expiresAt 만료 시간
+     * @param multipartUploadInfo 멀티파트 업로드 정보
+     * @return UploadSession 인스턴스
+     */
+    public static UploadSession reconstituteWithMultipart(
+            String sessionId,
+            PolicyKey policyKey,
+            UploadRequest uploadRequest,
+            String uploaderId,
+            UploadStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime expiresAt,
+            MultipartUploadInfo multipartUploadInfo
+    ) {
+        return new UploadSession(
+                sessionId,
+                policyKey,
+                uploadRequest,
+                uploaderId,
+                status,
+                createdAt,
+                expiresAt,
+                multipartUploadInfo,
                 new ArrayList<>()
         );
     }
@@ -176,6 +219,7 @@ public final class UploadSession {
                 UploadStatus.COMPLETED,
                 this.createdAt,
                 this.expiresAt,
+                this.multipartUploadInfo,
                 this.domainEvents
         );
     }
@@ -208,6 +252,7 @@ public final class UploadSession {
                 UploadStatus.COMPLETED,
                 this.createdAt,
                 this.expiresAt,
+                this.multipartUploadInfo,
                 this.domainEvents
         );
     }
@@ -226,6 +271,7 @@ public final class UploadSession {
                 UploadStatus.FAILED,
                 this.createdAt,
                 this.expiresAt,
+                this.multipartUploadInfo,
                 this.domainEvents
         );
     }
@@ -254,6 +300,7 @@ public final class UploadSession {
                 UploadStatus.UPLOADING,
                 this.createdAt,
                 this.expiresAt,
+                this.multipartUploadInfo,
                 this.domainEvents
         );
     }
@@ -279,6 +326,34 @@ public final class UploadSession {
                 UploadStatus.CANCELLED,
                 this.createdAt,
                 this.expiresAt,
+                this.multipartUploadInfo,
+                this.domainEvents
+        );
+    }
+
+    /**
+     * 멀티파트 업로드 정보를 설정한 새로운 세션을 반환합니다.
+     *
+     * 세션 생성 후 멀티파트 업로드를 시작할 때 사용됩니다.
+     *
+     * @param multipartUploadInfo 멀티파트 업로드 정보
+     * @return 멀티파트 업로드 정보가 설정된 새로운 UploadSession 인스턴스
+     * @throws IllegalArgumentException multipartUploadInfo가 null인 경우
+     */
+    public UploadSession withMultipartInfo(MultipartUploadInfo multipartUploadInfo) {
+        if (multipartUploadInfo == null) {
+            throw new IllegalArgumentException("MultipartUploadInfo cannot be null");
+        }
+
+        return new UploadSession(
+                this.sessionId,
+                this.policyKey,
+                this.uploadRequest,
+                this.uploaderId,
+                this.status,
+                this.createdAt,
+                this.expiresAt,
+                multipartUploadInfo,
                 this.domainEvents
         );
     }
@@ -358,6 +433,24 @@ public final class UploadSession {
 
     public LocalDateTime getExpiresAt() {
         return expiresAt;
+    }
+
+    /**
+     * 멀티파트 업로드 정보를 반환합니다.
+     *
+     * @return 멀티파트 업로드 정보 (없으면 empty Optional)
+     */
+    public Optional<MultipartUploadInfo> getMultipartUploadInfo() {
+        return Optional.ofNullable(multipartUploadInfo);
+    }
+
+    /**
+     * 멀티파트 업로드 여부를 확인합니다.
+     *
+     * @return 멀티파트 업로드 여부
+     */
+    public boolean isMultipartUpload() {
+        return multipartUploadInfo != null;
     }
 
     // ========== Object Methods ==========

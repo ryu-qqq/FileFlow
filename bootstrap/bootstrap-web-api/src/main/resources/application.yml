@@ -92,6 +92,14 @@ fileflow:
     expiration:
       lock-wait-time-seconds: 3
       lock-lease-time-seconds: 10
+  redisson:
+    connection-pool-size: 64
+    connection-minimum-idle-size: 10
+    idle-connection-timeout: 10000
+    connect-timeout: 10000
+    timeout: 3000
+    retry-attempts: 3
+    retry-interval: 1500
 
 # ========================================
 # Management & Actuator Configuration

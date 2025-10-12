@@ -8,6 +8,7 @@ import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
 import com.ryuqq.fileflow.domain.policy.vo.HtmlPolicy;
 import com.ryuqq.fileflow.domain.policy.vo.ImagePolicy;
 import com.ryuqq.fileflow.domain.policy.vo.PdfPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.VideoPolicy;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
@@ -39,6 +40,9 @@ public class FileTypePoliciesConverter implements AttributeConverter<FileTypePol
             if (attribute.getImagePolicy() != null) {
                 policyMap.put("imagePolicy", attribute.getImagePolicy());
             }
+            if (attribute.getVideoPolicy() != null) {
+                policyMap.put("videoPolicy", attribute.getVideoPolicy());
+            }
             if (attribute.getHtmlPolicy() != null) {
                 policyMap.put("htmlPolicy", attribute.getHtmlPolicy());
             }
@@ -66,11 +70,12 @@ public class FileTypePoliciesConverter implements AttributeConverter<FileTypePol
             Map<String, Object> policyMap = objectMapper.readValue(dbData, Map.class);
 
             ImagePolicy imagePolicy = convertToImagePolicy(policyMap.get("imagePolicy"));
+            VideoPolicy videoPolicy = convertToVideoPolicy(policyMap.get("videoPolicy"));
             HtmlPolicy htmlPolicy = convertToHtmlPolicy(policyMap.get("htmlPolicy"));
             ExcelPolicy excelPolicy = convertToExcelPolicy(policyMap.get("excelPolicy"));
             PdfPolicy pdfPolicy = convertToPdfPolicy(policyMap.get("pdfPolicy"));
 
-            return FileTypePolicies.of(imagePolicy, htmlPolicy, excelPolicy, pdfPolicy);
+            return FileTypePolicies.of(imagePolicy, videoPolicy, htmlPolicy, excelPolicy, pdfPolicy);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Failed to convert JSON to FileTypePolicies", e);
         }
@@ -130,6 +135,25 @@ public class FileTypePoliciesConverter implements AttributeConverter<FileTypePol
         int maxSheetCount = ((Number) map.get("maxSheetCount")).intValue();
 
         return new ExcelPolicy(maxFileSizeMB, maxSheetCount);
+    }
+
+    private VideoPolicy convertToVideoPolicy(Object obj) {
+        if (obj == null || (obj instanceof Map && ((Map<?, ?>) obj).isEmpty())) {
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> map = (Map<String, Object>) obj;
+
+        int maxFileSizeMB = ((Number) map.get("maxFileSizeMB")).intValue();
+        int maxFileCount = ((Number) map.get("maxFileCount")).intValue();
+
+        @SuppressWarnings("unchecked")
+        java.util.List<String> allowedFormats = (java.util.List<String>) map.get("allowedFormats");
+
+        int maxDurationSeconds = ((Number) map.get("maxDurationSeconds")).intValue();
+
+        return new VideoPolicy(maxFileSizeMB, maxFileCount, allowedFormats, maxDurationSeconds);
     }
 
     private PdfPolicy convertToPdfPolicy(Object obj) {

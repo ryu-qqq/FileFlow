@@ -43,6 +43,9 @@ public class UploadSessionEntity {
     @Column(name = "session_id", nullable = false, unique = true, length = 36)
     private String sessionId;
 
+    @Column(name = "idempotency_key", unique = true, length = 200)
+    private String idempotencyKey;
+
     @Column(name = "tenant_id", nullable = false, length = 50)
     private String tenantId;
 
@@ -93,6 +96,7 @@ public class UploadSessionEntity {
      * 업로드 세션 엔티티 생성자 (protected - factory method 사용 권장)
      *
      * @param sessionId 세션 고유 식별자
+     * @param idempotencyKey 멱등성 키 (옵션)
      * @param tenantId 테넌트 ID
      * @param policyKey 적용된 정책 키
      * @param fileName 원본 파일 이름
@@ -104,6 +108,7 @@ public class UploadSessionEntity {
      */
     protected UploadSessionEntity(
             String sessionId,
+            String idempotencyKey,
             String tenantId,
             String policyKey,
             String fileName,
@@ -114,6 +119,7 @@ public class UploadSessionEntity {
             LocalDateTime expiresAt
     ) {
         this.sessionId = sessionId;
+        this.idempotencyKey = idempotencyKey;
         this.tenantId = tenantId;
         this.policyKey = policyKey;
         this.fileName = fileName;
@@ -128,6 +134,7 @@ public class UploadSessionEntity {
      * 새로운 업로드 세션 엔티티를 생성하는 factory method
      *
      * @param sessionId 세션 고유 식별자
+     * @param idempotencyKey 멱등성 키 (옵션)
      * @param tenantId 테넌트 ID
      * @param policyKey 적용된 정책 키
      * @param fileName 원본 파일 이름
@@ -140,6 +147,7 @@ public class UploadSessionEntity {
      */
     public static UploadSessionEntity of(
             String sessionId,
+            String idempotencyKey,
             String tenantId,
             String policyKey,
             String fileName,
@@ -151,6 +159,7 @@ public class UploadSessionEntity {
     ) {
         return new UploadSessionEntity(
                 sessionId,
+                idempotencyKey,
                 tenantId,
                 policyKey,
                 fileName,
@@ -160,6 +169,55 @@ public class UploadSessionEntity {
                 presignedUrl,
                 expiresAt
         );
+    }
+
+    /**
+     * 기존 ID를 유지하면서 엔티티를 재구성하는 factory method
+     * (UPDATE 시 사용)
+     *
+     * @param id 기존 엔티티 ID (PK)
+     * @param sessionId 세션 고유 식별자
+     * @param idempotencyKey 멱등성 키 (옵션)
+     * @param tenantId 테넌트 ID
+     * @param policyKey 적용된 정책 키
+     * @param fileName 원본 파일 이름
+     * @param contentType MIME 타입
+     * @param fileSize 파일 크기
+     * @param status 업로드 상태
+     * @param presignedUrl S3 Presigned URL
+     * @param expiresAt 세션 만료 시각
+     * @param createdAt 생성 시각 (기존 값 유지)
+     * @return 재구성된 UploadSessionEntity
+     */
+    public static UploadSessionEntity reconstituteWithId(
+            Long id,
+            String sessionId,
+            String idempotencyKey,
+            String tenantId,
+            String policyKey,
+            String fileName,
+            String contentType,
+            Long fileSize,
+            UploadStatus status,
+            String presignedUrl,
+            LocalDateTime expiresAt,
+            LocalDateTime createdAt
+    ) {
+        UploadSessionEntity entity = new UploadSessionEntity(
+                sessionId,
+                idempotencyKey,
+                tenantId,
+                policyKey,
+                fileName,
+                contentType,
+                fileSize,
+                status,
+                presignedUrl,
+                expiresAt
+        );
+        entity.id = id; // 기존 ID 설정 (JPA가 UPDATE로 인식)
+        entity.createdAt = createdAt; // 생성 시각 유지
+        return entity;
     }
 
     @PrePersist
@@ -185,6 +243,10 @@ public class UploadSessionEntity {
 
     public String getSessionId() {
         return sessionId;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
     }
 
     public String getTenantId() {
@@ -259,6 +321,7 @@ public class UploadSessionEntity {
         return "UploadSessionEntity{" +
                 "id=" + id +
                 ", sessionId='" + sessionId + '\'' +
+                ", idempotencyKey='" + idempotencyKey + '\'' +
                 ", tenantId='" + tenantId + '\'' +
                 ", policyKey='" + policyKey + '\'' +
                 ", fileName='" + fileName + '\'' +

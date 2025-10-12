@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    url: jdbc:tc:mysql:8.0.33:///${DB_NAME:fileflow_test}?TC_TMPFS=/testtmpfs:rw&TC_INITSCRIPT=file:src/test/resources/sql/insert-upload-test-data.sql
+    url: jdbc:tc:mysql:8.0.33:///${DB_NAME:fileflow_test}?TC_TMPFS=/testtmpfs:rw
 
   jpa:
     hibernate:

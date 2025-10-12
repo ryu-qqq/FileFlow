@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotBlank;
  * 정책 업데이트를 위한 요청 DTO
  *
  * @param imagePolicy 이미지 정책 (nullable)
+ * @param videoPolicy 비디오 정책 (nullable)
  * @param htmlPolicy HTML 정책 (nullable)
  * @param excelPolicy Excel 정책 (nullable)
  * @param pdfPolicy PDF 정책 (nullable)
@@ -20,6 +21,9 @@ import jakarta.validation.constraints.NotBlank;
 public record UpdatePolicyRequest(
         @Valid
         ImagePolicyDto imagePolicy,
+
+        @Valid
+        VideoPolicyDto videoPolicy,
 
         @Valid
         HtmlPolicyDto htmlPolicy,
@@ -43,6 +47,7 @@ public record UpdatePolicyRequest(
         return new UpdateUploadPolicyCommand(
                 policyKeyDto,
                 imagePolicy != null ? imagePolicy.toDomain() : null,
+                videoPolicy != null ? videoPolicy.toDomain() : null,
                 htmlPolicy != null ? htmlPolicy.toDomain() : null,
                 excelPolicy != null ? excelPolicy.toDomain() : null,
                 pdfPolicy != null ? pdfPolicy.toDomain() : null,

@@ -5,9 +5,11 @@ import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.command.FileUploadCommand;
 import com.ryuqq.fileflow.domain.upload.vo.PresignedUrlInfo;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.retry.support.RetryTemplate;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -43,12 +45,16 @@ class S3PresignedUrlAdapterTest {
     private S3Presigner s3Presigner;
     private S3Properties s3Properties;
     private S3MultipartAdapter s3MultipartAdapter;
+    private RetryTemplate retryTemplate;
+    private CircuitBreaker circuitBreaker;
     private S3PresignedUrlAdapter adapter;
 
     @BeforeEach
     void setUp() {
         s3Presigner = mock(S3Presigner.class);
         s3MultipartAdapter = mock(S3MultipartAdapter.class);
+        retryTemplate = mock(RetryTemplate.class);
+        circuitBreaker = mock(CircuitBreaker.class);
         s3Properties = new S3Properties(
                 "test-bucket",
                 "ap-northeast-2",
@@ -58,7 +64,7 @@ class S3PresignedUrlAdapterTest {
                 10000L,
                 30000L
         );
-        adapter = new S3PresignedUrlAdapter(s3Presigner, s3Properties, s3MultipartAdapter);
+        adapter = new S3PresignedUrlAdapter(s3Presigner, s3Properties, s3MultipartAdapter, retryTemplate, circuitBreaker);
     }
 
     @Test
@@ -102,7 +108,7 @@ class S3PresignedUrlAdapterTest {
                 10000L,
                 30000L
         );
-        adapter = new S3PresignedUrlAdapter(s3Presigner, propertiesWithoutPrefix, s3MultipartAdapter);
+        adapter = new S3PresignedUrlAdapter(s3Presigner, propertiesWithoutPrefix, s3MultipartAdapter, retryTemplate, circuitBreaker);
 
         FileUploadCommand command = createTestCommand();
         URL mockUrl = new URL("https://test-bucket.s3.ap-northeast-2.amazonaws.com/user123/uuid/test.jpg?signature=xxx");
@@ -163,7 +169,7 @@ class S3PresignedUrlAdapterTest {
     @DisplayName("null S3Presigner로 생성 시 예외 발생")
     void shouldThrowExceptionWhenS3PresignerIsNull() {
         // When & Then
-        assertThatThrownBy(() -> new S3PresignedUrlAdapter(null, s3Properties, s3MultipartAdapter))
+        assertThatThrownBy(() -> new S3PresignedUrlAdapter(null, s3Properties, s3MultipartAdapter, retryTemplate, circuitBreaker))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("S3Presigner cannot be null");
     }
@@ -172,7 +178,7 @@ class S3PresignedUrlAdapterTest {
     @DisplayName("null S3Properties로 생성 시 예외 발생")
     void shouldThrowExceptionWhenS3PropertiesIsNull() {
         // When & Then
-        assertThatThrownBy(() -> new S3PresignedUrlAdapter(s3Presigner, null, s3MultipartAdapter))
+        assertThatThrownBy(() -> new S3PresignedUrlAdapter(s3Presigner, null, s3MultipartAdapter, retryTemplate, circuitBreaker))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("S3Properties cannot be null");
     }

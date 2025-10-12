@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("IdempotencyValidator 테스트")
@@ -71,9 +72,9 @@ class IdempotencyValidatorTest {
             IdempotencyKey key = IdempotencyKey.generate();
 
             // when & then
-            assertThatNoException().isThrownBy(() ->
+            assertThatCode(() ->
                     validator.validateOrThrow(key)
-            );
+            ).doesNotThrowAnyException();
         }
 
         @Test
@@ -178,9 +179,9 @@ class IdempotencyValidatorTest {
             IdempotencyKey key = IdempotencyKey.generate();
 
             // when & then
-            assertThatNoException().isThrownBy(() ->
+            assertThatCode(() ->
                     validator.validateAndMarkAsProcessed(key)
-            );
+            ).doesNotThrowAnyException();
             assertThat(validator.isProcessed(key)).isTrue();
         }
 
@@ -386,11 +387,11 @@ class IdempotencyValidatorTest {
             IdempotencyKey key3 = IdempotencyKey.generate();
 
             // when & then
-            assertThatNoException().isThrownBy(() -> {
+            assertThatCode(() -> {
                 validator.validateAndMarkAsProcessed(key1);
                 validator.validateAndMarkAsProcessed(key2);
                 validator.validateAndMarkAsProcessed(key3);
-            });
+            }).doesNotThrowAnyException();
 
             assertThat(validator.size()).isEqualTo(3);
         }
@@ -408,9 +409,9 @@ class IdempotencyValidatorTest {
 
             // then
             assertThat(result).isTrue();
-            assertThatNoException().isThrownBy(() ->
+            assertThatCode(() ->
                     validator.validateAndMarkAsProcessed(key)
-            );
+            ).doesNotThrowAnyException();
         }
     }
 }
