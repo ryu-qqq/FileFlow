@@ -1,11 +1,11 @@
 package com.ryuqq.fileflow.adapter.redis.listener;
 
+import com.ryuqq.fileflow.adapter.redis.config.SessionExpirationProperties;
 import com.ryuqq.fileflow.application.upload.service.UploadSessionPersistenceService;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.listener.KeyExpirationEventMessageListener;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -43,12 +43,7 @@ public class UploadSessionExpirationListener extends KeyExpirationEventMessageLi
 
     private final UploadSessionPersistenceService persistenceService;
     private final RedissonClient redissonClient;
-
-    @Value("${fileflow.session.expiration.lock-wait-time-seconds:3}")
-    private long lockWaitTimeSeconds;
-
-    @Value("${fileflow.session.expiration.lock-lease-time-seconds:10}")
-    private long lockLeaseTimeSeconds;
+    private final SessionExpirationProperties properties;
 
     /**
      * Constructor Injection
@@ -56,11 +51,13 @@ public class UploadSessionExpirationListener extends KeyExpirationEventMessageLi
      * @param listenerContainer Redis Message Listener Container
      * @param persistenceService UploadSession 영속성 Service
      * @param redissonClient Redisson Client (분산 락)
+     * @param properties Session Expiration 설정
      */
     public UploadSessionExpirationListener(
             RedisMessageListenerContainer listenerContainer,
             UploadSessionPersistenceService persistenceService,
-            RedissonClient redissonClient
+            RedissonClient redissonClient,
+            SessionExpirationProperties properties
     ) {
         super(listenerContainer);
         this.persistenceService = Objects.requireNonNull(
@@ -70,6 +67,10 @@ public class UploadSessionExpirationListener extends KeyExpirationEventMessageLi
         this.redissonClient = Objects.requireNonNull(
                 redissonClient,
                 "RedissonClient must not be null"
+        );
+        this.properties = Objects.requireNonNull(
+                properties,
+                "SessionExpirationProperties must not be null"
         );
     }
 
@@ -101,7 +102,11 @@ public class UploadSessionExpirationListener extends KeyExpirationEventMessageLi
             log.info("Attempting to acquire lock for session: {}", sessionId);
 
             // 분산 락 획득 시도 (waitTime, leaseTime은 application.yml에서 설정 가능)
-            boolean acquired = lock.tryLock(lockWaitTimeSeconds, lockLeaseTimeSeconds, TimeUnit.SECONDS);
+            boolean acquired = lock.tryLock(
+                    properties.getLockWaitTimeSeconds(),
+                    properties.getLockLeaseTimeSeconds(),
+                    TimeUnit.SECONDS
+            );
 
             if (!acquired) {
                 log.warn("Failed to acquire lock for session {}. Another server is processing it.", sessionId);
