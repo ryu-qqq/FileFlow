@@ -1,10 +1,12 @@
 package com.ryuqq.fileflow.application.policy.service;
 
 import com.ryuqq.fileflow.application.policy.dto.PolicyKeyDto;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.application.policy.port.in.DeleteUploadPolicyUseCase;
 import com.ryuqq.fileflow.application.policy.port.out.DeleteUploadPolicyPort;
 import com.ryuqq.fileflow.application.policy.port.out.LoadUploadPolicyPort;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
+import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.policy.UploadPolicy;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException;
 
@@ -18,6 +20,7 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
+@Service
 public class DeleteUploadPolicyService implements DeleteUploadPolicyUseCase {
 
     private final LoadUploadPolicyPort loadUploadPolicyPort;

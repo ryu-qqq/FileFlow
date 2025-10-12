@@ -1,0 +1,309 @@
+<?xml version="1.0"?>
+<ruleset name="Hexagonal Architecture - Law of Demeter"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+         https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Law of Demeter enforcement for Hexagonal Architecture
+
+        데미터의 법칙 (Law of Demeter):
+        - 객체는 자기 자신, 파라미터, 생성한 객체, 인스턴스 변수만 접근
+        - Train wreck (a.getB().getC()) 금지
+        - Tell, Don't Ask 원칙 준수
+
+        @author Sangwon Ryu (ryu@company.com)
+        @since 2025-01-10
+    </description>
+
+    <!-- ========================================
+         데미터의 법칙 (Law of Demeter)
+         ======================================== -->
+
+    <rule ref="category/java/design.xml/LawOfDemeter">
+        <priority>1</priority>
+        <properties>
+            <!-- Fluent API 패턴 허용 (Builder, Stream) -->
+            <property name="trustRadius" value="2"/>
+            <!-- Adapter 레이어는 외부 DTO 구조로 인해 완화 -->
+            <property name="violationSuppressXPath"
+                      value="//ClassOrInterfaceDeclaration[contains(@PackageName, 'adapter.')]"/>
+        </properties>
+    </rule>
+
+    <!-- ========================================
+         추가 설계 규칙
+         ======================================== -->
+
+    <!-- Getter 남용 방지 -->
+    <!-- Configuration Properties와 DTO 클래스는 데이터 전송이 목적이므로 제외 -->
+    <rule ref="category/java/design.xml/DataClass">
+        <priority>2</priority>
+        <properties>
+            <property name="violationSuppressXPath"
+                      value="//ClassOrInterfaceDeclaration[@Interface='true'
+                             or ends-with(@SimpleName, 'DTO')
+                             or ends-with(@SimpleName, 'Dto')
+                             or ends-with(@SimpleName, 'Request')
+                             or ends-with(@SimpleName, 'Response')
+                             or ends-with(@SimpleName, 'Properties')
+                             or ends-with(@SimpleName, 'Config')
+                             or ends-with(@SimpleName, 'Entity')
+                             or ends-with(@SimpleName, 'Record')
+                             or contains(@SimpleName, 'Retry')
+                             or contains(@SimpleName, 'CircuitBreaker')
+                             or contains(@PackageName, '.config.')
+                             or contains(@PackageName, '.dto.')
+                             or ancestor::RecordDeclaration]"/>
+        </properties>
+    </rule>
+
+    <!-- 과도한 임포트 (결합도 높음) -->
+    <rule ref="category/java/design.xml/ExcessiveImports">
+        <priority>3</priority>
+        <properties>
+            <property name="minimum" value="30"/>
+        </properties>
+    </rule>
+
+    <!-- 깊은 중첩 방지 -->
+    <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts">
+        <priority>2</priority>
+        <properties>
+            <property name="problemDepth" value="3"/>
+        </properties>
+    </rule>
+
+    <!-- God Class 방지 (LCOM 기반) -->
+    <!-- PMD 7.0.0에서 GodClass 규칙의 property 이름이 변경됨. 임시로 비활성화 -->
+    <!--
+    <rule ref="category/java/design.xml/GodClass">
+        <priority>2</priority>
+        <properties>
+            <property name="topscore" value="70"/>
+        </properties>
+    </rule>
+    -->
+
+    <!-- ========================================
+         단일 책임 원칙 (Single Responsibility Principle)
+         ======================================== -->
+
+    <!-- Domain Layer: 가장 엄격 (≤ 7 methods) -->
+    <rule name="DomainTooManyMethods"
+          language="java"
+          message="Domain class has too many methods (max 7) - violates SRP"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <priority>1</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//ClassOrInterfaceDeclaration[contains(@PackageName, '.domain.')]
+[@Interface='false']
+[not(contains(@SimpleName, 'Exception'))]
+[count(.//MethodDeclaration[@Public='true']) > 7]
+]]>
+                </value>
+            </property>
+        </properties>
+        <description>
+            Domain 클래스는 최대 7개의 public 메서드만 가져야 합니다.
+            더 많은 메서드가 필요하면 클래스를 분리하세요.
+        </description>
+    </rule>
+
+    <!-- Application Layer: UseCase는 작아야 함 (≤ 5 methods) -->
+    <rule name="UseCaseTooManyMethods"
+          language="java"
+          message="UseCase has too many methods (max 5) - one UseCase = one responsibility"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <priority>1</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//ClassOrInterfaceDeclaration[contains(@PackageName, '.application.')]
+[contains(@SimpleName, 'UseCase') or contains(@SimpleName, 'Service')]
+[count(.//MethodDeclaration[@Public='true']) > 5]
+]]>
+                </value>
+            </property>
+        </properties>
+        <description>
+            하나의 UseCase는 하나의 책임만 가져야 합니다.
+            복잡한 UseCase는 여러 개로 분리하세요.
+        </description>
+    </rule>
+
+    <!-- Controller: 너무 많은 엔드포인트 (≤ 10 endpoints) -->
+    <rule ref="category/java/design.xml/TooManyMethods">
+        <priority>2</priority>
+        <properties>
+            <!-- NO Lombok 프로젝트에서는 getter로 인해 메서드 수가 많아짐 -->
+            <property name="maxmethods" value="25"/>
+            <!-- Domain, Application 레이어는 제외 (getter 메서드가 많음) -->
+            <property name="violationSuppressXPath"
+                      value="//ClassOrInterfaceDeclaration[
+                             contains(@PackageName, '.domain.') or
+                             contains(@PackageName, '.application.')
+                      ]"/>
+        </properties>
+    </rule>
+
+    <!-- 과도한 필드 (≤ 7 fields) -->
+    <rule ref="category/java/design.xml/TooManyFields">
+        <priority>2</priority>
+        <properties>
+            <property name="maxfields" value="7"/>
+        </properties>
+    </rule>
+
+    <!-- 레이어별 클래스 길이 제한 -->
+    <rule name="DomainExcessiveClassLength"
+          language="java"
+          message="Domain class too long (max 200 lines) - split into smaller classes"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//ClassOrInterfaceDeclaration[contains(@PackageName, '.domain.')]
+[@EndLine - @BeginLine > 200]
+]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+
+    <rule name="ApplicationExcessiveClassLength"
+          language="java"
+          message="Application class too long (max 150 lines) - split into smaller UseCases"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//ClassOrInterfaceDeclaration[contains(@PackageName, '.application.')]
+[@EndLine - @BeginLine > 150]
+]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- PMD 7.0.0에서 ExcessiveClassLength 규칙 속성 변경으로 인해 비활성화 -->
+    <!--
+    <rule ref="category/java/design.xml/ExcessiveClassLength">
+        <priority>3</priority>
+        <properties>
+            <property name="minimum" value="300"/>
+        </properties>
+    </rule>
+    -->
+
+    <!-- ========================================
+         레이어별 커스텀 규칙
+         ======================================== -->
+
+    <!-- Domain 레이어: 가장 엄격한 데미터 법칙 -->
+    <rule name="DomainLayerDemeterStrict"
+          language="java"
+          message="Domain layer must strictly follow Law of Demeter - no method chaining allowed"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <priority>1</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//ClassOrInterfaceDeclaration[contains(@PackageName, '.domain.')]
+//PrimaryExpression[count(PrimarySuffix) > 1]
+[not(ancestor::Annotation)]
+[not(contains(@Image, 'builder()'))]
+[not(contains(@Image, 'stream()'))]
+]]>
+                </value>
+            </property>
+        </properties>
+        <description>
+            Domain 레이어에서는 메서드 체이닝이 엄격히 금지됩니다.
+
+            ❌ BAD:
+            String city = order.getUser().getAddress().getCity();
+
+            ✅ GOOD:
+            String city = order.getUserCity();
+        </description>
+    </rule>
+
+    <!-- Controller 레이어: DTO는 Record 사용으로 체이닝 자연스럽게 방지 -->
+    <rule name="ControllerNoRepositoryDependency"
+          language="java"
+          message="Controller must not depend on Repository - use UseCase only"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <priority>1</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//ClassOrInterfaceDeclaration[contains(@PackageName, 'adapter.in.')]
+//FieldDeclaration/Type/ReferenceType/ClassOrInterfaceType
+[contains(@Image, 'Repository')]
+]]>
+                </value>
+            </property>
+        </properties>
+        <description>
+            Controller는 Repository에 직접 의존하면 안 됩니다.
+            UseCase를 통해서만 비즈니스 로직에 접근하세요.
+
+            ❌ BAD:
+            private final OrderRepository orderRepository;
+
+            ✅ GOOD:
+            private final CreateOrderUseCase createOrderUseCase;
+        </description>
+    </rule>
+
+    <!-- ========================================
+         허용 패턴 (False Positive 방지)
+         ======================================== -->
+
+    <!-- Builder 패턴 허용 -->
+    <rule name="AllowBuilderPattern"
+          language="java"
+          message="Builder pattern is allowed"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <priority>5</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//PrimaryExpression[contains(@Image, 'builder()')]
+]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Stream API 허용 -->
+    <rule name="AllowStreamAPI"
+          language="java"
+          message="Stream API is allowed"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <priority>5</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//PrimaryExpression[contains(@Image, 'stream()')]
+]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+
+</ruleset>

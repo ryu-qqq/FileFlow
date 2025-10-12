@@ -35,8 +35,14 @@ public class UploadSessionMapper {
 
         UploadRequest request = domain.getUploadRequest();
 
+        // IdempotencyKey는 nullable이므로 null 체크
+        String idempotencyKeyValue = request.idempotencyKey() != null
+                ? request.idempotencyKey().value()
+                : null;
+
         return UploadSessionEntity.of(
                 domain.getSessionId(),
+                idempotencyKeyValue,
                 tenantId,
                 domain.getPolicyKey().getValue(),
                 request.fileName(),
@@ -65,13 +71,19 @@ public class UploadSessionMapper {
         com.ryuqq.fileflow.domain.policy.FileType fileType =
                 com.ryuqq.fileflow.domain.policy.FileType.fromContentType(entity.getContentType());
 
+        // IdempotencyKey 변환 (nullable)
+        com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey idempotencyKey =
+                entity.getIdempotencyKey() != null
+                        ? com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey.of(entity.getIdempotencyKey())
+                        : null;
+
         UploadRequest uploadRequest = UploadRequest.of(
                 entity.getFileName(),
                 fileType,
                 entity.getFileSize(),
                 entity.getContentType(),
                 null, // checksum not stored in current entity
-                null  // idempotencyKey not stored in current entity
+                idempotencyKey
         );
 
         return UploadSession.reconstitute(

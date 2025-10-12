@@ -16,6 +16,7 @@ public class S3Properties {
 
     private final String bucketName;
     private final String region;
+    private final String endpoint; // Optional: For LocalStack or custom S3-compatible endpoints
     private final long presignedUrlExpirationMinutes;
     private final String pathPrefix;
     private final int maxConnections;
@@ -27,6 +28,7 @@ public class S3Properties {
      *
      * @param bucketName S3 버킷 이름
      * @param region AWS 리전
+     * @param endpoint S3 endpoint (Optional: LocalStack 또는 S3-compatible 스토리지용)
      * @param presignedUrlExpirationMinutes Presigned URL 만료 시간(분)
      * @param pathPrefix S3 경로 접두사
      * @param maxConnections HTTP 클라이언트 최대 연결 수
@@ -37,6 +39,7 @@ public class S3Properties {
     public S3Properties(
             @Value("${aws.s3.bucket-name}") String bucketName,
             @Value("${aws.s3.region}") String region,
+            @Value("${aws.s3.endpoint:#{null}}") String endpoint,
             @Value("${aws.s3.presigned-url-expiration-minutes:15}") long presignedUrlExpirationMinutes,
             @Value("${aws.s3.path-prefix:}") String pathPrefix,
             @Value("${aws.s3.http.max-connections:100}") int maxConnections,
@@ -49,6 +52,7 @@ public class S3Properties {
 
         this.bucketName = bucketName;
         this.region = region;
+        this.endpoint = endpoint;
         this.presignedUrlExpirationMinutes = presignedUrlExpirationMinutes;
         this.pathPrefix = (pathPrefix == null || pathPrefix.isBlank()) ? "" : pathPrefix.trim();
         this.maxConnections = maxConnections;
@@ -62,6 +66,10 @@ public class S3Properties {
 
     public String getRegion() {
         return region;
+    }
+
+    public String getEndpoint() {
+        return endpoint;
     }
 
     public long getPresignedUrlExpirationMinutes() {

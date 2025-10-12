@@ -11,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -53,6 +55,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("integration-test")
 @DisplayName("멀티파트 진행률 추적 E2E 통합 테스트")
 @WithMockUser
+@Sql(scripts = "/sql/cleanup-upload-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "/sql/insert-upload-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class MultipartProgressTrackingIntegrationTest {
 
     @Container
@@ -62,6 +66,18 @@ class MultipartProgressTrackingIntegrationTest {
             .withServices(LocalStackContainer.Service.S3, LocalStackContainer.Service.SQS)
             .withEnv("SERVICES", "s3,sqs")
             .withEnv("DEBUG", "1");
+
+    /**
+     * LocalStack endpoint를 동적으로 Spring application 설정에 주입합니다.
+     * 멀티파트 업로드 테스트에서 application의 S3 adapter가 LocalStack을 사용하도록 설정합니다.
+     */
+    @DynamicPropertySource
+    static void overrideProperties(DynamicPropertyRegistry registry) {
+        registry.add("aws.s3.endpoint",
+                () -> localStack.getEndpointOverride(LocalStackContainer.Service.S3).toString());
+        registry.add("aws.s3.region",
+                () -> localStack.getRegion());
+    }
 
     @Autowired
     private MockMvc mockMvc;

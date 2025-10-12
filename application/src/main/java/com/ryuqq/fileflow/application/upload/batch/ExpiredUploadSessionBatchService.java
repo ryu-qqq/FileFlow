@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.application.upload.batch;
 import com.ryuqq.fileflow.application.upload.port.in.FailUploadUseCase;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
+import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,6 +30,7 @@ import java.util.Objects;
  * @author sangwon-ryu
  */
 @Component
+@Service
 public class ExpiredUploadSessionBatchService {
 
     private static final Logger log = LoggerFactory.getLogger(ExpiredUploadSessionBatchService.class);

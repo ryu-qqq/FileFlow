@@ -31,7 +31,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
+
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import org.springframework.retry.support.RetryTemplate;
 
 /**
  * S3MultipartAdapter 통합 테스트
@@ -113,7 +117,9 @@ class S3MultipartAdapterIntegrationTest {
                 30000L
         );
 
-        adapter = new S3MultipartAdapter(s3Presigner, s3Client, properties);
+        RetryTemplate retryTemplate = mock(RetryTemplate.class);
+        CircuitBreaker circuitBreaker = mock(CircuitBreaker.class);
+        adapter = new S3MultipartAdapter(s3Presigner, s3Client, properties, retryTemplate, circuitBreaker);
     }
 
     // ==========================================================================

@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.domain.policy.vo.FileTypePolicies;
 import com.ryuqq.fileflow.domain.policy.vo.HtmlPolicy;
 import com.ryuqq.fileflow.domain.policy.vo.ImagePolicy;
 import com.ryuqq.fileflow.domain.policy.vo.PdfPolicy;
+import com.ryuqq.fileflow.domain.policy.vo.VideoPolicy;
 
 import java.io.IOException;
 
@@ -30,11 +31,12 @@ public class FileTypePoliciesDeserializer extends JsonDeserializer<FileTypePolic
         JsonNode node = p.getCodec().readTree(p);
 
         ImagePolicy imagePolicy = deserializePolicy(node, "imagePolicy", p, ImagePolicy.class);
+        VideoPolicy videoPolicy = deserializePolicy(node, "videoPolicy", p, VideoPolicy.class);
         HtmlPolicy htmlPolicy = deserializePolicy(node, "htmlPolicy", p, HtmlPolicy.class);
         ExcelPolicy excelPolicy = deserializePolicy(node, "excelPolicy", p, ExcelPolicy.class);
         PdfPolicy pdfPolicy = deserializePolicy(node, "pdfPolicy", p, PdfPolicy.class);
 
-        return FileTypePolicies.of(imagePolicy, htmlPolicy, excelPolicy, pdfPolicy);
+        return FileTypePolicies.of(imagePolicy, videoPolicy, htmlPolicy, excelPolicy, pdfPolicy);
     }
 
     private <T> T deserializePolicy(JsonNode parentNode, String fieldName, JsonParser p, Class<T> policyClass) throws IOException {
