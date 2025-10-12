@@ -5,6 +5,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.listener.KeyExpirationEventMessageListener;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -22,13 +23,13 @@ import java.util.concurrent.TimeUnit;
  * 동작 원리:
  * 1. Redis Key가 TTL로 만료되면 KeyExpiredEvent 발생
  * 2. 이 Listener가 이벤트를 감지하고 sessionId 추출
- * 3. Redisson 분산 락 획득 시도 (3초 대기, 10초 자동 해제)
+ * 3. Redisson 분산 락 획득 시도 (설정 가능한 waitTime, leaseTime)
  * 4. 락 획득 성공 시 DB에서 세션 조회 후 FAILED 상태로 변경
  * 5. 락 해제
  *
  * 분산 락 전략:
- * - waitTime: 3초 (락 획득 대기 시간)
- * - leaseTime: 10초 (락 자동 해제 시간)
+ * - waitTime: application.yml에서 설정 (기본값: 3초)
+ * - leaseTime: application.yml에서 설정 (기본값: 10초)
  * - 락 획득 실패 시 로그만 남기고 종료 (다른 서버가 처리 중)
  *
  * @author sangwon-ryu
@@ -39,11 +40,15 @@ public class UploadSessionExpirationListener extends KeyExpirationEventMessageLi
     private static final Logger log = LoggerFactory.getLogger(UploadSessionExpirationListener.class);
     private static final String KEY_PREFIX = "upload:session:";
     private static final String LOCK_PREFIX = "lock:session:expire:";
-    private static final long LOCK_WAIT_TIME_SECONDS = 3;
-    private static final long LOCK_LEASE_TIME_SECONDS = 10;
 
     private final UploadSessionPersistenceService persistenceService;
     private final RedissonClient redissonClient;
+
+    @Value("${fileflow.session.expiration.lock-wait-time-seconds:3}")
+    private long lockWaitTimeSeconds;
+
+    @Value("${fileflow.session.expiration.lock-lease-time-seconds:10}")
+    private long lockLeaseTimeSeconds;
 
     /**
      * Constructor Injection
@@ -95,8 +100,8 @@ public class UploadSessionExpirationListener extends KeyExpirationEventMessageLi
         try {
             log.info("Attempting to acquire lock for session: {}", sessionId);
 
-            // 분산 락 획득 시도 (waitTime: 3초, leaseTime: 10초)
-            boolean acquired = lock.tryLock(LOCK_WAIT_TIME_SECONDS, LOCK_LEASE_TIME_SECONDS, TimeUnit.SECONDS);
+            // 분산 락 획득 시도 (waitTime, leaseTime은 application.yml에서 설정 가능)
+            boolean acquired = lock.tryLock(lockWaitTimeSeconds, lockLeaseTimeSeconds, TimeUnit.SECONDS);
 
             if (!acquired) {
                 log.warn("Failed to acquire lock for session {}. Another server is processing it.", sessionId);

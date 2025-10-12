@@ -85,6 +85,15 @@ spring:
           max-wait: -1ms
 
 # ========================================
+# FileFlow Application Configuration
+# ========================================
+fileflow:
+  session:
+    expiration:
+      lock-wait-time-seconds: 3
+      lock-lease-time-seconds: 10
+
+# ========================================
 # Management & Actuator Configuration
 # ========================================
 management:

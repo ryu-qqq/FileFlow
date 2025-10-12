@@ -52,15 +52,37 @@ public class RedisConfig {
     /**
      * Redis KeyspaceNotification 활성화
      * 'Ex' 설정: 만료 이벤트(expired)와 제거 이벤트(evicted) 활성화
+     *
+     * 설정 실패 시:
+     * - TTL 기반 세션 만료 처리가 동작하지 않음
+     * - Fallback 배치 스케줄러가 1시간마다 보상 처리 수행
      */
     @PostConstruct
     public void enableKeyspaceNotifications() {
         try (var connection = redisConnectionFactory.getConnection()) {
             connection.serverCommands()
                     .setConfig("notify-keyspace-events", "Ex");
-            log.info("Redis keyspace notifications enabled: Ex");
+            log.info("✅ Redis keyspace notifications enabled: Ex");
         } catch (Exception e) {
-            log.error("Failed to enable Redis keyspace notifications: {}", e.getMessage(), e);
+            log.error("""
+
+                    ⚠️  CRITICAL: Failed to enable Redis keyspace notifications
+                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    Reason: {}
+
+                    Impact:
+                      • TTL-based session expiration will NOT work
+                      • Real-time session processing will be disabled
+                      • Fallback batch scheduler will process expired sessions (1-hour delay)
+
+                    Solution:
+                      1. Add 'notify-keyspace-events Ex' to redis.conf
+                      2. Or execute: redis-cli CONFIG SET notify-keyspace-events Ex
+                      3. Ensure Redis user has CONFIG SET permission
+
+                    Current Status: Using fallback batch processing only
+                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    """, e.getMessage(), e);
         }
     }
 
