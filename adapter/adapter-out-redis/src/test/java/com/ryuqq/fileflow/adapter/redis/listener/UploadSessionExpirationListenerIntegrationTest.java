@@ -31,12 +31,10 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -126,13 +124,7 @@ class UploadSessionExpirationListenerIntegrationTest {
 
         // Redis에 세션 저장 (짧은 TTL)
         String redisKey = KEY_PREFIX + sessionId;
-        UploadSessionDto dto = UploadSessionDto.from(
-                sessionId,
-                session.getUploaderId(),
-                session.getStatus().name(),
-                session.getCreatedAt(),
-                session.getExpiresAt()
-        );
+        UploadSessionDto dto = UploadSessionDto.from(session);
         uploadSessionRedisTemplate.opsForValue().set(redisKey, dto, Duration.ofSeconds(2));
 
         // when: Redis TTL 만료 대기 (KeyExpiredEvent 발생)
@@ -251,13 +243,7 @@ class UploadSessionExpirationListenerIntegrationTest {
 
     private void saveSessionToRedis(String sessionId, UploadSession session, int ttlSeconds) {
         String redisKey = KEY_PREFIX + sessionId;
-        UploadSessionDto dto = UploadSessionDto.from(
-                sessionId,
-                session.getUploaderId(),
-                session.getStatus().name(),
-                session.getCreatedAt(),
-                session.getExpiresAt()
-        );
+        UploadSessionDto dto = UploadSessionDto.from(session);
         uploadSessionRedisTemplate.opsForValue().set(redisKey, dto, Duration.ofSeconds(ttlSeconds));
     }
 }
