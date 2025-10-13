@@ -43,6 +43,15 @@ public class OpenApiConfig {
     @Value("${server.port:8080}")
     private String serverPort;
 
+    @Value("${api.contact.url:https://github.com/your-org/fileflow}")
+    private String contactUrl;
+
+    @Value("${api.server.dev.url:https://dev-api.fileflow.com}")
+    private String devServerUrl;
+
+    @Value("${api.server.prod.url:https://api.fileflow.com}")
+    private String prodServerUrl;
+
     /**
      * OpenAPI 설정을 생성합니다.
      *
@@ -95,7 +104,7 @@ public class OpenApiConfig {
         return new Contact()
                 .name("FileFlow Team")
                 .email("fileflow@example.com")
-                .url("https://github.com/your-org/fileflow");
+                .url(contactUrl);
     }
 
     /**
@@ -120,11 +129,11 @@ public class OpenApiConfig {
                 .description("Local Development Server");
 
         Server devServer = new Server()
-                .url("https://dev-api.fileflow.com")
+                .url(devServerUrl)
                 .description("Development Server");
 
         Server prodServer = new Server()
-                .url("https://api.fileflow.com")
+                .url(prodServerUrl)
                 .description("Production Server");
 
         return List.of(localServer, devServer, prodServer);

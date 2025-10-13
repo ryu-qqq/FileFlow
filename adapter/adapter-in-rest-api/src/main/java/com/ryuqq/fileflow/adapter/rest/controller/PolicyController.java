@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.rest.controller;
 
 import com.ryuqq.fileflow.adapter.rest.dto.request.UpdatePolicyRequest;
+import com.ryuqq.fileflow.adapter.rest.dto.response.ErrorResponse;
 import com.ryuqq.fileflow.adapter.rest.dto.response.PolicyResponse;
 import com.ryuqq.fileflow.application.policy.dto.PolicyKeyDto;
 import com.ryuqq.fileflow.application.policy.dto.UpdateUploadPolicyCommand;
@@ -98,12 +99,12 @@ public class PolicyController {
             @ApiResponse(
                     responseCode = "404",
                     description = "정책을 찾을 수 없음",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "잘못된 정책 키 형식",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
     @GetMapping("/{policyKey}")
@@ -167,12 +168,12 @@ public class PolicyController {
             @ApiResponse(
                     responseCode = "404",
                     description = "정책을 찾을 수 없음",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "잘못된 요청 데이터",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
     @PutMapping("/{policyKey}")
@@ -211,12 +212,12 @@ public class PolicyController {
             @ApiResponse(
                     responseCode = "404",
                     description = "정책을 찾을 수 없음",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "잘못된 정책 키 형식",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
     @PostMapping("/{policyKey}/activate")
