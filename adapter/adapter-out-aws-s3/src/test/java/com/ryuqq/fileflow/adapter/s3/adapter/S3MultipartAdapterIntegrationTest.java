@@ -110,6 +110,7 @@ class S3MultipartAdapterIntegrationTest {
         S3Properties properties = new S3Properties(
                 TEST_BUCKET,
                 TEST_REGION,
+                null,
                 15L,
                 "multipart-uploads",
                 100,

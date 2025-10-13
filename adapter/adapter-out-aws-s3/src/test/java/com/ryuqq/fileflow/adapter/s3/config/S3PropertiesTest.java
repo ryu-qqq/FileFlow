@@ -24,6 +24,7 @@ class S3PropertiesTest {
         S3Properties properties = new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 15L,
                 "uploads",
                 100,
@@ -45,6 +46,7 @@ class S3PropertiesTest {
         S3Properties properties = new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 15L,
                 "   ",
                 100,
@@ -63,6 +65,7 @@ class S3PropertiesTest {
         S3Properties properties = new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 15L,
                 null,
                 100,
@@ -81,6 +84,7 @@ class S3PropertiesTest {
         S3Properties properties = new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 15L,
                 "  uploads  ",
                 100,
@@ -99,6 +103,7 @@ class S3PropertiesTest {
         assertThatThrownBy(() -> new S3Properties(
                 null,
                 "ap-northeast-2",
+                null,
                 15L,
                 "uploads",
                 100,
@@ -116,6 +121,7 @@ class S3PropertiesTest {
         assertThatThrownBy(() -> new S3Properties(
                 "   ",
                 "ap-northeast-2",
+                null,
                 15L,
                 "uploads",
                 100,
@@ -132,6 +138,7 @@ class S3PropertiesTest {
         // When & Then
         assertThatThrownBy(() -> new S3Properties(
                 "my-bucket",
+                null,
                 null,
                 15L,
                 "uploads",
@@ -150,6 +157,7 @@ class S3PropertiesTest {
         assertThatThrownBy(() -> new S3Properties(
                 "my-bucket",
                 "   ",
+                null,
                 15L,
                 "uploads",
                 100,
@@ -167,6 +175,7 @@ class S3PropertiesTest {
         assertThatThrownBy(() -> new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 0L,
                 "uploads",
                 100,
@@ -179,6 +188,7 @@ class S3PropertiesTest {
         assertThatThrownBy(() -> new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 -1L,
                 "uploads",
                 100,
@@ -196,6 +206,7 @@ class S3PropertiesTest {
         assertThatThrownBy(() -> new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 61L,
                 "uploads",
                 100,
@@ -213,6 +224,7 @@ class S3PropertiesTest {
         S3Properties properties1 = new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 1L,
                 "uploads",
                 100,
@@ -225,6 +237,7 @@ class S3PropertiesTest {
         S3Properties properties60 = new S3Properties(
                 "my-bucket",
                 "ap-northeast-2",
+                null,
                 60L,
                 "uploads",
                 100,

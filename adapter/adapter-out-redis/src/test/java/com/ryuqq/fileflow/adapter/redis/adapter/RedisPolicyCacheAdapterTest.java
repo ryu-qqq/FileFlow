@@ -95,6 +95,7 @@ class RedisPolicyCacheAdapterTest {
                 ImagePolicy.createDefault(),
                 null,
                 null,
+                null,
                 null
         );
 
@@ -233,6 +234,7 @@ class RedisPolicyCacheAdapterTest {
     private UploadPolicy createTestPolicy(PolicyKey policyKey) {
         FileTypePolicies fileTypePolicies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
+                null,
                 null,
                 null,
                 null

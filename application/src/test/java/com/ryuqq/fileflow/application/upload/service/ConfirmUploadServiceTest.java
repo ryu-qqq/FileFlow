@@ -43,6 +43,9 @@ class ConfirmUploadServiceTest {
     @Mock
     private VerifyS3ObjectPort verifyS3ObjectPort;
 
+    @Mock
+    private ChecksumVerificationService checksumVerificationService;
+
     private ConfirmUploadService confirmUploadService;
 
     private static final String S3_BUCKET = "test-bucket";
@@ -56,6 +59,7 @@ class ConfirmUploadServiceTest {
         confirmUploadService = new ConfirmUploadService(
                 uploadSessionPort,
                 verifyS3ObjectPort,
+                checksumVerificationService,
                 S3_BUCKET
         );
     }
@@ -70,7 +74,7 @@ class ConfirmUploadServiceTest {
             // Given
             UploadSession session = createPendingSession();
             String actualSessionId = session.getSessionId();
-            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, null);
+            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, null, null);
 
             when(uploadSessionPort.findById(actualSessionId)).thenReturn(Optional.of(session));
             when(verifyS3ObjectPort.doesObjectExist(anyString(), anyString())).thenReturn(true);
@@ -96,7 +100,7 @@ class ConfirmUploadServiceTest {
             // Given
             UploadSession session = createPendingSession();
             String actualSessionId = session.getSessionId();
-            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG);
+            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG, null);
 
             when(uploadSessionPort.findById(actualSessionId)).thenReturn(Optional.of(session));
             when(verifyS3ObjectPort.doesObjectExist(anyString(), anyString())).thenReturn(true);
@@ -120,7 +124,7 @@ class ConfirmUploadServiceTest {
             // Given
             UploadSession session = createPendingSession();
             String actualSessionId = session.getSessionId();
-            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG);
+            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG, null);
 
             when(uploadSessionPort.findById(actualSessionId)).thenReturn(Optional.of(session));
             when(verifyS3ObjectPort.doesObjectExist(anyString(), anyString())).thenReturn(true);
@@ -153,7 +157,7 @@ class ConfirmUploadServiceTest {
         @DisplayName("SessionId가 null인 경우 예외 발생")
         void confirm_NullSessionId_ThrowsException() {
             // When & Then
-            assertThatThrownBy(() -> new ConfirmUploadCommand(null, ETAG))
+            assertThatThrownBy(() -> new ConfirmUploadCommand(null, ETAG, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("SessionId cannot be null or empty");
         }
@@ -163,7 +167,7 @@ class ConfirmUploadServiceTest {
         void confirm_SessionNotFound_ThrowsException() {
             // Given
             String testSessionId = "non-existent-session";
-            ConfirmUploadCommand command = new ConfirmUploadCommand(testSessionId, ETAG);
+            ConfirmUploadCommand command = new ConfirmUploadCommand(testSessionId, ETAG, null);
 
             when(uploadSessionPort.findById(testSessionId)).thenReturn(Optional.empty());
 
@@ -180,7 +184,7 @@ class ConfirmUploadServiceTest {
             // Given
             UploadSession session = createPendingSession();
             String actualSessionId = session.getSessionId();
-            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG);
+            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG, null);
 
             when(uploadSessionPort.findById(actualSessionId)).thenReturn(Optional.of(session));
             when(verifyS3ObjectPort.doesObjectExist(anyString(), anyString())).thenReturn(false);
@@ -198,7 +202,7 @@ class ConfirmUploadServiceTest {
             // Given
             UploadSession session = createPendingSession();
             String actualSessionId = session.getSessionId();
-            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG);
+            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG, null);
 
             when(uploadSessionPort.findById(actualSessionId)).thenReturn(Optional.of(session));
             when(verifyS3ObjectPort.doesObjectExist(anyString(), anyString())).thenReturn(true);
@@ -217,7 +221,7 @@ class ConfirmUploadServiceTest {
             // Given
             UploadSession completedSession = createCompletedSession();
             String actualSessionId = completedSession.getSessionId();
-            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG);
+            ConfirmUploadCommand command = new ConfirmUploadCommand(actualSessionId, ETAG, null);
 
             when(uploadSessionPort.findById(actualSessionId)).thenReturn(Optional.of(completedSession));
             when(verifyS3ObjectPort.doesObjectExist(anyString(), anyString())).thenReturn(true);
@@ -239,6 +243,7 @@ class ConfirmUploadServiceTest {
                 com.ryuqq.fileflow.domain.policy.FileType.IMAGE,
                 1024L,
                 "image/jpeg",
+                null,
                 IdempotencyKey.generate()
         );
         return UploadSession.create(policyKey, uploadRequest, "uploader-1", 60);

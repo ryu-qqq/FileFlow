@@ -22,6 +22,7 @@ class FileTypeTest {
         // then
         assertThat(types).containsExactlyInAnyOrder(
             FileType.IMAGE,
+            FileType.VIDEO,
             FileType.HTML,
             FileType.EXCEL,
             FileType.PDF
@@ -164,7 +165,6 @@ class FileTypeTest {
     @ValueSource(strings = {
         "text/plain",
         "application/json",
-        "video/mp4",
         "audio/mpeg",
         "application/zip"
     })

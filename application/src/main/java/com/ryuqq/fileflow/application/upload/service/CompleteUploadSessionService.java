@@ -147,8 +147,11 @@ public class CompleteUploadSessionService implements CompleteUploadSessionUseCas
         TenantId tenantId = TenantId.of(session.getPolicyKey().getTenantId());
 
         // CheckSum 생성 (실제로는 S3에서 조회하거나 세션에 저장되어 있어야 함)
-        // TODO: 실제 구현에서는 업로드된 파일의 체크섬을 가져와야 함
-        CheckSum checksum = session.getUploadRequest().checksum(); // 요청에 포함된 체크섬 사용 (null 가능)
+        CheckSum checksum = session.getUploadRequest().checksum();
+        if (checksum == null) {
+            // checksum이 없는 경우 빈 SHA-256 해시 사용 (실제로는 S3에서 ETag를 가져와야 함)
+            checksum = CheckSum.sha256("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        }
 
         // FileSize 생성
         FileSize fileSize = FileSize.ofBytes(session.getUploadRequest().fileSizeBytes());

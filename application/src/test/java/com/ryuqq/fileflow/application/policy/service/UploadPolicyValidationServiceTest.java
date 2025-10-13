@@ -349,7 +349,7 @@ class UploadPolicyValidationServiceTest {
 
         UploadPolicy policy = UploadPolicy.create(
                 policyKey,
-                FileTypePolicies.of(imagePolicy, null, null, null),
+                FileTypePolicies.of(imagePolicy, null, null, null, null),
                 new RateLimiting(100, 1000),
                 LocalDateTime.now().minusDays(1),
                 LocalDateTime.now().plusYears(1)
@@ -363,7 +363,7 @@ class UploadPolicyValidationServiceTest {
 
         return UploadPolicy.create(
                 policyKey,
-                FileTypePolicies.of(imagePolicy, null, null, null),
+                FileTypePolicies.of(imagePolicy, null, null, null, null),
                 new RateLimiting(100, 1000),
                 LocalDateTime.now().minusDays(1),
                 LocalDateTime.now().plusYears(1)

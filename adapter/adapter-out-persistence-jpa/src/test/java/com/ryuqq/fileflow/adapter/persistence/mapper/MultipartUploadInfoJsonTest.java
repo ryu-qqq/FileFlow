@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.PartUploadInfo;
 import com.ryuqq.fileflow.domain.upload.vo.UploadRequest;
+import com.ryuqq.fileflow.domain.upload.vo.UploadStatus;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -58,7 +59,7 @@ class MultipartUploadInfoJsonTest {
         PolicyKey policyKey = PolicyKey.of("tenant-id", "SELLER", "PRODUCT");
         UploadRequest uploadRequest = UploadRequest.of(
                 "test-video.mp4",
-                FileType.VIDEO_MP4,
+                FileType.VIDEO,
                 104857600L, // 100MB
                 "video/mp4",
                 null,
@@ -73,14 +74,14 @@ class MultipartUploadInfoJsonTest {
                 policyKey,
                 uploadRequest,
                 "uploader-123",
-                "UPLOADING",
+                UploadStatus.UPLOADING,
                 now,
                 expiresAt,
                 multipartInfo
         );
 
         // When: Mapper를 통해 Domain → Entity 변환 (JSON 직렬화 포함)
-        UploadSessionEntity entity = mapper.toEntity(originalSession, "tenant-id");
+        UploadSessionEntity entity = mapper.toEntity(originalSession, "tenant-id", "uploader-123");
 
         // Then: Entity의 JSON 필드가 올바르게 생성되었는지 확인
         assertThat(entity).isNotNull();

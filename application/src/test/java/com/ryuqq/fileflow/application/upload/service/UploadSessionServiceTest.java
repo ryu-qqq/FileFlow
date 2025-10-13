@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.upload.dto.CreateUploadSessionCommand;
 import com.ryuqq.fileflow.application.upload.dto.UploadSessionResponse;
 import com.ryuqq.fileflow.application.upload.port.in.CreateUploadSessionUseCase;
 import com.ryuqq.fileflow.application.upload.port.out.GeneratePresignedUrlPort;
+import com.ryuqq.fileflow.application.upload.port.out.MultipartProgressPort;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.policy.FileType;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
@@ -51,6 +52,9 @@ class UploadSessionServiceTest {
     @Mock
     private UploadSessionPersistenceService persistenceService;
 
+    @Mock
+    private MultipartProgressPort multipartProgressPort;
+
     private UploadSessionService uploadSessionService;
 
     private static final String TENANT_ID = "tenant-1";
@@ -66,7 +70,8 @@ class UploadSessionServiceTest {
                 uploadSessionPort,
                 generatePresignedUrlPort,
                 validateUploadPolicyUseCase,
-                persistenceService
+                persistenceService,
+                multipartProgressPort
         );
     }
 
