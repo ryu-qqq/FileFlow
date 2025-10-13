@@ -34,6 +34,10 @@ dependencies {
     // Resilience & Retry
     implementation(libs.bundles.resilience)
 
+    // JPA API (for OptimisticLockException handling)
+    compileOnly("jakarta.persistence:jakarta.persistence-api:3.1.0")
+    testImplementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
+
     // ========================================
     // Test Dependencies
     // ========================================

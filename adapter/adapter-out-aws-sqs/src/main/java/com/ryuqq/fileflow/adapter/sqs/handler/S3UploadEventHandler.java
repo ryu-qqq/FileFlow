@@ -212,6 +212,18 @@ public class S3UploadEventHandler {
                     record.getS3().getObject().geteTag()
             );
 
+        } catch (jakarta.persistence.OptimisticLockException e) {
+            // Optimistic Locking 충돌 시 (다른 트랜잭션이 먼저 업데이트함)
+            // 중복 S3 이벤트이거나 동시에 두 트랜잭션이 업데이트를 시도한 경우
+            log.info("OptimisticLockException for session: {}. " +
+                    "Another transaction already updated this session. " +
+                    "This is expected behavior for duplicate S3 events or concurrent updates. " +
+                    "S3 object: {}",
+                    sessionId, s3Location.toUri());
+
+            // 예외를 던지지 않고 정상 처리로 간주 (멱등성 보장)
+            // SQS 메시지는 성공적으로 처리된 것으로 간주되어 삭제됨
+
         } catch (IllegalStateException e) {
             log.error("Failed to complete upload session: {}. Error: {}",
                     sessionId, e.getMessage(), e);

@@ -12,6 +12,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -39,6 +40,21 @@ public class UploadSessionEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+
+    /**
+     * JPA Optimistic Locking을 위한 버전 필드
+     * 동시성 제어를 통해 Race Condition을 방지합니다 (Issue #46 - KAN-137)
+     *
+     * 동작 방식:
+     * - UPDATE 시마다 version이 1씩 증가
+     * - UPDATE 시 WHERE 절에 version 조건이 자동 추가
+     * - 다른 트랜잭션이 먼저 UPDATE 했다면 OptimisticLockException 발생
+     *
+     * @see jakarta.persistence.OptimisticLockException
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 
     @Column(name = "session_id", nullable = false, unique = true, length = 36)
     private String sessionId;
@@ -203,6 +219,7 @@ public class UploadSessionEntity {
      * (UPDATE 시 사용)
      *
      * @param id 기존 엔티티 ID (PK)
+     * @param version Optimistic Locking 버전 (동시성 제어용)
      * @param sessionId 세션 고유 식별자
      * @param idempotencyKey 멱등성 키 (옵션)
      * @param tenantId 테넌트 ID
@@ -221,6 +238,7 @@ public class UploadSessionEntity {
      */
     public static UploadSessionEntity reconstituteWithId(
             Long id,
+            Long version,
             String sessionId,
             String idempotencyKey,
             String tenantId,
@@ -252,6 +270,7 @@ public class UploadSessionEntity {
                 expiresAt
         );
         entity.id = id; // 기존 ID 설정 (JPA가 UPDATE로 인식)
+        entity.version = version; // Optimistic Locking 버전 설정
         entity.createdAt = createdAt; // 생성 시각 유지
         return entity;
     }
@@ -275,6 +294,10 @@ public class UploadSessionEntity {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     public String getSessionId() {
@@ -368,6 +391,7 @@ public class UploadSessionEntity {
     public String toString() {
         return "UploadSessionEntity{" +
                 "id=" + id +
+                ", version=" + version +
                 ", sessionId='" + sessionId + '\'' +
                 ", idempotencyKey='" + idempotencyKey + '\'' +
                 ", tenantId='" + tenantId + '\'' +
