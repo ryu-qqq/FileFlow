@@ -19,14 +19,15 @@ import java.util.Objects;
  * 업로드 완료 확인 Service
  *
  * Hexagonal Architecture의 UseCase 구현체로서,
- * 클라이언트의 업로드 완료 알림을 처리하고 S3에서 파일 존재를 검증합니다.
+ * 클라이언트의 업로드 완료 알림을 처리하고 S3에서 파일 존재 및 무결성을 검증합니다.
  *
  * 처리 흐름:
  * 1. 세션 조회
  * 2. 세션 상태 검증 (PENDING 상태여야 함)
  * 3. S3에 파일 존재 확인
- * 4. ETag 검증 (제공된 경우)
- * 5. 세션 상태를 COMPLETED로 업데이트
+ * 4. SHA-256 체크섬 검증 (ChecksumVerificationService 사용)
+ * 5. ETag 검증 (선택적, 하위 호환성)
+ * 6. 세션 상태를 COMPLETED로 업데이트
  *
  * @author sangwon-ryu
  */
@@ -35,6 +36,7 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
 
     private final UploadSessionPort uploadSessionPort;
     private final VerifyS3ObjectPort verifyS3ObjectPort;
+    private final ChecksumVerificationService checksumVerificationService;
     private final String s3BucketName;
 
     /**
@@ -42,11 +44,13 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
      *
      * @param uploadSessionPort 세션 저장소
      * @param verifyS3ObjectPort S3 검증 Port
+     * @param checksumVerificationService 체크섬 검증 서비스
      * @param s3BucketName S3 버킷명 (외부 설정에서 주입)
      */
     public ConfirmUploadService(
             UploadSessionPort uploadSessionPort,
             VerifyS3ObjectPort verifyS3ObjectPort,
+            ChecksumVerificationService checksumVerificationService,
             @org.springframework.beans.factory.annotation.Value("${aws.s3.bucket-name}") String s3BucketName
     ) {
         this.uploadSessionPort = Objects.requireNonNull(
@@ -56,6 +60,10 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
         this.verifyS3ObjectPort = Objects.requireNonNull(
                 verifyS3ObjectPort,
                 "VerifyS3ObjectPort must not be null"
+        );
+        this.checksumVerificationService = Objects.requireNonNull(
+                checksumVerificationService,
+                "ChecksumVerificationService must not be null"
         );
         this.s3BucketName = Objects.requireNonNull(
                 s3BucketName,
@@ -112,7 +120,11 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
             );
         }
 
-        // 6. ETag 검증 (선택적)
+        // 6. SHA-256 체크섬 검증 (ChecksumVerificationService 사용)
+        // 세션에 체크섬이 포함되어 있으면 검증 수행
+        checksumVerificationService.verifyChecksum(session, s3Location.key());
+
+        // 7. ETag 검증 (선택적, 하위 호환성 유지)
         if (command.hasEtag()) {
             String actualEtag = verifyS3ObjectPort.getObjectETag(
                     s3Location.bucket(),
@@ -128,13 +140,13 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
             }
         }
 
-        // 7. 세션 상태 업데이트
+        // 8. 세션 상태 업데이트
         UploadSession confirmedSession = session.confirmUpload();
 
-        // 8. 변경된 세션 저장
+        // 9. 변경된 세션 저장
         UploadSession savedSession = uploadSessionPort.save(confirmedSession);
 
-        // 9. Response 생성
+        // 10. Response 생성
         return ConfirmUploadResponse.success(
                 savedSession.getSessionId(),
                 savedSession.getStatus()

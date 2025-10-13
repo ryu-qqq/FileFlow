@@ -41,6 +41,18 @@ public interface VerifyS3ObjectPort {
     S3ObjectMetadata getObjectMetadata(String bucket, String key);
 
     /**
+     * S3 객체의 User Metadata를 조회합니다.
+     *
+     * User Metadata는 x-amz-meta-* 헤더로 저장된 사용자 정의 메타데이터입니다.
+     * 체크섬 검증을 위한 x-amz-meta-checksum-value 등의 값을 조회할 때 사용됩니다.
+     *
+     * @param bucket S3 버킷명
+     * @param key S3 객체 키
+     * @return User Metadata 맵 (key: 메타데이터 키, value: 메타데이터 값)
+     */
+    java.util.Map<String, String> getUserMetadata(String bucket, String key);
+
+    /**
      * S3 객체 메타데이터를 담는 DTO
      *
      * @param etag S3 ETag
