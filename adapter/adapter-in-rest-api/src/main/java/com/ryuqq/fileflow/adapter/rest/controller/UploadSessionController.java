@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.rest.controller;
 
 import com.ryuqq.fileflow.adapter.rest.dto.request.CreateUploadSessionRequest;
 import com.ryuqq.fileflow.adapter.rest.dto.response.CreateUploadSessionApiResponse;
+import com.ryuqq.fileflow.adapter.rest.dto.response.ErrorResponse;
 import com.ryuqq.fileflow.application.upload.dto.CreateUploadSessionCommand;
 import com.ryuqq.fileflow.application.upload.port.in.CreateUploadSessionUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -91,12 +92,12 @@ public class UploadSessionController {
             @ApiResponse(
                     responseCode = "400",
                     description = "잘못된 요청 데이터 또는 정책 위반",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "정책을 찾을 수 없음",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
     @PostMapping

@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.rest.controller;
 
+import com.ryuqq.fileflow.adapter.rest.dto.response.ErrorResponse;
 import com.ryuqq.fileflow.adapter.rest.dto.response.UploadStatusApiResponse;
 import com.ryuqq.fileflow.application.upload.dto.UploadStatusResponse;
 import com.ryuqq.fileflow.application.upload.port.in.GetUploadStatusUseCase;
@@ -79,12 +80,12 @@ public class UploadStatusController {
             @ApiResponse(
                     responseCode = "404",
                     description = "세션을 찾을 수 없음",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "잘못된 세션 ID",
-                    content = @Content
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
     @GetMapping("/{sessionId}/status")
