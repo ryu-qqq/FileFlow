@@ -54,4 +54,21 @@ public interface ImageConversionPort {
      * @return 변환 가능 여부
      */
     boolean canConvertToWebP(ImageFormat format);
+
+    /**
+     * 이미지를 품질 90%로 압축합니다.
+     * 원본 포맷을 유지하면서 파일 크기를 감소시킵니다.
+     *
+     * 처리 과정:
+     * 1. S3에서 원본 이미지 다운로드
+     * 2. 동일 포맷으로 품질 90% 압축
+     * 3. 메타데이터 처리
+     * 4. S3에 압축된 이미지 업로드
+     * 5. 압축 효과 검증 (최소 10% 감소)
+     *
+     * @param request 이미지 최적화 요청
+     * @return 이미지 최적화 결과
+     * @throws com.ryuqq.fileflow.application.image.ImageConversionException 압축 중 오류 발생 시
+     */
+    ImageOptimizationResult compressImage(ImageOptimizationRequest request);
 }
