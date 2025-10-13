@@ -4,6 +4,7 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifIFD0Directory;
+import com.drew.metadata.exif.GpsDirectory;
 import com.drew.metadata.png.PngDirectory;
 import com.drew.metadata.jpeg.JpegDirectory;
 import com.ryuqq.fileflow.application.file.MetadataExtractionException;
@@ -32,6 +33,9 @@ import java.util.Set;
  * - exif_make: 카메라 제조사 (EXIF)
  * - exif_model: 카메라 모델 (EXIF)
  * - exif_datetime: 촬영 일시 (EXIF)
+ * - exif_orientation: 이미지 방향 (EXIF)
+ * - exif_gps_latitude: GPS 위도 (EXIF)
+ * - exif_gps_longitude: GPS 경도 (EXIF)
  *
  * @author sangwon-ryu
  */
@@ -112,6 +116,9 @@ public class ImageMetadataExtractor {
 
         // EXIF 메타데이터 (JPEG, TIFF 등)
         extractExifMetadata(fileId, metadata, results);
+
+        // GPS 메타데이터 (EXIF GPS)
+        extractGpsMetadata(fileId, metadata, results);
 
         return results;
     }
@@ -223,6 +230,50 @@ public class ImageMetadataExtractor {
         String software = exifDirectory.getString(ExifIFD0Directory.TAG_SOFTWARE);
         if (software != null) {
             results.add(createMetadata(fileId, "exif_software", software.trim()));
+        }
+
+        // 이미지 방향 (Orientation)
+        Integer orientation = exifDirectory.getInteger(ExifIFD0Directory.TAG_ORIENTATION);
+        if (orientation != null) {
+            results.add(createMetadata(fileId, "exif_orientation", orientation.toString(), MetadataType.NUMBER));
+        }
+    }
+
+    /**
+     * GPS 메타데이터를 추출합니다.
+     *
+     * @param fileId 파일 ID
+     * @param metadata 메타데이터
+     * @param results 결과 리스트
+     */
+    private void extractGpsMetadata(FileId fileId, Metadata metadata, List<FileMetadata> results) {
+        GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+        if (gpsDirectory == null) {
+            return;
+        }
+
+        // GPS 위도
+        Double latitude = gpsDirectory.getGeoLocation() != null
+            ? gpsDirectory.getGeoLocation().getLatitude()
+            : null;
+        if (latitude != null) {
+            results.add(createMetadata(fileId, "exif_gps_latitude", latitude.toString(), MetadataType.NUMBER));
+        }
+
+        // GPS 경도
+        Double longitude = gpsDirectory.getGeoLocation() != null
+            ? gpsDirectory.getGeoLocation().getLongitude()
+            : null;
+        if (longitude != null) {
+            results.add(createMetadata(fileId, "exif_gps_longitude", longitude.toString(), MetadataType.NUMBER));
+        }
+
+        // GPS 고도 (선택적)
+        Double altitude = gpsDirectory.getGeoLocation() != null
+            ? (Double) gpsDirectory.getObject(GpsDirectory.TAG_ALTITUDE)
+            : null;
+        if (altitude != null) {
+            results.add(createMetadata(fileId, "exif_gps_altitude", altitude.toString(), MetadataType.NUMBER));
         }
     }
 

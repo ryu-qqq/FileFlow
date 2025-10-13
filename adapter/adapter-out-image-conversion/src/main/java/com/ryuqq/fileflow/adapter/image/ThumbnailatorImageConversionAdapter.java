@@ -1,5 +1,9 @@
 package com.ryuqq.fileflow.adapter.image;
 
+import com.ryuqq.fileflow.adapter.image.exif.ExifMetadataStrategy;
+import com.ryuqq.fileflow.adapter.image.exif.ImageRotationHandler;
+import com.ryuqq.fileflow.adapter.image.exif.PreserveExifMetadataStrategy;
+import com.ryuqq.fileflow.adapter.image.exif.RemoveExifMetadataStrategy;
 import com.ryuqq.fileflow.application.image.ImageConversionException;
 import com.ryuqq.fileflow.application.image.port.out.ImageConversionPort;
 import com.ryuqq.fileflow.domain.image.vo.CompressionQuality;
@@ -58,14 +62,28 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
     );
 
     private final S3Client s3Client;
+    private final RemoveExifMetadataStrategy removeExifStrategy;
+    private final PreserveExifMetadataStrategy preserveExifStrategy;
+    private final ImageRotationHandler imageRotationHandler;
 
     /**
      * Constructor Injection (NO Lombok)
      *
      * @param s3Client AWS S3 Client
+     * @param removeExifStrategy EXIF 메타데이터 제거 전략
+     * @param preserveExifStrategy EXIF 메타데이터 유지 전략
+     * @param imageRotationHandler 이미지 회전 처리기
      */
-    public ThumbnailatorImageConversionAdapter(S3Client s3Client) {
+    public ThumbnailatorImageConversionAdapter(
+            S3Client s3Client,
+            RemoveExifMetadataStrategy removeExifStrategy,
+            PreserveExifMetadataStrategy preserveExifStrategy,
+            ImageRotationHandler imageRotationHandler
+    ) {
         this.s3Client = Objects.requireNonNull(s3Client, "S3Client must not be null");
+        this.removeExifStrategy = Objects.requireNonNull(removeExifStrategy, "RemoveExifStrategy must not be null");
+        this.preserveExifStrategy = Objects.requireNonNull(preserveExifStrategy, "PreserveExifStrategy must not be null");
+        this.imageRotationHandler = Objects.requireNonNull(imageRotationHandler, "ImageRotationHandler must not be null");
     }
 
     /**
@@ -93,17 +111,23 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
             logger.info("Downloading source image from S3: {}", request.getSourceS3Uri());
             long originalSizeBytes = s3ObjectStream.response().contentLength();
 
-            // 2. 스트림으로부터 BufferedImage 로드 (메모리 효율적)
-            BufferedImage sourceImage = loadImage(s3ObjectStream);
+            // 2. 원본 이미지 바이트 배열 로드 (EXIF 처리용)
+            byte[] sourceImageBytes = s3ObjectStream.readAllBytes();
+            BufferedImage sourceImage = loadImage(new ByteArrayInputStream(sourceImageBytes));
             ImageDimension originalDimension = ImageDimension.of(
                     sourceImage.getWidth(),
                     sourceImage.getHeight()
             );
 
-            // 3. WebP 변환 및 압축
+            // 3. EXIF Orientation 기반 이미지 회전
+            logger.info("Applying EXIF orientation rotation");
+            sourceImage = imageRotationHandler.rotateByExifOrientation(sourceImage, sourceImageBytes);
+
+            // 4. WebP 변환 및 압축
             logger.info("Converting image to WebP format with strategy: {}", request.getStrategy());
             byte[] convertedImageBytes = convertImage(
                     sourceImage,
+                    sourceImageBytes,
                     request.getSourceFormat(),
                     request.getStrategy(),
                     request.getQuality(),
@@ -207,18 +231,24 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
             logger.info("Downloading source image from S3: {}", request.getSourceS3Uri());
             long originalSizeBytes = s3ObjectStream.response().contentLength();
 
-            // 2. 스트림으로부터 BufferedImage 로드 (메모리 효율적)
-            BufferedImage sourceImage = loadImage(s3ObjectStream);
+            // 2. 원본 이미지 바이트 배열 로드 (EXIF 처리용)
+            byte[] sourceImageBytes = s3ObjectStream.readAllBytes();
+            BufferedImage sourceImage = loadImage(new ByteArrayInputStream(sourceImageBytes));
             ImageDimension originalDimension = ImageDimension.of(
                     sourceImage.getWidth(),
                     sourceImage.getHeight()
             );
 
-            // 3. 동일 포맷으로 압축
+            // 3. EXIF Orientation 기반 이미지 회전
+            logger.info("Applying EXIF orientation rotation");
+            sourceImage = imageRotationHandler.rotateByExifOrientation(sourceImage, sourceImageBytes);
+
+            // 4. 동일 포맷으로 압축
             logger.info("Compressing image with format: {} and quality: {}",
                     request.getSourceFormat(), request.getQuality());
             byte[] compressedImageBytes = compressImageToSameFormat(
                     sourceImage,
+                    sourceImageBytes,
                     request.getSourceFormat(),
                     request.getQuality(),
                     request.isPreserveMetadata()
@@ -359,7 +389,8 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
     /**
      * 이미지를 변환합니다.
      *
-     * @param sourceImage 원본 이미지
+     * @param sourceImage 원본 이미지 (이미 회전 처리됨)
+     * @param sourceImageBytes 원본 이미지 바이트 배열 (EXIF 처리용)
      * @param sourceFormat 원본 포맷
      * @param strategy 최적화 전략
      * @param quality 압축 품질
@@ -369,21 +400,25 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
      */
     private byte[] convertImage(
             BufferedImage sourceImage,
+            byte[] sourceImageBytes,
             ImageFormat sourceFormat,
             OptimizationStrategy strategy,
             CompressionQuality quality,
             boolean preserveMetadata
     ) throws IOException {
+        // EXIF 메타데이터 처리 전략 선택
+        ExifMetadataStrategy exifStrategy = preserveMetadata
+                ? preserveExifStrategy
+                : removeExifStrategy;
+
+        // EXIF 메타데이터 처리 (현재는 로깅만 수행, WebP는 메타데이터 쓰기 미지원)
+        sourceImage = exifStrategy.processMetadata(sourceImage, sourceImageBytes);
+
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             Builder<BufferedImage> builder = Thumbnails.of(sourceImage)
                     .scale(1.0) // 크기 변경 없음 (포맷 변환만)
                     .outputFormat("webp")
                     .outputQuality(quality.asFloat());
-
-            // TODO: 메타데이터 보존 로직 구현
-            // if (preserveMetadata) {
-            //     // webp-imageio는 메타데이터 보존을 제한적으로 지원
-            // }
 
             builder.toOutputStream(outputStream);
 
@@ -440,7 +475,8 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
     /**
      * 이미지를 동일 포맷으로 압축합니다.
      *
-     * @param sourceImage 원본 이미지
+     * @param sourceImage 원본 이미지 (이미 회전 처리됨)
+     * @param sourceImageBytes 원본 이미지 바이트 배열 (EXIF 처리용)
      * @param format 이미지 포맷
      * @param quality 압축 품질
      * @param preserveMetadata 메타데이터 보존 여부
@@ -449,20 +485,24 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
      */
     private byte[] compressImageToSameFormat(
             BufferedImage sourceImage,
+            byte[] sourceImageBytes,
             ImageFormat format,
             CompressionQuality quality,
             boolean preserveMetadata
     ) throws IOException {
+        // EXIF 메타데이터 처리 전략 선택
+        ExifMetadataStrategy exifStrategy = preserveMetadata
+                ? preserveExifStrategy
+                : removeExifStrategy;
+
+        // EXIF 메타데이터 처리 (현재는 로깅만 수행)
+        sourceImage = exifStrategy.processMetadata(sourceImage, sourceImageBytes);
+
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             Builder<BufferedImage> builder = Thumbnails.of(sourceImage)
                     .scale(1.0) // 크기 변경 없음 (압축만)
                     .outputFormat(getOutputFormatName(format))
                     .outputQuality(quality.asFloat());
-
-            // TODO: 메타데이터 보존 로직 구현
-            // if (preserveMetadata) {
-            //     // 포맷별 메타데이터 보존 로직
-            // }
 
             builder.toOutputStream(outputStream);
 
