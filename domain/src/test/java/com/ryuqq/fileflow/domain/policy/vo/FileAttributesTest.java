@@ -23,6 +23,7 @@ class FileAttributesTest {
                 Dimension.of(1920, 1080),
                 null,
                 null,
+                null,
                 null
         );
 
@@ -146,7 +147,7 @@ class FileAttributesTest {
     @DisplayName("sizeBytes가 음수일 때 예외 발생")
     void createFileAttributes_SizeBytesNegative_ThrowsException() {
         // when & then
-        assertThatThrownBy(() -> new FileAttributes(-1, 1, null, null, null, null, null))
+        assertThatThrownBy(() -> new FileAttributes(-1, 1, null, null, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("sizeBytes must not be negative");
     }
@@ -155,7 +156,7 @@ class FileAttributesTest {
     @DisplayName("fileCount가 음수일 때 예외 발생")
     void createFileAttributes_FileCountNegative_ThrowsException() {
         // when & then
-        assertThatThrownBy(() -> new FileAttributes(1024, -1, null, null, null, null, null))
+        assertThatThrownBy(() -> new FileAttributes(1024, -1, null, null, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("fileCount must not be negative");
     }

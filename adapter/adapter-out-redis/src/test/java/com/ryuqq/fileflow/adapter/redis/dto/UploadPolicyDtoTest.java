@@ -52,6 +52,7 @@ class UploadPolicyDtoTest {
                 ImagePolicy.createDefault(),
                 null,
                 null,
+                null,
                 null
         );
 
@@ -113,7 +114,7 @@ class UploadPolicyDtoTest {
             // given - DTO는 effectiveUntil이 null일 수 있음
             UploadPolicyDto dto = new UploadPolicyDto(
                     "b2c:CONSUMER:REVIEW",
-                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                     new RateLimiting(100, 1000),
                     1,
                     true,
@@ -144,7 +145,7 @@ class UploadPolicyDtoTest {
             // given
             UploadPolicyDto dto = new UploadPolicyDto(
                     invalidPolicyKey,
-                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                     new RateLimiting(100, 1000),
                     1,
                     true,
@@ -164,7 +165,7 @@ class UploadPolicyDtoTest {
             // given - :userType:serviceType는 split시 ["", "userType", "serviceType"]로 3개 파트
             UploadPolicyDto dto = new UploadPolicyDto(
                     ":userType:serviceType",
-                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                     new RateLimiting(100, 1000),
                     1,
                     true,
@@ -183,7 +184,7 @@ class UploadPolicyDtoTest {
             // given
             UploadPolicyDto dto = new UploadPolicyDto(
                     "b2c:CONSUMER:REVIEW",
-                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                     new RateLimiting(100, 1000),
                     1,
                     true,
@@ -299,7 +300,7 @@ class UploadPolicyDtoTest {
             LocalDateTime now = LocalDateTime.now();
             UploadPolicyDto dto1 = new UploadPolicyDto(
                     "b2c:CONSUMER:REVIEW",
-                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                     new RateLimiting(100, 1000),
                     1,
                     true,  // active
@@ -308,7 +309,7 @@ class UploadPolicyDtoTest {
             );
             UploadPolicyDto dto2 = new UploadPolicyDto(
                     "b2c:CONSUMER:REVIEW",
-                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                     new RateLimiting(100, 1000),
                     1,
                     false,  // inactive
@@ -352,7 +353,7 @@ class UploadPolicyDtoTest {
             // given - DTO 자체는 음수를 허용하지만, domain으로 변환 시 검증됨
             UploadPolicyDto dto = new UploadPolicyDto(
                     "b2c:CONSUMER:REVIEW",
-                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                     new RateLimiting(100, 1000),
                     1,  // version은 항상 양수
                     true,
@@ -370,7 +371,7 @@ class UploadPolicyDtoTest {
             // given
             UploadPolicyDto dto = new UploadPolicyDto(
                     "b2c:CONSUMER:REVIEW",  // valid policyKey
-                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                    FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                     new RateLimiting(100, 1000),
                     1,
                     true,

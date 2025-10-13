@@ -58,6 +58,7 @@ class S3PresignedUrlAdapterTest {
         s3Properties = new S3Properties(
                 "test-bucket",
                 "ap-northeast-2",
+                null,
                 15L,
                 "uploads",
                 100,
@@ -102,6 +103,7 @@ class S3PresignedUrlAdapterTest {
         S3Properties propertiesWithoutPrefix = new S3Properties(
                 "test-bucket",
                 "ap-northeast-2",
+                null,
                 15L,
                 "",
                 100,

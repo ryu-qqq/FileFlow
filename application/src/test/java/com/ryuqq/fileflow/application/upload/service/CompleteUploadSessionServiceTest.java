@@ -68,7 +68,7 @@ class CompleteUploadSessionServiceTest {
         // Then
         assertNotNull(response);
         assertEquals(sessionId, response.sessionId());
-        assertEquals("COMPLETED", response.status());
+        assertEquals(UploadStatus.COMPLETED, response.status());
 
         // 세션이 저장되었는지 확인
         UploadSession savedSession = uploadSessionPort.getSavedSession();
@@ -105,7 +105,7 @@ class CompleteUploadSessionServiceTest {
 
         // Then
         assertNotNull(response);
-        assertEquals("COMPLETED", response.status());
+        assertEquals(UploadStatus.COMPLETED, response.status());
 
         UploadSession savedSession = uploadSessionPort.getSavedSession();
         assertEquals(UploadStatus.COMPLETED, savedSession.getStatus());
