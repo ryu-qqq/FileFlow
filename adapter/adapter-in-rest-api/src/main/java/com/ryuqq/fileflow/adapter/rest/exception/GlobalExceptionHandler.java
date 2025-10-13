@@ -5,12 +5,15 @@ import com.ryuqq.fileflow.adapter.rest.dto.response.PolicyViolationErrorResponse
 import com.ryuqq.fileflow.domain.policy.exception.InvalidPolicyException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException;
+import com.ryuqq.fileflow.domain.upload.exception.ChecksumMismatchException;
+import com.ryuqq.fileflow.domain.upload.exception.FileNotFoundInS3Exception;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -93,6 +96,48 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
+     * FileNotFoundInS3Exception 처리
+     *
+     * @param ex FileNotFoundInS3Exception
+     * @param request HttpServletRequest
+     * @return 404 NOT_FOUND 응답
+     */
+    @ExceptionHandler(FileNotFoundInS3Exception.class)
+    public ResponseEntity<ErrorResponse> handleFileNotFoundInS3Exception(
+            FileNotFoundInS3Exception ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(),
+                "File Not Found in S3",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
+     * ChecksumMismatchException 처리
+     *
+     * @param ex ChecksumMismatchException
+     * @param request HttpServletRequest
+     * @return 400 BAD_REQUEST 응답
+     */
+    @ExceptionHandler(ChecksumMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleChecksumMismatchException(
+            ChecksumMismatchException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "Checksum Mismatch",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     /**
@@ -200,6 +245,28 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation Failed",
                 errorMessage,
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * HttpMessageNotReadableException 처리
+     * Request Body를 읽을 수 없거나 파싱할 수 없는 경우
+     *
+     * @param ex HttpMessageNotReadableException
+     * @param request HttpServletRequest
+     * @return 400 BAD_REQUEST 응답
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "Required request body is missing or malformed",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
