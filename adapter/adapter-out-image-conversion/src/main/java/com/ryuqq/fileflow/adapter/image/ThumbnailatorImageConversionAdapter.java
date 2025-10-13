@@ -399,17 +399,7 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
      * @return 결과 S3 URI
      */
     private String generateResultS3Uri(String sourceS3Uri) {
-        int lastDot = sourceS3Uri.lastIndexOf('.');
-        int lastSlash = sourceS3Uri.lastIndexOf('/');
-
-        if (lastDot > lastSlash && lastDot != -1) {
-            // 확장자가 있는 경우
-            String baseName = sourceS3Uri.substring(0, lastDot);
-            return baseName + "-webp.webp";
-        } else {
-            // 확장자가 없는 경우
-            return sourceS3Uri + "-webp.webp";
-        }
+        return generateS3UriWithSuffix(sourceS3Uri, "-webp", ".webp");
     }
 
     /**
@@ -420,17 +410,30 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
      * @return 압축된 이미지 S3 URI
      */
     private String generateCompressedS3Uri(String sourceS3Uri) {
+        return generateS3UriWithSuffix(sourceS3Uri, "-compressed", null);
+    }
+
+    /**
+     * S3 URI에 접미사를 추가하여 새로운 URI를 생성합니다.
+     * 파일명과 확장자를 조작하는 공통 로직을 제공합니다.
+     *
+     * @param sourceS3Uri 원본 S3 URI
+     * @param suffix 파일명에 추가할 접미사 (예: "-compressed", "-webp")
+     * @param newExtension 새로운 확장자 (null이면 원본 확장자 유지, 예: ".webp")
+     * @return 접미사와 확장자가 적용된 S3 URI
+     */
+    private String generateS3UriWithSuffix(String sourceS3Uri, String suffix, String newExtension) {
         int lastDot = sourceS3Uri.lastIndexOf('.');
         int lastSlash = sourceS3Uri.lastIndexOf('/');
 
         if (lastDot > lastSlash && lastDot != -1) {
             // 확장자가 있는 경우
             String baseName = sourceS3Uri.substring(0, lastDot);
-            String extension = sourceS3Uri.substring(lastDot);
-            return baseName + "-compressed" + extension;
+            String extension = (newExtension != null) ? newExtension : sourceS3Uri.substring(lastDot);
+            return baseName + suffix + extension;
         } else {
             // 확장자가 없는 경우
-            return sourceS3Uri + "-compressed";
+            return sourceS3Uri + suffix + (newExtension != null ? newExtension : "");
         }
     }
 

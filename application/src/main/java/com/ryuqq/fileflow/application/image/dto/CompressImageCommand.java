@@ -4,6 +4,8 @@ import com.ryuqq.fileflow.domain.image.vo.CompressionQuality;
 import com.ryuqq.fileflow.domain.image.vo.ImageFormat;
 import com.ryuqq.fileflow.domain.upload.vo.FileId;
 
+import java.util.Set;
+
 /**
  * 이미지 압축 Command
  *
@@ -30,6 +32,15 @@ public record CompressImageCommand(
         CompressionQuality quality,
         boolean preserveMetadata
 ) {
+
+    /**
+     * 압축 지원 포맷 집합
+     */
+    private static final Set<ImageFormat> COMPRESSIBLE_FORMATS = Set.of(
+            ImageFormat.JPEG,
+            ImageFormat.PNG,
+            ImageFormat.WEBP
+    );
 
     /**
      * Compact constructor로 검증 로직 수행
@@ -78,9 +89,7 @@ public record CompressImageCommand(
      * @return 압축 가능 여부
      */
     public boolean isCompressible() {
-        return sourceFormat == ImageFormat.JPEG
-                || sourceFormat == ImageFormat.PNG
-                || sourceFormat == ImageFormat.WEBP;
+        return COMPRESSIBLE_FORMATS.contains(sourceFormat);
     }
 
     // ========== Validation Methods ==========
@@ -105,9 +114,7 @@ public record CompressImageCommand(
             throw new IllegalArgumentException("Source format cannot be null");
         }
         // 압축 지원 포맷 검증
-        if (sourceFormat != ImageFormat.JPEG
-                && sourceFormat != ImageFormat.PNG
-                && sourceFormat != ImageFormat.WEBP) {
+        if (!COMPRESSIBLE_FORMATS.contains(sourceFormat)) {
             throw new IllegalArgumentException(
                     "Unsupported format for compression: " + sourceFormat +
                     ". Only JPEG, PNG, and WebP are supported."
