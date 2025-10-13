@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.rest.config;
 
+import com.ryuqq.fileflow.adapter.rest.config.properties.OpenApiProperties;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
@@ -9,10 +10,12 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * OpenAPI Configuration
@@ -28,32 +31,37 @@ import java.util.List;
  * @author sangwon-ryu
  */
 @Configuration
+@EnableConfigurationProperties(OpenApiProperties.class)
 public class OpenApiConfig {
 
     private static final String SECURITY_SCHEME_NAME = "bearerAuth";
     private static final String BEARER_FORMAT = "JWT";
     private static final String SECURITY_SCHEME_TYPE = "bearer";
 
-    @Value("${spring.application.name:FileFlow}")
-    private String applicationName;
+    private final OpenApiProperties properties;
+    private final String applicationName;
+    private final String applicationVersion;
+    private final String serverPort;
 
-    @Value("${spring.application.version:1.0.0}")
-    private String applicationVersion;
-
-    @Value("${server.port:8080}")
-    private String serverPort;
-
-    @Value("${api.contact.email:fileflow@example.com}")
-    private String contactEmail;
-
-    @Value("${api.contact.url:https://github.com/your-org/fileflow}")
-    private String contactUrl;
-
-    @Value("${api.server.dev.url:}")
-    private String devServerUrl;
-
-    @Value("${api.server.prod.url:}")
-    private String prodServerUrl;
+    /**
+     * Constructor Injection (NO Lombok)
+     *
+     * @param properties OpenAPI 설정 프로퍼티
+     * @param applicationName 애플리케이션 이름
+     * @param applicationVersion 애플리케이션 버전
+     * @param serverPort 서버 포트
+     */
+    public OpenApiConfig(
+            OpenApiProperties properties,
+            @Value("${spring.application.name:FileFlow}") String applicationName,
+            @Value("${spring.application.version:1.0.0}") String applicationVersion,
+            @Value("${server.port:8080}") String serverPort
+    ) {
+        this.properties = Objects.requireNonNull(properties, "OpenApiProperties must not be null");
+        this.applicationName = applicationName;
+        this.applicationVersion = applicationVersion;
+        this.serverPort = serverPort;
+    }
 
     /**
      * OpenAPI 설정을 생성합니다.
@@ -106,8 +114,8 @@ public class OpenApiConfig {
     private Contact createContact() {
         return new Contact()
                 .name("FileFlow Team")
-                .email(contactEmail)
-                .url(contactUrl);
+                .email(properties.getContact().getEmail())
+                .url(properties.getContact().getUrl());
     }
 
     /**
@@ -135,16 +143,18 @@ public class OpenApiConfig {
                 .description("Local Development Server"));
 
         // Add dev server only if URL is configured
-        if (devServerUrl != null && !devServerUrl.isBlank()) {
+        String devUrl = properties.getServer().getDevUrl();
+        if (devUrl != null && !devUrl.isBlank()) {
             servers.add(new Server()
-                    .url(devServerUrl)
+                    .url(devUrl)
                     .description("Development Server"));
         }
 
         // Add prod server only if URL is configured
-        if (prodServerUrl != null && !prodServerUrl.isBlank()) {
+        String prodUrl = properties.getServer().getProdUrl();
+        if (prodUrl != null && !prodUrl.isBlank()) {
             servers.add(new Server()
-                    .url(prodServerUrl)
+                    .url(prodUrl)
                     .description("Production Server"));
         }
 
