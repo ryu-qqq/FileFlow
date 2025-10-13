@@ -21,11 +21,10 @@ import java.util.Objects;
  *
  * 처리 흐름:
  * 1. Command 검증
- * 2. 포맷 압축 가능 여부 확인
- * 3. 압축 요청 생성
- * 4. 압축 수행 (ImageConversionPort 위임)
- * 5. 압축 효과 검증 (최소 10% 감소)
- * 6. 결과 반환
+ * 2. 압축 요청 생성
+ * 3. 압축 수행 (ImageConversionPort 위임)
+ * 4. 압축 효과 검증 (최소 10% 감소)
+ * 5. 결과 반환
  *
  * @author sangwon-ryu
  */
@@ -54,13 +53,12 @@ public class ImageCompressionService implements CompressImageUseCase {
      * 비즈니스 로직:
      * 1. Command 검증
      * 2. 포맷 지원 여부 확인
-     * 3. 압축 가능 여부 확인
-     * 4. ImageOptimizationRequest 생성
-     * 5. 압축 수행
-     * 6. 압축 효과 검증 (최소 10%)
-     * 7. ImageConversionResult 변환 및 반환
+     * 3. ImageOptimizationRequest 생성
+     * 4. 압축 수행
+     * 5. 압축 효과 검증 (최소 10%)
+     * 6. ImageConversionResult 변환 및 반환
      *
-     * @param command 이미지 압축 Command
+     * @param command 이미지 압축 Command (압축 가능 포맷은 Command에서 이미 검증됨)
      * @return 이미지 압축 결과
      * @throws IllegalArgumentException command가 null이거나 유효하지 않은 경우
      * @throws ImageConversionException 압축 중 오류 발생 시
@@ -75,14 +73,7 @@ public class ImageCompressionService implements CompressImageUseCase {
             throw ImageConversionException.unsupportedFormat(sourceFormat.getMimeType());
         }
 
-        // 2. 압축 가능 여부 확인
-        if (!command.isCompressible()) {
-            throw new ImageConversionException(
-                    "Cannot compress " + sourceFormat + " format. Only JPEG, PNG, and WebP are supported."
-            );
-        }
-
-        // 3. ImageOptimizationRequest 생성 (동일 포맷 유지)
+        // 2. ImageOptimizationRequest 생성 (동일 포맷 유지)
         ImageOptimizationRequest request = ImageOptimizationRequest.of(
                 command.sourceS3Uri(),
                 sourceFormat,
