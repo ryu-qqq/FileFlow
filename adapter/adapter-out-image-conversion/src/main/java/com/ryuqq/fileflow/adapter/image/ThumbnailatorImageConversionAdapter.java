@@ -50,6 +50,12 @@ import java.util.Objects;
 public class ThumbnailatorImageConversionAdapter implements ImageConversionPort {
 
     private static final Logger logger = LoggerFactory.getLogger(ThumbnailatorImageConversionAdapter.class);
+    private static final java.util.Set<ImageFormat> SUPPORTED_FORMATS = java.util.EnumSet.of(
+            ImageFormat.JPEG,
+            ImageFormat.PNG,
+            ImageFormat.GIF,
+            ImageFormat.WEBP
+    );
 
     private final S3Client s3Client;
 
@@ -82,14 +88,13 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
 
         Instant startTime = Instant.now();
 
-        try {
-            // 1. S3에서 원본 이미지 다운로드
+        try (ResponseInputStream<GetObjectResponse> s3ObjectStream = downloadFromS3AsStream(request.getSourceS3Uri())) {
+            // 1. S3에서 원본 이미지 스트림으로 다운로드
             logger.info("Downloading source image from S3: {}", request.getSourceS3Uri());
-            byte[] sourceImageBytes = downloadFromS3(request.getSourceS3Uri());
-            long originalSizeBytes = sourceImageBytes.length;
+            long originalSizeBytes = s3ObjectStream.response().contentLength();
 
-            // 2. BufferedImage로 로드
-            BufferedImage sourceImage = loadImage(sourceImageBytes);
+            // 2. 스트림으로부터 BufferedImage 로드 (메모리 효율적)
+            BufferedImage sourceImage = loadImage(s3ObjectStream);
             ImageDimension originalDimension = ImageDimension.of(
                     sourceImage.getWidth(),
                     sourceImage.getHeight()
@@ -162,10 +167,7 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
             return false;
         }
         // JPEG, PNG, GIF, WebP 지원
-        return format == ImageFormat.JPEG ||
-               format == ImageFormat.PNG ||
-               format == ImageFormat.GIF ||
-               format == ImageFormat.WEBP;
+        return SUPPORTED_FORMATS.contains(format);
     }
 
     /**
@@ -182,13 +184,14 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
     // ========== Private Helper Methods ==========
 
     /**
-     * S3에서 파일을 다운로드합니다.
+     * S3에서 파일을 스트림으로 다운로드합니다.
+     * 메모리 효율성을 위해 ResponseInputStream을 직접 반환합니다.
      *
      * @param s3Uri S3 URI (s3://bucket/key)
-     * @return 파일 바이트 배열
+     * @return S3 객체 ResponseInputStream (caller가 close 책임)
      * @throws IOException 다운로드 실패 시
      */
-    private byte[] downloadFromS3(String s3Uri) throws IOException {
+    private ResponseInputStream<GetObjectResponse> downloadFromS3AsStream(String s3Uri) throws IOException {
         S3Location location = parseS3Uri(s3Uri);
 
         try {
@@ -197,8 +200,7 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
                     .key(location.key())
                     .build();
 
-            ResponseInputStream<GetObjectResponse> response = s3Client.getObject(request);
-            return response.readAllBytes();
+            return s3Client.getObject(request);
 
         } catch (S3Exception e) {
             throw ImageConversionException.s3OperationFailed("download", s3Uri, e);
@@ -256,20 +258,19 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
     }
 
     /**
-     * 바이트 배열을 BufferedImage로 로드합니다.
+     * InputStream으로부터 BufferedImage를 로드합니다.
+     * 중간 byte[] 배열 없이 스트림을 직접 사용하여 메모리 효율적입니다.
      *
-     * @param imageBytes 이미지 바이트 배열
+     * @param imageStream 이미지 InputStream
      * @return BufferedImage
      * @throws IOException 로드 실패 시
      */
-    private BufferedImage loadImage(byte[] imageBytes) throws IOException {
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes)) {
-            BufferedImage image = ImageIO.read(inputStream);
-            if (image == null) {
-                throw new IOException("Failed to load image - ImageIO.read returned null");
-            }
-            return image;
+    private BufferedImage loadImage(java.io.InputStream imageStream) throws IOException {
+        BufferedImage image = ImageIO.read(imageStream);
+        if (image == null) {
+            throw new IOException("Failed to load image - ImageIO.read returned null");
         }
+        return image;
     }
 
     /**
