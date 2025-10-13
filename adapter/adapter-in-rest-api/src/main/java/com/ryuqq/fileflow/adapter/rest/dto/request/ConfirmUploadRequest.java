@@ -20,6 +20,14 @@ import jakarta.validation.constraints.NotBlank;
 public record ConfirmUploadRequest(
 
         @Schema(
+                description = "S3 업로드 경로 (Presigned URL 응답의 uploadPath)",
+                example = "user123/550e8400-e29b-41d4-a716-446655440000/test.jpg",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
+        @NotBlank(message = "Upload path must not be blank")
+        String uploadPath,
+
+        @Schema(
                 description = "S3 ETag (선택적 - 제공 시 검증 수행)",
                 example = "\"d41d8cd98f00b204e9800998ecf8427e\"",
                 nullable = true
@@ -35,8 +43,8 @@ public record ConfirmUploadRequest(
      */
     public ConfirmUploadCommand toCommand(String sessionId) {
         if (etag != null && !etag.trim().isEmpty()) {
-            return ConfirmUploadCommand.withEtag(sessionId, etag);
+            return ConfirmUploadCommand.withEtag(sessionId, uploadPath, etag);
         }
-        return ConfirmUploadCommand.withoutEtag(sessionId);
+        return ConfirmUploadCommand.withoutEtag(sessionId, uploadPath);
     }
 }
