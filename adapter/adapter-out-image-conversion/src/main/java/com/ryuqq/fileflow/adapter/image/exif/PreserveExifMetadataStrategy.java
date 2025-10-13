@@ -5,6 +5,8 @@ import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.exif.GpsDirectory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
@@ -39,6 +41,8 @@ import java.io.IOException;
  */
 @Component
 public class PreserveExifMetadataStrategy implements ExifMetadataStrategy {
+
+    private static final Logger log = LoggerFactory.getLogger(PreserveExifMetadataStrategy.class);
 
     /**
      * EXIF 메타데이터를 선택적으로 유지합니다.
@@ -92,7 +96,7 @@ public class PreserveExifMetadataStrategy implements ExifMetadataStrategy {
             // GPS 정보는 제거됨
             GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
             if (gpsDirectory != null && gpsDirectory.getGeoLocation() != null) {
-                System.out.println("GPS metadata will be removed for privacy");
+                log.info("GPS metadata will be removed for privacy");
             }
 
             // 카메라 정보는 유지 (DB에 저장됨)
@@ -101,11 +105,11 @@ public class PreserveExifMetadataStrategy implements ExifMetadataStrategy {
                 String make = exifDirectory.getString(ExifIFD0Directory.TAG_MAKE);
                 String model = exifDirectory.getString(ExifIFD0Directory.TAG_MODEL);
                 if (make != null || model != null) {
-                    System.out.println("Camera metadata will be preserved in database: " + make + " " + model);
+                    log.info("Camera metadata will be preserved in database: {} {}", make, model);
                 }
             }
         } catch (ImageProcessingException | IOException e) {
-            // 메타데이터 읽기 실패는 무시
+            log.warn("Failed to read EXIF metadata for processing", e);
         }
     }
 }

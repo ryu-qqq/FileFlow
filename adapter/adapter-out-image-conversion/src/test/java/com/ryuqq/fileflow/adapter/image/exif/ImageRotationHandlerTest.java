@@ -112,47 +112,6 @@ class ImageRotationHandlerTest {
         assertThat(rotatedImage).isSameAs(testImage);
     }
 
-    @Test
-    @DisplayName("90도 회전 시 가로세로 크기가 바뀜")
-    void swapsDimensionsWhen90DegreeRotation() throws IOException {
-        // 가로 200, 세로 100 이미지 생성
-        BufferedImage testImage = new BufferedImage(200, 100, BufferedImage.TYPE_INT_RGB);
-
-        // 실제 EXIF Orientation 6 (90도 회전) 데이터를 만들 수 없으므로
-        // 이 테스트는 스킵하거나 mock 이미지로 대체
-        // 실제로는 통합 테스트에서 실제 EXIF 이미지로 검증
-
-        assertThat(testImage.getWidth()).isEqualTo(200);
-        assertThat(testImage.getHeight()).isEqualTo(100);
-    }
-
-    @Test
-    @DisplayName("180도 회전 시 가로세로 크기가 유지됨")
-    void preservesDimensionsWhen180DegreeRotation() throws IOException {
-        // 가로 200, 세로 100 이미지 생성
-        BufferedImage testImage = new BufferedImage(200, 100, BufferedImage.TYPE_INT_RGB);
-
-        // 실제 EXIF Orientation 3 (180도 회전) 데이터를 만들 수 없으므로
-        // 이 테스트는 스킵하거나 mock 이미지로 대체
-        // 실제로는 통합 테스트에서 실제 EXIF 이미지로 검증
-
-        assertThat(testImage.getWidth()).isEqualTo(200);
-        assertThat(testImage.getHeight()).isEqualTo(100);
-    }
-
-    @Test
-    @DisplayName("270도 회전 시 가로세로 크기가 바뀜")
-    void swapsDimensionsWhen270DegreeRotation() throws IOException {
-        // 가로 200, 세로 100 이미지 생성
-        BufferedImage testImage = new BufferedImage(200, 100, BufferedImage.TYPE_INT_RGB);
-
-        // 실제 EXIF Orientation 8 (270도 회전) 데이터를 만들 수 없으므로
-        // 이 테스트는 스킵하거나 mock 이미지로 대체
-        // 실제로는 통합 테스트에서 실제 EXIF 이미지로 검증
-
-        assertThat(testImage.getWidth()).isEqualTo(200);
-        assertThat(testImage.getHeight()).isEqualTo(100);
-    }
 
     @Test
     @DisplayName("회전 처리 후 이미지가 null이 아님")

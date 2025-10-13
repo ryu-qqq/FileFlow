@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.metadata;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
+import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.exif.GpsDirectory;
 import com.drew.metadata.png.PngDirectory;
@@ -11,6 +12,8 @@ import com.ryuqq.fileflow.application.file.MetadataExtractionException;
 import com.ryuqq.fileflow.domain.file.FileMetadata;
 import com.ryuqq.fileflow.domain.file.MetadataType;
 import com.ryuqq.fileflow.domain.upload.vo.FileId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +43,8 @@ import java.util.Set;
  * @author sangwon-ryu
  */
 public class ImageMetadataExtractor {
+
+    private static final Logger log = LoggerFactory.getLogger(ImageMetadataExtractor.class);
 
     private static final Set<String> SUPPORTED_IMAGE_TYPES = Set.of(
             "image/jpeg",
@@ -153,8 +158,8 @@ public class ImageMetadataExtractor {
             if (componentCount != null) {
                 results.add(createMetadata(fileId, "component_count", componentCount.toString(), MetadataType.NUMBER));
             }
-        } catch (Exception e) {
-            // JPEG 메타데이터 추출 실패 시 무시 (다른 메타데이터는 계속 추출)
+        } catch (MetadataException e) {
+            log.warn("Failed to extract JPEG metadata for fileId: {}", fileId, e);
         }
     }
 
@@ -252,28 +257,24 @@ public class ImageMetadataExtractor {
             return;
         }
 
-        try {
-            // GPS 위도
-            if (gpsDirectory.getGeoLocation() != null) {
-                Double latitude = gpsDirectory.getGeoLocation().getLatitude();
-                if (latitude != null) {
-                    results.add(createMetadata(fileId, "exif_gps_latitude", latitude.toString(), MetadataType.NUMBER));
-                }
-
-                // GPS 경도
-                Double longitude = gpsDirectory.getGeoLocation().getLongitude();
-                if (longitude != null) {
-                    results.add(createMetadata(fileId, "exif_gps_longitude", longitude.toString(), MetadataType.NUMBER));
-                }
+        // GPS 위도
+        if (gpsDirectory.getGeoLocation() != null) {
+            Double latitude = gpsDirectory.getGeoLocation().getLatitude();
+            if (latitude != null) {
+                results.add(createMetadata(fileId, "exif_gps_latitude", latitude.toString(), MetadataType.NUMBER));
             }
 
-            // GPS 고도 (선택적) - Rational 타입으로 저장될 수 있으므로 안전하게 처리
-            Double altitude = gpsDirectory.getDoubleObject(GpsDirectory.TAG_ALTITUDE);
-            if (altitude != null) {
-                results.add(createMetadata(fileId, "exif_gps_altitude", altitude.toString(), MetadataType.NUMBER));
+            // GPS 경도
+            Double longitude = gpsDirectory.getGeoLocation().getLongitude();
+            if (longitude != null) {
+                results.add(createMetadata(fileId, "exif_gps_longitude", longitude.toString(), MetadataType.NUMBER));
             }
-        } catch (Exception e) {
-            // GPS 메타데이터 추출 실패 시 무시 (다른 메타데이터는 계속 추출)
+        }
+
+        // GPS 고도 (선택적) - Rational 타입으로 저장될 수 있으므로 안전하게 처리
+        Double altitude = gpsDirectory.getDoubleObject(GpsDirectory.TAG_ALTITUDE);
+        if (altitude != null) {
+            results.add(createMetadata(fileId, "exif_gps_altitude", altitude.toString(), MetadataType.NUMBER));
         }
     }
 

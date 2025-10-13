@@ -4,6 +4,8 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifIFD0Directory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.awt.Graphics2D;
@@ -34,6 +36,8 @@ import java.io.IOException;
  */
 @Component
 public class ImageRotationHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ImageRotationHandler.class);
 
     /**
      * EXIF Orientation 태그를 기반으로 이미지를 회전합니다.
@@ -76,7 +80,7 @@ public class ImageRotationHandler {
             return exifDirectory.getInteger(ExifIFD0Directory.TAG_ORIENTATION);
 
         } catch (ImageProcessingException | IOException e) {
-            // EXIF 읽기 실패 시 null 반환 (회전 없이 원본 사용)
+            log.warn("Failed to extract EXIF orientation, image will be used as-is", e);
             return null;
         }
     }
@@ -146,7 +150,7 @@ public class ImageRotationHandler {
         BufferedImage rotatedImage = new BufferedImage(
                 newWidth,
                 newHeight,
-                image.getType()
+                image.getType() == BufferedImage.TYPE_CUSTOM ? BufferedImage.TYPE_INT_ARGB : image.getType()
         );
 
         Graphics2D g2d = rotatedImage.createGraphics();
@@ -184,7 +188,7 @@ public class ImageRotationHandler {
         BufferedImage flippedImage = new BufferedImage(
                 width,
                 height,
-                image.getType()
+                image.getType() == BufferedImage.TYPE_CUSTOM ? BufferedImage.TYPE_INT_ARGB : image.getType()
         );
 
         Graphics2D g2d = flippedImage.createGraphics();
@@ -212,7 +216,7 @@ public class ImageRotationHandler {
         BufferedImage flippedImage = new BufferedImage(
                 width,
                 height,
-                image.getType()
+                image.getType() == BufferedImage.TYPE_CUSTOM ? BufferedImage.TYPE_INT_ARGB : image.getType()
         );
 
         Graphics2D g2d = flippedImage.createGraphics();
