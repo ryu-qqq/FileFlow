@@ -34,6 +34,7 @@ dependencies {
     implementation(project(":adapter:adapter-out-aws-s3"))
     implementation(project(":adapter:adapter-out-aws-sqs"))
     implementation(project(":adapter:adapter-out-aws-textract"))
+    implementation(project(":adapter:adapter-out-image-conversion"))
 
     // ========================================
     // Spring Boot Starters

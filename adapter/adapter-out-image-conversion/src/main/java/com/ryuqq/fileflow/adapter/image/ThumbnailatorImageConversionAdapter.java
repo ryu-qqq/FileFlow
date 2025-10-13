@@ -1,0 +1,336 @@
+package com.ryuqq.fileflow.adapter.image;
+
+import com.ryuqq.fileflow.application.image.ImageConversionException;
+import com.ryuqq.fileflow.application.image.port.out.ImageConversionPort;
+import com.ryuqq.fileflow.domain.image.vo.CompressionQuality;
+import com.ryuqq.fileflow.domain.image.vo.ImageDimension;
+import com.ryuqq.fileflow.domain.image.vo.ImageFormat;
+import com.ryuqq.fileflow.domain.image.vo.ImageOptimizationRequest;
+import com.ryuqq.fileflow.domain.image.vo.ImageOptimizationResult;
+import com.ryuqq.fileflow.domain.image.vo.OptimizationStrategy;
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.Thumbnails.Builder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Objects;
+
+/**
+ * Thumbnailator 기반 이미지 변환 Adapter
+ *
+ * 역할:
+ * - Application Layer의 ImageConversionPort를 구현
+ * - Thumbnailator 라이브러리를 사용한 이미지 변환
+ * - WebP 포맷 변환 (webp-imageio 라이브러리 사용)
+ * - S3 스토리지 연동 (다운로드/업로드)
+ *
+ * 기술 스택:
+ * - Thumbnailator: 이미지 변환 및 리사이징
+ * - webp-imageio: WebP 포맷 지원
+ * - AWS SDK S3: 파일 스토리지
+ *
+ * @author sangwon-ryu
+ */
+@Component
+public class ThumbnailatorImageConversionAdapter implements ImageConversionPort {
+
+    private static final Logger logger = LoggerFactory.getLogger(ThumbnailatorImageConversionAdapter.class);
+
+    private final S3Client s3Client;
+
+    /**
+     * Constructor Injection (NO Lombok)
+     *
+     * @param s3Client AWS S3 Client
+     */
+    public ThumbnailatorImageConversionAdapter(S3Client s3Client) {
+        this.s3Client = Objects.requireNonNull(s3Client, "S3Client must not be null");
+    }
+
+    /**
+     * 이미지를 WebP 포맷으로 변환합니다.
+     *
+     * 처리 과정:
+     * 1. S3에서 원본 이미지 다운로드
+     * 2. BufferedImage로 로드
+     * 3. Thumbnailator로 WebP 변환 및 압축
+     * 4. S3에 변환된 이미지 업로드
+     * 5. ImageOptimizationResult 반환
+     *
+     * @param request 이미지 최적화 요청
+     * @return 이미지 최적화 결과
+     * @throws ImageConversionException 변환 중 오류 발생 시
+     */
+    @Override
+    public ImageOptimizationResult convertToWebP(ImageOptimizationRequest request) {
+        Objects.requireNonNull(request, "ImageOptimizationRequest must not be null");
+
+        Instant startTime = Instant.now();
+
+        try {
+            // 1. S3에서 원본 이미지 다운로드
+            logger.info("Downloading source image from S3: {}", request.getSourceS3Uri());
+            byte[] sourceImageBytes = downloadFromS3(request.getSourceS3Uri());
+            long originalSizeBytes = sourceImageBytes.length;
+
+            // 2. BufferedImage로 로드
+            BufferedImage sourceImage = loadImage(sourceImageBytes);
+            ImageDimension originalDimension = ImageDimension.of(
+                    sourceImage.getWidth(),
+                    sourceImage.getHeight()
+            );
+
+            // 3. WebP 변환 및 압축
+            logger.info("Converting image to WebP format with strategy: {}", request.getStrategy());
+            byte[] convertedImageBytes = convertImage(
+                    sourceImage,
+                    request.getSourceFormat(),
+                    request.getStrategy(),
+                    request.getQuality(),
+                    request.isPreserveMetadata()
+            );
+            long convertedSizeBytes = convertedImageBytes.length;
+
+            // 4. S3에 변환된 이미지 업로드
+            String resultS3Uri = generateResultS3Uri(request.getSourceS3Uri());
+            logger.info("Uploading converted image to S3: {}", resultS3Uri);
+            uploadToS3(resultS3Uri, convertedImageBytes, ImageFormat.WEBP);
+
+            // 5. 처리 시간 계산
+            Instant endTime = Instant.now();
+            Duration processingTime = Duration.between(startTime, endTime);
+
+            // 6. ImageOptimizationResult 생성
+            ImageFormat targetFormat = request.determineTargetFormat();
+            ImageDimension resultDimension = request.needsResize()
+                    ? request.getTargetDimension()
+                    : originalDimension;
+
+            logger.info("Image conversion successful. Original: {} bytes, Converted: {} bytes, Reduction: {}%",
+                    originalSizeBytes, convertedSizeBytes,
+                    String.format("%.2f", (1.0 - (double) convertedSizeBytes / originalSizeBytes) * 100));
+
+            return ImageOptimizationResult.of(
+                    resultS3Uri,
+                    request.getSourceFormat(),
+                    targetFormat,
+                    request.getStrategy(),
+                    originalSizeBytes,
+                    convertedSizeBytes,
+                    originalDimension,
+                    resultDimension,
+                    processingTime
+            );
+
+        } catch (IOException e) {
+            throw ImageConversionException.conversionFailed(
+                    "Failed to convert image: " + request.getSourceS3Uri(),
+                    e
+            );
+        } catch (Exception e) {
+            throw new ImageConversionException(
+                    "Unexpected error during image conversion: " + e.getMessage(),
+                    e
+            );
+        }
+    }
+
+    /**
+     * 특정 이미지 포맷의 변환을 지원하는지 확인합니다.
+     *
+     * @param format 이미지 포맷
+     * @return 지원 여부
+     */
+    @Override
+    public boolean supports(ImageFormat format) {
+        if (format == null) {
+            return false;
+        }
+        // JPEG, PNG, GIF, WebP 지원
+        return format == ImageFormat.JPEG ||
+               format == ImageFormat.PNG ||
+               format == ImageFormat.GIF ||
+               format == ImageFormat.WEBP;
+    }
+
+    /**
+     * WebP 포맷으로 변환 가능한지 확인합니다.
+     *
+     * @param format 이미지 포맷
+     * @return 변환 가능 여부
+     */
+    @Override
+    public boolean canConvertToWebP(ImageFormat format) {
+        return supports(format) && format.isConvertibleToWebP();
+    }
+
+    // ========== Private Helper Methods ==========
+
+    /**
+     * S3에서 파일을 다운로드합니다.
+     *
+     * @param s3Uri S3 URI (s3://bucket/key)
+     * @return 파일 바이트 배열
+     * @throws IOException 다운로드 실패 시
+     */
+    private byte[] downloadFromS3(String s3Uri) throws IOException {
+        S3Location location = parseS3Uri(s3Uri);
+
+        try {
+            GetObjectRequest request = GetObjectRequest.builder()
+                    .bucket(location.bucket())
+                    .key(location.key())
+                    .build();
+
+            ResponseInputStream<GetObjectResponse> response = s3Client.getObject(request);
+            return response.readAllBytes();
+
+        } catch (S3Exception e) {
+            throw ImageConversionException.s3OperationFailed("download", s3Uri, e);
+        }
+    }
+
+    /**
+     * S3에 파일을 업로드합니다.
+     *
+     * @param s3Uri S3 URI (s3://bucket/key)
+     * @param data 파일 데이터
+     * @param format 이미지 포맷
+     * @throws IOException 업로드 실패 시
+     */
+    private void uploadToS3(String s3Uri, byte[] data, ImageFormat format) throws IOException {
+        S3Location location = parseS3Uri(s3Uri);
+
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(location.bucket())
+                    .key(location.key())
+                    .contentType(format.getMimeType())
+                    .contentLength((long) data.length)
+                    .build();
+
+            s3Client.putObject(request, RequestBody.fromBytes(data));
+
+        } catch (S3Exception e) {
+            throw ImageConversionException.s3OperationFailed("upload", s3Uri, e);
+        }
+    }
+
+    /**
+     * S3 URI를 파싱합니다.
+     *
+     * @param s3Uri S3 URI (s3://bucket/key)
+     * @return S3Location
+     */
+    private S3Location parseS3Uri(String s3Uri) {
+        if (!s3Uri.startsWith("s3://")) {
+            throw new IllegalArgumentException("Invalid S3 URI: " + s3Uri);
+        }
+
+        String pathPart = s3Uri.substring(5); // "s3://" 제거
+        int firstSlash = pathPart.indexOf('/');
+
+        if (firstSlash == -1) {
+            throw new IllegalArgumentException("Invalid S3 URI format: " + s3Uri);
+        }
+
+        String bucket = pathPart.substring(0, firstSlash);
+        String key = pathPart.substring(firstSlash + 1);
+
+        return new S3Location(bucket, key);
+    }
+
+    /**
+     * 바이트 배열을 BufferedImage로 로드합니다.
+     *
+     * @param imageBytes 이미지 바이트 배열
+     * @return BufferedImage
+     * @throws IOException 로드 실패 시
+     */
+    private BufferedImage loadImage(byte[] imageBytes) throws IOException {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes)) {
+            BufferedImage image = ImageIO.read(inputStream);
+            if (image == null) {
+                throw new IOException("Failed to load image - ImageIO.read returned null");
+            }
+            return image;
+        }
+    }
+
+    /**
+     * 이미지를 변환합니다.
+     *
+     * @param sourceImage 원본 이미지
+     * @param sourceFormat 원본 포맷
+     * @param strategy 최적화 전략
+     * @param quality 압축 품질
+     * @param preserveMetadata 메타데이터 보존 여부
+     * @return 변환된 이미지 바이트 배열
+     * @throws IOException 변환 실패 시
+     */
+    private byte[] convertImage(
+            BufferedImage sourceImage,
+            ImageFormat sourceFormat,
+            OptimizationStrategy strategy,
+            CompressionQuality quality,
+            boolean preserveMetadata
+    ) throws IOException {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Builder<BufferedImage> builder = Thumbnails.of(sourceImage)
+                    .scale(1.0) // 크기 변경 없음 (포맷 변환만)
+                    .outputFormat("webp")
+                    .outputQuality(quality.asFloat());
+
+            // TODO: 메타데이터 보존 로직 구현
+            // if (preserveMetadata) {
+            //     // webp-imageio는 메타데이터 보존을 제한적으로 지원
+            // }
+
+            builder.toOutputStream(outputStream);
+
+            return outputStream.toByteArray();
+        }
+    }
+
+    /**
+     * 결과 S3 URI를 생성합니다.
+     * 원본 파일명에 "-webp" 접미사를 추가하고 확장자를 .webp로 변경합니다.
+     *
+     * @param sourceS3Uri 원본 S3 URI
+     * @return 결과 S3 URI
+     */
+    private String generateResultS3Uri(String sourceS3Uri) {
+        int lastDot = sourceS3Uri.lastIndexOf('.');
+        int lastSlash = sourceS3Uri.lastIndexOf('/');
+
+        if (lastDot > lastSlash && lastDot != -1) {
+            // 확장자가 있는 경우
+            String baseName = sourceS3Uri.substring(0, lastDot);
+            return baseName + "-webp.webp";
+        } else {
+            // 확장자가 없는 경우
+            return sourceS3Uri + "-webp.webp";
+        }
+    }
+
+    /**
+     * S3 위치 정보를 담는 Record
+     */
+    private record S3Location(String bucket, String key) {
+    }
+}
