@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.adapter.rest.dto.response.PolicyViolationErrorResponse
 import com.ryuqq.fileflow.domain.policy.exception.InvalidPolicyException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException;
 import com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException;
+import com.ryuqq.fileflow.domain.upload.exception.ChecksumMismatchException;
+import com.ryuqq.fileflow.domain.upload.exception.FileNotFoundInS3Exception;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -93,6 +95,48 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
+     * FileNotFoundInS3Exception 처리
+     *
+     * @param ex FileNotFoundInS3Exception
+     * @param request HttpServletRequest
+     * @return 404 NOT_FOUND 응답
+     */
+    @ExceptionHandler(FileNotFoundInS3Exception.class)
+    public ResponseEntity<ErrorResponse> handleFileNotFoundInS3Exception(
+            FileNotFoundInS3Exception ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(),
+                "File Not Found in S3",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
+     * ChecksumMismatchException 처리
+     *
+     * @param ex ChecksumMismatchException
+     * @param request HttpServletRequest
+     * @return 400 BAD_REQUEST 응답
+     */
+    @ExceptionHandler(ChecksumMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleChecksumMismatchException(
+            ChecksumMismatchException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "Checksum Mismatch",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     /**
