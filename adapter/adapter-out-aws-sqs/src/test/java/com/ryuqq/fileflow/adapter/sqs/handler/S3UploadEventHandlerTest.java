@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.sqs.exception.S3EventParsingException;
 import com.ryuqq.fileflow.adapter.sqs.exception.SessionMatchingException;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.service.ChecksumVerificationService;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.vo.*;
@@ -32,6 +33,9 @@ class S3UploadEventHandlerTest {
     private UploadSessionPort uploadSessionPort;
 
     @Mock
+    private ChecksumVerificationService checksumVerificationService;
+
+    @Mock
     private RetryTemplate retryTemplate;
 
     @Mock
@@ -43,7 +47,7 @@ class S3UploadEventHandlerTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        handler = new S3UploadEventHandler(objectMapper, uploadSessionPort, retryTemplate, circuitBreaker);
+        handler = new S3UploadEventHandler(objectMapper, uploadSessionPort, checksumVerificationService, retryTemplate, circuitBreaker);
     }
 
     @Test

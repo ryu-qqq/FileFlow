@@ -71,6 +71,7 @@ class S3MultipartAdapterTest {
         s3Properties = new S3Properties(
                 "test-bucket",
                 "ap-northeast-2",
+                null,
                 15L,
                 "uploads",
                 100,
@@ -613,6 +614,7 @@ class S3MultipartAdapterTest {
             S3Properties propertiesWithoutPrefix = new S3Properties(
                     "test-bucket",
                     "ap-northeast-2",
+                    null,
                     15L,
                     "", // 빈 접두사
                     100,

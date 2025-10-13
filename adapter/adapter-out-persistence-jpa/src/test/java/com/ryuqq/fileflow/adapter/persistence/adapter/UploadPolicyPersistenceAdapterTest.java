@@ -78,6 +78,7 @@ class UploadPolicyPersistenceAdapterTest {
                 ImagePolicy.createDefault(),
                 null,
                 null,
+                null,
                 null
         );
 
@@ -154,6 +155,7 @@ class UploadPolicyPersistenceAdapterTest {
         // when
         FileTypePolicies newPolicies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
+                null,
                 new HtmlPolicy(20, 1000, true),
                 null,
                 null
@@ -228,6 +230,7 @@ class UploadPolicyPersistenceAdapterTest {
         // given
         FileTypePolicies complexPolicies = FileTypePolicies.of(
                 new ImagePolicy(10, 5, List.of("jpg", "png"), Dimension.of(1920, 1080)),
+                null,
                 new HtmlPolicy(20, 1000, true),
                 new ExcelPolicy(15, 100),
                 new PdfPolicy(25, 500)

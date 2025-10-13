@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.sqs.config.SqsProperties;
 import com.ryuqq.fileflow.adapter.sqs.handler.S3UploadEventHandler;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.service.ChecksumVerificationService;
 import com.ryuqq.fileflow.domain.policy.PolicyKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.vo.CheckSum;
@@ -122,6 +123,7 @@ class S3EventListenerIntegrationTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         uploadSessionPort = mock(UploadSessionPort.class);
+        ChecksumVerificationService checksumVerificationService = mock(ChecksumVerificationService.class);
         RetryTemplate retryTemplate = mock(RetryTemplate.class);
         CircuitBreaker circuitBreaker = mock(CircuitBreaker.class);
 
@@ -132,7 +134,7 @@ class S3EventListenerIntegrationTest {
         properties.setWaitTimeSeconds(1);
         properties.setVisibilityTimeout(30);
 
-        eventHandler = new S3UploadEventHandler(objectMapper, uploadSessionPort, retryTemplate, circuitBreaker);
+        eventHandler = new S3UploadEventHandler(objectMapper, uploadSessionPort, checksumVerificationService, retryTemplate, circuitBreaker);
 
         Executor executor = Executors.newFixedThreadPool(5);
         listener = new S3EventListener(sqsAsyncClient, properties, eventHandler, executor);
