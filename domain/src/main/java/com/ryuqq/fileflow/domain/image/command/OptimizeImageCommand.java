@@ -26,8 +26,8 @@ public record OptimizeImageCommand(
      * Compact constructor로 검증 로직 수행
      */
     public OptimizeImageCommand {
-        validateImageId(imageId);
-        validateSourceS3Uri(sourceS3Uri);
+        CommandValidators.validateImageId(imageId);
+        CommandValidators.validateSourceS3Uri(sourceS3Uri);
         validateSourceFormat(sourceFormat);
         validateStrategy(strategy);
         validateQuality(quality);
@@ -96,21 +96,6 @@ public record OptimizeImageCommand(
     }
 
     // ========== Validation Methods ==========
-
-    private static void validateImageId(String imageId) {
-        if (imageId == null || imageId.trim().isEmpty()) {
-            throw new IllegalArgumentException("ImageId cannot be null or empty");
-        }
-    }
-
-    private static void validateSourceS3Uri(String sourceS3Uri) {
-        if (sourceS3Uri == null || sourceS3Uri.trim().isEmpty()) {
-            throw new IllegalArgumentException("Source S3 URI cannot be null or empty");
-        }
-        if (!sourceS3Uri.startsWith("s3://")) {
-            throw new IllegalArgumentException("Source S3 URI must start with 's3://'");
-        }
-    }
 
     private static void validateSourceFormat(ImageFormat sourceFormat) {
         if (sourceFormat == null) {

@@ -160,6 +160,7 @@ public final class ImageAsset {
         validateFileSize(fileSizeBytes);
         validateCreatedAt(createdAt);
         validateOptimizationStatus(optimizationStatus);
+        validateOptimizedS3Uri(optimizationStatus, optimizedS3Uri);
 
         return new ImageAsset(
                 imageId,
@@ -355,6 +356,17 @@ public final class ImageAsset {
     private static void validateOptimizationStatus(ImageOptimizationStatus status) {
         if (status == null) {
             throw new IllegalArgumentException("OptimizationStatus cannot be null");
+        }
+    }
+
+    private static void validateOptimizedS3Uri(ImageOptimizationStatus status, String optimizedS3Uri) {
+        if (status == ImageOptimizationStatus.COMPLETED) {
+            if (optimizedS3Uri == null || optimizedS3Uri.trim().isEmpty()) {
+                throw new IllegalArgumentException("OptimizedS3Uri cannot be null or empty when optimization status is COMPLETED");
+            }
+            if (!optimizedS3Uri.startsWith("s3://")) {
+                throw new IllegalArgumentException("OptimizedS3Uri must start with 's3://'");
+            }
         }
     }
 

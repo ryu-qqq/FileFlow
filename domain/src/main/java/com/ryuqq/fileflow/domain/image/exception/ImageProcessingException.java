@@ -31,18 +31,6 @@ public class ImageProcessingException extends RuntimeException {
         this.operation = operation;
     }
 
-    public ImageProcessingException(String message) {
-        super(message);
-        this.imageId = null;
-        this.operation = null;
-    }
-
-    public ImageProcessingException(String message, Throwable cause) {
-        super(message, cause);
-        this.imageId = null;
-        this.operation = null;
-    }
-
     public String getImageId() {
         return imageId;
     }

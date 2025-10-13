@@ -29,12 +29,6 @@ public class InvalidImageFormatException extends RuntimeException {
         this.supportedFormats = supportedFormats;
     }
 
-    public InvalidImageFormatException(String message) {
-        super(message);
-        this.providedFormat = null;
-        this.supportedFormats = null;
-    }
-
     public String getProvidedFormat() {
         return providedFormat;
     }
