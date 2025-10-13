@@ -4,6 +4,8 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.GpsDirectory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
@@ -28,6 +30,8 @@ import java.io.IOException;
  */
 @Component
 public class RemoveExifMetadataStrategy implements ExifMetadataStrategy {
+
+    private static final Logger log = LoggerFactory.getLogger(RemoveExifMetadataStrategy.class);
 
     /**
      * EXIF 메타데이터를 제거합니다.
@@ -77,12 +81,12 @@ public class RemoveExifMetadataStrategy implements ExifMetadataStrategy {
 
             if (gpsDirectory != null && gpsDirectory.getGeoLocation() != null) {
                 // GPS 정보가 있으면 제거됨을 로깅
-                System.out.println("GPS metadata detected and will be removed: " +
-                        "Lat=" + gpsDirectory.getGeoLocation().getLatitude() +
-                        ", Lon=" + gpsDirectory.getGeoLocation().getLongitude());
+                log.info("GPS metadata detected and will be removed: Lat={}, Lon={}",
+                        gpsDirectory.getGeoLocation().getLatitude(),
+                        gpsDirectory.getGeoLocation().getLongitude());
             }
         } catch (ImageProcessingException | IOException e) {
-            // 메타데이터 읽기 실패는 무시 (메타데이터 제거에는 영향 없음)
+            log.warn("Failed to read EXIF metadata, but metadata will still be removed", e);
         }
     }
 }

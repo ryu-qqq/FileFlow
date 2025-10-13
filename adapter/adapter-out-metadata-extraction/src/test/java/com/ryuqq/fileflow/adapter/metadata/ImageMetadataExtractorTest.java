@@ -18,6 +18,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * ImageMetadataExtractor 단위 테스트
@@ -92,11 +93,7 @@ class ImageMetadataExtractorTest {
         // 테스트 리소스에 실제 JPEG 파일이 있다고 가정
         // 실제 프로젝트에서는 src/test/resources 에 테스트용 이미지 파일을 배치
         Path testImagePath = Paths.get("src/test/resources/test-images/sample.jpg");
-
-        if (!Files.exists(testImagePath)) {
-            // 테스트 이미지가 없으면 스킵
-            return;
-        }
+        assumeTrue(Files.exists(testImagePath), "Test image file not found: " + testImagePath);
 
         try (InputStream imageStream = Files.newInputStream(testImagePath)) {
             List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
@@ -180,11 +177,7 @@ class ImageMetadataExtractorTest {
     @DisplayName("GPS 메타데이터 추출 검증 - GPS 정보가 있는 이미지")
     void extractsGpsMetadataFromImageWithGps() throws IOException {
         Path testImagePath = Paths.get("src/test/resources/test-images/with_gps.jpg");
-
-        if (!Files.exists(testImagePath)) {
-            // 테스트 이미지가 없으면 스킵
-            return;
-        }
+        assumeTrue(Files.exists(testImagePath), "Test image file not found: " + testImagePath);
 
         try (InputStream imageStream = Files.newInputStream(testImagePath)) {
             List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
@@ -210,11 +203,7 @@ class ImageMetadataExtractorTest {
     @DisplayName("GPS 메타데이터 미존재 검증 - GPS 정보가 없는 이미지")
     void doesNotExtractGpsMetadataFromImageWithoutGps() throws IOException {
         Path testImagePath = Paths.get("src/test/resources/test-images/simple.jpg");
-
-        if (!Files.exists(testImagePath)) {
-            // 테스트 이미지가 없으면 스킵
-            return;
-        }
+        assumeTrue(Files.exists(testImagePath), "Test image file not found: " + testImagePath);
 
         try (InputStream imageStream = Files.newInputStream(testImagePath)) {
             List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
@@ -233,11 +222,7 @@ class ImageMetadataExtractorTest {
     @DisplayName("EXIF Orientation 태그 추출 검증")
     void extractsExifOrientationTag() throws IOException {
         Path testImagePath = Paths.get("src/test/resources/test-images/with_exif.jpg");
-
-        if (!Files.exists(testImagePath)) {
-            // 테스트 이미지가 없으면 스킵
-            return;
-        }
+        assumeTrue(Files.exists(testImagePath), "Test image file not found: " + testImagePath);
 
         try (InputStream imageStream = Files.newInputStream(testImagePath)) {
             List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
@@ -262,11 +247,7 @@ class ImageMetadataExtractorTest {
     @DisplayName("EXIF 메타데이터 전체 추출 검증 - 카메라 정보 포함")
     void extractsCompleteExifMetadata() throws IOException {
         Path testImagePath = Paths.get("src/test/resources/test-images/with_exif.jpg");
-
-        if (!Files.exists(testImagePath)) {
-            // 테스트 이미지가 없으면 스킵
-            return;
-        }
+        assumeTrue(Files.exists(testImagePath), "Test image file not found: " + testImagePath);
 
         try (InputStream imageStream = Files.newInputStream(testImagePath)) {
             List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
