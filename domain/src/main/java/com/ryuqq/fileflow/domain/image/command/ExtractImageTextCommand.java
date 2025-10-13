@@ -145,8 +145,8 @@ public record ExtractImageTextCommand(
         if (languageCode == null || languageCode.trim().isEmpty()) {
             throw new IllegalArgumentException("Language code cannot be null or empty");
         }
-        if (languageCode.length() != 2) {
-            throw new IllegalArgumentException("Language code must be 2 characters (ISO 639-1)");
+        if (languageCode.length() < 2 || languageCode.length() > 5) {
+            throw new IllegalArgumentException("Language code must be between 2 and 5 characters (e.g., 'ko', 'zh-CN')");
         }
     }
 

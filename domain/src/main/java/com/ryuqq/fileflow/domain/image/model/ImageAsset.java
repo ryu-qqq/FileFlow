@@ -347,9 +347,9 @@ public final class ImageAsset {
         if (createdAt == null) {
             throw new IllegalArgumentException("CreatedAt cannot be null");
         }
-        if (createdAt.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("CreatedAt cannot be in the future");
-        }
+        // Note: Future time validation removed for reconstitute() compatibility
+        // reconstitute() is used for loading persisted data from DB, where timestamps are historical
+        // Future time check can cause issues in distributed systems due to clock skew
     }
 
     private static void validateOptimizationStatus(ImageOptimizationStatus status) {
