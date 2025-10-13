@@ -131,6 +131,7 @@ class UploadSessionEntityTest {
         // when
         UploadSessionEntity entity = UploadSessionEntity.reconstituteWithId(
                 existingId,
+                0L,  // version (Optimistic Locking)
                 sessionId,
                 idempotencyKey,
                 tenantId,
