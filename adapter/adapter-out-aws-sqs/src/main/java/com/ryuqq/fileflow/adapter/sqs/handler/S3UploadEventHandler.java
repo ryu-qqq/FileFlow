@@ -5,7 +5,9 @@ import com.ryuqq.fileflow.adapter.sqs.dto.S3EventNotification;
 import com.ryuqq.fileflow.adapter.sqs.exception.S3EventParsingException;
 import com.ryuqq.fileflow.adapter.sqs.exception.SessionMatchingException;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.service.ChecksumVerificationService;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
+import com.ryuqq.fileflow.domain.upload.exception.ChecksumMismatchException;
 import com.ryuqq.fileflow.domain.upload.vo.S3Location;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.slf4j.Logger;
@@ -20,7 +22,7 @@ import java.util.regex.Pattern;
  * S3 업로드 이벤트 핸들러
  *
  * S3 이벤트를 파싱하고 업로드 세션을 업데이트합니다.
- * S3 key에서 세션 ID를 추출하여 매칭합니다.
+ * S3 key에서 세션 ID를 추출하여 매칭하고, 체크섬 검증을 수행합니다.
  *
  * @author sangwon-ryu
  */
@@ -36,17 +38,20 @@ public class S3UploadEventHandler {
 
     private final ObjectMapper objectMapper;
     private final UploadSessionPort uploadSessionPort;
+    private final ChecksumVerificationService checksumVerificationService;
     private final RetryTemplate retryTemplate;
     private final CircuitBreaker circuitBreaker;
 
     public S3UploadEventHandler(
             ObjectMapper objectMapper,
             UploadSessionPort uploadSessionPort,
+            ChecksumVerificationService checksumVerificationService,
             RetryTemplate retryTemplate,
             CircuitBreaker circuitBreaker
     ) {
         this.objectMapper = objectMapper;
         this.uploadSessionPort = uploadSessionPort;
+        this.checksumVerificationService = checksumVerificationService;
         this.retryTemplate = retryTemplate;
         this.circuitBreaker = circuitBreaker;
     }
@@ -175,7 +180,19 @@ public class S3UploadEventHandler {
             return;
         }
 
-        // 3. 세션 완료 처리
+        // 3. 체크섬 검증 (SHA-256)
+        try {
+            checksumVerificationService.verifyChecksum(session, s3Location.key());
+            log.info("Checksum verification passed for session: {}", sessionId);
+        } catch (ChecksumMismatchException e) {
+            log.error("Checksum verification failed for session: {}. " +
+                            "Expected: {}, Actual: {}. S3 object: {}",
+                    sessionId, e.getExpectedEtag(), e.getActualEtag(), s3Location.toUri());
+            // 체크섬 불일치 시 처리 중단 (DLQ로 전송됨)
+            throw e;
+        }
+
+        // 4. 세션 완료 처리
         try {
             UploadSession completedSession = session.complete();
 
