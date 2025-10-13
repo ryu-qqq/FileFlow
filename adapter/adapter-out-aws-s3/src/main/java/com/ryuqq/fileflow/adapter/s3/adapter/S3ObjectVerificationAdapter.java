@@ -156,6 +156,45 @@ public class S3ObjectVerificationAdapter implements VerifyS3ObjectPort {
         }
     }
 
+    /**
+     * S3 객체의 User Metadata를 조회합니다.
+     *
+     * User Metadata는 x-amz-meta-* 헤더로 저장된 사용자 정의 메타데이터입니다.
+     * AWS SDK는 "x-amz-meta-" 접두사를 제거하고 반환합니다.
+     *
+     * 예: S3에 저장된 "x-amz-meta-checksum-value" → 맵의 키는 "checksum-value"
+     *
+     * @param bucket S3 버킷명
+     * @param key S3 객체 키
+     * @return User Metadata 맵 (빈 맵이 아닌, null을 반환하지 않음)
+     * @throws IllegalArgumentException bucket 또는 key가 null이거나 비어있는 경우
+     * @throws RuntimeException HeadObject API 호출 실패 시
+     */
+    @Override
+    public java.util.Map<String, String> getUserMetadata(String bucket, String key) {
+        validateBucket(bucket);
+        validateKey(key);
+
+        try {
+            HeadObjectRequest request = HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+
+            HeadObjectResponse response = s3Client.headObject(request);
+
+            // S3 User Metadata 반환
+            // AWS SDK는 자동으로 "x-amz-meta-" 접두사를 제거하고 반환합니다.
+            return response.metadata();
+
+        } catch (S3Exception e) {
+            throw new RuntimeException(
+                    String.format("Failed to get S3 user metadata: bucket=%s, key=%s", bucket, key),
+                    e
+            );
+        }
+    }
+
     // ========== Validation Methods ==========
 
     private static void validateBucket(String bucket) {
