@@ -5,7 +5,6 @@ import com.ryuqq.fileflow.application.upload.port.out.MultipartProgressPort;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
-import com.ryuqq.fileflow.domain.upload.vo.MultipartUploadInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
