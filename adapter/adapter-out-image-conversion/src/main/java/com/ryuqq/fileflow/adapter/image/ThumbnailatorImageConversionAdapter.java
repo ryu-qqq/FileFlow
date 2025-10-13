@@ -2,8 +2,6 @@ package com.ryuqq.fileflow.adapter.image;
 
 import com.ryuqq.fileflow.adapter.image.exif.ExifMetadataStrategy;
 import com.ryuqq.fileflow.adapter.image.exif.ImageRotationHandler;
-import com.ryuqq.fileflow.adapter.image.exif.PreserveExifMetadataStrategy;
-import com.ryuqq.fileflow.adapter.image.exif.RemoveExifMetadataStrategy;
 import com.ryuqq.fileflow.application.image.ImageConversionException;
 import com.ryuqq.fileflow.application.image.port.out.ImageConversionPort;
 import com.ryuqq.fileflow.domain.image.vo.CompressionQuality;
@@ -32,7 +30,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Thumbnailator 기반 이미지 변환 Adapter
@@ -62,27 +64,44 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
     );
 
     private final S3Client s3Client;
-    private final RemoveExifMetadataStrategy removeExifStrategy;
-    private final PreserveExifMetadataStrategy preserveExifStrategy;
+    private final Map<Boolean, ExifMetadataStrategy> exifStrategies;
     private final ImageRotationHandler imageRotationHandler;
 
     /**
      * Constructor Injection (NO Lombok)
      *
+     * DIP (Dependency Inversion Principle) 준수:
+     * - 구체 클래스 대신 인터페이스(ExifMetadataStrategy) List로 주입
+     * - preservesMetadata() 반환값을 키로 사용하여 Map 생성
+     * - Spring의 자동 주입으로 모든 ExifMetadataStrategy 구현체 수집
+     *
      * @param s3Client AWS S3 Client
-     * @param removeExifStrategy EXIF 메타데이터 제거 전략
-     * @param preserveExifStrategy EXIF 메타데이터 유지 전략
+     * @param strategies EXIF 메타데이터 처리 전략 리스트 (Spring 자동 주입)
      * @param imageRotationHandler 이미지 회전 처리기
      */
     public ThumbnailatorImageConversionAdapter(
             S3Client s3Client,
-            RemoveExifMetadataStrategy removeExifStrategy,
-            PreserveExifMetadataStrategy preserveExifStrategy,
+            List<ExifMetadataStrategy> strategies,
             ImageRotationHandler imageRotationHandler
     ) {
         this.s3Client = Objects.requireNonNull(s3Client, "S3Client must not be null");
-        this.removeExifStrategy = Objects.requireNonNull(removeExifStrategy, "RemoveExifStrategy must not be null");
-        this.preserveExifStrategy = Objects.requireNonNull(preserveExifStrategy, "PreserveExifStrategy must not be null");
+        Objects.requireNonNull(strategies, "ExifMetadataStrategy list must not be null");
+
+        // ExifMetadataStrategy 구현체들을 preservesMetadata() 결과로 매핑
+        this.exifStrategies = strategies.stream()
+                .collect(Collectors.toMap(
+                        ExifMetadataStrategy::preservesMetadata,
+                        Function.identity()
+                ));
+
+        // 필수 전략 검증
+        if (!this.exifStrategies.containsKey(true) || !this.exifStrategies.containsKey(false)) {
+            throw new IllegalStateException(
+                    "Both preserve and remove EXIF strategies must be provided. " +
+                    "Found strategies: " + this.exifStrategies.keySet()
+            );
+        }
+
         this.imageRotationHandler = Objects.requireNonNull(imageRotationHandler, "ImageRotationHandler must not be null");
     }
 
@@ -406,10 +425,8 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
             CompressionQuality quality,
             boolean preserveMetadata
     ) throws IOException {
-        // EXIF 메타데이터 처리 전략 선택
-        ExifMetadataStrategy exifStrategy = preserveMetadata
-                ? preserveExifStrategy
-                : removeExifStrategy;
+        // EXIF 메타데이터 처리 전략 선택 (Map 기반)
+        ExifMetadataStrategy exifStrategy = exifStrategies.get(preserveMetadata);
 
         // EXIF 메타데이터 처리 (현재는 로깅만 수행, WebP는 메타데이터 쓰기 미지원)
         sourceImage = exifStrategy.processMetadata(sourceImage, sourceImageBytes);
@@ -490,10 +507,8 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
             CompressionQuality quality,
             boolean preserveMetadata
     ) throws IOException {
-        // EXIF 메타데이터 처리 전략 선택
-        ExifMetadataStrategy exifStrategy = preserveMetadata
-                ? preserveExifStrategy
-                : removeExifStrategy;
+        // EXIF 메타데이터 처리 전략 선택 (Map 기반)
+        ExifMetadataStrategy exifStrategy = exifStrategies.get(preserveMetadata);
 
         // EXIF 메타데이터 처리 (현재는 로깅만 수행)
         sourceImage = exifStrategy.processMetadata(sourceImage, sourceImageBytes);
