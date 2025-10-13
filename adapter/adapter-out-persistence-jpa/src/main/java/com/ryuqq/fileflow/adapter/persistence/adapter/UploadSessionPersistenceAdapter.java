@@ -154,11 +154,9 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
                 .toList();
     }
 
-    // ========== Private Helper Methods ==========
-
     /**
      * 기존 엔티티의 필드를 업데이트합니다.
-     * ID는 유지하여 JPA가 UPDATE를 수행하도록 합니다.
+     * ID와 Version은 유지하여 JPA가 Optimistic Locking과 함께 UPDATE를 수행하도록 합니다.
      *
      * @param existing 기존 엔티티
      * @param session 업데이트할 도메인 객체
@@ -189,11 +187,12 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
         // 새로운 엔티티를 생성할 때는 mapper.toEntity()를 통해 JSON으로 변환된 값을 가져와야 함
         UploadSessionEntity newEntity = mapper.toEntity(session, tenantId, uploaderId);
 
-        // 기존 엔티티의 필드를 업데이트 (ID는 유지)
+        // 기존 엔티티의 필드를 업데이트 (ID와 Version은 유지)
         // NOTE: UploadSessionEntity에는 setter가 없으므로,
-        // 동일한 ID를 가진 새 엔티티를 생성하는 방식 사용
+        // 동일한 ID와 Version을 가진 새 엔티티를 생성하는 방식 사용
         return UploadSessionEntity.reconstituteWithId(
-                existing.getId(), // 기존 ID 유지
+                existing.getId(), // 기존 ID 유지 (PK)
+                existing.getVersion(), // 기존 Version 유지 (Optimistic Locking)
                 session.getSessionId(),
                 idempotencyKeyValue,
                 tenantId,
