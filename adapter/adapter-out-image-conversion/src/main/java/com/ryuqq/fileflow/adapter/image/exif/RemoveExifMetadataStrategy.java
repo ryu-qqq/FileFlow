@@ -45,7 +45,9 @@ public class RemoveExifMetadataStrategy implements ExifMetadataStrategy {
     @Override
     public BufferedImage processMetadata(BufferedImage sourceImage, byte[] sourceImageBytes) throws IOException {
         // GPS 정보 로깅 (디버깅 및 모니터링용)
-        logGpsMetadataIfPresent(sourceImageBytes);
+        if (sourceImageBytes != null && sourceImageBytes.length > 0) {
+            logGpsMetadataIfPresent(sourceImageBytes);
+        }
 
         // BufferedImage는 메타데이터를 포함하지 않으므로
         // Thumbnailator로 변환 시 자동으로 메타데이터가 제거됨

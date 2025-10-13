@@ -175,4 +175,112 @@ class ImageMetadataExtractorTest {
             assertThat(e.getMessage()).contains("Failed to extract image metadata");
         }
     }
+
+    @Test
+    @DisplayName("GPS 메타데이터 추출 검증 - GPS 정보가 있는 이미지")
+    void extractsGpsMetadataFromImageWithGps() throws IOException {
+        Path testImagePath = Paths.get("src/test/resources/test-images/with_gps.jpg");
+
+        if (!Files.exists(testImagePath)) {
+            // 테스트 이미지가 없으면 스킵
+            return;
+        }
+
+        try (InputStream imageStream = Files.newInputStream(testImagePath)) {
+            List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
+
+            // GPS 메타데이터가 추출되었는지 확인
+            boolean hasGpsLatitude = metadata.stream()
+                    .anyMatch(m -> m.hasKey("exif_gps_latitude"));
+            boolean hasGpsLongitude = metadata.stream()
+                    .anyMatch(m -> m.hasKey("exif_gps_longitude"));
+
+            assertThat(hasGpsLatitude || hasGpsLongitude)
+                    .as("GPS metadata should be extracted if present")
+                    .isTrue();
+
+            // GPS 메타데이터가 있으면 NUMBER 타입이어야 함
+            metadata.stream()
+                    .filter(m -> m.hasKey("exif_gps_latitude") || m.hasKey("exif_gps_longitude") || m.hasKey("exif_gps_altitude"))
+                    .forEach(m -> assertThat(m.getValueType()).isEqualTo(MetadataType.NUMBER));
+        }
+    }
+
+    @Test
+    @DisplayName("GPS 메타데이터 미존재 검증 - GPS 정보가 없는 이미지")
+    void doesNotExtractGpsMetadataFromImageWithoutGps() throws IOException {
+        Path testImagePath = Paths.get("src/test/resources/test-images/simple.jpg");
+
+        if (!Files.exists(testImagePath)) {
+            // 테스트 이미지가 없으면 스킵
+            return;
+        }
+
+        try (InputStream imageStream = Files.newInputStream(testImagePath)) {
+            List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
+
+            // GPS 메타데이터가 없어야 함
+            boolean hasGpsMetadata = metadata.stream()
+                    .anyMatch(m -> m.hasKey("exif_gps_latitude") || m.hasKey("exif_gps_longitude"));
+
+            assertThat(hasGpsMetadata)
+                    .as("GPS metadata should not exist for images without GPS data")
+                    .isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("EXIF Orientation 태그 추출 검증")
+    void extractsExifOrientationTag() throws IOException {
+        Path testImagePath = Paths.get("src/test/resources/test-images/with_exif.jpg");
+
+        if (!Files.exists(testImagePath)) {
+            // 테스트 이미지가 없으면 스킵
+            return;
+        }
+
+        try (InputStream imageStream = Files.newInputStream(testImagePath)) {
+            List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
+
+            // Orientation 메타데이터 확인 (있을 수도 있고 없을 수도 있음)
+            metadata.stream()
+                    .filter(m -> m.hasKey("exif_orientation"))
+                    .forEach(m -> {
+                        // Orientation은 NUMBER 타입이어야 함
+                        assertThat(m.getValueType()).isEqualTo(MetadataType.NUMBER);
+
+                        // Orientation 값은 1-8 범위여야 함
+                        int orientationValue = Integer.parseInt(m.getMetadataValue());
+                        assertThat(orientationValue)
+                                .as("EXIF Orientation should be between 1 and 8")
+                                .isBetween(1, 8);
+                    });
+        }
+    }
+
+    @Test
+    @DisplayName("EXIF 메타데이터 전체 추출 검증 - 카메라 정보 포함")
+    void extractsCompleteExifMetadata() throws IOException {
+        Path testImagePath = Paths.get("src/test/resources/test-images/with_exif.jpg");
+
+        if (!Files.exists(testImagePath)) {
+            // 테스트 이미지가 없으면 스킵
+            return;
+        }
+
+        try (InputStream imageStream = Files.newInputStream(testImagePath)) {
+            List<FileMetadata> metadata = extractor.extract(testFileId, imageStream, "image/jpeg");
+
+            assertThat(metadata).isNotEmpty();
+
+            // 기본 메타데이터 확인
+            assertThat(metadata).anyMatch(m -> m.hasKey("format"));
+
+            // EXIF 메타데이터가 있으면 STRING 또는 NUMBER 타입이어야 함
+            metadata.stream()
+                    .filter(m -> m.hasKey("exif_make") || m.hasKey("exif_model") ||
+                                 m.hasKey("exif_datetime") || m.hasKey("exif_software"))
+                    .forEach(m -> assertThat(m.getValueType()).isEqualTo(MetadataType.STRING));
+        }
+    }
 }

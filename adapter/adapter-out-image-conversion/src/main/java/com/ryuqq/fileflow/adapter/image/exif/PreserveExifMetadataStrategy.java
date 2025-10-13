@@ -60,7 +60,9 @@ public class PreserveExifMetadataStrategy implements ExifMetadataStrategy {
     @Override
     public BufferedImage processMetadata(BufferedImage sourceImage, byte[] sourceImageBytes) throws IOException {
         // GPS 정보 제거 로깅
-        logMetadataProcessing(sourceImageBytes);
+        if (sourceImageBytes != null && sourceImageBytes.length > 0) {
+            logMetadataProcessing(sourceImageBytes);
+        }
 
         // 현재는 BufferedImage를 그대로 반환
         // WebP 변환 시 메타데이터는 자동으로 제거되고 DB에만 저장됨
