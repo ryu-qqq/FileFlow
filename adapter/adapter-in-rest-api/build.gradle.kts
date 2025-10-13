@@ -40,6 +40,7 @@ dependencies {
     testImplementation(libs.spring.security.test)
     testImplementation(libs.rest.assured)
     testImplementation(libs.spring.boot.starter.data.jpa)
+    testImplementation(libs.awaitility)
 
     // Testcontainers for integration tests
     testImplementation(libs.testcontainers.junit)

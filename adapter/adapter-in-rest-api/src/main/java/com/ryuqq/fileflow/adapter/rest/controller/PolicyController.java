@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.rest.controller;
 
 import com.ryuqq.fileflow.adapter.rest.dto.request.UpdatePolicyRequest;
+import com.ryuqq.fileflow.adapter.rest.dto.response.ErrorResponse;
 import com.ryuqq.fileflow.adapter.rest.dto.response.PolicyResponse;
 import com.ryuqq.fileflow.application.policy.dto.PolicyKeyDto;
 import com.ryuqq.fileflow.application.policy.dto.UpdateUploadPolicyCommand;
@@ -8,6 +9,13 @@ import com.ryuqq.fileflow.application.policy.dto.UploadPolicyResponse;
 import com.ryuqq.fileflow.application.policy.port.in.ActivateUploadPolicyUseCase;
 import com.ryuqq.fileflow.application.policy.port.in.GetUploadPolicyUseCase;
 import com.ryuqq.fileflow.application.policy.port.in.UpdateUploadPolicyUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +42,7 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
+@Tag(name = "Policy Management", description = "업로드 정책 관리 API")
 @RestController
 @RequestMapping("/api/v1/policies")
 public class PolicyController {
@@ -77,8 +86,32 @@ public class PolicyController {
      * @param policyKey 정책 키
      * @return 200 OK with PolicyResponse
      */
+    @Operation(
+            summary = "정책 조회",
+            description = "정책 키로 특정 업로드 정책을 조회합니다. 정책 키 형식: {tenantId}:{userType}:{serviceType}"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "정책 조회 성공",
+                    content = @Content(schema = @Schema(implementation = PolicyResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "정책을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 정책 키 형식",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping("/{policyKey}")
-    public ResponseEntity<PolicyResponse> getPolicy(@PathVariable String policyKey) {
+    public ResponseEntity<PolicyResponse> getPolicy(
+            @Parameter(description = "정책 키 (형식: tenantId:userType:serviceType)", example = "tenant1:free:image")
+            @PathVariable String policyKey
+    ) {
         Objects.requireNonNull(policyKey, "policyKey must not be null");
 
         PolicyKeyDto policyKeyDto = parsePolicyKey(policyKey);
@@ -97,6 +130,17 @@ public class PolicyController {
      * @param policyKey 정책 키 (쿼리 파라미터로 전달 예정, 현재는 기본값 사용)
      * @return 501 NOT_IMPLEMENTED
      */
+    @Operation(
+            summary = "전체 정책 목록 조회 (미구현)",
+            description = "모든 정책 목록을 조회합니다. 향후 구현 예정입니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "501",
+                    description = "아직 구현되지 않음",
+                    content = @Content
+            )
+    })
     @GetMapping
     public ResponseEntity<PolicyResponse> getPolicies() {
         // TODO: 향후 전체 정책 목록 조회 기능 구현 필요
@@ -111,8 +155,30 @@ public class PolicyController {
      * @param request 업데이트 요청
      * @return 200 OK with PolicyResponse
      */
+    @Operation(
+            summary = "정책 업데이트",
+            description = "업로드 정책의 설정을 업데이트합니다. 파일 크기 제한, 허용 확장자 등을 수정할 수 있습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "정책 업데이트 성공",
+                    content = @Content(schema = @Schema(implementation = PolicyResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "정책을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 데이터",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PutMapping("/{policyKey}")
     public ResponseEntity<PolicyResponse> updatePolicy(
+            @Parameter(description = "정책 키 (형식: tenantId:userType:serviceType)", example = "tenant1:free:image")
             @PathVariable String policyKey,
             @Valid @RequestBody UpdatePolicyRequest request
     ) {
@@ -133,8 +199,32 @@ public class PolicyController {
      * @param policyKey 정책 키
      * @return 200 OK with PolicyResponse
      */
+    @Operation(
+            summary = "정책 활성화",
+            description = "업로드 정책을 활성화합니다. 활성화된 정책만 업로드 시 사용됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "정책 활성화 성공",
+                    content = @Content(schema = @Schema(implementation = PolicyResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "정책을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 정책 키 형식",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PostMapping("/{policyKey}/activate")
-    public ResponseEntity<PolicyResponse> activatePolicy(@PathVariable String policyKey) {
+    public ResponseEntity<PolicyResponse> activatePolicy(
+            @Parameter(description = "정책 키 (형식: tenantId:userType:serviceType)", example = "tenant1:free:image")
+            @PathVariable String policyKey
+    ) {
         Objects.requireNonNull(policyKey, "policyKey must not be null");
 
         PolicyKeyDto policyKeyDto = parsePolicyKey(policyKey);

@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -369,15 +370,16 @@ class MultipartProgressTrackingIntegrationTest {
         boolean completed = latch.await(30, TimeUnit.SECONDS);
         executorService.shutdown();
 
-        // Redis 업데이트 완료를 위해 추가 대기 (비동기 처리 완료 보장)
-        Thread.sleep(1000); // 1초 대기
-
         // Then: 모든 파트가 완료되고 진행률 100%
         assertThat(completed).isTrue();
 
-        mockMvc.perform(get("/api/v1/upload/sessions/{sessionId}/status", sessionId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.progress").value(100));
+        // Redis 업데이트 완료를 위해 Awaitility로 대기 (비동기 처리 완료 보장)
+        await().atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        mockMvc.perform(get("/api/v1/upload/sessions/{sessionId}/status", sessionId))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.progress").value(100))
+                );
     }
 
     @Test

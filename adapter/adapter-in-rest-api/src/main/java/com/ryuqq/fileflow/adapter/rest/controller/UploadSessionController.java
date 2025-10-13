@@ -2,8 +2,15 @@ package com.ryuqq.fileflow.adapter.rest.controller;
 
 import com.ryuqq.fileflow.adapter.rest.dto.request.CreateUploadSessionRequest;
 import com.ryuqq.fileflow.adapter.rest.dto.response.CreateUploadSessionApiResponse;
+import com.ryuqq.fileflow.adapter.rest.dto.response.ErrorResponse;
 import com.ryuqq.fileflow.application.upload.dto.CreateUploadSessionCommand;
 import com.ryuqq.fileflow.application.upload.port.in.CreateUploadSessionUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +34,7 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
+@Tag(name = "Upload Session", description = "업로드 세션 및 Presigned URL 관리 API")
 @RestController
 @RequestMapping("/api/v1/upload/sessions")
 public class UploadSessionController {
@@ -61,6 +69,37 @@ public class UploadSessionController {
      * @throws com.ryuqq.fileflow.domain.policy.exception.PolicyNotFoundException 정책을 찾을 수 없는 경우
      * @throws com.ryuqq.fileflow.domain.policy.exception.PolicyViolationException 정책 검증 실패 시
      */
+    @Operation(
+            summary = "업로드 세션 생성",
+            description = """
+                    새로운 업로드 세션을 생성하고 S3 Presigned URL을 발급합니다.
+
+                    **비즈니스 플로우:**
+                    1. 정책 검증 (파일 크기, 확장자 등)
+                    2. 업로드 세션 생성
+                    3. S3 Presigned URL 발급
+                    4. 세션 정보 저장
+
+                    **Presigned URL 유효 시간:** 15분
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "업로드 세션 생성 성공",
+                    content = @Content(schema = @Schema(implementation = CreateUploadSessionApiResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 데이터 또는 정책 위반",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "정책을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PostMapping
     public ResponseEntity<CreateUploadSessionApiResponse> createUploadSession(
             @Valid @RequestBody CreateUploadSessionRequest request
