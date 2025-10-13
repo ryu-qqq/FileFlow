@@ -252,28 +252,28 @@ public class ImageMetadataExtractor {
             return;
         }
 
-        // GPS 위도
-        Double latitude = gpsDirectory.getGeoLocation() != null
-            ? gpsDirectory.getGeoLocation().getLatitude()
-            : null;
-        if (latitude != null) {
-            results.add(createMetadata(fileId, "exif_gps_latitude", latitude.toString(), MetadataType.NUMBER));
-        }
+        try {
+            // GPS 위도
+            if (gpsDirectory.getGeoLocation() != null) {
+                Double latitude = gpsDirectory.getGeoLocation().getLatitude();
+                if (latitude != null) {
+                    results.add(createMetadata(fileId, "exif_gps_latitude", latitude.toString(), MetadataType.NUMBER));
+                }
 
-        // GPS 경도
-        Double longitude = gpsDirectory.getGeoLocation() != null
-            ? gpsDirectory.getGeoLocation().getLongitude()
-            : null;
-        if (longitude != null) {
-            results.add(createMetadata(fileId, "exif_gps_longitude", longitude.toString(), MetadataType.NUMBER));
-        }
+                // GPS 경도
+                Double longitude = gpsDirectory.getGeoLocation().getLongitude();
+                if (longitude != null) {
+                    results.add(createMetadata(fileId, "exif_gps_longitude", longitude.toString(), MetadataType.NUMBER));
+                }
+            }
 
-        // GPS 고도 (선택적)
-        Double altitude = gpsDirectory.getGeoLocation() != null
-            ? (Double) gpsDirectory.getObject(GpsDirectory.TAG_ALTITUDE)
-            : null;
-        if (altitude != null) {
-            results.add(createMetadata(fileId, "exif_gps_altitude", altitude.toString(), MetadataType.NUMBER));
+            // GPS 고도 (선택적) - Rational 타입으로 저장될 수 있으므로 안전하게 처리
+            Double altitude = gpsDirectory.getDoubleObject(GpsDirectory.TAG_ALTITUDE);
+            if (altitude != null) {
+                results.add(createMetadata(fileId, "exif_gps_altitude", altitude.toString(), MetadataType.NUMBER));
+            }
+        } catch (Exception e) {
+            // GPS 메타데이터 추출 실패 시 무시 (다른 메타데이터는 계속 추출)
         }
     }
 

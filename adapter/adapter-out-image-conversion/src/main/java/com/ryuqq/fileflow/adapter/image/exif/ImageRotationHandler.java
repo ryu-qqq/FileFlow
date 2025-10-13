@@ -61,6 +61,10 @@ public class ImageRotationHandler {
      * @return Orientation 값 (1-8), 없으면 null
      */
     private Integer extractOrientation(byte[] imageBytes) {
+        if (imageBytes == null || imageBytes.length == 0) {
+            return null;
+        }
+
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(new ByteArrayInputStream(imageBytes));
             ExifIFD0Directory exifDirectory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
