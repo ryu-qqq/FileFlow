@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.image.model;
 
+import com.ryuqq.fileflow.domain.image.util.FileSizeFormatter;
 import com.ryuqq.fileflow.domain.image.vo.ImageDimension;
 import com.ryuqq.fileflow.domain.image.vo.ImageFormat;
 
@@ -298,13 +299,7 @@ public final class ImageAsset {
      * @return 예: "10.5 MB"
      */
     public String getHumanReadableSize() {
-        if (fileSizeBytes < 1024) {
-            return fileSizeBytes + " B";
-        } else if (fileSizeBytes < 1024 * 1024) {
-            return String.format("%.2f KB", fileSizeBytes / 1024.0);
-        } else {
-            return String.format("%.2f MB", fileSizeBytes / (1024.0 * 1024.0));
-        }
+        return FileSizeFormatter.format(fileSizeBytes);
     }
 
     // ========== Validation Methods ==========
