@@ -94,7 +94,6 @@ public class ImageConversionService implements ConvertToWebPUseCase {
         );
 
         // 5. 변환 수행
-        Instant startTime = Instant.now();
         try {
             ImageOptimizationResult optimizationResult = imageConversionPort.convertToWebP(request);
 
@@ -110,16 +109,14 @@ public class ImageConversionService implements ConvertToWebPUseCase {
                     optimizationResult.getProcessingTime()
             );
 
+        } catch (ImageConversionException e) {
+            // 7. ImageConversionException은 그대로 전파
+            throw e;
         } catch (Exception e) {
-            // 7. 실패 시 ImageConversionResult 반환
-            Instant endTime = Instant.now();
-            return ImageConversionResult.failure(
-                    command.fileId(),
-                    command.sourceS3Uri(),
-                    sourceFormat,
-                    strategy,
-                    0L, // 실패 시 원본 크기를 알 수 없음
-                    java.time.Duration.between(startTime, endTime)
+            // 8. 기타 예외는 ImageConversionException으로 래핑하여 전파
+            throw new ImageConversionException(
+                    "Failed to convert image for command: " + command,
+                    e
             );
         }
     }
