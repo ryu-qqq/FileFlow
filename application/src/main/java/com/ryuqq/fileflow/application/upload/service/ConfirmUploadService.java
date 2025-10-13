@@ -6,14 +6,11 @@ import com.ryuqq.fileflow.application.upload.port.in.ConfirmUploadUseCase;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
 import com.ryuqq.fileflow.application.upload.port.out.VerifyS3ObjectPort;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
-import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.upload.exception.ChecksumMismatchException;
-import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.upload.exception.FileNotFoundInS3Exception;
-import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
-import org.springframework.stereotype.Service;
 import com.ryuqq.fileflow.domain.upload.vo.S3Location;
+import com.ryuqq.fileflow.domain.upload.vo.UploadStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -50,7 +47,7 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
     public ConfirmUploadService(
             UploadSessionPort uploadSessionPort,
             VerifyS3ObjectPort verifyS3ObjectPort,
-            String s3BucketName
+            @org.springframework.beans.factory.annotation.Value("${aws.s3.bucket-name}") String s3BucketName
     ) {
         this.uploadSessionPort = Objects.requireNonNull(
                 uploadSessionPort,
@@ -86,23 +83,22 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
         // 1. 세션 조회
         UploadSession session = findSessionById(command.sessionId());
 
-        // 2. 세션 상태 검증 (confirmUpload() 내부에서 검증됨)
+        // 2. 멱등성 처리: 이미 완료된 세션은 성공 응답 반환
+        if (session.getStatus() == UploadStatus.COMPLETED) {
+            return ConfirmUploadResponse.success(
+                    session.getSessionId(),
+                    session.getStatus()
+            );
+        }
+
+        // 3. 세션 상태 검증 (confirmUpload() 내부에서 검증됨)
         // PENDING 상태가 아니면 IllegalStateException 발생
 
-        // 3. S3 위치 추출 (PresignedUrlInfo는 UploadSession에 없으므로,
-        //    실제 구현에서는 별도 저장소에서 조회하거나, UploadSession에 포함시켜야 함)
-        //    임시로 uploadPath를 사용 (실제로는 리팩토링 필요)
-        //
-        // TODO: UploadSession에 S3Location 필드 추가 필요
-        //       현재는 Presigned URL에서 추출한 경로를 사용한다고 가정
+        // 4. S3 위치 생성 (클라이언트가 제공한 uploadPath 사용)
+        // uploadPath는 Presigned URL 응답에 포함된 경로와 동일해야 함
+        S3Location s3Location = S3Location.of(s3BucketName, command.uploadPath());
 
-        // 임시 하드코딩 - 실제로는 세션에서 S3 정보를 가져와야 함
-        String bucketName = extractBucketFromSession(session);
-        String s3Key = extractS3KeyFromSession(session);
-
-        S3Location s3Location = S3Location.of(bucketName, s3Key);
-
-        // 4. S3에서 파일 존재 확인
+        // 5. S3에서 파일 존재 확인
         boolean exists = verifyS3ObjectPort.doesObjectExist(
                 s3Location.bucket(),
                 s3Location.key()
@@ -116,7 +112,7 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
             );
         }
 
-        // 5. ETag 검증 (선택적)
+        // 6. ETag 검증 (선택적)
         if (command.hasEtag()) {
             String actualEtag = verifyS3ObjectPort.getObjectETag(
                     s3Location.bucket(),
@@ -132,13 +128,13 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
             }
         }
 
-        // 6. 세션 상태 업데이트
+        // 7. 세션 상태 업데이트
         UploadSession confirmedSession = session.confirmUpload();
 
-        // 7. 변경된 세션 저장
+        // 8. 변경된 세션 저장
         UploadSession savedSession = uploadSessionPort.save(confirmedSession);
 
-        // 8. Response 생성
+        // 9. Response 생성
         return ConfirmUploadResponse.success(
                 savedSession.getSessionId(),
                 savedSession.getStatus()
@@ -161,42 +157,6 @@ public class ConfirmUploadService implements ConfirmUploadUseCase {
         }
         return uploadSessionPort.findById(sessionId)
                 .orElseThrow(() -> new UploadSessionNotFoundException(sessionId));
-    }
-
-    /**
-     * 세션에서 S3 버킷명을 추출합니다.
-     *
-     * TODO: 실제 구현에서는 UploadSession에 S3Location을 추가하거나,
-     *       별도 저장소에서 조회해야 합니다.
-     *       현재는 생성자에서 주입받은 버킷명을 사용합니다.
-     *
-     * @param session 업로드 세션
-     * @return S3 버킷명
-     */
-    private String extractBucketFromSession(UploadSession session) {
-        // 생성자에서 주입받은 버킷명 사용
-        // 실제로는 UploadSession에 S3Location 필드가 있어야 함
-        return this.s3BucketName;
-    }
-
-    /**
-     * 세션에서 S3 객체 키를 추출합니다.
-     *
-     * TODO: 실제 구현에서는 UploadSession에 S3Location을 추가하거나,
-     *       별도 저장소에서 조회해야 합니다.
-     *
-     * @param session 업로드 세션
-     * @return S3 객체 키
-     */
-    private String extractS3KeyFromSession(UploadSession session) {
-        // 임시 구현: 세션 ID와 파일명으로 키 생성
-        // 실제로는 UploadSession에 S3Location 필드가 있어야 함
-        return String.format(
-                "%s/%s/%s",
-                session.getPolicyKey().getTenantId(),
-                session.getSessionId(),
-                session.getUploadRequest().fileName()
-        );
     }
 
     /**

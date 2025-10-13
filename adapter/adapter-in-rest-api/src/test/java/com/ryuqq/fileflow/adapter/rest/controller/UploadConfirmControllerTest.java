@@ -74,7 +74,8 @@ class UploadConfirmControllerTest {
     void confirmUpload_Success() throws Exception {
         // Given
         String sessionId = UUID.randomUUID().toString();
-        ConfirmUploadRequest request = new ConfirmUploadRequest(null); // ETag 없음
+        String uploadPath = "user123/" + UUID.randomUUID() + "/test.jpg";
+        ConfirmUploadRequest request = new ConfirmUploadRequest(uploadPath, null); // ETag 없음
 
         ConfirmUploadResponse response = ConfirmUploadResponse.success(
                 sessionId,
@@ -102,8 +103,9 @@ class UploadConfirmControllerTest {
     void confirmUpload_WithETag_Success() throws Exception {
         // Given
         String sessionId = UUID.randomUUID().toString();
+        String uploadPath = "user123/" + UUID.randomUUID() + "/test.jpg";
         String etag = "\"d41d8cd98f00b204e9800998ecf8427e\"";
-        ConfirmUploadRequest request = new ConfirmUploadRequest(etag);
+        ConfirmUploadRequest request = new ConfirmUploadRequest(uploadPath, etag);
 
         ConfirmUploadResponse response = ConfirmUploadResponse.success(
                 sessionId,
@@ -131,7 +133,8 @@ class UploadConfirmControllerTest {
     void confirmUpload_Idempotent_AlreadyCompleted() throws Exception {
         // Given
         String sessionId = UUID.randomUUID().toString();
-        ConfirmUploadRequest request = new ConfirmUploadRequest(null);
+        String uploadPath = "user123/" + UUID.randomUUID() + "/test.jpg";
+        ConfirmUploadRequest request = new ConfirmUploadRequest(uploadPath, null);
 
         ConfirmUploadResponse response = ConfirmUploadResponse.of(
                 sessionId,
@@ -159,7 +162,8 @@ class UploadConfirmControllerTest {
     void confirmUpload_SessionNotFound() throws Exception {
         // Given
         String sessionId = UUID.randomUUID().toString();
-        ConfirmUploadRequest request = new ConfirmUploadRequest(null);
+        String uploadPath = "user123/" + UUID.randomUUID() + "/test.jpg";
+        ConfirmUploadRequest request = new ConfirmUploadRequest(uploadPath, null);
 
         when(confirmUploadUseCase.confirm(any(ConfirmUploadCommand.class)))
                 .thenThrow(new UploadSessionNotFoundException(sessionId));
@@ -181,7 +185,8 @@ class UploadConfirmControllerTest {
         String sessionId = UUID.randomUUID().toString();
         String bucket = "test-bucket";
         String key = "tenant/session/file.jpg";
-        ConfirmUploadRequest request = new ConfirmUploadRequest(null);
+        String uploadPath = "user123/" + UUID.randomUUID() + "/test.jpg";
+        ConfirmUploadRequest request = new ConfirmUploadRequest(uploadPath, null);
 
         when(confirmUploadUseCase.confirm(any(ConfirmUploadCommand.class)))
                 .thenThrow(new FileNotFoundInS3Exception(sessionId, bucket, key));
@@ -201,9 +206,10 @@ class UploadConfirmControllerTest {
     void confirmUpload_ChecksumMismatch() throws Exception {
         // Given
         String sessionId = UUID.randomUUID().toString();
+        String uploadPath = "user123/" + UUID.randomUUID() + "/test.jpg";
         String expectedEtag = "\"expected123\"";
         String actualEtag = "\"actual456\"";
-        ConfirmUploadRequest request = new ConfirmUploadRequest(expectedEtag);
+        ConfirmUploadRequest request = new ConfirmUploadRequest(uploadPath, expectedEtag);
 
         when(confirmUploadUseCase.confirm(any(ConfirmUploadCommand.class)))
                 .thenThrow(new ChecksumMismatchException(sessionId, expectedEtag, actualEtag));
@@ -223,7 +229,8 @@ class UploadConfirmControllerTest {
     void confirmUpload_InvalidState() throws Exception {
         // Given
         String sessionId = UUID.randomUUID().toString();
-        ConfirmUploadRequest request = new ConfirmUploadRequest(null);
+        String uploadPath = "user123/" + UUID.randomUUID() + "/test.jpg";
+        ConfirmUploadRequest request = new ConfirmUploadRequest(uploadPath, null);
 
         when(confirmUploadUseCase.confirm(any(ConfirmUploadCommand.class)))
                 .thenThrow(new IllegalStateException("Cannot confirm upload. Current status: FAILED. Only PENDING sessions can be confirmed."));
@@ -243,7 +250,8 @@ class UploadConfirmControllerTest {
     void confirmUpload_NullSessionId() throws Exception {
         // Given
         String sessionId = UUID.randomUUID().toString();
-        ConfirmUploadRequest request = new ConfirmUploadRequest(null);
+        String uploadPath = "user123/" + UUID.randomUUID() + "/test.jpg";
+        ConfirmUploadRequest request = new ConfirmUploadRequest(uploadPath, null);
 
         when(confirmUploadUseCase.confirm(any(ConfirmUploadCommand.class)))
                 .thenThrow(new IllegalArgumentException("SessionId must not be null or empty"));
