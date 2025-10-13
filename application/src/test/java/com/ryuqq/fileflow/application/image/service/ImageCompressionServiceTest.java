@@ -231,4 +231,26 @@ class ImageCompressionServiceTest {
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("CompressImageCommand must not be null");
     }
+
+    @Test
+    @DisplayName("예상치 못한 예외가 발생하면 ImageConversionException으로 래핑한다")
+    void throwsImageConversionExceptionWhenUnexpectedErrorOccurs() {
+        // Given
+        FileId fileId = FileId.generate();
+        CompressImageCommand command = CompressImageCommand.withDefaults(
+                fileId,
+                "s3://bucket/test.jpg",
+                ImageFormat.JPEG
+        );
+
+        when(imageConversionPort.supports(ImageFormat.JPEG)).thenReturn(true);
+        when(imageConversionPort.compressImage(any(ImageOptimizationRequest.class)))
+                .thenThrow(new RuntimeException("Unexpected database error"));
+
+        // When & Then
+        assertThatThrownBy(() -> imageCompressionService.compressImage(command))
+                .isInstanceOf(ImageConversionException.class)
+                .hasMessageContaining("Failed to compress image")
+                .hasCauseInstanceOf(RuntimeException.class);
+    }
 }

@@ -256,6 +256,7 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
                     e
             );
         } catch (Exception e) {
+            logger.error("Unexpected error during image compression for {}", request.getSourceS3Uri(), e);
             throw new ImageConversionException(
                     "Unexpected error during image compression: " + e.getMessage(),
                     e
