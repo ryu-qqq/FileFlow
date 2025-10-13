@@ -181,6 +181,89 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
         return supports(format) && format.isConvertibleToWebP();
     }
 
+    /**
+     * 이미지를 품질 90%로 압축합니다.
+     * 원본 포맷을 유지하면서 파일 크기를 감소시킵니다.
+     *
+     * 처리 과정:
+     * 1. S3에서 원본 이미지 다운로드
+     * 2. BufferedImage로 로드
+     * 3. Thumbnailator로 동일 포맷으로 압축 (품질 90%)
+     * 4. S3에 압축된 이미지 업로드
+     * 5. ImageOptimizationResult 반환
+     *
+     * @param request 이미지 최적화 요청
+     * @return 이미지 최적화 결과
+     * @throws ImageConversionException 압축 중 오류 발생 시
+     */
+    @Override
+    public ImageOptimizationResult compressImage(ImageOptimizationRequest request) {
+        Objects.requireNonNull(request, "ImageOptimizationRequest must not be null");
+
+        Instant startTime = Instant.now();
+
+        try (ResponseInputStream<GetObjectResponse> s3ObjectStream = downloadFromS3AsStream(request.getSourceS3Uri())) {
+            // 1. S3에서 원본 이미지 스트림으로 다운로드
+            logger.info("Downloading source image from S3: {}", request.getSourceS3Uri());
+            long originalSizeBytes = s3ObjectStream.response().contentLength();
+
+            // 2. 스트림으로부터 BufferedImage 로드 (메모리 효율적)
+            BufferedImage sourceImage = loadImage(s3ObjectStream);
+            ImageDimension originalDimension = ImageDimension.of(
+                    sourceImage.getWidth(),
+                    sourceImage.getHeight()
+            );
+
+            // 3. 동일 포맷으로 압축
+            logger.info("Compressing image with format: {} and quality: {}",
+                    request.getSourceFormat(), request.getQuality());
+            byte[] compressedImageBytes = compressImageToSameFormat(
+                    sourceImage,
+                    request.getSourceFormat(),
+                    request.getQuality(),
+                    request.isPreserveMetadata()
+            );
+            long compressedSizeBytes = compressedImageBytes.length;
+
+            // 4. S3에 압축된 이미지 업로드
+            String resultS3Uri = generateCompressedS3Uri(request.getSourceS3Uri());
+            logger.info("Uploading compressed image to S3: {}", resultS3Uri);
+            uploadToS3(resultS3Uri, compressedImageBytes, request.getSourceFormat());
+
+            // 5. 처리 시간 계산
+            Instant endTime = Instant.now();
+            Duration processingTime = Duration.between(startTime, endTime);
+
+            logger.info("Image compression successful. Original: {} bytes, Compressed: {} bytes, Reduction: {}%",
+                    originalSizeBytes, compressedSizeBytes,
+                    String.format("%.2f", (1.0 - (double) compressedSizeBytes / originalSizeBytes) * 100));
+
+            return ImageOptimizationResult.of(
+                    resultS3Uri,
+                    request.getSourceFormat(),
+                    request.getSourceFormat(), // 동일 포맷 유지
+                    request.getStrategy(),
+                    originalSizeBytes,
+                    compressedSizeBytes,
+                    originalDimension,
+                    originalDimension, // 크기 변경 없음
+                    processingTime
+            );
+
+        } catch (IOException e) {
+            throw ImageConversionException.conversionFailed(
+                    "Failed to compress image: " + request.getSourceS3Uri(),
+                    e
+            );
+        } catch (Exception e) {
+            logger.error("Unexpected error during image compression for {}", request.getSourceS3Uri(), e);
+            throw new ImageConversionException(
+                    "Unexpected error during image compression: " + e.getMessage(),
+                    e
+            );
+        }
+    }
+
     // ========== Private Helper Methods ==========
 
     /**
@@ -316,17 +399,91 @@ public class ThumbnailatorImageConversionAdapter implements ImageConversionPort 
      * @return 결과 S3 URI
      */
     private String generateResultS3Uri(String sourceS3Uri) {
+        return generateS3UriWithSuffix(sourceS3Uri, "-webp", ".webp");
+    }
+
+    /**
+     * 압축된 이미지의 S3 URI를 생성합니다.
+     * 원본 파일명에 "-compressed" 접미사를 추가합니다.
+     *
+     * @param sourceS3Uri 원본 S3 URI
+     * @return 압축된 이미지 S3 URI
+     */
+    private String generateCompressedS3Uri(String sourceS3Uri) {
+        return generateS3UriWithSuffix(sourceS3Uri, "-compressed", null);
+    }
+
+    /**
+     * S3 URI에 접미사를 추가하여 새로운 URI를 생성합니다.
+     * 파일명과 확장자를 조작하는 공통 로직을 제공합니다.
+     *
+     * @param sourceS3Uri 원본 S3 URI
+     * @param suffix 파일명에 추가할 접미사 (예: "-compressed", "-webp")
+     * @param newExtension 새로운 확장자 (null이면 원본 확장자 유지, 예: ".webp")
+     * @return 접미사와 확장자가 적용된 S3 URI
+     */
+    private String generateS3UriWithSuffix(String sourceS3Uri, String suffix, String newExtension) {
         int lastDot = sourceS3Uri.lastIndexOf('.');
         int lastSlash = sourceS3Uri.lastIndexOf('/');
 
         if (lastDot > lastSlash && lastDot != -1) {
             // 확장자가 있는 경우
             String baseName = sourceS3Uri.substring(0, lastDot);
-            return baseName + "-webp.webp";
+            String extension = (newExtension != null) ? newExtension : sourceS3Uri.substring(lastDot);
+            return baseName + suffix + extension;
         } else {
             // 확장자가 없는 경우
-            return sourceS3Uri + "-webp.webp";
+            return sourceS3Uri + suffix + (newExtension != null ? newExtension : "");
         }
+    }
+
+    /**
+     * 이미지를 동일 포맷으로 압축합니다.
+     *
+     * @param sourceImage 원본 이미지
+     * @param format 이미지 포맷
+     * @param quality 압축 품질
+     * @param preserveMetadata 메타데이터 보존 여부
+     * @return 압축된 이미지 바이트 배열
+     * @throws IOException 압축 실패 시
+     */
+    private byte[] compressImageToSameFormat(
+            BufferedImage sourceImage,
+            ImageFormat format,
+            CompressionQuality quality,
+            boolean preserveMetadata
+    ) throws IOException {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Builder<BufferedImage> builder = Thumbnails.of(sourceImage)
+                    .scale(1.0) // 크기 변경 없음 (압축만)
+                    .outputFormat(getOutputFormatName(format))
+                    .outputQuality(quality.asFloat());
+
+            // TODO: 메타데이터 보존 로직 구현
+            // if (preserveMetadata) {
+            //     // 포맷별 메타데이터 보존 로직
+            // }
+
+            builder.toOutputStream(outputStream);
+
+            return outputStream.toByteArray();
+        }
+    }
+
+    /**
+     * ImageFormat을 Thumbnailator 출력 포맷명으로 변환합니다.
+     *
+     * @param format 이미지 포맷
+     * @return Thumbnailator 출력 포맷명
+     */
+    private String getOutputFormatName(ImageFormat format) {
+        return switch (format) {
+            case JPEG -> "jpg";
+            case PNG -> "png";
+            case WEBP -> "webp";
+            case GIF -> "gif";
+            default -> throw new IllegalArgumentException("Unsupported format: " + format);
+        };
     }
 
     /**
