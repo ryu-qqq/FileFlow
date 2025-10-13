@@ -111,7 +111,6 @@ public class UploadSessionService implements
      * @throws com.ryuqq.fileflow.domain.upload.exception.PresignedUrlGenerationException Presigned URL 생성 실패 시
      */
     @Override
-    // ❌ @Transactional 제거 - 외부 API 호출이 있으므로 트랜잭션 범위에 포함시키면 안 됨
     public UploadSessionWithUrlResponse createSession(CreateUploadSessionCommand command) {
         if (command == null) {
             throw new IllegalArgumentException("CreateUploadSessionCommand must not be null");
