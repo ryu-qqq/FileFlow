@@ -17,6 +17,7 @@ public final class ImageDimension {
 
     private static final int MAX_DIMENSION = 10000;
     private static final int MIN_DIMENSION = 1;
+    private static final int THUMBNAIL_MAX_DIMENSION = 1000;
 
     private final int width;
     private final int height;
@@ -143,7 +144,7 @@ public final class ImageDimension {
      * @return 너비와 높이가 모두 1000 이하이면 true
      */
     public boolean isThumbnailSize() {
-        return width <= 1000 && height <= 1000;
+        return width <= THUMBNAIL_MAX_DIMENSION && height <= THUMBNAIL_MAX_DIMENSION;
     }
 
     private static void validateDimension(String name, int value) {

@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.image.vo;
 
+import com.ryuqq.fileflow.domain.image.util.FileSizeFormatter;
+
 import java.time.Duration;
 import java.util.Objects;
 
@@ -18,6 +20,7 @@ import java.util.Objects;
 public final class ImageOptimizationResult {
 
     private final String resultS3Uri;
+    private final ImageFormat originalFormat;
     private final ImageFormat resultFormat;
     private final OptimizationStrategy appliedStrategy;
     private final long originalSizeBytes;
@@ -28,6 +31,7 @@ public final class ImageOptimizationResult {
 
     private ImageOptimizationResult(
             String resultS3Uri,
+            ImageFormat originalFormat,
             ImageFormat resultFormat,
             OptimizationStrategy appliedStrategy,
             long originalSizeBytes,
@@ -37,6 +41,7 @@ public final class ImageOptimizationResult {
             Duration processingTime
     ) {
         this.resultS3Uri = resultS3Uri;
+        this.originalFormat = originalFormat;
         this.resultFormat = resultFormat;
         this.appliedStrategy = appliedStrategy;
         this.originalSizeBytes = originalSizeBytes;
@@ -50,6 +55,7 @@ public final class ImageOptimizationResult {
      * ImageOptimizationResult를 생성합니다.
      *
      * @param resultS3Uri 결과 이미지 S3 URI
+     * @param originalFormat 원본 이미지 포맷
      * @param resultFormat 결과 이미지 포맷
      * @param appliedStrategy 적용된 최적화 전략
      * @param originalSizeBytes 원본 파일 크기 (bytes)
@@ -62,6 +68,7 @@ public final class ImageOptimizationResult {
      */
     public static ImageOptimizationResult of(
             String resultS3Uri,
+            ImageFormat originalFormat,
             ImageFormat resultFormat,
             OptimizationStrategy appliedStrategy,
             long originalSizeBytes,
@@ -71,7 +78,8 @@ public final class ImageOptimizationResult {
             Duration processingTime
     ) {
         validateResultS3Uri(resultS3Uri);
-        validateResultFormat(resultFormat);
+        validateImageFormat("Original format", originalFormat);
+        validateImageFormat("Result format", resultFormat);
         validateAppliedStrategy(appliedStrategy);
         validateSize("Original size", originalSizeBytes);
         validateSize("Optimized size", optimizedSizeBytes);
@@ -81,6 +89,7 @@ public final class ImageOptimizationResult {
 
         return new ImageOptimizationResult(
                 resultS3Uri,
+                originalFormat,
                 resultFormat,
                 appliedStrategy,
                 originalSizeBytes,
@@ -147,7 +156,7 @@ public final class ImageOptimizationResult {
      * @return 포맷이 변경되었으면 true
      */
     public boolean wasFormatConverted() {
-        return !resultFormat.equals(appliedStrategy);
+        return !resultFormat.equals(originalFormat);
     }
 
     /**
@@ -168,24 +177,14 @@ public final class ImageOptimizationResult {
         return String.format(
                 "Optimization successful: %s → %s (%.1f%% reduction), " +
                 "Format: %s, Dimension: %s → %s, Processing time: %dms",
-                formatBytes(originalSizeBytes),
-                formatBytes(optimizedSizeBytes),
+                FileSizeFormatter.format(originalSizeBytes),
+                FileSizeFormatter.format(optimizedSizeBytes),
                 getReductionPercentage(),
                 resultFormat,
                 originalDimension,
                 resultDimension,
                 processingTime.toMillis()
         );
-    }
-
-    private String formatBytes(long bytes) {
-        if (bytes < 1024) {
-            return bytes + " B";
-        } else if (bytes < 1024 * 1024) {
-            return String.format("%.2f KB", bytes / 1024.0);
-        } else {
-            return String.format("%.2f MB", bytes / (1024.0 * 1024.0));
-        }
     }
 
     // ========== Validation Methods ==========
@@ -199,9 +198,9 @@ public final class ImageOptimizationResult {
         }
     }
 
-    private static void validateResultFormat(ImageFormat resultFormat) {
-        if (resultFormat == null) {
-            throw new IllegalArgumentException("Result format cannot be null");
+    private static void validateImageFormat(String name, ImageFormat format) {
+        if (format == null) {
+            throw new IllegalArgumentException(name + " cannot be null");
         }
     }
 
@@ -236,6 +235,10 @@ public final class ImageOptimizationResult {
 
     public String getResultS3Uri() {
         return resultS3Uri;
+    }
+
+    public ImageFormat getOriginalFormat() {
+        return originalFormat;
     }
 
     public ImageFormat getResultFormat() {
@@ -276,6 +279,7 @@ public final class ImageOptimizationResult {
         return originalSizeBytes == that.originalSizeBytes &&
                optimizedSizeBytes == that.optimizedSizeBytes &&
                Objects.equals(resultS3Uri, that.resultS3Uri) &&
+               originalFormat == that.originalFormat &&
                resultFormat == that.resultFormat &&
                appliedStrategy == that.appliedStrategy &&
                Objects.equals(originalDimension, that.originalDimension) &&
@@ -285,7 +289,7 @@ public final class ImageOptimizationResult {
 
     @Override
     public int hashCode() {
-        return Objects.hash(resultS3Uri, resultFormat, appliedStrategy, originalSizeBytes,
+        return Objects.hash(resultS3Uri, originalFormat, resultFormat, appliedStrategy, originalSizeBytes,
                 optimizedSizeBytes, originalDimension, resultDimension, processingTime);
     }
 
@@ -293,6 +297,7 @@ public final class ImageOptimizationResult {
     public String toString() {
         return "ImageOptimizationResult{" +
                 "resultS3Uri='" + resultS3Uri + '\'' +
+                ", originalFormat=" + originalFormat +
                 ", resultFormat=" + resultFormat +
                 ", appliedStrategy=" + appliedStrategy +
                 ", originalSizeBytes=" + originalSizeBytes +
