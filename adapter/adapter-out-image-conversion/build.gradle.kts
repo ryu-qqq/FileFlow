@@ -27,6 +27,9 @@ dependencies {
     // This adds WebP reading and writing capabilities
     implementation("org.sejda.imageio:webp-imageio:0.1.6")
 
+    // Metadata Extraction (for EXIF processing)
+    implementation(libs.metadata.extractor)
+
     // Spring Framework
     implementation(libs.spring.context)
     implementation(libs.spring.boot.configuration.processor)
