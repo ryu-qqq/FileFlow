@@ -61,12 +61,15 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
         // PolicyKey에서 tenantId 추출 (tenantId:userType:serviceType)
         String tenantId = session.getPolicyKey().getValue().split(":")[0];
 
+        // uploaderId 추출 (현재는 domain에서 직접 가져옴)
+        String uploaderId = session.getUploaderId();
+
         // 기존 엔티티 조회 (UPDATE 시) 또는 새 엔티티 생성 (INSERT 시)
         Optional<UploadSessionEntity> existingOpt = repository.findBySessionId(session.getSessionId());
 
         UploadSessionEntity entity = existingOpt
-                .map(existing -> updateExistingEntity(existing, session, tenantId))
-                .orElseGet(() -> mapper.toEntity(session, tenantId));
+                .map(existing -> updateExistingEntity(existing, session, tenantId, uploaderId))
+                .orElseGet(() -> mapper.toEntity(session, tenantId, uploaderId));
 
         if (logger.isDebugEnabled()) {
             String json = entity.getMultipartUploadInfoJson();
@@ -160,12 +163,14 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
      * @param existing 기존 엔티티
      * @param session 업데이트할 도메인 객체
      * @param tenantId 테넌트 ID
+     * @param uploaderId 업로더 사용자 ID
      * @return 업데이트된 엔티티
      */
     private UploadSessionEntity updateExistingEntity(
             UploadSessionEntity existing,
             UploadSession session,
-            String tenantId
+            String tenantId,
+            String uploaderId
     ) {
         UploadRequest request = session.getUploadRequest();
 
@@ -174,9 +179,15 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
                 ? request.idempotencyKey().value()
                 : null;
 
+        // CheckSum은 nullable이므로 null 체크
+        // DB에는 "algorithm:value" 형식으로 저장
+        String checksumValue = request.checksum() != null
+                ? request.checksum().algorithm() + ":" + request.checksum().value()
+                : null;
+
         // MultipartUploadInfo는 nullable이므로, mapper가 이미 처리한 엔티티에서 가져오기
         // 새로운 엔티티를 생성할 때는 mapper.toEntity()를 통해 JSON으로 변환된 값을 가져와야 함
-        UploadSessionEntity newEntity = mapper.toEntity(session, tenantId);
+        UploadSessionEntity newEntity = mapper.toEntity(session, tenantId, uploaderId);
 
         // 기존 엔티티의 필드를 업데이트 (ID는 유지)
         // NOTE: UploadSessionEntity에는 setter가 없으므로,
@@ -186,10 +197,12 @@ public class UploadSessionPersistenceAdapter implements UploadSessionPort {
                 session.getSessionId(),
                 idempotencyKeyValue,
                 tenantId,
+                uploaderId,
                 session.getPolicyKey().getValue(),
                 request.fileName(),
                 request.contentType(),
                 request.fileSizeBytes(),
+                checksumValue,
                 session.getStatus(),
                 null, // presignedUrl will be set separately
                 newEntity.getMultipartUploadInfoJson(), // multipartUploadInfo JSON

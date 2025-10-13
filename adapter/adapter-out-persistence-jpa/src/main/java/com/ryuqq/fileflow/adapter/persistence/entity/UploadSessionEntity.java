@@ -49,6 +49,9 @@ public class UploadSessionEntity {
     @Column(name = "tenant_id", nullable = false, length = 50)
     private String tenantId;
 
+    @Column(name = "uploader_id", nullable = false, length = 100)
+    private String uploaderId;
+
     @Column(name = "policy_key", nullable = false, length = 200)
     private String policyKey;
 
@@ -60,6 +63,9 @@ public class UploadSessionEntity {
 
     @Column(name = "file_size", nullable = false)
     private Long fileSize;
+
+    @Column(name = "checksum", length = 500)
+    private String checksum;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -101,10 +107,12 @@ public class UploadSessionEntity {
      * @param sessionId 세션 고유 식별자
      * @param idempotencyKey 멱등성 키 (옵션)
      * @param tenantId 테넌트 ID
+     * @param uploaderId 업로더 사용자 ID
      * @param policyKey 적용된 정책 키
      * @param fileName 원본 파일 이름
      * @param contentType MIME 타입
      * @param fileSize 파일 크기
+     * @param checksum 파일 체크섬 (옵션)
      * @param status 업로드 상태
      * @param presignedUrl S3 Presigned URL
      * @param multipartUploadInfoJson 멀티파트 업로드 정보 JSON
@@ -114,10 +122,12 @@ public class UploadSessionEntity {
             String sessionId,
             String idempotencyKey,
             String tenantId,
+            String uploaderId,
             String policyKey,
             String fileName,
             String contentType,
             Long fileSize,
+            String checksum,
             UploadStatus status,
             String presignedUrl,
             String multipartUploadInfoJson,
@@ -126,10 +136,12 @@ public class UploadSessionEntity {
         this.sessionId = sessionId;
         this.idempotencyKey = idempotencyKey;
         this.tenantId = tenantId;
+        this.uploaderId = uploaderId;
         this.policyKey = policyKey;
         this.fileName = fileName;
         this.contentType = contentType;
         this.fileSize = fileSize;
+        this.checksum = checksum;
         this.status = status;
         this.presignedUrl = presignedUrl;
         this.multipartUploadInfoJson = multipartUploadInfoJson;
@@ -142,10 +154,12 @@ public class UploadSessionEntity {
      * @param sessionId 세션 고유 식별자
      * @param idempotencyKey 멱등성 키 (옵션)
      * @param tenantId 테넌트 ID
+     * @param uploaderId 업로더 사용자 ID
      * @param policyKey 적용된 정책 키
      * @param fileName 원본 파일 이름
      * @param contentType MIME 타입
      * @param fileSize 파일 크기
+     * @param checksum 파일 체크섬 (옵션)
      * @param status 업로드 상태
      * @param presignedUrl S3 Presigned URL
      * @param multipartUploadInfoJson 멀티파트 업로드 정보 JSON
@@ -156,10 +170,12 @@ public class UploadSessionEntity {
             String sessionId,
             String idempotencyKey,
             String tenantId,
+            String uploaderId,
             String policyKey,
             String fileName,
             String contentType,
             Long fileSize,
+            String checksum,
             UploadStatus status,
             String presignedUrl,
             String multipartUploadInfoJson,
@@ -169,10 +185,12 @@ public class UploadSessionEntity {
                 sessionId,
                 idempotencyKey,
                 tenantId,
+                uploaderId,
                 policyKey,
                 fileName,
                 contentType,
                 fileSize,
+                checksum,
                 status,
                 presignedUrl,
                 multipartUploadInfoJson,
@@ -188,10 +206,12 @@ public class UploadSessionEntity {
      * @param sessionId 세션 고유 식별자
      * @param idempotencyKey 멱등성 키 (옵션)
      * @param tenantId 테넌트 ID
+     * @param uploaderId 업로더 사용자 ID
      * @param policyKey 적용된 정책 키
      * @param fileName 원본 파일 이름
      * @param contentType MIME 타입
      * @param fileSize 파일 크기
+     * @param checksum 파일 체크섬 (옵션)
      * @param status 업로드 상태
      * @param presignedUrl S3 Presigned URL
      * @param multipartUploadInfoJson 멀티파트 업로드 정보 JSON
@@ -204,10 +224,12 @@ public class UploadSessionEntity {
             String sessionId,
             String idempotencyKey,
             String tenantId,
+            String uploaderId,
             String policyKey,
             String fileName,
             String contentType,
             Long fileSize,
+            String checksum,
             UploadStatus status,
             String presignedUrl,
             String multipartUploadInfoJson,
@@ -218,10 +240,12 @@ public class UploadSessionEntity {
                 sessionId,
                 idempotencyKey,
                 tenantId,
+                uploaderId,
                 policyKey,
                 fileName,
                 contentType,
                 fileSize,
+                checksum,
                 status,
                 presignedUrl,
                 multipartUploadInfoJson,
@@ -265,6 +289,10 @@ public class UploadSessionEntity {
         return tenantId;
     }
 
+    public String getUploaderId() {
+        return uploaderId;
+    }
+
     public String getPolicyKey() {
         return policyKey;
     }
@@ -279,6 +307,10 @@ public class UploadSessionEntity {
 
     public Long getFileSize() {
         return fileSize;
+    }
+
+    public String getChecksum() {
+        return checksum;
     }
 
     public UploadStatus getStatus() {
@@ -339,10 +371,12 @@ public class UploadSessionEntity {
                 ", sessionId='" + sessionId + '\'' +
                 ", idempotencyKey='" + idempotencyKey + '\'' +
                 ", tenantId='" + tenantId + '\'' +
+                ", uploaderId='" + uploaderId + '\'' +
                 ", policyKey='" + policyKey + '\'' +
                 ", fileName='" + fileName + '\'' +
                 ", contentType='" + contentType + '\'' +
                 ", fileSize=" + fileSize +
+                ", checksum='" + checksum + '\'' +
                 ", status=" + status +
                 ", s3Key='" + s3Key + '\'' +
                 ", uploadStartedAt=" + uploadStartedAt +
