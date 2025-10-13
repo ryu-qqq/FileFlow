@@ -43,13 +43,16 @@ public class OpenApiConfig {
     @Value("${server.port:8080}")
     private String serverPort;
 
+    @Value("${api.contact.email:fileflow@example.com}")
+    private String contactEmail;
+
     @Value("${api.contact.url:https://github.com/your-org/fileflow}")
     private String contactUrl;
 
-    @Value("${api.server.dev.url:https://dev-api.fileflow.com}")
+    @Value("${api.server.dev.url:}")
     private String devServerUrl;
 
-    @Value("${api.server.prod.url:https://api.fileflow.com}")
+    @Value("${api.server.prod.url:}")
     private String prodServerUrl;
 
     /**
@@ -103,7 +106,7 @@ public class OpenApiConfig {
     private Contact createContact() {
         return new Contact()
                 .name("FileFlow Team")
-                .email("fileflow@example.com")
+                .email(contactEmail)
                 .url(contactUrl);
     }
 
@@ -124,19 +127,28 @@ public class OpenApiConfig {
      * @return 서버 정보 목록
      */
     private List<Server> createServers() {
-        Server localServer = new Server()
+        java.util.List<Server> servers = new java.util.ArrayList<>();
+
+        // Local server is always included
+        servers.add(new Server()
                 .url("http://localhost:" + serverPort)
-                .description("Local Development Server");
+                .description("Local Development Server"));
 
-        Server devServer = new Server()
-                .url(devServerUrl)
-                .description("Development Server");
+        // Add dev server only if URL is configured
+        if (devServerUrl != null && !devServerUrl.isBlank()) {
+            servers.add(new Server()
+                    .url(devServerUrl)
+                    .description("Development Server"));
+        }
 
-        Server prodServer = new Server()
-                .url(prodServerUrl)
-                .description("Production Server");
+        // Add prod server only if URL is configured
+        if (prodServerUrl != null && !prodServerUrl.isBlank()) {
+            servers.add(new Server()
+                    .url(prodServerUrl)
+                    .description("Production Server"));
+        }
 
-        return List.of(localServer, devServer, prodServer);
+        return servers;
     }
 
     /**
