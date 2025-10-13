@@ -20,7 +20,7 @@ class FileTypePoliciesIntegrationTest {
     void validateHtmlPolicy() {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, null, null);
         FileAttributes attributes = FileAttributes.builder()
                 .format("html")
                 .sizeBytes(5L * 1024 * 1024)
@@ -36,7 +36,7 @@ class FileTypePoliciesIntegrationTest {
     void validateHtmlPolicyWithNullImageCount() {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, null, null);
         FileAttributes attributes = FileAttributes.builder()
                 .format("html")
                 .sizeBytes(5L * 1024 * 1024)
@@ -52,7 +52,7 @@ class FileTypePoliciesIntegrationTest {
         // given
         ImagePolicy imagePolicy = new ImagePolicy(10, 5,
                 Arrays.asList("jpg"), Dimension.of(1920, 1080));
-        FileTypePolicies policies = FileTypePolicies.of(imagePolicy, null, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(imagePolicy, null, null, null, null);
         FileAttributes attributes = FileAttributes.builder()
                 .format("html")
                 .sizeBytes(5L * 1024 * 1024)
@@ -69,7 +69,7 @@ class FileTypePoliciesIntegrationTest {
     void validateExcelPolicy() {
         // given
         ExcelPolicy excelPolicy = new ExcelPolicy(20, 10);
-        FileTypePolicies policies = FileTypePolicies.of(null, null, excelPolicy, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, null, excelPolicy, null);
         FileAttributes attributes = FileAttributes.builder()
                 .format("xlsx")
                 .sizeBytes(10L * 1024 * 1024)
@@ -85,7 +85,7 @@ class FileTypePoliciesIntegrationTest {
     void validateExcelPolicyWithNullSheetCount() {
         // given
         ExcelPolicy excelPolicy = new ExcelPolicy(20, 10);
-        FileTypePolicies policies = FileTypePolicies.of(null, null, excelPolicy, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, null, excelPolicy, null);
         FileAttributes attributes = FileAttributes.builder()
                 .format("xlsx")
                 .sizeBytes(10L * 1024 * 1024)
@@ -101,7 +101,7 @@ class FileTypePoliciesIntegrationTest {
         // given
         ImagePolicy imagePolicy = new ImagePolicy(10, 5,
                 Arrays.asList("jpg"), Dimension.of(1920, 1080));
-        FileTypePolicies policies = FileTypePolicies.of(imagePolicy, null, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(imagePolicy, null, null, null, null);
         FileAttributes attributes = FileAttributes.builder()
                 .format("xlsx")
                 .sizeBytes(10L * 1024 * 1024)
@@ -118,7 +118,7 @@ class FileTypePoliciesIntegrationTest {
     void validatePdfPolicy() {
         // given
         PdfPolicy pdfPolicy = new PdfPolicy(15, 200);
-        FileTypePolicies policies = FileTypePolicies.of(null, null, null, pdfPolicy);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, null, null, pdfPolicy);
         FileAttributes attributes = FileAttributes.builder()
                 .format("pdf")
                 .sizeBytes(8L * 1024 * 1024)
@@ -134,7 +134,7 @@ class FileTypePoliciesIntegrationTest {
     void validatePdfPolicyWithNullPageCount() {
         // given
         PdfPolicy pdfPolicy = new PdfPolicy(15, 200);
-        FileTypePolicies policies = FileTypePolicies.of(null, null, null, pdfPolicy);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, null, null, pdfPolicy);
         FileAttributes attributes = FileAttributes.builder()
                 .format("pdf")
                 .sizeBytes(8L * 1024 * 1024)
@@ -150,7 +150,7 @@ class FileTypePoliciesIntegrationTest {
         // given
         ImagePolicy imagePolicy = new ImagePolicy(10, 5,
                 Arrays.asList("jpg"), Dimension.of(1920, 1080));
-        FileTypePolicies policies = FileTypePolicies.of(imagePolicy, null, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(imagePolicy, null, null, null, null);
         FileAttributes attributes = FileAttributes.builder()
                 .format("pdf")
                 .sizeBytes(8L * 1024 * 1024)
@@ -167,7 +167,7 @@ class FileTypePoliciesIntegrationTest {
     void getPolicyForHtml() {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, null, null);
 
         // when
         Object policy = policies.getPolicyFor(FileType.HTML);
@@ -181,7 +181,7 @@ class FileTypePoliciesIntegrationTest {
     void getPolicyForExcel() {
         // given
         ExcelPolicy excelPolicy = new ExcelPolicy(20, 10);
-        FileTypePolicies policies = FileTypePolicies.of(null, null, excelPolicy, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, null, excelPolicy, null);
 
         // when
         Object policy = policies.getPolicyFor(FileType.EXCEL);
@@ -195,7 +195,7 @@ class FileTypePoliciesIntegrationTest {
     void getHtmlPolicy() {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, null, null);
 
         // when & then
         assertThat(policies.getHtmlPolicy()).isEqualTo(htmlPolicy);
@@ -206,7 +206,7 @@ class FileTypePoliciesIntegrationTest {
     void getExcelPolicy() {
         // given
         ExcelPolicy excelPolicy = new ExcelPolicy(20, 10);
-        FileTypePolicies policies = FileTypePolicies.of(null, null, excelPolicy, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, null, excelPolicy, null);
 
         // when & then
         assertThat(policies.getExcelPolicy()).isEqualTo(excelPolicy);
@@ -217,7 +217,7 @@ class FileTypePoliciesIntegrationTest {
     void getPdfPolicy() {
         // given
         PdfPolicy pdfPolicy = new PdfPolicy(15, 200);
-        FileTypePolicies policies = FileTypePolicies.of(null, null, null, pdfPolicy);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, null, null, pdfPolicy);
 
         // when & then
         assertThat(policies.getPdfPolicy()).isEqualTo(pdfPolicy);
@@ -229,7 +229,7 @@ class FileTypePoliciesIntegrationTest {
         // given
         ImagePolicy imagePolicy = new ImagePolicy(10, 5,
                 Arrays.asList("jpg"), Dimension.of(1920, 1080));
-        FileTypePolicies policies = FileTypePolicies.of(imagePolicy, null, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(imagePolicy, null, null, null, null);
 
         // when & then
         assertThat(policies.getImagePolicy()).isEqualTo(imagePolicy);
@@ -242,7 +242,7 @@ class FileTypePoliciesIntegrationTest {
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
         ExcelPolicy excelPolicy = new ExcelPolicy(20, 10);
         PdfPolicy pdfPolicy = new PdfPolicy(15, 200);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, excelPolicy, pdfPolicy);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, excelPolicy, pdfPolicy);
 
         // when & then
         assertThat(policies.size()).isEqualTo(3);
@@ -253,8 +253,8 @@ class FileTypePoliciesIntegrationTest {
     void equalsWithSamePolicies() {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
-        FileTypePolicies policies1 = FileTypePolicies.of(null, htmlPolicy, null, null);
-        FileTypePolicies policies2 = FileTypePolicies.of(null, htmlPolicy, null, null);
+        FileTypePolicies policies1 = FileTypePolicies.of(null, null, htmlPolicy, null, null);
+        FileTypePolicies policies2 = FileTypePolicies.of(null, null, htmlPolicy, null, null);
 
         // when & then
         assertThat(policies1).isEqualTo(policies2);
@@ -267,8 +267,8 @@ class FileTypePoliciesIntegrationTest {
         // given
         HtmlPolicy htmlPolicy1 = new HtmlPolicy(10, 100, false);
         HtmlPolicy htmlPolicy2 = new HtmlPolicy(20, 200, false);
-        FileTypePolicies policies1 = FileTypePolicies.of(null, htmlPolicy1, null, null);
-        FileTypePolicies policies2 = FileTypePolicies.of(null, htmlPolicy2, null, null);
+        FileTypePolicies policies1 = FileTypePolicies.of(null, null, htmlPolicy1, null, null);
+        FileTypePolicies policies2 = FileTypePolicies.of(null, null, htmlPolicy2, null, null);
 
         // when & then
         assertThat(policies1).isNotEqualTo(policies2);
@@ -279,7 +279,7 @@ class FileTypePoliciesIntegrationTest {
     void equalsWithNull() {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, null, null);
 
         // when & then
         assertThat(policies).isNotEqualTo(null);
@@ -290,7 +290,7 @@ class FileTypePoliciesIntegrationTest {
     void equalsWithDifferentClass() {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, null, null);
 
         // when & then
         assertThat(policies).isNotEqualTo("different class");
@@ -302,7 +302,7 @@ class FileTypePoliciesIntegrationTest {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
         ExcelPolicy excelPolicy = new ExcelPolicy(20, 10);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, excelPolicy, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, excelPolicy, null);
 
         // when
         String result = policies.toString();
@@ -320,7 +320,7 @@ class FileTypePoliciesIntegrationTest {
     void hashCodeIsConsistent() {
         // given
         HtmlPolicy htmlPolicy = new HtmlPolicy(10, 100, false);
-        FileTypePolicies policies = FileTypePolicies.of(null, htmlPolicy, null, null);
+        FileTypePolicies policies = FileTypePolicies.of(null, null, htmlPolicy, null, null);
 
         // when
         int hashCode1 = policies.hashCode();

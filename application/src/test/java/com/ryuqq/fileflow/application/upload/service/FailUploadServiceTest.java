@@ -59,7 +59,7 @@ class FailUploadServiceTest {
         // Then
         assertNotNull(response);
         assertEquals(sessionId, response.sessionId());
-        assertEquals("FAILED", response.status());
+        assertEquals(UploadStatus.FAILED, response.status());
 
         // 세션이 저장되었는지 확인
         UploadSession savedSession = uploadSessionPort.getSavedSession();
@@ -91,7 +91,7 @@ class FailUploadServiceTest {
 
         // Then
         assertNotNull(response);
-        assertEquals("FAILED", response.status());
+        assertEquals(UploadStatus.FAILED, response.status());
 
         UploadSession savedSession = uploadSessionPort.getSavedSession();
         assertEquals(UploadStatus.FAILED, savedSession.getStatus());

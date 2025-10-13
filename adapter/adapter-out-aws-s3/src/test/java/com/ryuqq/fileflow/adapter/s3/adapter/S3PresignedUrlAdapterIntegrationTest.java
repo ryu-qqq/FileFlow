@@ -103,6 +103,7 @@ class S3PresignedUrlAdapterIntegrationTest {
         S3Properties properties = new S3Properties(
                 TEST_BUCKET,
                 TEST_REGION,
+                null,
                 15L,
                 "uploads",
                 100,

@@ -43,9 +43,10 @@ public class UploadSessionMapper {
      *
      * @param domain UploadSession 도메인 객체
      * @param tenantId 테넌트 ID (PolicyKey에서 추출)
+     * @param uploaderId 업로더 사용자 ID
      * @return UploadSessionEntity
      */
-    public UploadSessionEntity toEntity(UploadSession domain, String tenantId) {
+    public UploadSessionEntity toEntity(UploadSession domain, String tenantId, String uploaderId) {
         logger.debug("========== [MAPPER-TO-ENTITY] UploadSessionMapper.toEntity() called ==========");
         if (domain == null) {
             logger.debug("[MAPPER-TO-ENTITY] domain is null");
@@ -62,6 +63,12 @@ public class UploadSessionMapper {
                 ? request.idempotencyKey().value()
                 : null;
 
+        // CheckSum은 nullable이므로 null 체크
+        // DB에는 "algorithm:value" 형식으로 저장
+        String checksumValue = request.checksum() != null
+                ? request.checksum().algorithm() + ":" + request.checksum().value()
+                : null;
+
         // MultipartUploadInfo를 JSON으로 직렬화 (nullable)
         logger.debug("[MAPPER-TO-ENTITY] Calling serializeMultipartUploadInfo");
         String multipartUploadInfoJson = serializeMultipartUploadInfo(
@@ -73,10 +80,12 @@ public class UploadSessionMapper {
                 domain.getSessionId(),
                 idempotencyKeyValue,
                 tenantId,
+                uploaderId,
                 domain.getPolicyKey().getValue(),
                 request.fileName(),
                 request.contentType(),
                 request.fileSizeBytes(),
+                checksumValue,
                 domain.getStatus(),
                 null, // presignedUrl will be set separately
                 multipartUploadInfoJson,
@@ -112,12 +121,17 @@ public class UploadSessionMapper {
                         ? com.ryuqq.fileflow.domain.upload.vo.IdempotencyKey.of(entity.getIdempotencyKey())
                         : null;
 
+        // CheckSum 변환 (nullable)
+        CheckSum checksum = entity.getChecksum() != null
+                ? parseCheckSum(entity.getChecksum())
+                : null;
+
         UploadRequest uploadRequest = UploadRequest.of(
                 entity.getFileName(),
                 fileType,
                 entity.getFileSize(),
                 entity.getContentType(),
-                null, // checksum not stored in current entity
+                checksum,
                 idempotencyKey
         );
 
@@ -135,7 +149,7 @@ public class UploadSessionMapper {
                     entity.getSessionId(),
                     policyKey,
                     uploadRequest,
-                    entity.getTenantId(), // use tenantId as uploaderId temporarily
+                    entity.getUploaderId(),
                     entity.getStatus(),
                     entity.getCreatedAt(),
                     entity.getExpiresAt(),
@@ -149,7 +163,7 @@ public class UploadSessionMapper {
                 entity.getSessionId(),
                 policyKey,
                 uploadRequest,
-                entity.getTenantId(), // use tenantId as uploaderId temporarily
+                entity.getUploaderId(),
                 entity.getStatus(),
                 entity.getCreatedAt(),
                 entity.getExpiresAt()
@@ -175,6 +189,37 @@ public class UploadSessionMapper {
         }
 
         return PolicyKey.of(parts[0], parts[1], parts[2]);
+    }
+
+    /**
+     * CheckSum 문자열을 파싱하여 CheckSum VO로 변환
+     *
+     * DB 저장 형식:
+     * - "algorithm:value" 형식 (예: "SHA-256:abc123...")
+     * - "value" 형식만 있으면 기본값 SHA-256 사용
+     *
+     * @param checksumString DB에 저장된 checksum 문자열
+     * @return CheckSum VO
+     */
+    private CheckSum parseCheckSum(String checksumString) {
+        if (checksumString == null || checksumString.trim().isEmpty()) {
+            throw new IllegalArgumentException("CheckSum string cannot be null or empty");
+        }
+
+        String trimmed = checksumString.trim();
+
+        // "algorithm:value" 형식인지 확인
+        if (trimmed.contains(":")) {
+            String[] parts = trimmed.split(":", 2);
+            if (parts.length == 2) {
+                String algorithm = parts[0];
+                String value = parts[1];
+                return new CheckSum(value, algorithm);
+            }
+        }
+
+        // 형식이 없으면 기본값 SHA-256으로 처리
+        return CheckSum.sha256(trimmed);
     }
 
     /**

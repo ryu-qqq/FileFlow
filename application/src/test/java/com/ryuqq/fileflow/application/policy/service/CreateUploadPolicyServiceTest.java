@@ -52,6 +52,7 @@ class CreateUploadPolicyServiceTest {
                 null,
                 null,
                 null,
+                null,
                 100,
                 1000,
                 LocalDateTime.now(),
@@ -79,7 +80,7 @@ class CreateUploadPolicyServiceTest {
         // 기존 정책 설정
         UploadPolicy existingPolicy = UploadPolicy.create(
                 policyKey,
-                FileTypePolicies.of(imagePolicy, null, null, null),
+                FileTypePolicies.of(imagePolicy, null, null, null, null),
                 new RateLimiting(100, 1000),
                 LocalDateTime.now(),
                 LocalDateTime.now().plusDays(30)
@@ -89,6 +90,7 @@ class CreateUploadPolicyServiceTest {
         CreateUploadPolicyCommand command = new CreateUploadPolicyCommand(
                 policyKeyDto,
                 imagePolicy,
+                null,
                 null,
                 null,
                 null,

@@ -26,7 +26,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -57,7 +57,7 @@ class UploadPolicyTest {
         // given
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -103,7 +103,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         LocalDateTime effectiveFrom = LocalDateTime.now();
         LocalDateTime effectiveUntil = effectiveFrom.plusMonths(1);
@@ -127,7 +127,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveUntil = LocalDateTime.now().plusMonths(1);
@@ -151,7 +151,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -175,7 +175,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -200,7 +200,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -230,7 +230,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -260,7 +260,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -288,7 +288,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -318,7 +318,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.of(2025, 1, 1, 0, 0);
@@ -345,7 +345,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.of(2025, 1, 1, 0, 0);
@@ -371,7 +371,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -398,7 +398,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -425,7 +425,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().minusDays(1);
@@ -450,7 +450,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().minusDays(1);
@@ -477,10 +477,10 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies1 = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         FileTypePolicies policies2 = FileTypePolicies.of(
-                null,
+                null, null,
                 new HtmlPolicy(20, 50, true),
                 null, null
         );
@@ -505,7 +505,7 @@ class UploadPolicyTest {
         // given
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -529,7 +529,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -553,7 +553,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -585,7 +585,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().minusDays(1);
@@ -610,7 +610,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().plusDays(1);
@@ -635,7 +635,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().minusDays(2);
@@ -660,10 +660,10 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies oldPolicies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         FileTypePolicies newPolicies = FileTypePolicies.of(
-                null,
+                null, null,
                 new HtmlPolicy(20, 50, true),
                 null, null
         );
@@ -695,7 +695,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -722,7 +722,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();
@@ -749,7 +749,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().plusDays(1);
@@ -776,7 +776,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().minusDays(1);
@@ -803,7 +803,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().minusDays(1);
@@ -828,7 +828,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().minusDays(1);
@@ -855,7 +855,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now().plusDays(1);
@@ -882,7 +882,7 @@ class UploadPolicyTest {
         PolicyKey policyKey = PolicyKey.of("b2c", "CONSUMER", "REVIEW");
         FileTypePolicies policies = FileTypePolicies.of(
                 ImagePolicy.createDefault(),
-                null, null, null
+                null, null, null, null
         );
         RateLimiting rateLimiting = new RateLimiting(100, 1000);
         LocalDateTime effectiveFrom = LocalDateTime.now();

@@ -49,7 +49,7 @@ class UpdateUploadPolicyServiceTest {
 
         UploadPolicy existingPolicy = UploadPolicy.create(
                 policyKey,
-                FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null),
+                FileTypePolicies.of(ImagePolicy.createDefault(), null, null, null, null),
                 new RateLimiting(100, 1000),
                 LocalDateTime.now(),
                 LocalDateTime.now().plusDays(30)
@@ -59,6 +59,7 @@ class UpdateUploadPolicyServiceTest {
         UpdateUploadPolicyCommand command = new UpdateUploadPolicyCommand(
                 policyKeyDto,
                 ImagePolicy.createDefault(),
+                null,
                 null,
                 null,
                 null,
@@ -81,6 +82,7 @@ class UpdateUploadPolicyServiceTest {
         UpdateUploadPolicyCommand command = new UpdateUploadPolicyCommand(
                 policyKeyDto,
                 ImagePolicy.createDefault(),
+                null,
                 null,
                 null,
                 null,
