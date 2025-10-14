@@ -8,7 +8,6 @@ import com.ryuqq.fileflow.domain.file.FileRelationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +25,8 @@ import java.util.stream.Collectors;
  * - Entity → Domain FileRelationship 변환
  *
  * 트랜잭션:
- * - @Transactional로 트랜잭션 경계 관리
+ * - 트랜잭션은 Application Layer의 UseCase에서 관리됩니다
+ * - Adapter는 순수한 데이터 접근 계층으로 동작합니다
  * - saveAll은 배치 삽입으로 성능 최적화
  *
  * @author sangwon-ryu
@@ -58,7 +58,6 @@ public class FileRelationshipPersistenceAdapter implements SaveFileRelationshipP
     }
 
     @Override
-    @Transactional
     public FileRelationship save(FileRelationship fileRelationship) {
         Objects.requireNonNull(fileRelationship, "FileRelationship must not be null");
 
@@ -83,7 +82,6 @@ public class FileRelationshipPersistenceAdapter implements SaveFileRelationshipP
     }
 
     @Override
-    @Transactional
     public List<FileRelationship> saveAll(List<FileRelationship> fileRelationships) {
         if (fileRelationships == null || fileRelationships.isEmpty()) {
             throw new IllegalArgumentException("FileRelationships list cannot be null or empty");

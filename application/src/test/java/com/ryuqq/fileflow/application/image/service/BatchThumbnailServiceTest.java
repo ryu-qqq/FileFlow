@@ -89,6 +89,7 @@ class BatchThumbnailServiceTest {
                 imageId,
                 sourceS3Uri,
                 "s3://bucket/thumbnails/small/test-image-123.webp",
+                "abc123def456", // S3 ETag
                 ThumbnailSize.SMALL,
                 ImageDimension.of(2000, 1500),
                 ImageDimension.of(300, 225),
@@ -101,6 +102,7 @@ class BatchThumbnailServiceTest {
                 imageId,
                 sourceS3Uri,
                 "s3://bucket/thumbnails/medium/test-image-123.webp",
+                "xyz789ghi012", // S3 ETag
                 ThumbnailSize.MEDIUM,
                 ImageDimension.of(2000, 1500),
                 ImageDimension.of(800, 600),
@@ -199,6 +201,7 @@ class BatchThumbnailServiceTest {
                 imageId,
                 "s3://bucket/images/test.jpg",
                 String.format("s3://bucket/thumbnails/small/%s.webp", imageId),
+                "test-etag-123", // S3 ETag
                 ThumbnailSize.SMALL,
                 ImageDimension.of(1000, 800),
                 ImageDimension.of(300, 240),
@@ -296,6 +299,7 @@ class BatchThumbnailServiceTest {
                 imageId,
                 "s3://bucket/images/test.jpg",
                 String.format("s3://bucket/thumbnails/small/%s.webp", imageId),
+                "etag-fail-test", // S3 ETag
                 ThumbnailSize.SMALL,
                 ImageDimension.of(1000, 800),
                 ImageDimension.of(300, 240),
@@ -338,6 +342,7 @@ class BatchThumbnailServiceTest {
                 imageId,
                 "s3://my-bucket/path/to/image.jpg",
                 String.format("s3://my-bucket/thumbnails/small/%s.webp", imageId),
+                "parse-uri-etag", // S3 ETag
                 ThumbnailSize.SMALL,
                 ImageDimension.of(1000, 800),
                 ImageDimension.of(300, 240),
