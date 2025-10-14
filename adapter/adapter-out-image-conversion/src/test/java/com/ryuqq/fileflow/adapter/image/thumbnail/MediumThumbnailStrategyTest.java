@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.adapter.image.thumbnail;
 
+import com.ryuqq.fileflow.adapter.image.ResamplingAlgorithm;
+import com.ryuqq.fileflow.adapter.image.config.ImageProcessingConfig;
 import com.ryuqq.fileflow.domain.image.command.GenerateThumbnailCommand.ThumbnailSize;
 import com.ryuqq.fileflow.domain.image.vo.ImageDimension;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +12,8 @@ import java.awt.image.BufferedImage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * MediumThumbnailStrategy 단위 테스트
@@ -29,7 +33,10 @@ class MediumThumbnailStrategyTest {
 
     @BeforeEach
     void setUp() {
-        strategy = new MediumThumbnailStrategy();
+        ImageProcessingConfig config = mock(ImageProcessingConfig.class);
+        when(config.getResamplingAlgorithm()).thenReturn(ResamplingAlgorithm.LANCZOS3);
+        when(config.isSharpenEnabled()).thenReturn(true);
+        strategy = new MediumThumbnailStrategy(config);
     }
 
     @Test
