@@ -21,6 +21,7 @@ jobs:
       - name: Create Jira Issue
         if: github.event.action == 'opened'
         id: create
+        continue-on-error: true
         uses: atlassian/gajira-create@v3
         with:
           project: ${{ secrets.JIRA_PROJECT_KEY }}
@@ -46,6 +47,8 @@ jobs:
             const jiraKey = '${{ steps.create.outputs.issue }}';
             const jiraUrl = '${{ secrets.JIRA_BASE_URL }}';
             
+            console.log(`Created Jira issue: ${jiraKey}`);
+            
             // Add comment with Jira link
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -62,6 +65,30 @@ jobs:
               labels: ['jira-synced']
             });
 
+      - name: Handle Jira Creation Failure
+        if: github.event.action == 'opened' && steps.create.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `⚠️ Jira 이슈 생성에 실패했습니다. Jira 설정을 확인해주세요.\n\n` +
+                    `다음 항목을 확인하세요:\n` +
+                    `- JIRA_BASE_URL, JIRA_USER_EMAIL, JIRA_API_TOKEN, JIRA_PROJECT_KEY Secrets 설정\n` +
+                    `- Jira 프로젝트 권한\n` +
+                    `- Issue Type이 프로젝트에서 사용 가능한지 확인`
+            });
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['jira-sync-failed']
+            });
+
       - name: Find Jira Issue from Comments
         if: github.event.action != 'opened'
         id: find
@@ -69,30 +96,51 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            console.log(`Searching for Jira issue key in issue #${context.issue.number}`);
+            
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number
             });
             
-            // Find Jira issue key from comments
-            const jiraKeyRegex = /\[([A-Z]+-\d+)\]/;
+            console.log(`Found ${comments.data.length} comments`);
+            
+            // Find Jira issue key from comments (matches both [KEY-123] and [KEY-123](url))
+            const jiraKeyRegex = /\[([A-Z]+-\d+)\](?:\([^\)]+\))?/;
+            const simpleKeyRegex = /([A-Z]+-\d+)/;
+            
             for (const comment of comments.data) {
-              const match = comment.body.match(jiraKeyRegex);
+              console.log(`Checking comment by ${comment.user.login}: ${comment.body.substring(0, 100)}`);
+              
+              // First try to find in markdown link format
+              let match = comment.body.match(jiraKeyRegex);
               if (match) {
                 core.setOutput('issue', match[1]);
-                console.log(`Found Jira issue: ${match[1]}`);
+                console.log(`✅ Found Jira issue in markdown link: ${match[1]}`);
                 return;
+              }
+              
+              // If bot comment, try simple format
+              if (comment.user.type === 'Bot' || comment.user.login.includes('[bot]')) {
+                match = comment.body.match(simpleKeyRegex);
+                if (match) {
+                  core.setOutput('issue', match[1]);
+                  console.log(`✅ Found Jira issue in bot comment: ${match[1]}`);
+                  return;
+                }
               }
             }
             
-            // Also check issue title
-            const titleMatch = context.payload.issue.title.match(jiraKeyRegex);
+            // Also check issue title for [KEY-123] format
+            console.log(`Checking issue title: ${context.payload.issue.title}`);
+            const titleMatch = context.payload.issue.title.match(simpleKeyRegex);
             if (titleMatch) {
               core.setOutput('issue', titleMatch[1]);
-              console.log(`Found Jira issue in title: ${titleMatch[1]}`);
+              console.log(`✅ Found Jira issue in title: ${titleMatch[1]}`);
             } else {
-              console.log('No Jira issue key found');
+              console.log('❌ No Jira issue key found');
+              core.warning('Jira issue key not found. The issue may not have been synced initially.');
             }
 
       - name: Update Jira Issue Status (Closed)
