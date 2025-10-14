@@ -1,7 +1,12 @@
 package com.ryuqq.fileflow.adapter.image.config;
 
 import com.ryuqq.fileflow.adapter.image.ResamplingAlgorithm;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.Executor;
 
 /**
  * 이미지 처리 설정 클래스
@@ -11,6 +16,7 @@ import org.springframework.stereotype.Component;
  * - Progressive downsampling 설정
  * - Unsharp Mask 샤프닝 설정
  * - 환경별 최적화 설정 관리
+ * - 썸네일 생성용 전용 ExecutorService 설정
  *
  * 설정 파일 (application.yml):
  * <pre>
@@ -31,6 +37,7 @@ import org.springframework.stereotype.Component;
  * @author sangwon-ryu
  */
 @Component
+@Configuration
 public class ImageProcessingConfig {
 
     /**
@@ -111,6 +118,33 @@ public class ImageProcessingConfig {
             throw new IllegalArgumentException("Sharpen amount must be between 0.0 and 1.0");
         }
         this.sharpenAmount = sharpenAmount;
+    }
+
+    /**
+     * 썸네일 생성용 전용 ExecutorService Bean
+     *
+     * 설정:
+     * - Core Pool Size: 4 (최소 스레드 수)
+     * - Max Pool Size: 8 (최대 스레드 수)
+     * - Queue Capacity: 100 (작업 큐 크기)
+     * - Thread Name Prefix: thumbnail-executor-
+     *
+     * I/O 집약적 작업(S3 업로드)을 위해 별도 스레드 풀 사용
+     * ForkJoinPool.commonPool() 대신 전용 스레드 풀로 리소스 격리
+     *
+     * @return 썸네일 생성용 ExecutorService
+     */
+    @Bean(name = "thumbnailExecutor")
+    public Executor thumbnailExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("thumbnail-executor-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
+        executor.initialize();
+        return executor;
     }
 
     @Override
