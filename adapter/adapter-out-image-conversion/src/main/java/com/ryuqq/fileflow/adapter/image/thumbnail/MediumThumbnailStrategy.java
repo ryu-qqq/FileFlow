@@ -1,12 +1,13 @@
 package com.ryuqq.fileflow.adapter.image.thumbnail;
 
+import com.ryuqq.fileflow.adapter.image.ImageResizer;
+import com.ryuqq.fileflow.adapter.image.ResamplingAlgorithm;
+import com.ryuqq.fileflow.adapter.image.config.ImageProcessingConfig;
 import com.ryuqq.fileflow.domain.image.command.GenerateThumbnailCommand.ThumbnailSize;
 import com.ryuqq.fileflow.domain.image.vo.ImageDimension;
-import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 
 /**
  * Medium 썸네일 생성 전략 (800x800)
@@ -14,6 +15,8 @@ import java.io.IOException;
  * 역할:
  * - 800x800 크기의 썸네일 생성
  * - 고품질 리샘플링 (Lanczos3)
+ * - Progressive downsampling 적용
+ * - Unsharp Mask 샤프닝
  * - Aspect Ratio 유지 옵션 지원
  *
  * 비즈니스 규칙:
@@ -22,8 +25,9 @@ import java.io.IOException;
  * - WebP 포맷으로 출력 (파일명 규칙: {원본명}_medium.webp)
  *
  * 기술:
- * - Thumbnailator 라이브러리 사용
- * - 기본 리샘플링: Lanczos3 (고품질)
+ * - ImageResizer 유틸리티 사용
+ * - 설정 기반 리샘플링 알고리즘
+ * - Progressive downsampling으로 품질 향상
  *
  * @author sangwon-ryu
  */
@@ -32,6 +36,17 @@ public class MediumThumbnailStrategy implements ThumbnailGenerationStrategy {
 
     private static final ThumbnailSize SIZE = ThumbnailSize.MEDIUM;
     private static final ImageDimension TARGET_DIMENSION = SIZE.getDimension();
+
+    private final ImageProcessingConfig imageProcessingConfig;
+
+    /**
+     * Constructor Injection (NO Lombok)
+     *
+     * @param imageProcessingConfig 이미지 처리 설정
+     */
+    public MediumThumbnailStrategy(ImageProcessingConfig imageProcessingConfig) {
+        this.imageProcessingConfig = imageProcessingConfig;
+    }
 
     @Override
     public BufferedImage generateThumbnail(BufferedImage sourceImage, boolean maintainAspectRatio) {
@@ -44,21 +59,18 @@ public class MediumThumbnailStrategy implements ThumbnailGenerationStrategy {
             return sourceImage;
         }
 
-        try {
-            if (maintainAspectRatio) {
-                // Aspect Ratio 유지하면서 800x800 이내로 축소 (fit)
-                return Thumbnails.of(sourceImage)
-                        .size(TARGET_DIMENSION.getWidth(), TARGET_DIMENSION.getHeight())
-                        .asBufferedImage();
-            } else {
-                // Aspect Ratio 무시하고 정확히 800x800으로 크롭/리사이즈
-                return Thumbnails.of(sourceImage)
-                        .forceSize(TARGET_DIMENSION.getWidth(), TARGET_DIMENSION.getHeight())
-                        .asBufferedImage();
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to generate medium thumbnail", e);
-        }
+        // ImageResizer를 사용한 고품질 리사이징
+        ResamplingAlgorithm algorithm = imageProcessingConfig.getResamplingAlgorithm();
+        boolean applySharpen = imageProcessingConfig.isSharpenEnabled();
+
+        return ImageResizer.resize(
+                sourceImage,
+                TARGET_DIMENSION.getWidth(),
+                TARGET_DIMENSION.getHeight(),
+                algorithm,
+                maintainAspectRatio,
+                applySharpen
+        );
     }
 
     @Override
