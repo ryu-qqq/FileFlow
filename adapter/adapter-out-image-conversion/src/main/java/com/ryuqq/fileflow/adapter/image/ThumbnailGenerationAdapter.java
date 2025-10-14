@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -136,10 +137,12 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
             byte[] thumbnailBytes = convertToWebP(thumbnail, DEFAULT_QUALITY);
             long thumbnailSizeBytes = thumbnailBytes.length;
 
-            // 4. 썸네일 파일명 생성 및 S3 업로드
-            String thumbnailFileName = extractFileName(command.sourceS3Uri());
-            String generatedFileName = strategy.generateThumbnailFileName(thumbnailFileName);
-            String thumbnailS3Uri = generateThumbnailS3Uri(command.sourceS3Uri(), generatedFileName);
+            // 4. 썸네일 S3 URI 생성 및 업로드
+            String thumbnailS3Uri = generateThumbnailS3Uri(
+                    command.sourceS3Uri(),
+                    command.thumbnailSize(),
+                    command.imageId()
+            );
 
             logger.info("Uploading thumbnail to S3: {}", thumbnailS3Uri);
             uploadToS3(thumbnailS3Uri, thumbnailBytes, ImageFormat.WEBP);
@@ -210,46 +213,70 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
                     sourceImage.getHeight()
             );
 
-            // 2. 각 Command별로 썸네일 생성
-            for (GenerateThumbnailCommand command : commands) {
-                Instant cmdStartTime = Instant.now();
+            // 2. 각 Command별로 썸네일 생성 (병렬 처리)
+            List<CompletableFuture<ThumbnailGenerationResult>> futures = commands.stream()
+                    .map(command -> CompletableFuture.supplyAsync(() -> {
+                        Instant cmdStartTime = Instant.now();
 
-                ThumbnailGenerationStrategy strategy = getStrategy(command.thumbnailSize());
-                BufferedImage thumbnail = strategy.generateThumbnail(sourceImage, command.maintainAspectRatio());
+                        try {
+                            ThumbnailGenerationStrategy strategy = getStrategy(command.thumbnailSize());
 
-                ImageDimension thumbnailDimension = ImageDimension.of(
-                        thumbnail.getWidth(),
-                        thumbnail.getHeight()
-                );
+                            // 썸네일 생성 (sourceImage 읽기는 thread-safe)
+                            BufferedImage thumbnail = strategy.generateThumbnail(sourceImage, command.maintainAspectRatio());
 
-                byte[] thumbnailBytes = convertToWebP(thumbnail, DEFAULT_QUALITY);
-                long thumbnailSizeBytes = thumbnailBytes.length;
+                            ImageDimension thumbnailDimension = ImageDimension.of(
+                                    thumbnail.getWidth(),
+                                    thumbnail.getHeight()
+                            );
 
-                String thumbnailFileName = extractFileName(command.sourceS3Uri());
-                String generatedFileName = strategy.generateThumbnailFileName(thumbnailFileName);
-                String thumbnailS3Uri = generateThumbnailS3Uri(command.sourceS3Uri(), generatedFileName);
+                            // WebP 변환
+                            byte[] thumbnailBytes = convertToWebP(thumbnail, DEFAULT_QUALITY);
+                            long thumbnailSizeBytes = thumbnailBytes.length;
 
-                uploadToS3(thumbnailS3Uri, thumbnailBytes, ImageFormat.WEBP);
+                            // S3 URI 생성
+                            String thumbnailS3Uri = generateThumbnailS3Uri(
+                                    command.sourceS3Uri(),
+                                    command.thumbnailSize(),
+                                    command.imageId()
+                            );
 
-                Duration processingTime = Duration.between(cmdStartTime, Instant.now());
+                            // S3 업로드 (병렬 처리)
+                            uploadToS3(thumbnailS3Uri, thumbnailBytes, ImageFormat.WEBP);
 
-                results.add(ThumbnailGenerationResult.of(
-                        command.imageId(),
-                        command.sourceS3Uri(),
-                        thumbnailS3Uri,
-                        command.thumbnailSize(),
-                        originalDimension,
-                        thumbnailDimension,
-                        originalSizeBytes,
-                        thumbnailSizeBytes,
-                        processingTime
-                ));
+                            Duration processingTime = Duration.between(cmdStartTime, Instant.now());
 
-                logger.info("Generated {} thumbnail: {} bytes", command.thumbnailSize(), thumbnailSizeBytes);
-            }
+                            logger.info("Generated {} thumbnail: {} bytes", command.thumbnailSize(), thumbnailSizeBytes);
+
+                            return ThumbnailGenerationResult.of(
+                                    command.imageId(),
+                                    command.sourceS3Uri(),
+                                    thumbnailS3Uri,
+                                    command.thumbnailSize(),
+                                    originalDimension,
+                                    thumbnailDimension,
+                                    originalSizeBytes,
+                                    thumbnailSizeBytes,
+                                    processingTime
+                            );
+
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to generate thumbnail for " + command.thumbnailSize(), e);
+                        }
+                    }))
+                    .collect(Collectors.toList());
+
+            // 모든 썸네일 생성 작업 완료 대기
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            // 결과 수집
+            results = futures.stream()
+                    .map(CompletableFuture::join)
+                    .collect(Collectors.toList());
 
             Duration totalProcessingTime = Duration.between(startTime, Instant.now());
-            logger.info("Batch thumbnail generation completed. Total time: {}ms", totalProcessingTime.toMillis());
+            logger.info("Batch thumbnail generation completed. Total time: {}ms, Average per thumbnail: {}ms",
+                    totalProcessingTime.toMillis(),
+                    totalProcessingTime.toMillis() / commands.size());
 
             return results;
 
@@ -392,33 +419,28 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
     }
 
     /**
-     * S3 URI에서 파일명을 추출합니다.
-     *
-     * @param s3Uri S3 URI
-     * @return 파일명
-     */
-    private String extractFileName(String s3Uri) {
-        int lastSlash = s3Uri.lastIndexOf('/');
-        if (lastSlash == -1) {
-            throw new IllegalArgumentException("Invalid S3 URI format: " + s3Uri);
-        }
-        return s3Uri.substring(lastSlash + 1);
-    }
-
-    /**
      * 썸네일 S3 URI를 생성합니다.
+     * 경로 구조: s3://bucket/thumbnails/{size}/{imageId}.webp
      *
-     * @param sourceS3Uri 원본 S3 URI
-     * @param thumbnailFileName 썸네일 파일명
+     * 예시:
+     * - Small: s3://bucket/thumbnails/small/abc-123-def.webp
+     * - Medium: s3://bucket/thumbnails/medium/abc-123-def.webp
+     *
+     * @param sourceS3Uri 원본 S3 URI (버킷 정보 추출용)
+     * @param thumbnailSize 썸네일 크기 (small, medium)
+     * @param imageId 이미지 ID
      * @return 썸네일 S3 URI
      */
-    private String generateThumbnailS3Uri(String sourceS3Uri, String thumbnailFileName) {
-        int lastSlash = sourceS3Uri.lastIndexOf('/');
-        if (lastSlash == -1) {
-            throw new IllegalArgumentException("Invalid S3 URI format: " + sourceS3Uri);
-        }
-        String basePath = sourceS3Uri.substring(0, lastSlash + 1);
-        return basePath + thumbnailFileName;
+    private String generateThumbnailS3Uri(String sourceS3Uri, ThumbnailSize thumbnailSize, String imageId) {
+        S3Location sourceLocation = parseS3Uri(sourceS3Uri);
+
+        // thumbnails/{size}/{imageId}.webp 형식으로 Key 생성
+        String thumbnailKey = String.format("thumbnails/%s/%s.webp",
+                thumbnailSize.name().toLowerCase(),
+                imageId
+        );
+
+        return String.format("s3://%s/%s", sourceLocation.bucket(), thumbnailKey);
     }
 
     /**
