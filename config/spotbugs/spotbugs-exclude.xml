@@ -33,4 +33,18 @@
         <Class name="~.*Configuration"/>
         <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>
+
+    <!-- ========================================
+         Adapter and Strategy Classes - Constructor Validation
+         Adapters and Strategy implementations validate parameters
+         in constructors which is a correct defensive programming practice.
+         CT_CONSTRUCTOR_THROW warnings are acceptable for these classes.
+         ======================================== -->
+    <Match>
+        <Or>
+            <Class name="~.*Adapter"/>
+            <Class name="~.*Strategy"/>
+        </Or>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 </FindBugsFilter>
