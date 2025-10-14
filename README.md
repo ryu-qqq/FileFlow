@@ -85,6 +85,13 @@ FileFlow는 다양한 파일 타입(이미지, HTML, Excel, PDF)에 대한 업�
 
 상세한 프로젝트 문서는 [docs/file-flow](./docs/file-flow) 디렉토리를 참조하세요.
 
+### 🔗 Jira 통합
+
+GitHub 이슈를 자동으로 Jira Task로 동기화할 수 있습니다:
+- **설정 가이드**: [docs/JIRA_INTEGRATION.md](./docs/JIRA_INTEGRATION.md)
+- **기능**: 이슈 생성/수정/닫기 자동 동기화
+- **설정 시간**: 약 5분
+
 ## 🏛️ 아키텍처 원칙
 
 ### Hexagonal Architecture
