@@ -102,6 +102,38 @@ fileflow:
     retry-interval: 1500
 
 # ========================================
+# Image Processing Configuration
+# ========================================
+image:
+  processing:
+    # 리샘플링 알고리즘 (NEAREST_NEIGHBOR, BILINEAR, BICUBIC, LANCZOS3)
+    # - NEAREST_NEIGHBOR: 가장 빠름, 최저 품질
+    # - BILINEAR: 빠름, 중간 품질
+    # - BICUBIC: 느림, 높은 품질
+    # - LANCZOS3: 가장 느림, 최고 품질 (권장)
+    resampling-algorithm: LANCZOS3
+
+    # Progressive downsampling 활성화 여부
+    # true: 큰 이미지를 단계적으로 축소하여 품질 향상
+    # false: 한 번에 타겟 크기로 축소
+    progressive-downsampling-enabled: true
+
+    # Progressive downsampling 임계값
+    # 원본이 타겟의 N배 이상일 때 단계적 축소 적용
+    progressive-threshold: 2.0
+
+    # Unsharp Mask 샤프닝 활성화 여부
+    # true: 리사이징 후 선명도 보정 적용
+    # false: 샤프닝 비활성화
+    sharpen-enabled: true
+
+    # 샤프닝 강도 (0.0 ~ 1.0)
+    # 0.0: 샤프닝 없음
+    # 0.5: 중간 강도 (권장)
+    # 1.0: 최대 샤프닝 (노이즈 증폭 위험)
+    sharpen-amount: 0.5
+
+# ========================================
 # Management & Actuator Configuration
 # ========================================
 management:

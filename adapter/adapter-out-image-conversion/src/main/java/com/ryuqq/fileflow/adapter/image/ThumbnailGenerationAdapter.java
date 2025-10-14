@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -65,6 +66,7 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
 
     private final S3Client s3Client;
     private final Map<ThumbnailSize, ThumbnailGenerationStrategy> strategyMap;
+    private final Executor thumbnailExecutor;
 
     /**
      * Constructor Injection (NO Lombok)
@@ -76,12 +78,15 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
      *
      * @param s3Client AWS S3 Client
      * @param strategies 썸네일 생성 전략 리스트 (Spring 자동 주입)
+     * @param thumbnailExecutor 썸네일 생성용 ExecutorService (Spring 자동 주입)
      */
     public ThumbnailGenerationAdapter(
             S3Client s3Client,
-            List<ThumbnailGenerationStrategy> strategies
+            List<ThumbnailGenerationStrategy> strategies,
+            Executor thumbnailExecutor
     ) {
         this.s3Client = Objects.requireNonNull(s3Client, "S3Client must not be null");
+        this.thumbnailExecutor = Objects.requireNonNull(thumbnailExecutor, "ExecutorService must not be null");
         Objects.requireNonNull(strategies, "ThumbnailGenerationStrategy list must not be null");
 
         // ThumbnailGenerationStrategy 구현체들을 ThumbnailSize로 매핑
@@ -117,7 +122,11 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
             // 1. S3에서 원본 이미지 다운로드
             long originalSizeBytes = s3ObjectStream.response().contentLength();
             byte[] sourceImageBytes = s3ObjectStream.readAllBytes();
-            BufferedImage sourceImage = loadImage(new ByteArrayInputStream(sourceImageBytes));
+            
+            BufferedImage sourceImage;
+            try (ByteArrayInputStream imageStream = new ByteArrayInputStream(sourceImageBytes)) {
+                sourceImage = loadImage(imageStream);
+            }
 
             ImageDimension originalDimension = ImageDimension.of(
                     sourceImage.getWidth(),
@@ -145,10 +154,12 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
             );
 
             logger.info("Uploading thumbnail to S3: {}", thumbnailS3Uri);
-            uploadToS3(thumbnailS3Uri, thumbnailBytes, ImageFormat.WEBP);
+            String eTag = uploadToS3(thumbnailS3Uri, thumbnailBytes, ImageFormat.WEBP);
 
             // 5. 처리 시간 계산
             Duration processingTime = Duration.between(startTime, Instant.now());
+            
+            logger.debug("S3 upload completed. ETag: {}", eTag);
 
             logger.info("Thumbnail generation successful. Original: {} bytes, Thumbnail: {} bytes, Reduction: {:.2f}%",
                     originalSizeBytes, thumbnailSizeBytes,
@@ -158,6 +169,7 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
                     command.imageId(),
                     command.sourceS3Uri(),
                     thumbnailS3Uri,
+                    eTag,
                     command.thumbnailSize(),
                     originalDimension,
                     thumbnailDimension,
@@ -206,14 +218,18 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
             // 1. S3에서 원본 이미지를 한 번만 다운로드
             long originalSizeBytes = s3ObjectStream.response().contentLength();
             byte[] sourceImageBytes = s3ObjectStream.readAllBytes();
-            BufferedImage sourceImage = loadImage(new ByteArrayInputStream(sourceImageBytes));
+            
+            BufferedImage sourceImage;
+            try (ByteArrayInputStream imageStream = new ByteArrayInputStream(sourceImageBytes)) {
+                sourceImage = loadImage(imageStream);
+            }
 
             ImageDimension originalDimension = ImageDimension.of(
                     sourceImage.getWidth(),
                     sourceImage.getHeight()
             );
 
-            // 2. 각 Command별로 썸네일 생성 (병렬 처리)
+            // 2. 각 Command별로 썸네일 생성 (병렬 처리 with dedicated ExecutorService)
             List<CompletableFuture<ThumbnailGenerationResult>> futures = commands.stream()
                     .map(command -> CompletableFuture.supplyAsync(() -> {
                         Instant cmdStartTime = Instant.now();
@@ -241,16 +257,18 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
                             );
 
                             // S3 업로드 (병렬 처리)
-                            uploadToS3(thumbnailS3Uri, thumbnailBytes, ImageFormat.WEBP);
+                            String eTag = uploadToS3(thumbnailS3Uri, thumbnailBytes, ImageFormat.WEBP);
 
                             Duration processingTime = Duration.between(cmdStartTime, Instant.now());
 
-                            logger.info("Generated {} thumbnail: {} bytes", command.thumbnailSize(), thumbnailSizeBytes);
+                            logger.info("Generated {} thumbnail: {} bytes (ETag: {})", 
+                                    command.thumbnailSize(), thumbnailSizeBytes, eTag);
 
                             return ThumbnailGenerationResult.of(
                                     command.imageId(),
                                     command.sourceS3Uri(),
                                     thumbnailS3Uri,
+                                    eTag,
                                     command.thumbnailSize(),
                                     originalDimension,
                                     thumbnailDimension,
@@ -260,9 +278,12 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
                             );
 
                         } catch (IOException e) {
-                            throw new RuntimeException("Failed to generate thumbnail for " + command.thumbnailSize(), e);
+                            throw ImageConversionException.conversionFailed(
+                                    "Failed to generate thumbnail for " + command.thumbnailSize(),
+                                    e
+                            );
                         }
-                    }))
+                    }, thumbnailExecutor))
                     .collect(Collectors.toList());
 
             // 모든 썸네일 생성 작업 완료 대기
@@ -334,14 +355,15 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
     }
 
     /**
-     * S3에 파일을 업로드합니다.
+     * S3에 파일을 업로드하고 ETag를 반환합니다.
      *
      * @param s3Uri S3 URI (s3://bucket/key)
      * @param data 파일 데이터
      * @param format 이미지 포맷
+     * @return S3 ETag (체크섬)
      * @throws IOException 업로드 실패 시
      */
-    private void uploadToS3(String s3Uri, byte[] data, ImageFormat format) throws IOException {
+    private String uploadToS3(String s3Uri, byte[] data, ImageFormat format) throws IOException {
         S3Location location = parseS3Uri(s3Uri);
 
         try {
@@ -352,7 +374,11 @@ public class ThumbnailGenerationAdapter implements GenerateThumbnailUseCase {
                     .contentLength((long) data.length)
                     .build();
 
-            s3Client.putObject(request, RequestBody.fromBytes(data));
+            var response = s3Client.putObject(request, RequestBody.fromBytes(data));
+            
+            // S3 ETag 반환 (따옴표 제거)
+            String eTag = response.eTag();
+            return eTag != null ? eTag.replace("\"", "") : null;
 
         } catch (S3Exception e) {
             throw ImageConversionException.s3OperationFailed("upload", s3Uri, e);

@@ -17,6 +17,7 @@ import java.time.Duration;
  * - 썸네일 크기 정보
  * - 원본 대비 크기 정보
  * - 처리 시간
+ * - S3 ETag (파일 무결성 검증용)
  *
  * @author sangwon-ryu
  */
@@ -24,6 +25,7 @@ public record ThumbnailGenerationResult(
         String imageId,
         String sourceS3Uri,
         String thumbnailS3Uri,
+        String s3ETag,
         ThumbnailSize thumbnailSize,
         ImageDimension originalDimension,
         ImageDimension thumbnailDimension,
@@ -71,6 +73,7 @@ public record ThumbnailGenerationResult(
      * @param imageId 이미지 ID
      * @param sourceS3Uri 원본 이미지 S3 URI
      * @param thumbnailS3Uri 썸네일 이미지 S3 URI
+     * @param s3ETag S3 ETag (체크섬)
      * @param thumbnailSize 썸네일 크기
      * @param originalDimension 원본 이미지 크기
      * @param thumbnailDimension 썸네일 이미지 크기
@@ -83,6 +86,7 @@ public record ThumbnailGenerationResult(
             String imageId,
             String sourceS3Uri,
             String thumbnailS3Uri,
+            String s3ETag,
             ThumbnailSize thumbnailSize,
             ImageDimension originalDimension,
             ImageDimension thumbnailDimension,
@@ -94,6 +98,7 @@ public record ThumbnailGenerationResult(
                 imageId,
                 sourceS3Uri,
                 thumbnailS3Uri,
+                s3ETag,
                 thumbnailSize,
                 originalDimension,
                 thumbnailDimension,
