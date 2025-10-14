@@ -50,11 +50,15 @@ public class UploadSessionEntity {
      * - UPDATE 시 WHERE 절에 version 조건이 자동 추가
      * - 다른 트랜잭션이 먼저 UPDATE 했다면 OptimisticLockException 발생
      *
+     * 초기값:
+     * - 0L로 명시적 초기화하여 null 방지
+     * - JPA가 persist 시 자동으로 관리
+     *
      * @see jakarta.persistence.OptimisticLockException
      */
     @Version
     @Column(name = "version", nullable = false)
-    private Long version;
+    private Long version = 0L;
 
     @Column(name = "session_id", nullable = false, unique = true, length = 36)
     private String sessionId;

@@ -23,6 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -233,9 +236,28 @@ public class BatchThumbnailService implements GenerateBatchThumbnailsUseCase {
         // FileSize 생성
         FileSize fileSize = FileSize.ofBytes(result.thumbnailSizeBytes());
 
-        // CheckSum 생성 (썸네일의 경우 임시로 빈 SHA-256 사용)
-        // 실제로는 S3 ETag를 가져와서 사용해야 함
-        CheckSum checksum = CheckSum.sha256("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        // CheckSum 생성 (S3 ETag 사용)
+        // S3 ETag는 단일 파트 업로드의 경우 MD5 해시, 멀티파트 업로드의 경우 특별한 형식 (예: abc-3)
+        // ETag 형식을 확인하여 처리
+        CheckSum checksum;
+        if (result.s3ETag() != null && !result.s3ETag().isEmpty()) {
+            String eTag = result.s3ETag();
+            // 멀티파트 업로드 ETag는 하이픈(-)이 포함됨 (예: "abc123def456-3")
+            // 이 경우 전체를 MD5처럼 저장 (실제 MD5는 아니지만 식별자로 사용)
+            // 단일 파트 업로드는 순수 MD5 해시 (32자 hex)
+            if (eTag.matches("^[0-9a-fA-F]{32}$")) {
+                // 표준 MD5 형식
+                checksum = CheckSum.md5(eTag);
+            } else {
+                // 멀티파트 ETag 또는 비표준 형식 - SHA-256으로 해싱하여 저장
+                logger.debug("Non-standard ETag format detected: {}. Converting to SHA-256.", eTag);
+                checksum = CheckSum.sha256(computeSha256(eTag));
+            }
+        } else {
+            // Fallback: 빈 SHA-256 (권장하지 않음, 로그 경고)
+            logger.warn("S3 ETag is null for thumbnail: {}. Using fallback checksum.", result.thumbnailS3Uri());
+            checksum = CheckSum.sha256("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        }
 
         return FileAsset.create(
                 sourceImageId,  // sessionId로 원본 이미지 ID 사용
@@ -299,5 +321,33 @@ public class BatchThumbnailService implements GenerateBatchThumbnailsUseCase {
         String key = withoutPrefix.substring(firstSlash + 1);
 
         return S3Location.of(bucket, key);
+    }
+
+    /**
+     * 문자열의 SHA-256 해시를 계산합니다.
+     *
+     * @param input 입력 문자열
+     * @return SHA-256 해시 (hex 문자열)
+     */
+    private String computeSha256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            
+            // 바이트 배열을 hex 문자열로 변환
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+            
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-256은 표준 알고리즘이므로 이 예외는 발생하지 않아야 함
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
     }
 }
