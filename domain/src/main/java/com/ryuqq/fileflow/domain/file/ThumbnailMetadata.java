@@ -3,14 +3,14 @@ package com.ryuqq.fileflow.domain.file;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * 썸네일 관계의 메타데이터를 표현하는 Value Object
  *
- * 불변성:
- * - 모든 필드는 final로 선언
- * - 생성 후 변경 불가
+ * Java Record 사용:
+ * - 불변성 보장 (모든 필드 final)
+ * - equals/hashCode/toString 자동 생성
+ * - 보일러플레이트 코드 제거
  *
  * 비즈니스 규칙:
  * - 썸네일 크기 정보 (width, height) 필수
@@ -19,52 +19,26 @@ import java.util.Objects;
  *
  * @author sangwon-ryu
  */
-public final class ThumbnailMetadata {
+public record ThumbnailMetadata(
+        int width,
+        int height,
+        String algorithm,
+        LocalDateTime createdAt
+) {
 
     private static final String WIDTH_KEY = "width";
     private static final String HEIGHT_KEY = "height";
     private static final String ALGORITHM_KEY = "algorithm";
     private static final String CREATED_AT_KEY = "createdAt";
 
-    private final int width;
-    private final int height;
-    private final String algorithm;
-    private final LocalDateTime createdAt;
-
-    private ThumbnailMetadata(
-            int width,
-            int height,
-            String algorithm,
-            LocalDateTime createdAt
-    ) {
-        this.width = width;
-        this.height = height;
-        this.algorithm = algorithm;
-        this.createdAt = createdAt;
-    }
-
     /**
-     * 썸네일 메타데이터를 생성합니다.
-     *
-     * @param width 썸네일 너비
-     * @param height 썸네일 높이
-     * @param algorithm 리샘플링 알고리즘
-     * @param createdAt 생성 시간
-     * @return ThumbnailMetadata 인스턴스
-     * @throws IllegalArgumentException 유효하지 않은 입력 시
+     * Compact Constructor - 유효성 검증
      */
-    public static ThumbnailMetadata of(
-            int width,
-            int height,
-            String algorithm,
-            LocalDateTime createdAt
-    ) {
+    public ThumbnailMetadata {
         validateWidth(width);
         validateHeight(height);
         validateAlgorithm(algorithm);
         validateCreatedAt(createdAt);
-
-        return new ThumbnailMetadata(width, height, algorithm, createdAt);
     }
 
     /**
@@ -85,7 +59,7 @@ public final class ThumbnailMetadata {
             String algorithm = (String) metadata.get(ALGORITHM_KEY);
             LocalDateTime createdAt = (LocalDateTime) metadata.get(CREATED_AT_KEY);
 
-            return of(width, height, algorithm, createdAt);
+            return new ThumbnailMetadata(width, height, algorithm, createdAt);
         } catch (ClassCastException | NullPointerException e) {
             throw new IllegalArgumentException("Invalid thumbnail metadata format", e);
         }
@@ -167,54 +141,9 @@ public final class ThumbnailMetadata {
         if (createdAt == null) {
             throw new IllegalArgumentException("CreatedAt cannot be null");
         }
-        if (createdAt.isAfter(LocalDateTime.now())) {
+        // 시간 검증 개선: 1분 여유 추가 (테스트 안정성 및 분산 환경 대응)
+        if (createdAt.isAfter(LocalDateTime.now().plusMinutes(1))) {
             throw new IllegalArgumentException("CreatedAt cannot be in the future");
         }
-    }
-
-    // ========== Getters ==========
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    // ========== Override Methods ==========
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ThumbnailMetadata that = (ThumbnailMetadata) o;
-        return width == that.width
-                && height == that.height
-                && Objects.equals(algorithm, that.algorithm)
-                && Objects.equals(createdAt, that.createdAt);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(width, height, algorithm, createdAt);
-    }
-
-    @Override
-    public String toString() {
-        return "ThumbnailMetadata{" +
-                "width=" + width +
-                ", height=" + height +
-                ", algorithm='" + algorithm + '\'' +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }
