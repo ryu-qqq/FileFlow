@@ -104,7 +104,8 @@ public class DeleteFileAssetService implements DeleteFileAssetUseCase {
      * 여러 FileAsset을 일괄 삭제합니다.
      *
      * 각 파일에 대해 cascade 삭제를 수행하며,
-     * 개별 파일 삭제 실패 시에도 다른 파일 삭제를 계속 진행합니다.
+     * 모든 삭제 작업은 하나의 트랜잭션으로 처리됩니다.
+     * 하나라도 실패하면 전체 롤백됩니다.
      *
      * @param fileIds 삭제할 파일 ID 목록
      * @return 성공적으로 삭제된 파일 개수
@@ -117,12 +118,22 @@ public class DeleteFileAssetService implements DeleteFileAssetUseCase {
         int deletedCount = 0;
 
         for (FileId fileId : fileIds) {
-            try {
-                deleteFileAsset(fileId);
+            // 1. FileAsset 존재 확인
+            loadFileAssetPort.getById(fileId);
+
+            // 2. 관련된 모든 FileRelationship 삭제 (cascade)
+            int deletedRelationships = deleteFileRelationshipPort.deleteByFileId(fileId);
+            log.debug("Deleted {} file relationships for FileId: {}", deletedRelationships, fileId.value());
+
+            // 3. FileAsset 삭제
+            boolean deleted = deleteFileAssetPort.deleteById(fileId);
+
+            if (deleted) {
+                log.info("Successfully deleted FileAsset: {} (cascade deleted {} relationships)",
+                        fileId.value(), deletedRelationships);
                 deletedCount++;
-            } catch (Exception e) {
-                log.error("Failed to delete FileAsset: {}", fileId.value(), e);
-                // 계속 진행 (부분 실패 허용)
+            } else {
+                log.warn("FileAsset deletion returned false for FileId: {}", fileId.value());
             }
         }
 
