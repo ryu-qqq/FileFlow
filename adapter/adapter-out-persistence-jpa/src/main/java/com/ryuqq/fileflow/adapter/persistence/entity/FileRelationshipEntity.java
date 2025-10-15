@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -28,15 +29,24 @@ import java.util.Objects;
  * - Entity는 데이터 저장을 위한 매핑만 담당합니다
  * - Lombok을 사용하지 않으므로 모든 메서드를 수동으로 구현합니다
  *
- * @author sangwon-ryu
+ * @author sangwon-ryu (sangwon@company.com)
+ * @since 2025-10-14
  */
 @Entity
-@Table(name = "file_relationship", indexes = {
-        @Index(name = "idx_source_file_id", columnList = "source_file_id"),
-        @Index(name = "idx_target_file_id", columnList = "target_file_id"),
-        @Index(name = "idx_relationship_type", columnList = "relationship_type"),
-        @Index(name = "idx_created_at", columnList = "created_at")
-})
+@Table(name = "file_relationship",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_file_relationship",
+                        columnNames = {"source_file_id", "target_file_id", "relationship_type"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_source_file_id", columnList = "source_file_id"),
+                @Index(name = "idx_target_file_id", columnList = "target_file_id"),
+                @Index(name = "idx_relationship_type", columnList = "relationship_type"),
+                @Index(name = "idx_created_at", columnList = "created_at")
+        }
+)
 public class FileRelationshipEntity {
 
     @Id
@@ -110,6 +120,36 @@ public class FileRelationshipEntity {
         );
     }
 
+    /**
+     * DB에서 로드된 파일 관계 엔티티를 재구성하는 factory method
+     *
+     * @param id 엔티티 ID
+     * @param sourceFileId 원본 파일 ID
+     * @param targetFileId 대상 파일 ID
+     * @param relationshipType 관계 유형
+     * @param relationshipMetadata 관계 메타데이터
+     * @param createdAt 생성 시간
+     * @return 재구성된 FileRelationshipEntity
+     */
+    public static FileRelationshipEntity reconstitute(
+            Long id,
+            String sourceFileId,
+            String targetFileId,
+            FileRelationshipTypeEntity relationshipType,
+            Map<String, Object> relationshipMetadata,
+            LocalDateTime createdAt
+    ) {
+        FileRelationshipEntity entity = new FileRelationshipEntity(
+                sourceFileId,
+                targetFileId,
+                relationshipType,
+                relationshipMetadata
+        );
+        entity.id = id;
+        entity.createdAt = createdAt;
+        return entity;
+    }
+
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) {
@@ -178,6 +218,8 @@ public class FileRelationshipEntity {
      */
     public enum FileRelationshipTypeEntity {
         THUMBNAIL,
+        THUMBNAIL_SMALL,
+        THUMBNAIL_MEDIUM,
         OPTIMIZED,
         CONVERTED,
         DERIVATIVE,
