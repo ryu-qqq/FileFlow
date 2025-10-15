@@ -234,7 +234,7 @@ jobs:
             });
 
       - name: Find Jira Issue from Comments
-        if: github.event.action != 'opened'
+        if: github.event.action != 'opened' && github.event_name != 'workflow_dispatch'
         id: find
         uses: actions/github-script@v7
         with:
