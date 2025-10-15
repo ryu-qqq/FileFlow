@@ -9,7 +9,10 @@ on:
 jobs:
   sync-to-jira:
     runs-on: ubuntu-latest
-    
+    permissions:
+      issues: write
+      contents: read
+
     steps:
       - name: Login to Jira
         uses: atlassian/gajira-login@v3
@@ -29,14 +32,20 @@ jobs:
           summary: "[GH-${{ github.event.issue.number }}] ${{ github.event.issue.title }}"
           description: |
             *Synced from GitHub Issue:* ${{ github.event.issue.html_url }}
-            
+
             h3. Description
-            ${{ github.event.issue.body }}
-            
+            ${{ github.event.issue.body || 'No description provided' }}
+
             ---
             *Created by:* ${{ github.event.issue.user.login }}
-            *Labels:* ${{ join(github.event.issue.labels.*.name, ', ') }}
+            *Labels:* ${{ join(github.event.issue.labels.*.name, ', ') || 'None' }}
             *GitHub Issue Number:* #${{ github.event.issue.number }}
+
+      - name: Log Jira Creation Result
+        if: github.event.action == 'opened'
+        run: |
+          echo "Jira issue creation outcome: ${{ steps.create.outcome }}"
+          echo "Jira issue key: ${{ steps.create.outputs.issue }}"
 
       - name: Add Jira Issue Key to GitHub Issue
         if: github.event.action == 'opened' && steps.create.outputs.issue
