@@ -34,10 +34,12 @@ for file in "$@"; do
     [[ $file != *.java ]] && continue
 
     # Rule 1: Check for forbidden JPA relationship annotations
-    if grep -qE "@(OneToMany|ManyToOne|OneToOne|ManyToMany)" "$file"; then
+    # Filter out comments to avoid false positives
+    MATCHES=$(grep -n -E "@(OneToMany|ManyToOne|OneToOne|ManyToMany)" "$file" | grep -v ':\s*//' | grep -v ':\s*\*')
+    if [ -n "$MATCHES" ]; then
         log_error "$file contains JPA relationship annotations (FORBIDDEN)"
         log_error "   Use Long foreign key fields instead (userId, orderId, etc.)"
-        grep -n "@\(OneToMany\|ManyToOne\|OneToOne\|ManyToMany\)" "$file"
+        echo "$MATCHES"
     fi
 
     # Rule 2: Check for setter methods in Entity classes
@@ -59,10 +61,12 @@ for file in "$@"; do
     fi
 
     # Rule 4: Check for @Transactional in adapters
-    if grep -q "@Transactional" "$file"; then
+    # Filter out comments to avoid false positives
+    MATCHES=$(grep -n "@Transactional" "$file" | grep -v ':\s*//' | grep -v ':\s*\*')
+    if [ -n "$MATCHES" ]; then
         log_error "$file contains @Transactional (FORBIDDEN in adapters)"
         log_error "   Transaction management belongs in Application layer"
-        grep -n "@Transactional" "$file"
+        echo "$MATCHES"
     fi
 
     # Rule 5: Check for business logic keywords (warning)
