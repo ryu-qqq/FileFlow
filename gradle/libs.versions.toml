@@ -77,6 +77,17 @@ tika = "2.9.2"
 pdfbox = "3.0.2"
 poi = "5.2.5"
 
+# ========================================
+# Image Processing
+# ========================================
+thumbnailator = "0.4.20"
+imageio-webp = "3.11.0"
+
+# ========================================
+# Redis
+# ========================================
+lettuce = "6.3.2.RELEASE"
+
 [libraries]
 # ========================================
 # Spring Boot Starters
@@ -117,6 +128,7 @@ flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
 # AWS SDK v2
 # ========================================
 aws-bom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
+aws-sdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
 aws-s3 = { module = "software.amazon.awssdk:s3" }
 aws-s3-transfer = { module = "software.amazon.awssdk:s3-transfer-manager" }
 aws-sqs = { module = "software.amazon.awssdk:sqs" }
@@ -150,6 +162,7 @@ spotbugs-annotations = { module = "com.github.spotbugs:spotbugs-annotations", ve
 # API Documentation
 # ========================================
 springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+springdoc-openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 
 # ========================================
 # Logging & Monitoring
@@ -183,6 +196,17 @@ tika-core = { module = "org.apache.tika:tika-core", version.ref = "tika" }
 tika-parsers = { module = "org.apache.tika:tika-parsers-standard-package", version.ref = "tika" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi" }
+
+# ========================================
+# Image Processing
+# ========================================
+thumbnailator = { module = "net.coobird:thumbnailator", version.ref = "thumbnailator" }
+imageio-webp = { module = "com.twelvemonkeys.imageio:imageio-webp", version.ref = "imageio-webp" }
+
+# ========================================
+# Redis
+# ========================================
+lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 
 [bundles]
 # ========================================
