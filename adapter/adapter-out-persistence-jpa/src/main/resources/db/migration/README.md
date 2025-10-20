@@ -1,188 +1,250 @@
-# Flyway Database Migration Scripts
+# 📚 FileFlow Database Migration Guide
 
-이 디렉토리는 FileFlow 프로젝트의 데이터베이스 스키마 버전 관리를 위한 Flyway 마이그레이션 스크립트를 포함합니다.
+## 🗂️ Migration Files Overview
 
-## 📋 Migration Overview
+### Core Tables (V1-V2)
+- **V1__create_tenant_organization_tables.sql**
+  - `tenants`: 멀티테넌시 핵심 테이블
+  - `organizations`: 판매자/회사 조직 관리
+  - `tenant_settings`: 테넌트별 설정
+  - `organization_settings`: 조직별 설정
 
-| Version | Script | Description | Tables |
-|---------|--------|-------------|--------|
-| V1 | `V1__create_tenant_table.sql` | 테넌트 테이블 생성 | `tenant` |
-| V2 | `V2__create_upload_policy_table.sql` | 업로드 정책 테이블 생성 | `upload_policy` |
-| V3 | `V3__create_processing_policy_table.sql` | 처리 정책 테이블 생성 | `processing_policy` |
-| V4 | `V4__create_policy_change_log_table.sql` | 정책 변경 로그 테이블 생성 | `policy_change_log` |
-| V5 | `V5__insert_initial_data.sql` | 초기 데이터 삽입 | - |
+- **V2__create_user_permission_tables.sql**
+  - `user_contexts`: 사용자 컨텍스트 (외부 인증 서버 연동)
+  - `roles`: 역할 정의
+  - `permissions`: 권한 정의
+  - `user_role_mappings`: 사용자-역할 매핑
+  - `role_permissions`: 역할-권한 매핑
 
-## 🎯 Schema Design
+### File Management (V3-V4)
+- **V3__create_file_management_tables.sql**
+  - `file_assets`: 파일 자산 정보
+  - `file_variants`: 썸네일, 리사이즈 등 변종
+  - `file_metadata`: 파일 메타데이터
+  - `file_relationships`: 파일 간 관계
+  - `file_tags`: 파일 태그
+  - `file_shares`: 파일 공유
+  - `file_versions`: 버전 관리
 
-### 1. Tenant Table (V1)
-**목적**: 멀티 테넌시 지원을 위한 테넌트 관리
+- **V4__create_upload_management_tables.sql**
+  - `upload_policies`: 업로드 정책
+  - `upload_sessions`: 업로드 세션 관리
+  - `upload_parts`: 멀티파트 업로드
+  - `upload_chunks`: 청크 업로드
+  - `external_downloads`: 외부 URL 다운로드
+  - `batch_uploads`: 배치 업로드
 
+### Processing Pipeline (V5-V6)
+- **V5__create_pipeline_processing_tables.sql**
+  - `pipeline_definitions`: 파이프라인 정의
+  - `pipeline_stages`: 파이프라인 단계
+  - `pipeline_executions`: 실행 추적
+  - `pipeline_stage_logs`: 단계별 로그
+  - `pipeline_templates`: 템플릿
+  - `pipeline_schedules`: 스케줄
+
+- **V6__create_data_extraction_tables.sql**
+  - `extracted_data`: OCR/AI 추출 데이터
+  - `canonical_formats`: 표준 포맷 정의
+  - `data_mappings`: 데이터 매핑
+  - `mapping_rules`: 매핑 규칙
+  - `ai_training_data`: AI 학습 데이터
+  - `extracted_entities`: 추출된 엔티티
+  - `ocr_regions`: OCR 영역
+
+### Monitoring & Logging (V7-V9)
+- **V7__create_audit_logging_tables.sql**
+  - `audit_logs`: 감사 로그 (7년 보관)
+  - `access_logs`: 접근 로그 (90일 보관)
+  - `processing_errors`: 처리 오류
+  - `security_events`: 보안 이벤트
+  - `performance_metrics`: 성능 메트릭
+  - `api_usage_logs`: API 사용 로그
+  - `compliance_logs`: 규정 준수 로그
+
+- **V8__create_supplementary_tables.sql**
+  - `file_categories`: 파일 카테고리
+  - `file_thumbnails_queue`: 썸네일 생성 큐
+  - `virus_scan_results`: 바이러스 스캔 결과
+  - `file_events`: Event Sourcing
+  - `schema_migrations_history`: 마이그레이션 히스토리
+  - `notification_templates`: 알림 템플릿
+  - `notification_queue`: 알림 큐
+  - `system_configs`: 시스템 설정
+
+- **V9__create_indexes_and_optimizations.sql**
+  - 복합 인덱스 생성
+  - Full-text 검색 인덱스
+  - 파티션 관리 프로시저
+  - 스케줄된 이벤트
+  - 성능 최적화 뷰
+
+## 🚀 Migration Execution
+
+### Prerequisites
+```yaml
+MySQL: 8.0+
+Character Set: utf8mb4
+Collation: utf8mb4_unicode_ci
+Storage Engine: InnoDB
+```
+
+### Flyway Configuration
+```yaml
+spring:
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    table: flyway_schema_history
+    baseline-version: 0
+    baseline-description: Initial
+```
+
+### Manual Execution
 ```sql
-tenant_id (PK, VARCHAR(50))
-├─ name (VARCHAR(100))
-├─ created_at (DATETIME)
-└─ updated_at (DATETIME)
+-- Run migrations in order
+source V1__create_tenant_organization_tables.sql;
+source V2__create_user_permission_tables.sql;
+source V3__create_file_management_tables.sql;
+source V4__create_upload_management_tables.sql;
+source V5__create_pipeline_processing_tables.sql;
+source V6__create_data_extraction_tables.sql;
+source V7__create_audit_logging_tables.sql;
+source V8__create_supplementary_tables.sql;
+source V9__create_indexes_and_optimizations.sql;
 ```
 
-**특징**:
-- 비즈니스 키(`tenant_id`)를 Primary Key로 사용
-- 타임스탬프 자동 관리 (`DEFAULT CURRENT_TIMESTAMP`, `ON UPDATE CURRENT_TIMESTAMP`)
+## 🔑 Key Design Decisions
 
-### 2. Upload Policy Table (V2)
-**목적**: 파일 업로드 정책 관리 (테넌트별, 사용자 타입별, 서비스별)
+### 1. No Foreign Key Constraints
+- **이유**: 분산 환경 확장성, 샤딩 준비, Lock contention 감소
+- **대안**: 애플리케이션 레벨 참조 무결성 검증
 
+### 2. User Contexts Instead of Users
+- **이유**: 외부 인증 서버(JWT) 사용
+- **역할 분리**: 
+  - Auth Server: 인증(Authentication)
+  - FileFlow: 권한(Authorization)
+
+### 3. Hybrid Logging Strategy
+```
+MySQL (단기) → S3 (장기 아카이브) 
+  ↓              ↓
+CloudWatch    Athena
+(실시간 알림)  (쿼리)
+```
+
+### 4. Partitioning Strategy
+| Table | Partition Type | Retention |
+|-------|---------------|-----------|
+| audit_logs | Monthly | 7 years |
+| access_logs | Daily | 7 days |
+| file_assets | Monthly | Permanent |
+| performance_metrics | Daily | 7 days |
+
+## 📊 Data Volume Estimates
+
+### Monthly Projections
+- Files: ~1M uploads
+- Audit Logs: ~10M records
+- Access Logs: ~100M records
+- Pipeline Executions: ~5M runs
+
+### Storage Requirements
+- MySQL: ~500GB (active data)
+- S3 Archive: ~20TB (compressed)
+- Growth Rate: ~2TB/year
+
+## 🔧 Maintenance
+
+### Daily Tasks
 ```sql
-policy_key (PK, VARCHAR(200))  # Format: {tenantId}:{userType}:{serviceType}
-├─ file_type_policies (JSON)   # 파일 타입별 정책 (maxSize, maxCount, allowedExtensions)
-├─ rate_limiting (JSON)         # Rate limiting 정책 (requestsPerHour, uploadsPerDay)
-├─ effective_from (DATETIME)
-├─ effective_until (DATETIME)
-├─ version (INT)
-└─ is_active (TINYINT)
+-- Check partition status
+SELECT TABLE_NAME, PARTITION_NAME, PARTITION_DESCRIPTION 
+FROM INFORMATION_SCHEMA.PARTITIONS 
+WHERE TABLE_SCHEMA = 'fileflow';
+
+-- Analyze tables for optimizer
+ANALYZE TABLE file_assets, upload_sessions;
 ```
 
-**인덱스**:
-- `idx_upload_policy_is_active`: 활성 정책 빠른 조회
-- `idx_upload_policy_effective_period`: 유효 기간 범위 검색
-
-**특징**:
-- MySQL 8.0 JSON 타입 활용 (검증 및 쿼리 최적화)
-- 복합 키 구조로 계층적 정책 관리
-- JPA 낙관적 락을 위한 version 컬럼
-
-### 3. Processing Policy Table (V3)
-**목적**: 파일 처리 정책 관리 (향후 확장용)
-
+### Weekly Tasks
 ```sql
-policy_key (PK, VARCHAR(200))
-├─ processing_config (JSON)
-├─ created_at (DATETIME)
-└─ updated_at (DATETIME)
+-- Clean expired sessions
+DELETE FROM upload_sessions 
+WHERE expires_at < NOW() 
+AND status IN ('EXPIRED', 'CANCELLED');
+
+-- Archive old logs (handled by events)
+CALL drop_old_partitions('access_logs', 7);
 ```
 
-**특징**:
-- 확장 가능한 구조 (현재는 기본 스키마만)
-- Upload Policy와 1:1 관계
-
-### 4. Policy Change Log Table (V4)
-**목적**: 정책 변경 이력 추적 (감사 로그)
-
+### Monthly Tasks
 ```sql
-id (PK, BIGINT AUTO_INCREMENT)
-├─ policy_key (VARCHAR(200))
-├─ change_type (VARCHAR(50))    # CREATE, UPDATE, DELETE, ACTIVATE, DEACTIVATE
-├─ old_version (INT)
-├─ new_version (INT)
-├─ old_value (JSON)
-├─ new_value (JSON)
-├─ changed_by (VARCHAR(100))
-└─ changed_at (DATETIME)
+-- Create new partitions (automated)
+CALL create_audit_log_partitions();
+
+-- Update statistics
+ANALYZE TABLE audit_logs, processing_errors;
 ```
 
-**인덱스**:
-- `idx_policy_change_log_policy_key`: 특정 정책의 변경 이력 조회
-- `idx_policy_change_log_changed_at`: 시간 범위 기반 감사
+## ⚠️ Important Notes
 
-**특징**:
-- 정책 변경 전후 스냅샷 저장
-- 규정 준수 및 감사 요구사항 충족
+1. **Event Scheduler**: Must be enabled for automatic partition management
+   ```sql
+   SET GLOBAL event_scheduler = ON;
+   ```
 
-### 5. Initial Data (V5)
-**목적**: 시스템 기본 데이터 삽입
+2. **Buffer Pool**: Adjust based on available RAM
+   ```sql
+   SET GLOBAL innodb_buffer_pool_size = 4294967296; -- 4GB
+   ```
 
-**Tenants**:
-- `b2b`: B2B Platform
-- `b2c`: B2C Platform
+3. **Max Connections**: Set based on application needs
+   ```sql
+   SET GLOBAL max_connections = 500;
+   ```
 
-**Upload Policies**:
-1. `b2c:CONSUMER:REVIEW`: 소비자 리뷰 이미지 업로드
-   - IMAGE: 10MB, 최대 5개
-   - Rate: 100 req/hour, 50 uploads/day
-
-2. `b2c:SELLER:PRODUCT`: 판매자 상품 등록
-   - IMAGE: 20MB, 최대 10개
-   - PDF: 50MB, 최대 3개
-   - Rate: 200 req/hour, 100 uploads/day
-
-3. `b2c:CRAWLER:PRODUCT`: 크롤러 상품 수집
-   - IMAGE: 100MB, 최대 50개
-   - HTML: 10MB, 최대 10개
-   - Rate: 1000 req/hour, 10000 uploads/day
-
-4. `b2b:BUYER:ORDER_SHEET`: 바이어 발주서 업로드
-   - EXCEL: 50MB, 최대 5개
-   - PDF: 20MB, 최대 3개
-   - Rate: 100 req/hour, 200 uploads/day
-
-## 🔧 Naming Convention
-
-### File Naming
-```
-V{version}__{description}.sql
-```
-- `V`: Version prefix (필수)
-- `{version}`: 순차적 버전 번호 (1, 2, 3...)
-- `__`: 구분자 (더블 언더스코어)
-- `{description}`: snake_case 설명
-
-### Policy Key Format
-```
-{tenantId}:{userType}:{serviceType}
-```
-- `tenantId`: b2c, b2b
-- `userType`: CONSUMER, SELLER, CRAWLER, BUYER
-- `serviceType`: REVIEW, PRODUCT, ORDER_SHEET
-
-## ✅ Validation
-
-### 테스트 실행
-```bash
-./gradlew :adapter-out-persistence-jpa:test --tests FlywayMigrationTest
-```
-
-### 검증 항목
-- ✅ 테이블 스키마 (컬럼 타입, NULL 여부, 기본값)
-- ✅ 인덱스 존재 및 구조
-- ✅ 초기 데이터 정합성
-- ✅ JSON 데이터 형식 및 필드
-- ✅ Flyway 마이그레이션 히스토리
-- ✅ 문자셋 (UTF8MB4)
-
-### 커버리지
-- 11개 통합 테스트 (모두 통과)
-- Testcontainers MySQL 8.0 기반
-
-## 🚨 Best Practices
-
-### DO
-- ✅ 스크립트는 멱등성(idempotent) 보장
-- ✅ 타임스탬프는 DB 레벨에서 관리
-- ✅ JSON 타입으로 구조화된 데이터 저장
-- ✅ 인덱스는 쿼리 패턴 기반 설계
-- ✅ 프로덕션 적용 전 테스트 환경 검증
-
-### DON'T
-- ❌ 이미 적용된 마이그레이션 수정 금지
-- ❌ 프로덕션에서 `flyway.clean` 사용 금지
-- ❌ 순서 변경 또는 버전 건너뛰기 금지
-- ❌ 트랜잭션 없이 데이터 변경 금지
+4. **Slow Query Log**: Enable for performance monitoring
+   ```sql
+   SET GLOBAL slow_query_log = 1;
+   SET GLOBAL long_query_time = 2;
+   ```
 
 ## 🔄 Rollback Strategy
 
-Flyway는 기본적으로 rollback을 지원하지 않습니다. 다음 전략을 사용하세요:
+Each migration can be rolled back independently:
 
-1. **새 마이그레이션 생성**: 되돌리기 위한 새 버전 스크립트 작성
-   ```sql
-   -- V6__rollback_something.sql
-   DROP TABLE IF EXISTS new_table;
-   ```
+```sql
+-- Example rollback for V8
+DROP TABLE IF EXISTS system_configs;
+DROP TABLE IF EXISTS notification_queue;
+DROP TABLE IF EXISTS notification_templates;
+-- ... etc
 
-2. **버전 관리**: Git을 통한 코드 리뷰 및 승인 프로세스
-3. **백업**: 마이그레이션 전 데이터베이스 백업
-4. **테스트**: 프로덕션 적용 전 스테이징 환경 검증
+-- Update migration history
+DELETE FROM schema_migrations_history WHERE version = 'V8';
+```
 
-## 📚 References
+## 📝 Version History
 
-- [Flyway Documentation](https://flywaydb.org/documentation/)
-- [MySQL 8.0 JSON Type](https://dev.mysql.com/doc/refman/8.0/en/json.html)
-- [Spring Boot Flyway Integration](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto.data-initialization.migration-tool.flyway)
+| Version | Date | Description |
+|---------|------|-------------|
+| V1-V9 | 2025-01-20 | Initial schema creation |
+
+## 📞 Support
+
+For issues or questions:
+- Check logs: `/var/log/mysql/error.log`
+- Monitor metrics: Grafana dashboards
+- Contact: FileFlow Team
+
+---
+
+**Note**: This schema is optimized for:
+- High-volume file processing
+- Multi-tenant isolation
+- Horizontal scalability
+- Compliance requirements (GDPR, CCPA)
+- Performance monitoring
