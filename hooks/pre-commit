@@ -9,13 +9,21 @@
 
 set -e  # Exit on first error
 
-# Resolve symlink for macOS compatibility
+# ========================================
+# Resolve Symlink for macOS/Linux Compatibility
+# ========================================
+# If this script is executed via symlink (e.g., .git/hooks/pre-commit -> ../../hooks/pre-commit),
+# we need to resolve it to find the actual validators directory
+
 if [ -L "${BASH_SOURCE[0]}" ]; then
     # Follow symlink
     HOOK_SCRIPT="$(readlink "${BASH_SOURCE[0]}")"
     if [[ "$HOOK_SCRIPT" != /* ]]; then
-        # Relative path, resolve it
-        HOOK_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd "$(dirname "$HOOK_SCRIPT")" && pwd)/$(basename "$HOOK_SCRIPT")"
+        # Relative path, resolve it relative to the symlink location
+        SYMLINK_DIR=$(dirname "${BASH_SOURCE[0]}")
+        TARGET_DIR=$(dirname "$HOOK_SCRIPT")
+        REAL_TARGET_DIR=$(cd "$SYMLINK_DIR" && cd "$TARGET_DIR" && pwd)
+        HOOK_SCRIPT="$REAL_TARGET_DIR/$(basename "$HOOK_SCRIPT")"
     fi
 else
     HOOK_SCRIPT="${BASH_SOURCE[0]}"
@@ -204,6 +212,30 @@ if bash "$VALIDATORS_DIR/dead-code-detector.sh" $CHANGED_FILES; then
     log_success "No dead code detected"
 else
     log_warning "Potential dead code detected (review suggested)"
+fi
+
+# ========================================
+# Transaction Boundary Validation (Issue #28)
+# ========================================
+
+log_info "Validating transaction boundaries (external API calls)..."
+if bash "$VALIDATORS_DIR/transaction-boundary-validator.sh"; then
+    log_success "Transaction boundary validation passed"
+else
+    log_error "Transaction boundary validation failed"
+    VALIDATION_FAILED=1
+fi
+
+# ========================================
+# Spring Proxy Limitation Validation (Issue #27)
+# ========================================
+
+log_info "Validating Spring @Transactional proxy patterns..."
+if bash "$VALIDATORS_DIR/transaction-proxy-validator.sh"; then
+    log_success "Spring proxy validation passed"
+else
+    log_error "Spring proxy validation failed"
+    VALIDATION_FAILED=1
 fi
 
 # ========================================
