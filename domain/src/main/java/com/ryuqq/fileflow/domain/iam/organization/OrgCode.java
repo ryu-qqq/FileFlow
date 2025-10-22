@@ -73,6 +73,19 @@ public final class OrgCode {
     }
 
     /**
+     * OrgCode 생성 - Static Factory Method
+     *
+     * @param value 조직 코드 값
+     * @return OrgCode 인스턴스
+     * @throws IllegalArgumentException value가 null, 빈 문자열이거나 비즈니스 규칙을 위반하는 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public static OrgCode of(String value) {
+        return new OrgCode(value);
+    }
+
+    /**
      * 조직 코드 값을 반환합니다.
      *
      * @return 조직 코드 값
