@@ -6,6 +6,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -381,6 +386,110 @@ class TenantTest {
             tenant.softDelete();
             assertThat(tenant.isDeleted()).isTrue();
             assertThat(tenant.isActive()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("시간 제어 테스트 (Clock)")
+    class ClockTest {
+
+        private Clock fixedClock;
+        private LocalDateTime fixedTime;
+
+        @BeforeEach
+        void setUp() {
+            fixedClock = Clock.fixed(Instant.parse("2025-10-22T00:00:00Z"), ZoneId.of("UTC"));
+            fixedTime = LocalDateTime.ofInstant(fixedClock.instant(), ZoneId.of("UTC"));
+        }
+
+        @Test
+        @DisplayName("고정된 시간으로 Tenant를 생성할 수 있다")
+        void createWithFixedClock() {
+            // when
+            Tenant tenant = new Tenant(tenantId, tenantName, fixedClock);
+
+            // then
+            assertThat(tenant.getCreatedAt()).isEqualTo(fixedTime);
+            assertThat(tenant.getUpdatedAt()).isEqualTo(fixedTime);
+            assertThat(tenant.isActive()).isTrue();
+        }
+
+        @Test
+        @DisplayName("고정된 시간으로 이름 변경 시 예측 가능한 시간이 기록된다")
+        void updateNameWithFixedClock() {
+            // given
+            Tenant tenant = new Tenant(tenantId, tenantName, fixedClock);
+            TenantName newName = new TenantName("New Name");
+
+            // when
+            tenant.updateName(newName);
+
+            // then
+            assertThat(tenant.getName()).isEqualTo(newName);
+            assertThat(tenant.getUpdatedAt()).isEqualTo(fixedTime);
+        }
+
+        @Test
+        @DisplayName("고정된 시간으로 suspend 시 예측 가능한 시간이 기록된다")
+        void suspendWithFixedClock() {
+            // given
+            Tenant tenant = new Tenant(tenantId, tenantName, fixedClock);
+
+            // when
+            tenant.suspend();
+
+            // then
+            assertThat(tenant.getStatus()).isEqualTo(TenantStatus.SUSPENDED);
+            assertThat(tenant.getUpdatedAt()).isEqualTo(fixedTime);
+        }
+
+        @Test
+        @DisplayName("고정된 시간으로 activate 시 예측 가능한 시간이 기록된다")
+        void activateWithFixedClock() {
+            // given
+            Tenant tenant = new Tenant(tenantId, tenantName, fixedClock);
+            tenant.suspend();
+
+            // when
+            tenant.activate();
+
+            // then
+            assertThat(tenant.getStatus()).isEqualTo(TenantStatus.ACTIVE);
+            assertThat(tenant.getUpdatedAt()).isEqualTo(fixedTime);
+        }
+
+        @Test
+        @DisplayName("고정된 시간으로 softDelete 시 예측 가능한 시간이 기록된다")
+        void softDeleteWithFixedClock() {
+            // given
+            Tenant tenant = new Tenant(tenantId, tenantName, fixedClock);
+
+            // when
+            tenant.softDelete();
+
+            // then
+            assertThat(tenant.isDeleted()).isTrue();
+            assertThat(tenant.getStatus()).isEqualTo(TenantStatus.SUSPENDED);
+            assertThat(tenant.getUpdatedAt()).isEqualTo(fixedTime);
+        }
+
+        @Test
+        @DisplayName("시간이 변경되어도 동일한 Clock을 사용하면 시간이 일관되게 유지된다")
+        void consistentTimeWithSameClock() {
+            // given
+            Tenant tenant = new Tenant(tenantId, tenantName, fixedClock);
+            LocalDateTime createdAt = tenant.getCreatedAt();
+
+            // when - 여러 작업 수행
+            tenant.updateName(new TenantName("Name 1"));
+            tenant.updateName(new TenantName("Name 2"));
+            tenant.suspend();
+            tenant.activate();
+
+            // then - 모든 시간이 고정된 시간과 동일
+            assertThat(tenant.getCreatedAt()).isEqualTo(fixedTime);
+            assertThat(tenant.getUpdatedAt()).isEqualTo(fixedTime);
+            assertThat(createdAt).isEqualTo(fixedTime);
         }
     }
 }
