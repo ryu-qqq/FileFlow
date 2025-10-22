@@ -4,6 +4,7 @@
 # Claude Code Hook: user-prompt-submit (JSON Logging)
 # Trigger: 사용자가 프롬프트를 제출할 때
 # Strategy: Keyword → Layer → inject-rules.py (Cache-based)
+# Bash 3.2 호환 (macOS 기본 Bash)
 # =====================================================
 
 # 로그 헬퍼 경로
@@ -31,34 +32,97 @@ DETECTED_LAYERS=()
 DETECTED_KEYWORDS=()
 PRIORITY_FILTER=""
 
-# Keyword → Layer 매핑
-declare -A LAYER_KEYWORDS=(
-    ["aggregate"]="domain"
-    ["애그리게이트"]="domain"
-    ["entity"]="domain"
-    ["value.object"]="domain"
-    ["domain.event"]="domain"
-    ["usecase"]="application"
-    ["service"]="application"
-    ["command"]="application"
-    ["query"]="application"
-    ["transaction"]="application"
-    ["controller"]="adapter-rest"
-    ["컨트롤러"]="adapter-rest"
-    ["rest.api"]="adapter-rest"
-    ["endpoint"]="adapter-rest"
-    ["repository"]="adapter-persistence"
-    ["jpa"]="adapter-persistence"
-    ["entity.mapping"]="adapter-persistence"
-    ["test"]="testing"
-    ["테스트"]="testing"
-    ["record"]="java21"
-    ["sealed"]="java21"
-    ["dto"]="enterprise"
-    ["mapper"]="enterprise"
-    ["exception"]="error-handling"
-    ["error"]="error-handling"
-)
+# Keyword → Layer 매핑 함수 (Bash 3.2 호환)
+get_layer_from_keyword() {
+    local keyword="$1"
+
+    case "$keyword" in
+        # Domain layer
+        aggregate|entity|value*object|domain*event|getter|factory|policy)
+            echo "domain"
+            ;;
+        # Application layer
+        usecase|service|command|query|transaction|assembler|spring|proxy|orchestration)
+            echo "application"
+            ;;
+        # Adapter-REST layer (adapter-in 포함)
+        controller|rest*api|endpoint|adapter*in|validation|request|response|handling)
+            echo "adapter-rest"
+            ;;
+        # Adapter-Persistence layer (adapter-out, persistence-mysql 포함)
+        repository|jpa|entity*mapping|adapter*out|persistence*mysql|persistence*postgresql|persistence*mongo|querydsl|batch|specification)
+            echo "adapter-persistence"
+            ;;
+        # Testing
+        test|archunit|testcontainers|benchmark)
+            echo "testing"
+            ;;
+        # Java21
+        record|sealed|virtual|threads|async)
+            echo "java21"
+            ;;
+        # Enterprise
+        dto|mapper|cache|event|circuit*breaker|resilience|saga)
+            echo "enterprise"
+            ;;
+        # Error handling
+        exception|error)
+            echo "error-handling"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+# 키워드 목록 (프로젝트별 패키지 구조 포함)
+KEYWORDS="aggregate entity value.object value_object valueobject domain.event domain_event domainevent getter factory policy usecase service command query transaction assembler spring proxy orchestration controller rest.api rest_api restapi endpoint adapter-in adapter_in adapterin validation request response handling repository jpa entity.mapping entity_mapping entitymapping adapter-out adapter_out adapterout persistence-mysql persistence_mysql persistencemysql persistence-postgresql persistence-mongo querydsl batch specification test archunit testcontainers benchmark record sealed virtual threads async dto mapper cache event circuit.breaker circuit_breaker circuitbreaker resilience saga exception error"
+
+# Primary Keywords 검색 (30점)
+for keyword in $KEYWORDS; do
+    # . 와 _ 를 공백으로도 매칭되도록 패턴 변환
+    pattern=$(echo "$keyword" | sed 's/[._]/ /g')
+
+    if echo "$USER_INPUT" | grep -qiE "$pattern"; then
+        layer=$(get_layer_from_keyword "$keyword")
+
+        if [ -n "$layer" ]; then
+            CONTEXT_SCORE=$((CONTEXT_SCORE + 30))
+
+            # 레이어 중복 방지
+            if [[ ! " ${DETECTED_LAYERS[@]} " =~ " ${layer} " ]]; then
+                DETECTED_LAYERS+=("$layer")
+            fi
+
+            DETECTED_KEYWORDS+=("$keyword")
+        fi
+    fi
+done
+
+# 한글 키워드 검색
+if echo "$USER_INPUT" | grep -q "애그리게이트"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 30))
+    if [[ ! " ${DETECTED_LAYERS[@]} " =~ " domain " ]]; then
+        DETECTED_LAYERS+=("domain")
+    fi
+    DETECTED_KEYWORDS+=("애그리게이트")
+fi
+
+if echo "$USER_INPUT" | grep -q "컨트롤러"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 30))
+    if [[ ! " ${DETECTED_LAYERS[@]} " =~ " adapter-rest " ]]; then
+        DETECTED_LAYERS+=("adapter-rest")
+    fi
+    DETECTED_KEYWORDS+=("컨트롤러")
+fi
+
+if echo "$USER_INPUT" | grep -q "테스트"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 30))
+    if [[ ! " ${DETECTED_LAYERS[@]} " =~ " testing " ]]; then
+        DETECTED_LAYERS+=("testing")
+    fi
+    DETECTED_KEYWORDS+=("테스트")
+fi
 
 # Secondary Keywords (15점)
 if echo "$USER_INPUT" | grep -qiE "(domain|도메인)"; then
@@ -71,32 +135,31 @@ if echo "$USER_INPUT" | grep -qiE "(api|rest)"; then
     DETECTED_KEYWORDS+=("api_context")
 fi
 
-# Primary Keywords (30점)
-for keyword in "${!LAYER_KEYWORDS[@]}"; do
-    regex_keyword=$(echo "$keyword" | sed 's/\./ /g')
+if echo "$USER_INPUT" | grep -qiE "(persistence|영속성)"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
+    DETECTED_KEYWORDS+=("persistence_context")
+fi
 
-    if echo "$USER_INPUT" | grep -qiE "$regex_keyword"; then
-        layer="${LAYER_KEYWORDS[$keyword]}"
-        CONTEXT_SCORE=$((CONTEXT_SCORE + 30))
+if echo "$USER_INPUT" | grep -qiE "(transaction|트랜잭션)"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
+    DETECTED_KEYWORDS+=("transaction_context")
+fi
 
-        if [[ ! " ${DETECTED_LAYERS[@]} " =~ " ${layer} " ]]; then
-            DETECTED_LAYERS+=("$layer")
-        fi
-
-        DETECTED_KEYWORDS+=("$keyword")
-    fi
-done
+if echo "$USER_INPUT" | grep -qiE "(validation|검증)"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
+    DETECTED_KEYWORDS+=("validation_context")
+fi
 
 # Zero-Tolerance Keywords (20점)
-if echo "$USER_INPUT" | grep -qiE "(lombok|getter.chaining|@transactional|zero.tolerance)"; then
+if echo "$USER_INPUT" | grep -qiE "(lombok|getter\.chaining|law\.of\.demeter|@transactional|zero\.tolerance)"; then
     PRIORITY_FILTER="critical"
     CONTEXT_SCORE=$((CONTEXT_SCORE + 20))
     DETECTED_KEYWORDS+=("zero_tolerance")
 fi
 
 # 키워드 분석 결과 로그
-LAYERS_JSON=$(printf '%s\n' "${DETECTED_LAYERS[@]}" | jq -R . | jq -s .)
-KEYWORDS_JSON=$(printf '%s\n' "${DETECTED_KEYWORDS[@]}" | jq -R . | jq -s .)
+LAYERS_JSON=$(printf '%s\n' "${DETECTED_LAYERS[@]}" | jq -R . | jq -s . 2>/dev/null || echo "[]")
+KEYWORDS_JSON=$(printf '%s\n' "${DETECTED_KEYWORDS[@]}" | jq -R . | jq -s . 2>/dev/null || echo "[]")
 
 log_event "keyword_analysis" "{\"session_id\":\"$SESSION_ID\",\"context_score\":$CONTEXT_SCORE,\"threshold\":25,\"detected_layers\":$LAYERS_JSON,\"detected_keywords\":$KEYWORDS_JSON,\"priority_filter\":\"$PRIORITY_FILTER\"}"
 

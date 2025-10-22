@@ -24,4 +24,9 @@ dependencies {
     // ========================================
     // Domain layer는 순수 Java만 사용
     // 프레임워크, 라이브러리 의존성 금지
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation(project(":test-fixtures"))
 }

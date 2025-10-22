@@ -56,6 +56,19 @@ public class TenantName {
     }
 
     /**
+     * TenantName 생성 - Static Factory Method
+     *
+     * @param value Tenant 이름
+     * @return TenantName 인스턴스
+     * @throws IllegalArgumentException value가 null, 공백이거나 길이 제약을 위반하는 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public static TenantName of(String value) {
+        return new TenantName(value);
+    }
+
+    /**
      * Tenant 이름 값을 반환합니다.
      *
      * @return Tenant 이름

@@ -22,4 +22,17 @@ public record TenantId(String value) {
             throw new IllegalArgumentException("Tenant ID는 필수입니다");
         }
     }
+
+    /**
+     * TenantId 생성 - Static Factory Method
+     *
+     * @param value Tenant ID 값
+     * @return TenantId 인스턴스
+     * @throws IllegalArgumentException value가 null이거나 빈 문자열인 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public static TenantId of(String value) {
+        return new TenantId(value);
+    }
 }
