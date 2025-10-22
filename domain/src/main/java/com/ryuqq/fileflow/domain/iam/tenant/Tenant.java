@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.iam.tenant;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 /**
@@ -23,6 +24,7 @@ public class Tenant {
 
     // 불변 필드
     private final TenantId id;
+    private final Clock clock;
     private final LocalDateTime createdAt;
 
     // 가변 필드
@@ -43,6 +45,22 @@ public class Tenant {
      * @since 2025-10-22
      */
     public Tenant(TenantId id, TenantName name) {
+        this(id, name, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Tenant를 생성합니다 (테스트용).
+     *
+     * <p>테스트에서 시간을 제어하기 위한 package-private 생성자입니다.</p>
+     *
+     * @param id Tenant 식별자
+     * @param name Tenant 이름
+     * @param clock 시간 제공자
+     * @throws IllegalArgumentException id 또는 name이 null인 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    Tenant(TenantId id, TenantName name, Clock clock) {
         if (id == null) {
             throw new IllegalArgumentException("Tenant ID는 필수입니다");
         }
@@ -51,10 +69,11 @@ public class Tenant {
         }
 
         this.id = id;
+        this.clock = clock;
         this.name = name;
         this.status = TenantStatus.ACTIVE;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
         this.deleted = false;
     }
 
@@ -79,7 +98,7 @@ public class Tenant {
         }
 
         this.name = newName;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -101,7 +120,7 @@ public class Tenant {
         }
 
         this.status = TenantStatus.SUSPENDED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -123,7 +142,7 @@ public class Tenant {
         }
 
         this.status = TenantStatus.ACTIVE;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -143,7 +162,7 @@ public class Tenant {
 
         this.deleted = true;
         this.status = TenantStatus.SUSPENDED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
