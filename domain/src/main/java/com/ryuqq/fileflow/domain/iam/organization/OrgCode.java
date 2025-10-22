@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * @author ryu-qqq
  * @since 2025-10-22
  */
-public class OrgCode {
+public final class OrgCode {
 
     private static final int MIN_LENGTH = 2;
     private static final int MAX_LENGTH = 20;

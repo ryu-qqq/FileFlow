@@ -80,9 +80,7 @@ public class Organization {
         if (orgCode == null) {
             throw new IllegalArgumentException("조직 코드는 필수입니다");
         }
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("조직 이름은 필수입니다");
-        }
+        validateName(name);
 
         this.id = id;
         this.tenantId = tenantId;
@@ -107,12 +105,8 @@ public class Organization {
      * @since 2025-10-22
      */
     public void updateName(String newName) {
-        if (this.deleted) {
-            throw new IllegalStateException("삭제된 Organization은 수정할 수 없습니다");
-        }
-        if (newName == null || newName.isBlank()) {
-            throw new IllegalArgumentException("조직 이름은 필수입니다");
-        }
+        ensureNotDeleted("수정");
+        validateName(newName);
 
         this.name = newName.trim();
         this.updatedAt = LocalDateTime.now(clock);
@@ -128,9 +122,7 @@ public class Organization {
      * @since 2025-10-22
      */
     public void deactivate() {
-        if (this.deleted) {
-            throw new IllegalStateException("삭제된 Organization은 비활성화할 수 없습니다");
-        }
+        ensureNotDeleted("비활성화");
         if (this.status == OrganizationStatus.INACTIVE) {
             throw new IllegalStateException("이미 비활성화된 Organization입니다");
         }
@@ -281,6 +273,36 @@ public class Organization {
      */
     public boolean isDeleted() {
         return deleted;
+    }
+
+    /**
+     * Organization이 삭제되지 않았는지 확인합니다.
+     *
+     * <p>삭제된 Organization은 모든 상태 변경 작업이 불가능합니다.</p>
+     *
+     * @param action 수행하려는 작업 (예: "수정", "비활성화")
+     * @throws IllegalStateException Organization이 삭제된 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    private void ensureNotDeleted(String action) {
+        if (this.deleted) {
+            throw new IllegalStateException("삭제된 Organization은 " + action + "할 수 없습니다");
+        }
+    }
+
+    /**
+     * 조직 이름의 유효성을 검증합니다.
+     *
+     * @param name 검증할 조직 이름
+     * @throws IllegalArgumentException name이 null이거나 빈 문자열인 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    private static void validateName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("조직 이름은 필수입니다");
+        }
     }
 
     /**

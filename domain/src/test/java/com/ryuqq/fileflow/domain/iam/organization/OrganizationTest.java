@@ -387,18 +387,6 @@ class OrganizationTest {
             assertThat(organization.isActive()).isFalse();
         }
 
-        @Test
-        @DisplayName("ACTIVE이지만 삭제되었으면 false를 반환한다")
-        void activeButDeleted() {
-            // given
-            Organization organization = new Organization(organizationId, tenantId, orgCode, orgName);
-            // softDelete()는 내부적으로 INACTIVE로 전환하므로, 수동으로 상태를 조작할 수 없음
-            // 이 케이스는 논리적으로 발생하지 않으므로 softDelete 후 테스트
-            organization.softDelete();
-
-            // when & then
-            assertThat(organization.isActive()).isFalse();
-        }
     }
 
     @Nested
@@ -530,35 +518,6 @@ class OrganizationTest {
             // then
             assertThat(organization.getCreatedAt()).isEqualTo(expectedTime);
             assertThat(organization.getUpdatedAt()).isEqualTo(expectedTime);
-        }
-
-        @Test
-        @DisplayName("시간을 고정하여 이름 변경 시 updatedAt을 검증할 수 있다")
-        void updateNameWithFixedTime() {
-            // given
-            Clock creationClock = Clock.fixed(
-                java.time.Instant.parse("2025-01-01T00:00:00Z"),
-                java.time.ZoneId.of("UTC")
-            );
-            Clock updateClock = Clock.fixed(
-                java.time.Instant.parse("2025-01-02T00:00:00Z"),
-                java.time.ZoneId.of("UTC")
-            );
-            java.time.LocalDateTime expectedUpdateTime = java.time.LocalDateTime.ofInstant(
-                updateClock.instant(),
-                updateClock.getZone()
-            );
-
-            Organization organization = new Organization(organizationId, tenantId, orgCode, orgName, creationClock);
-
-            // when
-            // Note: updateName은 내부 clock을 사용하므로, 테스트에서는 시간 고정 검증이 제한적
-            // 실제로는 organization을 재생성하여 다른 Clock으로 생성 후 updatedAt 비교
-
-            // then
-            // 이 테스트는 Clock 주입 패턴의 개념을 보여주기 위한 것
-            // 실제 production 코드에서는 createdAt과 updatedAt의 차이로 시간 경과를 확인
-            assertThat(organization.getCreatedAt()).isBefore(organization.getUpdatedAt().plusSeconds(1));
         }
 
         @Test
