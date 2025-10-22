@@ -238,17 +238,8 @@ class OrganizationPersistenceAdapterTest extends IntegrationTestBase {
             OrganizationFixtures.organizationWithCode(TEST_TENANT_ID, "DELETED", "Deleted")
         );
 
-        Organization softDeleted = Organization.reconstitute(
-            organization.getId(),
-            organization.getTenantId(),
-            organization.getOrgCode(),
-            organization.getName(),
-            organization.getStatus(),
-            organization.getCreatedAt(),
-            organization.getUpdatedAt(),
-            true
-        );
-        organizationPersistenceAdapter.save(softDeleted);
+        organization.softDelete();
+        organizationPersistenceAdapter.save(organization);
 
         // when
         boolean exists = organizationPersistenceAdapter.existsByTenantIdAndOrgCode(
@@ -290,17 +281,8 @@ class OrganizationPersistenceAdapterTest extends IntegrationTestBase {
         Organization deletedOrg = organizationPersistenceAdapter.save(
             OrganizationFixtures.organizationWithCode(TEST_TENANT_ID, "ORG3", "Org 3")
         );
-        Organization softDeleted = Organization.reconstitute(
-            deletedOrg.getId(),
-            deletedOrg.getTenantId(),
-            deletedOrg.getOrgCode(),
-            deletedOrg.getName(),
-            deletedOrg.getStatus(),
-            deletedOrg.getCreatedAt(),
-            deletedOrg.getUpdatedAt(),
-            true
-        );
-        organizationPersistenceAdapter.save(softDeleted);
+        deletedOrg.softDelete();
+        organizationPersistenceAdapter.save(deletedOrg);
 
         // when
         long count = organizationPersistenceAdapter.countByTenantId(TEST_TENANT_ID);
