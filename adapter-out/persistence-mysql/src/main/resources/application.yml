@@ -1,0 +1,74 @@
+# ========================================
+# Persistence MySQL Module Configuration
+# ========================================
+# Purpose: MySQL 영속성 어댑터 설정
+# - JPA/Hibernate 설정
+# - DataSource 설정
+# - SQL 로깅 설정
+# ========================================
+
+spring:
+  # ========================================
+  # JPA Configuration
+  # ========================================
+  jpa:
+    # Hibernate DDL 전략 (개발: validate, 운영: none)
+    hibernate:
+      ddl-auto: validate  # ⚠️ 운영: none, 개발: validate
+
+    # JPA 속성
+    properties:
+      hibernate:
+        # SQL 방언 (MySQL 8.x)
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+        # SQL 포맷팅 (개발 시 가독성 향상)
+        format_sql: true
+        use_sql_comments: true
+
+        # Batch 처리 최적화
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+        # 2차 캐시 비활성화 (필요 시 Redis 사용)
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+
+    # JPA 구현체 표시 (쿼리 로그)
+    show-sql: false  # ⚠️ 운영: false, Logback으로 제어
+
+  # ========================================
+  # DataSource Configuration
+  # ========================================
+  datasource:
+    # HikariCP 설정
+    hikari:
+      pool-name: FileFlowHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+      # MySQL 연결 유지 설정
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+
+# ========================================
+# Logging Configuration
+# ========================================
+logging:
+  level:
+    # Hibernate SQL 로깅 (개발)
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+    # Spring Data JPA 로깅
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.transaction: DEBUG
+
+    # Application 로깅
+    com.ryuqq.fileflow.adapter.out.persistence.mysql: DEBUG

@@ -14,19 +14,19 @@ include("domain")
 include("application")
 
 // ========================================
+// Test Support Modules
+// ========================================
+include("test-fixtures")
+
+// ========================================
 // Adapter Modules (Ports & Adapters)
 // ========================================
 // Inbound Adapters (Driving)
-include("adapter:adapter-in-rest-api")
+include("adapter-in:rest-api")
 
 // Outbound Adapters (Driven)
-include("adapter:adapter-out-persistence-jpa")
-include("adapter:adapter-out-redis")
-include("adapter:adapter-out-aws-s3")
-include("adapter:adapter-out-aws-sqs")
-include("adapter:adapter-out-aws-textract")
-include("adapter:adapter-out-metadata-extraction")
-include("adapter:adapter-out-image-conversion")
+// New Hexagonal Architecture Adapters
+include("adapter-out:persistence-mysql")
 
 // ========================================
 // Bootstrap Modules (Runnable Applications)

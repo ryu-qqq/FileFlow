@@ -35,12 +35,34 @@ public class Organization {
     private boolean deleted;
 
     /**
-     * Organization을 생성합니다.
+     * Organization을 생성합니다 (Static Factory Method).
      *
      * <p>생성 시 모든 필수 필드를 검증하고 초기 상태를 설정합니다.</p>
+     * <p>ID가 null이면 신규 Organization (DB 저장 전 상태), 아니면 저장 후 상태입니다.</p>
      * <p>초기 상태: ACTIVE, deleted = false</p>
      *
-     * @param id Organization 식별자
+     * @param id Organization 식별자 (null 가능 - 신규 생성 시)
+     * @param tenantId Tenant 식별자 (Long FK 전략)
+     * @param orgCode 조직 코드
+     * @param name 조직 이름
+     * @return 생성된 Organization
+     * @throws IllegalArgumentException 필수 필드가 null이거나 유효하지 않은 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public static Organization of(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
+        return new Organization(id, tenantId, orgCode, name, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Organization 생성자 (테스트용, package-private).
+     *
+     * <p>테스트에서 시간을 제어하기 위한 package-private 생성자입니다.</p>
+     * <p>4개 파라미터: ID 필수 (null이면 예외)</p>
+     * <p>5개 파라미터(Clock 포함): ID nullable (신규 생성 시 null 허용)</p>
+     * <p>초기 상태: ACTIVE, deleted = false</p>
+     *
+     * @param id Organization 식별자 (4개 파라미터에서는 필수)
      * @param tenantId Tenant 식별자 (Long FK 전략)
      * @param orgCode 조직 코드
      * @param name 조직 이름
@@ -48,17 +70,19 @@ public class Organization {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
+    Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
         this(id, tenantId, orgCode, name, Clock.systemDefaultZone());
+        if (id == null) {
+            throw new IllegalArgumentException("Organization ID는 필수입니다");
+        }
     }
 
     /**
-     * Organization을 생성합니다 (테스트용).
+     * Organization 생성자 (Clock 지원, ID nullable).
      *
-     * <p>테스트에서 시간을 제어하기 위한 package-private 생성자입니다.</p>
-     * <p>초기 상태: ACTIVE, deleted = false</p>
+     * <p>ID가 null이면 신규 생성, 아니면 저장 후 상태</p>
      *
-     * @param id Organization 식별자
+     * @param id Organization 식별자 (null 가능 - 신규 생성 시)
      * @param tenantId Tenant 식별자 (Long FK 전략)
      * @param orgCode 조직 코드
      * @param name 조직 이름
@@ -68,9 +92,6 @@ public class Organization {
      * @since 2025-10-22
      */
     Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name, Clock clock) {
-        if (id == null) {
-            throw new IllegalArgumentException("Organization ID는 필수입니다");
-        }
         if (tenantId == null) {
             throw new IllegalArgumentException("Tenant ID는 필수입니다");
         }
@@ -91,6 +112,77 @@ public class Organization {
         this.createdAt = LocalDateTime.now(clock);
         this.updatedAt = LocalDateTime.now(clock);
         this.deleted = false;
+    }
+
+    /**
+     * Private 전체 생성자 (reconstitute 전용)
+     *
+     * @param id Organization ID
+     * @param tenantId Tenant ID (Long FK)
+     * @param orgCode 조직 코드
+     * @param name 조직 이름
+     * @param status Organization 상태
+     * @param clock 시간 제공자
+     * @param createdAt 생성 일시
+     * @param updatedAt 수정 일시
+     * @param deleted 삭제 여부
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    private Organization(
+        OrganizationId id,
+        Long tenantId,
+        OrgCode orgCode,
+        String name,
+        OrganizationStatus status,
+        Clock clock,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        boolean deleted
+    ) {
+        this.id = id;
+        this.tenantId = tenantId;
+        this.orgCode = orgCode;
+        this.name = name;
+        this.status = status;
+        this.clock = clock;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.deleted = deleted;
+    }
+
+    /**
+     * DB에서 조회한 데이터로 Organization 재구성 (Static Factory Method)
+     *
+     * <p>Persistence Layer에서 DB 데이터를 Domain으로 변환할 때 사용합니다.</p>
+     * <p>모든 상태(status, deleted 포함)를 그대로 복원합니다.</p>
+     *
+     * @param id Organization ID
+     * @param tenantId Tenant ID (Long FK)
+     * @param orgCode 조직 코드
+     * @param name 조직 이름
+     * @param status Organization 상태
+     * @param createdAt 생성 일시
+     * @param updatedAt 수정 일시
+     * @param deleted 삭제 여부
+     * @return 재구성된 Organization
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public static Organization reconstitute(
+        OrganizationId id,
+        Long tenantId,
+        OrgCode orgCode,
+        String name,
+        OrganizationStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        boolean deleted
+    ) {
+        return new Organization(
+            id, tenantId, orgCode, name, status,
+            Clock.systemDefaultZone(), createdAt, updatedAt, deleted
+        );
     }
 
     /**
@@ -197,6 +289,20 @@ public class Organization {
     }
 
     /**
+     * Organization ID 원시 값을 반환합니다 (Law of Demeter 준수).
+     *
+     * <p>❌ Bad: organization.getId().value()</p>
+     * <p>✅ Good: organization.getIdValue()</p>
+     *
+     * @return Organization ID 원시 값
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public Long getIdValue() {
+        return id.value();
+    }
+
+    /**
      * Tenant ID를 반환합니다.
      *
      * <p>Long FK 전략: Tenant Aggregate를 직접 참조하지 않고 ID만 반환합니다.</p>
@@ -218,6 +324,20 @@ public class Organization {
      */
     public OrgCode getOrgCode() {
         return orgCode;
+    }
+
+    /**
+     * 조직 코드 원시 값을 반환합니다 (Law of Demeter 준수).
+     *
+     * <p>❌ Bad: organization.getOrgCode().getValue()</p>
+     * <p>✅ Good: organization.getOrgCodeValue()</p>
+     *
+     * @return 조직 코드 원시 값
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public String getOrgCodeValue() {
+        return orgCode.getValue();
     }
 
     /**
