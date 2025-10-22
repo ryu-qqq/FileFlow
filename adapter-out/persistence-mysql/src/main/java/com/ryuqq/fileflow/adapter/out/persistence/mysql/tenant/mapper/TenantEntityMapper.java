@@ -90,11 +90,11 @@ public final class TenantEntityMapper {
         }
 
         // Value Object → 원시 타입 (Law of Demeter 준수)
-        String id = tenant.getIdValue();
+        String id = tenant.getId() != null ? tenant.getIdValue() : null;
         String name = tenant.getNameValue();
 
         // 신규 Tenant인 경우 (ID가 아직 없음)
-        if (tenant.getId() == null || tenant.getIdValue() == null) {
+        if (id == null) {
             return TenantJpaEntity.create(
                 id,
                 name,
