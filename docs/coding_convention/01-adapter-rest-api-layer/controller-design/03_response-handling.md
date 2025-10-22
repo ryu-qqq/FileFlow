@@ -56,25 +56,164 @@ public OrderApiResponse createOrder(@RequestBody CreateOrderRequest request) {
 
 ### 3. 응답 본문 표준화
 
-**성공/에러 모두 일관된 JSON 구조 사용**
+**성공/에러 모두 ApiResponse로 래핑하여 일관된 JSON 구조 사용**
 
 ```json
-// 성공 응답
+// 성공 응답 (ApiResponse로 래핑)
 {
-  "orderId": 123,
-  "status": "CONFIRMED",
-  "totalAmount": 50000,
-  "createdAt": "2025-10-17T10:30:00Z"
+  "success": true,
+  "data": {
+    "orderId": 123,
+    "status": "CONFIRMED",
+    "totalAmount": 50000,
+    "createdAt": "2025-10-17T10:30:00Z"
+  },
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-12345"
 }
 
 // 에러 응답 (GlobalExceptionHandler가 자동 생성)
 {
-  "code": "ORDER-001",
-  "message": "Order not found: 999",
-  "timestamp": "2025-10-17T10:30:00",
-  "path": "/api/v1/orders/999"
+  "success": false,
+  "error": {
+    "code": "ORDER-001",
+    "message": "Order not found: 999",
+    "path": "/api/v1/orders/999"
+  },
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-12346"
 }
 ```
+
+---
+
+## 📦 ApiResponse<T> 표준 래퍼
+
+### ApiResponse Record 정의
+
+**모든 API 응답을 일관된 구조로 래핑**
+
+```java
+package com.company.adapter.in.rest.shared.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+/**
+ * 표준 API 응답 래퍼
+ *
+ * <p>모든 REST API 응답을 일관된 구조로 래핑하여 클라이언트에서
+ * 예측 가능하고 처리하기 쉬운 응답을 제공합니다.
+ *
+ * <h3>주요 특징</h3>
+ * <ul>
+ *   <li>성공/실패 여부를 명확히 구분 (success 필드)</li>
+ *   <li>메타데이터 포함 (timestamp, requestId)</li>
+ *   <li>제네릭 타입으로 다양한 데이터 지원</li>
+ *   <li>에러 정보와 데이터를 분리하여 관리</li>
+ * </ul>
+ *
+ * @param <T> 응답 데이터 타입
+ * @author Development Team
+ * @since 1.0.0
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record ApiResponse<T>(
+    boolean success,              // 성공 여부
+    T data,                       // 응답 데이터 (성공 시)
+    ErrorInfo error,              // 에러 정보 (실패 시)
+    LocalDateTime timestamp,      // 응답 생성 시각
+    String requestId              // 요청 추적 ID
+) {
+
+    /**
+     * 성공 응답 생성 (데이터 포함)
+     *
+     * @param data 응답 데이터
+     * @param <T> 데이터 타입
+     * @return 성공 ApiResponse
+     */
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(
+            true,
+            data,
+            null,
+            LocalDateTime.now(),
+            generateRequestId()
+        );
+    }
+
+    /**
+     * 성공 응답 생성 (데이터 없음 - 204 No Content용)
+     *
+     * @param <T> 데이터 타입
+     * @return 성공 ApiResponse (data = null)
+     */
+    public static <T> ApiResponse<T> success() {
+        return new ApiResponse<>(
+            true,
+            null,
+            null,
+            LocalDateTime.now(),
+            generateRequestId()
+        );
+    }
+
+    /**
+     * 실패 응답 생성
+     *
+     * @param error 에러 정보
+     * @param <T> 데이터 타입
+     * @return 실패 ApiResponse
+     */
+    public static <T> ApiResponse<T> failure(ErrorInfo error) {
+        return new ApiResponse<>(
+            false,
+            null,
+            error,
+            LocalDateTime.now(),
+            generateRequestId()
+        );
+    }
+
+    /**
+     * 요청 추적 ID 생성
+     *
+     * @return UUID 기반 요청 ID
+     */
+    private static String generateRequestId() {
+        return "req-" + UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    /**
+     * 에러 정보
+     *
+     * @param code 에러 코드
+     * @param message 에러 메시지
+     * @param path 요청 경로
+     */
+    public record ErrorInfo(
+        String code,
+        String message,
+        String path
+    ) {
+        public static ErrorInfo of(String code, String message, String path) {
+            return new ErrorInfo(code, message, path);
+        }
+    }
+}
+```
+
+### 사용 이유
+
+| 항목 | 기존 (ResponseEntity<T>) | 개선 (ApiResponse<T>) |
+|------|-------------------------|----------------------|
+| **일관성** | API마다 다른 구조 | 모든 API가 동일한 구조 ✅ |
+| **메타데이터** | 데이터만 반환 | timestamp, requestId 포함 ✅ |
+| **에러 처리** | 상태 코드에만 의존 | success 필드로 명확히 구분 ✅ |
+| **추적** | 요청 추적 어려움 | requestId로 로그 연계 ✅ |
+| **클라이언트 처리** | 조건부 파싱 필요 | 항상 동일한 방식으로 처리 ✅ |
 
 ---
 
@@ -151,10 +290,10 @@ public class OrderController {
  * 주문 생성
  *
  * @param request 주문 생성 요청
- * @return 201 Created + Location 헤더 + 생성된 주문 정보
+ * @return 201 Created + Location 헤더 + ApiResponse로 래핑된 주문 정보
  */
 @PostMapping
-public ResponseEntity<OrderApiResponse> createOrder(
+public ResponseEntity<ApiResponse<OrderApiResponse>> createOrder(
         @Valid @RequestBody CreateOrderRequest request) {
 
     CreateOrderUseCase.Command command = orderApiMapper.toCommand(request);
@@ -164,7 +303,7 @@ public ResponseEntity<OrderApiResponse> createOrder(
     return ResponseEntity
         .status(HttpStatus.CREATED)  // ✅ 201 Created
         .header(HttpHeaders.LOCATION, "/api/v1/orders/" + apiResponse.orderId())  // ✅ Location 헤더
-        .body(apiResponse);
+        .body(ApiResponse.success(apiResponse));  // ✅ ApiResponse로 래핑
 }
 ```
 
@@ -175,11 +314,17 @@ Location: /api/v1/orders/123
 Content-Type: application/json
 
 {
-  "orderId": 123,
-  "customerId": 456,
-  "status": "CONFIRMED",
-  "totalAmount": 50000,
-  "createdAt": "2025-10-17T10:30:00Z"
+  "success": true,
+  "data": {
+    "orderId": 123,
+    "customerId": 456,
+    "status": "CONFIRMED",
+    "totalAmount": 50000,
+    "createdAt": "2025-10-17T10:30:00Z"
+  },
+  "error": null,
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-a1b2c3d4"
 }
 ```
 
@@ -192,16 +337,16 @@ Content-Type: application/json
  * 주문 단건 조회
  *
  * @param orderId 주문 ID
- * @return 200 OK + 주문 상세 정보
+ * @return 200 OK + ApiResponse로 래핑된 주문 상세 정보
  */
 @GetMapping("/{orderId}")
-public ResponseEntity<OrderDetailApiResponse> getOrder(@PathVariable Long orderId) {
+public ResponseEntity<ApiResponse<OrderDetailApiResponse>> getOrder(@PathVariable Long orderId) {
 
     GetOrderQuery.Query query = new GetOrderQuery.Query(orderId);
     GetOrderQuery.Response response = getOrderQuery.getOrder(query);
     OrderDetailApiResponse apiResponse = orderApiMapper.toDetailApiResponse(response);
 
-    return ResponseEntity.ok(apiResponse);  // ✅ 200 OK
+    return ResponseEntity.ok(ApiResponse.success(apiResponse));  // ✅ 200 OK + ApiResponse
 }
 ```
 
@@ -211,22 +356,28 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
-  "orderId": 123,
-  "customerId": 456,
-  "customerName": "홍길동",
-  "status": "CONFIRMED",
-  "items": [
-    {
-      "productId": 789,
-      "productName": "상품A",
-      "quantity": 2,
-      "unitPrice": 25000,
-      "totalPrice": 50000
-    }
-  ],
-  "totalAmount": 50000,
-  "createdAt": "2025-10-17T10:30:00Z",
-  "confirmedAt": "2025-10-17T10:35:00Z"
+  "success": true,
+  "data": {
+    "orderId": 123,
+    "customerId": 456,
+    "customerName": "홍길동",
+    "status": "CONFIRMED",
+    "items": [
+      {
+        "productId": 789,
+        "productName": "상품A",
+        "quantity": 2,
+        "unitPrice": 25000,
+        "totalPrice": 50000
+      }
+    ],
+    "totalAmount": 50000,
+    "createdAt": "2025-10-17T10:30:00Z",
+    "confirmedAt": "2025-10-17T10:35:00Z"
+  },
+  "error": null,
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-b2c3d4e5"
 }
 ```
 
@@ -241,10 +392,10 @@ Content-Type: application/json
  * @param page 페이지 번호
  * @param size 페이지 크기
  * @param sort 정렬 조건
- * @return 200 OK + 페이징된 주문 목록
+ * @return 200 OK + ApiResponse로 래핑된 페이징 주문 목록
  */
 @GetMapping
-public ResponseEntity<PageResponse<OrderSummaryApiResponse>> searchOrders(
+public ResponseEntity<ApiResponse<PageResponse<OrderSummaryApiResponse>>> searchOrders(
         @RequestParam(required = false) Long customerId,
         @RequestParam(required = false) String status,
         @RequestParam(defaultValue = "0") int page,
@@ -260,9 +411,9 @@ public ResponseEntity<PageResponse<OrderSummaryApiResponse>> searchOrders(
         .build();
 
     SearchOrdersQuery.Response response = searchOrdersQuery.searchOrders(query);
-    PageResponse<OrderSummaryApiResponse> apiResponse = orderApiMapper.toPageApiResponse(response);
+    PageResponse<OrderSummaryApiResponse> pageResponse = orderApiMapper.toPageApiResponse(response);
 
-    return ResponseEntity.ok(apiResponse);  // ✅ 200 OK
+    return ResponseEntity.ok(ApiResponse.success(pageResponse));  // ✅ 200 OK + ApiResponse
 }
 ```
 
@@ -272,30 +423,36 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
-  "content": [
-    {
-      "orderId": 123,
-      "customerId": 456,
-      "customerName": "홍길동",
-      "status": "CONFIRMED",
-      "totalAmount": 50000,
-      "createdAt": "2025-10-17T10:30:00Z"
-    },
-    {
-      "orderId": 124,
-      "customerId": 457,
-      "customerName": "김철수",
-      "status": "SHIPPED",
-      "totalAmount": 75000,
-      "createdAt": "2025-10-17T11:00:00Z"
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 50,
-  "totalPages": 3,
-  "first": true,
-  "last": false
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "orderId": 123,
+        "customerId": 456,
+        "customerName": "홍길동",
+        "status": "CONFIRMED",
+        "totalAmount": 50000,
+        "createdAt": "2025-10-17T10:30:00Z"
+      },
+      {
+        "orderId": 124,
+        "customerId": 457,
+        "customerName": "김철수",
+        "status": "SHIPPED",
+        "totalAmount": 75000,
+        "createdAt": "2025-10-17T11:00:00Z"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 50,
+    "totalPages": 3,
+    "first": true,
+    "last": false
+  },
+  "error": null,
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-c3d4e5f6"
 }
 ```
 
@@ -307,10 +464,10 @@ Content-Type: application/json
  *
  * @param orderId 주문 ID
  * @param request 상태 변경 요청
- * @return 200 OK + 수정된 주문 정보
+ * @return 200 OK + ApiResponse로 래핑된 수정된 주문 정보
  */
 @PatchMapping("/{orderId}/status")
-public ResponseEntity<OrderApiResponse> updateOrderStatus(
+public ResponseEntity<ApiResponse<OrderApiResponse>> updateOrderStatus(
         @PathVariable Long orderId,
         @Valid @RequestBody UpdateOrderStatusRequest request) {
 
@@ -318,7 +475,7 @@ public ResponseEntity<OrderApiResponse> updateOrderStatus(
     UpdateOrderUseCase.Response response = updateOrderUseCase.updateOrderStatus(command);
     OrderApiResponse apiResponse = orderApiMapper.toApiResponse(response);
 
-    return ResponseEntity.ok(apiResponse);  // ✅ 200 OK
+    return ResponseEntity.ok(ApiResponse.success(apiResponse));  // ✅ 200 OK + ApiResponse
 }
 ```
 
@@ -328,10 +485,16 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
-  "orderId": 123,
-  "status": "SHIPPED",
-  "totalAmount": 50000,
-  "updatedAt": "2025-10-17T15:00:00Z"
+  "success": true,
+  "data": {
+    "orderId": 123,
+    "status": "SHIPPED",
+    "totalAmount": 50000,
+    "updatedAt": "2025-10-17T15:00:00Z"
+  },
+  "error": null,
+  "timestamp": "2025-10-17T15:00:00Z",
+  "requestId": "req-d4e5f6g7"
 }
 ```
 
@@ -343,7 +506,7 @@ Content-Type: application/json
  *
  * @param orderId 주문 ID
  * @param request 취소 요청 (취소 사유 포함)
- * @return 204 No Content
+ * @return 204 No Content (응답 본문 없음)
  */
 @DeleteMapping("/{orderId}")
 public ResponseEntity<Void> cancelOrder(
@@ -353,7 +516,7 @@ public ResponseEntity<Void> cancelOrder(
     CancelOrderUseCase.Command command = orderApiMapper.toCancelCommand(orderId, request);
     cancelOrderUseCase.cancelOrder(command);
 
-    return ResponseEntity.noContent().build();  // ✅ 204 No Content
+    return ResponseEntity.noContent().build();  // ✅ 204 No Content (본문 없음)
 }
 ```
 
@@ -361,6 +524,8 @@ public ResponseEntity<Void> cancelOrder(
 ```http
 HTTP/1.1 204 No Content
 ```
+
+**참고**: 204 No Content는 응답 본문이 없으므로 ApiResponse로 래핑하지 않습니다.
 
 ---
 
@@ -631,7 +796,7 @@ public ResponseEntity<PageResponse<OrderSummaryApiResponse>> searchOrders(
  * 글로벌 예외 핸들러
  *
  * <p>모든 Controller에서 발생하는 예외를 자동으로 적절한 HTTP 상태 코드와
- * ErrorResponse로 변환합니다.
+ * ApiResponse로 변환합니다.
  *
  * @see 08-error-handling/03_global-exception-handler.md
  * @see 08-error-handling/04_error-response-format.md
@@ -643,11 +808,11 @@ public class GlobalExceptionHandler {
      * 404 Not Found - 리소스 없음
      */
     @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(
+    public ResponseEntity<ApiResponse<Void>> handleNotFoundException(
             OrderNotFoundException ex,
             HttpServletRequest request) {
 
-        ErrorResponse response = ErrorResponse.of(
+        ApiResponse.ErrorInfo errorInfo = ApiResponse.ErrorInfo.of(
             ex.getErrorCode().getCode(),
             ex.getMessage(),
             request.getRequestURI()
@@ -655,48 +820,43 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)  // ✅ 404 Not Found
-            .body(response);
+            .body(ApiResponse.failure(errorInfo));
     }
 
     /**
      * 400 Bad Request - 검증 실패
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(
             MethodArgumentNotValidException ex,
             HttpServletRequest request) {
 
-        List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
+        String fieldErrorMessage = ex.getBindingResult()
             .getFieldErrors()
             .stream()
-            .map(error -> new ErrorResponse.FieldError(
-                error.getField(),
-                error.getRejectedValue(),
-                error.getDefaultMessage()
-            ))
-            .toList();
+            .map(error -> error.getField() + ": " + error.getDefaultMessage())
+            .collect(Collectors.joining(", "));
 
-        ErrorResponse response = ErrorResponse.of(
+        ApiResponse.ErrorInfo errorInfo = ApiResponse.ErrorInfo.of(
             "VALIDATION_FAILED",
-            "Validation failed",
-            request.getRequestURI(),
-            fieldErrors
+            fieldErrorMessage,
+            request.getRequestURI()
         );
 
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)  // ✅ 400 Bad Request
-            .body(response);
+            .body(ApiResponse.failure(errorInfo));
     }
 
     /**
      * 409 Conflict - 비즈니스 규칙 위반
      */
     @ExceptionHandler(InsufficientStockException.class)
-    public ResponseEntity<ErrorResponse> handleConflictException(
+    public ResponseEntity<ApiResponse<Void>> handleConflictException(
             InsufficientStockException ex,
             HttpServletRequest request) {
 
-        ErrorResponse response = ErrorResponse.of(
+        ApiResponse.ErrorInfo errorInfo = ApiResponse.ErrorInfo.of(
             ex.getErrorCode().getCode(),
             ex.getMessage(),
             request.getRequestURI()
@@ -704,20 +864,20 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
             .status(HttpStatus.CONFLICT)  // ✅ 409 Conflict
-            .body(response);
+            .body(ApiResponse.failure(errorInfo));
     }
 
     /**
      * 500 Internal Server Error - 서버 오류
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleInternalServerError(
+    public ResponseEntity<ApiResponse<Void>> handleInternalServerError(
             Exception ex,
             HttpServletRequest request) {
 
         log.error("Unexpected error occurred", ex);
 
-        ErrorResponse response = ErrorResponse.of(
+        ApiResponse.ErrorInfo errorInfo = ApiResponse.ErrorInfo.of(
             "INTERNAL_SERVER_ERROR",
             "An unexpected error occurred. Please try again later.",
             request.getRequestURI()
@@ -725,7 +885,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)  // ✅ 500
-            .body(response);
+            .body(ApiResponse.failure(errorInfo));
     }
 }
 ```
@@ -735,37 +895,60 @@ public class GlobalExceptionHandler {
 **404 Not Found**:
 ```json
 {
-  "code": "ORDER-001",
-  "message": "Order not found: 999",
-  "timestamp": "2025-10-17T10:30:00",
-  "path": "/api/v1/orders/999"
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "ORDER-001",
+    "message": "Order not found: 999",
+    "path": "/api/v1/orders/999"
+  },
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-e4f5g6h7"
 }
 ```
 
 **400 Bad Request** (Validation):
 ```json
 {
-  "code": "VALIDATION_FAILED",
-  "message": "Validation failed",
-  "timestamp": "2025-10-17T10:30:00",
-  "path": "/api/v1/orders",
-  "errors": [
-    {
-      "field": "customerId",
-      "rejectedValue": null,
-      "message": "Customer ID is required"
-    }
-  ]
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "customerId: Customer ID is required, totalAmount: Must be positive",
+    "path": "/api/v1/orders"
+  },
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-i8j9k0l1"
 }
 ```
 
 **409 Conflict**:
 ```json
 {
-  "code": "ORDER-002",
-  "message": "Insufficient stock for product 100: requested=50, available=10",
-  "timestamp": "2025-10-17T10:30:00",
-  "path": "/api/v1/orders"
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "ORDER-002",
+    "message": "Insufficient stock for product 100: requested=50, available=10",
+    "path": "/api/v1/orders"
+  },
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-m2n3o4p5"
+}
+```
+
+**500 Internal Server Error**:
+```json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "An unexpected error occurred. Please try again later.",
+    "path": "/api/v1/orders/123"
+  },
+  "timestamp": "2025-10-17T10:30:00Z",
+  "requestId": "req-q6r7s8t9"
 }
 ```
 
@@ -774,15 +957,21 @@ public class GlobalExceptionHandler {
 ## 📋 실무 체크리스트
 
 ### ResponseEntity 사용
-- [ ] 모든 Controller 메서드가 `ResponseEntity<T>`를 반환하는가?
+- [ ] 모든 Controller 메서드가 `ResponseEntity<ApiResponse<T>>`를 반환하는가?
 - [ ] 적절한 HTTP 상태 코드를 명시적으로 설정하는가?
 - [ ] 생성(POST) 시 201 Created를 반환하는가?
-- [ ] 삭제(DELETE) 시 204 No Content를 반환하는가?
+- [ ] 삭제(DELETE) 시 204 No Content를 반환하는가? (ApiResponse 없이)
 
 ### HTTP 헤더
 - [ ] 생성 시 Location 헤더를 포함하는가?
 - [ ] 적절한 Content-Type을 설정하는가? (application/json)
 - [ ] 필요 시 ETag, Cache-Control 헤더를 활용하는가?
+
+### ApiResponse 래핑
+- [ ] 모든 성공 응답이 `ApiResponse.success(data)`로 래핑되었는가?
+- [ ] 모든 에러 응답이 `ApiResponse.failure(errorInfo)`로 래핑되었는가?
+- [ ] 응답에 `success`, `data`, `error`, `timestamp`, `requestId` 필드가 포함되는가?
+- [ ] 204 No Content를 제외한 모든 응답에 ApiResponse를 사용하는가?
 
 ### 응답 본문
 - [ ] Response DTO에 `Api` 접두사를 사용하는가? (예: `OrderApiResponse`)
@@ -790,19 +979,19 @@ public class GlobalExceptionHandler {
 - [ ] Entity를 직접 반환하지 않는가? (DTO 변환 필수)
 
 ### 페이징
-- [ ] 페이징 응답에 `PageResponse<T>`를 사용하는가?
+- [ ] 페이징 응답에 `ApiResponse<PageResponse<T>>`를 사용하는가?
 - [ ] 페이징 정보 (page, size, totalElements 등)를 포함하는가?
 - [ ] 빈 목록도 200 OK로 반환하는가?
 
 ### 에러 처리
 - [ ] GlobalExceptionHandler에서 에러 응답을 통일했는가?
-- [ ] 에러 응답에 `ErrorResponse`를 사용하는가?
+- [ ] 에러 응답에 `ApiResponse<Void>`와 `ErrorInfo`를 사용하는가?
 - [ ] 적절한 HTTP 상태 코드를 반환하는가? (400, 404, 409, 500)
 - [ ] 민감한 정보를 에러 응답에 노출하지 않는가?
 
 ### 일관성
-- [ ] 모든 API가 동일한 응답 구조를 사용하는가?
-- [ ] 성공/에러 응답 형식이 일관적인가?
+- [ ] 모든 API가 동일한 `ApiResponse` 구조를 사용하는가?
+- [ ] 성공 시 `success: true`, 실패 시 `success: false`가 설정되는가?
 - [ ] HTTP 상태 코드 사용이 일관적인가?
 
 ---
