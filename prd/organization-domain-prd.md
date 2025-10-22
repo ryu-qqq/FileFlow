@@ -105,7 +105,7 @@ Long FK 전략을 사용하여 Tenant와의 관계를 표현합니다.
 
 ## 패키지 구조
 ```
-domain/src/main/java/com/company/template/domain/model/organization/
+domain/src/main/java/com/ryuqq/fileflow/domain/iam/organization/
 ├── Organization.java           # Aggregate Root
 ├── OrganizationId.java         # Value Object (Record)
 ├── OrgCode.java                # Value Object

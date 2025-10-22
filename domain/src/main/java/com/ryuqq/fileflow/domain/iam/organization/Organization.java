@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.iam.organization;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -25,6 +26,7 @@ public class Organization {
 
     private final OrganizationId id;
     private final Long tenantId;
+    private final Clock clock;
     private OrgCode orgCode;
     private String name;
     private OrganizationStatus status;
@@ -47,6 +49,25 @@ public class Organization {
      * @since 2025-10-22
      */
     public Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
+        this(id, tenantId, orgCode, name, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Organization을 생성합니다 (테스트용).
+     *
+     * <p>테스트에서 시간을 제어하기 위한 package-private 생성자입니다.</p>
+     * <p>초기 상태: ACTIVE, deleted = false</p>
+     *
+     * @param id Organization 식별자
+     * @param tenantId Tenant 식별자 (Long FK 전략)
+     * @param orgCode 조직 코드
+     * @param name 조직 이름
+     * @param clock 시간 제공자
+     * @throws IllegalArgumentException 필수 필드가 null이거나 유효하지 않은 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name, Clock clock) {
         if (id == null) {
             throw new IllegalArgumentException("Organization ID는 필수입니다");
         }
@@ -65,11 +86,12 @@ public class Organization {
 
         this.id = id;
         this.tenantId = tenantId;
+        this.clock = clock;
         this.orgCode = orgCode;
         this.name = name.trim();
         this.status = OrganizationStatus.ACTIVE;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
         this.deleted = false;
     }
 
@@ -93,7 +115,7 @@ public class Organization {
         }
 
         this.name = newName.trim();
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -114,7 +136,7 @@ public class Organization {
         }
 
         this.status = OrganizationStatus.INACTIVE;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -134,7 +156,7 @@ public class Organization {
 
         this.deleted = true;
         this.status = OrganizationStatus.INACTIVE;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
