@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * TenantName 비즈니스 규칙 검증 테스트
  *
- * @author Claude
+ * @author ryu-qqq
  * @since 2025-10-22
  */
 @Tag("unit")

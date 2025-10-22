@@ -1,7 +1,7 @@
 // ========================================
-// Adapter-Out Persistence JPA (Outbound Adapter)
+// Adapter-Out Persistence MySQL (Outbound Adapter)
 // ========================================
-// Purpose: 데이터베이스 영속성 어댑터 (Driven Adapter)
+// Purpose: MySQL 데이터베이스 영속성 어댑터 (Driven Adapter)
 // - JPA Entities (NOT Domain Entities!)
 // - JPA Repositories
 // - QueryDSL for complex queries
@@ -23,7 +23,6 @@
 
 plugins {
     java
-    id("com.ewerk.gradle.plugins.querydsl") version "1.0.10"
 }
 
 dependencies {
@@ -45,19 +44,11 @@ dependencies {
     testImplementation(rootProject.libs.h2)
 
     // ========================================
-    // QueryDSL
+    // QueryDSL (Jakarta)
     // ========================================
-    implementation(rootProject.libs.querydsl.jpa) {
-        artifact {
-            classifier = "jakarta"
-        }
-    }
-    annotationProcessor(rootProject.libs.querydsl.apt) {
-        artifact {
-            classifier = "jakarta"
-        }
-    }
-    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+    implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
+    annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api:3.1.0")
 
     // ========================================
     // Flyway Migration
@@ -68,20 +59,16 @@ dependencies {
     // ========================================
     // Test Dependencies
     // ========================================
+    testImplementation(project(":test-fixtures"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(rootProject.libs.testcontainers.junit)
     testImplementation(rootProject.libs.testcontainers.mysql)
 }
 
 // ========================================
-// QueryDSL Configuration
+// QueryDSL Configuration (Gradle 8.x)
 // ========================================
 val querydslDir = "src/main/generated"
-
-querydsl {
-    jpa = true
-    querydslSourcesDir = querydslDir
-}
 
 sourceSets {
     main {
@@ -97,6 +84,6 @@ tasks.withType<JavaCompile> {
 
 tasks.named("clean") {
     doLast {
-        file(querydslDir).deleteRecursively()
+        delete(file(querydslDir))
     }
 }

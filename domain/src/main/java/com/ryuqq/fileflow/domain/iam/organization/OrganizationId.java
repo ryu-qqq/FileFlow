@@ -36,4 +36,17 @@ public record OrganizationId(Long value) {
             throw new IllegalArgumentException("Organization ID는 양수여야 합니다");
         }
     }
+
+    /**
+     * OrganizationId 생성 - Static Factory Method
+     *
+     * @param value Organization ID 값
+     * @return OrganizationId 인스턴스
+     * @throws IllegalArgumentException value가 null이거나 음수인 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public static OrganizationId of(Long value) {
+        return new OrganizationId(value);
+    }
 }

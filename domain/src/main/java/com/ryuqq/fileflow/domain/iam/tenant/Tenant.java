@@ -34,9 +34,9 @@ public class Tenant {
     private boolean deleted;
 
     /**
-     * Tenant를 생성합니다.
+     * Tenant를 생성합니다 (Package-private 생성자).
      *
-     * <p>생성 시 자동으로 ACTIVE 상태로 초기화되며, 삭제되지 않은 상태입니다.</p>
+     * <p>외부 패키지에서 직접 생성할 수 없습니다. 정적 팩토리 메서드 또는 같은 패키지 내 테스트에서 사용하세요.</p>
      *
      * @param id Tenant 식별자
      * @param name Tenant 이름
@@ -44,8 +44,24 @@ public class Tenant {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public Tenant(TenantId id, TenantName name) {
+    Tenant(TenantId id, TenantName name) {
         this(id, name, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Tenant를 생성합니다 (Static Factory Method).
+     *
+     * <p>생성 시 자동으로 ACTIVE 상태로 초기화되며, 삭제되지 않은 상태입니다.</p>
+     *
+     * @param id Tenant 식별자
+     * @param name Tenant 이름
+     * @return 생성된 Tenant
+     * @throws IllegalArgumentException id 또는 name이 null인 경우
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public static Tenant of(TenantId id, TenantName name) {
+        return new Tenant(id, name, Clock.systemDefaultZone());
     }
 
     /**
@@ -75,6 +91,64 @@ public class Tenant {
         this.createdAt = LocalDateTime.now(clock);
         this.updatedAt = LocalDateTime.now(clock);
         this.deleted = false;
+    }
+
+    /**
+     * Private 전체 생성자 (reconstitute 전용)
+     *
+     * @param id Tenant ID
+     * @param name Tenant 이름
+     * @param status Tenant 상태
+     * @param clock 시간 제공자
+     * @param createdAt 생성 일시
+     * @param updatedAt 수정 일시
+     * @param deleted 삭제 여부
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    private Tenant(
+        TenantId id,
+        TenantName name,
+        TenantStatus status,
+        Clock clock,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        boolean deleted
+    ) {
+        this.id = id;
+        this.name = name;
+        this.status = status;
+        this.clock = clock;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.deleted = deleted;
+    }
+
+    /**
+     * DB에서 조회한 데이터로 Tenant 재구성 (Static Factory Method)
+     *
+     * <p>Persistence Layer에서 DB 데이터를 Domain으로 변환할 때 사용합니다.</p>
+     * <p>모든 상태(status, deleted 포함)를 그대로 복원합니다.</p>
+     *
+     * @param id Tenant ID
+     * @param name Tenant 이름
+     * @param status Tenant 상태
+     * @param createdAt 생성 일시
+     * @param updatedAt 수정 일시
+     * @param deleted 삭제 여부
+     * @return 재구성된 Tenant
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public static Tenant reconstitute(
+        TenantId id,
+        TenantName name,
+        TenantStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        boolean deleted
+    ) {
+        return new Tenant(id, name, status, Clock.systemDefaultZone(), createdAt, updatedAt, deleted);
     }
 
     /**
@@ -192,6 +266,20 @@ public class Tenant {
     }
 
     /**
+     * Tenant ID 원시 값을 반환합니다 (Law of Demeter 준수).
+     *
+     * <p>❌ Bad: tenant.getId().value()</p>
+     * <p>✅ Good: tenant.getIdValue()</p>
+     *
+     * @return Tenant ID 원시 값
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public String getIdValue() {
+        return id.value();
+    }
+
+    /**
      * Tenant 이름을 반환합니다.
      *
      * @return Tenant 이름
@@ -200,6 +288,20 @@ public class Tenant {
      */
     public TenantName getName() {
         return name;
+    }
+
+    /**
+     * Tenant 이름 원시 값을 반환합니다 (Law of Demeter 준수).
+     *
+     * <p>❌ Bad: tenant.getName().getValue()</p>
+     * <p>✅ Good: tenant.getNameValue()</p>
+     *
+     * @return Tenant 이름 원시 값
+     * @author ryu-qqq
+     * @since 2025-10-22
+     */
+    public String getNameValue() {
+        return name.getValue();
     }
 
     /**
