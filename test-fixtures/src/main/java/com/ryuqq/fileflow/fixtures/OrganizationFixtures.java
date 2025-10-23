@@ -43,12 +43,12 @@ public final class OrganizationFixtures {
      *
      * <p>DB에서 자동 증가 ID가 생성되기 전 상태의 Organization입니다.</p>
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치)
      * @return ID가 null인 신규 Sales 조직 (ACTIVE)
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization salesOrganization(Long tenantId) {
+    public static Organization salesOrganization(String tenantId) {
         return Organization.of(
             null,  // ID 없음 (DB 저장 시 자동 생성)
             tenantId,
@@ -65,7 +65,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization hrOrganization(Long tenantId) {
+    public static Organization hrOrganization(String tenantId) {
         return Organization.of(
             null,  // ID 없음 (DB 저장 시 자동 생성)
             tenantId,
@@ -82,7 +82,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization itOrganization(Long tenantId) {
+    public static Organization itOrganization(String tenantId) {
         return Organization.of(
             null,  // ID 없음 (DB 저장 시 자동 생성)
             tenantId,
@@ -101,7 +101,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization organizationWithCode(Long tenantId, String orgCodeValue, String name) {
+    public static Organization organizationWithCode(String tenantId, String orgCodeValue, String name) {
         return Organization.of(
             null,  // ID 없음 (DB 저장 시 자동 생성)
             tenantId,
@@ -119,7 +119,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization salesOrganizationWithId(Long organizationId, Long tenantId) {
+    public static Organization salesOrganizationWithId(Long organizationId, String tenantId) {
         return Organization.of(
             OrganizationId.of(organizationId),
             tenantId,
@@ -137,7 +137,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization hrOrganizationWithId(Long organizationId, Long tenantId) {
+    public static Organization hrOrganizationWithId(Long organizationId, String tenantId) {
         return Organization.of(
             OrganizationId.of(organizationId),
             tenantId,
@@ -155,7 +155,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization inactiveOrganization(Long organizationId, Long tenantId) {
+    public static Organization inactiveOrganization(Long organizationId, String tenantId) {
         return Organization.reconstitute(
             OrganizationId.of(organizationId),
             tenantId,
@@ -176,7 +176,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization deletedOrganization(Long tenantId) {
+    public static Organization deletedOrganization(String tenantId) {
         return Organization.reconstitute(
             OrganizationId.of(999L),
             tenantId,
@@ -199,7 +199,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization deletedOrganizationWithCode(Long organizationId, Long tenantId, String orgCodeValue) {
+    public static Organization deletedOrganizationWithCode(Long organizationId, String tenantId, String orgCodeValue) {
         return Organization.reconstitute(
             OrganizationId.of(organizationId),
             tenantId,
@@ -226,7 +226,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization organizationWithClock(Long tenantId, String orgCodeValue, String name, Clock clock) {
+    public static Organization organizationWithClock(String tenantId, String orgCodeValue, String name, Clock clock) {
         LocalDateTime now = LocalDateTime.now(clock);
         return Organization.reconstitute(
             null,  // ID는 null (DB 저장 시 생성됨)
@@ -259,7 +259,7 @@ public final class OrganizationFixtures {
      */
     public static Organization customOrganization(
         Long organizationId,
-        Long tenantId,
+        String tenantId,
         String orgCodeValue,
         String name,
         OrganizationStatus status,
@@ -276,6 +276,51 @@ public final class OrganizationFixtures {
             createdAt,
             updatedAt,
             deleted
+        );
+    }
+
+    /**
+     * ID를 가진 ACTIVE 상태의 Organization을 생성합니다.
+     *
+     * <p>테스트에서 Update/Delete 작업을 테스트할 때 사용합니다.</p>
+     *
+     * @param organizationId Organization ID
+     * @return ID를 가진 Organization (ACTIVE, "tenant-default", "ORG-DEFAULT")
+     * @author ryu-qqq
+     * @since 2025-10-23
+     */
+    public static Organization activeOrganizationWithId(Long organizationId) {
+        return Organization.reconstitute(
+            OrganizationId.of(organizationId),
+            "tenant-default",
+            OrgCode.of("ORG-DEFAULT"),
+            "Default Organization",
+            OrganizationStatus.ACTIVE,
+            LocalDateTime.now().minusDays(1),
+            LocalDateTime.now().minusDays(1),
+            false
+        );
+    }
+
+    /**
+     * INACTIVE 상태의 Organization을 생성합니다 (인자 없음 버전).
+     *
+     * <p>테스트에서 비활성화된 Organization이 필요할 때 사용합니다.</p>
+     *
+     * @return INACTIVE 상태의 Organization (ID: 999L, "tenant-default")
+     * @author ryu-qqq
+     * @since 2025-10-23
+     */
+    public static Organization inactiveOrganization() {
+        return Organization.reconstitute(
+            OrganizationId.of(999L),
+            "tenant-default",
+            OrgCode.of("INACTIVE"),
+            "Inactive Organization",
+            OrganizationStatus.INACTIVE,
+            LocalDateTime.now().minusDays(30),
+            LocalDateTime.now().minusDays(1),
+            false
         );
     }
 }
