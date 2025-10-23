@@ -45,8 +45,8 @@ class OrganizationPersistenceAdapterTest extends IntegrationTestBase {
     @Autowired
     private OrganizationPersistenceAdapter organizationPersistenceAdapter;
 
-    private static final Long TEST_TENANT_ID = 1L;
-    private static final Long ANOTHER_TENANT_ID = 2L;
+    private static final String TEST_TENANT_ID = "test-tenant-1";
+    private static final String ANOTHER_TENANT_ID = "test-tenant-2";
 
     @Test
     @DisplayName("신규 Organization을 저장하면 ID가 생성되어 반환된다")

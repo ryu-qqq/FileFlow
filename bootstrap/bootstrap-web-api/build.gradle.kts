@@ -26,16 +26,11 @@ dependencies {
     // Adapters
     // ========================================
     // Inbound
-    implementation(project(":adapter:adapter-in-rest-api"))
+    implementation(project(":adapter-in:rest-api"))
 
     // Outbound
-    implementation(project(":adapter:adapter-out-persistence-jpa"))
-    implementation(project(":adapter:adapter-out-redis"))
-    implementation(project(":adapter:adapter-out-aws-s3"))
-    implementation(project(":adapter:adapter-out-aws-sqs"))
-    implementation(project(":adapter:adapter-out-aws-textract"))
-    implementation(project(":adapter:adapter-out-metadata-extraction"))
-    implementation(project(":adapter:adapter-out-image-conversion"))
+    implementation(project(":adapter-out:persistence-mysql"))
+
 
     // ========================================
     // Spring Boot Starters
