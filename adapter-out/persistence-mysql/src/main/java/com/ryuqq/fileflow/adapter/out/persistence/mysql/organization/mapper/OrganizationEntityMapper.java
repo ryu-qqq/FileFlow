@@ -17,7 +17,7 @@ import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
  *   <li>✅ {@code toDomain()}: Entity → Domain 변환</li>
  *   <li>✅ {@code toEntity()}: Domain → Entity 변환</li>
  *   <li>✅ Value Object 변환 포함 (OrganizationId, OrgCode, OrganizationStatus)</li>
- *   <li>✅ Long FK 전략 적용 (tenantId는 Long 타입으로 직접 매핑)</li>
+ *   <li>✅ String FK 전략 적용 (tenantId는 String 타입으로 직접 매핑 - Tenant PK 타입과 일치)</li>
  *   <li>❌ Lombok 금지 (Pure Java)</li>
  *   <li>❌ 비즈니스 로직 금지 (단순 변환만)</li>
  * </ul>
@@ -42,7 +42,7 @@ public final class OrganizationEntityMapper {
      * <ol>
      *   <li>Value Object 생성: {@code OrganizationId}, {@code OrgCode}</li>
      *   <li>Domain Enum 그대로 사용: {@code OrganizationStatus}</li>
-     *   <li>Long tenantId 직접 매핑 (Long FK 전략)</li>
+     *   <li>String tenantId 직접 매핑 (String FK 전략 - Tenant PK 타입과 일치)</li>
      *   <li>Domain Aggregate 재구성</li>
      * </ol>
      *
@@ -59,13 +59,13 @@ public final class OrganizationEntityMapper {
         OrganizationId organizationId = OrganizationId.of(entity.getId());
         OrgCode orgCode = OrgCode.of(entity.getOrgCode());
 
-        // Long FK 전략: tenantId는 Long 타입 그대로 사용
-        Long tenantId = entity.getTenantId();
+        // String FK 전략: tenantId는 String 타입 그대로 사용 (Tenant PK 타입과 일치)
+        String tenantId = entity.getTenantId();
 
         // Domain Aggregate 재구성 (Status 그대로 사용)
         return Organization.reconstitute(
             organizationId,
-            tenantId,           // Long FK
+            tenantId,           // String FK - Tenant PK 타입과 일치
             orgCode,
             entity.getName(),
             entity.getStatus(),
@@ -84,7 +84,7 @@ public final class OrganizationEntityMapper {
      * <ol>
      *   <li>Value Object 원시 타입 추출: {@code id.value()}, {@code orgCode.value()}</li>
      *   <li>Domain Enum 그대로 사용: {@code OrganizationStatus}</li>
-     *   <li>Long tenantId 직접 매핑 (Long FK 전략)</li>
+     *   <li>String tenantId 직접 매핑 (String FK 전략 - Tenant PK 타입과 일치)</li>
      *   <li>JPA Entity 생성 (reconstitute 또는 create)</li>
      * </ol>
      *
@@ -99,7 +99,7 @@ public final class OrganizationEntityMapper {
 
         // Value Object → 원시 타입 (Law of Demeter 준수)
         Long id = organization.getId() != null ? organization.getIdValue() : null;
-        Long tenantId = organization.getTenantId();  // Long FK 직접 사용
+        String tenantId = organization.getTenantId();  // String FK 직접 사용 (Tenant PK 타입과 일치)
         String orgCode = organization.getOrgCodeValue();
         String name = organization.getName();
 

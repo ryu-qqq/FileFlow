@@ -50,9 +50,9 @@ public class OrganizationJpaEntity {
     private Long id;
 
     /**
-     * 소속 Tenant ID (Long FK - 관계 어노테이션 사용 금지!)
+     * 소속 Tenant ID (String FK - Tenant PK 타입과 일치)
      *
-     * <p><strong>Long FK 전략</strong>: JPA 관계 어노테이션 대신 Long 타입 사용</p>
+     * <p><strong>String FK 전략</strong>: Tenant PK 타입(String UUID)과 일치하여 참조 무결성 보장</p>
      * <p>Domain {@code Organization.tenantId}와 직접 매핑됩니다.</p>
      *
      * <p><strong>이유</strong>:
@@ -60,11 +60,12 @@ public class OrganizationJpaEntity {
      *   <li>Law of Demeter 준수 ({@code org.getTenant().getId()} 금지)</li>
      *   <li>N+1 문제 방지</li>
      *   <li>불필요한 Join 방지</li>
+     *   <li>DB FK 제약조건 생성 가능 (타입 일치)</li>
      * </ul>
      * </p>
      */
-    @Column(name = "tenant_id", nullable = false)
-    private final Long tenantId;
+    @Column(name = "tenant_id", nullable = false, length = 50)
+    private final String tenantId;
 
     /**
      * 조직 코드
@@ -134,7 +135,7 @@ public class OrganizationJpaEntity {
      * <p>Static Factory Method에서만 사용합니다.</p>
      */
     private OrganizationJpaEntity(
-        Long tenantId,
+        String tenantId,
         String orgCode,
         String name,
         OrganizationStatus status,
@@ -158,7 +159,7 @@ public class OrganizationJpaEntity {
      *
      * <p><strong>검증</strong>: 필수 필드 null 체크만 수행 (비즈니스 검증은 Domain Layer에서)</p>
      *
-     * @param tenantId 소속 Tenant ID (Long FK)
+     * @param tenantId 소속 Tenant ID (String - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @param createdAt 생성 일시
@@ -166,7 +167,7 @@ public class OrganizationJpaEntity {
      * @throws IllegalArgumentException 필수 필드가 null인 경우
      */
     public static OrganizationJpaEntity create(
-        Long tenantId,
+        String tenantId,
         String orgCode,
         String name,
         LocalDateTime createdAt
@@ -194,7 +195,7 @@ public class OrganizationJpaEntity {
      * <p>DB 조회 결과를 Entity로 변환할 때 사용합니다.</p>
      *
      * @param id Organization ID
-     * @param tenantId 소속 Tenant ID (Long FK)
+     * @param tenantId 소속 Tenant ID (String - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @param status Organization 상태
@@ -205,7 +206,7 @@ public class OrganizationJpaEntity {
      */
     public static OrganizationJpaEntity reconstitute(
         Long id,
-        Long tenantId,
+        String tenantId,
         String orgCode,
         String name,
         OrganizationStatus status,
@@ -234,7 +235,7 @@ public class OrganizationJpaEntity {
         return id;
     }
 
-    public Long getTenantId() {
+    public String getTenantId() {
         return tenantId;
     }
 
