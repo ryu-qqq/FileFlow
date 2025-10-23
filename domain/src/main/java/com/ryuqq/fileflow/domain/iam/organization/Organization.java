@@ -262,12 +262,12 @@ public class Organization {
      * <p>❌ Bad: organization.getTenantId().equals(tenantId)</p>
      * <p>✅ Good: organization.belongsToTenant(tenantId)</p>
      *
-     * @param tenantId 확인할 Tenant ID
+     * @param tenantId 확인할 Tenant ID (String - Tenant PK 타입과 일치)
      * @return 해당 Tenant에 속하면 true
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public boolean belongsToTenant(Long tenantId) {
+    public boolean belongsToTenant(String tenantId) {
         if (tenantId == null) {
             return false;
         }

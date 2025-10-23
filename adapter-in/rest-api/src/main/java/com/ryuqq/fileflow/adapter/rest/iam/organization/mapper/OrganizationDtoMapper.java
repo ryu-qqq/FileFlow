@@ -56,7 +56,7 @@ public final class OrganizationDtoMapper {
      */
     public static CreateOrganizationCommand toCommand(CreateOrganizationRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("CreateOrganizationRequest는 필수입니다");
+            throw new IllegalArgumentException("CreateOrganizationRequest는 null일 수 없습니다");
         }
         return new CreateOrganizationCommand(
             request.tenantId(),
@@ -77,10 +77,10 @@ public final class OrganizationDtoMapper {
      */
     public static UpdateOrganizationCommand toCommand(Long organizationId, UpdateOrganizationRequest request) {
         if (organizationId == null || organizationId <= 0) {
-            throw new IllegalArgumentException("Organization ID는 필수이며 양수여야 합니다");
+            throw new IllegalArgumentException("Organization ID는 null일 수 없으며 양수여야 합니다");
         }
         if (request == null) {
-            throw new IllegalArgumentException("UpdateOrganizationRequest는 필수입니다");
+            throw new IllegalArgumentException("UpdateOrganizationRequest는 null일 수 없습니다");
         }
         return new UpdateOrganizationCommand(organizationId, request.name());
     }
@@ -97,10 +97,10 @@ public final class OrganizationDtoMapper {
      */
     public static UpdateOrganizationStatusCommand toCommand(Long organizationId, UpdateOrganizationStatusRequest request) {
         if (organizationId == null || organizationId <= 0) {
-            throw new IllegalArgumentException("Organization ID는 필수이며 양수여야 합니다");
+            throw new IllegalArgumentException("Organization ID는 null일 수 없으며 양수여야 합니다");
         }
         if (request == null) {
-            throw new IllegalArgumentException("UpdateOrganizationStatusRequest는 필수입니다");
+            throw new IllegalArgumentException("UpdateOrganizationStatusRequest는 null일 수 없습니다");
         }
         return new UpdateOrganizationStatusCommand(organizationId, request.status());
     }
@@ -116,7 +116,7 @@ public final class OrganizationDtoMapper {
      */
     public static OrganizationApiResponse toApiResponse(OrganizationResponse response) {
         if (response == null) {
-            throw new IllegalArgumentException("OrganizationResponse는 필수입니다");
+            throw new IllegalArgumentException("OrganizationResponse는 null일 수 없습니다");
         }
         return new OrganizationApiResponse(
             response.organizationId(),
