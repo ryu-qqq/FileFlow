@@ -1,7 +1,9 @@
 package com.ryuqq.fileflow.application.iam.organization.assembler;
 
-import com.ryuqq.fileflow.application.iam.organization.dto.OrganizationResponse;
+import com.ryuqq.fileflow.application.iam.organization.dto.command.CreateOrganizationCommand;
+import com.ryuqq.fileflow.application.iam.organization.dto.response.OrganizationResponse;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
+import com.ryuqq.fileflow.domain.iam.organization.OrgCode;
 
 /**
  * OrganizationAssembler - Organization DTO ↔ Domain 변환 유틸리티
@@ -14,13 +16,18 @@ import com.ryuqq.fileflow.domain.iam.organization.Organization;
  *   <li>✅ Pure Java (Lombok 금지)</li>
  *   <li>✅ Static 메서드만 제공 (유틸리티 클래스)</li>
  *   <li>✅ Law of Demeter 준수 (Getter 체이닝 금지)</li>
- *   <li>✅ 단방향 변환: Domain → Response (Command → Domain은 UseCase에서 처리)</li>
- *   <li>✅ Long FK 전략 - Tenant ID를 Long으로 변환</li>
+ *   <li>✅ 양방향 변환: Command → Domain, Domain → Response</li>
+ *   <li>✅ Long FK 전략 - Tenant ID를 Long으로 사용</li>
  * </ul>
  *
  * <p><strong>사용 예시:</strong></p>
  * <pre>{@code
- * Organization organization = Organization.of(...);
+ * // Command → Domain
+ * CreateOrganizationCommand command = new CreateOrganizationCommand(...);
+ * OrganizationCode orgCode = OrganizationCode.of(command.orgCode());
+ * Organization organization = OrganizationAssembler.toDomain(command, orgCode);
+ *
+ * // Domain → Response
  * OrganizationResponse response = OrganizationAssembler.toResponse(organization);
  * }</pre>
  *
@@ -40,6 +47,35 @@ public final class OrganizationAssembler {
      */
     private OrganizationAssembler() {
         throw new AssertionError("Cannot instantiate utility class");
+    }
+
+    /**
+     * CreateOrganizationCommand → Organization Domain 변환
+     *
+     * <p>Command 객체를 받아 Organization Aggregate를 생성합니다.</p>
+     * <p>ID는 null로 설정되며, 저장 후 자동 생성됩니다.</p>
+     *
+     * @param command Organization 생성 Command
+     * @param orgCode OrgCode Value Object (이미 검증됨)
+     * @return Organization Domain 객체 (ID는 null)
+     * @throws IllegalArgumentException command 또는 orgCode가 null인 경우
+     * @author ryu-qqq
+     * @since 2025-10-23
+     */
+    public static Organization toDomain(CreateOrganizationCommand command, OrgCode orgCode) {
+        if (command == null) {
+            throw new IllegalArgumentException("CreateOrganizationCommand는 필수입니다");
+        }
+        if (orgCode == null) {
+            throw new IllegalArgumentException("OrgCode는 필수입니다");
+        }
+
+        return Organization.of(
+            null,  // ID는 저장 후 자동 생성
+            command.tenantId(),
+            orgCode,
+            command.name()
+        );
     }
 
     /**

@@ -1,7 +1,15 @@
 package com.ryuqq.fileflow.application.iam.tenant.assembler;
 
-import com.ryuqq.fileflow.application.iam.tenant.dto.TenantResponse;
+import com.ryuqq.fileflow.application.iam.tenant.dto.command.CreateTenantCommand;
+import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
+import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantTreeResponse;
+import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
+import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
+import com.ryuqq.fileflow.domain.iam.tenant.TenantName;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * TenantAssembler - Tenant DTO ↔ Domain 변환 유틸리티
@@ -14,7 +22,7 @@ import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
  *   <li>✅ Pure Java (Lombok 금지)</li>
  *   <li>✅ Static 메서드만 제공 (유틸리티 클래스)</li>
  *   <li>✅ Law of Demeter 준수 (Getter 체이닝 금지)</li>
- *   <li>✅ 단방향 변환: Domain → Response (Command → Domain은 UseCase에서 처리)</li>
+ *   <li>✅ 양방향 변환: Command → Domain, Domain → Response</li>
  * </ul>
  *
  * <p><strong>사용 예시:</strong></p>
@@ -42,6 +50,27 @@ public final class TenantAssembler {
     }
 
     /**
+     * TenantName → Tenant Domain 변환
+     *
+     * <p>Command로부터 추출한 TenantName을 받아 Tenant Aggregate를 생성합니다.</p>
+     * <p>TenantId는 UUID로 자동 생성됩니다.</p>
+     *
+     * @param tenantName TenantName Value Object (이미 검증됨)
+     * @return Tenant Domain 객체
+     * @throws IllegalArgumentException tenantName이 null인 경우
+     * @author ryu-qqq
+     * @since 2025-10-23
+     */
+    public static Tenant toDomain(TenantName tenantName) {
+        if (tenantName == null) {
+            throw new IllegalArgumentException("TenantName은 필수입니다");
+        }
+
+        TenantId tenantId = TenantId.of(UUID.randomUUID().toString());
+        return Tenant.of(tenantId, tenantName);
+    }
+
+    /**
      * Tenant Domain → TenantResponse 변환
      *
      * <p>Law of Demeter 준수: tenant.getIdValue(), tenant.getNameValue() 사용</p>
@@ -64,6 +93,49 @@ public final class TenantAssembler {
             tenant.getNameValue(),
             tenant.getStatus().name(),
             tenant.isDeleted(),
+            tenant.getCreatedAt(),
+            tenant.getUpdatedAt()
+        );
+    }
+
+    /**
+     * Tenant + Organization List → TenantTreeResponse 변환
+     *
+     * <p>Tenant와 하위 Organization 목록을 트리 구조로 변환합니다.</p>
+     * <p>Law of Demeter 준수: 각 Aggregate의 getXxxValue() 메서드 사용</p>
+     *
+     * @param tenant Tenant Aggregate
+     * @param organizations Organization 목록
+     * @return TenantTreeResponse (트리 구조)
+     * @throws IllegalArgumentException tenant 또는 organizations가 null인 경우
+     * @author ryu-qqq
+     * @since 2025-10-23
+     */
+    public static TenantTreeResponse toTreeResponse(Tenant tenant, List<Organization> organizations) {
+        if (tenant == null) {
+            throw new IllegalArgumentException("Tenant는 필수입니다");
+        }
+        if (organizations == null) {
+            throw new IllegalArgumentException("Organization 목록은 필수입니다");
+        }
+
+        List<TenantTreeResponse.OrganizationSummary> orgSummaries = organizations.stream()
+            .map(org -> new TenantTreeResponse.OrganizationSummary(
+                org.getIdValue(),
+                org.getOrgCodeValue(),
+                org.getName(),
+                org.getStatus().name(),
+                org.isDeleted()
+            ))
+            .toList();
+
+        return new TenantTreeResponse(
+            tenant.getIdValue(),
+            tenant.getNameValue(),
+            tenant.getStatus().name(),
+            tenant.isDeleted(),
+            orgSummaries.size(),
+            orgSummaries,
             tenant.getCreatedAt(),
             tenant.getUpdatedAt()
         );

@@ -31,7 +31,7 @@ public class QOrganizationJpaEntity extends EntityPathBase<OrganizationJpaEntity
 
     public final EnumPath<com.ryuqq.fileflow.domain.iam.organization.OrganizationStatus> status = createEnum("status", com.ryuqq.fileflow.domain.iam.organization.OrganizationStatus.class);
 
-    public final NumberPath<Long> tenantId = createNumber("tenantId", Long.class);
+    public final StringPath tenantId = createString("tenantId");
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
