@@ -13,6 +13,7 @@ import com.ryuqq.fileflow.domain.iam.tenant.exception.TenantNotFoundException;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,7 @@ public class GetTenantTreeService implements GetTenantTreeUseCase {
 
     private final TenantQueryRepositoryPort tenantQueryRepositoryPort;
     private final OrganizationQueryRepositoryPort organizationQueryRepositoryPort;
+    private final int maxOrganizationsPerTree;
 
     /**
      * Constructor - 의존성 주입
@@ -53,15 +55,18 @@ public class GetTenantTreeService implements GetTenantTreeUseCase {
      *
      * @param tenantQueryRepositoryPort Tenant 조회 Repository Port
      * @param organizationQueryRepositoryPort Organization 조회 Repository Port
+     * @param maxOrganizationsPerTree Tenant 트리에서 조회할 최대 Organization 개수 (application.yml 설정)
      * @author ryu-qqq
      * @since 2025-10-23
      */
     public GetTenantTreeService(
         TenantQueryRepositoryPort tenantQueryRepositoryPort,
-        OrganizationQueryRepositoryPort organizationQueryRepositoryPort
+        OrganizationQueryRepositoryPort organizationQueryRepositoryPort,
+        @Value("${application.tenant.max-organizations-per-tree:1000}") int maxOrganizationsPerTree
     ) {
         this.tenantQueryRepositoryPort = tenantQueryRepositoryPort;
         this.organizationQueryRepositoryPort = organizationQueryRepositoryPort;
+        this.maxOrganizationsPerTree = maxOrganizationsPerTree;
     }
 
     /**
@@ -100,12 +105,12 @@ public class GetTenantTreeService implements GetTenantTreeUseCase {
         Boolean deletedFilter = query.includeDeleted() ? null : false;
 
         List<Organization> organizations = organizationQueryRepositoryPort.findAllWithOffset(
-            tenantId,                 // tenantId filter (String - Tenant PK 타입과 일치)
-            null,                     // orgCodeContains (전체 조회)
-            null,                     // nameContains (전체 조회)
-            deletedFilter,            // deleted (null = 전체, false = 활성만)
-            0,                        // offset (처음부터)
-            1000                      // limit (충분히 큰 값 - 실무에서는 페이징 필요)
+            tenantId,                    // tenantId filter (String - Tenant PK 타입과 일치)
+            null,                        // orgCodeContains (전체 조회)
+            null,                        // nameContains (전체 조회)
+            deletedFilter,               // deleted (null = 전체, false = 활성만)
+            0,                           // offset (처음부터)
+            maxOrganizationsPerTree      // limit (application.yml에서 설정, 기본값 1000)
         );
 
         // 3. Domain → DTO 변환 (Assembler 책임)

@@ -142,7 +142,8 @@ public class TenantQueryRepositoryAdapter implements TenantQueryRepositoryPort {
     /**
      * Tenant 목록 조회 (Cursor-based Pagination)
      *
-     * <p>Cursor는 Base64로 인코딩된 Tenant ID입니다.</p>
+     * <p>Cursor는 Base64로 인코딩된 "createdAt|id" 복합 키입니다.
+     * UUID는 순차적이지 않으므로 createdAt + id 복합 정렬을 사용하여 일관된 순서를 보장합니다.</p>
      *
      * @param nameContains 이름 검색어 (부분 일치, null 허용)
      * @param deleted 삭제 여부 필터 (null이면 전체 조회)
@@ -166,7 +167,10 @@ public class TenantQueryRepositoryAdapter implements TenantQueryRepositoryPort {
                 eqDeleted(deleted),
                 gtCursor(cursor)
             )
-            .orderBy(tenantJpaEntity.id.asc())
+            .orderBy(
+                tenantJpaEntity.createdAt.asc(),
+                tenantJpaEntity.id.asc()
+            )
             .limit(limit)
             .fetch();
 
@@ -210,9 +214,14 @@ public class TenantQueryRepositoryAdapter implements TenantQueryRepositoryPort {
     }
 
     /**
-     * Cursor보다 큰 ID 조건 (Cursor-based Pagination)
+     * Cursor보다 큰 (createdAt, id) 복합 조건 (Cursor-based Pagination)
      *
-     * @param cursor Base64 인코딩된 Tenant ID (null이면 조건 제외)
+     * <p>UUID는 순차적이지 않으므로 createdAt + id 복합 정렬을 사용합니다.
+     * Cursor 형식: Base64("createdAt|id")</p>
+     *
+     * <p>SQL WHERE 조건: {@code (createdAt, id) > (cursor_createdAt, cursor_id)}</p>
+     *
+     * @param cursor Base64 인코딩된 "createdAt|id" (null이면 조건 제외)
      * @return BooleanExpression
      * @author ryu-qqq
      * @since 2025-10-23
@@ -224,8 +233,24 @@ public class TenantQueryRepositoryAdapter implements TenantQueryRepositoryPort {
 
         try {
             String decodedCursor = new String(Base64.getUrlDecoder().decode(cursor));
-            return tenantJpaEntity.id.gt(decodedCursor);
-        } catch (IllegalArgumentException e) {
+            String[] parts = decodedCursor.split("\\|");
+
+            if (parts.length != 2) {
+                // 잘못된 cursor 형식은 무시
+                return null;
+            }
+
+            String createdAtStr = parts[0];
+            String id = parts[1];
+
+            // (createdAt, id) > (cursor_createdAt, cursor_id) 복합 비교
+            // createdAt이 더 크거나, 같으면서 id가 더 큰 경우
+            return tenantJpaEntity.createdAt.gt(java.time.LocalDateTime.parse(createdAtStr))
+                .or(
+                    tenantJpaEntity.createdAt.eq(java.time.LocalDateTime.parse(createdAtStr))
+                        .and(tenantJpaEntity.id.gt(id))
+                );
+        } catch (Exception e) {
             // 잘못된 cursor는 무시하고 처음부터 조회
             return null;
         }

@@ -55,7 +55,7 @@ public final class TenantDtoMapper {
      */
     public static CreateTenantCommand toCommand(CreateTenantRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("CreateTenantRequest는 필수입니다");
+            throw new IllegalArgumentException("CreateTenantRequest는 null일 수 없습니다");
         }
         return new CreateTenantCommand(request.name());
     }
@@ -72,10 +72,10 @@ public final class TenantDtoMapper {
      */
     public static UpdateTenantCommand toCommand(String tenantId, UpdateTenantRequest request) {
         if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+            throw new IllegalArgumentException("Tenant ID는 null일 수 없습니다");
         }
         if (request == null) {
-            throw new IllegalArgumentException("UpdateTenantRequest는 필수입니다");
+            throw new IllegalArgumentException("UpdateTenantRequest는 null일 수 없습니다");
         }
         return new UpdateTenantCommand(tenantId, request.name());
     }
@@ -92,10 +92,10 @@ public final class TenantDtoMapper {
      */
     public static UpdateTenantStatusCommand toCommand(String tenantId, UpdateTenantStatusRequest request) {
         if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+            throw new IllegalArgumentException("Tenant ID는 null일 수 없습니다");
         }
         if (request == null) {
-            throw new IllegalArgumentException("UpdateTenantStatusRequest는 필수입니다");
+            throw new IllegalArgumentException("UpdateTenantStatusRequest는 null일 수 없습니다");
         }
         return new UpdateTenantStatusCommand(tenantId, request.status());
     }
@@ -111,7 +111,7 @@ public final class TenantDtoMapper {
      */
     public static TenantApiResponse toApiResponse(TenantResponse response) {
         if (response == null) {
-            throw new IllegalArgumentException("TenantResponse는 필수입니다");
+            throw new IllegalArgumentException("TenantResponse는 null일 수 없습니다");
         }
         return new TenantApiResponse(
             response.tenantId(),
