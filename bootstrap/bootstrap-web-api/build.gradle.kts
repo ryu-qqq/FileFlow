@@ -45,6 +45,11 @@ dependencies {
     annotationProcessor(libs.spring.boot.configuration.processor)
 
     // ========================================
+    // API Documentation (Swagger/OpenAPI)
+    // ========================================
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
+
+    // ========================================
     // Observability
     // ========================================
     // Micrometer for metrics

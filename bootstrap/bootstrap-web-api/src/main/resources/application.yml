@@ -9,7 +9,7 @@ spring:
   # Database Configuration
   # ========================================
   datasource:
-    url: jdbc:mysql://localhost:3306/fileflow?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/fileflow?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:password}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -55,22 +55,9 @@ spring:
     sql-migration-suffixes: .sql
     clean-disabled: true  # 프로덕션 환경 보호
 
-# ========================================
-# Logging Configuration
-# ========================================
-logging:
-  level:
-    root: INFO
-    com.ryuqq.fileflow: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.flywaydb: INFO
-
-# ========================================
-# Redis Configuration
-# ========================================
-spring:
+  # ========================================
+  # Redis Configuration
+  # ========================================
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -83,6 +70,18 @@ spring:
           max-idle: 8
           min-idle: 2
           max-wait: -1ms
+
+# ========================================
+# Logging Configuration
+# ========================================
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.flywaydb: INFO
 
 # ========================================
 # FileFlow Application Configuration
@@ -144,3 +143,21 @@ management:
   endpoint:
     health:
       show-details: always
+
+# ========================================
+# SpringDoc OpenAPI Configuration
+# ========================================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  show-actuator: false
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

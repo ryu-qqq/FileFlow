@@ -1,0 +1,74 @@
+# ========================================
+# FileFlow Local Development Docker Compose
+# ========================================
+# MySQL 8.0 + Redis 7.2
+# ========================================
+
+version: '3.8'
+
+services:
+  # ========================================
+  # MySQL Database
+  # ========================================
+  mysql:
+    image: mysql:8.0
+    container_name: fileflow-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: fileflow
+      MYSQL_USER: fileflow_user
+      MYSQL_PASSWORD: fileflow_password
+      TZ: UTC
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+00:00
+    networks:
+      - fileflow-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ========================================
+  # Redis Cache
+  # ========================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: fileflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ""
+    networks:
+      - fileflow-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+# ========================================
+# Networks
+# ========================================
+networks:
+  fileflow-network:
+    driver: bridge
+
+# ========================================
+# Volumes
+# ========================================
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
