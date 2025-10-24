@@ -53,11 +53,11 @@ public record Grant(
      * @since 2025-10-24
      */
     public Grant {
-        if (roleCode == null || roleCode.trim().isEmpty()) {
+        if (roleCode == null || roleCode.isBlank()) {
             throw new IllegalArgumentException("Role 코드는 필수입니다");
         }
 
-        if (permissionCode == null || permissionCode.trim().isEmpty()) {
+        if (permissionCode == null || permissionCode.isBlank()) {
             throw new IllegalArgumentException("Permission 코드는 필수입니다");
         }
 
@@ -69,12 +69,11 @@ public record Grant(
         roleCode = roleCode.trim();
         permissionCode = permissionCode.trim();
 
-        // conditionExpr는 nullable이므로 null이 아닐 때만 trim
-        if (conditionExpr != null && !conditionExpr.trim().isEmpty()) {
-            conditionExpr = conditionExpr.trim();
-        } else {
-            // 빈 문자열은 null로 정규화
+        // conditionExpr는 nullable이므로 null이거나 비어있을 때만 null로 정규화
+        if (conditionExpr == null || conditionExpr.isBlank()) {
             conditionExpr = null;
+        } else {
+            conditionExpr = conditionExpr.trim();
         }
     }
 
