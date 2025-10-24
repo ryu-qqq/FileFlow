@@ -1,12 +1,13 @@
 package com.ryuqq.fileflow.adapter.rest.controller.iam;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ryuqq.fileflow.adapter.rest.dto.iam.tenant.CreateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.dto.iam.tenant.UpdateTenantRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.controller.TenantController;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.CreateTenantRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantRequest;
 import com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler;
-import com.ryuqq.fileflow.application.iam.tenant.dto.TenantResponse;
-import com.ryuqq.fileflow.application.iam.tenant.usecase.CreateTenantUseCase;
-import com.ryuqq.fileflow.application.iam.tenant.usecase.UpdateTenantUseCase;
+import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
+import com.ryuqq.fileflow.application.iam.tenant.facade.TenantCommandFacade;
+import com.ryuqq.fileflow.application.iam.tenant.facade.TenantQueryFacade;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -59,10 +60,10 @@ class TenantControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private CreateTenantUseCase createTenantUseCase;
+    private TenantCommandFacade tenantCommandFacade;
 
     @MockBean
-    private UpdateTenantUseCase updateTenantUseCase;
+    private TenantQueryFacade tenantQueryFacade;
 
     /**
      * POST /api/v1/tenants - Tenant 생성 성공 (201 Created)
@@ -84,7 +85,7 @@ class TenantControllerIntegrationTest {
             LocalDateTime.now()
         );
 
-        when(createTenantUseCase.execute(any())).thenReturn(mockResponse);
+        when(tenantCommandFacade.createTenant(any())).thenReturn(mockResponse);
 
         // When & Then
         mockMvc.perform(post("/api/v1/tenants")
@@ -134,7 +135,7 @@ class TenantControllerIntegrationTest {
         // Given
         CreateTenantRequest request = new CreateTenantRequest("my-tenant");
 
-        when(createTenantUseCase.execute(any()))
+        when(tenantCommandFacade.createTenant(any()))
             .thenThrow(new IllegalStateException("동일한 이름의 Tenant가 이미 존재합니다: my-tenant"));
 
         // When & Then - RFC 7807 응답 검증
@@ -170,7 +171,7 @@ class TenantControllerIntegrationTest {
             LocalDateTime.now()
         );
 
-        when(updateTenantUseCase.execute(any())).thenReturn(mockResponse);
+        when(tenantCommandFacade.updateTenant(any())).thenReturn(mockResponse);
 
         // When & Then
         mockMvc.perform(patch("/api/v1/tenants/{tenantId}", tenantId)
