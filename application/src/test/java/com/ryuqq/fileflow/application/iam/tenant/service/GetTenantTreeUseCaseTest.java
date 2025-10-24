@@ -76,7 +76,8 @@ class GetTenantTreeUseCaseTest {
         organizationQueryRepositoryPort = mock(OrganizationQueryRepositoryPort.class);
         getTenantTreeUseCase = new GetTenantTreeService(
             tenantQueryRepositoryPort,
-            organizationQueryRepositoryPort
+            organizationQueryRepositoryPort,
+            1000  // maxOrganizationsPerTree
         );
     }
 

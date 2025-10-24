@@ -86,7 +86,7 @@ class OrganizationDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> OrganizationDtoMapper.toCommand((CreateOrganizationRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("CreateOrganizationRequest must not be null");
+                .hasMessageContaining("CreateOrganizationRequest는 null일 수 없습니다");
         }
     }
 
@@ -131,7 +131,7 @@ class OrganizationDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(null, request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("organizationId must not be null");
+                .hasMessageContaining("Organization ID는 null일 수 없으며 양수여야 합니다");
         }
 
         /**
@@ -147,9 +147,9 @@ class OrganizationDtoMapperTest {
             Long organizationId = 1L;
 
             // When & Then
-            assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(organizationId, null))
+            assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(organizationId, (UpdateOrganizationRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("UpdateOrganizationRequest must not be null");
+                .hasMessageContaining("UpdateOrganizationRequest는 null일 수 없습니다");
         }
     }
 
@@ -216,7 +216,7 @@ class OrganizationDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(null, request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("organizationId must not be null");
+                .hasMessageContaining("Organization ID는 null일 수 없으며 양수여야 합니다");
         }
 
         /**
@@ -234,7 +234,7 @@ class OrganizationDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(organizationId, (UpdateOrganizationStatusRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("UpdateOrganizationStatusRequest must not be null");
+                .hasMessageContaining("UpdateOrganizationStatusRequest는 null일 수 없습니다");
         }
     }
 
@@ -350,7 +350,7 @@ class OrganizationDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> OrganizationDtoMapper.toApiResponse(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("OrganizationResponse must not be null");
+                .hasMessageContaining("OrganizationResponse는 null일 수 없습니다");
         }
     }
 
@@ -367,7 +367,7 @@ class OrganizationDtoMapperTest {
         @Test
         @DisplayName("OrganizationDtoMapper는 인스턴스화할 수 없다")
         void utilityClass_CannotBeInstantiated() {
-            // When & Then - Reflection으로 인스턴스 생성 시도 시 AssertionError 발생
+            // When & Then - Reflection으로 인스턴스 생성 시도 시 UnsupportedOperationException 발생
             assertThatThrownBy(() -> {
                 java.lang.reflect.Constructor<OrganizationDtoMapper> constructor =
                     OrganizationDtoMapper.class.getDeclaredConstructor();
@@ -375,8 +375,8 @@ class OrganizationDtoMapperTest {
                 constructor.newInstance();
             })
             .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
-            .hasCauseInstanceOf(AssertionError.class)
-            .hasRootCauseMessage("Utility class should not be instantiated");
+            .hasCauseInstanceOf(UnsupportedOperationException.class)
+            .hasRootCauseMessage("Utility class cannot be instantiated");
         }
     }
 }

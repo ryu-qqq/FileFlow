@@ -426,7 +426,7 @@ class OrganizationQueryRepositoryAdapterTest extends IntegrationTestBase {
             createAndSaveOrganizationEntity(TEST_TENANT_ID, "ORG2", "Org 2", false, OrganizationStatus.ACTIVE);
             createAndSaveOrganizationEntity(TEST_TENANT_ID, "ORG3", "Org 3", false, OrganizationStatus.ACTIVE);
 
-            String cursor = Base64.getUrlEncoder().encodeToString(first.getId().toString().getBytes());
+            String cursor = Base64.getUrlEncoder().encodeToString((first.getCreatedAt() + "|" + first.getId()).getBytes());
 
             // Act
             List<Organization> result = organizationQueryRepositoryAdapter
@@ -487,7 +487,7 @@ class OrganizationQueryRepositoryAdapterTest extends IntegrationTestBase {
             createAndSaveOrganizationEntity(TEST_TENANT_ID, "ORG2", "Org 2", false, OrganizationStatus.ACTIVE);
             createAndSaveOrganizationEntity(ANOTHER_TENANT_ID, "ORG3", "Org 3", false, OrganizationStatus.ACTIVE);
 
-            String cursor = Base64.getUrlEncoder().encodeToString(first.getId().toString().getBytes());
+            String cursor = Base64.getUrlEncoder().encodeToString((first.getCreatedAt() + "|" + first.getId()).getBytes());
 
             // Act
             List<Organization> result = organizationQueryRepositoryAdapter
@@ -509,7 +509,7 @@ class OrganizationQueryRepositoryAdapterTest extends IntegrationTestBase {
             createAndSaveOrganizationEntity(TEST_TENANT_ID, "SALES-003", "Sales 3", false, OrganizationStatus.ACTIVE);
             createAndSaveOrganizationEntity(TEST_TENANT_ID, "HR-001", "HR", false, OrganizationStatus.ACTIVE);
 
-            String cursor = Base64.getUrlEncoder().encodeToString(first.getId().toString().getBytes());
+            String cursor = Base64.getUrlEncoder().encodeToString((first.getCreatedAt() + "|" + first.getId()).getBytes());
 
             // Act
             List<Organization> result = organizationQueryRepositoryAdapter
@@ -527,7 +527,7 @@ class OrganizationQueryRepositoryAdapterTest extends IntegrationTestBase {
             OrganizationJpaEntity last = createAndSaveOrganizationEntity(
                 TEST_TENANT_ID, "LAST", "Last Org", false, OrganizationStatus.ACTIVE
             );
-            String cursor = Base64.getUrlEncoder().encodeToString(last.getId().toString().getBytes());
+            String cursor = Base64.getUrlEncoder().encodeToString((last.getCreatedAt() + "|" + last.getId()).getBytes());
 
             // Act
             List<Organization> result = organizationQueryRepositoryAdapter

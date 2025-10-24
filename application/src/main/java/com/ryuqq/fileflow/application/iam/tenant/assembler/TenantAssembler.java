@@ -1,6 +1,5 @@
 package com.ryuqq.fileflow.application.iam.tenant.assembler;
 
-import com.ryuqq.fileflow.application.iam.tenant.dto.command.CreateTenantCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
 import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantTreeResponse;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
