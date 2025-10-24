@@ -12,8 +12,14 @@ java {
 }
 
 dependencies {
-    // Domain 모듈만 의존 (Persistence 의존 X)
+    // Domain 모듈 의존
     api(project(":domain"))
+
+    // Application 모듈 의존 (DTO 참조를 위해 필요)
+    api(project(":application"))
+
+    // Persistence 모듈 의존 (JpaEntity Fixtures를 위해 필요)
+    api(project(":adapter-out:persistence-mysql"))
 
     // Test 유틸리티
     implementation("org.junit.jupiter:junit-jupiter-api:5.10.2")

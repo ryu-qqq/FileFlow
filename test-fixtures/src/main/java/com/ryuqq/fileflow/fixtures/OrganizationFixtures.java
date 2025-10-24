@@ -323,4 +323,43 @@ public final class OrganizationFixtures {
             false
         );
     }
+
+    /**
+     * 특정 ID를 가진 비활성화된 조직을 생성합니다 (WithId 접미사 버전).
+     *
+     * <p>EntityMapper 테스트에서 사용하는 메서드입니다.</p>
+     *
+     * @param organizationId Organization ID
+     * @param tenantId Tenant ID
+     * @return INACTIVE 상태의 조직
+     * @author ryu-qqq
+     * @since 2025-10-24
+     */
+    public static Organization inactiveOrganizationWithId(Long organizationId, String tenantId) {
+        return inactiveOrganization(organizationId, tenantId);
+    }
+
+    /**
+     * 특정 ID를 가진 삭제된 조직을 생성합니다 (WithId 접미사 버전).
+     *
+     * <p>EntityMapper 테스트에서 사용하는 메서드입니다.</p>
+     *
+     * @param organizationId Organization ID
+     * @param tenantId Tenant ID
+     * @return 삭제된 상태의 조직
+     * @author ryu-qqq
+     * @since 2025-10-24
+     */
+    public static Organization deletedOrganizationWithId(Long organizationId, String tenantId) {
+        return Organization.reconstitute(
+            OrganizationId.of(organizationId),
+            tenantId,
+            OrgCode.of("DELETED"),
+            "Deleted Organization",
+            OrganizationStatus.INACTIVE,
+            LocalDateTime.now().minusDays(60),
+            LocalDateTime.now().minusDays(30),
+            true  // deleted
+        );
+    }
 }

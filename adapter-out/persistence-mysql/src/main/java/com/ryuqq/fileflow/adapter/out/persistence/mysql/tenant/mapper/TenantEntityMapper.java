@@ -90,19 +90,10 @@ public final class TenantEntityMapper {
         }
 
         // Value Object → 원시 타입 (Law of Demeter 준수)
-        String id = tenant.getId() != null ? tenant.getIdValue() : null;
+        String id = tenant.getIdValue();
         String name = tenant.getNameValue();
 
-        // 신규 Tenant인 경우 (ID가 아직 없음)
-        if (id == null) {
-            return TenantJpaEntity.create(
-                id,
-                name,
-                tenant.getCreatedAt()
-            );
-        }
-
-        // 기존 Tenant인 경우 (재구성) - Status 그대로 전달
+        // Tenant는 항상 ID를 가지므로 reconstitute 사용 - Status 그대로 전달
         return TenantJpaEntity.reconstitute(
             id,
             name,
