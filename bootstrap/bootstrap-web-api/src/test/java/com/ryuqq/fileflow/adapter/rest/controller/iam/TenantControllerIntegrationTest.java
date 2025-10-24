@@ -92,10 +92,11 @@ class TenantControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.tenantId").value("tenant-id-123"))
-            .andExpect(jsonPath("$.name").value("my-tenant"))
-            .andExpect(jsonPath("$.status").value("ACTIVE"))
-            .andExpect(jsonPath("$.deleted").value(false));
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.tenantId").value("tenant-id-123"))
+            .andExpect(jsonPath("$.data.name").value("my-tenant"))
+            .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+            .andExpect(jsonPath("$.data.deleted").value(false));
     }
 
     /**
@@ -178,9 +179,10 @@ class TenantControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.tenantId").value(tenantId))
-            .andExpect(jsonPath("$.name").value("updated-tenant-name"))
-            .andExpect(jsonPath("$.status").value("ACTIVE"));
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.tenantId").value(tenantId))
+            .andExpect(jsonPath("$.data.name").value("updated-tenant-name"))
+            .andExpect(jsonPath("$.data.status").value("ACTIVE"));
     }
 
     /**

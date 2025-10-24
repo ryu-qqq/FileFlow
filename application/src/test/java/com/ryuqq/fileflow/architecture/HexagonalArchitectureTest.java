@@ -40,21 +40,17 @@ class HexagonalArchitectureTest {
     @Test
     @DisplayName("헥사고날 아키텍처 레이어 의존성 규칙 - Domain은 외부 의존 금지")
     void hexagonalArchitectureLayersShouldRespectDependencies() {
-        // Given: Hexagonal Architecture 레이어 정의
+        // Given: Hexagonal Architecture 레이어 정의 (Application 모듈은 Domain과 Application만 검증)
         ArchRule rule = layeredArchitecture()
-                .consideringAllDependencies()
+                .consideringOnlyDependenciesInLayers()  // Java 기본 클래스 의존성 무시
 
-                // Layer 정의
+                // Layer 정의 (Application 모듈에 존재하는 레이어만 정의)
                 .layer("Domain").definedBy("..domain..")
                 .layer("Application").definedBy("..application..")
-                .layer("AdapterIn").definedBy("..adapter.rest..", "..adapter.web..")
-                .layer("AdapterOut").definedBy("..adapter.persistence..", "..adapter.external..")
 
                 // 의존성 규칙
                 .whereLayer("Domain").mayNotAccessAnyLayer()
-                .whereLayer("Application").mayOnlyAccessLayers("Domain")
-                .whereLayer("AdapterIn").mayOnlyAccessLayers("Application", "Domain")
-                .whereLayer("AdapterOut").mayOnlyAccessLayers("Application", "Domain");
+                .whereLayer("Application").mayOnlyAccessLayers("Domain");
 
         // When & Then: 규칙 검증
         rule.check(importedClasses);
@@ -98,31 +94,8 @@ class HexagonalArchitectureTest {
         rule.check(importedClasses);
     }
 
-    @Test
-    @DisplayName("Adapter Layer는 Application/Domain 의존 가능 - 다른 Adapter 의존 금지")
-    void adapterLayerShouldOnlyDependOnApplicationAndDomain() {
-        // Given: Adapter-In 클래스들
-        ArchRule adapterInRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses()
-                .that().resideInAPackage("..adapter.rest..")
-                .should().dependOnClassesThat().resideInAnyPackage(
-                        "..adapter.persistence..",
-                        "..adapter.external.."
-                )
-                .because("Adapter-In은 Adapter-Out에 직접 의존하지 않아야 합니다.");
-
-        // Given: Adapter-Out 클래스들
-        ArchRule adapterOutRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses()
-                .that().resideInAPackage("..adapter.persistence..")
-                .should().dependOnClassesThat().resideInAnyPackage(
-                        "..adapter.rest..",
-                        "..adapter.web.."
-                )
-                .because("Adapter-Out은 Adapter-In에 직접 의존하지 않아야 합니다.");
-
-        // When & Then: 규칙 검증
-        adapterInRule.check(importedClasses);
-        adapterOutRule.check(importedClasses);
-    }
+    // Note: Application 모듈에는 Adapter 레이어가 없으므로 Adapter 간 의존성 테스트는 제거됨
+    // Adapter 간 의존성 테스트는 bootstrap-web-api 모듈에서 수행됨
 
     @Test
     @DisplayName("순환 의존성 금지 - 모든 레이어")
