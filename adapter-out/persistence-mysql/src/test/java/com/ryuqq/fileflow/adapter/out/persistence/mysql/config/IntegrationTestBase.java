@@ -89,8 +89,34 @@ public abstract class IntegrationTestBase {
     @BeforeEach
     void clearDatabase() {
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
-        jdbcTemplate.execute("TRUNCATE TABLE organizations");
-        jdbcTemplate.execute("TRUNCATE TABLE tenants");
+
+        // IAM Tables (테이블이 없으면 무시)
+        truncateTableIfExists("user_role_mapping");
+        truncateTableIfExists("role_permissions");
+        truncateTableIfExists("roles");
+        truncateTableIfExists("permissions");
+        truncateTableIfExists("user_organization_membership");
+        truncateTableIfExists("user_contexts");
+
+        // Organization Tables
+        truncateTableIfExists("organizations");
+        truncateTableIfExists("tenants");
+
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+    }
+
+    /**
+     * 테이블이 존재하면 TRUNCATE, 없으면 무시
+     *
+     * @param tableName 테이블명
+     * @author ryu-qqq
+     * @since 2025-10-24
+     */
+    private void truncateTableIfExists(String tableName) {
+        try {
+            jdbcTemplate.execute("TRUNCATE TABLE " + tableName);
+        } catch (Exception e) {
+            // 테이블이 없으면 무시 (테스트 초기에는 테이블이 없을 수 있음)
+        }
     }
 }

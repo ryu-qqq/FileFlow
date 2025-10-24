@@ -11,8 +11,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  *
  * <h3>설정 범위</h3>
  * <ul>
- *   <li>✅ JPA Entity Scan (Tenant, Organization)</li>
- *   <li>✅ JPA Repository Scan</li>
+ *   <li>✅ JPA Entity Scan (Tenant, Organization, Permission, Role, UserContext)</li>
+ *   <li>✅ JPA Repository Scan (All modules)</li>
  *   <li>✅ QueryDSL Configuration (via @Import)</li>
  * </ul>
  *
@@ -27,11 +27,15 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EntityScan(basePackages = {
     "com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.entity",
-    "com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity"
+    "com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity",
+    "com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.permission.entity",
+    "com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.entity"
 })
 @EnableJpaRepositories(basePackages = {
     "com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.repository",
-    "com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.repository"
+    "com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.repository",
+    "com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.permission.repository",
+    "com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.repository"
 })
 public class TestJpaConfiguration {
     // Test configuration class - no implementation needed

@@ -20,6 +20,8 @@ public final class RoleCode {
 
     private static final int MIN_LENGTH = 3;
     private static final int MAX_LENGTH = 100;
+    private static final java.util.regex.Pattern CODE_PATTERN =
+        java.util.regex.Pattern.compile("^[a-zA-Z0-9._-]+$");
 
     private final String value;
 
@@ -33,7 +35,7 @@ public final class RoleCode {
      */
     private RoleCode(String value) {
         validateValue(value);
-        this.value = value;
+        this.value = value.trim();
     }
 
     /**
@@ -58,7 +60,7 @@ public final class RoleCode {
      * @since 2025-10-24
      */
     private void validateValue(String value) {
-        if (value == null || value.trim().isEmpty()) {
+        if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Role 코드는 필수입니다");
         }
 
@@ -76,7 +78,7 @@ public final class RoleCode {
         }
 
         // 영문, 숫자, 점(.), 하이픈(-), 언더스코어(_)만 허용
-        if (!trimmedValue.matches("^[a-zA-Z0-9._-]+$")) {
+        if (!CODE_PATTERN.matcher(trimmedValue).matches()) {
             throw new IllegalArgumentException(
                 "Role 코드는 영문, 숫자, 점(.), 하이픈(-), 언더스코어(_)만 사용할 수 있습니다"
             );
