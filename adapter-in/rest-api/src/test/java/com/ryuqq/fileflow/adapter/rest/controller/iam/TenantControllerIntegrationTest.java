@@ -22,6 +22,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -61,6 +62,7 @@ import java.util.List;
 @WebMvcTest(controllers = TenantController.class)
 @Import(GlobalExceptionHandler.class)
 @DisplayName("TenantController Integration Test")
+@ContextConfiguration(classes = {TenantController.class, GlobalExceptionHandler.class})
 class TenantControllerIntegrationTest {
 
     @Autowired
@@ -102,10 +104,10 @@ class TenantControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.tenantId").value("tenant-id-123"))
-            .andExpect(jsonPath("$.name").value("my-tenant"))
-            .andExpect(jsonPath("$.status").value("ACTIVE"))
-            .andExpect(jsonPath("$.deleted").value(false));
+            .andExpect(jsonPath("$.data.tenantId").value("tenant-id-123"))
+            .andExpect(jsonPath("$.data.name").value("my-tenant"))
+            .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+            .andExpect(jsonPath("$.data.deleted").value(false));
     }
 
     /**
@@ -188,9 +190,9 @@ class TenantControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.tenantId").value(tenantId))
-            .andExpect(jsonPath("$.name").value("updated-tenant-name"))
-            .andExpect(jsonPath("$.status").value("ACTIVE"));
+            .andExpect(jsonPath("$.data.tenantId").value(tenantId))
+            .andExpect(jsonPath("$.data.name").value("updated-tenant-name"))
+            .andExpect(jsonPath("$.data.status").value("ACTIVE"));
     }
 
     /**
@@ -281,8 +283,10 @@ class TenantControllerIntegrationTest {
             tenants,
             0,
             20,
-            2,
-            1
+            2L,
+            1,
+            true,
+            true
         );
 
         when(tenantQueryFacade.getTenantsWithPage(any())).thenReturn(pageResponse);
@@ -382,12 +386,12 @@ class TenantControllerIntegrationTest {
     void getTenantTree_Success_Returns200() throws Exception {
         // Given
         String tenantId = "tenant-id-123";
-        TenantTreeResponse mockResponse = TenantTreeResponse.of(
+        TenantTreeResponse mockResponse = new TenantTreeResponse(
             tenantId,
             "my-tenant",
             "ACTIVE",
             false,
-            2,
+            0,
             new ArrayList<>(),
             LocalDateTime.now(),
             LocalDateTime.now()
@@ -400,7 +404,7 @@ class TenantControllerIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.tenantId").value(tenantId))
             .andExpect(jsonPath("$.data.name").value("my-tenant"))
-            .andExpect(jsonPath("$.data.organizationCount").value(2))
+            .andExpect(jsonPath("$.data.organizationCount").value(0))
             .andExpect(jsonPath("$.data.organizations").isArray());
     }
 }

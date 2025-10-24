@@ -231,4 +231,46 @@ public final class TenantFixtures {
             deleted
         );
     }
+
+    /**
+     * 특정 ID를 가진 일시 정지된 Tenant를 생성합니다 (WithId 접미사 버전).
+     *
+     * <p>EntityMapper 테스트에서 사용하는 메서드입니다.</p>
+     *
+     * @param tenantIdValue Tenant ID 값
+     * @return SUSPENDED 상태의 Tenant
+     * @author ryu-qqq
+     * @since 2025-10-24
+     */
+    public static Tenant suspendedTenantWithId(String tenantIdValue) {
+        return Tenant.reconstitute(
+            TenantId.of(tenantIdValue),
+            TenantName.of("Suspended Company"),
+            TenantStatus.SUSPENDED,
+            LocalDateTime.now().minusDays(30),
+            LocalDateTime.now().minusDays(1),
+            false
+        );
+    }
+
+    /**
+     * 특정 ID를 가진 삭제된 Tenant를 생성합니다 (WithId 접미사 버전).
+     *
+     * <p>EntityMapper 테스트에서 사용하는 메서드입니다.</p>
+     *
+     * @param tenantIdValue Tenant ID 값
+     * @return 삭제된 상태의 Tenant (deleted = true, status = SUSPENDED)
+     * @author ryu-qqq
+     * @since 2025-10-24
+     */
+    public static Tenant deletedTenantWithId(String tenantIdValue) {
+        return Tenant.reconstitute(
+            TenantId.of(tenantIdValue),
+            TenantName.of("Deleted Company"),
+            TenantStatus.SUSPENDED,
+            LocalDateTime.now().minusDays(60),
+            LocalDateTime.now().minusDays(30),
+            true  // deleted
+        );
+    }
 }

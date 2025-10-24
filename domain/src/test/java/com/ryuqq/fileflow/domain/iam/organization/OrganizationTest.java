@@ -24,14 +24,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class OrganizationTest {
 
     private OrganizationId organizationId;
-    private Long tenantId;
+    private String tenantId;
     private OrgCode orgCode;
     private String orgName;
 
     @BeforeEach
     void setUp() {
         organizationId = new OrganizationId(1L);
-        tenantId = 100L;
+        tenantId = "TENANT-100";
         orgCode = new OrgCode("SALES-KR");
         orgName = "Sales Korea";
     }
@@ -99,16 +99,16 @@ class OrganizationTest {
         }
 
         @Test
-        @DisplayName("TenantId가 0 이하이면 예외가 발생한다")
+        @DisplayName("TenantId가 빈 문자열이면 예외가 발생한다")
         void createWithInvalidTenantId() {
             // when & then
-            assertThatThrownBy(() -> new Organization(organizationId, 0L, orgCode, orgName))
+            assertThatThrownBy(() -> new Organization(organizationId, "", orgCode, orgName))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Tenant ID는 양수여야 합니다");
+                .hasMessage("Tenant ID는 필수입니다");
 
-            assertThatThrownBy(() -> new Organization(organizationId, -1L, orgCode, orgName))
+            assertThatThrownBy(() -> new Organization(organizationId, "   ", orgCode, orgName))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Tenant ID는 양수여야 합니다");
+                .hasMessage("Tenant ID는 필수입니다");
         }
 
         @Test
@@ -400,7 +400,7 @@ class OrganizationTest {
             Organization organization = new Organization(organizationId, tenantId, orgCode, orgName);
 
             // when & then
-            assertThat(organization.belongsToTenant(100L)).isTrue();
+            assertThat(organization.belongsToTenant("TENANT-100")).isTrue();
         }
 
         @Test
@@ -410,7 +410,7 @@ class OrganizationTest {
             Organization organization = new Organization(organizationId, tenantId, orgCode, orgName);
 
             // when & then
-            assertThat(organization.belongsToTenant(200L)).isFalse();
+            assertThat(organization.belongsToTenant("TENANT-200")).isFalse();
         }
 
         @Test
@@ -424,14 +424,14 @@ class OrganizationTest {
         }
 
         @Test
-        @DisplayName("Long FK 전략: Tenant 객체가 아닌 Long ID로 확인한다")
-        void longFkStrategy() {
+        @DisplayName("String FK 전략: Tenant 객체가 아닌 String ID로 확인한다")
+        void stringFkStrategy() {
             // given
-            Organization organization = new Organization(organizationId, 100L, orgCode, orgName);
+            Organization organization = new Organization(organizationId, "TENANT-100", orgCode, orgName);
 
-            // when & then - Long 타입으로 직접 비교
-            assertThat(organization.getTenantId()).isEqualTo(100L);
-            assertThat(organization.belongsToTenant(100L)).isTrue();
+            // when & then - String 타입으로 직접 비교
+            assertThat(organization.getTenantId()).isEqualTo("TENANT-100");
+            assertThat(organization.belongsToTenant("TENANT-100")).isTrue();
         }
     }
 
@@ -558,7 +558,7 @@ class OrganizationTest {
         void equalityWithSameId() {
             // given
             Organization org1 = new Organization(organizationId, tenantId, orgCode, orgName);
-            Organization org2 = new Organization(organizationId, 200L, new OrgCode("OTHER"), "Other Name");
+            Organization org2 = new Organization(organizationId, "TENANT-200", new OrgCode("OTHER"), "Other Name");
 
             // when & then
             assertThat(org1).isEqualTo(org2);

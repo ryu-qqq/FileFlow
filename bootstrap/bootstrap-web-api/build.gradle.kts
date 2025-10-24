@@ -38,11 +38,15 @@ dependencies {
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.validation)
-    implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.actuator)
 
     // Configuration Processing
     annotationProcessor(libs.spring.boot.configuration.processor)
+
+    // ========================================
+    // API Documentation (Swagger/OpenAPI)
+    // ========================================
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // ========================================
     // Observability
@@ -67,7 +71,6 @@ dependencies {
     // Test Dependencies
     // ========================================
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation(libs.spring.security.test)
     testImplementation(libs.testcontainers.mysql)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.rest.assured)

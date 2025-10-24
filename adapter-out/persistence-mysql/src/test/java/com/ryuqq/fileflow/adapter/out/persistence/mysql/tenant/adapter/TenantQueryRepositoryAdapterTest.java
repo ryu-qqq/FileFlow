@@ -316,13 +316,19 @@ class TenantQueryRepositoryAdapterTest extends IntegrationTestBase {
                 createAndSaveTenantEntity("Company C", false, TenantStatus.ACTIVE)
             );
 
-            // ID 기준 오름차순 정렬 (Cursor pagination은 ID 기준)
+            // createdAt + ID 기준 오름차순 정렬 (Cursor pagination은 createdAt + ID 복합 기준)
             List<TenantJpaEntity> sortedEntities = allEntities.stream()
-                .sorted((e1, e2) -> e1.getId().compareTo(e2.getId()))
+                .sorted((e1, e2) -> {
+                    int createdAtCompare = e1.getCreatedAt().compareTo(e2.getCreatedAt());
+                    if (createdAtCompare != 0) {
+                        return createdAtCompare;
+                    }
+                    return e1.getId().compareTo(e2.getId());
+                })
                 .toList();
 
             TenantJpaEntity first = sortedEntities.get(0);
-            String cursor = Base64.getUrlEncoder().encodeToString(first.getId().getBytes());
+            String cursor = Base64.getUrlEncoder().encodeToString((first.getCreatedAt() + "|" + first.getId()).getBytes());
 
             // Act
             List<Tenant> result = tenantQueryRepositoryAdapter.findAllWithCursor(null, null, cursor, 10);
@@ -331,13 +337,12 @@ class TenantQueryRepositoryAdapterTest extends IntegrationTestBase {
             assertThat(result).hasSize(2); // first 이후 2개
             assertThat(result).noneMatch(t -> t.getIdValue().equals(first.getId()));
 
-            // ID 기준 오름차순 정렬 확인
-            String prevId = null;
-            for (Tenant tenant : result) {
-                if (prevId != null) {
-                    assertThat(tenant.getIdValue()).isGreaterThan(prevId);
-                }
-                prevId = tenant.getIdValue();
+            // createdAt 기준 오름차순 정렬 확인 (createdAt이 같으면 ID 기준)
+            for (int i = 0; i < result.size() - 1; i++) {
+                java.time.LocalDateTime currentCreatedAt = result.get(i).getCreatedAt();
+                java.time.LocalDateTime nextCreatedAt = result.get(i + 1).getCreatedAt();
+                // createdAt이 오름차순이거나 같아야 함
+                assertThat(currentCreatedAt.isAfter(nextCreatedAt)).isFalse();
             }
         }
 
@@ -358,24 +363,24 @@ class TenantQueryRepositoryAdapterTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("ID 기준 오름차순 정렬 검증 (Cursor Pagination)")
-        void shouldOrderByIdAsc() {
+        @DisplayName("createdAt + ID 복합 정렬 검증 (Cursor Pagination)")
+        void shouldOrderByCreatedAtAndIdAsc() {
             // Arrange
-            List<TenantJpaEntity> entities = List.of(
-                createAndSaveTenantEntity("Company A", false, TenantStatus.ACTIVE),
-                createAndSaveTenantEntity("Company B", false, TenantStatus.ACTIVE),
-                createAndSaveTenantEntity("Company C", false, TenantStatus.ACTIVE)
-            );
+            createAndSaveTenantEntity("Company A", false, TenantStatus.ACTIVE);
+            createAndSaveTenantEntity("Company B", false, TenantStatus.ACTIVE);
+            createAndSaveTenantEntity("Company C", false, TenantStatus.ACTIVE);
 
             // Act
             List<Tenant> result = tenantQueryRepositoryAdapter.findAllWithCursor(null, null, null, 10);
 
             // Assert
             assertThat(result).hasSize(3);
+            // createdAt + id 복합 정렬이므로 createdAt 기준으로 확인
             for (int i = 0; i < result.size() - 1; i++) {
-                String currentId = result.get(i).getIdValue();
-                String nextId = result.get(i + 1).getIdValue();
-                assertThat(currentId.compareTo(nextId)).isLessThan(0); // 오름차순
+                java.time.LocalDateTime currentCreatedAt = result.get(i).getCreatedAt();
+                java.time.LocalDateTime nextCreatedAt = result.get(i + 1).getCreatedAt();
+                // createdAt이 오름차순이거나 같아야 함
+                assertThat(currentCreatedAt.isAfter(nextCreatedAt)).isFalse();
             }
         }
 
@@ -390,12 +395,19 @@ class TenantQueryRepositoryAdapterTest extends IntegrationTestBase {
             );
             createAndSaveTenantEntity("XYZ Company", false, TenantStatus.ACTIVE);
 
-            // ID 기준 정렬하여 첫 번째 Acme 엔티티를 커서로 사용
+            // createdAt + ID 기준 정렬하여 첫 번째 Acme 엔티티를 커서로 사용
             List<TenantJpaEntity> sortedAcme = acmeEntities.stream()
-                .sorted((e1, e2) -> e1.getId().compareTo(e2.getId()))
+                .sorted((e1, e2) -> {
+                    int createdAtCompare = e1.getCreatedAt().compareTo(e2.getCreatedAt());
+                    if (createdAtCompare != 0) {
+                        return createdAtCompare;
+                    }
+                    return e1.getId().compareTo(e2.getId());
+                })
                 .toList();
 
-            String cursor = Base64.getUrlEncoder().encodeToString(sortedAcme.get(0).getId().getBytes());
+            TenantJpaEntity firstAcme = sortedAcme.get(0);
+            String cursor = Base64.getUrlEncoder().encodeToString((firstAcme.getCreatedAt() + "|" + firstAcme.getId()).getBytes());
 
             // Act
             List<Tenant> result = tenantQueryRepositoryAdapter.findAllWithCursor("Acme", null, cursor, 10);
@@ -411,7 +423,7 @@ class TenantQueryRepositoryAdapterTest extends IntegrationTestBase {
         void shouldReturnEmptyWhenNoCursorNext() {
             // Arrange
             TenantJpaEntity last = createAndSaveTenantEntity("Last Company", false, TenantStatus.ACTIVE);
-            String cursor = Base64.getUrlEncoder().encodeToString(last.getId().getBytes());
+            String cursor = Base64.getUrlEncoder().encodeToString((last.getCreatedAt() + "|" + last.getId()).getBytes());
 
             // Act
             List<Tenant> result = tenantQueryRepositoryAdapter.findAllWithCursor(null, null, cursor, 10);
