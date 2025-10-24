@@ -42,13 +42,13 @@ class HexagonalArchitectureTest {
     void hexagonalArchitectureLayersShouldRespectDependencies() {
         // Given: Hexagonal Architecture 레이어 정의
         ArchRule rule = layeredArchitecture()
-                .consideringAllDependencies()
+                .consideringOnlyDependenciesInLayers()  // Java 기본 클래스 의존성 무시
 
                 // Layer 정의
                 .layer("Domain").definedBy("..domain..")
                 .layer("Application").definedBy("..application..")
                 .layer("AdapterIn").definedBy("..adapter.rest..", "..adapter.web..")
-                .layer("AdapterOut").definedBy("..adapter.persistence..", "..adapter.external..")
+                .layer("AdapterOut").definedBy("..adapter.out.persistence..", "..adapter.external..")  // 실제 패키지 구조 반영
 
                 // 의존성 규칙
                 .whereLayer("Domain").mayNotAccessAnyLayer()
@@ -105,14 +105,14 @@ class HexagonalArchitectureTest {
         ArchRule adapterInRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses()
                 .that().resideInAPackage("..adapter.rest..")
                 .should().dependOnClassesThat().resideInAnyPackage(
-                        "..adapter.persistence..",
+                        "..adapter.out.persistence..",
                         "..adapter.external.."
                 )
                 .because("Adapter-In은 Adapter-Out에 직접 의존하지 않아야 합니다.");
 
         // Given: Adapter-Out 클래스들
         ArchRule adapterOutRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses()
-                .that().resideInAPackage("..adapter.persistence..")
+                .that().resideInAPackage("..adapter.out.persistence..")
                 .should().dependOnClassesThat().resideInAnyPackage(
                         "..adapter.rest..",
                         "..adapter.web.."
