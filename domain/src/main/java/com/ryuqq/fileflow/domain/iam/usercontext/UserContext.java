@@ -103,19 +103,18 @@ public class UserContext {
      * UserContext를 생성합니다 (테스트용).
      *
      * <p>테스트에서 시간을 제어하기 위한 package-private 생성자입니다.</p>
+     * <p><strong>주의</strong>: id가 null이면 신규 엔티티로 간주됩니다 (DB 저장 시 자동 ID 생성)</p>
      *
-     * @param id UserContext 식별자
+     * @param id UserContext 식별자 (null 허용 - 신규 엔티티)
      * @param externalUserId 외부 IDP 사용자 식별자
      * @param email 이메일
      * @param clock 시간 제공자
-     * @throws IllegalArgumentException id, externalUserId, email 중 하나라도 null인 경우
+     * @throws IllegalArgumentException externalUserId 또는 email이 null인 경우
      * @author ryu-qqq
      * @since 2025-10-24
      */
     UserContext(UserContextId id, ExternalUserId externalUserId, Email email, Clock clock) {
-        if (id == null) {
-            throw new IllegalArgumentException("UserContext ID는 필수입니다");
-        }
+        // null ID는 신규 엔티티 생성 시 허용 (DB에서 자동 생성)
         if (externalUserId == null) {
             throw new IllegalArgumentException("External User ID는 필수입니다");
         }

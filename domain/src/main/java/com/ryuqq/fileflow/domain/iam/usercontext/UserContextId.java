@@ -23,17 +23,15 @@ public record UserContextId(Long value) {
     /**
      * UserContextId의 Compact Constructor
      *
-     * <p>null 및 음수 값을 검증합니다.</p>
+     * <p>음수 값을 검증합니다.</p>
+     * <p><strong>주의</strong>: null은 신규 엔티티 생성 시 허용됩니다 (DB 자동 생성 ID)</p>
      *
-     * @throws IllegalArgumentException value가 null이거나 음수인 경우
+     * @throws IllegalArgumentException value가 음수인 경우
      * @author ryu-qqq
      * @since 2025-10-24
      */
     public UserContextId {
-        if (value == null) {
-            throw new IllegalArgumentException("UserContext ID는 필수입니다");
-        }
-        if (value <= 0) {
+        if (value != null && value <= 0) {
             throw new IllegalArgumentException("UserContext ID는 양수여야 합니다");
         }
     }
