@@ -37,7 +37,18 @@ public record Email(String value) {
      * <p>연속된 점(..), 시작/끝 점(.), 도메인 시작 점(.) 등을 거부합니다.</p>
      */
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[A-Za-z0-9+_-]+(\\.[A-Za-z0-9+_-]+)*@[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*\\.[A-Za-z]{2,}$"
+        """
+        ^                                             # 문자열 시작
+        # 로컬 파트: 연속된 점(..), 시작/끝 점(.) 불허
+        [A-Za-z0-9+_-]+(?:\\.[A-Za-z0-9+_-]+)*
+        @                                             # @ 기호
+        # 도메인 파트: 시작/끝 하이픈(-) 불허
+        [A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?
+        (?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*
+        # TLD: 최소 2글자
+        \\.[A-Za-z]{2,}
+        $                                             # 문자열 끝
+        """, Pattern.COMMENTS
     );
 
     /**
