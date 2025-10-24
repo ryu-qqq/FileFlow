@@ -77,7 +77,7 @@ class TenantDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> TenantDtoMapper.toCommand((CreateTenantRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("CreateTenantRequest must not be null");
+                .hasMessageContaining("CreateTenantRequest는 null일 수 없습니다");
         }
     }
 
@@ -122,7 +122,7 @@ class TenantDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> TenantDtoMapper.toCommand(null, request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("tenantId must not be null");
+                .hasMessageContaining("Tenant ID는 null일 수 없습니다");
         }
 
         /**
@@ -138,9 +138,9 @@ class TenantDtoMapperTest {
             String tenantId = "tenant-uuid-123";
 
             // When & Then
-            assertThatThrownBy(() -> TenantDtoMapper.toCommand(tenantId, null))
+            assertThatThrownBy(() -> TenantDtoMapper.toCommand(tenantId, (UpdateTenantRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("UpdateTenantRequest must not be null");
+                .hasMessageContaining("UpdateTenantRequest는 null일 수 없습니다");
         }
     }
 
@@ -207,7 +207,7 @@ class TenantDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> TenantDtoMapper.toCommand(null, request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("tenantId must not be null");
+                .hasMessageContaining("Tenant ID는 null일 수 없습니다");
         }
 
         /**
@@ -225,7 +225,7 @@ class TenantDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> TenantDtoMapper.toCommand(tenantId, (UpdateTenantStatusRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("UpdateTenantStatusRequest must not be null");
+                .hasMessageContaining("UpdateTenantStatusRequest는 null일 수 없습니다");
         }
     }
 
@@ -336,7 +336,7 @@ class TenantDtoMapperTest {
             // When & Then
             assertThatThrownBy(() -> TenantDtoMapper.toApiResponse(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("TenantResponse must not be null");
+                .hasMessageContaining("TenantResponse는 null일 수 없습니다");
         }
     }
 
@@ -353,7 +353,7 @@ class TenantDtoMapperTest {
         @Test
         @DisplayName("TenantDtoMapper는 인스턴스화할 수 없다")
         void utilityClass_CannotBeInstantiated() {
-            // When & Then - Reflection으로 인스턴스 생성 시도 시 AssertionError 발생
+            // When & Then - Reflection으로 인스턴스 생성 시도 시 UnsupportedOperationException 발생
             assertThatThrownBy(() -> {
                 java.lang.reflect.Constructor<TenantDtoMapper> constructor =
                     TenantDtoMapper.class.getDeclaredConstructor();
@@ -361,8 +361,8 @@ class TenantDtoMapperTest {
                 constructor.newInstance();
             })
             .isInstanceOf(java.lang.reflect.InvocationTargetException.class)
-            .hasCauseInstanceOf(AssertionError.class)
-            .hasRootCauseMessage("Utility class should not be instantiated");
+            .hasCauseInstanceOf(UnsupportedOperationException.class)
+            .hasRootCauseMessage("Utility class cannot be instantiated");
         }
     }
 }

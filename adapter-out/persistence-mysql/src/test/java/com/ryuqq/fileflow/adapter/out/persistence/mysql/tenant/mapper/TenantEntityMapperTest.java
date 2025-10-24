@@ -180,23 +180,25 @@ class TenantEntityMapperTest {
         }
 
         /**
-         * 정상: 신규 Tenant Domain을 Entity로 변환 (ID 없음)
+         * 정상: 신규 Tenant Domain을 Entity로 변환
+         *
+         * <p>Domain은 항상 ID를 가지며, Entity로 변환 시 모든 필드가 정확히 매핑됩니다.</p>
          *
          * @author ryu-qqq
          * @since 2025-10-23
          */
         @Test
-        @DisplayName("ID가 없는 Tenant Domain을 Entity로 변환한다 (create)")
+        @DisplayName("Tenant Domain을 Entity로 변환한다 (create)")
         void toEntity_NewTenant_ReturnsEntity() {
-            // Given - ID가 없는 Domain (create)
+            // Given - 신규 Tenant Domain
             Tenant domain = TenantFixtures.activeTenant();
 
             // When - Entity 변환
             TenantJpaEntity entity = TenantEntityMapper.toEntity(domain);
 
-            // Then - ID 제외한 필드 정확히 매핑됨
+            // Then - 모든 필드 정확히 매핑됨
             assertThat(entity).isNotNull();
-            assertThat(entity.getId()).isNull();  // 신규 생성 시 ID는 null
+            assertThat(entity.getId()).isEqualTo(domain.getIdValue());
             assertThat(entity.getName()).isEqualTo(domain.getNameValue());
             assertThat(entity.getCreatedAt()).isEqualTo(domain.getCreatedAt());
         }
