@@ -108,7 +108,7 @@ public class CelEngine {
                 return booleanResult;
             } else {
                 log.warn("Expression '{}' did not evaluate to Boolean, got: {}. Denying by default.",
-                        expression, result != null ? result.getClass().getSimpleName() : "null");
+                        expression, result);
                 return false;
             }
 
