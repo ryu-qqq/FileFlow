@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.rest.exception;
 
+import com.ryuqq.fileflow.domain.settings.SettingNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -30,6 +31,7 @@ import java.util.Map;
  * <ul>
  *   <li>400 Bad Request: {@code MethodArgumentNotValidException} (Validation 실패)</li>
  *   <li>400 Bad Request: {@code IllegalArgumentException} (잘못된 인자)</li>
+ *   <li>404 Not Found: {@code SettingNotFoundException} (설정을 찾을 수 없음)</li>
  *   <li>409 Conflict: {@code IllegalStateException} (중복, 상태 충돌)</li>
  *   <li>500 Internal Server Error: {@code Exception} (기타 모든 예외)</li>
  * </ul>
@@ -129,6 +131,40 @@ public class GlobalExceptionHandler {
         );
         problemDetail.setType(URI.create("about:blank"));
         problemDetail.setTitle("Bad Request");
+        problemDetail.setProperty("timestamp", Instant.now().toString());
+
+        return problemDetail;
+    }
+
+    /**
+     * 리소스 미발견 처리 (404 Not Found)
+     *
+     * <p>{@code SettingNotFoundException}을 처리합니다.</p>
+     *
+     * <p><strong>Response Example:</strong></p>
+     * <pre>{@code
+     * {
+     *   "type": "about:blank",
+     *   "title": "Not Found",
+     *   "status": 404,
+     *   "detail": "설정을 찾을 수 없습니다",
+     *   "timestamp": "2025-10-25T10:30:00Z"
+     * }
+     * }</pre>
+     *
+     * @param ex {@code SettingNotFoundException}
+     * @return RFC 7807 ProblemDetail (404 Not Found)
+     * @author ryu-qqq
+     * @since 2025-10-25
+     */
+    @ExceptionHandler(SettingNotFoundException.class)
+    public ProblemDetail handleSettingNotFoundException(SettingNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+            HttpStatus.NOT_FOUND,
+            ex.getMessage()
+        );
+        problemDetail.setType(URI.create("about:blank"));
+        problemDetail.setTitle("Not Found");
         problemDetail.setProperty("timestamp", Instant.now().toString());
 
         return problemDetail;
