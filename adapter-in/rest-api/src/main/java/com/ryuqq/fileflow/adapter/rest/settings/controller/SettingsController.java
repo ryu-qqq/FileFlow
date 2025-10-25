@@ -3,12 +3,10 @@ package com.ryuqq.fileflow.adapter.rest.settings.controller;
 import com.ryuqq.fileflow.adapter.rest.common.dto.ApiResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.MergedSettingsApiResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingRequest;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.mapper.SettingsDtoMapper;
-import com.ryuqq.fileflow.application.settings.dto.GetMergedSettingsQuery;
-import com.ryuqq.fileflow.application.settings.dto.MergedSettingsResponse;
-import com.ryuqq.fileflow.application.settings.dto.UpdateSettingCommand;
-import com.ryuqq.fileflow.application.settings.service.GetMergedSettingsUseCase;
-import com.ryuqq.fileflow.application.settings.service.UpdateSettingUseCase;
+import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
+import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -142,8 +140,8 @@ public class SettingsController {
         @RequestParam(required = false) Long orgId,
         @RequestParam(required = false) Long tenantId
     ) {
-        GetMergedSettingsQuery query = new GetMergedSettingsQuery(orgId, tenantId);
-        MergedSettingsResponse response = getMergedSettingsUseCase.execute(query);
+        GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(orgId, tenantId);
+        GetMergedSettingsUseCase.Response response = getMergedSettingsUseCase.execute(query);
         MergedSettingsApiResponse apiResponse = SettingsDtoMapper.toApiResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
@@ -187,7 +185,17 @@ public class SettingsController {
      * HTTP/1.1 200 OK
      * {
      *   "success": true,
-     *   "data": null,
+     *   "data": {
+     *     "id": 1,
+     *     "key": "MAX_UPLOAD_SIZE",
+     *     "value": "200MB",
+     *     "valueType": "STRING",
+     *     "level": "ORG",
+     *     "contextId": 1,
+     *     "secret": false,
+     *     "createdAt": "2025-10-25T14:30:00",
+     *     "updatedAt": "2025-10-25T14:35:00"
+     *   },
      *   "error": null,
      *   "timestamp": "2025-10-25T14:35:00"
      * }
@@ -202,17 +210,18 @@ public class SettingsController {
      * </ul>
      *
      * @param request 설정 수정 요청 DTO
-     * @return 200 OK + ApiResponse<Void>
+     * @return 200 OK + ApiResponse<SettingResponse> (수정된 설정 반환)
      * @throws IllegalArgumentException level이 유효하지 않은 경우 (400)
      * @author ryu-qqq
      * @since 2025-10-25
      */
     @PatchMapping
-    public ResponseEntity<ApiResponse<Void>> updateSetting(
+    public ResponseEntity<ApiResponse<UpdateSettingResponse>> updateSetting(
         @Valid @RequestBody UpdateSettingRequest request
     ) {
-        UpdateSettingCommand command = SettingsDtoMapper.toCommand(request);
-        updateSettingUseCase.execute(command);
-        return ResponseEntity.ok(ApiResponse.ofSuccess(null));
+        UpdateSettingUseCase.Command command = SettingsDtoMapper.toCommand(request);
+        UpdateSettingUseCase.Response response = updateSettingUseCase.execute(command);
+        UpdateSettingResponse apiResponse = SettingsDtoMapper.toUpdateResponse(response);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 }

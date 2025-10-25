@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import java.time.LocalDateTime;
 
@@ -53,7 +54,15 @@ import java.time.LocalDateTime;
  * @since 2025-10-25
  */
 @Entity
-@Table(name = "settings")
+@Table(
+    name = "settings",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_setting_key_level_context",
+            columnNames = {"setting_key", "level", "context_id"}
+        )
+    }
+)
 public class SettingJpaEntity {
 
     /**

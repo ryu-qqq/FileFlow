@@ -16,31 +16,45 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * SettingRepositoryAdapter - Setting 전용 Persistence Adapter
+ * SettingRepositoryAdapter - Setting 전용 Persistence Adapter (DEPRECATED)
  *
- * <p>헥사고날 아키텍처 패턴: Domain {@code SettingRepository} Port 구현체입니다.</p>
- * <p>JPA Repository를 사용하여 Setting Aggregate를 영속화합니다.</p>
- *
- * <p><strong>책임:</strong></p>
+ * <p><strong>⚠️ DEPRECATED:</strong> CQRS 패턴 적용으로 대체됨</p>
  * <ul>
- *   <li>Setting CRUD 작업</li>
- *   <li>3레벨 병합을 위한 대량 조회 (ORG, TENANT, DEFAULT)</li>
- *   <li>Entity ↔ Domain 변환 (Mapper 위임)</li>
+ *   <li>Query 작업은 {@link SettingQueryAdapter} 사용 (LoadSettingsPort 구현)</li>
+ *   <li>Command 작업은 {@link SettingCommandAdapter} 사용 (SaveSettingPort 구현)</li>
  * </ul>
  *
- * <p><strong>설계 원칙:</strong></p>
+ * <p><strong>마이그레이션 가이드:</strong></p>
+ * <pre>
+ * // 기존 (Deprecated)
+ * {@literal @}Autowired
+ * private SettingRepository settingRepository;
+ *
+ * // 신규 (CQRS 패턴)
+ * {@literal @}Autowired
+ * private LoadSettingsPort loadSettingsPort;  // Query 작업
+ *
+ * {@literal @}Autowired
+ * private SaveSettingPort saveSettingPort;    // Command 작업
+ * </pre>
+ *
+ * <p><strong>CQRS 분리 이유:</strong></p>
  * <ul>
- *   <li>✅ {@code @Component} 사용 (Spring Bean 등록)</li>
- *   <li>✅ {@code SettingRepository} Port 구현</li>
- *   <li>✅ JPA Repository 사용 (Spring Data JPA)</li>
- *   <li>✅ Pure Java (Lombok 금지)</li>
- *   <li>✅ Law of Demeter 준수 (Mapper를 통한 변환)</li>
- *   <li>❌ {@code @Transactional} 사용 금지 (Application Layer에서만)</li>
+ *   <li>✅ Query/Command 책임 분리 (SRP 준수)</li>
+ *   <li>✅ Query 최적화 (DTO Projection, Read-Only)</li>
+ *   <li>✅ Command 최적화 (Batch Insert, Bulk Delete)</li>
+ *   <li>✅ 트랜잭션 관리 명확화 (Command만 트랜잭션)</li>
  * </ul>
  *
+ * <p><strong>제거 예정:</strong> 2026-01-01 이후 삭제 예정</p>
+ *
+ * @deprecated CQRS 패턴 적용으로 {@link SettingQueryAdapter}와 {@link SettingCommandAdapter}로 분리됨
+ * @see SettingQueryAdapter Query 작업 (LoadSettingsPort 구현)
+ * @see SettingCommandAdapter Command 작업 (SaveSettingPort 구현)
  * @author ryu-qqq
  * @since 2025-10-25
  */
+@Deprecated(since = "2025-10-25", forRemoval = true)
 @Component
 public class SettingRepositoryAdapter implements SettingRepository {
 
