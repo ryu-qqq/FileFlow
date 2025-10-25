@@ -71,23 +71,7 @@ public class PermissionDeniedException extends BusinessException {
         String permissionCode,
         String detailMessage
     ) {
-        super(
-            PermissionErrorCode.PERMISSION_DENIED,
-            buildMessage(denialReason, permissionCode, detailMessage)
-        );
-
-        if (denialReason == null) {
-            throw new IllegalArgumentException("DenialReason은 필수입니다");
-        }
-        if (permissionCode == null || permissionCode.isBlank()) {
-            throw new IllegalArgumentException("Permission 코드는 필수입니다");
-        }
-        if (detailMessage == null || detailMessage.isBlank()) {
-            throw new IllegalArgumentException("상세 메시지는 필수입니다");
-        }
-
-        this.denialReason = denialReason;
-        this.permissionCode = permissionCode.trim();
+        this(denialReason, permissionCode, detailMessage, null);
     }
 
     /**
