@@ -9,7 +9,6 @@ import com.ryuqq.fileflow.application.iam.permission.dto.response.EvaluatePermis
 import com.ryuqq.fileflow.application.iam.permission.port.in.EvaluatePermissionUseCase;
 import com.ryuqq.fileflow.application.iam.permission.port.out.GrantRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.permission.Grant;
-import com.ryuqq.fileflow.domain.iam.permission.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -122,25 +121,41 @@ public class EvaluatePermissionService implements EvaluatePermissionUseCase {
                 return denyNoGrant(command, startTime);
             }
 
-            // 2+3단계: Permission 필터링 + Scope 매칭 (통합)
-            Optional<Grant> matchingGrant = filterByPermissionAndScope(grants, command.permissionCode(), command.scope());
-            log.debug("2+3단계 완료 - Permission+Scope 매칭: {}", matchingGrant.isPresent() ? "일치 Grant 발견" : "일치 없음");
+            // 2+3단계: Permission 필터링 + Scope 매칭 (모든 적용 가능한 Grant 수집)
+            List<Grant> applicableGrants = grants.stream()
+                .filter(grant -> grant.isForPermission(command.permissionCode()))
+                .filter(grant -> grant.isApplicableToScope(command.scope()))
+                .sorted(java.util.Comparator.comparing((Grant g) -> g.scope().getLevel()).reversed())
+                .toList();
 
-            if (matchingGrant.isEmpty()) {
+            log.debug("2+3단계 완료 - Permission+Scope 매칭: {} 개 Grant 발견", applicableGrants.size());
+
+            if (applicableGrants.isEmpty()) {
                 // Permission은 있지만 Scope가 맞지 않는 경우와, Permission 자체가 없는 경우 구분
-                boolean hasPermission = grants.stream().anyMatch(g -> g.isForPermission(command.permissionCode()));
-                if (hasPermission) {
-                    Grant anyGrant = grants.stream().filter(g -> g.isForPermission(command.permissionCode())).findFirst().get();
-                    return denyScopeMismatch(command, anyGrant, startTime);
+                Optional<Grant> anyGrantForPermission = grants.stream()
+                    .filter(g -> g.isForPermission(command.permissionCode()))
+                    .findFirst();
+
+                if (anyGrantForPermission.isPresent()) {
+                    return denyScopeMismatch(command, anyGrantForPermission.get(), startTime);
                 } else {
                     return denyNoGrant(command, startTime);
                 }
             }
 
-            Grant grant = matchingGrant.get();
+            // 4단계: ABAC 평가 (모든 적용 가능한 Grant 평가, 무조건 Grant 우선)
+            // 무조건 Grant가 있으면 즉시 허용 (가장 넓은 Scope의 무조건 Grant 우선)
+            Optional<Grant> unconditionalGrant = applicableGrants.stream()
+                .filter(grant -> !grant.hasCondition())
+                .findFirst();
 
-            // 4단계: ABAC 평가 (조건이 있는 경우만)
-            if (grant.hasCondition()) {
+            if (unconditionalGrant.isPresent()) {
+                log.debug("4단계 완료 - 무조건 Grant 발견 (즉시 허용)");
+                return allow(command, startTime);
+            }
+
+            // 조건부 Grant만 있는 경우: 조건 평가 (순서대로, 하나라도 성공하면 허용)
+            for (Grant grant : applicableGrants) {
                 try {
                     boolean conditionMet = evaluateAbacCondition(
                         grant.conditionExpr(),
@@ -148,23 +163,30 @@ public class EvaluatePermissionService implements EvaluatePermissionUseCase {
                         command.resourceAttributes()
                     );
 
-                    log.debug("4단계 완료 - ABAC 평가: condition='{}', result={}",
+                    log.debug("4단계 - ABAC 평가: condition='{}', result={}",
                         grant.conditionExpr(), conditionMet);
 
-                    if (!conditionMet) {
-                        return denyConditionNotMet(command, grant, startTime);
+                    if (conditionMet) {
+                        return allowWithCondition(command, grant, startTime);
                     }
-
-                    return allowWithCondition(command, grant, startTime);
+                    // 조건 실패 시 다음 Grant 평가 계속
 
                 } catch (IllegalArgumentException e) {
-                    // ABAC 조건 평가 실패
-                    return denyConditionEvaluationFailed(command, grant, startTime, e);
+                    // ABAC 평가 실패 시 다음 Grant 평가 계속
+                    log.warn("ABAC 평가 실패 (다음 Grant 계속): condition='{}', error={}",
+                        grant.conditionExpr(), e.getMessage());
+
+                    // 마지막 Grant였다면 평가 실패로 거부
+                    if (grant == applicableGrants.get(applicableGrants.size() - 1)) {
+                        return denyConditionEvaluationFailed(command, grant, startTime, e);
+                    }
                 }
-            } else {
-                log.debug("4단계 생략 - 조건 없는 Grant (무조건 허용)");
-                return allow(command, startTime);
             }
+
+            // 모든 조건부 Grant가 실패한 경우
+            Grant lastGrant = applicableGrants.get(applicableGrants.size() - 1);
+            log.debug("4단계 완료 - 모든 조건부 Grant 실패");
+            return denyConditionNotMet(command, lastGrant, startTime);
 
         } catch (Exception e) {
             long durationMillis = (System.nanoTime() - startTime) / 1_000_000;
@@ -206,27 +228,6 @@ public class EvaluatePermissionService implements EvaluatePermissionUseCase {
         }
 
         return grants;
-    }
-
-    /**
-     * 2+3단계 통합: Permission 필터링 + Scope 매칭
-     *
-     * <p>요청된 permissionCode와 일치하고 Scope까지 만족하는 첫 번째 Grant를 찾습니다.</p>
-     * <p>여러 Role의 Grant가 있을 때, Scope가 더 넓은 Grant를 우선 선택하도록 합니다.</p>
-     * <p>Short-circuit 평가: 첫 번째 일치 시 즉시 반환</p>
-     *
-     * @param grants Grant 리스트
-     * @param permissionCode 요청된 권한 코드
-     * @param requestedScope 요청된 Scope
-     * @return 일치하는 Grant (Optional)
-     * @author ryu-qqq
-     * @since 2025-10-25
-     */
-    private Optional<Grant> filterByPermissionAndScope(List<Grant> grants, String permissionCode, Scope requestedScope) {
-        return grants.stream()
-            .filter(grant -> grant.isForPermission(permissionCode))
-            .filter(grant -> grant.isApplicableToScope(requestedScope))
-            .findFirst();
     }
 
     /**
