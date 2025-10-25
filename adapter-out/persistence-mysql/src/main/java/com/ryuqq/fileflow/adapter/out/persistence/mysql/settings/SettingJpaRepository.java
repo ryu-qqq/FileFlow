@@ -181,9 +181,9 @@ public interface SettingJpaRepository extends JpaRepository<SettingJpaEntity, Lo
         SELECT s FROM SettingJpaEntity s
         WHERE s.settingKey = :settingKey
         ORDER BY CASE s.level
-            WHEN 'ORG' THEN 1
-            WHEN 'TENANT' THEN 2
-            WHEN 'DEFAULT' THEN 3
+            WHEN com.ryuqq.fileflow.domain.settings.SettingLevel.ORG THEN 1
+            WHEN com.ryuqq.fileflow.domain.settings.SettingLevel.TENANT THEN 2
+            WHEN com.ryuqq.fileflow.domain.settings.SettingLevel.DEFAULT THEN 3
         END
         """)
     List<SettingJpaEntity> findAllBySettingKeyOrderByPriority(@Param("settingKey") String settingKey);

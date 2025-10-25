@@ -2,8 +2,9 @@ package com.ryuqq.fileflow.adapter.rest.settings.mapper;
 
 import com.ryuqq.fileflow.adapter.rest.settings.dto.MergedSettingsApiResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingRequest;
-import com.ryuqq.fileflow.application.settings.dto.MergedSettingsResponse;
-import com.ryuqq.fileflow.application.settings.dto.UpdateSettingCommand;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingResponse;
+import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
+import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 
 /**
@@ -45,7 +46,7 @@ public final class SettingsDtoMapper {
     }
 
     /**
-     * UpdateSettingRequest → UpdateSettingCommand 변환
+     * UpdateSettingRequest → UpdateSettingUseCase.Command 변환
      *
      * <p>REST API Request를 Application Command로 변환합니다.</p>
      *
@@ -58,13 +59,13 @@ public final class SettingsDtoMapper {
      * </ul>
      *
      * @param request REST API 요청 DTO (필수)
-     * @return UpdateSettingCommand
+     * @return UpdateSettingUseCase.Command
      * @throws IllegalArgumentException request가 null인 경우
      * @throws IllegalArgumentException level이 유효하지 않은 경우
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public static UpdateSettingCommand toCommand(UpdateSettingRequest request) {
+    public static UpdateSettingUseCase.Command toCommand(UpdateSettingRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("UpdateSettingRequest는 필수입니다");
         }
@@ -72,7 +73,7 @@ public final class SettingsDtoMapper {
         // Enum validation (IllegalArgumentException if invalid)
         SettingLevel.valueOf(request.level().toUpperCase());
 
-        return new UpdateSettingCommand(
+        return new UpdateSettingUseCase.Command(
             request.key(),
             request.value(),
             request.level().toUpperCase(),
@@ -81,7 +82,36 @@ public final class SettingsDtoMapper {
     }
 
     /**
-     * MergedSettingsResponse → MergedSettingsApiResponse 변환
+     * UpdateSettingUseCase.Response → UpdateSettingResponse 변환
+     *
+     * <p>Application Response를 REST API Response로 변환합니다.</p>
+     *
+     * @param response Application Layer 응답 (필수)
+     * @return UpdateSettingResponse
+     * @throws IllegalArgumentException response가 null인 경우
+     * @author ryu-qqq
+     * @since 2025-10-25
+     */
+    public static UpdateSettingResponse toUpdateResponse(UpdateSettingUseCase.Response response) {
+        if (response == null) {
+            throw new IllegalArgumentException("UpdateSettingUseCase.Response는 필수입니다");
+        }
+
+        return new UpdateSettingResponse(
+            response.id(),
+            response.key(),
+            response.value(),
+            response.valueType(),
+            response.level(),
+            response.contextId(),
+            response.secret(),
+            response.createdAt(),
+            response.updatedAt()
+        );
+    }
+
+    /**
+     * GetMergedSettingsUseCase.Response → MergedSettingsApiResponse 변환
      *
      * <p>Application Response를 REST API Response로 변환합니다.</p>
      *
@@ -98,13 +128,13 @@ public final class SettingsDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public static MergedSettingsApiResponse toApiResponse(MergedSettingsResponse response) {
+    public static MergedSettingsApiResponse toApiResponse(GetMergedSettingsUseCase.Response response) {
         if (response == null) {
-            throw new IllegalArgumentException("MergedSettingsResponse는 필수입니다");
+            throw new IllegalArgumentException("GetMergedSettingsUseCase.Response는 필수입니다");
         }
 
         return new MergedSettingsApiResponse(
-            response.getSettings()
+            response.settings()
         );
     }
 }
