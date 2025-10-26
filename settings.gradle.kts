@@ -27,6 +27,7 @@ include("adapter-in:rest-api")
 // Outbound Adapters (Driven)
 // New Hexagonal Architecture Adapters
 include("adapter-out:persistence-mysql")
+include("adapter-out:persistence-redis")
 include("adapter-out:abac-cel")
 
 // ========================================
