@@ -9,11 +9,15 @@ import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.iam.usercontext.UserContext;
 import com.ryuqq.fileflow.domain.iam.usercontext.UserContextId;
+import com.ryuqq.fileflow.domain.iam.usercontext.exception.UserContextNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 /**
  * Role 철회 Service 구현
@@ -70,7 +74,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <ul>
  *   <li>{@code IllegalArgumentException}: Command 필드 null 또는 유효하지 않음</li>
  *   <li>{@code IllegalStateException}: UserContext 삭제됨 또는 Membership 미존재</li>
- *   <li>{@code EntityNotFoundException}: UserContext 미존재 (userId 불일치)</li>
+ *   <li>{@code UserContextNotFoundException}: UserContext 미존재 (userId 불일치)</li>
  * </ul>
  *
  * <p><strong>규칙 준수:</strong></p>
@@ -93,6 +97,7 @@ public class RoleRevocationService implements RevokeRoleUseCase {
     private final UserContextRepositoryPort userContextRepository;
     private final GrantsCachePort grantsCachePort;
     private final ApplicationEventPublisher eventPublisher;
+    private final Clock clock;
 
     /**
      * Constructor
@@ -100,17 +105,20 @@ public class RoleRevocationService implements RevokeRoleUseCase {
      * @param userContextRepository UserContext 저장소 Port
      * @param grantsCachePort Grants 캐시 Port (KAN-262에서 구현)
      * @param eventPublisher Spring 이벤트 발행자
+     * @param clock 시간 제어를 위한 Clock (테스트 용이성)
      * @author ryu-qqq
      * @since 2025-10-26
      */
     public RoleRevocationService(
         UserContextRepositoryPort userContextRepository,
         GrantsCachePort grantsCachePort,
-        ApplicationEventPublisher eventPublisher
+        ApplicationEventPublisher eventPublisher,
+        Clock clock
     ) {
         this.userContextRepository = userContextRepository;
         this.grantsCachePort = grantsCachePort;
         this.eventPublisher = eventPublisher;
+        this.clock = clock;
     }
 
     /**
@@ -122,7 +130,7 @@ public class RoleRevocationService implements RevokeRoleUseCase {
      * @param command Role 철회 Command (Not null)
      * @throws IllegalArgumentException Command 필드 유효성 검증 실패
      * @throws IllegalStateException UserContext가 삭제됨 또는 Membership 미존재
-     * @throws EntityNotFoundException UserContext 미존재 (userId 불일치)
+     * @throws UserContextNotFoundException UserContext 미존재 (userId 불일치)
      * @author ryu-qqq
      * @since 2025-10-26
      */
@@ -134,9 +142,7 @@ public class RoleRevocationService implements RevokeRoleUseCase {
 
         // 1. UserContext 조회
         UserContext userContext = userContextRepository.findById(UserContextId.of(command.userId()))
-            .orElseThrow(() -> new IllegalStateException(
-                String.format("사용자를 찾을 수 없습니다: userId=%d", command.userId())
-            ));
+            .orElseThrow(() -> UserContextNotFoundException.withUserId(command.userId()));
 
         // 2. Command → Domain 변환
         TenantId tenantId = TenantId.of(command.tenantId());
@@ -155,17 +161,19 @@ public class RoleRevocationService implements RevokeRoleUseCase {
         try {
             grantsCachePort.invalidateUser(command.userId());
             log.debug("캐시 무효화 성공: userId={}", command.userId());
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // Cache Fallback: 캐시 무효화 실패 시에도 서비스는 정상 동작
             // TTL(5분)로 자동 만료되므로 최대 5분 후 정상화
+            // RuntimeException으로 제한하여 예상치 못한 Checked Exception은 전파
             log.error("캐시 무효화 실패 (TTL로 자동 만료 예정): userId={}", command.userId(), e);
         }
 
         // 6. 이벤트 발행 (감사 로그, 알림 등)
-        RoleRevokedEvent event = RoleRevokedEvent.of(
+        RoleRevokedEvent event = new RoleRevokedEvent(
             command.userId(),
             command.tenantId(),
-            command.organizationId()
+            command.organizationId(),
+            LocalDateTime.now(clock)
         );
         eventPublisher.publishEvent(event);
 

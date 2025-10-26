@@ -56,14 +56,14 @@ public record AssignRoleCommand(
      * @since 2025-10-26
      */
     public AssignRoleCommand {
-        if (userId == null || userId < 0) {
-            throw new IllegalArgumentException("userId는 필수이며 0 이상이어야 합니다");
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("userId는 필수이며 0보다 큰 양수여야 합니다");
         }
         if (tenantId == null || tenantId.isBlank()) {
             throw new IllegalArgumentException("tenantId는 필수입니다");
         }
-        if (organizationId == null || organizationId < 0) {
-            throw new IllegalArgumentException("organizationId는 필수이며 0 이상이어야 합니다");
+        if (organizationId == null || organizationId <= 0) {
+            throw new IllegalArgumentException("organizationId는 필수이며 0보다 큰 양수여야 합니다");
         }
         if (membershipType == null || membershipType.isBlank()) {
             throw new IllegalArgumentException("membershipType은 필수입니다");
