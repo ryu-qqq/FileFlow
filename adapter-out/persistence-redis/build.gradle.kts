@@ -46,8 +46,5 @@ dependencies {
     testImplementation(project(":test-fixtures"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(rootProject.libs.testcontainers.junit)
-
-    // TestContainers Redis
-    testImplementation("org.testcontainers:testcontainers:1.19.0")
-    testImplementation("com.redis:testcontainers-redis:2.2.2")
+    testImplementation(rootProject.libs.testcontainers.redis)
 }
