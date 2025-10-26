@@ -12,7 +12,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -384,7 +383,7 @@ public class SettingsCacheAdapter implements SettingsCachePort {
                     .build()
             )) {
                 cursor.forEachRemaining(key -> keySet.add(new String(key)));
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error("Error scanning keys for pattern: {}", pattern, e);
             }
             return keySet;
