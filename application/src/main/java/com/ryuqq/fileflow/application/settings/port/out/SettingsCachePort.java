@@ -225,28 +225,26 @@ public interface SettingsCachePort {
     /**
      * 특정 사용자와 관련된 모든 Settings 캐시 무효화
      *
-     * <p>주어진 userId에 해당하는 조직/테넌트의 모든 Settings 캐시를 무효화합니다.
-     * 사용자의 조직/테넌트 정보를 기반으로 관련 캐시를 삭제합니다.</p>
+     * <p>Settings 캐시는 조직/테넌트 기반으로 구성되어 있으므로,
+     * 사용자별 무효화는 구현체가 직접 지원하지 않습니다.
+     * 호출자는 사용자의 조직/테넌트 정보를 조회한 후, 명시적으로
+     * {@link #invalidateOrg(Long)} 또는 {@link #invalidateTenant(Long)}를 호출해야 합니다.</p>
      *
-     * <p><strong>무효화 로직:</strong></p>
-     * <ol>
-     *   <li>사용자의 조직/테넌트 정보 조회 (UserContext)</li>
-     *   <li>각 조직/테넌트에 대해 invalidateOrg() 또는 invalidateTenant() 호출</li>
-     *   <li>조직 변경 시 해당 조직의 모든 설정 캐시 삭제</li>
-     * </ol>
+     * <p><strong>권장 사용 패턴:</strong></p>
+     * <pre>{@code
+     * // 사용자의 조직/테넌트 정보 조회
+     * UserContext userContext = userContextRepository.findByUserId(userId);
+     *
+     * // 명시적으로 조직/테넌트 캐시 무효화
+     * settingsCachePort.invalidateOrg(userContext.getOrganizationId());
+     * settingsCachePort.invalidateTenant(userContext.getTenantId());
+     * }</pre>
      *
      * <p><strong>사용 시나리오:</strong></p>
      * <ul>
      *   <li>사용자 조직/테넌트 변경 시</li>
      *   <li>사용자 권한 변경으로 설정 재계산 필요 시</li>
      *   <li>사용자별 설정 초기화 시</li>
-     * </ul>
-     *
-     * <p><strong>주의사항:</strong></p>
-     * <ul>
-     *   <li>⚠️ 사용자가 속한 조직/테넌트가 많으면 무효화 범위가 넓어짐</li>
-     *   <li>✅ 일반적으로 사용자당 조직/테넌트 수는 적음 (< 10개)</li>
-     *   <li>✅ 무효화 실패 시에도 TTL로 자동 만료됨</li>
      * </ul>
      *
      * @param userId 사용자 ID (Not null)
