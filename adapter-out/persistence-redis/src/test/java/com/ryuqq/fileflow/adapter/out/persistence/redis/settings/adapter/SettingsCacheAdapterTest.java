@@ -87,12 +87,6 @@ class SettingsCacheAdapterTest extends RedisIntegrationTestBase {
             // when - 캐시 저장
             settingsCacheAdapter.save(ORG_ID, TENANT_ID, sampleSettings);
 
-            // DEBUG: Redis에 실제로 저장되었는지 확인
-            String cacheKey = "settings:org:" + ORG_ID + ":tenant:" + TENANT_ID;
-            Object rawValue = redisTemplate.opsForValue().get(cacheKey);
-            System.out.println("DEBUG: Raw value from Redis: " + rawValue);
-            System.out.println("DEBUG: Raw value type: " + (rawValue != null ? rawValue.getClass().getName() : "null"));
-
             // when - 캐시 조회
             Optional<SettingsForMerge> cachedSettings = settingsCacheAdapter.findMergedSettings(ORG_ID, TENANT_ID);
 

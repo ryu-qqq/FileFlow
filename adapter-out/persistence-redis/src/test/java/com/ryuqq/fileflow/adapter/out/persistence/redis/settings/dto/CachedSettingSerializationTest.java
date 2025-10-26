@@ -48,7 +48,6 @@ class CachedSettingSerializationTest {
         String json = objectMapper.writeValueAsString(cached);
 
         // then
-        System.out.println("Serialized JSON: " + json);
         assertThat(json).contains("\"id\":1");
         assertThat(json).contains("\"keyValue\":\"test.key\"");
         assertThat(json).contains("\"settingValue\":\"test value\"");
@@ -77,7 +76,6 @@ class CachedSettingSerializationTest {
         CachedSetting cached = objectMapper.readValue(json, CachedSetting.class);
 
         // then
-        System.out.println("Deserialized: " + cached);
         assertThat(cached.getId()).isEqualTo(1L);
         assertThat(cached.getKeyValue()).isEqualTo("test.key");
         assertThat(cached.getSettingValue()).isEqualTo("test value");
