@@ -1,0 +1,194 @@
+Configuration on demand is an incubating feature.
+> Task :adapter-out:persistence-mysql:processResources UP-TO-DATE
+> Task :application:processResources NO-SOURCE
+> Task :adapter-in:rest-api:processResources NO-SOURCE
+> Task :domain:compileJava UP-TO-DATE
+> Task :bootstrap:bootstrap-web-api:processResources
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :application:compileJava UP-TO-DATE
+> Task :application:classes UP-TO-DATE
+> Task :application:jar UP-TO-DATE
+> Task :adapter-in:rest-api:compileJava UP-TO-DATE
+> Task :adapter-in:rest-api:classes UP-TO-DATE
+> Task :adapter-in:rest-api:jar UP-TO-DATE
+> Task :adapter-out:persistence-mysql:compileJava UP-TO-DATE
+> Task :adapter-out:persistence-mysql:classes UP-TO-DATE
+> Task :adapter-out:persistence-mysql:jar UP-TO-DATE
+> Task :bootstrap:bootstrap-web-api:compileJava UP-TO-DATE
+> Task :bootstrap:bootstrap-web-api:classes
+> Task :bootstrap:bootstrap-web-api:resolveMainClassName
+
+> Task :bootstrap:bootstrap-web-api:bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2025-10-24T12:34:35.540+09:00  INFO 62709 --- [fileflow-web-api] [           main] com.ryuqq.fileflow.FileflowApplication   : Starting FileflowApplication using Java 21.0.3 with PID 62709 (/Users/sangwon-ryu/fileflow/bootstrap/bootstrap-web-api/build/classes/java/main started by sangwon-ryu in /Users/sangwon-ryu/fileflow/bootstrap/bootstrap-web-api)
+2025-10-24T12:34:35.541+09:00 DEBUG 62709 --- [fileflow-web-api] [           main] com.ryuqq.fileflow.FileflowApplication   : Running with Spring Boot v3.5.6, Spring v6.2.11
+2025-10-24T12:34:35.541+09:00  INFO 62709 --- [fileflow-web-api] [           main] com.ryuqq.fileflow.FileflowApplication   : No active profile set, falling back to 1 default profile: "default"
+2025-10-24T12:34:36.049+09:00  INFO 62709 --- [fileflow-web-api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-24T12:34:36.075+09:00  INFO 62709 --- [fileflow-web-api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 20 ms. Found 2 JPA repository interfaces.
+2025-10-24T12:34:36.610+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-10-24T12:34:36.622+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-10-24T12:34:36.622+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2025-10-24T12:34:36.654+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-10-24T12:34:36.654+09:00  INFO 62709 --- [fileflow-web-api] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1082 ms
+2025-10-24T12:34:36.750+09:00 DEBUG 62709 --- [fileflow-web-api] [           main] o.s.w.f.ServerHttpObservationFilter      : Filter 'webMvcObservationFilter' configured for use
+2025-10-24T12:34:36.824+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-24T12:34:36.865+09:00  INFO 62709 --- [fileflow-web-api] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.29.Final
+2025-10-24T12:34:36.901+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-10-24T12:34:37.088+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-24T12:34:37.106+09:00  INFO 62709 --- [fileflow-web-api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-10-24T12:34:37.222+09:00  INFO 62709 --- [fileflow-web-api] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3580134d
+2025-10-24T12:34:37.223+09:00  INFO 62709 --- [fileflow-web-api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-10-24T12:34:37.276+09:00  WARN 62709 --- [fileflow-web-api] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-24T12:34:37.287+09:00  INFO 62709 --- [fileflow-web-api] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.43
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-24T12:34:37.823+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-24T12:34:37.893+09:00 DEBUG 62709 --- [fileflow-web-api] [           main] org.hibernate.SQL                        : 
+    alter table organizations 
+       modify column status enum ('ACTIVE','INACTIVE') not null
+2025-10-24T12:34:37.925+09:00 DEBUG 62709 --- [fileflow-web-api] [           main] org.hibernate.SQL                        : 
+    alter table tenants 
+       modify column status enum ('ACTIVE','SUSPENDED') not null
+2025-10-24T12:34:37.946+09:00  INFO 62709 --- [fileflow-web-api] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-24T12:34:38.282+09:00  WARN 62709 --- [fileflow-web-api] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-24T12:34:38.349+09:00 DEBUG 62709 --- [fileflow-web-api] [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : 18 mappings in 'requestMappingHandlerMapping'
+2025-10-24T12:34:38.406+09:00 DEBUG 62709 --- [fileflow-web-api] [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**, /swagger-ui*/*swagger-initializer.js, /swagger-ui*/**] in 'resourceHandlerMapping'
+2025-10-24T12:34:38.429+09:00 DEBUG 62709 --- [fileflow-web-api] [           main] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-24T12:34:38.458+09:00 DEBUG 62709 --- [fileflow-web-api] [           main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 2 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-24T12:34:38.629+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2025-10-24T12:34:38.682+09:00  INFO 62709 --- [fileflow-web-api] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-10-24T12:34:38.699+09:00  INFO 62709 --- [fileflow-web-api] [           main] com.ryuqq.fileflow.FileflowApplication   : Started FileflowApplication in 3.428 seconds (process running for 3.607)
+2025-10-24T12:40:10.996+09:00  INFO 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-10-24T12:40:10.997+09:00  INFO 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-10-24T12:40:10.997+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2025-10-24T12:40:10.997+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2025-10-24T12:40:10.997+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
+2025-10-24T12:40:11.004+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@31406eab
+2025-10-24T12:40:11.004+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@71d0ad00
+2025-10-24T12:40:11.005+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2025-10-24T12:40:11.005+09:00  INFO 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 8 ms
+2025-10-24T12:40:11.023+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : GET "/", parameters={}
+2025-10-24T12:40:11.029+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/], classpath [resources/], classpath [static/], classpath [public/], ServletContext [/]]
+2025-10-24T12:40:11.032+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.w.s.r.ResourceHttpRequestHandler     : Resource not found
+2025-10-24T12:40:11.037+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler#handleGlobalException(Exception)
+2025-10-24T12:40:11.070+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/problem+json;q=0.8', given [text/html, application/xhtml+xml, image/avif, image/webp, image/apng, application/xml;q=0.9, */*;q=0.8, application/signed-exchange;v=b3;q=0.7] and supported [application/problem+json]
+2025-10-24T12:40:11.073+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [ProblemDetail[type='about:blank', title='Internal Server Error', status=500, detail='An unexpected e (truncated)...]
+2025-10-24T12:40:11.090+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource .]
+2025-10-24T12:40:11.090+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 500 INTERNAL_SERVER_ERROR
+2025-10-24T12:40:11.107+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : GET "/favicon.ico", parameters={}
+2025-10-24T12:40:11.116+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/], classpath [resources/], classpath [static/], classpath [public/], ServletContext [/]]
+2025-10-24T12:40:11.127+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.w.s.r.ResourceHttpRequestHandler     : Resource not found
+2025-10-24T12:40:11.127+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler#handleGlobalException(Exception)
+2025-10-24T12:40:11.127+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/problem+json;q=0.8', given [image/avif, image/webp, image/apng, image/svg+xml, image/*, */*;q=0.8] and supported [application/problem+json]
+2025-10-24T12:40:11.128+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [ProblemDetail[type='about:blank', title='Internal Server Error', status=500, detail='An unexpected e (truncated)...]
+2025-10-24T12:40:11.134+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource favicon.ico.]
+2025-10-24T12:40:11.134+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 500 INTERNAL_SERVER_ERROR
+2025-10-24T12:40:20.573+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui.html", parameters={}
+2025-10-24T12:40:20.575+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.springdoc.webmvc.ui.SwaggerWelcomeWebMvc#redirectToUi(HttpServletRequest)
+2025-10-24T12:40:20.598+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json;q=0.8', given [text/html, application/xhtml+xml, image/avif, image/webp, image/apng, application/xml;q=0.9, */*;q=0.8, application/signed-exchange;v=b3;q=0.7] and supported [application/json, application/*+json, application/yaml]
+2025-10-24T12:40:20.599+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Nothing to write: null body
+2025-10-24T12:40:20.599+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 302 FOUND
+2025-10-24T12:40:20.601+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui/index.html", parameters={}
+2025-10-24T12:40:20.602+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/webjars/]]
+2025-10-24T12:40:20.604+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.609+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui/index.css", parameters={}
+2025-10-24T12:40:20.609+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui/swagger-ui-standalone-preset.js", parameters={}
+2025-10-24T12:40:20.609+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui/swagger-initializer.js", parameters={}
+2025-10-24T12:40:20.609+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui/swagger-ui-bundle.js", parameters={}
+2025-10-24T12:40:20.609+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui/swagger-ui.css", parameters={}
+2025-10-24T12:40:20.610+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-5] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/webjars/]]
+2025-10-24T12:40:20.610+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/webjars/]]
+2025-10-24T12:40:20.610+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-8] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/webjars/]]
+2025-10-24T12:40:20.610+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-9] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/webjars/]]
+2025-10-24T12:40:20.610+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-6] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/webjars/]]
+2025-10-24T12:40:20.612+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.616+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.619+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.622+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.628+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.697+09:00 DEBUG 62709 --- [fileflow-web-api] [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : GET "/api-docs/swagger-config", parameters={}
+2025-10-24T12:40:20.697+09:00 DEBUG 62709 --- [fileflow-web-api] [io-8080-exec-10] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.springdoc.webmvc.ui.SwaggerConfigResource#openapiJson(HttpServletRequest)
+2025-10-24T12:40:20.698+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui/favicon-32x32.png", parameters={}
+2025-10-24T12:40:20.698+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/webjars/]]
+2025-10-24T12:40:20.699+09:00 DEBUG 62709 --- [fileflow-web-api] [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [*/*] and supported [application/json]
+2025-10-24T12:40:20.699+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.701+09:00 DEBUG 62709 --- [fileflow-web-api] [io-8080-exec-10] m.m.a.RequestResponseBodyMethodProcessor : Writing [{configUrl=/api-docs/swagger-config, displayRequestDuration=true, docExpansion=none, oauth2RedirectU (truncated)...]
+2025-10-24T12:40:20.702+09:00 DEBUG 62709 --- [fileflow-web-api] [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.706+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : GET "/api-docs", parameters={}
+2025-10-24T12:40:20.706+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to org.springdoc.webmvc.api.OpenApiWebMvcResource#openapiJson(HttpServletRequest, String, Locale)
+2025-10-24T12:40:20.778+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : GET "/swagger-ui/favicon-32x32.png", parameters={}
+2025-10-24T12:40:20.778+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-3] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/webjars/]]
+2025-10-24T12:40:20.779+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:20.950+09:00  INFO 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 236 ms
+2025-10-24T12:40:20.963+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Using 'application/json', given [application/json, */*] and supported [application/json]
+2025-10-24T12:40:20.965+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Writing [{123, 34, 111, 112, 101, 110, 97, 112, 105, 34, 58, 34, 51, 46, 48, 46, 49, 34, 44, 34, 105, 110, 10 (truncated)...]
+2025-10-24T12:40:20.966+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:40:26.095+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : GET "/api/v1/organizations?page=0&size=100&cursor=string&tenantId=%20VM%22FKx%3BB%7DG%21wa%3En2e9%2AVRO%28%2B5DdJPC2%5CleqzxKruG6&orgCodeContains=string&nameContains=string&deleted=true&offsetBased=true", parameters={masked}
+2025-10-24T12:40:26.096+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.ryuqq.fileflow.adapter.rest.iam.organization.controller.OrganizationController#getOrganizations(OrganizationListQueryParam)
+2025-10-24T12:40:26.133+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler#handleIllegalArgumentException(IllegalArgumentException)
+2025-10-24T12:40:26.134+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/problem+json', given [application/json] and supported [application/problem+json]
+2025-10-24T12:40:26.134+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [ProblemDetail[type='about:blank', title='Bad Request', status=400, detail='page와 cursor는 동시에 사용할 수 없 (truncated)...]
+2025-10-24T12:40:26.134+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [java.lang.IllegalArgumentException: page와 cursor는 동시에 사용할 수 없습니다]
+2025-10-24T12:40:26.134+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 400 BAD_REQUEST
+2025-10-24T12:40:43.624+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : GET "/actuator/health", parameters={}
+2025-10-24T12:40:43.637+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-6] m.m.a.RequestResponseBodyMethodProcessor : Read "application/octet-stream" to []
+2025-10-24T12:40:43.674+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/vnd.spring-boot.actuator.v3+json', given [*/*] and supported [application/vnd.spring-boot.actuator.v3+json, application/vnd.spring-boot.actuator.v2+json, application/json]
+2025-10-24T12:40:43.681+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [org.springframework.boot.actuate.health.SystemHealth@3e06ceff]
+2025-10-24T12:40:43.684+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:41:17.989+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : GET "/actuator/health", parameters={}
+2025-10-24T12:41:18.015+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-9] m.m.a.RequestResponseBodyMethodProcessor : Read "application/octet-stream" to []
+2025-10-24T12:41:18.027+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-9] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/vnd.spring-boot.actuator.v3+json;q=0.8', given [text/html, application/xhtml+xml, image/avif, image/webp, image/apng, application/xml;q=0.9, */*;q=0.8, application/signed-exchange;v=b3;q=0.7] and supported [application/vnd.spring-boot.actuator.v3+json, application/vnd.spring-boot.actuator.v2+json, application/json]
+2025-10-24T12:41:18.027+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-9] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [org.springframework.boot.actuate.health.SystemHealth@33a19cdd]
+2025-10-24T12:41:18.029+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-10-24T12:41:18.049+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : GET "/favicon.ico", parameters={}
+2025-10-24T12:41:18.052+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped to ResourceHttpRequestHandler [classpath [META-INF/resources/], classpath [resources/], classpath [static/], classpath [public/], ServletContext [/]]
+2025-10-24T12:41:18.066+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.w.s.r.ResourceHttpRequestHandler     : Resource not found
+2025-10-24T12:41:18.073+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler#handleGlobalException(Exception)
+2025-10-24T12:41:18.074+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/problem+json;q=0.8', given [image/avif, image/webp, image/apng, image/svg+xml, image/*, */*;q=0.8] and supported [application/problem+json]
+2025-10-24T12:41:18.075+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [ProblemDetail[type='about:blank', title='Internal Server Error', status=500, detail='An unexpected e (truncated)...]
+2025-10-24T12:41:18.076+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource favicon.ico.]
+2025-10-24T12:41:18.077+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 500 INTERNAL_SERVER_ERROR
+2025-10-24T12:45:18.411+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/api/v1/organizations", parameters={}
+2025-10-24T12:45:18.413+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.ryuqq.fileflow.adapter.rest.iam.organization.controller.OrganizationController#createOrganization(CreateOrganizationRequest)
+2025-10-24T12:45:18.450+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [CreateOrganizationRequest[tenantId=string, orgCode=string, name=string]]
+2025-10-24T12:45:18.581+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] org.hibernate.SQL                        : 
+    /* <criteria> */ select
+        oje1_0.id 
+    from
+        organizations oje1_0 
+    where
+        oje1_0.tenant_id=? 
+        and oje1_0.org_code=? 
+        and not(oje1_0.deleted) 
+    limit
+        ?
+2025-10-24T12:45:18.624+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] org.hibernate.SQL                        : 
+    /* insert for
+        com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity.OrganizationJpaEntity */insert 
+    into
+        organizations (created_at, deleted, name, org_code, status, tenant_id, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+2025-10-24T12:45:18.658+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [application/json] and supported [application/json, application/*+json, application/yaml]
+2025-10-24T12:45:18.663+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [ApiResponse[success=true, data=OrganizationApiResponse[organizationId=1, tenantId=string, orgCode=ST (truncated)...]
+2025-10-24T12:45:18.664+09:00 DEBUG 62709 --- [fileflow-web-api] [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 201 CREATED
+2025-10-24T18:22:03.531+09:00  WARN 62709 --- [fileflow-web-api] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=19m53s448ms).
+2025-10-24T18:36:54.410+09:00  WARN 62709 --- [fileflow-web-api] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=14m50s890ms).
+2025-10-24T18:37:56.497+09:00  WARN 62709 --- [fileflow-web-api] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m2s86ms).
+2025-10-25T04:12:05.517+09:00  WARN 62709 --- [fileflow-web-api] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m2s381ms).

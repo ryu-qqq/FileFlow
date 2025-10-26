@@ -1,11 +1,11 @@
 package com.ryuqq.fileflow.application.settings.service;
 
-import com.ryuqq.fileflow.application.settings.dto.GetMergedSettingsQuery;
-import com.ryuqq.fileflow.application.settings.dto.MergedSettingsResponse;
+import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
+import com.ryuqq.fileflow.application.settings.port.out.LoadSettingsPort;
+import com.ryuqq.fileflow.application.settings.service.query.GetMergedSettingsService;
 import com.ryuqq.fileflow.domain.settings.Setting;
 import com.ryuqq.fileflow.domain.settings.SettingMerger;
 import com.ryuqq.fileflow.fixtures.SettingFixtures;
-import com.ryuqq.fileflow.domain.settings.SettingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -37,15 +37,15 @@ import static org.mockito.Mockito.when;
 @DisplayName("GetMergedSettingsUseCase 테스트")
 class GetMergedSettingsUseCaseTest {
 
-    private SettingRepository settingRepository;
+    private LoadSettingsPort loadSettingsPort;
     private SettingMerger settingMerger;
-    private GetMergedSettingsUseCase getMergedSettingsUseCase;
+    private GetMergedSettingsService getMergedSettingsService;
 
     @BeforeEach
     void setUp() {
-        settingRepository = mock(SettingRepository.class);
+        loadSettingsPort = mock(LoadSettingsPort.class);
         settingMerger = new SettingMerger();
-        getMergedSettingsUseCase = new GetMergedSettingsUseCase(settingRepository, settingMerger);
+        getMergedSettingsService = new GetMergedSettingsService(loadSettingsPort, settingMerger);
     }
 
     @Nested
@@ -58,7 +58,7 @@ class GetMergedSettingsUseCaseTest {
             // Arrange
             Long orgId = 1L;
             Long tenantId = 100L;
-            GetMergedSettingsQuery query = new GetMergedSettingsQuery(orgId, tenantId);
+            GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(orgId, tenantId);
 
             Setting orgSetting = SettingFixtures.createOrgSetting(orgId);           // MAX_UPLOAD_SIZE = 200MB
             Setting tenantSetting = SettingFixtures.createTenantSetting(tenantId);  // MAX_UPLOAD_SIZE = 50MB
@@ -68,21 +68,21 @@ class GetMergedSettingsUseCaseTest {
             List<Setting> tenantSettings = List.of(tenantSetting);
             List<Setting> defaultSettings = List.of(defaultSetting);
 
-            SettingRepository.SettingsForMerge settingsForMerge = new SettingRepository.SettingsForMerge(
+            LoadSettingsPort.SettingsForMerge settingsForMerge = new LoadSettingsPort.SettingsForMerge(
                 orgSettings, tenantSettings, defaultSettings
             );
 
-            when(settingRepository.findAllForMerge(eq(orgId), eq(tenantId)))
+            when(loadSettingsPort.findAllForMerge(eq(orgId), eq(tenantId)))
                 .thenReturn(settingsForMerge);
 
             // Act
-            MergedSettingsResponse response = getMergedSettingsUseCase.execute(query);
+            GetMergedSettingsUseCase.Response response = getMergedSettingsService.execute(query);
 
             // Assert
             assertThat(response).isNotNull();
-            assertThat(response.getSettings()).containsEntry("MAX_UPLOAD_SIZE", "200MB"); // ORG 우선
+            assertThat(response.settings()).containsEntry("MAX_UPLOAD_SIZE", "200MB"); // ORG 우선
 
-            verify(settingRepository).findAllForMerge(eq(orgId), eq(tenantId));
+            verify(loadSettingsPort).findAllForMerge(eq(orgId), eq(tenantId));
         }
 
         @Test
@@ -90,7 +90,7 @@ class GetMergedSettingsUseCaseTest {
         void shouldMergeWithTenantPriorityWhenNoOrg() {
             // Arrange
             Long tenantId = 100L;
-            GetMergedSettingsQuery query = new GetMergedSettingsQuery(null, tenantId);
+            GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, tenantId);
 
             Setting tenantSetting = SettingFixtures.createTenantSetting(tenantId);  // MAX_UPLOAD_SIZE = 50MB
             Setting defaultSetting = SettingFixtures.createDefaultSetting();        // MAX_UPLOAD_SIZE = 100MB
@@ -99,28 +99,28 @@ class GetMergedSettingsUseCaseTest {
             List<Setting> tenantSettings = List.of(tenantSetting);
             List<Setting> defaultSettings = List.of(defaultSetting);
 
-            SettingRepository.SettingsForMerge settingsForMerge = new SettingRepository.SettingsForMerge(
+            LoadSettingsPort.SettingsForMerge settingsForMerge = new LoadSettingsPort.SettingsForMerge(
                 orgSettings, tenantSettings, defaultSettings
             );
 
-            when(settingRepository.findAllForMerge(eq(null), eq(tenantId)))
+            when(loadSettingsPort.findAllForMerge(eq(null), eq(tenantId)))
                 .thenReturn(settingsForMerge);
 
             // Act
-            MergedSettingsResponse response = getMergedSettingsUseCase.execute(query);
+            GetMergedSettingsUseCase.Response response = getMergedSettingsService.execute(query);
 
             // Assert
             assertThat(response).isNotNull();
-            assertThat(response.getSettings()).containsEntry("MAX_UPLOAD_SIZE", "50MB"); // TENANT 우선
+            assertThat(response.settings()).containsEntry("MAX_UPLOAD_SIZE", "50MB"); // TENANT 우선
 
-            verify(settingRepository).findAllForMerge(eq(null), eq(tenantId));
+            verify(loadSettingsPort).findAllForMerge(eq(null), eq(tenantId));
         }
 
         @Test
         @DisplayName("ORG와 TENANT가 없으면 DEFAULT만 반환된다")
         void shouldReturnOnlyDefaultWhenNoOrgAndTenant() {
             // Arrange
-            GetMergedSettingsQuery query = new GetMergedSettingsQuery(null, null);
+            GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, null);
 
             Setting defaultSetting = SettingFixtures.createDefaultSetting(); // MAX_UPLOAD_SIZE = 100MB
 
@@ -128,28 +128,28 @@ class GetMergedSettingsUseCaseTest {
             List<Setting> tenantSettings = List.of();
             List<Setting> defaultSettings = List.of(defaultSetting);
 
-            SettingRepository.SettingsForMerge settingsForMerge = new SettingRepository.SettingsForMerge(
+            LoadSettingsPort.SettingsForMerge settingsForMerge = new LoadSettingsPort.SettingsForMerge(
                 orgSettings, tenantSettings, defaultSettings
             );
 
-            when(settingRepository.findAllForMerge(eq(null), eq(null)))
+            when(loadSettingsPort.findAllForMerge(eq(null), eq(null)))
                 .thenReturn(settingsForMerge);
 
             // Act
-            MergedSettingsResponse response = getMergedSettingsUseCase.execute(query);
+            GetMergedSettingsUseCase.Response response = getMergedSettingsService.execute(query);
 
             // Assert
             assertThat(response).isNotNull();
-            assertThat(response.getSettings()).containsEntry("MAX_UPLOAD_SIZE", "100MB"); // DEFAULT만
+            assertThat(response.settings()).containsEntry("MAX_UPLOAD_SIZE", "100MB"); // DEFAULT만
 
-            verify(settingRepository).findAllForMerge(eq(null), eq(null));
+            verify(loadSettingsPort).findAllForMerge(eq(null), eq(null));
         }
 
         @Test
         @DisplayName("비밀 설정은 마스킹되어 병합된다")
         void shouldMaskSecretSettings() {
             // Arrange
-            GetMergedSettingsQuery query = new GetMergedSettingsQuery(null, null);
+            GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, null);
 
             Setting defaultSecret = SettingFixtures.createDefaultSecretSetting(); // API_KEY = secret-key-123 (masked)
             Setting defaultNormal = SettingFixtures.createDefaultSetting();       // MAX_UPLOAD_SIZE = 100MB
@@ -158,19 +158,19 @@ class GetMergedSettingsUseCaseTest {
             List<Setting> tenantSettings = List.of();
             List<Setting> defaultSettings = List.of(defaultSecret, defaultNormal);
 
-            SettingRepository.SettingsForMerge settingsForMerge = new SettingRepository.SettingsForMerge(
+            LoadSettingsPort.SettingsForMerge settingsForMerge = new LoadSettingsPort.SettingsForMerge(
                 orgSettings, tenantSettings, defaultSettings
             );
 
-            when(settingRepository.findAllForMerge(any(), any()))
+            when(loadSettingsPort.findAllForMerge(any(), any()))
                 .thenReturn(settingsForMerge);
 
             // Act
-            MergedSettingsResponse response = getMergedSettingsUseCase.execute(query);
+            GetMergedSettingsUseCase.Response response = getMergedSettingsService.execute(query);
 
             // Assert
             assertThat(response).isNotNull();
-            assertThat(response.getSettings())
+            assertThat(response.settings())
                 .containsEntry("API_KEY", "********")          // 마스킹됨
                 .containsEntry("MAX_UPLOAD_SIZE", "100MB");    // 일반 값
         }
@@ -179,25 +179,25 @@ class GetMergedSettingsUseCaseTest {
         @DisplayName("모든 레벨이 비어있으면 빈 Map을 반환한다")
         void shouldReturnEmptyMapWhenAllLevelsEmpty() {
             // Arrange
-            GetMergedSettingsQuery query = new GetMergedSettingsQuery(null, null);
+            GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, null);
 
             List<Setting> orgSettings = List.of();
             List<Setting> tenantSettings = List.of();
             List<Setting> defaultSettings = List.of();
 
-            SettingRepository.SettingsForMerge settingsForMerge = new SettingRepository.SettingsForMerge(
+            LoadSettingsPort.SettingsForMerge settingsForMerge = new LoadSettingsPort.SettingsForMerge(
                 orgSettings, tenantSettings, defaultSettings
             );
 
-            when(settingRepository.findAllForMerge(any(), any()))
+            when(loadSettingsPort.findAllForMerge(any(), any()))
                 .thenReturn(settingsForMerge);
 
             // Act
-            MergedSettingsResponse response = getMergedSettingsUseCase.execute(query);
+            GetMergedSettingsUseCase.Response response = getMergedSettingsService.execute(query);
 
             // Assert
             assertThat(response).isNotNull();
-            assertThat(response.getSettings()).isEmpty();
+            assertThat(response.settings()).isEmpty();
         }
     }
 
@@ -206,12 +206,11 @@ class GetMergedSettingsUseCaseTest {
     class ExceptionScenarios {
 
         @Test
-        @DisplayName("Query가 null이면 IllegalArgumentException 발생")
+        @DisplayName("Query가 null이면 NullPointerException 발생")
         void shouldThrowExceptionWhenQueryIsNull() {
             // Act & Assert
-            assertThatThrownBy(() -> getMergedSettingsUseCase.execute(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Query는 필수입니다");
+            assertThatThrownBy(() -> getMergedSettingsService.execute(null))
+                .isInstanceOf(NullPointerException.class);
         }
     }
 
@@ -223,36 +222,36 @@ class GetMergedSettingsUseCaseTest {
         @DisplayName("orgId와 tenantId가 모두 null이어도 Query 생성 가능")
         void shouldCreateQueryWithBothIdsNull() {
             // Act
-            GetMergedSettingsQuery query = new GetMergedSettingsQuery(null, null);
+            GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, null);
 
             // Assert
             assertThat(query).isNotNull();
-            assertThat(query.getOrgId()).isNull();
-            assertThat(query.getTenantId()).isNull();
+            assertThat(query.orgId()).isNull();
+            assertThat(query.tenantId()).isNull();
         }
 
         @Test
         @DisplayName("orgId만 있어도 Query 생성 가능")
         void shouldCreateQueryWithOnlyOrgId() {
             // Act
-            GetMergedSettingsQuery query = new GetMergedSettingsQuery(1L, null);
+            GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(1L, null);
 
             // Assert
             assertThat(query).isNotNull();
-            assertThat(query.getOrgId()).isEqualTo(1L);
-            assertThat(query.getTenantId()).isNull();
+            assertThat(query.orgId()).isEqualTo(1L);
+            assertThat(query.tenantId()).isNull();
         }
 
         @Test
         @DisplayName("tenantId만 있어도 Query 생성 가능")
         void shouldCreateQueryWithOnlyTenantId() {
             // Act
-            GetMergedSettingsQuery query = new GetMergedSettingsQuery(null, 100L);
+            GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, 100L);
 
             // Assert
             assertThat(query).isNotNull();
-            assertThat(query.getOrgId()).isNull();
-            assertThat(query.getTenantId()).isEqualTo(100L);
+            assertThat(query.orgId()).isNull();
+            assertThat(query.tenantId()).isEqualTo(100L);
         }
     }
 }

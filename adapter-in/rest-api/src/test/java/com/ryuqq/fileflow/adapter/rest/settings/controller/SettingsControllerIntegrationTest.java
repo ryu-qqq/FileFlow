@@ -7,7 +7,7 @@ import com.ryuqq.fileflow.application.settings.dto.MergedSettingsResponse;
 import com.ryuqq.fileflow.application.settings.dto.SettingResponse;
 import com.ryuqq.fileflow.application.settings.service.GetMergedSettingsUseCase;
 import com.ryuqq.fileflow.application.settings.service.UpdateSettingUseCase;
-import com.ryuqq.fileflow.domain.settings.SettingNotFoundException;
+import com.ryuqq.fileflow.domain.settings.exception.SettingNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
