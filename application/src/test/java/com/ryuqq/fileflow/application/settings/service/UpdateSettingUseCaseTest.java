@@ -214,7 +214,7 @@ class UpdateSettingUseCaseTest {
                 .isInstanceOf(SettingNotFoundException.class);
 
             verify(loadSettingsPort).findByKeyAndLevel(any(SettingKey.class), eq(SettingLevel.DEFAULT), eq(null));
-            verify(loadSettingsPort, never()).save(any());
+            verify(saveSettingPort, never()).save(any());
         }
 
         @Test
@@ -239,7 +239,7 @@ class UpdateSettingUseCaseTest {
 
             verify(loadSettingsPort).findByKeyAndLevel(any(SettingKey.class), eq(SettingLevel.DEFAULT), eq(null));
             verify(schemaValidator).validate(eq(invalidValue), eq(SettingType.NUMBER));
-            verify(loadSettingsPort, never()).save(any());
+            verify(saveSettingPort, never()).save(any());
         }
     }
 
