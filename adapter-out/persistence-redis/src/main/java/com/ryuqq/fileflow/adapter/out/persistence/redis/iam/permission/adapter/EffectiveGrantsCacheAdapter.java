@@ -6,9 +6,13 @@ import com.ryuqq.fileflow.application.iam.permission.port.out.GrantsCachePort;
 import com.ryuqq.fileflow.domain.iam.permission.Grant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -216,7 +220,7 @@ public class EffectiveGrantsCacheAdapter implements GrantsCachePort {
         String pattern = CACHE_KEY_PREFIX + userId + ":*";
 
         try {
-            Set<String> keys = redisTemplate.keys(pattern);
+            Set<String> keys = scanKeys(pattern);
 
             if (keys != null && !keys.isEmpty()) {
                 Long deletedCount = redisTemplate.delete(keys);
@@ -257,7 +261,7 @@ public class EffectiveGrantsCacheAdapter implements GrantsCachePort {
     @Override
     public void invalidateAll() {
         try {
-            Set<String> keys = redisTemplate.keys(CACHE_KEY_PATTERN);
+            Set<String> keys = scanKeys(CACHE_KEY_PATTERN);
 
             if (keys != null && !keys.isEmpty()) {
                 Long deletedCount = redisTemplate.delete(keys);
@@ -315,5 +319,45 @@ public class EffectiveGrantsCacheAdapter implements GrantsCachePort {
         if (organizationId == null || organizationId < 0) {
             throw new IllegalArgumentException("organizationId는 null이거나 음수일 수 없습니다");
         }
+    }
+
+    /**
+     * Redis SCAN을 사용한 Non-blocking 키 조회
+     *
+     * <p>Redis KEYS 명령어 대신 SCAN을 사용하여 패턴 매칭되는 키를 조회합니다.
+     * SCAN은 non-blocking 방식으로 동작하여 운영 환경에서 Redis 성능에 영향을 주지 않습니다.</p>
+     *
+     * <p><strong>KEYS vs SCAN:</strong></p>
+     * <ul>
+     *   <li>❌ KEYS: 블로킹 연산, 운영 환경에서 성능 문제 발생</li>
+     *   <li>✅ SCAN: Non-blocking, 커서 기반 반복 조회</li>
+     * </ul>
+     *
+     * <p><strong>SCAN 옵션:</strong></p>
+     * <ul>
+     *   <li>match(pattern): 패턴 매칭 조건</li>
+     *   <li>count(1000): 한 번에 조회할 키 개수 힌트 (정확한 개수는 아님)</li>
+     * </ul>
+     *
+     * @param pattern Redis 키 패턴 (예: "grants:user:123:*")
+     * @return 패턴에 매칭되는 키 Set (빈 Set 가능)
+     * @author ryu-qqq
+     * @since 2025-10-26
+     */
+    private Set<String> scanKeys(String pattern) {
+        return redisTemplate.execute((org.springframework.data.redis.connection.RedisConnection connection) -> {
+            Set<String> keySet = new HashSet<>();
+            try (Cursor<byte[]> cursor = connection.scan(
+                ScanOptions.scanOptions()
+                    .match(pattern)
+                    .count(1000)
+                    .build()
+            )) {
+                cursor.forEachRemaining(key -> keySet.add(new String(key)));
+            } catch (IOException e) {
+                log.error("Error scanning keys for pattern: {}", pattern, e);
+            }
+            return keySet;
+        });
     }
 }
