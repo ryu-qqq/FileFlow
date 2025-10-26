@@ -1,4 +1,7 @@
-package com.ryuqq.fileflow.domain.settings;
+package com.ryuqq.fileflow.domain.settings.exception;
+
+import com.ryuqq.fileflow.domain.settings.SettingKey;
+import com.ryuqq.fileflow.domain.settings.SettingLevel;
 
 /**
  * Setting Not Found Exception

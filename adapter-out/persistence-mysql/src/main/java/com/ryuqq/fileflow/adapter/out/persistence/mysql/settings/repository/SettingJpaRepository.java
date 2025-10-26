@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.out.persistence.mysql.settings;
+package com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.repository;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.entity.SettingJpaEntity;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;

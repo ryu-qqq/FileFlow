@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.rest.exception;
 
-import com.ryuqq.fileflow.domain.settings.InvalidSettingException;
-import com.ryuqq.fileflow.domain.settings.SettingNotFoundException;
+import com.ryuqq.fileflow.domain.settings.exception.InvalidSettingException;
+import com.ryuqq.fileflow.domain.settings.exception.SettingNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;

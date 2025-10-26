@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.adapter;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.SettingJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.repository.SettingJpaRepository;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.entity.SettingJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.mapper.SettingEntityMapper;
 import com.ryuqq.fileflow.application.settings.port.out.SaveSettingPort;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * <p><strong>CQRS 원칙:</strong></p>
  * <ul>
  *   <li>✅ Command 작업만 구현 (save*, delete*)</li>
- *   <li>✅ Query 작업은 {@link SettingQueryAdapter}에서 분리</li>
+ *   <li>✅ Query 작업은 {@link SettingQueryRepositoryAdapter}에서 분리</li>
  *   <li>✅ Write 작업 (데이터 변경)</li>
  * </ul>
  *
@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  * @since 2025-10-25
  */
 @Component
-public class SettingCommandAdapter implements SaveSettingPort {
+public class SettingPersistenceAdapter implements SaveSettingPort {
 
     private final SettingJpaRepository jpaRepository;
 
@@ -71,7 +71,7 @@ public class SettingCommandAdapter implements SaveSettingPort {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public SettingCommandAdapter(SettingJpaRepository jpaRepository) {
+    public SettingPersistenceAdapter(SettingJpaRepository jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 

@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.adapter;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.SettingJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.repository.SettingJpaRepository;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.mapper.SettingEntityMapper;
 import com.ryuqq.fileflow.application.settings.port.out.LoadSettingsPort;
 import com.ryuqq.fileflow.domain.settings.Setting;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Setting Query Adapter - CQRS Query 측 Persistence Adapter
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
  * <p><strong>CQRS 원칙:</strong></p>
  * <ul>
  *   <li>✅ Query 작업만 구현 (find*, load*)</li>
- *   <li>✅ Command 작업은 {@link SettingCommandAdapter}에서 분리</li>
+ *   <li>✅ Command 작업은 {@link SettingPersistenceAdapter}에서 분리</li>
  *   <li>✅ Read-Only 작업 (데이터 변경 없음)</li>
  * </ul>
  *
@@ -55,7 +54,7 @@ import java.util.stream.Collectors;
  * @since 2025-10-25
  */
 @Component
-public class SettingQueryAdapter implements LoadSettingsPort {
+public class SettingQueryRepositoryAdapter implements LoadSettingsPort {
 
     private final SettingJpaRepository jpaRepository;
 
@@ -66,7 +65,7 @@ public class SettingQueryAdapter implements LoadSettingsPort {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public SettingQueryAdapter(SettingJpaRepository jpaRepository) {
+    public SettingQueryRepositoryAdapter(SettingJpaRepository jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
 
@@ -139,7 +138,7 @@ public class SettingQueryAdapter implements LoadSettingsPort {
         return jpaRepository.findAllByLevelAndContextId(level, contextId)
             .stream()
             .map(SettingEntityMapper::toDomain)
-            .collect(Collectors.toUnmodifiableList());
+            .toList();
     }
 
     /**
@@ -162,7 +161,7 @@ public class SettingQueryAdapter implements LoadSettingsPort {
         return jpaRepository.findAllByOrg(orgId)
             .stream()
             .map(SettingEntityMapper::toDomain)
-            .collect(Collectors.toUnmodifiableList());
+            .toList();
     }
 
     /**
@@ -185,7 +184,7 @@ public class SettingQueryAdapter implements LoadSettingsPort {
         return jpaRepository.findAllByTenant(tenantId)
             .stream()
             .map(SettingEntityMapper::toDomain)
-            .collect(Collectors.toUnmodifiableList());
+            .toList();
     }
 
     /**
@@ -202,7 +201,7 @@ public class SettingQueryAdapter implements LoadSettingsPort {
         return jpaRepository.findAllDefaults()
             .stream()
             .map(SettingEntityMapper::toDomain)
-            .collect(Collectors.toUnmodifiableList());
+            .toList();
     }
 
     /**
