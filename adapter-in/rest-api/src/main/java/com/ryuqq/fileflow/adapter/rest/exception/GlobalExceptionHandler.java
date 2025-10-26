@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.adapter.rest.exception;
 
+import com.ryuqq.fileflow.domain.settings.exception.InvalidSettingException;
+import com.ryuqq.fileflow.domain.settings.exception.SettingNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -30,6 +32,7 @@ import java.util.Map;
  * <ul>
  *   <li>400 Bad Request: {@code MethodArgumentNotValidException} (Validation 실패)</li>
  *   <li>400 Bad Request: {@code IllegalArgumentException} (잘못된 인자)</li>
+ *   <li>404 Not Found: {@code SettingNotFoundException} (설정을 찾을 수 없음)</li>
  *   <li>409 Conflict: {@code IllegalStateException} (중복, 상태 충돌)</li>
  *   <li>500 Internal Server Error: {@code Exception} (기타 모든 예외)</li>
  * </ul>
@@ -54,6 +57,26 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * ProblemDetail 생성 헬퍼 메서드 (코드 중복 제거)
+     *
+     * <p>RFC 7807 표준을 준수하는 ProblemDetail 객체를 생성합니다.</p>
+     *
+     * @param status HTTP 상태 코드
+     * @param title 에러 제목
+     * @param detail 에러 상세 메시지
+     * @return ProblemDetail 객체
+     * @author ryu-qqq
+     * @since 2025-10-25
+     */
+    private ProblemDetail createProblemDetail(HttpStatus status, String title, String detail) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
+        problemDetail.setType(URI.create("about:blank"));
+        problemDetail.setTitle(title);
+        problemDetail.setProperty("timestamp", Instant.now().toString());
+        return problemDetail;
+    }
 
     /**
      * Validation 실패 처리 (400 Bad Request)
@@ -82,13 +105,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+        ProblemDetail problemDetail = createProblemDetail(
             HttpStatus.BAD_REQUEST,
+            "Bad Request",
             "Validation failed for request"
         );
-        problemDetail.setType(URI.create("about:blank"));
-        problemDetail.setTitle("Bad Request");
-        problemDetail.setProperty("timestamp", Instant.now().toString());
 
         // Validation 에러 필드 수집
         Map<String, String> errors = new HashMap<>();
@@ -123,15 +144,71 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+        return createProblemDetail(
             HttpStatus.BAD_REQUEST,
+            "Bad Request",
             ex.getMessage()
         );
-        problemDetail.setType(URI.create("about:blank"));
-        problemDetail.setTitle("Bad Request");
-        problemDetail.setProperty("timestamp", Instant.now().toString());
+    }
 
-        return problemDetail;
+    /**
+     * 도메인 예외 처리 (400 Bad Request)
+     *
+     * <p>{@code InvalidSettingException}을 처리합니다.</p>
+     *
+     * <p><strong>Response Example:</strong></p>
+     * <pre>{@code
+     * {
+     *   "type": "about:blank",
+     *   "title": "Bad Request",
+     *   "status": 400,
+     *   "detail": "설정 값이 타입과 호환되지 않습니다",
+     *   "timestamp": "2025-10-25T10:30:00Z"
+     * }
+     * }</pre>
+     *
+     * @param ex {@code InvalidSettingException}
+     * @return RFC 7807 ProblemDetail (400 Bad Request)
+     * @author ryu-qqq
+     * @since 2025-10-25
+     */
+    @ExceptionHandler(InvalidSettingException.class)
+    public ProblemDetail handleInvalidSettingException(InvalidSettingException ex) {
+        return createProblemDetail(
+            HttpStatus.BAD_REQUEST,
+            "Bad Request",
+            ex.getMessage()
+        );
+    }
+
+    /**
+     * 리소스 미발견 처리 (404 Not Found)
+     *
+     * <p>{@code SettingNotFoundException}을 처리합니다.</p>
+     *
+     * <p><strong>Response Example:</strong></p>
+     * <pre>{@code
+     * {
+     *   "type": "about:blank",
+     *   "title": "Not Found",
+     *   "status": 404,
+     *   "detail": "설정을 찾을 수 없습니다",
+     *   "timestamp": "2025-10-25T10:30:00Z"
+     * }
+     * }</pre>
+     *
+     * @param ex {@code SettingNotFoundException}
+     * @return RFC 7807 ProblemDetail (404 Not Found)
+     * @author ryu-qqq
+     * @since 2025-10-25
+     */
+    @ExceptionHandler(SettingNotFoundException.class)
+    public ProblemDetail handleSettingNotFoundException(SettingNotFoundException ex) {
+        return createProblemDetail(
+            HttpStatus.NOT_FOUND,
+            "Not Found",
+            ex.getMessage()
+        );
     }
 
     /**
@@ -157,15 +234,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalStateException.class)
     public ProblemDetail handleIllegalStateException(IllegalStateException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+        return createProblemDetail(
             HttpStatus.CONFLICT,
+            "Conflict",
             ex.getMessage()
         );
-        problemDetail.setType(URI.create("about:blank"));
-        problemDetail.setTitle("Conflict");
-        problemDetail.setProperty("timestamp", Instant.now().toString());
-
-        return problemDetail;
     }
 
     /**
@@ -191,15 +264,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGlobalException(Exception ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+        // TODO: Logging 추가 (실제 에러 메시지는 로그에만 기록)
+        return createProblemDetail(
             HttpStatus.INTERNAL_SERVER_ERROR,
+            "Internal Server Error",
             "An unexpected error occurred"
         );
-        problemDetail.setType(URI.create("about:blank"));
-        problemDetail.setTitle("Internal Server Error");
-        problemDetail.setProperty("timestamp", Instant.now().toString());
-        // TODO: Logging 추가 (실제 에러 메시지는 로그에만 기록)
-
-        return problemDetail;
     }
 }
