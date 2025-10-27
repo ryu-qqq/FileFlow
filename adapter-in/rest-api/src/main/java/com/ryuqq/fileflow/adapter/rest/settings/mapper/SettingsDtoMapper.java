@@ -1,8 +1,11 @@
 package com.ryuqq.fileflow.adapter.rest.settings.mapper;
 
+import com.ryuqq.fileflow.adapter.rest.settings.dto.CreateSettingRequest;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.CreateSettingResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.MergedSettingsApiResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingRequest;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingResponse;
+import com.ryuqq.fileflow.application.settings.port.in.CreateSettingUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
@@ -43,6 +46,75 @@ public final class SettingsDtoMapper {
      */
     private SettingsDtoMapper() {
         throw new AssertionError("Cannot instantiate SettingsDtoMapper");
+    }
+
+    /**
+     * CreateSettingRequest → CreateSettingUseCase.Command 변환
+     *
+     * <p>REST API Request를 Application Command로 변환합니다.</p>
+     *
+     * <p><strong>변환 규칙:</strong></p>
+     * <ul>
+     *   <li>{@code String key} → {@code String key}</li>
+     *   <li>{@code String value} → {@code String value}</li>
+     *   <li>{@code String level} → {@code String level} (대문자 변환)</li>
+     *   <li>{@code Long contextId} → {@code Long contextId}</li>
+     *   <li>{@code String valueType} → {@code String valueType} (null이면 기본값 "STRING")</li>
+     *   <li>{@code Boolean secret} → {@code boolean secret} (null이면 기본값 false)</li>
+     * </ul>
+     *
+     * @param request REST API 요청 DTO (필수)
+     * @return CreateSettingUseCase.Command
+     * @throws IllegalArgumentException request가 null인 경우
+     * @throws IllegalArgumentException level이 유효하지 않은 경우
+     * @author ryu-qqq
+     * @since 2025-10-26
+     */
+    public static CreateSettingUseCase.Command toCommand(CreateSettingRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("CreateSettingRequest는 필수입니다");
+        }
+
+        // Enum validation (IllegalArgumentException if invalid)
+        SettingLevel.valueOf(request.level().toUpperCase());
+
+        return new CreateSettingUseCase.Command(
+            request.key(),
+            request.value(),
+            request.level().toUpperCase(),
+            request.contextId(),
+            request.valueType() != null ? request.valueType().toUpperCase() : "STRING",
+            request.secret() != null ? request.secret() : false
+        );
+    }
+
+    /**
+     * CreateSettingUseCase.Response → CreateSettingResponse 변환
+     *
+     * <p>Application Response를 REST API Response로 변환합니다.</p>
+     *
+     * @param response Application Layer 응답 (필수)
+     * @return CreateSettingResponse
+     * @throws IllegalArgumentException response가 null인 경우
+     * @author ryu-qqq
+     * @since 2025-10-26
+     */
+    public static CreateSettingResponse toCreateResponse(CreateSettingUseCase.Response response) {
+        if (response == null) {
+            throw new IllegalArgumentException("CreateSettingUseCase.Response는 필수입니다");
+        }
+
+        return new CreateSettingResponse(
+            response.id(),
+            response.key(),
+            response.value(),
+            response.valueType(),
+            response.level(),
+            response.contextId(),
+            response.secret(),
+            response.createdAt(),
+            response.updatedAt()
+        );
     }
 
     /**

@@ -63,16 +63,23 @@ public final class TenantDtoMapper {
     /**
      * UpdateTenantRequest → UpdateTenantCommand 변환
      *
-     * @param tenantId Tenant ID (Path Variable)
+     * <p><strong>Option B 변경:</strong></p>
+     * <ul>
+     *   <li>변경 전: tenantId는 String (UUID)</li>
+     *   <li>변경 후: tenantId는 Long (AUTO_INCREMENT)</li>
+     *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+     * </ul>
+     *
+     * @param tenantId Tenant ID (Path Variable - Long)
      * @param request REST API 요청 DTO
      * @return Application Command DTO
-     * @throws IllegalArgumentException tenantId 또는 request가 null인 경우
+     * @throws IllegalArgumentException tenantId 또는 request가 null이거나 유효하지 않은 경우
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static UpdateTenantCommand toCommand(String tenantId, UpdateTenantRequest request) {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 null일 수 없습니다");
+    public static UpdateTenantCommand toCommand(Long tenantId, UpdateTenantRequest request) {
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
         if (request == null) {
             throw new IllegalArgumentException("UpdateTenantRequest는 null일 수 없습니다");
@@ -83,16 +90,23 @@ public final class TenantDtoMapper {
     /**
      * UpdateTenantStatusRequest → UpdateTenantStatusCommand 변환
      *
-     * @param tenantId Tenant ID (Path Variable)
+     * <p><strong>Option B 변경:</strong></p>
+     * <ul>
+     *   <li>변경 전: tenantId는 String (UUID)</li>
+     *   <li>변경 후: tenantId는 Long (AUTO_INCREMENT)</li>
+     *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+     * </ul>
+     *
+     * @param tenantId Tenant ID (Path Variable - Long)
      * @param request REST API 요청 DTO
      * @return Application Command DTO
-     * @throws IllegalArgumentException tenantId 또는 request가 null인 경우
+     * @throws IllegalArgumentException tenantId 또는 request가 null이거나 유효하지 않은 경우
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static UpdateTenantStatusCommand toCommand(String tenantId, UpdateTenantStatusRequest request) {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 null일 수 없습니다");
+    public static UpdateTenantStatusCommand toCommand(Long tenantId, UpdateTenantStatusRequest request) {
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
         if (request == null) {
             throw new IllegalArgumentException("UpdateTenantStatusRequest는 null일 수 없습니다");

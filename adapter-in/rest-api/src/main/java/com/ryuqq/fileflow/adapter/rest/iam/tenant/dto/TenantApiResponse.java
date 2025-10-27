@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
  *   <li>✅ JSON 직렬화 친화적 구조</li>
  * </ul>
  *
- * <p><strong>사용 예시:</strong></p>
+ * <p><strong>사용 예시 (Option B 변경):</strong></p>
  * <pre>{@code
  * {
- *   "tenantId": "tenant-id-123",
+ *   "tenantId": 123,
  *   "name": "my-tenant",
  *   "status": "ACTIVE",
  *   "deleted": false,
@@ -29,7 +29,14 @@ import java.time.LocalDateTime;
  * }
  * }</pre>
  *
- * @param tenantId Tenant ID
+ * <p><strong>Option B 변경:</strong></p>
+ * <ul>
+ *   <li>변경 전: tenantId는 String (UUID)</li>
+ *   <li>변경 후: tenantId는 Long (AUTO_INCREMENT)</li>
+ *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+ * </ul>
+ *
+ * @param tenantId Tenant ID (Long - AUTO_INCREMENT)
  * @param name Tenant 이름
  * @param status Tenant 상태 (ACTIVE, SUSPENDED)
  * @param deleted 삭제 여부
@@ -39,7 +46,7 @@ import java.time.LocalDateTime;
  * @since 2025-10-22
  */
 public record TenantApiResponse(
-    String tenantId,
+    Long tenantId,
     String name,
     String status,
     boolean deleted,

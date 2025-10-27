@@ -241,7 +241,7 @@ public class TenantQueryRepositoryAdapter implements TenantQueryRepositoryPort {
             }
 
             String createdAtStr = parts[0];
-            String id = parts[1];
+            Long id = Long.parseLong(parts[1]);
 
             // (createdAt, id) > (cursor_createdAt, cursor_id) 복합 비교
             // createdAt이 더 크거나, 같으면서 id가 더 큰 경우

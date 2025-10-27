@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.rest.iam.organization.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 /**
  * CreateOrganizationRequest - Organization 생성 요청 DTO
@@ -16,20 +17,20 @@ import jakarta.validation.constraints.NotNull;
  *   <li>✅ Request 접미사 사용</li>
  *   <li>✅ Jakarta Validation 사용 ({@code @Valid} 검증)</li>
  *   <li>✅ Application DTO와 분리 (Mapper 변환 필수)</li>
- *   <li>✅ String FK 전략 - Tenant ID를 String으로 전달 (Tenant PK 타입과 일치)</li>
+ *   <li>✅ Long FK 전략 - Tenant ID를 Long으로 전달 (Tenant PK 타입과 일치)</li>
  * </ul>
  *
  * <p><strong>사용 예시:</strong></p>
  * <pre>{@code
  * POST /api/v1/organizations
  * {
- *   "tenantId": "tenant-uuid-123",
+ *   "tenantId": 123,
  *   "orgCode": "ORG001",
  *   "name": "Engineering Department"
  * }
  * }</pre>
  *
- * @param tenantId 소속 Tenant ID (필수, String - Tenant PK 타입과 일치)
+ * @param tenantId 소속 Tenant ID (필수, Long - Tenant PK 타입과 일치)
  * @param orgCode 조직 코드 (필수, 빈 문자열 불가)
  * @param name 조직 이름 (필수, 빈 문자열 불가)
  * @author ryu-qqq
@@ -37,8 +38,8 @@ import jakarta.validation.constraints.NotNull;
  */
 public record CreateOrganizationRequest(
     @NotNull(message = "Tenant ID는 필수입니다")
-    @NotBlank(message = "Tenant ID는 빈 문자열일 수 없습니다")
-    String tenantId,
+    @Positive(message = "Tenant ID는 양수여야 합니다")
+    Long tenantId,
 
     @NotBlank(message = "조직 코드는 필수입니다")
     String orgCode,

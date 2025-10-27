@@ -44,3 +44,8 @@ out/
 *.tfvars
 .terraformrc
 terraform.rc
+
+# Claude Code working files
+claudedocs/
+*.log
+.claude/hooks/logs/

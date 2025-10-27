@@ -300,7 +300,7 @@ public class RolePersistenceAdapter implements RoleRepositoryPort {
 
         // Value Object → 원시 타입 추출
         Long userContextIdValue = userContextId.value();
-        String tenantIdValue = tenantId.value();  // TenantId는 String UUID 그대로 사용
+        Long tenantIdValue = tenantId.value();  // TenantId는 Long AUTO_INCREMENT 그대로 사용
         Long organizationIdValue = organizationId.value();
 
         // QueryDSL 기반 4-table JOIN (CQRS Read Model)

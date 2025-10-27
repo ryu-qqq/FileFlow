@@ -271,11 +271,18 @@ public class Tenant {
      * <p>❌ Bad: tenant.getId().value()</p>
      * <p>✅ Good: tenant.getIdValue()</p>
      *
-     * @return Tenant ID 원시 값
+     * <p><strong>타입 변경 (Option B):</strong></p>
+     * <ul>
+     *   <li>변경 전: String (UUID)</li>
+     *   <li>변경 후: Long (AUTO_INCREMENT)</li>
+     *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+     * </ul>
+     *
+     * @return Tenant ID 원시 값 (Long)
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public String getIdValue() {
+    public Long getIdValue() {
         return id.value();
     }
 

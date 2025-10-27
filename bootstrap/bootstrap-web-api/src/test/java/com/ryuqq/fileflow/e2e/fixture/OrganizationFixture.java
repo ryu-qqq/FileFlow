@@ -1,6 +1,9 @@
 package com.ryuqq.fileflow.e2e.fixture;
 
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.entity.UserOrgMembershipJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.repository.UserOrgMembershipJpaRepository;
 import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
+import org.springframework.stereotype.Component;
 
 /**
  * OrganizationFixture - Organization 테스트 데이터 생성 유틸리티
@@ -17,7 +20,21 @@ import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRe
  * @author ryu-qqq
  * @since 2025-10-26
  */
+@Component
 public class OrganizationFixture {
+
+    private final UserOrgMembershipJpaRepository userOrgMembershipRepository;
+
+    /**
+     * Constructor - Spring이 Repository 자동 주입
+     *
+     * @param userOrgMembershipRepository UserOrgMembership Repository
+     * @author ryu-qqq
+     * @since 2025-10-27
+     */
+    public OrganizationFixture(UserOrgMembershipJpaRepository userOrgMembershipRepository) {
+        this.userOrgMembershipRepository = userOrgMembershipRepository;
+    }
 
     /**
      * Organization 생성 요청 생성
@@ -29,7 +46,7 @@ public class OrganizationFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateOrganizationRequest createRequest(String tenantId, String orgCode, String name) {
+    public static CreateOrganizationRequest createRequest(Long tenantId, String orgCode, String name) {
         return new CreateOrganizationRequest(tenantId, orgCode, name);
     }
 
@@ -42,7 +59,7 @@ public class OrganizationFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateOrganizationRequest createRequest(String tenantId, String orgCode) {
+    public static CreateOrganizationRequest createRequest(Long tenantId, String orgCode) {
         return createRequest(tenantId, orgCode, "Org-" + orgCode);
     }
 
@@ -54,7 +71,7 @@ public class OrganizationFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateOrganizationRequest createRequest(String tenantId) {
+    public static CreateOrganizationRequest createRequest(Long tenantId) {
         String orgCode = "ORG" + System.currentTimeMillis();
         return createRequest(tenantId, orgCode);
     }
@@ -68,7 +85,7 @@ public class OrganizationFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateOrganizationRequest[] createRequests(String tenantId, int count) {
+    public static CreateOrganizationRequest[] createRequests(Long tenantId, int count) {
         CreateOrganizationRequest[] requests = new CreateOrganizationRequest[count];
         long timestamp = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
@@ -76,5 +93,58 @@ public class OrganizationFixture {
             requests[i] = createRequest(tenantId, orgCode);
         }
         return requests;
+    }
+
+    /**
+     * UserOrgMembership 생성 (UserContext를 Organization에 연결)
+     *
+     * <p>UserContext가 Organization에 소속되도록 Membership을 생성합니다.</p>
+     * <p>기본 MembershipType은 "MEMBER"입니다.</p>
+     *
+     * @param userContextId UserContext ID
+     * @param organizationId Organization ID
+     * @param tenantId Tenant ID
+     * @return 저장된 UserOrgMembershipJpaEntity
+     * @author ryu-qqq
+     * @since 2025-10-27
+     */
+    public UserOrgMembershipJpaEntity createUserOrgMembership(
+        Long userContextId,
+        Long organizationId,
+        Long tenantId
+    ) {
+        UserOrgMembershipJpaEntity membership = UserOrgMembershipJpaEntity.create(
+            userContextId,
+            tenantId,
+            organizationId,
+            "MEMBER"
+        );
+        return userOrgMembershipRepository.save(membership);
+    }
+
+    /**
+     * UserOrgMembership 생성 (MembershipType 지정 가능)
+     *
+     * @param userContextId UserContext ID
+     * @param organizationId Organization ID
+     * @param tenantId Tenant ID
+     * @param membershipType Membership 타입 (OWNER, ADMIN, MEMBER)
+     * @return 저장된 UserOrgMembershipJpaEntity
+     * @author ryu-qqq
+     * @since 2025-10-27
+     */
+    public UserOrgMembershipJpaEntity createUserOrgMembership(
+        Long userContextId,
+        Long organizationId,
+        Long tenantId,
+        String membershipType
+    ) {
+        UserOrgMembershipJpaEntity membership = UserOrgMembershipJpaEntity.create(
+            userContextId,
+            tenantId,
+            organizationId,
+            membershipType
+        );
+        return userOrgMembershipRepository.save(membership);
     }
 }

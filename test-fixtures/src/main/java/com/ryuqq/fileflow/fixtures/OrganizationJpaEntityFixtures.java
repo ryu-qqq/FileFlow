@@ -57,7 +57,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity salesOrgEntity(String tenantId) {
+    public static OrganizationJpaEntity salesOrgEntity(Long tenantId) {
         return OrganizationJpaEntity.create(
             tenantId,
             "SALES",
@@ -74,7 +74,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity hrOrgEntity(String tenantId) {
+    public static OrganizationJpaEntity hrOrgEntity(Long tenantId) {
         return OrganizationJpaEntity.create(
             tenantId,
             "HR",
@@ -91,7 +91,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity itOrgEntity(String tenantId) {
+    public static OrganizationJpaEntity itOrgEntity(Long tenantId) {
         return OrganizationJpaEntity.create(
             tenantId,
             "IT",
@@ -110,7 +110,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity orgEntityWithCode(String tenantId, String orgCode, String name) {
+    public static OrganizationJpaEntity orgEntityWithCode(Long tenantId, String orgCode, String name) {
         return OrganizationJpaEntity.create(
             tenantId,
             orgCode,
@@ -130,7 +130,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity orgEntityWithId(Long id, String tenantId) {
+    public static OrganizationJpaEntity orgEntityWithId(Long id, Long tenantId) {
         return OrganizationJpaEntity.reconstitute(
             id,
             tenantId,
@@ -156,7 +156,7 @@ public final class OrganizationJpaEntityFixtures {
      */
     public static OrganizationJpaEntity orgEntityWithIdAndCode(
         Long id,
-        String tenantId,
+        Long tenantId,
         String orgCode,
         String name
     ) {
@@ -180,7 +180,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity inactiveOrgEntity(String tenantId) {
+    public static OrganizationJpaEntity inactiveOrgEntity(Long tenantId) {
         return OrganizationJpaEntity.reconstitute(
             999L,
             tenantId,
@@ -202,7 +202,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity inactiveOrgEntityWithId(Long id, String tenantId) {
+    public static OrganizationJpaEntity inactiveOrgEntityWithId(Long id, Long tenantId) {
         return OrganizationJpaEntity.reconstitute(
             id,
             tenantId,
@@ -225,7 +225,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity deletedOrgEntity(String tenantId) {
+    public static OrganizationJpaEntity deletedOrgEntity(Long tenantId) {
         return OrganizationJpaEntity.reconstitute(
             999L,
             tenantId,
@@ -247,7 +247,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationJpaEntity deletedOrgEntityWithId(Long id, String tenantId) {
+    public static OrganizationJpaEntity deletedOrgEntityWithId(Long id, Long tenantId) {
         return OrganizationJpaEntity.reconstitute(
             id,
             tenantId,
@@ -279,7 +279,7 @@ public final class OrganizationJpaEntityFixtures {
      */
     public static OrganizationJpaEntity customOrgEntity(
         Long id,
-        String tenantId,
+        Long tenantId,
         String orgCode,
         String name,
         OrganizationStatus status,
@@ -310,7 +310,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static List<OrganizationJpaEntity> orgEntityList(String tenantId, int count) {
+    public static List<OrganizationJpaEntity> orgEntityList(Long tenantId, int count) {
         List<OrganizationJpaEntity> entities = new ArrayList<>(count);
         LocalDateTime baseTime = LocalDateTime.now().minusDays(1);
 
@@ -342,7 +342,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static List<OrganizationJpaEntity> inactiveOrgEntityList(String tenantId, int count) {
+    public static List<OrganizationJpaEntity> inactiveOrgEntityList(Long tenantId, int count) {
         List<OrganizationJpaEntity> entities = new ArrayList<>(count);
         LocalDateTime baseTime = LocalDateTime.now().minusDays(30);
 
@@ -374,7 +374,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static List<OrganizationJpaEntity> deletedOrgEntityList(String tenantId, int count) {
+    public static List<OrganizationJpaEntity> deletedOrgEntityList(Long tenantId, int count) {
         List<OrganizationJpaEntity> entities = new ArrayList<>(count);
         LocalDateTime baseTime = LocalDateTime.now().minusDays(60);
 
@@ -407,7 +407,7 @@ public final class OrganizationJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static List<OrganizationJpaEntity> mixedStatusOrgEntityList(String tenantId, int count) {
+    public static List<OrganizationJpaEntity> mixedStatusOrgEntityList(Long tenantId, int count) {
         List<OrganizationJpaEntity> entities = new ArrayList<>(count);
         int activeCount = (count + 2) / 3;  // 반올림
         int inactiveCount = count / 3;

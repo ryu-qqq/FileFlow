@@ -121,21 +121,21 @@ public class OrganizationPersistenceAdapter implements OrganizationRepositoryPor
      * 소프트 삭제된 Organization은 제외됩니다.
      * 반환 순서는 생성일시(createdAt) 오름차순입니다.</p>
      *
-     * <p><strong>String FK 전략:</strong></p>
+     * <p><strong>Long FK 전략:</strong></p>
      * <ul>
-     *   <li>Tenant 객체 참조가 아닌 String tenantId 사용 (Tenant PK 타입과 일치)</li>
+     *   <li>Tenant 객체 참조가 아닌 Long tenantId 사용 (Tenant PK 타입과 일치)</li>
      * </ul>
      *
-     * @param tenantId 조회할 Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId 조회할 Tenant ID (Long - Tenant PK 타입과 일치)
      * @return Organization 목록 (존재하지 않으면 빈 리스트)
-     * @throws IllegalArgumentException tenantId가 null이거나 빈 문자열인 경우
+     * @throws IllegalArgumentException tenantId가 null이거나 0 이하인 경우
      * @author ryu-qqq
      * @since 2025-10-22
      */
     @Override
-    public List<Organization> findByTenantId(String tenantId) {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("tenantId must not be null or blank");
+    public List<Organization> findByTenantId(Long tenantId) {
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("tenantId must not be null and must be positive");
         }
 
         return organizationJpaRepository.findByTenantIdAndDeletedIsFalseOrderByCreatedAtAsc(tenantId)
@@ -155,17 +155,17 @@ public class OrganizationPersistenceAdapter implements OrganizationRepositoryPor
      *   <li>조직 코드 기반 Organization 조회</li>
      * </ul>
      *
-     * @param tenantId 조회할 Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId 조회할 Tenant ID (Long - Tenant PK 타입과 일치)
      * @param orgCode 조회할 조직 코드
      * @return Organization (존재하지 않거나 삭제된 경우 {@code Optional.empty()})
-     * @throws IllegalArgumentException tenantId가 null이거나 빈 문자열이거나 orgCode가 null인 경우
+     * @throws IllegalArgumentException tenantId가 null이거나 0 이하이거나 orgCode가 null인 경우
      * @author ryu-qqq
      * @since 2025-10-22
      */
     @Override
-    public Optional<Organization> findByTenantIdAndOrgCode(String tenantId, OrgCode orgCode) {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("tenantId must not be null or blank");
+    public Optional<Organization> findByTenantIdAndOrgCode(Long tenantId, OrgCode orgCode) {
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("tenantId must not be null and must be positive");
         }
         if (orgCode == null) {
             throw new IllegalArgumentException("OrgCode must not be null");
@@ -188,17 +188,17 @@ public class OrganizationPersistenceAdapter implements OrganizationRepositoryPor
      *   <li>Organization 생성 시 조직 코드 중복 검증</li>
      * </ul>
      *
-     * @param tenantId 확인할 Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId 확인할 Tenant ID (Long - Tenant PK 타입과 일치)
      * @param orgCode 확인할 조직 코드
      * @return 존재하면 {@code true}, 없으면 {@code false}
-     * @throws IllegalArgumentException tenantId가 null이거나 빈 문자열이거나 orgCode가 null인 경우
+     * @throws IllegalArgumentException tenantId가 null이거나 0 이하이거나 orgCode가 null인 경우
      * @author ryu-qqq
      * @since 2025-10-22
      */
     @Override
-    public boolean existsByTenantIdAndOrgCode(String tenantId, OrgCode orgCode) {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("tenantId must not be null or blank");
+    public boolean existsByTenantIdAndOrgCode(Long tenantId, OrgCode orgCode) {
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("tenantId must not be null and must be positive");
         }
         if (orgCode == null) {
             throw new IllegalArgumentException("OrgCode must not be null");
@@ -241,16 +241,16 @@ public class OrganizationPersistenceAdapter implements OrganizationRepositoryPor
      *   <li>Tenant별 Organization 제한 확인</li>
      * </ul>
      *
-     * @param tenantId 확인할 Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId 확인할 Tenant ID (Long - Tenant PK 타입과 일치)
      * @return 활성 Organization 개수
-     * @throws IllegalArgumentException tenantId가 null이거나 빈 문자열인 경우
+     * @throws IllegalArgumentException tenantId가 null이거나 0 이하인 경우
      * @author ryu-qqq
      * @since 2025-10-22
      */
     @Override
-    public long countByTenantId(String tenantId) {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("tenantId must not be null or blank");
+    public long countByTenantId(Long tenantId) {
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("tenantId must not be null and must be positive");
         }
 
         return organizationJpaRepository.countByTenantIdAndDeletedIsFalse(tenantId);

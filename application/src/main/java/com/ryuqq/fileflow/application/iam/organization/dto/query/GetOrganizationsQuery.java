@@ -27,7 +27,7 @@ package com.ryuqq.fileflow.application.iam.organization.dto.query;
  * @param page 페이지 번호 (0부터 시작, Offset-based 전용)
  * @param size 페이지 크기 (기본값: 20, 최대: 100)
  * @param cursor 커서 값 (Cursor-based 전용)
- * @param tenantId Tenant ID 필터 (String - Tenant PK 타입과 일치, 특정 Tenant의 Organization만 조회)
+ * @param tenantId Tenant ID 필터 (Long - Tenant PK 타입과 일치, 특정 Tenant의 Organization만 조회)
  * @param orgCodeContains 조직 코드 검색어 (부분 일치)
  * @param nameContains 이름 검색어 (부분 일치)
  * @param deleted 삭제 여부 필터 (null이면 전체 조회)
@@ -38,7 +38,7 @@ public record GetOrganizationsQuery(
     Integer page,
     Integer size,
     String cursor,
-    String tenantId,
+    Long tenantId,
     String orgCodeContains,
     String nameContains,
     Boolean deleted
@@ -70,8 +70,8 @@ public record GetOrganizationsQuery(
         }
 
         // tenantId 검증
-        if (tenantId != null && tenantId.isBlank()) {
-            throw new IllegalArgumentException("tenantId는 빈 문자열일 수 없습니다");
+        if (tenantId != null && tenantId <= 0) {
+            throw new IllegalArgumentException("tenantId는 0보다 큰 양수여야 합니다");
         }
     }
 

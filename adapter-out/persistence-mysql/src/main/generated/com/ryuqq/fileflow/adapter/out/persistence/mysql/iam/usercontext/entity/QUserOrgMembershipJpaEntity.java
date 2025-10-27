@@ -25,7 +25,7 @@ public class QUserOrgMembershipJpaEntity extends EntityPathBase<UserOrgMembershi
 
     public final NumberPath<Long> organizationId = createNumber("organizationId", Long.class);
 
-    public final StringPath tenantId = createString("tenantId");
+    public final NumberPath<Long> tenantId = createNumber("tenantId", Long.class);
 
     public final NumberPath<Long> userContextId = createNumber("userContextId", Long.class);
 

@@ -18,11 +18,18 @@ import java.time.LocalDateTime;
  *
  * <p><strong>사용 예시:</strong></p>
  * <pre>{@code
- * Tenant tenant = Tenant.of(TenantId.of("id-123"), TenantName.of("my-tenant"));
+ * Tenant tenant = Tenant.of(TenantId.of(123L), TenantName.of("my-tenant"));
  * TenantResponse response = TenantAssembler.toResponse(tenant);
  * }</pre>
  *
- * @param tenantId Tenant ID
+ * <p><strong>Option B 변경:</strong></p>
+ * <ul>
+ *   <li>변경 전: tenantId는 String (UUID)</li>
+ *   <li>변경 후: tenantId는 Long (AUTO_INCREMENT)</li>
+ *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+ * </ul>
+ *
+ * @param tenantId Tenant ID (Long - AUTO_INCREMENT)
  * @param name Tenant 이름
  * @param status Tenant 상태 (ACTIVE, SUSPENDED)
  * @param deleted 삭제 여부
@@ -32,7 +39,7 @@ import java.time.LocalDateTime;
  * @since 2025-10-22
  */
 public record TenantResponse(
-    String tenantId,
+    Long tenantId,
     String name,
     String status,
     boolean deleted,
@@ -44,13 +51,13 @@ public record TenantResponse(
      *
      * <p>Record의 Compact Constructor를 사용하여 생성 시점에 필수 값 검증을 수행합니다.</p>
      *
-     * @throws IllegalArgumentException 필수 필드가 null인 경우
+     * @throws IllegalArgumentException 필수 필드가 null이거나 유효하지 않은 경우
      * @author ryu-qqq
      * @since 2025-10-22
      */
     public TenantResponse {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Tenant 이름은 필수입니다");

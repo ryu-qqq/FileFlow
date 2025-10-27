@@ -65,11 +65,11 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
             .andExpect(status().isCreated())
             .andReturn();
 
-        String tenantId = JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId");
+        Long tenantId = ((Number) JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId")).longValue();
 
         // 3. TENANT 레벨 설정 생성 (MAX_UPLOAD_SIZE=50MB)
         UpdateSettingRequest tenantSettingRequest = new UpdateSettingRequest(
-            "MAX_UPLOAD_SIZE", "50MB", "TENANT", Long.parseLong(tenantId)
+            "MAX_UPLOAD_SIZE", "50MB", "TENANT", tenantId
         );
         mockMvc.perform(patch("/api/v1/settings")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -87,11 +87,11 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
             .andExpect(status().isCreated())
             .andReturn();
 
-        String orgId = JsonPath.read(orgResult.getResponse().getContentAsString(), "$.data.orgId");
+        Long orgId = ((Number) JsonPath.read(orgResult.getResponse().getContentAsString(), "$.data.organizationId")).longValue();
 
         // 5. ORG 레벨 설정 생성 (MAX_UPLOAD_SIZE=200MB)
         UpdateSettingRequest orgSettingRequest = new UpdateSettingRequest(
-            "MAX_UPLOAD_SIZE", "200MB", "ORG", Long.parseLong(orgId)
+            "MAX_UPLOAD_SIZE", "200MB", "ORG", orgId
         );
         mockMvc.perform(patch("/api/v1/settings")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -103,15 +103,15 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
 
         // 6. ORG + TENANT + DEFAULT 병합 조회 → ORG 우선 (200MB)
         mockMvc.perform(get("/api/v1/settings")
-                .param("orgId", orgId)
-                .param("tenantId", tenantId))
+                .param("orgId", orgId.toString())
+                .param("tenantId", tenantId.toString()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.settings.MAX_UPLOAD_SIZE").value("200MB"));
 
         // 7. TENANT + DEFAULT 병합 조회 (ORG 없음) → TENANT 우선 (50MB)
         mockMvc.perform(get("/api/v1/settings")
-                .param("tenantId", tenantId))
+                .param("tenantId", tenantId.toString()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.settings.MAX_UPLOAD_SIZE").value("50MB"));
@@ -134,7 +134,7 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
             .andExpect(status().isCreated())
             .andReturn();
 
-        String tenantId = JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId");
+        Long tenantId = ((Number) JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId")).longValue();
 
         // 2. Organization 생성
         CreateOrganizationRequest orgRequest = OrganizationFixture.createRequest(tenantId);
@@ -144,11 +144,11 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
             .andExpect(status().isCreated())
             .andReturn();
 
-        String orgId = JsonPath.read(orgResult.getResponse().getContentAsString(), "$.data.orgId");
+        Long orgId = ((Number) JsonPath.read(orgResult.getResponse().getContentAsString(), "$.data.organizationId")).longValue();
 
         // 3. ORG 레벨 전용 설정 생성 (ORG_SPECIFIC_KEY=org-value)
         UpdateSettingRequest orgSettingRequest = new UpdateSettingRequest(
-            "ORG_SPECIFIC_KEY", "org-value", "ORG", Long.parseLong(orgId)
+            "ORG_SPECIFIC_KEY", "org-value", "ORG", orgId
         );
         mockMvc.perform(patch("/api/v1/settings")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -157,8 +157,8 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
 
         // 4. ORG + TENANT 병합 조회 → ORG 값만 반환
         mockMvc.perform(get("/api/v1/settings")
-                .param("orgId", orgId)
-                .param("tenantId", tenantId))
+                .param("orgId", orgId.toString())
+                .param("tenantId", tenantId.toString()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.settings.ORG_SPECIFIC_KEY").value("org-value"));
@@ -175,7 +175,7 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
             .andExpect(status().isCreated())
             .andReturn();
 
-        String tenantId = JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId");
+        Long tenantId = ((Number) JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId")).longValue();
 
         // 2. Organization 생성
         CreateOrganizationRequest orgRequest = OrganizationFixture.createRequest(tenantId);
@@ -185,7 +185,7 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
             .andExpect(status().isCreated())
             .andReturn();
 
-        String orgId = JsonPath.read(orgResult.getResponse().getContentAsString(), "$.data.orgId");
+        Long orgId = ((Number) JsonPath.read(orgResult.getResponse().getContentAsString(), "$.data.organizationId")).longValue();
 
         // 3. 여러 레벨에 다양한 설정 생성
         // DEFAULT: KEY_A=default-a, KEY_B=default-b, KEY_C=default-c
@@ -205,13 +205,13 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
         // TENANT: KEY_A=tenant-a (KEY_B, KEY_C는 TENANT 레벨 없음)
         mockMvc.perform(patch("/api/v1/settings")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(new UpdateSettingRequest("KEY_A", "tenant-a", "TENANT", Long.parseLong(tenantId)))))
+                .content(toJson(new UpdateSettingRequest("KEY_A", "tenant-a", "TENANT", tenantId))))
             .andExpect(status().isOk());
 
         // ORG: KEY_B=org-b (KEY_A, KEY_C는 ORG 레벨 없음)
         mockMvc.perform(patch("/api/v1/settings")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(new UpdateSettingRequest("KEY_B", "org-b", "ORG", Long.parseLong(orgId)))))
+                .content(toJson(new UpdateSettingRequest("KEY_B", "org-b", "ORG", orgId))))
             .andExpect(status().isOk());
 
         // 4. 병합 조회 → 각 키의 우선순위 독립적 적용
@@ -219,8 +219,8 @@ class Scenario09_SettingsPriorityMergeE2ETest extends EndToEndTestBase {
         // KEY_B: TENANT 없음 → ORG (org-b)
         // KEY_C: ORG, TENANT 없음 → DEFAULT (default-c)
         mockMvc.perform(get("/api/v1/settings")
-                .param("orgId", orgId)
-                .param("tenantId", tenantId))
+                .param("orgId", orgId.toString())
+                .param("tenantId", tenantId.toString()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.settings.KEY_A").value("tenant-a"))
