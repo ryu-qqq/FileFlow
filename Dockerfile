@@ -30,14 +30,11 @@ COPY gradle/libs.versions.toml gradle/
 # 멀티 모듈 프로젝트: 각 모듈의 build.gradle.kts 복사
 COPY domain/build.gradle.kts domain/
 COPY application/build.gradle.kts application/
-COPY adapter/adapter-in-rest-api/build.gradle.kts adapter/adapter-in-rest-api/
-COPY adapter/adapter-out-persistence-jpa/build.gradle.kts adapter/adapter-out-persistence-jpa/
-COPY adapter/adapter-out-redis/build.gradle.kts adapter/adapter-out-redis/
-COPY adapter/adapter-out-aws-s3/build.gradle.kts adapter/adapter-out-aws-s3/
-COPY adapter/adapter-out-aws-sqs/build.gradle.kts adapter/adapter-out-aws-sqs/
-COPY adapter/adapter-out-aws-textract/build.gradle.kts adapter/adapter-out-aws-textract/
-COPY adapter/adapter-out-metadata-extraction/build.gradle.kts adapter/adapter-out-metadata-extraction/
-COPY adapter/adapter-out-image-conversion/build.gradle.kts adapter/adapter-out-image-conversion/
+COPY adapter-in/rest-api/build.gradle.kts adapter-in/rest-api/
+COPY adapter-out/build.gradle.kts settings.gradle.kts adapter-out/
+COPY adapter-out/persistence-mysql/build.gradle.kts adapter-out/persistence-mysql/
+COPY adapter-out/persistence-redis/build.gradle.kts adapter-out/persistence-redis/
+COPY adapter-out/abac-cel/build.gradle.kts adapter-out/abac-cel/
 COPY bootstrap/bootstrap-web-api/build.gradle.kts bootstrap/bootstrap-web-api/
 
 # ========================================
@@ -49,21 +46,14 @@ RUN ./gradlew dependencies --no-daemon --stacktrace || true
 # ========================================
 # Step 4: 소스 코드 복사
 # 코드가 변경되면 이 레이어부터 재빌드됨
-# 현재 존재하는 모듈만 복사 (향후 추가 모듈은 src 생성 후 추가)
 # ========================================
 COPY domain/src domain/src/
 COPY application/src application/src/
-COPY adapter/adapter-out-persistence-jpa/src adapter/adapter-out-persistence-jpa/src/
+COPY adapter-in/rest-api/src adapter-in/rest-api/src/
+COPY adapter-out/persistence-mysql/src adapter-out/persistence-mysql/src/
+COPY adapter-out/persistence-redis/src adapter-out/persistence-redis/src/
+COPY adapter-out/abac-cel/src adapter-out/abac-cel/src/
 COPY bootstrap/bootstrap-web-api/src bootstrap/bootstrap-web-api/src/
-
-# TODO: 아래 모듈들은 src 디렉토리 생성 후 주석 해제
-# COPY adapter/adapter-in-rest-api/src adapter/adapter-in-rest-api/src/
-# COPY adapter/adapter-out-redis/src adapter/adapter-out-redis/src/
-# COPY adapter/adapter-out-aws-s3/src adapter/adapter-out-aws-s3/src/
-# COPY adapter/adapter-out-aws-sqs/src adapter/adapter-out-aws-sqs/src/
-# COPY adapter/adapter-out-aws-textract/src adapter/adapter-out-aws-textract/src/
-# COPY adapter/adapter-out-metadata-extraction/src adapter/adapter-out-metadata-extraction/src/
-# COPY adapter/adapter-out-image-conversion/src adapter/adapter-out-image-conversion/src/
 
 # ========================================
 # Step 5: Checkstyle, SpotBugs 설정 파일 복사
@@ -73,8 +63,9 @@ COPY config/ config/
 # ========================================
 # Step 6: 애플리케이션 빌드
 # 테스트는 별도 CI 단계에서 실행하므로 스킵
+# Clean 빌드로 QueryDSL Q 클래스 중복 생성 문제 방지
 # ========================================
-RUN ./gradlew :bootstrap:bootstrap-web-api:bootJar \
+RUN ./gradlew clean :bootstrap:bootstrap-web-api:bootJar \
     -x test \
     -x checkstyleMain \
     -x checkstyleTest \

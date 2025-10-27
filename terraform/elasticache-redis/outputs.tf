@@ -1,0 +1,39 @@
+output "cluster_id" {
+  description = "Cache cluster ID"
+  value       = aws_elasticache_cluster.main.id
+}
+
+output "endpoint" {
+  description = "Cache cluster endpoint"
+  value       = aws_elasticache_cluster.main.cache_nodes[0].address
+}
+
+output "port" {
+  description = "Redis port"
+  value       = aws_elasticache_cluster.main.port
+}
+
+output "security_group_id" {
+  description = "Security group ID for Redis"
+  value       = aws_security_group.redis.id
+}
+
+output "subnet_group_name" {
+  description = "Subnet group name"
+  value       = aws_elasticache_subnet_group.main.name
+}
+
+output "parameter_group_name" {
+  description = "Parameter group name"
+  value       = aws_elasticache_parameter_group.main.name
+}
+
+output "slow_log_group" {
+  description = "Slow log CloudWatch log group"
+  value       = aws_cloudwatch_log_group.redis_slow.name
+}
+
+output "engine_log_group" {
+  description = "Engine log CloudWatch log group"
+  value       = aws_cloudwatch_log_group.redis_engine.name
+}

@@ -1,0 +1,108 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform-*.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      # 순차 실행으로 변경 (의존성 고려)
+      max-parallel: 1
+      matrix:
+        module:
+          # 의존성 순서대로 배치
+          - name: elasticache-redis
+            dir: terraform/elasticache-redis
+            order: 1
+          - name: s3-bucket
+            dir: terraform/s3-bucket
+            order: 2
+          - name: sqs-queue
+            dir: terraform/sqs-queue
+            order: 3
+          - name: ecs-service
+            dir: terraform/ecs-service
+            order: 4
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+          role-duration-seconds: 7200
+          role-session-name: GitHubActions-FileFlow-TerraformApply
+
+      - name: Terraform Init - ${{ matrix.module.name }}
+        working-directory: ${{ matrix.module.dir }}
+        run: terraform init
+
+      - name: Terraform Apply - ${{ matrix.module.name }}
+        working-directory: ${{ matrix.module.dir }}
+        run: |
+          echo "🚀 Applying Terraform for ${{ matrix.module.name }}..."
+          terraform apply -auto-approve -no-color
+          echo "✅ Apply completed for ${{ matrix.module.name }}"
+
+      - name: Terraform Output - ${{ matrix.module.name }}
+        working-directory: ${{ matrix.module.dir }}
+        run: |
+          echo "📋 Outputs for ${{ matrix.module.name }}:"
+          terraform output -json > outputs-${{ matrix.module.name }}.json
+          terraform output
+
+      - name: Upload Apply Results - ${{ matrix.module.name }}
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: apply-results-${{ matrix.module.name }}
+          path: ${{ matrix.module.dir }}/outputs-${{ matrix.module.name }}.json
+          retention-days: 30
+
+  notify-completion:
+    name: Notify Deployment Completion
+    needs: terraform-apply
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Create Deployment Summary
+        run: |
+          echo "## 🎉 FileFlow Infrastructure Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ${{ needs.terraform-apply.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Modules Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ElastiCache Redis" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ S3 Bucket" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ SQS Queue" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ECS Service" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps**:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify infrastructure in AWS Console" >> $GITHUB_STEP_SUMMARY
+          echo "2. Check CloudWatch logs" >> $GITHUB_STEP_SUMMARY
+          echo "3. Test application endpoints" >> $GITHUB_STEP_SUMMARY
