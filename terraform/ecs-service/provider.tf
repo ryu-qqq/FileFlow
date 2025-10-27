@@ -13,12 +13,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "ryuqqq-prod-tfstate"
-    key            = "services/fileflow/terraform.tfstate"
+    bucket         = "prod-connectly"
+    key            = "fileflow/ecs-service/terraform.tfstate"
     region         = "ap-northeast-2"
+    dynamodb_table = "prod-connectly-tf-lock"
     encrypt        = true
-    dynamodb_table = "terraform-lock"
-    kms_key_id     = "alias/terraform-state"
   }
 }
 
