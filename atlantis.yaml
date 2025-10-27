@@ -28,7 +28,6 @@ projects:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
     apply_requirements: ["approved", "mergeable"]
-    workflow: default
 
   # 2. S3 Bucket - File storage
   - name: fileflow-s3-prod
@@ -38,7 +37,6 @@ projects:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
     apply_requirements: ["approved", "mergeable"]
-    workflow: default
 
   # 3. SQS Queue - Message queue
   - name: fileflow-sqs-prod
@@ -48,7 +46,6 @@ projects:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
     apply_requirements: ["approved", "mergeable"]
-    workflow: default
 
   # 4. ECS Service - Application service
   - name: fileflow-ecs-prod
@@ -58,22 +55,3 @@ projects:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
     apply_requirements: ["approved", "mergeable"]
-    workflow: default
-
-
-# Workflows
-workflows:
-  default:
-    plan:
-      steps:
-        # Disable shared plugin cache to prevent "text file busy" race conditions
-        - env:
-            name: TF_PLUGIN_CACHE_DIR
-            value: ""
-        - init:
-            extra_args:
-              - "-upgrade"
-        - plan
-    apply:
-      steps:
-        - apply
