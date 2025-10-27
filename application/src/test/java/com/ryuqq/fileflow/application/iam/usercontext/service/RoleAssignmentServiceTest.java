@@ -7,6 +7,7 @@ import com.ryuqq.fileflow.application.iam.usercontext.port.out.UserContextReposi
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.iam.usercontext.*;
+import com.ryuqq.fileflow.domain.iam.usercontext.exception.UserContextNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * RoleAssignmentService Unit Test
@@ -56,11 +62,15 @@ class RoleAssignmentServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private RoleAssignmentService roleAssignmentService;
 
     private UserContext userContext;
     private AssignRoleCommand command;
+    private LocalDateTime fixedTime;
 
     /**
      * 테스트 전 공통 설정
@@ -70,6 +80,12 @@ class RoleAssignmentServiceTest {
      */
     @BeforeEach
     void setUp() {
+        // Given: 고정된 시간 설정 (테스트 용이성)
+        fixedTime = LocalDateTime.of(2025, 10, 26, 15, 30, 0);
+        Instant fixedInstant = fixedTime.atZone(ZoneId.systemDefault()).toInstant();
+        lenient().when(clock.instant()).thenReturn(fixedInstant);
+        lenient().when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+
         // Given: UserContext 생성 (Membership 없는 초기 상태)
         userContext = UserContext.of(
             UserContextId.of(123L),
@@ -122,6 +138,7 @@ class RoleAssignmentServiceTest {
         assertThat(publishedEvent.tenantId()).isEqualTo("tenant-1");
         assertThat(publishedEvent.organizationId()).isEqualTo(456L);
         assertThat(publishedEvent.membershipType()).isEqualTo("EMPLOYEE");
+        assertThat(publishedEvent.occurredAt()).isEqualTo(fixedTime);
     }
 
     /**
@@ -131,14 +148,14 @@ class RoleAssignmentServiceTest {
      * @since 2025-10-26
      */
     @Test
-    @DisplayName("예외: UserContext가 존재하지 않으면 IllegalStateException 발생")
+    @DisplayName("예외: UserContext가 존재하지 않으면 UserContextNotFoundException 발생")
     void shouldThrowExceptionWhenUserContextNotFound() {
         // Given
         when(userContextRepository.findById(UserContextId.of(123L))).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> roleAssignmentService.execute(command))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(UserContextNotFoundException.class)
             .hasMessageContaining("사용자를 찾을 수 없습니다");
 
         // Then: 캐시 무효화 호출 안 됨
@@ -200,5 +217,8 @@ class RoleAssignmentServiceTest {
 
         // Then: 캐시 무효화 호출 안 됨 (트랜잭션 롤백)
         verify(grantsCachePort, never()).invalidateUser(any());
+
+        // Then: 이벤트 발행 안 됨 (트랜잭션 롤백으로 부수효과 없음)
+        verify(eventPublisher, never()).publishEvent(any());
     }
 }

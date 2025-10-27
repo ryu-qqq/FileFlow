@@ -136,11 +136,9 @@ public class EvaluatePermissionService implements EvaluatePermissionUseCase {
                     .filter(g -> g.isForPermission(command.permissionCode()))
                     .findFirst();
 
-                if (anyGrantForPermission.isPresent()) {
-                    return denyScopeMismatch(command, anyGrantForPermission.get(), startTime);
-                } else {
-                    return denyNoGrant(command, startTime);
-                }
+                return anyGrantForPermission
+                    .map(grant -> denyScopeMismatch(command, grant, startTime))
+                    .orElseGet(() -> denyNoGrant(command, startTime));
             }
 
             // 4단계: ABAC 평가 (모든 적용 가능한 Grant 평가, 무조건 Grant 우선)
@@ -177,14 +175,14 @@ public class EvaluatePermissionService implements EvaluatePermissionUseCase {
                         grant.conditionExpr(), e.getMessage());
 
                     // 마지막 Grant였다면 평가 실패로 거부
-                    if (grant == applicableGrants.get(applicableGrants.size() - 1)) {
+                    if (grant == applicableGrants.getLast()) {
                         return denyConditionEvaluationFailed(command, grant, startTime, e);
                     }
                 }
             }
 
             // 모든 조건부 Grant가 실패한 경우
-            Grant lastGrant = applicableGrants.get(applicableGrants.size() - 1);
+            Grant lastGrant = applicableGrants.getLast();
             log.debug("4단계 완료 - 모든 조건부 Grant 실패");
             return denyConditionNotMet(command, lastGrant, startTime);
 

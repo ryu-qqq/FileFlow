@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  *   <li>✅ Pure Java (Lombok 금지)</li>
  *   <li>✅ Response 접미사 사용</li>
  *   <li>✅ 도메인 객체와 분리 (Assembler 변환 필수)</li>
- *   <li>✅ String FK 전략 - Tenant ID를 String으로 반환 (Tenant PK 타입과 일치)</li>
+ *   <li>✅ Long FK 전략 - Tenant ID를 Long으로 반환 (Tenant PK 타입과 일치)</li>
  * </ul>
  *
  * <p><strong>사용 예시:</strong></p>
@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
  * }</pre>
  *
  * @param organizationId Organization ID
- * @param tenantId 소속 Tenant ID (String - Tenant PK 타입과 일치)
+ * @param tenantId 소속 Tenant ID (Long - Tenant PK 타입과 일치)
  * @param orgCode 조직 코드
  * @param name 조직 이름
  * @param status Organization 상태 (ACTIVE, INACTIVE)
@@ -36,7 +36,7 @@ import java.time.LocalDateTime;
  */
 public record OrganizationResponse(
     Long organizationId,
-    String tenantId,
+    Long tenantId,
     String orgCode,
     String name,
     String status,
@@ -57,8 +57,8 @@ public record OrganizationResponse(
         if (organizationId == null || organizationId <= 0) {
             throw new IllegalArgumentException("Organization ID는 필수이며 양수여야 합니다");
         }
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
         if (orgCode == null || orgCode.isBlank()) {
             throw new IllegalArgumentException("조직 코드는 필수입니다");

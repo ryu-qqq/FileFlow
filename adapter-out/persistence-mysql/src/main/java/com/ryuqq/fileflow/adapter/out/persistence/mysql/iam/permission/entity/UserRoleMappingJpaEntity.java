@@ -85,14 +85,14 @@ public class UserRoleMappingJpaEntity {
     private final String roleCode;
 
     /**
-     * Tenant ID (FK - String UUID 전략)
+     * Tenant ID (FK - Long AUTO_INCREMENT 전략)
      *
      * <p>Domain {@code TenantId}와 매핑됩니다.</p>
-     * <p><strong>주의</strong>: TenantJpaEntity의 UUID String과 일치해야 합니다.</p>
-     * <p><strong>제약</strong>: NOT NULL, VARCHAR(50), Index 권장 (Composite Index: user_context_id + tenant_id + organization_id)</p>
+     * <p><strong>주의</strong>: TenantJpaEntity의 Long PK와 일치해야 합니다.</p>
+     * <p><strong>제약</strong>: NOT NULL, BIGINT, Index 권장 (Composite Index: user_context_id + tenant_id + organization_id)</p>
      */
-    @Column(name = "tenant_id", nullable = false, length = 50)
-    private final String tenantId;
+    @Column(name = "tenant_id", nullable = false)
+    private final Long tenantId;
 
     /**
      * Organization ID (FK - Long 전략)
@@ -124,7 +124,7 @@ public class UserRoleMappingJpaEntity {
         Long id,
         Long userContextId,
         String roleCode,
-        String tenantId,  // String UUID
+        Long tenantId,  // Long AUTO_INCREMENT
         Long organizationId
     ) {
         this.id = id;
@@ -143,7 +143,7 @@ public class UserRoleMappingJpaEntity {
      *
      * @param userContextId UserContext ID
      * @param roleCode Role 코드
-     * @param tenantId Tenant ID (String UUID)
+     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
      * @param organizationId Organization ID
      * @return 새로운 UserRoleMappingJpaEntity
      * @throws IllegalArgumentException 필수 필드가 null인 경우
@@ -153,7 +153,7 @@ public class UserRoleMappingJpaEntity {
     public static UserRoleMappingJpaEntity create(
         Long userContextId,
         String roleCode,
-        String tenantId,  // String UUID
+        Long tenantId,  // Long AUTO_INCREMENT
         Long organizationId
     ) {
         if (userContextId == null || roleCode == null ||
@@ -180,7 +180,7 @@ public class UserRoleMappingJpaEntity {
      * @param id UserRoleMapping ID
      * @param userContextId UserContext ID
      * @param roleCode Role 코드
-     * @param tenantId Tenant ID (String UUID)
+     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
      * @param organizationId Organization ID
      * @return 재구성된 UserRoleMappingJpaEntity
      * @author ryu-qqq
@@ -190,7 +190,7 @@ public class UserRoleMappingJpaEntity {
         Long id,
         Long userContextId,
         String roleCode,
-        String tenantId,  // String UUID
+        Long tenantId,  // Long AUTO_INCREMENT
         Long organizationId
     ) {
         return new UserRoleMappingJpaEntity(
@@ -218,7 +218,7 @@ public class UserRoleMappingJpaEntity {
         return roleCode;
     }
 
-    public String getTenantId() {
+    public Long getTenantId() {
         return tenantId;
     }
 

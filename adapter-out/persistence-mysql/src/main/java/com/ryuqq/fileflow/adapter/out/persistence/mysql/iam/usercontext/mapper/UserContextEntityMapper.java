@@ -84,12 +84,12 @@ public final class UserContextEntityMapper {
         Email email = Email.of(entity.getEmail());
 
         // Membership Entity → Domain Record 변환
-        // TenantId는 String UUID 그대로 사용
+        // TenantId는 Long FK 그대로 사용 (Tenant PK 타입과 일치)
         List<Membership> memberships = new ArrayList<>();
         if (membershipEntities != null) {
             for (UserOrgMembershipJpaEntity membershipEntity : membershipEntities) {
                 Membership membership = Membership.of(
-                    TenantId.of(membershipEntity.getTenantId()),  // String UUID 그대로 사용
+                    TenantId.of(membershipEntity.getTenantId()),  // Long FK (Tenant PK 타입과 일치)
                     OrganizationId.of(membershipEntity.getOrganizationId()),
                     MembershipType.valueOf(membershipEntity.getMembershipType())
                 );
@@ -184,8 +184,8 @@ public final class UserContextEntityMapper {
         }
 
         // Value Object → 원시 타입
-        // TenantId는 String UUID 그대로 사용
-        String tenantId = membership.tenantId().value();  // String UUID
+        // TenantId는 Long FK 그대로 사용 (Tenant PK 타입과 일치)
+        Long tenantId = membership.tenantId().value();  // Long FK
         Long organizationId = membership.organizationId().value();
         String membershipType = membership.type().name();
 

@@ -40,12 +40,12 @@ public final class OrganizationCommandFixtures {
      *
      * <p>"ORG-DEFAULT" 조직 코드와 "Default Organization" 이름으로 생성합니다.</p>
      *
-     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @return CreateOrganizationCommand
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static CreateOrganizationCommand createOrganizationCommand(String tenantId) {
+    public static CreateOrganizationCommand createOrganizationCommand(Long tenantId) {
         return new CreateOrganizationCommand(tenantId, "ORG-DEFAULT", "Default Organization");
     }
 
@@ -59,7 +59,7 @@ public final class OrganizationCommandFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static CreateOrganizationCommand createOrganizationCommand(String tenantId, String orgCode, String name) {
+    public static CreateOrganizationCommand createOrganizationCommand(Long tenantId, String orgCode, String name) {
         return new CreateOrganizationCommand(tenantId, orgCode, name);
     }
 
@@ -71,7 +71,7 @@ public final class OrganizationCommandFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static CreateOrganizationCommand createSalesOrganizationCommand(String tenantId) {
+    public static CreateOrganizationCommand createSalesOrganizationCommand(Long tenantId) {
         return new CreateOrganizationCommand(tenantId, "SALES", "Sales Department");
     }
 
@@ -83,7 +83,7 @@ public final class OrganizationCommandFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static CreateOrganizationCommand createHrOrganizationCommand(String tenantId) {
+    public static CreateOrganizationCommand createHrOrganizationCommand(Long tenantId) {
         return new CreateOrganizationCommand(tenantId, "HR", "Human Resources");
     }
 
@@ -95,7 +95,7 @@ public final class OrganizationCommandFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static CreateOrganizationCommand createItOrganizationCommand(String tenantId) {
+    public static CreateOrganizationCommand createItOrganizationCommand(Long tenantId) {
         return new CreateOrganizationCommand(tenantId, "IT", "IT Department");
     }
 

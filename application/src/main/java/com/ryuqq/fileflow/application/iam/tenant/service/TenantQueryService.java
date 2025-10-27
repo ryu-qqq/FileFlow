@@ -194,12 +194,12 @@ public class TenantQueryService implements GetTenantUseCase, GetTenantsUseCase {
     /**
      * Cursor 인코딩 (Tenant ID를 Base64로 인코딩)
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @return Base64 인코딩된 커서
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    private String encodeCursor(String tenantId) {
-        return Base64.getUrlEncoder().encodeToString(tenantId.getBytes());
+    private String encodeCursor(Long tenantId) {
+        return Base64.getUrlEncoder().encodeToString(String.valueOf(tenantId).getBytes());
     }
 }

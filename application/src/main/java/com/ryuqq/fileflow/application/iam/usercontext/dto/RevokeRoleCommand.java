@@ -41,14 +41,14 @@ package com.ryuqq.fileflow.application.iam.usercontext.dto;
  * </ul>
  *
  * @param userId 사용자 ID
- * @param tenantId 테넌트 ID (원시 문자열)
+ * @param tenantId 테넌트 ID (Long - Tenant PK 타입과 일치)
  * @param organizationId 조직 ID (원시 Long)
  * @author ryu-qqq
  * @since 2025-10-26
  */
 public record RevokeRoleCommand(
     Long userId,
-    String tenantId,
+    Long tenantId,
     Long organizationId
 ) {
 
@@ -60,14 +60,14 @@ public record RevokeRoleCommand(
      * @since 2025-10-26
      */
     public RevokeRoleCommand {
-        if (userId == null || userId < 0) {
-            throw new IllegalArgumentException("userId는 필수이며 0 이상이어야 합니다");
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("userId는 필수이며 0보다 큰 양수여야 합니다");
         }
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("tenantId는 필수입니다");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("tenantId는 필수이며 0보다 큰 양수여야 합니다");
         }
-        if (organizationId == null || organizationId < 0) {
-            throw new IllegalArgumentException("organizationId는 필수이며 0 이상이어야 합니다");
+        if (organizationId == null || organizationId <= 0) {
+            throw new IllegalArgumentException("organizationId는 필수이며 0보다 큰 양수여야 합니다");
         }
     }
 
@@ -75,7 +75,7 @@ public record RevokeRoleCommand(
      * Static Factory Method
      *
      * @param userId 사용자 ID
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (Long - Tenant PK 타입과 일치)
      * @param organizationId 조직 ID
      * @return RevokeRoleCommand 인스턴스
      * @throws IllegalArgumentException 필수 필드가 null이거나 유효하지 않은 경우
@@ -84,7 +84,7 @@ public record RevokeRoleCommand(
      */
     public static RevokeRoleCommand of(
         Long userId,
-        String tenantId,
+        Long tenantId,
         Long organizationId
     ) {
         return new RevokeRoleCommand(userId, tenantId, organizationId);

@@ -92,23 +92,23 @@ public class GrantQueryRepository {
      * </ul>
      *
      * @param userContextId UserContext ID
-     * @param tenantId Tenant ID (String UUID)
+     * @param tenantId Tenant ID (Long - AUTO_INCREMENT)
      * @param organizationId Organization ID
      * @return Grant Read Model 목록
-     * @throws IllegalArgumentException 파라미터가 null 또는 blank인 경우
+     * @throws IllegalArgumentException 파라미터가 null 또는 유효하지 않은 경우
      * @author ryu-qqq
      * @since 2025-10-24
      */
     public List<GrantReadModel> findEffectiveGrants(
         Long userContextId,
-        String tenantId,  // String UUID
+        Long tenantId,  // Long AUTO_INCREMENT
         Long organizationId
     ) {
         if (userContextId == null) {
             throw new IllegalArgumentException("UserContextId must not be null");
         }
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("TenantId must not be null or blank");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("TenantId must not be null and must be positive");
         }
         if (organizationId == null) {
             throw new IllegalArgumentException("OrganizationId must not be null");

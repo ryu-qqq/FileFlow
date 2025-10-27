@@ -5,6 +5,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -38,12 +40,20 @@ public class TenantJpaEntity {
     /**
      * Tenant 고유 식별자 (Primary Key)
      *
-     * <p>Domain {@code TenantId} (String 기반 Value Object)와 매핑됩니다.</p>
-     * <p><strong>생성 전략</strong>: Application에서 생성한 UUID 값 사용 (Auto Increment 아님)</p>
+     * <p>Domain {@code TenantId} (Long 기반 Value Object)와 매핑됩니다.</p>
+     * <p><strong>생성 전략</strong>: Database AUTO_INCREMENT (MySQL BIGINT)</p>
+     *
+     * <p><strong>타입 변경 (Option B):</strong></p>
+     * <ul>
+     *   <li>변경 전: String (UUID, Application 생성)</li>
+     *   <li>변경 후: Long (AUTO_INCREMENT, DB 생성)</li>
+     *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+     * </ul>
      */
     @Id
-    @Column(name = "id", length = 50, nullable = false)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
     /**
      * Tenant 이름
@@ -102,9 +112,11 @@ public class TenantJpaEntity {
      * Private 전체 생성자
      *
      * <p>Static Factory Method에서만 사용합니다.</p>
+     *
+     * <p><strong>Option B 변경:</strong> id 타입 String → Long</p>
      */
     private TenantJpaEntity(
-        String id,
+        Long id,
         String name,
         TenantStatus status,
         LocalDateTime createdAt,
@@ -126,19 +138,24 @@ public class TenantJpaEntity {
      *
      * <p><strong>검증</strong>: 필수 필드 null 체크만 수행 (비즈니스 검증은 Domain Layer에서)</p>
      *
-     * @param id Tenant ID (UUID 문자열)
+     * <p><strong>Option B 변경:</strong></p>
+     * <ul>
+     *   <li>id 파라미터 제거: AUTO_INCREMENT로 DB가 자동 생성</li>
+     *   <li>생성자에 null 전달: JPA가 save() 시점에 id 할당</li>
+     * </ul>
+     *
      * @param name Tenant 이름
      * @param createdAt 생성 일시
-     * @return 새로운 TenantJpaEntity
+     * @return 새로운 TenantJpaEntity (id는 null, save 후 자동 할당)
      * @throws IllegalArgumentException 필수 필드가 null인 경우
      */
-    public static TenantJpaEntity create(String id, String name, LocalDateTime createdAt) {
-        if (id == null || name == null || createdAt == null) {
-            throw new IllegalArgumentException("Required fields (id, name, createdAt) must not be null");
+    public static TenantJpaEntity create(String name, LocalDateTime createdAt) {
+        if (name == null || createdAt == null) {
+            throw new IllegalArgumentException("Required fields (name, createdAt) must not be null");
         }
 
         return new TenantJpaEntity(
-            id,
+            null,       // id는 null: AUTO_INCREMENT로 DB가 자동 생성
             name,
             TenantStatus.ACTIVE,
             createdAt,
@@ -152,7 +169,9 @@ public class TenantJpaEntity {
      *
      * <p>DB 조회 결과를 Entity로 변환할 때 사용합니다.</p>
      *
-     * @param id Tenant ID
+     * <p><strong>Option B 변경:</strong> id 타입 String → Long</p>
+     *
+     * @param id Tenant ID (Long - AUTO_INCREMENT)
      * @param name Tenant 이름
      * @param status Tenant 상태
      * @param createdAt 생성 일시
@@ -161,7 +180,7 @@ public class TenantJpaEntity {
      * @return 재구성된 TenantJpaEntity
      */
     public static TenantJpaEntity reconstitute(
-        String id,
+        Long id,
         String name,
         TenantStatus status,
         LocalDateTime createdAt,
@@ -175,7 +194,7 @@ public class TenantJpaEntity {
     // Getters (Public, 비즈니스 메서드 없음!)
     // ========================================
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 

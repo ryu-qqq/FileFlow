@@ -15,7 +15,7 @@ import java.util.Optional;
  * <h3>설계 원칙</h3>
  * <ul>
  *   <li>✅ Spring Data JPA 인터페이스 (구현체 자동 생성)</li>
- *   <li>✅ String FK 전략 (tenantId는 String - Tenant PK 타입과 일치)</li>
+ *   <li>✅ Long FK 전략 (tenantId는 Long - Tenant PK 타입과 일치)</li>
  *   <li>✅ 소프트 삭제 고려 (deleted=false 조건 추가)</li>
  *   <li>✅ 메서드 네이밍 규칙 준수 (Spring Data JPA Query Methods)</li>
  *   <li>❌ {@code @Repository} 어노테이션 불필요 (JpaRepository 상속 시 자동)</li>
@@ -40,12 +40,12 @@ public interface OrganizationJpaRepository extends JpaRepository<OrganizationJpa
      *
      * <p>특정 Tenant에 속한 모든 활성 Organization을 생성일시 오름차순으로 조회합니다.</p>
      *
-     * <p><strong>String FK 전략</strong>: Tenant PK 타입(String UUID)과 일치</p>
+     * <p><strong>Long FK 전략</strong>: Tenant PK 타입(Long AUTO_INCREMENT)과 일치</p>
      *
-     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @return Organization 목록 (빈 리스트 가능)
      */
-    List<OrganizationJpaEntity> findByTenantIdAndDeletedIsFalseOrderByCreatedAtAsc(String tenantId);
+    List<OrganizationJpaEntity> findByTenantIdAndDeletedIsFalseOrderByCreatedAtAsc(Long tenantId);
 
     /**
      * Tenant ID와 조직 코드로 활성 Organization 조회
@@ -53,11 +53,11 @@ public interface OrganizationJpaRepository extends JpaRepository<OrganizationJpa
      * <p>특정 Tenant 내에서 조직 코드로 Organization을 찾습니다.
      * 조직 코드는 Tenant 내에서 유니크하므로 최대 1건만 반환됩니다.</p>
      *
-     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @return Organization Entity (삭제되었거나 존재하지 않으면 {@code Optional.empty()})
      */
-    Optional<OrganizationJpaEntity> findByTenantIdAndOrgCodeAndDeletedIsFalse(String tenantId, String orgCode);
+    Optional<OrganizationJpaEntity> findByTenantIdAndOrgCodeAndDeletedIsFalse(Long tenantId, String orgCode);
 
     /**
      * Tenant ID와 조직 코드 중복 확인 (활성 Organization 기준)
@@ -65,19 +65,19 @@ public interface OrganizationJpaRepository extends JpaRepository<OrganizationJpa
      * <p>특정 Tenant 내에서 동일한 조직 코드가 이미 사용 중인지 확인합니다.
      * 소프트 삭제된 Organization은 제외됩니다.</p>
      *
-     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @return 존재하면 {@code true}, 없으면 {@code false}
      */
-    boolean existsByTenantIdAndOrgCodeAndDeletedIsFalse(String tenantId, String orgCode);
+    boolean existsByTenantIdAndOrgCodeAndDeletedIsFalse(Long tenantId, String orgCode);
 
     /**
      * Tenant ID로 활성 Organization 개수 조회
      *
      * <p>특정 Tenant에 속한 활성 Organization의 개수를 반환합니다.</p>
      *
-     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @return 활성 Organization 개수
      */
-    long countByTenantIdAndDeletedIsFalse(String tenantId);
+    long countByTenantIdAndDeletedIsFalse(Long tenantId);
 }

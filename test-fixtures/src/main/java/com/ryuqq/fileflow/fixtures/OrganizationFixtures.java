@@ -48,7 +48,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization salesOrganization(String tenantId) {
+    public static Organization salesOrganization(Long tenantId) {
         return Organization.of(
             null,  // ID 없음 (DB 저장 시 자동 생성)
             tenantId,
@@ -65,7 +65,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization hrOrganization(String tenantId) {
+    public static Organization hrOrganization(Long tenantId) {
         return Organization.of(
             null,  // ID 없음 (DB 저장 시 자동 생성)
             tenantId,
@@ -82,7 +82,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization itOrganization(String tenantId) {
+    public static Organization itOrganization(Long tenantId) {
         return Organization.of(
             null,  // ID 없음 (DB 저장 시 자동 생성)
             tenantId,
@@ -101,7 +101,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization organizationWithCode(String tenantId, String orgCodeValue, String name) {
+    public static Organization organizationWithCode(Long tenantId, String orgCodeValue, String name) {
         return Organization.of(
             null,  // ID 없음 (DB 저장 시 자동 생성)
             tenantId,
@@ -119,7 +119,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization salesOrganizationWithId(Long organizationId, String tenantId) {
+    public static Organization salesOrganizationWithId(Long organizationId, Long tenantId) {
         return Organization.of(
             OrganizationId.of(organizationId),
             tenantId,
@@ -137,7 +137,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization hrOrganizationWithId(Long organizationId, String tenantId) {
+    public static Organization hrOrganizationWithId(Long organizationId, Long tenantId) {
         return Organization.of(
             OrganizationId.of(organizationId),
             tenantId,
@@ -155,7 +155,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization inactiveOrganization(Long organizationId, String tenantId) {
+    public static Organization inactiveOrganization(Long organizationId, Long tenantId) {
         return Organization.reconstitute(
             OrganizationId.of(organizationId),
             tenantId,
@@ -176,7 +176,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization deletedOrganization(String tenantId) {
+    public static Organization deletedOrganization(Long tenantId) {
         return Organization.reconstitute(
             OrganizationId.of(999L),
             tenantId,
@@ -199,7 +199,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization deletedOrganizationWithCode(Long organizationId, String tenantId, String orgCodeValue) {
+    public static Organization deletedOrganizationWithCode(Long organizationId, Long tenantId, String orgCodeValue) {
         return Organization.reconstitute(
             OrganizationId.of(organizationId),
             tenantId,
@@ -226,7 +226,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization organizationWithClock(String tenantId, String orgCodeValue, String name, Clock clock) {
+    public static Organization organizationWithClock(Long tenantId, String orgCodeValue, String name, Clock clock) {
         LocalDateTime now = LocalDateTime.now(clock);
         return Organization.reconstitute(
             null,  // ID는 null (DB 저장 시 생성됨)
@@ -259,7 +259,7 @@ public final class OrganizationFixtures {
      */
     public static Organization customOrganization(
         Long organizationId,
-        String tenantId,
+        Long tenantId,
         String orgCodeValue,
         String name,
         OrganizationStatus status,
@@ -285,14 +285,14 @@ public final class OrganizationFixtures {
      * <p>테스트에서 Update/Delete 작업을 테스트할 때 사용합니다.</p>
      *
      * @param organizationId Organization ID
-     * @return ID를 가진 Organization (ACTIVE, "tenant-default", "ORG-DEFAULT")
+     * @return ID를 가진 Organization (ACTIVE, tenantId: 1L, "ORG-DEFAULT")
      * @author ryu-qqq
      * @since 2025-10-23
      */
     public static Organization activeOrganizationWithId(Long organizationId) {
         return Organization.reconstitute(
             OrganizationId.of(organizationId),
-            "tenant-default",
+            1L,
             OrgCode.of("ORG-DEFAULT"),
             "Default Organization",
             OrganizationStatus.ACTIVE,
@@ -307,14 +307,14 @@ public final class OrganizationFixtures {
      *
      * <p>테스트에서 비활성화된 Organization이 필요할 때 사용합니다.</p>
      *
-     * @return INACTIVE 상태의 Organization (ID: 999L, "tenant-default")
+     * @return INACTIVE 상태의 Organization (ID: 999L, tenantId: 1L)
      * @author ryu-qqq
      * @since 2025-10-23
      */
     public static Organization inactiveOrganization() {
         return Organization.reconstitute(
             OrganizationId.of(999L),
-            "tenant-default",
+            1L,
             OrgCode.of("INACTIVE"),
             "Inactive Organization",
             OrganizationStatus.INACTIVE,
@@ -335,7 +335,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    public static Organization inactiveOrganizationWithId(Long organizationId, String tenantId) {
+    public static Organization inactiveOrganizationWithId(Long organizationId, Long tenantId) {
         return inactiveOrganization(organizationId, tenantId);
     }
 
@@ -350,7 +350,7 @@ public final class OrganizationFixtures {
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    public static Organization deletedOrganizationWithId(Long organizationId, String tenantId) {
+    public static Organization deletedOrganizationWithId(Long organizationId, Long tenantId) {
         return Organization.reconstitute(
             OrganizationId.of(organizationId),
             tenantId,

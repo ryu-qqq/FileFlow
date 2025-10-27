@@ -6,9 +6,9 @@ package com.ryuqq.fileflow.application.iam.tenant.dto.query;
  * <p>Tenant와 하위 Organization 목록을 트리 구조로 조회하기 위한 Query 객체입니다.
  * Java Record를 사용하여 불변성을 보장합니다.</p>
  *
- * <p><strong>사용 예시:</strong></p>
+ * <p><strong>사용 예시 (Option B 변경):</strong></p>
  * <pre>{@code
- * GetTenantTreeQuery query = GetTenantTreeQuery.of("tenant-123", false);
+ * GetTenantTreeQuery query = GetTenantTreeQuery.of(123L, false);
  * TenantTreeResponse response = getTenantTreeUseCase.execute(query);
  * }</pre>
  *
@@ -26,13 +26,20 @@ package com.ryuqq.fileflow.application.iam.tenant.dto.query;
  *   <li>✅ 정적 팩토리 메서드 제공</li>
  * </ul>
  *
- * @param tenantId Tenant ID
+ * <p><strong>Option B 변경:</strong></p>
+ * <ul>
+ *   <li>변경 전: tenantId는 String (UUID)</li>
+ *   <li>변경 후: tenantId는 Long (AUTO_INCREMENT)</li>
+ *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+ * </ul>
+ *
+ * @param tenantId Tenant ID (Long - AUTO_INCREMENT)
  * @param includeDeleted 삭제된 Organization 포함 여부 (기본값: false)
  * @author ryu-qqq
  * @since 2025-10-23
  */
 public record GetTenantTreeQuery(
-    String tenantId,
+    Long tenantId,
     boolean includeDeleted
 ) {
     /**
@@ -40,13 +47,13 @@ public record GetTenantTreeQuery(
      *
      * <p>Record의 Compact Constructor를 사용하여 생성 시점에 필수 값 검증을 수행합니다.</p>
      *
-     * @throws IllegalArgumentException Tenant ID가 null이거나 빈 문자열인 경우
+     * @throws IllegalArgumentException Tenant ID가 null이거나 0 이하인 경우
      * @author ryu-qqq
      * @since 2025-10-23
      */
     public GetTenantTreeQuery {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
     }
 
@@ -55,25 +62,25 @@ public record GetTenantTreeQuery(
      *
      * <p>삭제된 Organization을 제외하고 조회하는 Query를 생성합니다 (기본값).</p>
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long)
      * @return GetTenantTreeQuery (includeDeleted = false)
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static GetTenantTreeQuery of(String tenantId) {
+    public static GetTenantTreeQuery of(Long tenantId) {
         return new GetTenantTreeQuery(tenantId, false);
     }
 
     /**
      * 정적 팩토리 메서드 - 전체 파라미터로 Query 생성
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long)
      * @param includeDeleted 삭제된 Organization 포함 여부
      * @return GetTenantTreeQuery
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static GetTenantTreeQuery of(String tenantId, boolean includeDeleted) {
+    public static GetTenantTreeQuery of(Long tenantId, boolean includeDeleted) {
         return new GetTenantTreeQuery(tenantId, includeDeleted);
     }
 }
