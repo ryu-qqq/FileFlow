@@ -27,7 +27,6 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
 
   # 2. S3 Bucket - File storage
   - name: fileflow-s3-prod
@@ -36,7 +35,6 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
 
   # 3. SQS Queue - Message queue
   - name: fileflow-sqs-prod
@@ -45,7 +43,6 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
 
   # 4. ECS Service - Application service
   - name: fileflow-ecs-prod
@@ -54,4 +51,3 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
