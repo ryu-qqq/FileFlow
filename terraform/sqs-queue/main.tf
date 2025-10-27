@@ -25,7 +25,7 @@ variable "message_retention" {
 variable "visibility_timeout" {
   description = "Visibility timeout in seconds"
   type        = number
-  default     = 
+  default     = 30
 }
 
 # KMS Key for SQS encryption

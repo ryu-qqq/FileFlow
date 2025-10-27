@@ -52,42 +52,69 @@ resource "aws_security_group" "fileflow_alb" {
 module "fileflow_alb" {
   source = "../../modules/alb"
 
-  # ALB Configuration
-  name               = "${local.name_prefix}-alb"
-  internal           = false
-  load_balancer_type = "application"
+  # Required variables
+  name       = "${local.name_prefix}-alb"
+  subnet_ids = local.public_subnet_ids
+  vpc_id     = local.vpc_id
 
-  # Network Configuration
-  vpc_id             = local.vpc_id
-  public_subnet_ids  = local.public_subnet_ids
+  # Optional configuration
+  internal           = false
   security_group_ids = [aws_security_group.fileflow_alb.id]
 
-  # Target Group Configuration
-  target_group_name = "${local.name_prefix}-tg"
-  target_group_port = local.container_port
-  target_group_protocol = "HTTP"
-  target_type = "ip"
+  # Target Group
+  target_groups = {
+    fileflow = {
+      port        = local.container_port
+      protocol    = "HTTP"
+      target_type = "ip"
 
-  # Health Check Configuration
-  health_check = {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = ""
-    matcher             = "200-299"
+      health_check = {
+        enabled             = true
+        healthy_threshold   = 2
+        unhealthy_threshold = 3
+        timeout             = 5
+        interval            = 30
+        path                = ""
+        matcher             = "200-299"
+      }
+    }
   }
 
-  # SSL Certificate (if provided)
-  # NOTE: SSL certificate ARN should be provided for production
-  # Get from: aws acm list-certificates --region ap-northeast-2
-  certificate_arn = null
+  # HTTP Listener (redirect to HTTPS)
+  http_listeners = {
+    default = {
+      port     = 80
+      protocol = "HTTP"
 
-  # Access Logs (optional)
-  enable_deletion_protection = true
+      default_action = {
+        type = "redirect"
+        redirect = {
+          port        = "443"
+          protocol    = "HTTPS"
+          status_code = "HTTP_301"
+        }
+      }
+    }
+  }
 
-  tags = merge(
+  # HTTPS Listener (commented out until certificate is provided)
+  # https_listeners = {
+  #   default = {
+  #     port            = 443
+  #     protocol        = "HTTPS"
+  #     certificate_arn = "arn:aws:acm:ap-northeast-2:ACCOUNT_ID:certificate/CERT_ID"
+  #     ssl_policy      = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  #
+  #     default_action = {
+  #       type             = "forward"
+  #       target_group_key = "fileflow"
+  #     }
+  #   }
+  # }
+
+  enable_deletion_protection = false
+
+  common_tags = merge(
     local.required_tags,
     {
       Name      = "alb-${local.name_prefix}"
@@ -101,7 +128,7 @@ resource "aws_ssm_parameter" "alb_dns_name" {
   name        = "/services/${local.service_name}/alb-dns-name"
   description = "ALB DNS name for ${local.service_name}"
   type        = "String"
-  value       = module.fileflow_alb.dns_name
+  value       = module.fileflow_alb.alb_dns_name
 
   tags = local.required_tags
 }
