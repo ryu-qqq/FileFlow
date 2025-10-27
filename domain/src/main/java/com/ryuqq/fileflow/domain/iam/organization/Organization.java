@@ -25,7 +25,7 @@ import java.util.Objects;
 public class Organization {
 
     private final OrganizationId id;
-    private final String tenantId;
+    private final Long tenantId;
     private final Clock clock;
     private OrgCode orgCode;
     private String name;
@@ -42,7 +42,7 @@ public class Organization {
      * <p>초기 상태: ACTIVE, deleted = false</p>
      *
      * @param id Organization 식별자 (null 가능 - 신규 생성 시)
-     * @param tenantId Tenant 식별자 (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant 식별자 (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @return 생성된 Organization
@@ -50,7 +50,7 @@ public class Organization {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Organization of(OrganizationId id, String tenantId, OrgCode orgCode, String name) {
+    public static Organization of(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
         return new Organization(id, tenantId, orgCode, name, Clock.systemDefaultZone());
     }
 
@@ -63,14 +63,14 @@ public class Organization {
      * <p>초기 상태: ACTIVE, deleted = false</p>
      *
      * @param id Organization 식별자 (4개 파라미터에서는 필수)
-     * @param tenantId Tenant 식별자 (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant 식별자 (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @throws IllegalArgumentException 필수 필드가 null이거나 유효하지 않은 경우
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    Organization(OrganizationId id, String tenantId, OrgCode orgCode, String name) {
+    Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
         this(id, tenantId, orgCode, name, Clock.systemDefaultZone());
         if (id == null) {
             throw new IllegalArgumentException("Organization ID는 필수입니다");
@@ -83,7 +83,7 @@ public class Organization {
      * <p>ID가 null이면 신규 생성, 아니면 저장 후 상태</p>
      *
      * @param id Organization 식별자 (null 가능 - 신규 생성 시)
-     * @param tenantId Tenant 식별자 (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant 식별자 (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @param clock 시간 제공자
@@ -91,9 +91,9 @@ public class Organization {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    Organization(OrganizationId id, String tenantId, OrgCode orgCode, String name, Clock clock) {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+    Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name, Clock clock) {
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
         if (orgCode == null) {
             throw new IllegalArgumentException("조직 코드는 필수입니다");
@@ -115,7 +115,7 @@ public class Organization {
      * Private 전체 생성자 (reconstitute 전용)
      *
      * @param id Organization ID
-     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @param status Organization 상태
@@ -128,7 +128,7 @@ public class Organization {
      */
     private Organization(
         OrganizationId id,
-        String tenantId,
+        Long tenantId,
         OrgCode orgCode,
         String name,
         OrganizationStatus status,
@@ -155,7 +155,7 @@ public class Organization {
      * <p>모든 상태(status, deleted 포함)를 그대로 복원합니다.</p>
      *
      * @param id Organization ID
-     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @param status Organization 상태
@@ -168,7 +168,7 @@ public class Organization {
      */
     public static Organization reconstitute(
         OrganizationId id,
-        String tenantId,
+        Long tenantId,
         OrgCode orgCode,
         String name,
         OrganizationStatus status,
@@ -262,13 +262,13 @@ public class Organization {
      * <p>❌ Bad: organization.getTenantId().equals(tenantId)</p>
      * <p>✅ Good: organization.belongsToTenant(tenantId)</p>
      *
-     * @param tenantId 확인할 Tenant ID (String - Tenant PK 타입과 일치)
+     * @param tenantId 확인할 Tenant ID (Long - Tenant PK 타입과 일치)
      * @return 해당 Tenant에 속하면 true
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public boolean belongsToTenant(String tenantId) {
-        if (tenantId == null) {
+    public boolean belongsToTenant(Long tenantId) {
+        if (tenantId == null || tenantId <= 0) {
             return false;
         }
         return this.tenantId.equals(tenantId);
@@ -302,14 +302,14 @@ public class Organization {
     /**
      * Tenant ID를 반환합니다.
      *
-     * <p>String FK 전략: Tenant Aggregate를 직접 참조하지 않고 ID만 반환합니다.</p>
-     * <p>Tenant PK 타입(String UUID)과 일치하여 참조 무결성을 보장합니다.</p>
+     * <p>Long FK 전략: Tenant Aggregate를 직접 참조하지 않고 ID만 반환합니다.</p>
+     * <p>Tenant PK 타입(Long AUTO_INCREMENT)과 일치하여 참조 무결성을 보장합니다.</p>
      *
-     * @return Tenant ID (String UUID)
+     * @return Tenant ID (Long AUTO_INCREMENT)
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public String getTenantId() {
+    public Long getTenantId() {
         return tenantId;
     }
 

@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.settings.assembler;
 
 import com.ryuqq.fileflow.application.settings.dto.SettingResponse;
+import com.ryuqq.fileflow.application.settings.port.in.CreateSettingUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
 import com.ryuqq.fileflow.domain.settings.Setting;
 
@@ -78,6 +79,34 @@ public class SettingAssembler {
         }
 
         return new UpdateSettingUseCase.Response(
+            setting.getId(),
+            setting.getKeyValue(),
+            setting.getDisplayValue(), // 비밀 키 자동 마스킹
+            setting.getValueType().name(),
+            setting.getLevel().name(),
+            setting.getContextId(),
+            setting.isSecret(),
+            setting.getCreatedAt(),
+            setting.getUpdatedAt()
+        );
+    }
+
+    /**
+     * Domain 객체(Setting)를 CreateSettingUseCase.Response로 변환합니다.
+     *
+     * <p>비밀 키는 getDisplayValue()를 통해 자동으로 마스킹됩니다.</p>
+     *
+     * @param setting Domain 객체
+     * @return CreateSettingUseCase.Response
+     * @author ryu-qqq
+     * @since 2025-10-26
+     */
+    public CreateSettingUseCase.Response toCreateResponse(Setting setting) {
+        if (setting == null) {
+            return null;
+        }
+
+        return new CreateSettingUseCase.Response(
             setting.getId(),
             setting.getKeyValue(),
             setting.getDisplayValue(), // 비밀 키 자동 마스킹

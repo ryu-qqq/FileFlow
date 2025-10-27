@@ -77,7 +77,7 @@ class TenantControllerIntegrationTest {
         // Given
         CreateTenantRequest request = new CreateTenantRequest("my-tenant");
         TenantResponse mockResponse = new TenantResponse(
-            "tenant-id-123",
+            123L,
             "my-tenant",
             "ACTIVE",
             false,
@@ -161,7 +161,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("PATCH /api/v1/tenants/{tenantId} - Tenant 수정 성공 (200 OK)")
     void updateTenant_Success_Returns200() throws Exception {
         // Given
-        String tenantId = "tenant-id-123";
+        Long tenantId = 123L;
         UpdateTenantRequest request = new UpdateTenantRequest("updated-tenant-name");
         TenantResponse mockResponse = new TenantResponse(
             tenantId,

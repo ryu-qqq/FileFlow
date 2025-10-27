@@ -69,14 +69,21 @@ public class UpdateSettingService implements UpdateSettingUseCase {
     }
 
     /**
-     * 설정을 업데이트합니다.
+     * 설정을 업데이트합니다 (Upsert: 없으면 생성, 있으면 수정).
      *
-     * <p>업데이트 절차:</p>
+     * <p><strong>Upsert 동작:</strong></p>
+     * <ul>
+     *   <li>기존 설정이 있으면 → 기존 값을 업데이트</li>
+     *   <li>기존 설정이 없으면 → 새로운 설정 생성 (secret=false, type=STRING 기본값)</li>
+     * </ul>
+     *
+     * <p><strong>실행 절차:</strong></p>
      * <ol>
      *   <li>Command → Domain Value Object 변환</li>
      *   <li>기존 Setting 조회</li>
+     *   <li>있으면 → 기존 설정 수정 (기존 type과 secret 유지)</li>
+     *   <li>없으면 → 새 설정 생성 (secret=false, type=STRING)</li>
      *   <li>JSON 스키마 검증 (필요 시)</li>
-     *   <li>Setting 업데이트 (Domain 메서드)</li>
      *   <li>Repository 저장</li>
      *   <li>Assembler를 통한 Response 변환</li>
      * </ol>
@@ -84,8 +91,7 @@ public class UpdateSettingService implements UpdateSettingUseCase {
      * <p>쓰기 트랜잭션으로 실행됩니다.</p>
      *
      * @param command 업데이트 Command
-     * @return 업데이트된 Setting Response
-     * @throws SettingNotFoundException Setting을 찾을 수 없는 경우
+     * @return 업데이트된 Setting Response (생성 또는 수정)
      * @throws InvalidSettingException 스키마 검증 실패 시
      * @author ryu-qqq
      * @since 2025-10-25
@@ -98,24 +104,36 @@ public class UpdateSettingService implements UpdateSettingUseCase {
         Long contextId = command.contextId();
 
         // 2. 기존 Setting 조회 (Query Port 사용)
-        Setting setting = loadSettingsPort.findByKeyAndLevel(key, level, contextId)
-            .orElseThrow(() -> SettingNotFoundException.withKeyAndLevel(key, level, contextId));
+        java.util.Optional<Setting> existingSetting = loadSettingsPort.findByKeyAndLevel(key, level, contextId);
 
-        // 3. 새로운 값 생성 및 검증
-        SettingType type = setting.getValueType();
-        validateValue(command.value(), type);
+        Setting savedSetting;
 
-        SettingValue newValue = setting.isSecret()
-            ? SettingValue.secret(command.value(), type)
-            : SettingValue.of(command.value(), type);
+        if (existingSetting.isPresent()) {
+            // 3-A. 기존 설정이 있으면 수정
+            Setting setting = existingSetting.get();
+            SettingType type = setting.getValueType();
+            validateValue(command.value(), type);
 
-        // 4. Domain 메서드를 통한 업데이트 (비즈니스 규칙 강제)
-        setting.updateValue(newValue);
+            SettingValue newValue = setting.isSecret()
+                ? SettingValue.secret(command.value(), type)
+                : SettingValue.of(command.value(), type);
 
-        // 5. Repository 저장 (Command Port 사용)
-        Setting savedSetting = saveSettingPort.save(setting);
+            setting.updateValue(newValue);
+            savedSetting = saveSettingPort.save(setting);
+        } else {
+            // 3-B. 기존 설정이 없으면 생성 (type은 STRING 기본값, secret은 키 패턴으로 자동 판단)
+            SettingType type = SettingType.STRING;
+            validateValue(command.value(), type);
 
-        // 6. Assembler를 통한 Response 변환
+            // 키 패턴에 따라 자동으로 secret 여부 판단
+            SettingValue value = key.isSecretKey()
+                ? SettingValue.secret(command.value(), type)
+                : SettingValue.of(command.value(), type);
+            Setting newSetting = Setting.of(null, key, value, level, contextId);
+            savedSetting = saveSettingPort.save(newSetting);
+        }
+
+        // 4. Assembler를 통한 Response 변환
         return settingAssembler.toUpdateResponse(savedSetting);
     }
 

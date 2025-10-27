@@ -39,7 +39,7 @@ public interface UserRoleMappingJpaRepository extends JpaRepository<UserRoleMapp
      * <p>특정 사용자가 특정 Tenant/Organization 컨텍스트에서 가진 모든 Role을 조회합니다.</p>
      *
      * @param userContextId UserContext ID
-     * @param tenantId Tenant ID (String UUID)
+     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
      * @param organizationId Organization ID
      * @return UserRoleMapping Entity 리스트
      * @author ryu-qqq
@@ -47,7 +47,7 @@ public interface UserRoleMappingJpaRepository extends JpaRepository<UserRoleMapp
      */
     List<UserRoleMappingJpaEntity> findAllByUserContextIdAndTenantIdAndOrganizationId(
         Long userContextId,
-        String tenantId,
+        Long tenantId,
         Long organizationId
     );
 }

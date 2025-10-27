@@ -5,7 +5,6 @@ import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * TenantResponseFixtures - Tenant Response Object Mother Pattern
@@ -48,7 +47,7 @@ public final class TenantResponseFixtures {
      */
     public static TenantResponse tenantResponse() {
         return new TenantResponse(
-            UUID.randomUUID().toString(),
+            1L,
             "Test Company",
             "ACTIVE",
             false,
@@ -66,7 +65,7 @@ public final class TenantResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static TenantResponse tenantResponse(String tenantId, String name) {
+    public static TenantResponse tenantResponse(Long tenantId, String name) {
         return new TenantResponse(
             tenantId,
             name,
@@ -88,7 +87,7 @@ public final class TenantResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static TenantResponse tenantResponse(String tenantId, String name, String status, boolean deleted) {
+    public static TenantResponse tenantResponse(Long tenantId, String name, String status, boolean deleted) {
         return new TenantResponse(
             tenantId,
             name,
@@ -108,7 +107,7 @@ public final class TenantResponseFixtures {
      */
     public static TenantResponse suspendedTenantResponse() {
         return new TenantResponse(
-            UUID.randomUUID().toString(),
+            1L,
             "Suspended Company",
             "SUSPENDED",
             false,
@@ -125,7 +124,7 @@ public final class TenantResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static TenantResponse suspendedTenantResponse(String tenantId) {
+    public static TenantResponse suspendedTenantResponse(Long tenantId) {
         return new TenantResponse(
             tenantId,
             "Suspended Company",
@@ -145,7 +144,7 @@ public final class TenantResponseFixtures {
      */
     public static TenantResponse deletedTenantResponse() {
         return new TenantResponse(
-            UUID.randomUUID().toString(),
+            1L,
             "Deleted Company",
             "SUSPENDED",
             true,  // deleted
@@ -168,7 +167,7 @@ public final class TenantResponseFixtures {
         List<TenantResponse> responses = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             responses.add(new TenantResponse(
-                UUID.randomUUID().toString(),
+                1L,
                 "Test Company " + (i + 1),
                 "ACTIVE",
                 false,
@@ -191,7 +190,7 @@ public final class TenantResponseFixtures {
         List<TenantResponse> responses = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             responses.add(new TenantResponse(
-                UUID.randomUUID().toString(),
+                1L,
                 "Suspended Company " + (i + 1),
                 "SUSPENDED",
                 false,

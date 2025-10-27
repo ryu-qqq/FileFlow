@@ -4,8 +4,6 @@ import com.ryuqq.fileflow.application.iam.tenant.dto.command.CreateTenantCommand
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.UpdateTenantCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.UpdateTenantStatusCommand;
 
-import java.util.UUID;
-
 /**
  * TenantCommandFixtures - Tenant Command Object Mother Pattern
  *
@@ -64,7 +62,7 @@ public final class TenantCommandFixtures {
     /**
      * 기본 UpdateTenantCommand를 생성합니다.
      *
-     * <p>랜덤 UUID를 ID로 사용하고, "Updated Company"를 이름으로 사용합니다.</p>
+     * <p>ID 1L을 사용하고, "Updated Company"를 이름으로 사용합니다.</p>
      *
      * @return UpdateTenantCommand
      * @author ryu-qqq
@@ -72,7 +70,7 @@ public final class TenantCommandFixtures {
      */
     public static UpdateTenantCommand updateTenantCommand() {
         return new UpdateTenantCommand(
-            UUID.randomUUID().toString(),
+            1L,
             "Updated Company"
         );
     }
@@ -80,20 +78,20 @@ public final class TenantCommandFixtures {
     /**
      * 특정 ID와 이름을 가진 UpdateTenantCommand를 생성합니다.
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
      * @param newName 새로운 Tenant 이름
      * @return UpdateTenantCommand
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static UpdateTenantCommand updateTenantCommand(String tenantId, String newName) {
+    public static UpdateTenantCommand updateTenantCommand(Long tenantId, String newName) {
         return new UpdateTenantCommand(tenantId, newName);
     }
 
     /**
      * 기본 UpdateTenantStatusCommand를 생성합니다 (SUSPENDED 상태로 변경).
      *
-     * <p>랜덤 UUID를 ID로 사용하고, SUSPENDED 상태로 변경하는 Command를 생성합니다.</p>
+     * <p>ID 1L을 사용하고, SUSPENDED 상태로 변경하는 Command를 생성합니다.</p>
      *
      * @return UpdateTenantStatusCommand (SUSPENDED)
      * @author ryu-qqq
@@ -101,7 +99,7 @@ public final class TenantCommandFixtures {
      */
     public static UpdateTenantStatusCommand updateTenantStatusCommand() {
         return new UpdateTenantStatusCommand(
-            UUID.randomUUID().toString(),
+            1L,
             "SUSPENDED"
         );
     }
@@ -109,37 +107,37 @@ public final class TenantCommandFixtures {
     /**
      * 특정 ID와 상태를 가진 UpdateTenantStatusCommand를 생성합니다.
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
      * @param status 변경할 상태 (ACTIVE, SUSPENDED)
      * @return UpdateTenantStatusCommand
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static UpdateTenantStatusCommand updateTenantStatusCommand(String tenantId, String status) {
+    public static UpdateTenantStatusCommand updateTenantStatusCommand(Long tenantId, String status) {
         return new UpdateTenantStatusCommand(tenantId, status);
     }
 
     /**
      * ACTIVE 상태로 변경하는 UpdateTenantStatusCommand를 생성합니다.
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
      * @return UpdateTenantStatusCommand (ACTIVE)
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static UpdateTenantStatusCommand activateTenantCommand(String tenantId) {
+    public static UpdateTenantStatusCommand activateTenantCommand(Long tenantId) {
         return new UpdateTenantStatusCommand(tenantId, "ACTIVE");
     }
 
     /**
      * SUSPENDED 상태로 변경하는 UpdateTenantStatusCommand를 생성합니다.
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
      * @return UpdateTenantStatusCommand (SUSPENDED)
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static UpdateTenantStatusCommand suspendTenantCommand(String tenantId) {
+    public static UpdateTenantStatusCommand suspendTenantCommand(Long tenantId) {
         return new UpdateTenantStatusCommand(tenantId, "SUSPENDED");
     }
 }

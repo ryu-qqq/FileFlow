@@ -63,14 +63,14 @@ public class UserOrgMembershipJpaEntity {
     private final Long userContextId;
 
     /**
-     * Tenant ID (FK - String UUID 전략)
+     * Tenant ID (FK - Long 전략)
      *
      * <p>Domain {@code TenantId}와 매핑됩니다.</p>
-     * <p><strong>주의</strong>: TenantJpaEntity의 UUID String과 일치해야 합니다.</p>
-     * <p><strong>제약</strong>: NOT NULL, VARCHAR(50), Index 권장</p>
+     * <p><strong>Long FK 전략</strong>: TenantJpaEntity의 Long AUTO_INCREMENT PK와 일치합니다.</p>
+     * <p><strong>제약</strong>: NOT NULL, BIGINT, Index 권장</p>
      */
-    @Column(name = "tenant_id", nullable = false, length = 50)
-    private final String tenantId;
+    @Column(name = "tenant_id", nullable = false)
+    private final Long tenantId;
 
     /**
      * Organization ID (FK - Long 전략)
@@ -98,7 +98,7 @@ public class UserOrgMembershipJpaEntity {
      */
     protected UserOrgMembershipJpaEntity() {
         this.userContextId = null;
-        this.tenantId = null;  // String UUID
+        this.tenantId = null;  // Long FK
         this.organizationId = null;
         this.membershipType = null;
     }
@@ -111,7 +111,7 @@ public class UserOrgMembershipJpaEntity {
     private UserOrgMembershipJpaEntity(
         Long id,
         Long userContextId,
-        String tenantId,  // String UUID
+        Long tenantId,  // Long FK
         Long organizationId,
         String membershipType
     ) {
@@ -130,7 +130,7 @@ public class UserOrgMembershipJpaEntity {
      * <p><strong>검증</strong>: 필수 필드 null 체크만 수행 (비즈니스 검증은 Domain Layer에서)</p>
      *
      * @param userContextId UserContext ID
-     * @param tenantId Tenant ID (String UUID)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @param organizationId Organization ID
      * @param membershipType Membership 타입 (OWNER, ADMIN, MEMBER 등)
      * @return 새로운 UserOrgMembershipJpaEntity
@@ -140,7 +140,7 @@ public class UserOrgMembershipJpaEntity {
      */
     public static UserOrgMembershipJpaEntity create(
         Long userContextId,
-        String tenantId,  // String UUID
+        Long tenantId,  // Long FK
         Long organizationId,
         String membershipType
     ) {
@@ -167,7 +167,7 @@ public class UserOrgMembershipJpaEntity {
      *
      * @param id Membership ID
      * @param userContextId UserContext ID
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @param organizationId Organization ID
      * @param membershipType Membership 타입
      * @return 재구성된 UserOrgMembershipJpaEntity
@@ -177,7 +177,7 @@ public class UserOrgMembershipJpaEntity {
     public static UserOrgMembershipJpaEntity reconstitute(
         Long id,
         Long userContextId,
-        String tenantId,
+        Long tenantId,
         Long organizationId,
         String membershipType
     ) {
@@ -202,7 +202,7 @@ public class UserOrgMembershipJpaEntity {
         return userContextId;
     }
 
-    public String getTenantId() {
+    public Long getTenantId() {
         return tenantId;
     }
 

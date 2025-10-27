@@ -30,11 +30,11 @@ public class TenantNotFoundException extends BusinessException {
      *
      * <p>에러 메시지에 찾지 못한 Tenant ID를 포함시킵니다.</p>
      *
-     * @param tenantId 찾지 못한 Tenant ID
+     * @param tenantId 찾지 못한 Tenant ID (Long - Tenant PK 타입과 일치)
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public TenantNotFoundException(String tenantId) {
+    public TenantNotFoundException(Long tenantId) {
         super(
             TenantErrorCode.TENANT_NOT_FOUND,
             "Tenant not found: " + tenantId

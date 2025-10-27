@@ -22,33 +22,40 @@ package com.ryuqq.fileflow.application.iam.tenant.dto.command;
  * <p><strong>사용 예시:</strong></p>
  * <pre>{@code
  * UpdateTenantStatusCommand command = new UpdateTenantStatusCommand(
- *     "tenant-id-123",
+ *     1L,
  *     "SUSPENDED"
  * );
  * updateTenantStatusUseCase.execute(command);
  * }</pre>
  *
- * @param tenantId Tenant ID
+ * <p><strong>Option B 변경:</strong></p>
+ * <ul>
+ *   <li>변경 전: tenantId는 String (UUID)</li>
+ *   <li>변경 후: tenantId는 Long (AUTO_INCREMENT)</li>
+ *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+ * </ul>
+ *
+ * @param tenantId Tenant ID (Long - AUTO_INCREMENT)
  * @param status 변경할 상태 (ACTIVE, SUSPENDED)
  * @author ryu-qqq
  * @since 2025-10-23
  */
 public record UpdateTenantStatusCommand(
-    String tenantId,
+    Long tenantId,
     String status
 ) {
     /**
      * Constructor - Validation
      *
-     * @param tenantId Tenant ID
+     * @param tenantId Tenant ID (Long)
      * @param status 변경할 상태
-     * @throws IllegalArgumentException tenantId 또는 status가 null/blank인 경우
+     * @throws IllegalArgumentException tenantId가 null이거나 0 이하이거나, status가 null/blank인 경우
      * @author ryu-qqq
      * @since 2025-10-23
      */
     public UpdateTenantStatusCommand {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
         if (status == null || status.isBlank()) {
             throw new IllegalArgumentException("상태는 필수입니다");

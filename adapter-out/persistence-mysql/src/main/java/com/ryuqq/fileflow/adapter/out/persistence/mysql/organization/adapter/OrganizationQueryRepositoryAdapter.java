@@ -85,7 +85,7 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
     /**
      * Organization 목록 조회 (Offset-based Pagination)
      *
-     * @param tenantId Tenant ID 필터 (String - Tenant PK 타입과 일치, null 허용)
+     * @param tenantId Tenant ID 필터 (Long - Tenant PK 타입과 일치, null 허용)
      * @param orgCodeContains 조직 코드 검색어 (부분 일치, null 허용)
      * @param nameContains 이름 검색어 (부분 일치, null 허용)
      * @param deleted 삭제 여부 필터 (null이면 전체 조회)
@@ -97,7 +97,7 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
      */
     @Override
     public List<Organization> findAllWithOffset(
-        String tenantId,
+        Long tenantId,
         String orgCodeContains,
         String nameContains,
         Boolean deleted,
@@ -125,7 +125,7 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
     /**
      * Organization 목록 총 개수 조회
      *
-     * @param tenantId Tenant ID 필터 (String - Tenant PK 타입과 일치, null 허용)
+     * @param tenantId Tenant ID 필터 (Long - Tenant PK 타입과 일치, null 허용)
      * @param orgCodeContains 조직 코드 검색어 (부분 일치, null 허용)
      * @param nameContains 이름 검색어 (부분 일치, null 허용)
      * @param deleted 삭제 여부 필터 (null이면 전체 조회)
@@ -135,7 +135,7 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
      */
     @Override
     public long countAll(
-        String tenantId,
+        Long tenantId,
         String orgCodeContains,
         String nameContains,
         Boolean deleted
@@ -160,7 +160,7 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
      * <p>Cursor는 Base64로 인코딩된 "createdAt|id" 복합 키입니다.
      * Organization ID는 Long이므로 순차적이지만, 일관성을 위해 createdAt + id 복합 정렬을 사용합니다.</p>
      *
-     * @param tenantId Tenant ID 필터 (String - Tenant PK 타입과 일치, null 허용)
+     * @param tenantId Tenant ID 필터 (Long - Tenant PK 타입과 일치, null 허용)
      * @param orgCodeContains 조직 코드 검색어 (부분 일치, null 허용)
      * @param nameContains 이름 검색어 (부분 일치, null 허용)
      * @param deleted 삭제 여부 필터 (null이면 전체 조회)
@@ -172,7 +172,7 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
      */
     @Override
     public List<Organization> findAllWithCursor(
-        String tenantId,
+        Long tenantId,
         String orgCodeContains,
         String nameContains,
         Boolean deleted,
@@ -207,13 +207,13 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
     /**
      * Tenant ID 일치 조건
      *
-     * @param tenantId Tenant ID (String - Tenant PK 타입과 일치, null이면 조건 제외)
+     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치, null이면 조건 제외)
      * @return BooleanExpression
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    private BooleanExpression eqTenantId(String tenantId) {
-        if (tenantId == null || tenantId.isBlank()) {
+    private BooleanExpression eqTenantId(Long tenantId) {
+        if (tenantId == null || tenantId <= 0) {
             return null;
         }
         return organizationJpaEntity.tenantId.eq(tenantId);

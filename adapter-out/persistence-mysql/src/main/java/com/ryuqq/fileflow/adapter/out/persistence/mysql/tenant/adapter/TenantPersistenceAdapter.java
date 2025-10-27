@@ -107,7 +107,7 @@ public class TenantPersistenceAdapter implements TenantRepositoryPort {
             throw new IllegalArgumentException("TenantId must not be null");
         }
 
-        String idValue = id.value();
+        Long idValue = id.value();
 
         return tenantJpaRepository.findByIdAndDeletedIsFalse(idValue)
             .map(TenantEntityMapper::toDomain);
@@ -164,7 +164,7 @@ public class TenantPersistenceAdapter implements TenantRepositoryPort {
             throw new IllegalArgumentException("TenantId must not be null");
         }
 
-        String idValue = id.value();
+        Long idValue = id.value();
 
         tenantJpaRepository.deleteById(idValue);
     }

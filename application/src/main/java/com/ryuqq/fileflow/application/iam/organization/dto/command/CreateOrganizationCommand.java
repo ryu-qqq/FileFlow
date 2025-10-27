@@ -12,23 +12,23 @@ package com.ryuqq.fileflow.application.iam.organization.dto.command;
  *   <li>✅ Pure Java (Lombok 금지)</li>
  *   <li>✅ Command 접미사 사용</li>
  *   <li>✅ 도메인 객체와 분리 (Assembler 변환 필수)</li>
- *   <li>✅ String FK 전략 - Tenant ID를 String으로 전달 (Tenant PK 타입과 일치)</li>
+ *   <li>✅ Long FK 전략 - Tenant ID를 Long으로 전달 (Tenant PK 타입과 일치)</li>
  * </ul>
  *
  * <p><strong>사용 예시:</strong></p>
  * <pre>{@code
- * CreateOrganizationCommand command = new CreateOrganizationCommand("tenant-uuid-123", "ORG001", "Engineering Dept");
+ * CreateOrganizationCommand command = new CreateOrganizationCommand(123L, "ORG001", "Engineering Dept");
  * OrganizationResponse response = createOrganizationUseCase.execute(command);
  * }</pre>
  *
- * @param tenantId 소속 Tenant ID (필수, String - Tenant PK 타입과 일치)
+ * @param tenantId 소속 Tenant ID (필수, Long - Tenant PK 타입과 일치)
  * @param orgCode 조직 코드 (필수, 빈 문자열 불가)
  * @param name 조직 이름 (필수, 빈 문자열 불가)
  * @author ryu-qqq
  * @since 2025-10-22
  */
 public record CreateOrganizationCommand(
-    String tenantId,
+    Long tenantId,
     String orgCode,
     String name
 ) {
@@ -42,8 +42,8 @@ public record CreateOrganizationCommand(
      * @since 2025-10-22
      */
     public CreateOrganizationCommand {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
         if (orgCode == null || orgCode.isBlank()) {
             throw new IllegalArgumentException("조직 코드는 필수입니다");

@@ -30,6 +30,7 @@ dependencies {
 
     // Outbound
     implementation(project(":adapter-out:persistence-mysql"))
+    implementation(project(":adapter-out:abac-cel"))
 
 
     // ========================================
