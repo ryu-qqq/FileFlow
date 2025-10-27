@@ -50,7 +50,7 @@ public final class TenantFixtures {
      */
     public static Tenant activeTenant() {
         return Tenant.of(
-            TenantId.of(UUID.randomUUID().toString()),
+            TenantId.of(1L),
             TenantName.of("Test Company")
         );
     }
@@ -65,7 +65,7 @@ public final class TenantFixtures {
      */
     public static Tenant activeTenantWithName(String name) {
         return Tenant.of(
-            TenantId.of(UUID.randomUUID().toString()),
+            TenantId.of(1L),
             TenantName.of(name)
         );
     }
@@ -78,7 +78,7 @@ public final class TenantFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Tenant activeTenantWithId(String tenantIdValue) {
+    public static Tenant activeTenantWithId(Long tenantIdValue) {
         return Tenant.of(
             TenantId.of(tenantIdValue),
             TenantName.of("Test Company")
@@ -94,7 +94,7 @@ public final class TenantFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Tenant activeTenantWithIdAndName(String tenantIdValue, String name) {
+    public static Tenant activeTenantWithIdAndName(Long tenantIdValue, String name) {
         return Tenant.of(
             TenantId.of(tenantIdValue),
             TenantName.of(name)
@@ -110,7 +110,7 @@ public final class TenantFixtures {
      */
     public static Tenant suspendedTenant() {
         return Tenant.reconstitute(
-            TenantId.of(UUID.randomUUID().toString()),
+            TenantId.of(1L),
             TenantName.of("Suspended Company"),
             TenantStatus.SUSPENDED,
             LocalDateTime.now().minusDays(30),
@@ -129,7 +129,7 @@ public final class TenantFixtures {
      */
     public static Tenant suspendedTenantWithName(String name) {
         return Tenant.reconstitute(
-            TenantId.of(UUID.randomUUID().toString()),
+            TenantId.of(1L),
             TenantName.of(name),
             TenantStatus.SUSPENDED,
             LocalDateTime.now().minusDays(30),
@@ -147,7 +147,7 @@ public final class TenantFixtures {
      */
     public static Tenant deletedTenant() {
         return Tenant.reconstitute(
-            TenantId.of(UUID.randomUUID().toString()),
+            TenantId.of(1L),
             TenantName.of("Deleted Company"),
             TenantStatus.SUSPENDED,
             LocalDateTime.now().minusDays(60),
@@ -166,7 +166,7 @@ public final class TenantFixtures {
      */
     public static Tenant deletedTenantWithName(String name) {
         return Tenant.reconstitute(
-            TenantId.of(UUID.randomUUID().toString()),
+            TenantId.of(1L),
             TenantName.of(name),
             TenantStatus.SUSPENDED,
             LocalDateTime.now().minusDays(60),
@@ -187,7 +187,7 @@ public final class TenantFixtures {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static Tenant tenantWithClock(String tenantIdValue, String name, Clock clock) {
+    public static Tenant tenantWithClock(Long tenantIdValue, String name, Clock clock) {
         // Package-private 생성자 접근 (같은 패키지가 아니므로 reconstitute 사용)
         return Tenant.reconstitute(
             TenantId.of(tenantIdValue),
@@ -215,7 +215,7 @@ public final class TenantFixtures {
      * @since 2025-10-22
      */
     public static Tenant customTenant(
-        String tenantIdValue,
+        Long tenantIdValue,
         String name,
         TenantStatus status,
         LocalDateTime createdAt,
@@ -242,7 +242,7 @@ public final class TenantFixtures {
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    public static Tenant suspendedTenantWithId(String tenantIdValue) {
+    public static Tenant suspendedTenantWithId(Long tenantIdValue) {
         return Tenant.reconstitute(
             TenantId.of(tenantIdValue),
             TenantName.of("Suspended Company"),
@@ -263,7 +263,7 @@ public final class TenantFixtures {
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    public static Tenant deletedTenantWithId(String tenantIdValue) {
+    public static Tenant deletedTenantWithId(Long tenantIdValue) {
         return Tenant.reconstitute(
             TenantId.of(tenantIdValue),
             TenantName.of("Deleted Company"),

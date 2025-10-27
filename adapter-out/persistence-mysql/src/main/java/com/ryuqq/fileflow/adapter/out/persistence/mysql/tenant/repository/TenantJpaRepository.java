@@ -15,6 +15,7 @@ import java.util.Optional;
  * <h3>설계 원칙</h3>
  * <ul>
  *   <li>✅ Spring Data JPA 인터페이스 (구현체 자동 생성)</li>
+ *   <li>✅ Long PK 전략 (AUTO_INCREMENT)</li>
  *   <li>✅ 소프트 삭제 고려 (deleted=false 조건 추가)</li>
  *   <li>✅ 메서드 네이밍 규칙 준수 (Spring Data JPA Query Methods)</li>
  *   <li>❌ {@code @Repository} 어노테이션 불필요 (JpaRepository 상속 시 자동)</li>
@@ -23,17 +24,17 @@ import java.util.Optional;
  *
  * @since 1.0.0
  */
-public interface TenantJpaRepository extends JpaRepository<TenantJpaEntity, String> {
+public interface TenantJpaRepository extends JpaRepository<TenantJpaEntity, Long> {
 
     /**
      * ID로 활성 Tenant 조회
      *
      * <p>소프트 삭제되지 않은 Tenant만 조회합니다.</p>
      *
-     * @param id Tenant ID
+     * @param id Tenant ID (Long - AUTO_INCREMENT PK)
      * @return Tenant Entity (삭제되었거나 존재하지 않으면 {@code Optional.empty()})
      */
-    Optional<TenantJpaEntity> findByIdAndDeletedIsFalse(String id);
+    Optional<TenantJpaEntity> findByIdAndDeletedIsFalse(Long id);
 
     /**
      * 모든 활성 Tenant 조회

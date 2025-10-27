@@ -19,8 +19,8 @@ import java.time.LocalDateTime;
  * <pre>
  * RoleAssignedEvent event = RoleAssignedEvent.of(
  *     123L,                          // userId
- *     "tenant-1",                    // tenantId
- *     456L,                          // organizationId
+ *     456L,                          // tenantId (Long - Tenant PK 타입과 일치)
+ *     789L,                          // organizationId
  *     MembershipType.EMPLOYEE        // membershipType (Role)
  * );
  * eventPublisher.publishEvent(event);
@@ -35,7 +35,7 @@ import java.time.LocalDateTime;
  * </ul>
  *
  * @param userId 사용자 ID
- * @param tenantId 테넌트 ID
+ * @param tenantId 테넌트 ID (Long - Tenant PK 타입과 일치)
  * @param organizationId 조직 ID
  * @param membershipType Role 타입 (EMPLOYEE, MANAGER, ADMIN 등)
  * @param occurredAt 이벤트 발생 시각
@@ -44,7 +44,7 @@ import java.time.LocalDateTime;
  */
 public record RoleAssignedEvent(
     Long userId,
-    String tenantId,
+    Long tenantId,
     Long organizationId,
     String membershipType,
     LocalDateTime occurredAt
@@ -61,8 +61,8 @@ public record RoleAssignedEvent(
         if (userId == null || userId < 0) {
             throw new IllegalArgumentException("userId는 필수이며 0 이상이어야 합니다");
         }
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("tenantId는 필수입니다");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("tenantId는 필수이며 0보다 큰 양수여야 합니다");
         }
         if (organizationId == null || organizationId < 0) {
             throw new IllegalArgumentException("organizationId는 필수이며 0 이상이어야 합니다");
@@ -79,7 +79,7 @@ public record RoleAssignedEvent(
      * Static Factory Method - 현재 시각으로 이벤트 생성
      *
      * @param userId 사용자 ID
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (Long - Tenant PK 타입과 일치)
      * @param organizationId 조직 ID
      * @param membershipType Role 타입
      * @return RoleAssignedEvent 인스턴스
@@ -89,7 +89,7 @@ public record RoleAssignedEvent(
      */
     public static RoleAssignedEvent of(
         Long userId,
-        String tenantId,
+        Long tenantId,
         Long organizationId,
         String membershipType
     ) {

@@ -15,14 +15,14 @@ import java.time.LocalDateTime;
  *   <li>✅ ApiResponse 접미사 사용</li>
  *   <li>✅ Application DTO와 분리 (Mapper 변환 필수)</li>
  *   <li>✅ JSON 직렬화 친화적 구조</li>
- *   <li>✅ String FK 전략 - Tenant ID를 String으로 반환 (Tenant PK 타입과 일치)</li>
+ *   <li>✅ Long FK 전략 - Tenant ID를 Long으로 반환 (Tenant PK 타입과 일치)</li>
  * </ul>
  *
  * <p><strong>사용 예시:</strong></p>
  * <pre>{@code
  * {
  *   "organizationId": 1,
- *   "tenantId": "tenant-uuid-123",
+ *   "tenantId": 123,
  *   "orgCode": "ORG001",
  *   "name": "Engineering Department",
  *   "deleted": false,
@@ -32,7 +32,7 @@ import java.time.LocalDateTime;
  * }</pre>
  *
  * @param organizationId Organization ID
- * @param tenantId 소속 Tenant ID (String - Tenant PK 타입과 일치)
+ * @param tenantId 소속 Tenant ID (Long - Tenant PK 타입과 일치)
  * @param orgCode 조직 코드
  * @param name 조직 이름
  * @param deleted 삭제 여부
@@ -43,7 +43,7 @@ import java.time.LocalDateTime;
  */
 public record OrganizationApiResponse(
     Long organizationId,
-    String tenantId,
+    Long tenantId,
     String orgCode,
     String name,
     boolean deleted,

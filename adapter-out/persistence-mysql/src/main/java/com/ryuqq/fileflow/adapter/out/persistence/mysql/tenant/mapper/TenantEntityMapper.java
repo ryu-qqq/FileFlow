@@ -90,7 +90,8 @@ public final class TenantEntityMapper {
         }
 
         // Value Object → 원시 타입 (Law of Demeter 준수)
-        String id = tenant.getIdValue();
+        // Option B: id 타입 String → Long
+        Long id = tenant.getIdValue();
         String name = tenant.getNameValue();
 
         // Tenant는 항상 ID를 가지므로 reconstitute 사용 - Status 그대로 전달

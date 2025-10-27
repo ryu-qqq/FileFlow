@@ -46,7 +46,7 @@ public interface OrganizationQueryRepositoryPort {
      * <p>검색 조건에 맞는 Organization 목록을 조회합니다.</p>
      * <p>COUNT 쿼리가 별도로 실행되므로 totalElements 계산이 가능합니다.</p>
      *
-     * @param tenantId Tenant ID 필터 (String - Tenant PK 타입과 일치, null 허용)
+     * @param tenantId Tenant ID 필터 (Long - Tenant PK 타입과 일치, null 허용)
      * @param orgCodeContains 조직 코드 검색어 (부분 일치, null 허용)
      * @param nameContains 이름 검색어 (부분 일치, null 허용)
      * @param deleted 삭제 여부 필터 (null이면 전체 조회)
@@ -57,7 +57,7 @@ public interface OrganizationQueryRepositoryPort {
      * @since 2025-10-23
      */
     List<Organization> findAllWithOffset(
-        String tenantId,
+        Long tenantId,
         String orgCodeContains,
         String nameContains,
         Boolean deleted,
@@ -71,7 +71,7 @@ public interface OrganizationQueryRepositoryPort {
      * <p>검색 조건에 맞는 전체 개수를 반환합니다.</p>
      * <p>Offset-based Pagination에서 totalElements 계산에 사용됩니다.</p>
      *
-     * @param tenantId Tenant ID 필터 (String - Tenant PK 타입과 일치, null 허용)
+     * @param tenantId Tenant ID 필터 (Long - Tenant PK 타입과 일치, null 허용)
      * @param orgCodeContains 조직 코드 검색어 (부분 일치, null 허용)
      * @param nameContains 이름 검색어 (부분 일치, null 허용)
      * @param deleted 삭제 여부 필터 (null이면 전체 조회)
@@ -80,7 +80,7 @@ public interface OrganizationQueryRepositoryPort {
      * @since 2025-10-23
      */
     long countAll(
-        String tenantId,
+        Long tenantId,
         String orgCodeContains,
         String nameContains,
         Boolean deleted
@@ -93,7 +93,7 @@ public interface OrganizationQueryRepositoryPort {
      * <p>COUNT 쿼리가 실행되지 않으므로 성능이 우수합니다.</p>
      * <p>다음 페이지 존재 여부 확인을 위해 limit + 1개를 조회합니다.</p>
      *
-     * @param tenantId Tenant ID 필터 (String - Tenant PK 타입과 일치, null 허용)
+     * @param tenantId Tenant ID 필터 (Long - Tenant PK 타입과 일치, null 허용)
      * @param orgCodeContains 조직 코드 검색어 (부분 일치, null 허용)
      * @param nameContains 이름 검색어 (부분 일치, null 허용)
      * @param deleted 삭제 여부 필터 (null이면 전체 조회)
@@ -104,7 +104,7 @@ public interface OrganizationQueryRepositoryPort {
      * @since 2025-10-23
      */
     List<Organization> findAllWithCursor(
-        String tenantId,
+        Long tenantId,
         String orgCodeContains,
         String nameContains,
         Boolean deleted,

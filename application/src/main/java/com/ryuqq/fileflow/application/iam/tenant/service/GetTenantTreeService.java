@@ -101,11 +101,11 @@ public class GetTenantTreeService implements GetTenantTreeUseCase {
             .orElseThrow(() -> new TenantNotFoundException(query.tenantId()));
 
         // 2. Tenant에 속한 Organization 목록 조회
-        String tenantId = tenant.getIdValue();
+        Long tenantId = tenant.getIdValue();
         Boolean deletedFilter = query.includeDeleted() ? null : false;
 
         List<Organization> organizations = organizationQueryRepositoryPort.findAllWithOffset(
-            tenantId,                    // tenantId filter (String - Tenant PK 타입과 일치)
+            tenantId,                    // tenantId filter (Long - Tenant PK 타입과 일치)
             null,                        // orgCodeContains (전체 조회)
             null,                        // nameContains (전체 조회)
             deletedFilter,               // deleted (null = 전체, false = 활성만)

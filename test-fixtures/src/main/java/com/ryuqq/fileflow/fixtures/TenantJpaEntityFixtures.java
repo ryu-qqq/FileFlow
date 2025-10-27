@@ -50,8 +50,8 @@ public final class TenantJpaEntityFixtures {
     /**
      * 기본 활성 Tenant Entity를 생성합니다.
      *
-     * <p>랜덤 UUID를 ID로 사용하고, "Test Company"를 이름으로 사용합니다.</p>
-     * <p>신규 Entity로 생성되므로 JPA의 {@code create()} 메서드를 사용합니다.</p>
+     * <p>"Test Company"를 이름으로 사용합니다.</p>
+     * <p>신규 Entity로 생성되므로 JPA의 {@code create()} 메서드를 사용합니다 (ID는 DB에서 자동 생성).</p>
      *
      * @return ACTIVE 상태의 TenantJpaEntity
      * @author ryu-qqq
@@ -59,7 +59,6 @@ public final class TenantJpaEntityFixtures {
      */
     public static TenantJpaEntity activeTenantEntity() {
         return TenantJpaEntity.create(
-            UUID.randomUUID().toString(),
             "Test Company",
             LocalDateTime.now().minusDays(1)
         );
@@ -70,33 +69,39 @@ public final class TenantJpaEntityFixtures {
      *
      * <p>테스트에서 특정 ID가 필요한 경우 사용합니다.</p>
      *
-     * @param id Tenant ID 값 (UUID 문자열)
+     * @param id Tenant ID 값 (Long AUTO_INCREMENT)
      * @return ACTIVE 상태의 TenantJpaEntity
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static TenantJpaEntity tenantEntityWithId(String id) {
-        return TenantJpaEntity.create(
+    public static TenantJpaEntity tenantEntityWithId(Long id) {
+        return TenantJpaEntity.reconstitute(
             id,
             "Test Company",
-            LocalDateTime.now().minusDays(1)
+            TenantStatus.ACTIVE,
+            LocalDateTime.now().minusDays(1),
+            LocalDateTime.now().minusDays(1),
+            false
         );
     }
 
     /**
      * 특정 ID와 이름을 가진 활성 Tenant Entity를 생성합니다.
      *
-     * @param id Tenant ID 값
+     * @param id Tenant ID 값 (Long AUTO_INCREMENT)
      * @param name Tenant 이름
      * @return ACTIVE 상태의 TenantJpaEntity
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static TenantJpaEntity activeTenantEntityWithIdAndName(String id, String name) {
-        return TenantJpaEntity.create(
+    public static TenantJpaEntity activeTenantEntityWithIdAndName(Long id, String name) {
+        return TenantJpaEntity.reconstitute(
             id,
             name,
-            LocalDateTime.now().minusDays(1)
+            TenantStatus.ACTIVE,
+            LocalDateTime.now().minusDays(1),
+            LocalDateTime.now().minusDays(1),
+            false
         );
     }
 
@@ -111,7 +116,7 @@ public final class TenantJpaEntityFixtures {
      */
     public static TenantJpaEntity suspendedTenantEntity() {
         return TenantJpaEntity.reconstitute(
-            UUID.randomUUID().toString(),
+            1L,
             "Suspended Company",
             TenantStatus.SUSPENDED,
             LocalDateTime.now().minusDays(30),
@@ -128,7 +133,7 @@ public final class TenantJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static TenantJpaEntity suspendedTenantEntityWithId(String id) {
+    public static TenantJpaEntity suspendedTenantEntityWithId(Long id) {
         return TenantJpaEntity.reconstitute(
             id,
             "Suspended Company",
@@ -150,7 +155,7 @@ public final class TenantJpaEntityFixtures {
      */
     public static TenantJpaEntity deletedTenantEntity() {
         return TenantJpaEntity.reconstitute(
-            UUID.randomUUID().toString(),
+            1L,
             "Deleted Company",
             TenantStatus.SUSPENDED,
             LocalDateTime.now().minusDays(60),
@@ -167,7 +172,7 @@ public final class TenantJpaEntityFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static TenantJpaEntity deletedTenantEntityWithId(String id) {
+    public static TenantJpaEntity deletedTenantEntityWithId(Long id) {
         return TenantJpaEntity.reconstitute(
             id,
             "Deleted Company",
@@ -188,7 +193,7 @@ public final class TenantJpaEntityFixtures {
      */
     public static TenantJpaEntity deletedTenantEntityWithName(String name) {
         return TenantJpaEntity.reconstitute(
-            UUID.randomUUID().toString(),
+            1L,
             name,
             TenantStatus.SUSPENDED,
             LocalDateTime.now().minusDays(60),
@@ -213,7 +218,7 @@ public final class TenantJpaEntityFixtures {
      * @since 2025-10-23
      */
     public static TenantJpaEntity customTenantEntity(
-        String id,
+        Long id,
         String name,
         TenantStatus status,
         LocalDateTime createdAt,
@@ -240,7 +245,7 @@ public final class TenantJpaEntityFixtures {
 
         for (int i = 0; i < count; i++) {
             TenantJpaEntity entity = TenantJpaEntity.reconstitute(
-                UUID.randomUUID().toString(),
+                1L,
                 "Test Company " + (i + 1),
                 TenantStatus.ACTIVE,
                 baseTime.minusHours(count - i),
@@ -269,7 +274,7 @@ public final class TenantJpaEntityFixtures {
 
         for (int i = 0; i < count; i++) {
             TenantJpaEntity entity = TenantJpaEntity.reconstitute(
-                UUID.randomUUID().toString(),
+                1L,
                 "Suspended Company " + (i + 1),
                 TenantStatus.SUSPENDED,
                 baseTime.minusDays(count - i),
@@ -298,7 +303,7 @@ public final class TenantJpaEntityFixtures {
 
         for (int i = 0; i < count; i++) {
             TenantJpaEntity entity = TenantJpaEntity.reconstitute(
-                UUID.randomUUID().toString(),
+                1L,
                 "Deleted Company " + (i + 1),
                 TenantStatus.SUSPENDED,
                 baseTime.minusDays(count - i),

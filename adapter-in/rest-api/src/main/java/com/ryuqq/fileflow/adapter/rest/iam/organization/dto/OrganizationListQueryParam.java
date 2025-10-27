@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.adapter.rest.iam.organization.dto;
 import com.ryuqq.fileflow.application.iam.organization.dto.query.GetOrganizationsQuery;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 
 /**
  * OrganizationListQueryParam - Organization 목록 조회 Query Parameter DTO
@@ -12,8 +12,8 @@ import jakarta.validation.constraints.Pattern;
  *
  * <p><strong>사용 예시:</strong></p>
  * <pre>{@code
- * GET /api/v1/organizations?page=0&size=20&tenantId=tenant-uuid-123&orgCodeContains=ORG&nameContains=test&deleted=false
- * → OrganizationListQueryParam(page=0, size=20, cursor=null, tenantId="tenant-uuid-123", orgCodeContains="ORG", nameContains="test", deleted=false)
+ * GET /api/v1/organizations?page=0&size=20&tenantId=123&orgCodeContains=ORG&nameContains=test&deleted=false
+ * → OrganizationListQueryParam(page=0, size=20, cursor=null, tenantId=123, orgCodeContains="ORG", nameContains="test", deleted=false)
  * }</pre>
  *
  * <p><strong>Pagination 전략:</strong></p>
@@ -26,7 +26,7 @@ import jakarta.validation.constraints.Pattern;
  * <ul>
  *   <li>page: 0 이상</li>
  *   <li>size: 1~100 사이</li>
- *   <li>tenantId: 빈 문자열 불가 (String - Tenant PK 타입과 일치)</li>
+ *   <li>tenantId: 양수 (Long - Tenant PK 타입과 일치)</li>
  * </ul>
  *
  * <p><strong>Zero-Tolerance 규칙 준수:</strong></p>
@@ -34,13 +34,13 @@ import jakarta.validation.constraints.Pattern;
  *   <li>✅ Pure Java (Lombok 금지)</li>
  *   <li>✅ Record 사용 (Immutable)</li>
  *   <li>✅ Validation 어노테이션 적용</li>
- *   <li>✅ String FK 전략 - tenantId를 String으로 사용 (Tenant PK 타입과 일치)</li>
+ *   <li>✅ Long FK 전략 - tenantId를 Long으로 사용 (Tenant PK 타입과 일치)</li>
  * </ul>
  *
  * @param page 페이지 번호 (0-based, Offset-based 전용)
  * @param size 페이지 크기 (기본값: 20)
  * @param cursor 커서 값 (Base64 인코딩, Cursor-based 전용)
- * @param tenantId Tenant ID 필터 (String - Tenant PK 타입과 일치)
+ * @param tenantId Tenant ID 필터 (Long - Tenant PK 타입과 일치)
  * @param orgCodeContains 조직 코드 필터 (부분 일치)
  * @param nameContains 이름 필터 (부분 일치)
  * @param deleted 삭제 여부 필터 (null: 전체, true: 삭제된 것만, false: 활성만)
@@ -57,8 +57,8 @@ public record OrganizationListQueryParam(
 
     String cursor,
 
-    @Pattern(regexp = "^(?!\\s*$).+", message = "Tenant ID는 빈 문자열일 수 없습니다")
-    String tenantId,
+    @Positive(message = "Tenant ID는 양수여야 합니다")
+    Long tenantId,
 
     String orgCodeContains,
     String nameContains,

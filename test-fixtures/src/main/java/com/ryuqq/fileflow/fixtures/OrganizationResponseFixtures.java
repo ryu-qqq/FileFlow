@@ -46,7 +46,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationResponse organizationResponse(String tenantId) {
+    public static OrganizationResponse organizationResponse(Long tenantId) {
         return new OrganizationResponse(
             1L,
             tenantId,
@@ -70,7 +70,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationResponse organizationResponse(Long organizationId, String tenantId, String orgCode, String name) {
+    public static OrganizationResponse organizationResponse(Long organizationId, Long tenantId, String orgCode, String name) {
         return new OrganizationResponse(
             organizationId,
             tenantId,
@@ -98,7 +98,7 @@ public final class OrganizationResponseFixtures {
      */
     public static OrganizationResponse organizationResponse(
         Long organizationId,
-        String tenantId,
+        Long tenantId,
         String orgCode,
         String name,
         String status,
@@ -124,7 +124,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationResponse salesOrganizationResponse(String tenantId) {
+    public static OrganizationResponse salesOrganizationResponse(Long tenantId) {
         return new OrganizationResponse(
             1L,
             tenantId,
@@ -145,7 +145,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationResponse hrOrganizationResponse(String tenantId) {
+    public static OrganizationResponse hrOrganizationResponse(Long tenantId) {
         return new OrganizationResponse(
             2L,
             tenantId,
@@ -166,7 +166,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationResponse itOrganizationResponse(String tenantId) {
+    public static OrganizationResponse itOrganizationResponse(Long tenantId) {
         return new OrganizationResponse(
             3L,
             tenantId,
@@ -187,7 +187,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationResponse inactiveOrganizationResponse(String tenantId) {
+    public static OrganizationResponse inactiveOrganizationResponse(Long tenantId) {
         return new OrganizationResponse(
             999L,
             tenantId,
@@ -208,7 +208,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static OrganizationResponse deletedOrganizationResponse(String tenantId) {
+    public static OrganizationResponse deletedOrganizationResponse(Long tenantId) {
         return new OrganizationResponse(
             999L,
             tenantId,
@@ -232,7 +232,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static List<OrganizationResponse> organizationResponseList(String tenantId, int count) {
+    public static List<OrganizationResponse> organizationResponseList(Long tenantId, int count) {
         List<OrganizationResponse> responses = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             responses.add(new OrganizationResponse(
@@ -258,7 +258,7 @@ public final class OrganizationResponseFixtures {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static List<OrganizationResponse> inactiveOrganizationResponseList(String tenantId, int count) {
+    public static List<OrganizationResponse> inactiveOrganizationResponseList(Long tenantId, int count) {
         List<OrganizationResponse> responses = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             responses.add(new OrganizationResponse(

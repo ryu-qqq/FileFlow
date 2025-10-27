@@ -13,7 +13,7 @@ import java.util.List;
  * <pre>{@code
  * GET /api/v1/tenants/{tenantId}/tree
  * {
- *   "tenantId": "tenant-123",
+ *   "tenantId": 123,
  *   "name": "MyTenant",
  *   "status": "ACTIVE",
  *   "organizationCount": 5,
@@ -34,7 +34,14 @@ import java.util.List;
  *   <li>✅ 도메인 객체와 분리</li>
  * </ul>
  *
- * @param tenantId Tenant ID
+ * <p><strong>Option B 변경:</strong></p>
+ * <ul>
+ *   <li>변경 전: tenantId는 String (UUID)</li>
+ *   <li>변경 후: tenantId는 Long (AUTO_INCREMENT)</li>
+ *   <li>이유: Settings.contextId (BIGINT)와 타입 일관성 확보</li>
+ * </ul>
+ *
+ * @param tenantId Tenant ID (Long - AUTO_INCREMENT)
  * @param name Tenant 이름
  * @param status Tenant 상태 (ACTIVE, SUSPENDED)
  * @param deleted 삭제 여부
@@ -46,7 +53,7 @@ import java.util.List;
  * @since 2025-10-23
  */
 public record TenantTreeResponse(
-    String tenantId,
+    Long tenantId,
     String name,
     String status,
     boolean deleted,
@@ -108,8 +115,8 @@ public record TenantTreeResponse(
      * @since 2025-10-23
      */
     public TenantTreeResponse {
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Tenant 이름은 필수입니다");

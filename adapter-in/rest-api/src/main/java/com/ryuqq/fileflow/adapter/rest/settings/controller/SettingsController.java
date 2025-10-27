@@ -1,16 +1,21 @@
 package com.ryuqq.fileflow.adapter.rest.settings.controller;
 
 import com.ryuqq.fileflow.adapter.rest.common.dto.ApiResponse;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.CreateSettingRequest;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.CreateSettingResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.MergedSettingsApiResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingRequest;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingResponse;
 import com.ryuqq.fileflow.adapter.rest.settings.mapper.SettingsDtoMapper;
+import com.ryuqq.fileflow.application.settings.port.in.CreateSettingUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p><strong>제공 API:</strong></p>
  * <ul>
+ *   <li>POST /api/v1/settings - 설정 생성 (201 Created)</li>
  *   <li>GET /api/v1/settings - 3레벨 병합된 설정 조회 (200 OK)</li>
  *   <li>PATCH /api/v1/settings - 특정 설정 수정 (200 OK)</li>
  * </ul>
@@ -60,6 +66,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/settings")
 public class SettingsController {
 
+    private final CreateSettingUseCase createSettingUseCase;
     private final GetMergedSettingsUseCase getMergedSettingsUseCase;
     private final UpdateSettingUseCase updateSettingUseCase;
 
@@ -68,17 +75,107 @@ public class SettingsController {
      *
      * <p>Spring의 Constructor Injection 사용 (Field Injection 금지)</p>
      *
+     * @param createSettingUseCase 설정 생성 UseCase
      * @param getMergedSettingsUseCase 3레벨 병합 설정 조회 UseCase
      * @param updateSettingUseCase 설정 수정 UseCase
      * @author ryu-qqq
-     * @since 2025-10-25
+     * @since 2025-10-26
      */
     public SettingsController(
+        CreateSettingUseCase createSettingUseCase,
         GetMergedSettingsUseCase getMergedSettingsUseCase,
         UpdateSettingUseCase updateSettingUseCase
     ) {
+        this.createSettingUseCase = createSettingUseCase;
         this.getMergedSettingsUseCase = getMergedSettingsUseCase;
         this.updateSettingUseCase = updateSettingUseCase;
+    }
+
+    /**
+     * POST /api/v1/settings - 설정 생성
+     *
+     * <p>새로운 Setting을 생성합니다.</p>
+     *
+     * <p><strong>HTTP Status Codes:</strong></p>
+     * <ul>
+     *   <li>201 Created: 설정 생성 성공</li>
+     *   <li>400 Bad Request: Validation 실패, 잘못된 SettingLevel 또는 ValueType</li>
+     *   <li>409 Conflict: 동일한 (key, level, contextId) 조합이 이미 존재</li>
+     * </ul>
+     *
+     * <p><strong>Request Example - ORG Level:</strong></p>
+     * <pre>{@code
+     * POST /api/v1/settings
+     * {
+     *   "key": "MAX_UPLOAD_SIZE",
+     *   "value": "100MB",
+     *   "level": "ORG",
+     *   "contextId": 1,
+     *   "valueType": "STRING",
+     *   "secret": false
+     * }
+     * }</pre>
+     *
+     * <p><strong>Request Example - DEFAULT Level with Secret:</strong></p>
+     * <pre>{@code
+     * POST /api/v1/settings
+     * {
+     *   "key": "API_KEY",
+     *   "value": "sk_live_abcdefg123456",
+     *   "level": "DEFAULT",
+     *   "contextId": null,
+     *   "valueType": "STRING",
+     *   "secret": true
+     * }
+     * }</pre>
+     *
+     * <p><strong>Response Example:</strong></p>
+     * <pre>{@code
+     * HTTP/1.1 201 Created
+     * {
+     *   "success": true,
+     *   "data": {
+     *     "id": 1,
+     *     "key": "MAX_UPLOAD_SIZE",
+     *     "value": "100MB",
+     *     "valueType": "STRING",
+     *     "level": "ORG",
+     *     "contextId": 1,
+     *     "secret": false,
+     *     "createdAt": "2025-10-26T10:30:00",
+     *     "updatedAt": "2025-10-26T10:30:00"
+     *   },
+     *   "error": null,
+     *   "timestamp": "2025-10-26T10:30:00"
+     * }
+     * }</pre>
+     *
+     * <p><strong>Validation 규칙:</strong></p>
+     * <ul>
+     *   <li>key: 필수, 빈 문자열 불가</li>
+     *   <li>value: 필수, 빈 문자열 불가</li>
+     *   <li>level: 필수, "ORG", "TENANT", "DEFAULT" 중 하나</li>
+     *   <li>contextId: ORG/TENANT 레벨은 필수, DEFAULT는 null</li>
+     *   <li>valueType: 선택, null이면 기본값 "STRING"</li>
+     *   <li>secret: 선택, null이면 기본값 false</li>
+     * </ul>
+     *
+     * @param request 설정 생성 요청 DTO
+     * @return 201 Created + ApiResponse<CreateSettingResponse> (생성된 설정 반환)
+     * @throws IllegalArgumentException level 또는 valueType이 유효하지 않은 경우 (400)
+     * @throws IllegalStateException 동일한 (key, level, contextId) 조합이 이미 존재하는 경우 (409)
+     * @author ryu-qqq
+     * @since 2025-10-26
+     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<CreateSettingResponse>> createSetting(
+        @Valid @RequestBody CreateSettingRequest request
+    ) {
+        CreateSettingUseCase.Command command = SettingsDtoMapper.toCommand(request);
+        CreateSettingUseCase.Response response = createSettingUseCase.execute(command);
+        CreateSettingResponse apiResponse = SettingsDtoMapper.toCreateResponse(response);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(ApiResponse.ofSuccess(apiResponse));
     }
 
     /**

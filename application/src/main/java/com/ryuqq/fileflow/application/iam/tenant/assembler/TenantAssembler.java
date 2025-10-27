@@ -8,7 +8,6 @@ import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantName;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * TenantAssembler - Tenant DTO ↔ Domain 변환 유틸리티
@@ -52,10 +51,16 @@ public final class TenantAssembler {
      * TenantName → Tenant Domain 변환
      *
      * <p>Command로부터 추출한 TenantName을 받아 Tenant Aggregate를 생성합니다.</p>
-     * <p>TenantId는 UUID로 자동 생성됩니다.</p>
+     *
+     * <p><strong>Option B 변경:</strong></p>
+     * <ul>
+     *   <li>변경 전: TenantId는 UUID로 Application에서 생성</li>
+     *   <li>변경 후: TenantId는 null (AUTO_INCREMENT로 DB가 생성)</li>
+     *   <li>save() 후 JPA가 자동으로 id 할당</li>
+     * </ul>
      *
      * @param tenantName TenantName Value Object (이미 검증됨)
-     * @return Tenant Domain 객체
+     * @return Tenant Domain 객체 (id는 null, save 후 할당됨)
      * @throws IllegalArgumentException tenantName이 null인 경우
      * @author ryu-qqq
      * @since 2025-10-23
@@ -65,7 +70,8 @@ public final class TenantAssembler {
             throw new IllegalArgumentException("TenantName은 필수입니다");
         }
 
-        TenantId tenantId = TenantId.of(UUID.randomUUID().toString());
+        // Option B: id는 null로 생성, save 후 AUTO_INCREMENT로 할당됨
+        TenantId tenantId = TenantId.of(null);
         return Tenant.of(tenantId, tenantName);
     }
 

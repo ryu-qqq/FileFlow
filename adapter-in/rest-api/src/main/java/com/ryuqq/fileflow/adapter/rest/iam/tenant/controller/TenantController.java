@@ -157,9 +157,9 @@ public class TenantController {
      *   <li>404 Not Found: Tenant가 존재하지 않음</li>
      * </ul>
      *
-     * <p><strong>Request Example:</strong></p>
+     * <p><strong>Request Example (Option B 변경):</strong></p>
      * <pre>{@code
-     * PATCH /api/v1/tenants/tenant-id-123
+     * PATCH /api/v1/tenants/123
      * {
      *   "name": "updated-tenant-name"
      * }
@@ -169,7 +169,7 @@ public class TenantController {
      * <pre>{@code
      * HTTP/1.1 200 OK
      * {
-     *   "tenantId": "tenant-id-123",
+     *   "tenantId": 123,
      *   "name": "updated-tenant-name",
      *   "status": "ACTIVE",
      *   "deleted": false,
@@ -178,7 +178,7 @@ public class TenantController {
      * }
      * }</pre>
      *
-     * @param tenantId Tenant ID (Path Variable)
+     * @param tenantId Tenant ID (Path Variable - Long)
      * @param request Tenant 수정 요청 DTO
      * @return 200 OK + TenantApiResponse
      * @author ryu-qqq
@@ -186,7 +186,7 @@ public class TenantController {
      */
     @PatchMapping("/{tenantId}")
     public ResponseEntity<ApiResponse<TenantApiResponse>> updateTenant(
-        @PathVariable String tenantId,
+        @PathVariable Long tenantId,
         @Valid @RequestBody UpdateTenantRequest request
     ) {
         UpdateTenantCommand command = TenantDtoMapper.toCommand(tenantId, request);
@@ -211,9 +211,9 @@ public class TenantController {
      *   <li>404 Not Found: Tenant가 존재하지 않음</li>
      * </ul>
      *
-     * <p><strong>Request Example:</strong></p>
+     * <p><strong>Request Example (Option B 변경):</strong></p>
      * <pre>{@code
-     * PATCH /api/v1/tenants/tenant-id-123/status
+     * PATCH /api/v1/tenants/123/status
      * {
      *   "status": "SUSPENDED"
      * }
@@ -223,7 +223,7 @@ public class TenantController {
      * <pre>{@code
      * HTTP/1.1 200 OK
      * {
-     *   "tenantId": "tenant-id-123",
+     *   "tenantId": 123,
      *   "name": "my-tenant",
      *   "status": "SUSPENDED",
      *   "deleted": false,
@@ -232,7 +232,7 @@ public class TenantController {
      * }
      * }</pre>
      *
-     * @param tenantId Tenant ID (Path Variable)
+     * @param tenantId Tenant ID (Path Variable - Long)
      * @param request Tenant 상태 변경 요청 DTO
      * @return 200 OK + TenantApiResponse
      * @author ryu-qqq
@@ -240,7 +240,7 @@ public class TenantController {
      */
     @PatchMapping("/{tenantId}/status")
     public ResponseEntity<ApiResponse<TenantApiResponse>> updateTenantStatus(
-        @PathVariable String tenantId,
+        @PathVariable Long tenantId,
         @Valid @RequestBody UpdateTenantStatusRequest request
     ) {
         UpdateTenantStatusCommand command = TenantDtoMapper.toCommand(tenantId, request);
@@ -310,9 +310,9 @@ public class TenantController {
      *   <li>404 Not Found: Tenant가 존재하지 않음</li>
      * </ul>
      *
-     * <p><strong>Request Example:</strong></p>
+     * <p><strong>Request Example (Option B 변경):</strong></p>
      * <pre>{@code
-     * GET /api/v1/tenants/tenant-id-123
+     * GET /api/v1/tenants/123
      * }</pre>
      *
      * <p><strong>Response Example:</strong></p>
@@ -321,7 +321,7 @@ public class TenantController {
      * {
      *   "success": true,
      *   "data": {
-     *     "tenantId": "tenant-id-123",
+     *     "tenantId": 123,
      *     "name": "my-tenant",
      *     "status": "ACTIVE",
      *     "deleted": false,
@@ -334,14 +334,14 @@ public class TenantController {
      * }
      * }</pre>
      *
-     * @param tenantId Tenant ID (Path Variable)
+     * @param tenantId Tenant ID (Path Variable - Long)
      * @return 200 OK + ApiResponse<TenantApiResponse>
      * @author ryu-qqq
      * @since 2025-10-23
      */
     @GetMapping("/{tenantId}")
     public ResponseEntity<ApiResponse<TenantApiResponse>> getTenant(
-        @PathVariable String tenantId
+        @PathVariable Long tenantId
     ) {
         GetTenantQuery query = GetTenantQuery.of(tenantId);
         TenantResponse response = tenantQueryFacade.getTenant(query);
@@ -361,10 +361,10 @@ public class TenantController {
      *   <li>404 Not Found: Tenant가 존재하지 않음</li>
      * </ul>
      *
-     * <p><strong>Request Example:</strong></p>
+     * <p><strong>Request Example (Option B 변경):</strong></p>
      * <pre>{@code
-     * GET /api/v1/tenants/tenant-id-123/tree
-     * GET /api/v1/tenants/tenant-id-123/tree?includeDeleted=true
+     * GET /api/v1/tenants/123/tree
+     * GET /api/v1/tenants/123/tree?includeDeleted=true
      * }</pre>
      *
      * <p><strong>Response Example:</strong></p>
@@ -373,7 +373,7 @@ public class TenantController {
      * {
      *   "success": true,
      *   "data": {
-     *     "tenantId": "tenant-id-123",
+     *     "tenantId": 123,
      *     "name": "my-tenant",
      *     "status": "ACTIVE",
      *     "deleted": false,
@@ -403,14 +403,14 @@ public class TenantController {
      * }
      * }</pre>
      *
-     * @param tenantId Tenant ID (Path Variable)
+     * @param tenantId Tenant ID (Path Variable - Long)
      * @return 200 OK + ApiResponse<TenantTreeResponse>
      * @author ryu-qqq
      * @since 2025-10-23
      */
     @GetMapping("/{tenantId}/tree")
     public ResponseEntity<ApiResponse<TenantTreeResponse>> getTenantTree(
-        @PathVariable String tenantId
+        @PathVariable Long tenantId
     ) {
         GetTenantTreeQuery query = GetTenantTreeQuery.of(tenantId);
         TenantTreeResponse response = tenantQueryFacade.getTenantTree(query);

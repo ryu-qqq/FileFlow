@@ -175,11 +175,11 @@ public record Membership(
      * <p>❌ Bad: membership.tenantId().value()</p>
      * <p>✅ Good: membership.getTenantIdValue()</p>
      *
-     * @return Tenant ID 원시 값
+     * @return Tenant ID 원시 값 (Long - Tenant PK 타입과 일치)
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    public String getTenantIdValue() {
+    public Long getTenantIdValue() {
         return tenantId.value();
     }
 

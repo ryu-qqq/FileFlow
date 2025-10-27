@@ -23,7 +23,7 @@ public class QTenantJpaEntity extends EntityPathBase<TenantJpaEntity> {
 
     public final BooleanPath deleted = createBoolean("deleted");
 
-    public final StringPath id = createString("id");
+    public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath name = createString("name");
 

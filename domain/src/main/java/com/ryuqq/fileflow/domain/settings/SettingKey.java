@@ -116,6 +116,36 @@ public class SettingKey {
     }
 
     /**
+     * 이 키가 비밀 설정 키인지 판단합니다.
+     *
+     * <p>특정 패턴의 키 이름은 자동으로 비밀 설정으로 간주됩니다:</p>
+     * <ul>
+     *   <li>API_KEY, API-KEY, api.key 등 (대소문자 무관)</li>
+     *   <li>PASSWORD, password 등</li>
+     *   <li>SECRET, secret 등</li>
+     *   <li>TOKEN, token 등</li>
+     *   <li>CREDENTIAL, credential 등</li>
+     * </ul>
+     *
+     * <p><strong>도메인 비즈니스 규칙:</strong></p>
+     * <p>민감한 정보를 담는 키는 자동으로 마스킹 처리되어야 합니다.</p>
+     *
+     * @return 비밀 설정 키이면 true
+     * @author ryu-qqq
+     * @since 2025-10-27
+     */
+    public boolean isSecretKey() {
+        String upperValue = this.value.toUpperCase();
+        return upperValue.contains("API_KEY") ||
+               upperValue.contains("API-KEY") ||
+               upperValue.contains("API.KEY") ||
+               upperValue.contains("PASSWORD") ||
+               upperValue.contains("SECRET") ||
+               upperValue.contains("TOKEN") ||
+               upperValue.contains("CREDENTIAL");
+    }
+
+    /**
      * 동등성을 비교합니다.
      *
      * <p>Value Object 패턴: 값이 같으면 동일한 객체</p>

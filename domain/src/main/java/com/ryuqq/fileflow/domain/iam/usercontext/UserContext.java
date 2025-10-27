@@ -362,12 +362,14 @@ public class UserContext {
      * <p>❌ Bad: userContext.getId().value()</p>
      * <p>✅ Good: userContext.getIdValue()</p>
      *
-     * @return UserContext ID 원시 값
+     * <p><strong>주의</strong>: 신규 생성 시 ID가 null이므로 null을 반환합니다.</p>
+     *
+     * @return UserContext ID 원시 값 (신규 생성 시 null)
      * @author ryu-qqq
      * @since 2025-10-24
      */
     public Long getIdValue() {
-        return id.value();
+        return id != null ? id.value() : null;
     }
 
     /**
