@@ -14,13 +14,13 @@ module "fileflow_logs" {
   retention_in_days = local.log_retention_days
   kms_key_id        = data.aws_kms_key.cloudwatch_logs.arn
 
-  tags = merge(
-    local.required_tags,
-    {
-      Name      = "logs-${local.name_prefix}"
-      Component = "logging"
-    }
-  )
+  # Required tags
+  environment = local.environment
+  service     = local.service_name
+  team        = "platform-team"
+  owner       = "platform-team@example.com"
+  cost_center = "engineering"
+  project     = "fileflow"
 }
 
 # Security Group for ECS Tasks
@@ -60,59 +60,115 @@ resource "aws_security_group" "fileflow" {
   }
 }
 
+# IAM Role for ECS Task Execution
+resource "aws_iam_role" "fileflow_execution_role" {
+  name = "${local.name_prefix}-ecs-execution-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = local.required_tags
+}
+
+resource "aws_iam_role_policy_attachment" "fileflow_execution_role_policy" {
+  role       = aws_iam_role.fileflow_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# IAM Role for ECS Task
+resource "aws_iam_role" "fileflow_task_role" {
+  name = "${local.name_prefix}-ecs-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = local.required_tags
+}
+
 # ECS Service
 module "fileflow_service" {
   source = "../../modules/ecs-service"
 
-  # Service Configuration
-  service_name   = local.service_name
-  environment    = local.environment
-  cpu            = 1024
-  memory         = 2048
-  desired_count  = 1
+  # Required variables
+  name               = local.service_name
+  cluster_id         = local.ecs_cluster_id
+  container_name     = local.container_name
+  container_port     = local.container_port
+  container_image    = "nginx:latest"
+  cpu                = 1024
+  memory             = 2048
+  desired_count      = 1
+  execution_role_arn = aws_iam_role.fileflow_execution_role.arn
+  task_role_arn      = aws_iam_role.fileflow_task_role.arn
+  subnet_ids         = local.private_subnet_ids
+  common_tags        = local.required_tags
 
-  # Container Configuration
-  container_name = local.container_name
-  container_port = local.container_port
-  container_image = "nginx:latest"
-
-  # Network Configuration
-  vpc_id             = local.vpc_id
-  private_subnet_ids = local.private_subnet_ids
+  # Security groups
   security_group_ids = [aws_security_group.fileflow.id]
 
-  # Logging Configuration
-  log_group_name  = module.fileflow_logs.name
-  log_region      = "ap-northeast-2"
+  # CloudWatch Logs
+  log_configuration = {
+    log_driver = "awslogs"
+    options = {
+      "awslogs-group"         = module.fileflow_logs.log_group_name
+      "awslogs-region"        = "ap-northeast-2"
+      "awslogs-stream-prefix" = "ecs"
+    }
+  }
 
   # Load Balancer Configuration
-  target_group_arn = module.fileflow_alb.target_group_arn
-
-  # Health Check
-  health_check_path = ""
+  load_balancer_config = {
+    target_group_arn = module.fileflow_alb.target_group_arns["fileflow"]
+    container_name   = local.container_name
+    container_port   = local.container_port
+  }
 
   # Environment Variables
-  environment_variables = {
-    ENVIRONMENT = local.environment
-    SERVICE_NAME = local.service_name
-    DB_HOST = local.db_address
-    DB_PORT = local.db_port
-  }
+  container_environment = [
+    {
+      name  = "ENVIRONMENT"
+      value = local.environment
+    },
+    {
+      name  = "SERVICE_NAME"
+      value = local.service_name
+    },
+    {
+      name  = "DB_HOST"
+      value = local.db_address
+    },
+    {
+      name  = "DB_PORT"
+      value = tostring(local.db_port)
+    }
+  ]
 
   # Secrets (injected at runtime)
-  secrets = {
-    DB_PASSWORD = data.aws_ssm_parameter.master_password_secret_name.value
-  }
-
-  tags = merge(
-    local.required_tags,
+  container_secrets = [
     {
-      Name      = "ecs-${local.name_prefix}"
-      Component = "compute"
+      name      = "DB_PASSWORD"
+      valueFrom = data.aws_ssm_parameter.master_password_secret_name.value
     }
-  )
+  ]
 
   depends_on = [
-    module.fileflow_logs
+    module.fileflow_logs,
+    aws_iam_role_policy_attachment.fileflow_execution_role_policy
   ]
 }

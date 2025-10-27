@@ -76,7 +76,8 @@ def generate_sqs_queue():
         "service_name": "fileflow",
         "environment": "prod",
         "aws_region": "ap-northeast-2",
-        "message_retention": 345600  # 4 days in seconds
+        "message_retention": 345600,  # 4 days in seconds
+        "visibility_timeout": 30  # 30 seconds
     }
 
     components = {

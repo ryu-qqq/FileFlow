@@ -20,28 +20,28 @@ output "security_group_id" {
 
 output "cloudwatch_log_group_name" {
   description = "CloudWatch log group name"
-  value       = module.fileflow_logs.name
+  value       = module.fileflow_logs.log_group_name
 }
 
 output "cloudwatch_log_group_arn" {
   description = "CloudWatch log group ARN"
-  value       = module.fileflow_logs.arn
+  value       = module.fileflow_logs.log_group_arn
 }
 
 # ALB Outputs
 output "alb_dns_name" {
   description = "ALB DNS name"
-  value       = module.fileflow_alb.dns_name
+  value       = module.fileflow_alb.alb_dns_name
 }
 
 output "alb_arn" {
   description = "ALB ARN"
-  value       = module.fileflow_alb.arn
+  value       = module.fileflow_alb.alb_arn
 }
 
 output "target_group_arn" {
   description = "Target group ARN"
-  value       = module.fileflow_alb.target_group_arn
+  value       = module.fileflow_alb.target_group_arns["fileflow"]
 }
 
 output "alb_security_group_id" {
