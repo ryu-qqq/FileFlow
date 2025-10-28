@@ -22,10 +22,6 @@ variable "bucket_purpose" {
   default     = ""
 }
 
-# Data sources
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-
 # KMS Key for S3 encryption
 resource "aws_kms_key" "s3" {
   description             = "KMS key for ${local.bucket_name} S3 bucket"
