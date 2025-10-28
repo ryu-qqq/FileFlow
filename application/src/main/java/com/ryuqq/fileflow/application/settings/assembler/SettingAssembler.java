@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.application.settings.dto.SettingResponse;
 import com.ryuqq.fileflow.application.settings.port.in.CreateSettingUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
 import com.ryuqq.fileflow.domain.settings.Setting;
+import org.springframework.stereotype.Component;
 
 /**
  * Setting Assembler
@@ -16,11 +17,13 @@ import com.ryuqq.fileflow.domain.settings.Setting;
  *   <li>❌ Lombok 사용 안함 - Pure Java</li>
  *   <li>✅ Assembler 패턴 - 변환 로직 캡슐화</li>
  *   <li>✅ Stateless - 상태를 가지지 않음</li>
+ *   <li>✅ Spring Component - @Component 어노테이션</li>
  * </ul>
  *
  * @author ryu-qqq
  * @since 2025-10-25
  */
+@Component
 public class SettingAssembler {
 
     /**
