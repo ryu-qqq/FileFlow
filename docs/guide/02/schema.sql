@@ -1,4 +1,4 @@
--- FileFlow Phase 2 schema.sql (Upload Management - Full Implementation)
+-- FileFlow Phase 2 schema-v2.sql (Upload Management - Full Implementation)
 -- Engine: MySQL 8.x (FK intentionally omitted; soft-delete + indexes included)
 -- Based on: 01-upload-management.md (Epic Document)
 -- Dependencies: Phase 1 schema (tenants, organizations, user_contexts) must be applied first
@@ -259,7 +259,7 @@ CREATE TABLE IF NOT EXISTS upload_policies (
 -- Phase 2에서는 UploadCompletedEvent 수신 후 생성
 CREATE TABLE IF NOT EXISTS file_metadata (
   id                       VARCHAR(50) PRIMARY KEY,           -- UUID
-  upload_session_id        CHAR(27) NOT NULL,                 -- upload_sessions.session_id (앱 레벨 참조)
+  upload_session_id        VARCHAR(50) NOT NULL,              -- upload_sessions.session_id (앱 레벨 참조)
   owner_user_context_id    BIGINT NOT NULL,                   -- No FK to user_contexts
   tenant_id                VARCHAR(50) NOT NULL,              -- No FK to tenants
   organization_id          BIGINT NULL,                       -- No FK to organizations
