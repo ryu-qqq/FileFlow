@@ -2,6 +2,22 @@
 # FILEFLOW - Outputs
 # ============================================================================
 
+# ECS Cluster Outputs
+output "ecs_cluster_id" {
+  description = "ECS cluster ID"
+  value       = aws_ecs_cluster.fileflow.id
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name"
+  value       = aws_ecs_cluster.fileflow.name
+}
+
+output "ecs_cluster_arn" {
+  description = "ECS cluster ARN"
+  value       = aws_ecs_cluster.fileflow.arn
+}
+
 # ECS Service Outputs
 output "ecs_service_id" {
   description = "ECS service ID"

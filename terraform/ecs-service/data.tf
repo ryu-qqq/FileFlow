@@ -27,11 +27,6 @@ data "aws_kms_key" "cloudwatch_logs" {
   key_id = "alias/cloudwatch-logs"
 }
 
-# ECS Cluster
-data "aws_ssm_parameter" "ecs_cluster_id" {
-  name = "/shared/ecs/cluster-id"
-}
-
 # Shared RDS Database
 data "aws_ssm_parameter" "db_instance_address" {
   name = "/shared/rds/db-instance-address"
@@ -60,12 +55,9 @@ locals {
   private_subnet_ids = split(",", data.aws_ssm_parameter.private_subnet_ids.value)
   public_subnet_ids  = split(",", data.aws_ssm_parameter.public_subnet_ids.value)
 
-  # ECS
-  ecs_cluster_id = data.aws_ssm_parameter.ecs_cluster_id.value
-
   # Shared Database
-  db_address = data.aws_ssm_parameter.db_instance_address.value
-  db_port    = data.aws_ssm_parameter.db_instance_port.value
+  db_address  = data.aws_ssm_parameter.db_instance_address.value
+  db_port     = data.aws_ssm_parameter.db_instance_port.value
   db_password = jsondecode(data.aws_secretsmanager_secret_version.db_password.secret_string)["password"]
 
 }

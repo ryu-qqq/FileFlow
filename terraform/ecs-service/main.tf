@@ -107,7 +107,7 @@ module "fileflow_service" {
 
   # Required variables
   name               = local.service_name
-  cluster_id         = local.ecs_cluster_id
+  cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = local.container_name
   container_port     = local.container_port
   container_image    = "nginx:latest"
