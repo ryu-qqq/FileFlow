@@ -57,11 +57,94 @@ jobs:
         working-directory: ${{ matrix.module.dir }}
         run: terraform init
 
+      - name: Check and Import Existing Resources - ${{ matrix.module.name }}
+        working-directory: ${{ matrix.module.dir }}
+        run: |
+          echo "🔍 기존 리소스 확인 및 Import 중..."
+
+          # Plan 실행하여 충돌 확인
+          set +e
+          terraform plan -out=tfplan 2>&1 | tee plan_output.txt
+          PLAN_EXIT_CODE=$?
+          set -e
+
+          # 409 에러 또는 "already exists" 패턴 확인
+          if grep -q "EntityAlreadyExists\|already exists" plan_output.txt; then
+            echo "⚠️  기존 리소스 발견! Import 작업 시작..."
+
+            # ECS Service 모듈
+            if [ "${{ matrix.module.name }}" == "ecs-service" ]; then
+              echo "📦 ECS Service 리소스 Import 중..."
+
+              # IAM Execution Role
+              if aws iam get-role --role-name fileflow-prod-ecs-execution-role --region ap-northeast-2 >/dev/null 2>&1; then
+                echo "  → Importing fileflow-prod-ecs-execution-role..."
+                terraform import -input=false aws_iam_role.fileflow_execution_role fileflow-prod-ecs-execution-role || echo "  ⚠️  Import failed or already in state"
+              fi
+
+              # IAM Task Role
+              if aws iam get-role --role-name fileflow-prod-ecs-task-role --region ap-northeast-2 >/dev/null 2>&1; then
+                echo "  → Importing fileflow-prod-ecs-task-role..."
+                terraform import -input=false aws_iam_role.fileflow_task_role fileflow-prod-ecs-task-role || echo "  ⚠️  Import failed or already in state"
+              fi
+
+              # ALB
+              ALB_ARN=$(aws elbv2 describe-load-balancers --names fileflow-prod-alb --region ap-northeast-2 --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null || echo "")
+              if [ -n "$ALB_ARN" ] && [ "$ALB_ARN" != "None" ]; then
+                echo "  → Importing ALB: $ALB_ARN"
+                terraform import -input=false aws_lb.fileflow_alb "$ALB_ARN" || echo "  ⚠️  Import failed or already in state"
+              fi
+
+              # Target Group
+              TG_ARN=$(aws elbv2 describe-target-groups --names fileflow-prod-alb-fileflow --region ap-northeast-2 --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null || echo "")
+              if [ -n "$TG_ARN" ] && [ "$TG_ARN" != "None" ]; then
+                echo "  → Importing Target Group: $TG_ARN"
+                terraform import -input=false aws_lb_target_group.fileflow "$TG_ARN" || echo "  ⚠️  Import failed or already in state"
+              fi
+            fi
+
+            # ElastiCache Redis 모듈
+            if [ "${{ matrix.module.name }}" == "elasticache-redis" ]; then
+              echo "📦 ElastiCache Redis 리소스 Import 중..."
+              if aws elasticache describe-replication-groups --replication-group-id fileflow-prod-redis --region ap-northeast-2 >/dev/null 2>&1; then
+                echo "  → Importing fileflow-prod-redis..."
+                terraform import -input=false aws_elasticache_replication_group.redis fileflow-prod-redis || echo "  ⚠️  Import failed or already in state"
+              fi
+            fi
+
+            # S3 Bucket 모듈
+            if [ "${{ matrix.module.name }}" == "s3-bucket" ]; then
+              echo "📦 S3 Bucket 리소스 Import 중..."
+              BUCKET_NAME="fileflow--prod"
+              if aws s3api head-bucket --bucket "$BUCKET_NAME" --region ap-northeast-2 >/dev/null 2>&1; then
+                echo "  → Importing $BUCKET_NAME..."
+                terraform import -input=false aws_s3_bucket.main "$BUCKET_NAME" || echo "  ⚠️  Import failed or already in state"
+              fi
+            fi
+
+            # SQS Queue 모듈
+            if [ "${{ matrix.module.name }}" == "sqs-queue" ]; then
+              echo "📦 SQS Queue 리소스 Import 중..."
+              QUEUE_URL=$(aws sqs get-queue-url --queue-name fileflow-prod-queue --region ap-northeast-2 --query 'QueueUrl' --output text 2>/dev/null || echo "")
+              if [ -n "$QUEUE_URL" ] && [ "$QUEUE_URL" != "None" ]; then
+                echo "  → Importing fileflow-prod-queue..."
+                terraform import -input=false aws_sqs_queue.main "$QUEUE_URL" || echo "  ⚠️  Import failed or already in state"
+              fi
+            fi
+
+            echo "✅ Import 완료! Plan 재실행..."
+            terraform plan -out=tfplan
+          else
+            echo "✅ 기존 리소스 없음 또는 State와 일치. 정상 진행."
+          fi
+
+          rm -f plan_output.txt
+
       - name: Terraform Apply - ${{ matrix.module.name }}
         working-directory: ${{ matrix.module.dir }}
         run: |
           echo "🚀 Applying Terraform for ${{ matrix.module.name }}..."
-          terraform apply -auto-approve -no-color
+          terraform apply -auto-approve -no-color tfplan
           echo "✅ Apply completed for ${{ matrix.module.name }}"
 
       - name: Terraform Output - ${{ matrix.module.name }}

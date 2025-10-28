@@ -80,19 +80,15 @@ module "fileflow_alb" {
     }
   }
 
-  # HTTP Listener (redirect to HTTPS)
+  # HTTP Listener (forward to Target Group - HTTPS disabled until certificate provided)
   http_listeners = {
     default = {
       port     = 80
       protocol = "HTTP"
 
       default_action = {
-        type = "redirect"
-        redirect = {
-          port        = "443"
-          protocol    = "HTTPS"
-          status_code = "HTTP_301"
-        }
+        type             = "forward"
+        target_group_key = "fileflow"
       }
     }
   }
