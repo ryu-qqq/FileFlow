@@ -1,27 +1,15 @@
-data "aws_vpc" "main" {
-  tags = {
-    Name = "main-vpc"
-  }
+# ============================================================================
+# Shared Infrastructure References
+# ============================================================================
+# This file references shared infrastructure managed in Infrastructure repo
+# DO NOT modify shared infrastructure from here.
+# ============================================================================
+
+# Network Resources
+data "aws_ssm_parameter" "vpc_id" {
+  name = "/shared/network/vpc-id"
 }
 
-data "aws_subnets" "private" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.main.id]
-  }
-
-  tags = {
-    Tier = "private"
-  }
-}
-
-data "aws_security_groups" "app" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.main.id]
-  }
-
-  tags = {
-    Name = "*app*"
-  }
+data "aws_ssm_parameter" "private_subnet_ids" {
+  name = "/shared/network/private-subnet-ids"
 }

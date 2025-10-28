@@ -31,7 +31,7 @@ variable "num_cache_nodes" {
 # Subnet Group
 resource "aws_elasticache_subnet_group" "main" {
   name       = local.redis_name
-  subnet_ids = data.aws_subnets.private.ids
+  subnet_ids = local.private_subnet_ids
 
   tags = merge(
     local.required_tags,
@@ -46,14 +46,14 @@ resource "aws_elasticache_subnet_group" "main" {
 resource "aws_security_group" "redis" {
   name        = "${local.redis_name}-sg"
   description = "Security group for ${local.redis_name}"
-  vpc_id      = data.aws_vpc.main.id
+  vpc_id      = local.vpc_id
 
   ingress {
-    description     = "Redis from application"
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = data.aws_security_groups.app.ids
+    description = "Redis from VPC"
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]  # VPC CIDR - update with actual VPC CIDR
   }
 
   egress {
