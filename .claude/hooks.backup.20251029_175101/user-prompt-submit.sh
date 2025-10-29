@@ -168,57 +168,6 @@ log_event "keyword_analysis" "{\"session_id\":\"$SESSION_ID\",\"context_score\":
 if [[ $CONTEXT_SCORE -ge 25 ]]; then
     log_event "decision" "{\"session_id\":\"$SESSION_ID\",\"action\":\"cache_injection\",\"reason\":\"score_above_threshold\"}"
 
-    # ==================== Serena 메모리 자동 로드 ====================
-
-    cat << 'EOF'
-
----
-
-## 🧠 Serena 메모리 자동 로드 (Context-aware)
-
-```python
-# Detected Layers:
-EOF
-
-    for layer in "${DETECTED_LAYERS[@]}"; do
-        echo "# - $layer"
-    done
-
-    cat << 'EOF'
-
-# 레이어별 컨벤션 자동 로드:
-EOF
-
-    for layer in "${DETECTED_LAYERS[@]}"; do
-        case "$layer" in
-            domain)
-                echo 'conventions = read_memory("coding_convention_domain_layer")'
-                ;;
-            application)
-                echo 'conventions = read_memory("coding_convention_application_layer")'
-                ;;
-            adapter-rest)
-                echo 'conventions = read_memory("coding_convention_rest_api_layer")'
-                ;;
-            adapter-persistence)
-                echo 'conventions = read_memory("coding_convention_persistence_layer")'
-                ;;
-        esac
-    done
-
-    cat << 'EOF'
-```
-
-**Serena 메모리가 최우선 규칙이며, 아래 Cache 규칙은 보조 참고용입니다.**
-
----
-
-EOF
-
-    log_event "serena_memory_load" "{\"session_id\":\"$SESSION_ID\",\"layers_loaded\":${#DETECTED_LAYERS[@]}}"
-
-    # ==================== Cache 기반 규칙 주입 ====================
-
     INJECT_SCRIPT=".claude/commands/lib/inject-rules.py"
 
     if [[ -f "$INJECT_SCRIPT" ]]; then
