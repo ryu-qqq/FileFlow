@@ -33,7 +33,7 @@ Spring Standards 프로젝트의 코딩 컨벤션을 Serena 메모리에서 자�
 
 ```python
 # 1. Serena 프로젝트 활성화
-mcp__serena__activate_project("/Users/sangwon-ryu/claude-spring-standards")
+mcp__serena__activate_project("/Users/sangwon-ryu/fileflow")
 
 # 2. 사용 가능한 메모리 목록 확인
 memories = mcp__serena__list_memories()
@@ -48,7 +48,7 @@ onboarding_status = mcp__serena__check_onboarding_performed()
 ## 출력 예시
 
 ```
-✅ 프로젝트 활성화: claude-spring-standards
+✅ 프로젝트 활성화: fileflow
 ✅ 사용 가능한 메모리: 7개
 
 📚 코딩 컨벤션 로드 완료:
