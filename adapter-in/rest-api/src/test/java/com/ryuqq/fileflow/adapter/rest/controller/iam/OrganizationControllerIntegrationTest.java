@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler;
 import com.ryuqq.fileflow.adapter.rest.iam.organization.controller.OrganizationController;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.UpdateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.UpdateOrganizationStatusRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.CreateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationStatusApiRequest;
 import com.ryuqq.fileflow.application.common.dto.PageResponse;
 import com.ryuqq.fileflow.application.common.dto.SliceResponse;
 import com.ryuqq.fileflow.application.iam.organization.dto.response.OrganizationResponse;
@@ -87,7 +87,7 @@ class OrganizationControllerIntegrationTest {
     @DisplayName("POST /api/v1/organizations - Organization 생성 성공 (201 Created)")
     void createOrganization_Success_Returns201() throws Exception {
         // Given
-        CreateOrganizationRequest request = new CreateOrganizationRequest(
+        CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(
             "TEST001",
             "ORG001",
             "Engineering Department"
@@ -127,7 +127,7 @@ class OrganizationControllerIntegrationTest {
     @DisplayName("POST /api/v1/organizations - Validation 실패 (400 Bad Request)")
     void createOrganization_ValidationFails_Returns400() throws Exception {
         // Given - orgCode가 빈 문자열
-        CreateOrganizationRequest request = new CreateOrganizationRequest(
+        CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(
             "TEST001",
             "",  // Invalid: 빈 문자열
             "Engineering Department"
@@ -156,7 +156,7 @@ class OrganizationControllerIntegrationTest {
     @DisplayName("POST /api/v1/organizations - 중복 조직 코드 (409 Conflict)")
     void createOrganization_DuplicateOrgCode_Returns409() throws Exception {
         // Given
-        CreateOrganizationRequest request = new CreateOrganizationRequest(
+        CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(
             "TEST001",
             "ORG001",
             "Engineering Department"
@@ -190,7 +190,7 @@ class OrganizationControllerIntegrationTest {
     void updateOrganization_Success_Returns200() throws Exception {
         // Given
         Long organizationId = 1L;
-        UpdateOrganizationRequest request = new UpdateOrganizationRequest("Updated Department Name");
+        UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("Updated Department Name");
         OrganizationResponse mockResponse = new OrganizationResponse(
             organizationId,
             "TEST001",
@@ -225,7 +225,7 @@ class OrganizationControllerIntegrationTest {
     void updateOrganization_ValidationFails_Returns400() throws Exception {
         // Given - name이 빈 문자열
         Long organizationId = 1L;
-        UpdateOrganizationRequest request = new UpdateOrganizationRequest("");
+        UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("");
 
         // When & Then - RFC 7807 응답 검증
         mockMvc.perform(patch("/api/v1/organizations/{organizationId}", organizationId)
@@ -249,7 +249,7 @@ class OrganizationControllerIntegrationTest {
     void updateOrganizationStatus_Success_Returns200() throws Exception {
         // Given
         Long organizationId = 1L;
-        UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("SUSPENDED");
+        UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("SUSPENDED");
         OrganizationResponse mockResponse = new OrganizationResponse(
             organizationId,
             "TEST001",

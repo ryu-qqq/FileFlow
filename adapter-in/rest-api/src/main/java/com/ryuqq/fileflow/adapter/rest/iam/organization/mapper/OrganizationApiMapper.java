@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.adapter.rest.iam.organization.mapper;
 
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.OrganizationApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.UpdateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.UpdateOrganizationStatusRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.CreateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.response.OrganizationApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationStatusApiRequest;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.CreateOrganizationCommand;
 import com.ryuqq.fileflow.application.iam.organization.dto.response.OrganizationResponse;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.UpdateOrganizationCommand;
@@ -33,7 +33,7 @@ import com.ryuqq.fileflow.application.iam.organization.dto.command.UpdateOrganiz
  * @author ryu-qqq
  * @since 2025-10-22
  */
-public final class OrganizationDtoMapper {
+public final class OrganizationApiMapper {
 
     /**
      * Private Constructor - 인스턴스 생성 방지
@@ -41,7 +41,7 @@ public final class OrganizationDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    private OrganizationDtoMapper() {
+    private OrganizationApiMapper() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
@@ -54,7 +54,7 @@ public final class OrganizationDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static CreateOrganizationCommand toCommand(CreateOrganizationRequest request) {
+    public static CreateOrganizationCommand toCommand(CreateOrganizationApiRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("CreateOrganizationRequest는 null일 수 없습니다");
         }
@@ -75,7 +75,7 @@ public final class OrganizationDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static UpdateOrganizationCommand toCommand(Long organizationId, UpdateOrganizationRequest request) {
+    public static UpdateOrganizationCommand toCommand(Long organizationId, UpdateOrganizationApiRequest request) {
         if (organizationId == null || organizationId <= 0) {
             throw new IllegalArgumentException("Organization ID는 null일 수 없으며 양수여야 합니다");
         }
@@ -95,7 +95,7 @@ public final class OrganizationDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static UpdateOrganizationStatusCommand toCommand(Long organizationId, UpdateOrganizationStatusRequest request) {
+    public static UpdateOrganizationStatusCommand toCommand(Long organizationId, UpdateOrganizationStatusApiRequest request) {
         if (organizationId == null || organizationId <= 0) {
             throw new IllegalArgumentException("Organization ID는 null일 수 없으며 양수여야 합니다");
         }

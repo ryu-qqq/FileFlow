@@ -1,9 +1,10 @@
-package com.ryuqq.adapter.in.rest.config;
+package com.ryuqq.fileflow.adapter.rest.config;
+
+
+import com.ryuqq.fileflow.adapter.rest.common.error.ErrorMapperRegistry;
+import com.ryuqq.fileflow.adapter.rest.common.mapper.ErrorMapper;
 
 import java.util.List;
-
-import com.ryuqq.adapter.in.rest.common.error.ErrorMapperRegistry;
-import com.ryuqq.adapter.in.rest.common.mapper.ErrorMapper;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

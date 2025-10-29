@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request;
 
 import com.ryuqq.fileflow.application.iam.tenant.dto.query.GetTenantsQuery;
 import jakarta.validation.constraints.Max;
@@ -42,7 +42,7 @@ import jakarta.validation.constraints.Min;
  * @author ryu-qqq
  * @since 2025-10-23
  */
-public record TenantListQueryParam(
+public record TenantSearchApiRequest(
     @Min(value = 0, message = "페이지 번호는 0 이상이어야 합니다")
     Integer page,
 
@@ -65,7 +65,7 @@ public record TenantListQueryParam(
      * @param nameContains 이름 필터
      * @param deleted 삭제 여부 필터
      */
-    public TenantListQueryParam {
+    public TenantSearchApiRequest {
         size = (size == null) ? 20 : size;
     }
 

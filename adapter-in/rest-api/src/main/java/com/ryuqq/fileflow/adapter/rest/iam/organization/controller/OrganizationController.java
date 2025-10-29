@@ -1,12 +1,14 @@
 package com.ryuqq.fileflow.adapter.rest.iam.organization.controller;
 
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.OrganizationApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.OrganizationListQueryParam;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.UpdateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.UpdateOrganizationStatusRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.mapper.OrganizationDtoMapper;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.CreateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.response.OrganizationApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.OrganizationSearchApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationStatusApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.mapper.OrganizationApiMapper;
 import com.ryuqq.fileflow.adapter.rest.common.dto.ApiResponse;
+import com.ryuqq.fileflow.adapter.rest.common.dto.PageApiResponse;
+import com.ryuqq.fileflow.adapter.rest.common.dto.SliceApiResponse;
 import com.ryuqq.fileflow.application.common.dto.PageResponse;
 import com.ryuqq.fileflow.application.common.dto.SliceResponse;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.CreateOrganizationCommand;
@@ -76,7 +78,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-10-22
  */
 @RestController
-@RequestMapping("/api/v1/organizations")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.iam.organization.base}")
 public class OrganizationController {
 
     private final OrganizationCommandFacade organizationCommandFacade;
@@ -142,11 +144,11 @@ public class OrganizationController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<OrganizationApiResponse>> createOrganization(
-        @Valid @RequestBody CreateOrganizationRequest request
+        @Valid @RequestBody CreateOrganizationApiRequest request
     ) {
-        CreateOrganizationCommand command = OrganizationDtoMapper.toCommand(request);
+        CreateOrganizationCommand command = OrganizationApiMapper.toCommand(request);
         OrganizationResponse response = organizationCommandFacade.createOrganization(command);
-        OrganizationApiResponse apiResponse = OrganizationDtoMapper.toApiResponse(response);
+        OrganizationApiResponse apiResponse = OrganizationApiMapper.toApiResponse(response);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ofSuccess(apiResponse));
     }
 
@@ -191,11 +193,11 @@ public class OrganizationController {
     @PatchMapping("/{organizationId}")
     public ResponseEntity<ApiResponse<OrganizationApiResponse>> updateOrganization(
         @PathVariable Long organizationId,
-        @Valid @RequestBody UpdateOrganizationRequest request
+        @Valid @RequestBody UpdateOrganizationApiRequest request
     ) {
-        UpdateOrganizationCommand command = OrganizationDtoMapper.toCommand(organizationId, request);
+        UpdateOrganizationCommand command = OrganizationApiMapper.toCommand(organizationId, request);
         OrganizationResponse response = organizationCommandFacade.updateOrganization(command);
-        OrganizationApiResponse apiResponse = OrganizationDtoMapper.toApiResponse(response);
+        OrganizationApiResponse apiResponse = OrganizationApiMapper.toApiResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 
@@ -246,11 +248,11 @@ public class OrganizationController {
     @PatchMapping("/{organizationId}/status")
     public ResponseEntity<ApiResponse<OrganizationApiResponse>> updateOrganizationStatus(
         @PathVariable Long organizationId,
-        @Valid @RequestBody UpdateOrganizationStatusRequest request
+        @Valid @RequestBody UpdateOrganizationStatusApiRequest request
     ) {
-        UpdateOrganizationStatusCommand command = OrganizationDtoMapper.toCommand(organizationId, request);
+        UpdateOrganizationStatusCommand command = OrganizationApiMapper.toCommand(organizationId, request);
         OrganizationResponse response = organizationCommandFacade.updateOrganizationStatus(command);
-        OrganizationApiResponse apiResponse = OrganizationDtoMapper.toApiResponse(response);
+        OrganizationApiResponse apiResponse = OrganizationApiMapper.toApiResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 
@@ -314,7 +316,7 @@ public class OrganizationController {
      *
      * <p><strong>개선 사항 (Phase 6-1):</strong></p>
      * <ul>
-     *   <li>✅ Query Parameter 객체화 ({@link OrganizationListQueryParam} Record)</li>
+     *   <li>✅ Query Parameter 객체화 ({@link OrganizationSearchApiRequest} Record)</li>
      *   <li>✅ 메서드 파라미터 7개 → 1개로 단순화</li>
      *   <li>✅ Validation 자동 적용 (@Valid + Bean Validation)</li>
      * </ul>
@@ -326,16 +328,18 @@ public class OrganizationController {
      */
     @GetMapping
     public ResponseEntity<?> getOrganizations(
-        @Valid @ModelAttribute OrganizationListQueryParam param
+        @Valid @ModelAttribute OrganizationSearchApiRequest param
     ) {
         GetOrganizationsQuery query = param.toQuery();
 
         if (param.isOffsetBased()) {
             PageResponse<OrganizationResponse> pageResponse = organizationQueryFacade.getOrganizationsWithPage(query);
-            return ResponseEntity.ok(ApiResponse.ofSuccess(pageResponse));
+            PageApiResponse<OrganizationApiResponse> pageApiResponse = PageApiResponse.from(pageResponse, OrganizationApiMapper::toApiResponse);
+            return ResponseEntity.ok(ApiResponse.ofSuccess(pageApiResponse));
         } else {
             SliceResponse<OrganizationResponse> sliceResponse = organizationQueryFacade.getOrganizationsWithSlice(query);
-            return ResponseEntity.ok(ApiResponse.ofSuccess(sliceResponse));
+            SliceApiResponse<OrganizationApiResponse> sliceApiResponse = SliceApiResponse.from(sliceResponse, OrganizationApiMapper::toApiResponse);
+            return ResponseEntity.ok(ApiResponse.ofSuccess(sliceApiResponse));
         }
     }
 
@@ -384,7 +388,7 @@ public class OrganizationController {
     ) {
         GetOrganizationQuery query = new GetOrganizationQuery(organizationId);
         OrganizationResponse response = organizationQueryFacade.getOrganization(query);
-        OrganizationApiResponse apiResponse = OrganizationDtoMapper.toApiResponse(response);
+        OrganizationApiResponse apiResponse = OrganizationApiMapper.toApiResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 }

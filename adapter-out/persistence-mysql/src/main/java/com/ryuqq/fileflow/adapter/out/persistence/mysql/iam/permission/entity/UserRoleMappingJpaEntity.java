@@ -18,10 +18,11 @@ import jakarta.persistence.Table;
  *   <li>✅ JPA 어노테이션만 사용 (비즈니스 로직 없음)</li>
  *   <li>✅ Long FK 전략 (JPA 관계 어노테이션 금지)</li>
  *   <li>✅ Getter만 제공 (Setter 금지)</li>
- *   <li>✅ {@code private final} 필드 (변경 불가능한 필드)</li>
- *   <li>✅ Static Factory Methods: {@code create()}, {@code reconstitute()}</li>
+ *   <li>✅ 기본 생성자 + PK 포함/제외 생성자만 제공</li>
  *   <li>❌ Lombok 금지</li>
  *   <li>❌ JPA 관계 어노테이션 금지</li>
+ *   <li>❌ Static Factory Method 금지</li>
+ *   <li>❌ 비즈니스 로직 금지</li>
  * </ul>
  *
  * <h3>테이블 구조</h3>
@@ -73,7 +74,7 @@ public class UserRoleMappingJpaEntity {
      * <p><strong>제약</strong>: NOT NULL, Index 권장 (Composite Index: user_context_id + tenant_id + organization_id)</p>
      */
     @Column(name = "user_context_id", nullable = false)
-    private final Long userContextId;
+    private Long userContextId;
 
     /**
      * Role 코드 (FK - String 전략)
@@ -82,7 +83,7 @@ public class UserRoleMappingJpaEntity {
      * <p><strong>제약</strong>: NOT NULL, Index 권장</p>
      */
     @Column(name = "role_code", nullable = false, length = 100)
-    private final String roleCode;
+    private String roleCode;
 
     /**
      * Tenant ID (FK - Long AUTO_INCREMENT 전략)
@@ -92,7 +93,7 @@ public class UserRoleMappingJpaEntity {
      * <p><strong>제약</strong>: NOT NULL, BIGINT, Index 권장 (Composite Index: user_context_id + tenant_id + organization_id)</p>
      */
     @Column(name = "tenant_id", nullable = false)
-    private final Long tenantId;
+    private Long tenantId;
 
     /**
      * Organization ID (FK - Long 전략)
@@ -101,30 +102,54 @@ public class UserRoleMappingJpaEntity {
      * <p><strong>제약</strong>: NOT NULL, Index 권장 (Composite Index: user_context_id + tenant_id + organization_id)</p>
      */
     @Column(name = "organization_id", nullable = false)
-    private final Long organizationId;
+    private Long organizationId;
 
     /**
      * JPA 전용 기본 생성자 (Protected)
      *
-     * <p>JPA Proxy 생성을 위해 필요합니다. 직접 호출 금지!</p>
+     * <p>JPA 스펙 요구사항입니다. 직접 호출 금지!</p>
      */
     protected UserRoleMappingJpaEntity() {
-        this.userContextId = null;
-        this.roleCode = null;
-        this.tenantId = null;
-        this.organizationId = null;
     }
 
     /**
-     * Private 전체 생성자
+     * PK 제외 생성자 (새로 생성)
      *
-     * <p>Static Factory Method에서만 사용합니다.</p>
+     * <p>User와 Role을 특정 Tenant/Organization 컨텍스트에서 연결할 때 사용합니다.</p>
+     *
+     * @param userContextId UserContext ID
+     * @param roleCode Role 코드
+     * @param tenantId Tenant ID
+     * @param organizationId Organization ID
      */
-    private UserRoleMappingJpaEntity(
+    public UserRoleMappingJpaEntity(
+        Long userContextId,
+        String roleCode,
+        Long tenantId,
+        Long organizationId
+    ) {
+        this.userContextId = userContextId;
+        this.roleCode = roleCode;
+        this.tenantId = tenantId;
+        this.organizationId = organizationId;
+    }
+
+    /**
+     * PK 포함 전체 생성자
+     *
+     * <p>DB에서 조회한 데이터를 Entity로 변환할 때 사용합니다.</p>
+     *
+     * @param id UserRoleMapping ID (PK)
+     * @param userContextId UserContext ID
+     * @param roleCode Role 코드
+     * @param tenantId Tenant ID
+     * @param organizationId Organization ID
+     */
+    public UserRoleMappingJpaEntity(
         Long id,
         Long userContextId,
         String roleCode,
-        Long tenantId,  // Long AUTO_INCREMENT
+        Long tenantId,
         Long organizationId
     ) {
         this.id = id;
@@ -134,76 +159,8 @@ public class UserRoleMappingJpaEntity {
         this.organizationId = organizationId;
     }
 
-    /**
-     * 새로운 UserRoleMapping Entity 생성 (Static Factory Method)
-     *
-     * <p>User와 Role을 특정 Tenant/Organization 컨텍스트에서 연결할 때 사용합니다.</p>
-     *
-     * <p><strong>검증</strong>: 필수 필드 null 체크만 수행 (비즈니스 검증은 Domain Layer에서)</p>
-     *
-     * @param userContextId UserContext ID
-     * @param roleCode Role 코드
-     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
-     * @param organizationId Organization ID
-     * @return 새로운 UserRoleMappingJpaEntity
-     * @throws IllegalArgumentException 필수 필드가 null인 경우
-     * @author ryu-qqq
-     * @since 2025-10-24
-     */
-    public static UserRoleMappingJpaEntity create(
-        Long userContextId,
-        String roleCode,
-        Long tenantId,  // Long AUTO_INCREMENT
-        Long organizationId
-    ) {
-        if (userContextId == null || roleCode == null ||
-            tenantId == null || organizationId == null) {
-            throw new IllegalArgumentException(
-                "Required fields (userContextId, roleCode, tenantId, organizationId) must not be null"
-            );
-        }
-
-        return new UserRoleMappingJpaEntity(
-            null,               // id는 DB에서 자동 생성
-            userContextId,
-            roleCode,
-            tenantId,
-            organizationId
-        );
-    }
-
-    /**
-     * DB에서 조회한 데이터로 Entity 재구성 (Static Factory Method)
-     *
-     * <p>DB 조회 결과를 Entity로 변환할 때 사용합니다.</p>
-     *
-     * @param id UserRoleMapping ID
-     * @param userContextId UserContext ID
-     * @param roleCode Role 코드
-     * @param tenantId Tenant ID (Long AUTO_INCREMENT)
-     * @param organizationId Organization ID
-     * @return 재구성된 UserRoleMappingJpaEntity
-     * @author ryu-qqq
-     * @since 2025-10-24
-     */
-    public static UserRoleMappingJpaEntity reconstitute(
-        Long id,
-        Long userContextId,
-        String roleCode,
-        Long tenantId,  // Long AUTO_INCREMENT
-        Long organizationId
-    ) {
-        return new UserRoleMappingJpaEntity(
-            id,
-            userContextId,
-            roleCode,
-            tenantId,
-            organizationId
-        );
-    }
-
     // ========================================
-    // Getters (Public, 비즈니스 메서드 없음!)
+    // Getters
     // ========================================
 
     public Long getId() {

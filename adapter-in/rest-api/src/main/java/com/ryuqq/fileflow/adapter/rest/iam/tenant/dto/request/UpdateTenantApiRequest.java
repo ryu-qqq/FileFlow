@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -29,7 +29,7 @@ import jakarta.validation.constraints.NotBlank;
  * @author ryu-qqq
  * @since 2025-10-22
  */
-public record UpdateTenantRequest(
+public record UpdateTenantApiRequest(
     @NotBlank(message = "Tenant 이름은 필수입니다")
     String name
 ) {

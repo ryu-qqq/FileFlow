@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -33,7 +33,7 @@ import jakarta.validation.constraints.NotNull;
  * @author ryu-qqq
  * @since 2025-10-23
  */
-public record UpdateTenantStatusRequest(
+public record UpdateTenantStatusApiRequest(
     @NotNull(message = "상태는 필수입니다")
     String status
 ) {

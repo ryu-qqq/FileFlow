@@ -1,5 +1,6 @@
-package com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.entity;
+package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.entity;
 
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.BaseAuditEntity;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,7 +36,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "tenants")
-public class TenantJpaEntity {
+public class TenantJpaEntity extends BaseAuditEntity {
 
     /**
      * Tenant 고유 식별자 (Primary Key)
@@ -62,7 +63,7 @@ public class TenantJpaEntity {
      * <p><strong>제약</strong>: NOT NULL, 최대 200자</p>
      */
     @Column(name = "name", nullable = false, length = 200)
-    private final String name;
+    private String name;
 
     /**
      * Tenant 상태
@@ -75,25 +76,10 @@ public class TenantJpaEntity {
     private TenantStatus status;
 
     /**
-     * 생성 일시
-     *
-     * <p><strong>불변 필드</strong>: Entity 생성 시점에만 설정</p>
-     */
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private final LocalDateTime createdAt;
-
-    /**
-     * 최종 수정 일시
-     *
-     * <p><strong>변경 가능 필드</strong>: Entity 수정 시마다 업데이트</p>
-     */
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    /**
      * 소프트 삭제 플래그
      *
      * <p><strong>변경 가능 필드</strong>: {@code true}이면 논리적 삭제 상태</p>
+     * <p><strong>주의</strong>: BaseAuditEntity의 createdAt, updatedAt은 상속받음</p>
      */
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
@@ -104,16 +90,31 @@ public class TenantJpaEntity {
      * <p>JPA Proxy 생성을 위해 필요합니다. 직접 호출 금지!</p>
      */
     protected TenantJpaEntity() {
-        this.name = null;
-        this.createdAt = null;
+        super();
     }
 
     /**
-     * Private 전체 생성자
+     * 신규 생성용 생성자 (Protected - PK 없음)
      *
-     * <p>Static Factory Method에서만 사용합니다.</p>
+     * <p>새로운 Entity 생성 시 사용합니다. ID는 DB에서 자동 생성됩니다.</p>
+     */
+    protected TenantJpaEntity(
+        String name,
+        TenantStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        boolean deleted
+    ) {
+        super(createdAt, updatedAt);
+        this.name = name;
+        this.status = status;
+        this.deleted = deleted;
+    }
+
+    /**
+     * 재구성용 생성자 (Private - PK 포함)
      *
-     * <p><strong>Option B 변경:</strong> id 타입 String → Long</p>
+     * <p>DB 조회 결과를 Entity로 재구성할 때 사용합니다.</p>
      */
     private TenantJpaEntity(
         Long id,
@@ -123,11 +124,10 @@ public class TenantJpaEntity {
         LocalDateTime updatedAt,
         boolean deleted
     ) {
+        super(createdAt, updatedAt);
         this.id = id;
         this.name = name;
         this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
         this.deleted = deleted;
     }
 
@@ -137,12 +137,6 @@ public class TenantJpaEntity {
      * <p>신규 Tenant 생성 시 사용합니다. 초기 상태는 ACTIVE, deleted=false입니다.</p>
      *
      * <p><strong>검증</strong>: 필수 필드 null 체크만 수행 (비즈니스 검증은 Domain Layer에서)</p>
-     *
-     * <p><strong>Option B 변경:</strong></p>
-     * <ul>
-     *   <li>id 파라미터 제거: AUTO_INCREMENT로 DB가 자동 생성</li>
-     *   <li>생성자에 null 전달: JPA가 save() 시점에 id 할당</li>
-     * </ul>
      *
      * @param name Tenant 이름
      * @param createdAt 생성 일시
@@ -155,7 +149,6 @@ public class TenantJpaEntity {
         }
 
         return new TenantJpaEntity(
-            null,       // id는 null: AUTO_INCREMENT로 DB가 자동 생성
             name,
             TenantStatus.ACTIVE,
             createdAt,
@@ -168,8 +161,6 @@ public class TenantJpaEntity {
      * DB에서 조회한 데이터로 Entity 재구성 (Static Factory Method)
      *
      * <p>DB 조회 결과를 Entity로 변환할 때 사용합니다.</p>
-     *
-     * <p><strong>Option B 변경:</strong> id 타입 String → Long</p>
      *
      * @param id Tenant ID (Long - AUTO_INCREMENT)
      * @param name Tenant 이름
@@ -204,14 +195,6 @@ public class TenantJpaEntity {
 
     public TenantStatus getStatus() {
         return status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     public boolean isDeleted() {

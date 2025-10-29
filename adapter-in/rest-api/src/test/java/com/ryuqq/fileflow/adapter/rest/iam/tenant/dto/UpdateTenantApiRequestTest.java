@@ -4,6 +4,9 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantApiRequest;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 2025-10-23
  */
 @DisplayName("UpdateTenantRequest DTO Validation 테스트")
-class UpdateTenantRequestTest {
+class UpdateTenantApiRequestTest {
 
     private static Validator validator;
 
@@ -47,14 +50,14 @@ class UpdateTenantRequestTest {
         @DisplayName("name이 null이면 검증 실패")
         void name_null_shouldFail() {
             // Given
-            UpdateTenantRequest request = new UpdateTenantRequest(null);
+            UpdateTenantApiRequest request = new UpdateTenantApiRequest(null);
 
             // When
-            Set<ConstraintViolation<UpdateTenantRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<UpdateTenantRequest> violation = violations.iterator().next();
+            ConstraintViolation<UpdateTenantApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("name");
             assertThat(violation.getMessage()).isEqualTo("Tenant 이름은 필수입니다");
         }
@@ -63,14 +66,14 @@ class UpdateTenantRequestTest {
         @DisplayName("name이 빈 문자열이면 검증 실패")
         void name_empty_shouldFail() {
             // Given
-            UpdateTenantRequest request = new UpdateTenantRequest("");
+            UpdateTenantApiRequest request = new UpdateTenantApiRequest("");
 
             // When
-            Set<ConstraintViolation<UpdateTenantRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<UpdateTenantRequest> violation = violations.iterator().next();
+            ConstraintViolation<UpdateTenantApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("name");
             assertThat(violation.getMessage()).isEqualTo("Tenant 이름은 필수입니다");
         }
@@ -79,14 +82,14 @@ class UpdateTenantRequestTest {
         @DisplayName("name이 공백 문자열이면 검증 실패")
         void name_blank_shouldFail() {
             // Given
-            UpdateTenantRequest request = new UpdateTenantRequest("   ");
+            UpdateTenantApiRequest request = new UpdateTenantApiRequest("   ");
 
             // When
-            Set<ConstraintViolation<UpdateTenantRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<UpdateTenantRequest> violation = violations.iterator().next();
+            ConstraintViolation<UpdateTenantApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("name");
             assertThat(violation.getMessage()).isEqualTo("Tenant 이름은 필수입니다");
         }
@@ -100,10 +103,10 @@ class UpdateTenantRequestTest {
         @DisplayName("유효한 name이면 검증 성공")
         void validName_shouldPass() {
             // Given
-            UpdateTenantRequest request = new UpdateTenantRequest("Updated Company");
+            UpdateTenantApiRequest request = new UpdateTenantApiRequest("Updated Company");
 
             // When
-            Set<ConstraintViolation<UpdateTenantRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -113,10 +116,10 @@ class UpdateTenantRequestTest {
         @DisplayName("name이 최소 길이(1자)여도 검증 성공")
         void name_minLength_shouldPass() {
             // Given
-            UpdateTenantRequest request = new UpdateTenantRequest("X");
+            UpdateTenantApiRequest request = new UpdateTenantApiRequest("X");
 
             // When
-            Set<ConstraintViolation<UpdateTenantRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -131,8 +134,8 @@ class UpdateTenantRequestTest {
         @DisplayName("동일한 값으로 생성된 Record는 equals()가 true")
         void sameValues_shouldBeEqual() {
             // Given
-            UpdateTenantRequest request1 = new UpdateTenantRequest("Updated Company");
-            UpdateTenantRequest request2 = new UpdateTenantRequest("Updated Company");
+            UpdateTenantApiRequest request1 = new UpdateTenantApiRequest("Updated Company");
+            UpdateTenantApiRequest request2 = new UpdateTenantApiRequest("Updated Company");
 
             // When & Then
             assertThat(request1).isEqualTo(request2);
@@ -143,8 +146,8 @@ class UpdateTenantRequestTest {
         @DisplayName("다른 값으로 생성된 Record는 equals()가 false")
         void differentValues_shouldNotBeEqual() {
             // Given
-            UpdateTenantRequest request1 = new UpdateTenantRequest("Company A");
-            UpdateTenantRequest request2 = new UpdateTenantRequest("Company B");
+            UpdateTenantApiRequest request1 = new UpdateTenantApiRequest("Company A");
+            UpdateTenantApiRequest request2 = new UpdateTenantApiRequest("Company B");
 
             // When & Then
             assertThat(request1).isNotEqualTo(request2);

@@ -1,12 +1,12 @@
 package com.ryuqq.fileflow.adapter.rest.settings.controller;
 
 import com.ryuqq.fileflow.adapter.rest.common.dto.ApiResponse;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.CreateSettingRequest;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.CreateSettingResponse;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.MergedSettingsApiResponse;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingRequest;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingResponse;
-import com.ryuqq.fileflow.adapter.rest.settings.mapper.SettingsDtoMapper;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.request.CreateSettingApiRequest;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.response.CreateSettingApiResponse;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.response.MergedSettingsApiResponse;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.request.UpdateSettingApiRequest;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.response.UpdateSettingApiResponse;
+import com.ryuqq.fileflow.adapter.rest.settings.mapper.SettingsApiMapper;
 import com.ryuqq.fileflow.application.settings.port.in.CreateSettingUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
@@ -63,7 +63,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-10-25
  */
 @RestController
-@RequestMapping("/api/v1/settings")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.settings.base}")
 public class SettingsController {
 
     private final CreateSettingUseCase createSettingUseCase;
@@ -168,12 +168,12 @@ public class SettingsController {
      * @since 2025-10-26
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<CreateSettingResponse>> createSetting(
-        @Valid @RequestBody CreateSettingRequest request
+    public ResponseEntity<ApiResponse<CreateSettingApiResponse>> createSetting(
+        @Valid @RequestBody CreateSettingApiRequest request
     ) {
-        CreateSettingUseCase.Command command = SettingsDtoMapper.toCommand(request);
+        CreateSettingUseCase.Command command = SettingsApiMapper.toCommand(request);
         CreateSettingUseCase.Response response = createSettingUseCase.execute(command);
-        CreateSettingResponse apiResponse = SettingsDtoMapper.toCreateResponse(response);
+        CreateSettingApiResponse apiResponse = SettingsApiMapper.toCreateResponse(response);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.ofSuccess(apiResponse));
     }
@@ -239,7 +239,7 @@ public class SettingsController {
     ) {
         GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(orgId, tenantId);
         GetMergedSettingsUseCase.Response response = getMergedSettingsUseCase.execute(query);
-        MergedSettingsApiResponse apiResponse = SettingsDtoMapper.toApiResponse(response);
+        MergedSettingsApiResponse apiResponse = SettingsApiMapper.toApiResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 
@@ -313,12 +313,12 @@ public class SettingsController {
      * @since 2025-10-25
      */
     @PatchMapping
-    public ResponseEntity<ApiResponse<UpdateSettingResponse>> updateSetting(
-        @Valid @RequestBody UpdateSettingRequest request
+    public ResponseEntity<ApiResponse<UpdateSettingApiResponse>> updateSetting(
+        @Valid @RequestBody UpdateSettingApiRequest request
     ) {
-        UpdateSettingUseCase.Command command = SettingsDtoMapper.toCommand(request);
+        UpdateSettingUseCase.Command command = SettingsApiMapper.toCommand(request);
         UpdateSettingUseCase.Response response = updateSettingUseCase.execute(command);
-        UpdateSettingResponse apiResponse = SettingsDtoMapper.toUpdateResponse(response);
+        UpdateSettingApiResponse apiResponse = SettingsApiMapper.toUpdateResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 }

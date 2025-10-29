@@ -1,7 +1,9 @@
-package com.ryuqq.adapter.in.rest.common.error;
+package com.ryuqq.fileflow.adapter.rest.common.error;
 
-import com.ryuqq.adapter.in.rest.common.mapper.ErrorMapper;
-import com.ryuqq.domain.common.DomainException;
+
+
+import com.ryuqq.fileflow.adapter.rest.common.mapper.ErrorMapper;
+import com.ryuqq.fileflow.domain.common.DomainException;
 
 import java.net.URI;
 import java.util.List;

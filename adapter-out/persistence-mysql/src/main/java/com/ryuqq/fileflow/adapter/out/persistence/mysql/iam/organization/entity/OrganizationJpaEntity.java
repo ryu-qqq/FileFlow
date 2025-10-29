@@ -1,5 +1,6 @@
-package com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity;
+package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity;
 
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.BaseAuditEntity;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,7 +37,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "organizations")
-public class OrganizationJpaEntity {
+public class OrganizationJpaEntity extends BaseAuditEntity {
 
     /**
      * Organization 고유 식별자 (Primary Key, Auto Increment)
@@ -65,7 +66,7 @@ public class OrganizationJpaEntity {
      * </p>
      */
     @Column(name = "tenant_id", nullable = false)
-    private final Long tenantId;
+    private Long tenantId;
 
     /**
      * 조직 코드
@@ -74,7 +75,7 @@ public class OrganizationJpaEntity {
      * <p><strong>제약</strong>: Tenant 내 유니크, NOT NULL, 최대 50자</p>
      */
     @Column(name = "org_code", nullable = false, length = 50)
-    private final String orgCode;
+    private String orgCode;
 
     /**
      * 조직 이름
@@ -95,25 +96,10 @@ public class OrganizationJpaEntity {
     private OrganizationStatus status;
 
     /**
-     * 생성 일시
-     *
-     * <p><strong>불변 필드</strong>: Entity 생성 시점에만 설정</p>
-     */
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private final LocalDateTime createdAt;
-
-    /**
-     * 최종 수정 일시
-     *
-     * <p><strong>변경 가능 필드</strong>: Entity 수정 시마다 업데이트</p>
-     */
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    /**
      * 소프트 삭제 플래그
      *
-     * <p><strong>변경 가능 필드</strong>: {@code true}이면 논리적 삭제 상태</p>
+     * <p><strong>변경 가늩 필드</strong>: {@code true}이면 논리적 삭제 상태</p>
+     * <p><strong>주의</strong>: BaseAuditEntity의 createdAt, updatedAt은 상속받음</p>
      */
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
@@ -124,17 +110,15 @@ public class OrganizationJpaEntity {
      * <p>JPA Proxy 생성을 위해 필요합니다. 직접 호출 금지!</p>
      */
     protected OrganizationJpaEntity() {
-        this.tenantId = null;
-        this.orgCode = null;
-        this.createdAt = null;
+        super();
     }
 
     /**
-     * Private 전체 생성자
+     * 신규 생성용 생성자 (Protected - PK 없음)
      *
-     * <p>Static Factory Method에서만 사용합니다.</p>
+     * <p>새로운 Entity 생성 시 사용합니다. ID는 DB에서 자동 생성됩니다.</p>
      */
-    private OrganizationJpaEntity(
+    protected OrganizationJpaEntity(
         Long tenantId,
         String orgCode,
         String name,
@@ -143,12 +127,35 @@ public class OrganizationJpaEntity {
         LocalDateTime updatedAt,
         boolean deleted
     ) {
+        super(createdAt, updatedAt);
         this.tenantId = tenantId;
         this.orgCode = orgCode;
         this.name = name;
         this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.deleted = deleted;
+    }
+
+    /**
+     * 재구성용 생성자 (Private - PK 포함)
+     *
+     * <p>DB 조회 결과를 Entity로 재구성할 때 사용합니다.</p>
+     */
+    private OrganizationJpaEntity(
+        Long id,
+        Long tenantId,
+        String orgCode,
+        String name,
+        OrganizationStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        boolean deleted
+    ) {
+        super(createdAt, updatedAt);
+        this.id = id;
+        this.tenantId = tenantId;
+        this.orgCode = orgCode;
+        this.name = name;
+        this.status = status;
         this.deleted = deleted;
     }
 
@@ -214,7 +221,8 @@ public class OrganizationJpaEntity {
         LocalDateTime updatedAt,
         boolean deleted
     ) {
-        OrganizationJpaEntity entity = new OrganizationJpaEntity(
+        return new OrganizationJpaEntity(
+            id,
             tenantId,
             orgCode,
             name,
@@ -223,8 +231,6 @@ public class OrganizationJpaEntity {
             updatedAt,
             deleted
         );
-        entity.id = id;  // ID는 setter 없이 직접 할당 (reconstitute 전용)
-        return entity;
     }
 
     // ========================================
@@ -249,14 +255,6 @@ public class OrganizationJpaEntity {
 
     public OrganizationStatus getStatus() {
         return status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     public boolean isDeleted() {

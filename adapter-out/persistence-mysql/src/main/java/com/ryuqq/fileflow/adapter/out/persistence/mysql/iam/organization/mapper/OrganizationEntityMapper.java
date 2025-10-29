@@ -1,6 +1,6 @@
-package com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.mapper;
+package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.mapper;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity.OrganizationJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.OrganizationJpaEntity;
 import com.ryuqq.fileflow.domain.iam.organization.OrgCode;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;

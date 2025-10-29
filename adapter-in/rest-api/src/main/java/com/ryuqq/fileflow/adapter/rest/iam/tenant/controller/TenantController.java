@@ -1,12 +1,14 @@
 package com.ryuqq.fileflow.adapter.rest.iam.tenant.controller;
 
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.CreateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.TenantApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.TenantListQueryParam;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantStatusRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.mapper.TenantDtoMapper;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.CreateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.response.TenantApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.TenantSearchApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantStatusApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.mapper.TenantApiMapper;
 import com.ryuqq.fileflow.adapter.rest.common.dto.ApiResponse;
+import com.ryuqq.fileflow.adapter.rest.common.dto.PageApiResponse;
+import com.ryuqq.fileflow.adapter.rest.common.dto.SliceApiResponse;
 import com.ryuqq.fileflow.application.common.dto.PageResponse;
 import com.ryuqq.fileflow.application.common.dto.SliceResponse;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.CreateTenantCommand;
@@ -76,7 +78,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-10-22
  */
 @RestController
-@RequestMapping("/api/v1/tenants")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.iam.tenant.base}")
 public class TenantController {
 
     private final TenantCommandFacade tenantCommandFacade;
@@ -139,11 +141,11 @@ public class TenantController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<TenantApiResponse>> createTenant(
-        @Valid @RequestBody CreateTenantRequest request
+        @Valid @RequestBody CreateTenantApiRequest request
     ) {
-        CreateTenantCommand command = TenantDtoMapper.toCommand(request);
+        CreateTenantCommand command = TenantApiMapper.toCommand(request);
         TenantResponse response = tenantCommandFacade.createTenant(command);
-        TenantApiResponse apiResponse = TenantDtoMapper.toApiResponse(response);
+        TenantApiResponse apiResponse = TenantApiMapper.toApiResponse(response);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ofSuccess(apiResponse));
     }
 
@@ -187,11 +189,11 @@ public class TenantController {
     @PatchMapping("/{tenantId}")
     public ResponseEntity<ApiResponse<TenantApiResponse>> updateTenant(
         @PathVariable Long tenantId,
-        @Valid @RequestBody UpdateTenantRequest request
+        @Valid @RequestBody UpdateTenantApiRequest request
     ) {
-        UpdateTenantCommand command = TenantDtoMapper.toCommand(tenantId, request);
+        UpdateTenantCommand command = TenantApiMapper.toCommand(tenantId, request);
         TenantResponse response = tenantCommandFacade.updateTenant(command);
-        TenantApiResponse apiResponse = TenantDtoMapper.toApiResponse(response);
+        TenantApiResponse apiResponse = TenantApiMapper.toApiResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 
@@ -241,11 +243,11 @@ public class TenantController {
     @PatchMapping("/{tenantId}/status")
     public ResponseEntity<ApiResponse<TenantApiResponse>> updateTenantStatus(
         @PathVariable Long tenantId,
-        @Valid @RequestBody UpdateTenantStatusRequest request
+        @Valid @RequestBody UpdateTenantStatusApiRequest request
     ) {
-        UpdateTenantStatusCommand command = TenantDtoMapper.toCommand(tenantId, request);
+        UpdateTenantStatusCommand command = TenantApiMapper.toCommand(tenantId, request);
         TenantResponse response = tenantCommandFacade.updateTenantStatus(command);
-        TenantApiResponse apiResponse = TenantDtoMapper.toApiResponse(response);
+        TenantApiResponse apiResponse = TenantApiMapper.toApiResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 
@@ -276,7 +278,7 @@ public class TenantController {
      *
      * <p><strong>개선 사항 (Phase 6-1):</strong></p>
      * <ul>
-     *   <li>✅ Query Parameter 객체화 ({@link TenantListQueryParam} Record)</li>
+     *   <li>✅ Query Parameter 객체화 ({@link TenantSearchApiRequest} Record)</li>
      *   <li>✅ 메서드 파라미터 5개 → 1개로 단순화</li>
      *   <li>✅ Validation 자동 적용 (@Valid + Bean Validation)</li>
      * </ul>
@@ -288,16 +290,18 @@ public class TenantController {
      */
     @GetMapping
     public ResponseEntity<?> getTenants(
-        @Valid @ModelAttribute TenantListQueryParam param
+        @Valid @ModelAttribute TenantSearchApiRequest param
     ) {
         GetTenantsQuery query = param.toQuery();
 
         if (param.isOffsetBased()) {
             PageResponse<TenantResponse> pageResponse = tenantQueryFacade.getTenantsWithPage(query);
-            return ResponseEntity.ok(ApiResponse.ofSuccess(pageResponse));
+            PageApiResponse<TenantApiResponse> pageApiResponse = PageApiResponse.from(pageResponse, TenantApiMapper::toApiResponse);
+            return ResponseEntity.ok(ApiResponse.ofSuccess(pageApiResponse));
         } else {
             SliceResponse<TenantResponse> sliceResponse = tenantQueryFacade.getTenantsWithSlice(query);
-            return ResponseEntity.ok(ApiResponse.ofSuccess(sliceResponse));
+            SliceApiResponse<TenantApiResponse> sliceApiResponse = SliceApiResponse.from(sliceResponse, TenantApiMapper::toApiResponse);
+            return ResponseEntity.ok(ApiResponse.ofSuccess(sliceApiResponse));
         }
     }
 
@@ -345,7 +349,7 @@ public class TenantController {
     ) {
         GetTenantQuery query = GetTenantQuery.of(tenantId);
         TenantResponse response = tenantQueryFacade.getTenant(query);
-        TenantApiResponse apiResponse = TenantDtoMapper.toApiResponse(response);
+        TenantApiResponse apiResponse = TenantApiMapper.toApiResponse(response);
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 

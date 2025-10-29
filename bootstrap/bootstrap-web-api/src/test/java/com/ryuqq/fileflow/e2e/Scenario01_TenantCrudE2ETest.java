@@ -1,8 +1,8 @@
 package com.ryuqq.fileflow.e2e;
 
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.CreateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantStatusRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.CreateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantStatusApiRequest;
 import com.ryuqq.fileflow.e2e.fixture.TenantFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ class Scenario01_TenantCrudE2ETest extends EndToEndTestBase {
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void tenantCrud_FullFlow_Success() throws Exception {
         // 1. Tenant 생성 (CREATE)
-        CreateTenantRequest createRequest = TenantFixture.createRequest();
+        CreateTenantApiRequest createRequest = TenantFixture.createRequest();
 
         MvcResult createResult = mockMvc.perform(post("/api/v1/tenants")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -75,7 +75,7 @@ class Scenario01_TenantCrudE2ETest extends EndToEndTestBase {
             .andExpect(jsonPath("$.data.deleted").value(false));
 
         // 3. Tenant 수정 (UPDATE)
-        UpdateTenantRequest updateRequest = new UpdateTenantRequest("updated-tenant-name");
+        UpdateTenantApiRequest updateRequest = new UpdateTenantApiRequest("updated-tenant-name");
 
         mockMvc.perform(patch("/api/v1/tenants/{tenantId}", tenantId)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -87,7 +87,7 @@ class Scenario01_TenantCrudE2ETest extends EndToEndTestBase {
             .andExpect(jsonPath("$.data.deleted").value(false));
 
         // 4. Tenant 상태 변경 (UPDATE STATUS)
-        UpdateTenantStatusRequest statusRequest = new UpdateTenantStatusRequest("SUSPENDED");
+        UpdateTenantStatusApiRequest statusRequest = new UpdateTenantStatusApiRequest("SUSPENDED");
 
         mockMvc.perform(patch("/api/v1/tenants/{tenantId}/status", tenantId)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -111,12 +111,12 @@ class Scenario01_TenantCrudE2ETest extends EndToEndTestBase {
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void getTenants_Success() throws Exception {
         // 1. 2개의 Tenant 생성
-        CreateTenantRequest[] requests = TenantFixture.createRequests(2);
+        CreateTenantApiRequest[] requests = TenantFixture.createRequests(2);
 
         Long tenant1Id = null;
         Long tenant2Id = null;
 
-        for (CreateTenantRequest request : requests) {
+        for (CreateTenantApiRequest request : requests) {
             MvcResult result = mockMvc.perform(post("/api/v1/tenants")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(toJson(request)))
@@ -151,7 +151,7 @@ class Scenario01_TenantCrudE2ETest extends EndToEndTestBase {
     void createTenant_DuplicateName_Returns409() throws Exception {
         // 1. 첫 번째 Tenant 생성 (unique name 사용하여 다른 테스트와 충돌 방지)
         String uniqueName = "duplicate-tenant-" + System.currentTimeMillis();
-        CreateTenantRequest request = TenantFixture.createRequest(uniqueName);
+        CreateTenantApiRequest request = TenantFixture.createRequest(uniqueName);
 
         mockMvc.perform(post("/api/v1/tenants")
                 .contentType(MediaType.APPLICATION_JSON)

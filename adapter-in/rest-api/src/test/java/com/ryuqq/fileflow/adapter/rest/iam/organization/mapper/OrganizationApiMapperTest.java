@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.adapter.rest.iam.organization.mapper;
 
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.OrganizationApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.UpdateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.UpdateOrganizationStatusRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.CreateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.response.OrganizationApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationStatusApiRequest;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.CreateOrganizationCommand;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.UpdateOrganizationCommand;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.UpdateOrganizationStatusCommand;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Tag("adapter")
 @Tag("fast")
 @DisplayName("OrganizationDtoMapper 테스트")
-class OrganizationDtoMapperTest {
+class OrganizationApiMapperTest {
 
     private static final String DEFAULT_TENANT_ID = "tenant-uuid-123";
 
@@ -58,14 +58,14 @@ class OrganizationDtoMapperTest {
         @DisplayName("CreateOrganizationRequest를 CreateOrganizationCommand로 변환한다")
         void toCommand_CreateOrganizationRequest_ReturnsCommand() {
             // Given
-            CreateOrganizationRequest request = new CreateOrganizationRequest(
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(
                 DEFAULT_TENANT_ID,
                 "ORG001",
                 "Engineering Department"
             );
 
             // When
-            CreateOrganizationCommand command = OrganizationDtoMapper.toCommand(request);
+            CreateOrganizationCommand command = OrganizationApiMapper.toCommand(request);
 
             // Then
             assertThat(command).isNotNull();
@@ -84,7 +84,7 @@ class OrganizationDtoMapperTest {
         @DisplayName("null CreateOrganizationRequest 전달 시 IllegalArgumentException이 발생한다")
         void toCommand_NullCreateOrganizationRequest_ThrowsException() {
             // When & Then
-            assertThatThrownBy(() -> OrganizationDtoMapper.toCommand((CreateOrganizationRequest) null))
+            assertThatThrownBy(() -> OrganizationApiMapper.toCommand((CreateOrganizationApiRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("CreateOrganizationRequest는 null일 수 없습니다");
         }
@@ -105,10 +105,10 @@ class OrganizationDtoMapperTest {
         void toCommand_UpdateOrganizationRequest_ReturnsCommand() {
             // Given
             Long organizationId = 1L;
-            UpdateOrganizationRequest request = new UpdateOrganizationRequest("Updated Department Name");
+            UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("Updated Department Name");
 
             // When
-            UpdateOrganizationCommand command = OrganizationDtoMapper.toCommand(organizationId, request);
+            UpdateOrganizationCommand command = OrganizationApiMapper.toCommand(organizationId, request);
 
             // Then
             assertThat(command).isNotNull();
@@ -126,10 +126,10 @@ class OrganizationDtoMapperTest {
         @DisplayName("null organizationId 전달 시 IllegalArgumentException이 발생한다")
         void toCommand_NullOrganizationId_ThrowsException() {
             // Given
-            UpdateOrganizationRequest request = new UpdateOrganizationRequest("Updated Department Name");
+            UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("Updated Department Name");
 
             // When & Then
-            assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(null, request))
+            assertThatThrownBy(() -> OrganizationApiMapper.toCommand(null, request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Organization ID는 null일 수 없으며 양수여야 합니다");
         }
@@ -147,7 +147,7 @@ class OrganizationDtoMapperTest {
             Long organizationId = 1L;
 
             // When & Then
-            assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(organizationId, (UpdateOrganizationRequest) null))
+            assertThatThrownBy(() -> OrganizationApiMapper.toCommand(organizationId, (UpdateOrganizationApiRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("UpdateOrganizationRequest는 null일 수 없습니다");
         }
@@ -168,10 +168,10 @@ class OrganizationDtoMapperTest {
         void toCommand_UpdateOrganizationStatusRequestActive_ReturnsCommand() {
             // Given
             Long organizationId = 1L;
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("ACTIVE");
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("ACTIVE");
 
             // When
-            UpdateOrganizationStatusCommand command = OrganizationDtoMapper.toCommand(organizationId, request);
+            UpdateOrganizationStatusCommand command = OrganizationApiMapper.toCommand(organizationId, request);
 
             // Then
             assertThat(command).isNotNull();
@@ -190,10 +190,10 @@ class OrganizationDtoMapperTest {
         void toCommand_UpdateOrganizationStatusRequestInactive_ReturnsCommand() {
             // Given
             Long organizationId = 2L;
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("INACTIVE");
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("INACTIVE");
 
             // When
-            UpdateOrganizationStatusCommand command = OrganizationDtoMapper.toCommand(organizationId, request);
+            UpdateOrganizationStatusCommand command = OrganizationApiMapper.toCommand(organizationId, request);
 
             // Then
             assertThat(command).isNotNull();
@@ -211,10 +211,10 @@ class OrganizationDtoMapperTest {
         @DisplayName("null organizationId 전달 시 IllegalArgumentException이 발생한다")
         void toCommand_NullOrganizationId_ThrowsException() {
             // Given
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("ACTIVE");
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("ACTIVE");
 
             // When & Then
-            assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(null, request))
+            assertThatThrownBy(() -> OrganizationApiMapper.toCommand(null, request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Organization ID는 null일 수 없으며 양수여야 합니다");
         }
@@ -232,7 +232,7 @@ class OrganizationDtoMapperTest {
             Long organizationId = 1L;
 
             // When & Then
-            assertThatThrownBy(() -> OrganizationDtoMapper.toCommand(organizationId, (UpdateOrganizationStatusRequest) null))
+            assertThatThrownBy(() -> OrganizationApiMapper.toCommand(organizationId, (UpdateOrganizationStatusApiRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("UpdateOrganizationStatusRequest는 null일 수 없습니다");
         }
@@ -265,7 +265,7 @@ class OrganizationDtoMapperTest {
             );
 
             // When
-            OrganizationApiResponse apiResponse = OrganizationDtoMapper.toApiResponse(response);
+            OrganizationApiResponse apiResponse = OrganizationApiMapper.toApiResponse(response);
 
             // Then
             assertThat(apiResponse).isNotNull();
@@ -301,7 +301,7 @@ class OrganizationDtoMapperTest {
             );
 
             // When
-            OrganizationApiResponse apiResponse = OrganizationDtoMapper.toApiResponse(response);
+            OrganizationApiResponse apiResponse = OrganizationApiMapper.toApiResponse(response);
 
             // Then
             assertThat(apiResponse).isNotNull();
@@ -331,7 +331,7 @@ class OrganizationDtoMapperTest {
             );
 
             // When
-            OrganizationApiResponse apiResponse = OrganizationDtoMapper.toApiResponse(response);
+            OrganizationApiResponse apiResponse = OrganizationApiMapper.toApiResponse(response);
 
             // Then
             assertThat(apiResponse).isNotNull();
@@ -348,7 +348,7 @@ class OrganizationDtoMapperTest {
         @DisplayName("null OrganizationResponse 전달 시 IllegalArgumentException이 발생한다")
         void toApiResponse_NullOrganizationResponse_ThrowsException() {
             // When & Then
-            assertThatThrownBy(() -> OrganizationDtoMapper.toApiResponse(null))
+            assertThatThrownBy(() -> OrganizationApiMapper.toApiResponse(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("OrganizationResponse는 null일 수 없습니다");
         }
@@ -369,8 +369,8 @@ class OrganizationDtoMapperTest {
         void utilityClass_CannotBeInstantiated() {
             // When & Then - Reflection으로 인스턴스 생성 시도 시 UnsupportedOperationException 발생
             assertThatThrownBy(() -> {
-                java.lang.reflect.Constructor<OrganizationDtoMapper> constructor =
-                    OrganizationDtoMapper.class.getDeclaredConstructor();
+                java.lang.reflect.Constructor<OrganizationApiMapper> constructor =
+                    OrganizationApiMapper.class.getDeclaredConstructor();
                 constructor.setAccessible(true);
                 constructor.newInstance();
             })

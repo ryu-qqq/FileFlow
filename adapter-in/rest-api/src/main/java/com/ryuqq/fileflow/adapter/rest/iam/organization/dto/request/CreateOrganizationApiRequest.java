@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.organization.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -36,7 +36,7 @@ import jakarta.validation.constraints.Positive;
  * @author ryu-qqq
  * @since 2025-10-22
  */
-public record CreateOrganizationRequest(
+public record CreateOrganizationApiRequest(
     @NotNull(message = "Tenant ID는 필수입니다")
     @Positive(message = "Tenant ID는 양수여야 합니다")
     Long tenantId,

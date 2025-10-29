@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.entity;
 
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.BaseAuditEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +20,7 @@ import java.time.LocalDateTime;
  * <h3>설계 원칙</h3>
  * <ul>
  *   <li>✅ JPA 어노테이션만 사용 (비즈니스 로직 없음)</li>
- *   <li>✅ Long FK 전략 (JPA 관계 어노테이션 금지 - {@code @OneToMany}, {@code @ManyToOne} 등 사용 안함)</li>
+ *   <li>✅ Long FK 전략 (JPA 관계 어노테이션 금지)</li>
  *   <li>✅ Getter만 제공 (Setter 금지)</li>
  *   <li>✅ {@code private final} 필드 (변경 불가능한 필드)</li>
  *   <li>✅ Static Factory Methods: {@code create()}, {@code reconstitute()}</li>
@@ -41,7 +42,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "user_contexts")
-public class UserContextJpaEntity {
+public class UserContextJpaEntity extends BaseAuditEntity {
 
     /**
      * UserContext 고유 식별자 (Primary Key)
@@ -62,7 +63,7 @@ public class UserContextJpaEntity {
      * <p><strong>예시</strong>: "auth0|abc123", "google|xyz789"</p>
      */
     @Column(name = "external_user_id", unique = true, nullable = false, length = 255)
-    private final String externalUserId;
+    private String externalUserId;
 
     /**
      * 사용자 이메일
@@ -71,28 +72,13 @@ public class UserContextJpaEntity {
      * <p><strong>제약</strong>: NOT NULL, 최대 255자</p>
      */
     @Column(name = "email", nullable = false, length = 255)
-    private final String email;
-
-    /**
-     * 생성 일시
-     *
-     * <p><strong>불변 필드</strong>: Entity 생성 시점에만 설정</p>
-     */
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private final LocalDateTime createdAt;
-
-    /**
-     * 최종 수정 일시
-     *
-     * <p><strong>변경 가능 필드</strong>: Entity 수정 시마다 업데이트</p>
-     */
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private String email;
 
     /**
      * 소프트 삭제 플래그
      *
      * <p><strong>변경 가능 필드</strong>: {@code true}이면 논리적 삭제 상태</p>
+     * <p><strong>주의</strong>: BaseAuditEntity의 createdAt, updatedAt은 상속받음</p>
      */
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
@@ -103,15 +89,31 @@ public class UserContextJpaEntity {
      * <p>JPA Proxy 생성을 위해 필요합니다. 직접 호출 금지!</p>
      */
     protected UserContextJpaEntity() {
-        this.externalUserId = null;
-        this.email = null;
-        this.createdAt = null;
+        super();
     }
 
     /**
-     * Private 전체 생성자
+     * 신규 생성용 생성자 (Protected - PK 없음)
      *
-     * <p>Static Factory Method에서만 사용합니다.</p>
+     * <p>새로운 Entity 생성 시 사용합니다. ID는 DB에서 자동 생성됩니다.</p>
+     */
+    protected UserContextJpaEntity(
+        String externalUserId,
+        String email,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        boolean deleted
+    ) {
+        super(createdAt, updatedAt);
+        this.externalUserId = externalUserId;
+        this.email = email;
+        this.deleted = deleted;
+    }
+
+    /**
+     * 재구성용 생성자 (Private - PK 포함)
+     *
+     * <p>DB 조회 결과를 Entity로 재구성할 때 사용합니다.</p>
      */
     private UserContextJpaEntity(
         Long id,
@@ -121,11 +123,10 @@ public class UserContextJpaEntity {
         LocalDateTime updatedAt,
         boolean deleted
     ) {
+        super(createdAt, updatedAt);
         this.id = id;
         this.externalUserId = externalUserId;
         this.email = email;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
         this.deleted = deleted;
     }
 
@@ -156,7 +157,6 @@ public class UserContextJpaEntity {
         }
 
         return new UserContextJpaEntity(
-            null,           // id는 DB에서 자동 생성
             externalUserId,
             email,
             createdAt,
@@ -212,14 +212,6 @@ public class UserContextJpaEntity {
 
     public String getEmail() {
         return email;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     public boolean isDeleted() {

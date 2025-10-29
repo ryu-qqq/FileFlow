@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.e2e;
 
 import com.jayway.jsonpath.JsonPath;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.CreateOrganizationApiRequest;
 import com.ryuqq.fileflow.e2e.fixture.OrganizationFixture;
 import com.ryuqq.fileflow.e2e.fixture.PermissionFixture;
 import org.junit.jupiter.api.AfterEach;
@@ -88,7 +88,7 @@ class Scenario06_TenantScopePermissionE2ETest extends EndToEndTestBase {
         // 2. Organization 생성
         long timestamp = System.nanoTime();
         String orgCode = "S6-" + (timestamp % 100000000);  // 최대 13자 (20자 제한)
-        CreateOrganizationRequest orgRequest = OrganizationFixture.createRequest(
+        CreateOrganizationApiRequest orgRequest = OrganizationFixture.createRequest(
             tenantId,
             orgCode
         );

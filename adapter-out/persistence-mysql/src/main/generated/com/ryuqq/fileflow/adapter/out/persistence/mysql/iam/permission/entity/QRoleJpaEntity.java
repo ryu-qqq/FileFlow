@@ -19,15 +19,20 @@ public class QRoleJpaEntity extends EntityPathBase<RoleJpaEntity> {
 
     public static final QRoleJpaEntity roleJpaEntity = new QRoleJpaEntity("roleJpaEntity");
 
+    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QSoftDeletableEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QSoftDeletableEntity(this);
+
     public final StringPath code = createString("code");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final BooleanPath deleted = createBoolean("deleted");
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> deletedAt = _super.deletedAt;
 
     public final StringPath description = createString("description");
 
-    public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public QRoleJpaEntity(String variable) {
         super(RoleJpaEntity.class, forVariable(variable));

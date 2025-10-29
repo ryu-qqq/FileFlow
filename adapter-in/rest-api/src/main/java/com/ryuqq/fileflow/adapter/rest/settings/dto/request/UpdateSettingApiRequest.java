@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.settings.dto;
+package com.ryuqq.fileflow.adapter.rest.settings.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

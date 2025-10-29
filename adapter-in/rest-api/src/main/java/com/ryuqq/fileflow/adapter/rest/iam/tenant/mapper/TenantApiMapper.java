@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.adapter.rest.iam.tenant.mapper;
 
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.CreateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.TenantApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantStatusRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.CreateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.response.TenantApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantStatusApiRequest;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.CreateTenantCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.UpdateTenantCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.UpdateTenantStatusCommand;
@@ -32,7 +32,7 @@ import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
  * @author ryu-qqq
  * @since 2025-10-22
  */
-public final class TenantDtoMapper {
+public final class TenantApiMapper {
 
     /**
      * Private Constructor - 인스턴스 생성 방지
@@ -40,7 +40,7 @@ public final class TenantDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    private TenantDtoMapper() {
+    private TenantApiMapper() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
@@ -53,7 +53,7 @@ public final class TenantDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static CreateTenantCommand toCommand(CreateTenantRequest request) {
+    public static CreateTenantCommand toCommand(CreateTenantApiRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("CreateTenantRequest는 null일 수 없습니다");
         }
@@ -77,7 +77,7 @@ public final class TenantDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public static UpdateTenantCommand toCommand(Long tenantId, UpdateTenantRequest request) {
+    public static UpdateTenantCommand toCommand(Long tenantId, UpdateTenantApiRequest request) {
         if (tenantId == null || tenantId <= 0) {
             throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }
@@ -104,7 +104,7 @@ public final class TenantDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public static UpdateTenantStatusCommand toCommand(Long tenantId, UpdateTenantStatusRequest request) {
+    public static UpdateTenantStatusCommand toCommand(Long tenantId, UpdateTenantStatusApiRequest request) {
         if (tenantId == null || tenantId <= 0) {
             throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
         }

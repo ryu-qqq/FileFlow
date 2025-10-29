@@ -123,13 +123,13 @@ public final class RoleEntityMapper {
         // Value Object → 원시 타입 (Law of Demeter 준수)
         String code = role.getCodeValue();
 
-        // Role은 Code를 PK로 사용하므로 항상 reconstitute
-        return RoleJpaEntity.reconstitute(
+        // Role은 Code를 PK로 사용하므로 항상 PK 포함 생성자 사용
+        return new RoleJpaEntity(
             code,
             role.getDescription(),
             role.getCreatedAt(),
             role.getUpdatedAt(),
-            role.isDeleted()
+            role.getDeletedAt()
         );
     }
 
@@ -163,8 +163,8 @@ public final class RoleEntityMapper {
         // 주의: PermissionCode는 getValue() 메서드 사용
         String permissionCodeValue = permissionCode.getValue();
 
-        // RolePermission은 새로 생성되거나 기존 것이므로 create 사용
-        return RolePermissionJpaEntity.create(roleCode, permissionCodeValue);
+        // RolePermission은 새로 생성 (PK 제외 생성자 사용)
+        return new RolePermissionJpaEntity(roleCode, permissionCodeValue);
     }
 
     /**

@@ -1,12 +1,11 @@
 package com.ryuqq.fileflow.fixtures;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.entity.TenantJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.entity.TenantJpaEntity;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * TenantJpaEntity Object Mother Pattern
