@@ -23,6 +23,9 @@ jobs:
       matrix:
         module:
           # 의존성 순서대로 배치
+          - name: ecr
+            dir: terraform/ecr
+            order: 0
           - name: elasticache-redis
             dir: terraform/elasticache-redis
             order: 1
@@ -132,6 +135,15 @@ jobs:
               fi
             fi
 
+            # ECR 모듈
+            if [ "${{ matrix.module.name }}" == "ecr" ]; then
+              echo "📦 ECR Repository 리소스 Import 중..."
+              if aws ecr describe-repositories --repository-names fileflow-prod --region ap-northeast-2 >/dev/null 2>&1; then
+                echo "  → Importing fileflow-prod ECR repository..."
+                terraform import -input=false aws_ecr_repository.fileflow fileflow-prod || echo "  ⚠️  Import failed or already in state"
+              fi
+            fi
+
             echo "✅ Import 완료! Plan 재실행..."
             terraform plan -out=tfplan
           else
@@ -179,6 +191,7 @@ jobs:
           echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Modules Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ECR Repository" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ ElastiCache Redis" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ S3 Bucket" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ SQS Queue" >> $GITHUB_STEP_SUMMARY
