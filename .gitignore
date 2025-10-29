@@ -49,3 +49,6 @@ terraform.rc
 claudedocs/
 *.log
 .claude/hooks/logs/
+
+# LangFuse telemetry files (contains sensitive API keys)
+.langfuse.telemetry
