@@ -53,7 +53,7 @@ resource "aws_security_group" "redis" {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]  # VPC CIDR - update with actual VPC CIDR
+    cidr_blocks = ["10.0.0.0/16"] # VPC CIDR - update with actual VPC CIDR
   }
 
   egress {
@@ -111,23 +111,23 @@ resource "aws_elasticache_cluster" "main" {
   security_group_ids = [aws_security_group.redis.id]
 
   snapshot_retention_limit = 7
-  snapshot_window         = "03:00-05:00"
-  maintenance_window      = "sun:05:00-sun:07:00"
+  snapshot_window          = "03:00-05:00"
+  maintenance_window       = "sun:05:00-sun:07:00"
 
   auto_minor_version_upgrade = true
 
   log_delivery_configuration {
     destination      = aws_cloudwatch_log_group.redis_slow.name
     destination_type = "cloudwatch-logs"
-    log_format      = "json"
-    log_type        = "slow-log"
+    log_format       = "json"
+    log_type         = "slow-log"
   }
 
   log_delivery_configuration {
     destination      = aws_cloudwatch_log_group.redis_engine.name
     destination_type = "cloudwatch-logs"
-    log_format      = "json"
-    log_type        = "engine-log"
+    log_format       = "json"
+    log_type         = "engine-log"
   }
 
   tags = merge(

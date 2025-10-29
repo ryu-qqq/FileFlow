@@ -18,7 +18,7 @@ resource "aws_ecr_repository" "fileflow" {
 
   # 암호화 설정
   encryption_configuration {
-    encryption_type = "AES256"  # AWS 관리형 키 사용
+    encryption_type = "AES256" # AWS 관리형 키 사용
   }
 
   tags = {
