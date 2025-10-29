@@ -104,14 +104,14 @@ public final class PermissionEntityMapper {
         String code = permission.getCodeValue();
         String defaultScope = permission.getDefaultScope().name();
 
-        // Permission은 Code를 PK로 사용하므로 항상 reconstitute
-        return PermissionJpaEntity.reconstitute(
+        // Permission은 Code를 PK로 사용하므로 항상 PK 포함 생성자 사용
+        return new PermissionJpaEntity(
             code,
             permission.getDescription(),
             defaultScope,
             permission.getCreatedAt(),
             permission.getUpdatedAt(),
-            permission.isDeleted()
+            permission.getDeletedAt()
         );
     }
 }

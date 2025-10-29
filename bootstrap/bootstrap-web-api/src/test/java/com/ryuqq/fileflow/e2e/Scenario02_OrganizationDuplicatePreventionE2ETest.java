@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.e2e;
 
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.CreateTenantRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.CreateOrganizationApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.CreateTenantApiRequest;
 import com.ryuqq.fileflow.e2e.fixture.OrganizationFixture;
 import com.ryuqq.fileflow.e2e.fixture.TenantFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -45,7 +45,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
     @DisplayName("같은 Tenant 내에서 동일한 org_code로 Organization 생성 시도 시 409 Conflict 반환")
     void createOrganization_SameTenantDuplicateOrgCode_Returns409() throws Exception {
         // 1. Tenant 생성
-        CreateTenantRequest tenantRequest = TenantFixture.createRequest();
+        CreateTenantApiRequest tenantRequest = TenantFixture.createRequest();
         MvcResult tenantResult = mockMvc.perform(post("/api/v1/tenants")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(tenantRequest)))
@@ -55,7 +55,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
         Long tenantId = ((Number) JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId")).longValue();
 
         // 2. 첫 번째 Organization 생성 (orgCode: "ORG001")
-        CreateOrganizationRequest orgRequest1 = OrganizationFixture.createRequest(tenantId, "ORG001");
+        CreateOrganizationApiRequest orgRequest1 = OrganizationFixture.createRequest(tenantId, "ORG001");
         mockMvc.perform(post("/api/v1/organizations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(orgRequest1)))
@@ -64,7 +64,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
             .andExpect(jsonPath("$.data.orgCode").value("ORG001"));
 
         // 3. 동일한 orgCode로 두 번째 Organization 생성 시도 → 409 Conflict
-        CreateOrganizationRequest orgRequest2 = OrganizationFixture.createRequest(tenantId, "ORG001", "Duplicate Org");
+        CreateOrganizationApiRequest orgRequest2 = OrganizationFixture.createRequest(tenantId, "ORG001", "Duplicate Org");
         mockMvc.perform(post("/api/v1/organizations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(orgRequest2)))
@@ -78,7 +78,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
     @DisplayName("다른 Tenant 간에는 동일한 org_code로 Organization 생성 가능")
     void createOrganization_DifferentTenantSameOrgCode_Success() throws Exception {
         // 1. Tenant1 생성
-        CreateTenantRequest tenant1Request = TenantFixture.createRequest();
+        CreateTenantApiRequest tenant1Request = TenantFixture.createRequest();
         MvcResult tenant1Result = mockMvc.perform(post("/api/v1/tenants")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(tenant1Request)))
@@ -88,7 +88,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
         Long tenant1Id = ((Number) JsonPath.read(tenant1Result.getResponse().getContentAsString(), "$.data.tenantId")).longValue();
 
         // 2. Tenant2 생성
-        CreateTenantRequest tenant2Request = TenantFixture.createRequest();
+        CreateTenantApiRequest tenant2Request = TenantFixture.createRequest();
         MvcResult tenant2Result = mockMvc.perform(post("/api/v1/tenants")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(tenant2Request)))
@@ -98,7 +98,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
         Long tenant2Id = ((Number) JsonPath.read(tenant2Result.getResponse().getContentAsString(), "$.data.tenantId")).longValue();
 
         // 3. Tenant1에 Organization 생성 (orgCode: "SHARED_ORG")
-        CreateOrganizationRequest org1Request = OrganizationFixture.createRequest(tenant1Id, "SHARED_ORG");
+        CreateOrganizationApiRequest org1Request = OrganizationFixture.createRequest(tenant1Id, "SHARED_ORG");
         mockMvc.perform(post("/api/v1/organizations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(org1Request)))
@@ -107,7 +107,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
             .andExpect(jsonPath("$.data.orgCode").value("SHARED_ORG"));
 
         // 4. Tenant2에 동일한 orgCode로 Organization 생성 → 200 OK (다른 tenant이므로 허용)
-        CreateOrganizationRequest org2Request = OrganizationFixture.createRequest(tenant2Id, "SHARED_ORG");
+        CreateOrganizationApiRequest org2Request = OrganizationFixture.createRequest(tenant2Id, "SHARED_ORG");
         mockMvc.perform(post("/api/v1/organizations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(org2Request)))
@@ -120,7 +120,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
     @DisplayName("한 Tenant에 여러 Organization 생성 가능 (각각 다른 org_code)")
     void createOrganization_MultipleDifferentOrgCodes_Success() throws Exception {
         // 1. Tenant 생성
-        CreateTenantRequest tenantRequest = TenantFixture.createRequest();
+        CreateTenantApiRequest tenantRequest = TenantFixture.createRequest();
         MvcResult tenantResult = mockMvc.perform(post("/api/v1/tenants")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(tenantRequest)))
@@ -130,9 +130,9 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
         Long tenantId = ((Number) JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId")).longValue();
 
         // 2. 3개의 서로 다른 Organization 생성
-        CreateOrganizationRequest[] orgRequests = OrganizationFixture.createRequests(tenantId, 3);
+        CreateOrganizationApiRequest[] orgRequests = OrganizationFixture.createRequests(tenantId, 3);
 
-        for (CreateOrganizationRequest orgRequest : orgRequests) {
+        for (CreateOrganizationApiRequest orgRequest : orgRequests) {
             mockMvc.perform(post("/api/v1/organizations")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(toJson(orgRequest)))
@@ -154,7 +154,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
     @DisplayName("org_code가 null이거나 빈 문자열인 경우 400 Bad Request 반환")
     void createOrganization_InvalidOrgCode_Returns400() throws Exception {
         // 1. Tenant 생성
-        CreateTenantRequest tenantRequest = TenantFixture.createRequest();
+        CreateTenantApiRequest tenantRequest = TenantFixture.createRequest();
         MvcResult tenantResult = mockMvc.perform(post("/api/v1/tenants")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(tenantRequest)))
@@ -164,7 +164,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
         Long tenantId = ((Number) JsonPath.read(tenantResult.getResponse().getContentAsString(), "$.data.tenantId")).longValue();
 
         // 2. org_code가 빈 문자열인 Organization 생성 시도
-        CreateOrganizationRequest orgRequest = OrganizationFixture.createRequest(tenantId, "", "Invalid Org");
+        CreateOrganizationApiRequest orgRequest = OrganizationFixture.createRequest(tenantId, "", "Invalid Org");
         mockMvc.perform(post("/api/v1/organizations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(orgRequest)))
@@ -181,7 +181,7 @@ class Scenario02_OrganizationDuplicatePreventionE2ETest extends EndToEndTestBase
         // NOTE: 현재 API는 Tenant 존재 여부를 검증하지 않고 Organization을 생성함 (201 반환)
         // TODO: Tenant FK 검증 로직 추가하여 404 Not Found 반환하도록 개선 필요 (KAN-XXX)
         Long nonExistentTenantId = 999999L;
-        CreateOrganizationRequest orgRequest = OrganizationFixture.createRequest(nonExistentTenantId, "ORG001");
+        CreateOrganizationApiRequest orgRequest = OrganizationFixture.createRequest(nonExistentTenantId, "ORG001");
 
         mockMvc.perform(post("/api/v1/organizations")
                 .contentType(MediaType.APPLICATION_JSON)

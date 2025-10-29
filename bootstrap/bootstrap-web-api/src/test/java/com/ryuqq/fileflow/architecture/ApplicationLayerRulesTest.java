@@ -1,12 +1,13 @@
 package com.ryuqq.fileflow.architecture;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
@@ -36,7 +37,7 @@ class ApplicationLayerRulesTest {
     void setUp() {
         applicationClasses = new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                .importPackages("com.ryuqq.fileflow.application");
+                .importPackages("com.ryuqq.application");
     }
 
     @Test
@@ -56,13 +57,14 @@ class ApplicationLayerRulesTest {
     }
 
     @Test
-    @DisplayName("UseCase 인터페이스는 *UseCase 네이밍 규칙 준수")
+    @DisplayName("UseCase 인터페이스는 *UseCase 또는 *QueryService 네이밍 규칙 준수")
     void useCaseInterfacesShouldFollowNamingConvention() {
         ArchRule rule = classes()
                 .that().resideInAPackage("..application..port.in..")
                 .and().areInterfaces()
                 .should().haveSimpleNameEndingWith("UseCase")
-                .because("UseCase 인터페이스는 *UseCase 네이밍 규칙을 따라야 합니다.");
+                .orShould().haveSimpleNameEndingWith("QueryService")
+                .because("UseCase 인터페이스는 *UseCase(Command) 또는 *QueryService(Query) 네이밍 규칙을 따라야 합니다.");
 
         rule.check(applicationClasses);
     }
@@ -74,8 +76,9 @@ class ApplicationLayerRulesTest {
                 .that().resideInAPackage("..application..port.in..")
                 .and().areInterfaces()
                 .and().haveSimpleNameEndingWith("UseCase")
+                .or().haveSimpleNameEndingWith("QueryService")
                 .should().bePublic()
-                .because("UseCase 인터페이스는 Public이어야 합니다.");
+                .because("UseCase/QueryService 인터페이스는 Public이어야 합니다.");
 
         rule.check(applicationClasses);
     }
@@ -123,6 +126,44 @@ class ApplicationLayerRulesTest {
                 .should().beAnnotatedWith("org.springframework.stereotype.Service")
                 .orShould().beAnnotatedWith("org.springframework.stereotype.Component")
                 .because("Application Service는 @Service 또는 @Component로 Spring Bean으로 등록되어야 합니다.");
+
+        rule.check(applicationClasses);
+    }
+
+    @Test
+    @DisplayName("Assembler는 @Component로 등록되어야 함")
+    void assemblersShouldBeAnnotatedWithComponent() {
+        ArchRule rule = classes()
+                .that().resideInAPackage("..application..assembler..")
+                .and().haveSimpleNameEndingWith("Assembler")
+                .should().beAnnotatedWith("org.springframework.stereotype.Component")
+                .because("Assembler는 @Component로 Spring Bean으로 등록되어야 합니다.");
+
+        rule.check(applicationClasses);
+    }
+
+    @Test
+    @DisplayName("Command OutPort 네이밍 규칙 준수")
+    void commandOutPortsShouldFollowNamingConvention() {
+        ArchRule rule = classes()
+                .that().resideInAPackage("..application..port.out..")
+                .and().areInterfaces()
+                .and().haveSimpleNameContaining("Command")
+                .should().haveSimpleNameEndingWith("OutPort")
+                .because("Command OutPort는 *CommandOutPort 네이밍 규칙을 따라야 합니다.");
+
+        rule.check(applicationClasses);
+    }
+
+    @Test
+    @DisplayName("Query OutPort 네이밍 규칙 준수")
+    void queryOutPortsShouldFollowNamingConvention() {
+        ArchRule rule = classes()
+                .that().resideInAPackage("..application..port.out..")
+                .and().areInterfaces()
+                .and().haveSimpleNameContaining("Query")
+                .should().haveSimpleNameEndingWith("OutPort")
+                .because("Query OutPort는 *QueryOutPort 네이밍 규칙을 따라야 합니다.");
 
         rule.check(applicationClasses);
     }

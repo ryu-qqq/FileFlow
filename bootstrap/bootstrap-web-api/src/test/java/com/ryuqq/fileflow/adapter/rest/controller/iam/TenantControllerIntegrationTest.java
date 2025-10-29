@@ -2,8 +2,8 @@ package com.ryuqq.fileflow.adapter.rest.controller.iam;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.rest.iam.tenant.controller.TenantController;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.CreateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.CreateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantApiRequest;
 import com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler;
 import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
 import com.ryuqq.fileflow.application.iam.tenant.facade.TenantCommandFacade;
@@ -75,7 +75,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("POST /api/v1/tenants - Tenant 생성 성공 (201 Created)")
     void createTenant_Success_Returns201() throws Exception {
         // Given
-        CreateTenantRequest request = new CreateTenantRequest("my-tenant");
+        CreateTenantApiRequest request = new CreateTenantApiRequest("my-tenant");
         TenantResponse mockResponse = new TenantResponse(
             123L,
             "my-tenant",
@@ -109,7 +109,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("POST /api/v1/tenants - Validation 실패 (400 Bad Request)")
     void createTenant_ValidationFails_Returns400() throws Exception {
         // Given - name이 빈 문자열
-        CreateTenantRequest request = new CreateTenantRequest("");
+        CreateTenantApiRequest request = new CreateTenantApiRequest("");
 
         // When & Then - RFC 7807 응답 검증
         mockMvc.perform(post("/api/v1/tenants")
@@ -134,7 +134,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("POST /api/v1/tenants - 중복 Tenant 이름 (409 Conflict)")
     void createTenant_DuplicateName_Returns409() throws Exception {
         // Given
-        CreateTenantRequest request = new CreateTenantRequest("my-tenant");
+        CreateTenantApiRequest request = new CreateTenantApiRequest("my-tenant");
 
         when(tenantCommandFacade.createTenant(any()))
             .thenThrow(new IllegalStateException("동일한 이름의 Tenant가 이미 존재합니다: my-tenant"));
@@ -162,7 +162,7 @@ class TenantControllerIntegrationTest {
     void updateTenant_Success_Returns200() throws Exception {
         // Given
         Long tenantId = 123L;
-        UpdateTenantRequest request = new UpdateTenantRequest("updated-tenant-name");
+        UpdateTenantApiRequest request = new UpdateTenantApiRequest("updated-tenant-name");
         TenantResponse mockResponse = new TenantResponse(
             tenantId,
             "updated-tenant-name",
@@ -196,7 +196,7 @@ class TenantControllerIntegrationTest {
     void updateTenant_ValidationFails_Returns400() throws Exception {
         // Given - name이 빈 문자열
         String tenantId = "tenant-id-123";
-        UpdateTenantRequest request = new UpdateTenantRequest("");
+        UpdateTenantApiRequest request = new UpdateTenantApiRequest("");
 
         // When & Then - RFC 7807 응답 검증
         mockMvc.perform(patch("/api/v1/tenants/{tenantId}", tenantId)

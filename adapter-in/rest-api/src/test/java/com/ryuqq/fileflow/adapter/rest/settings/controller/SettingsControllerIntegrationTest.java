@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.adapter.rest.settings.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingRequest;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.request.UpdateSettingApiRequest;
 import com.ryuqq.fileflow.application.settings.dto.MergedSettingsResponse;
 import com.ryuqq.fileflow.application.settings.dto.SettingResponse;
 import com.ryuqq.fileflow.application.settings.service.GetMergedSettingsUseCase;
@@ -219,7 +219,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("DEFAULT 레벨 설정을 성공적으로 수정한다 (200 OK)")
         void updateSetting_DefaultLevel_Returns200() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "MAX_UPLOAD_SIZE", "200MB", "DEFAULT", null
             );
             SettingResponse mockResponse = new SettingResponse(
@@ -245,7 +245,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("ORG 레벨 설정을 성공적으로 수정한다 (200 OK)")
         void updateSetting_OrgLevel_Returns200() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "MAX_UPLOAD_SIZE", "300MB", "ORG", 1L
             );
             SettingResponse mockResponse = new SettingResponse(
@@ -269,7 +269,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("TENANT 레벨 설정을 성공적으로 수정한다 (200 OK)")
         void updateSetting_TenantLevel_Returns200() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "MAX_UPLOAD_SIZE", "80MB", "TENANT", 100L
             );
             SettingResponse mockResponse = new SettingResponse(
@@ -293,7 +293,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("key가 null이면 400 Bad Request 반환")
         void updateSetting_KeyIsNull_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 null, "value", "DEFAULT", null
             );
 
@@ -312,7 +312,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("key가 빈 문자열이면 400 Bad Request 반환")
         void updateSetting_KeyIsBlank_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "", "value", "DEFAULT", null
             );
 
@@ -331,7 +331,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("value가 null이면 400 Bad Request 반환")
         void updateSetting_ValueIsNull_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "KEY", null, "DEFAULT", null
             );
 
@@ -350,7 +350,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("value가 빈 문자열이면 400 Bad Request 반환")
         void updateSetting_ValueIsBlank_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "KEY", "", "DEFAULT", null
             );
 
@@ -369,7 +369,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("level이 null이면 400 Bad Request 반환")
         void updateSetting_LevelIsNull_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "KEY", "value", null, null
             );
 
@@ -388,7 +388,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("level이 빈 문자열이면 400 Bad Request 반환")
         void updateSetting_LevelIsBlank_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "KEY", "value", "", null
             );
 
@@ -407,7 +407,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("유효하지 않은 level이면 400 Bad Request 반환")
         void updateSetting_InvalidLevel_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "KEY", "value", "INVALID", null
             );
 
@@ -430,7 +430,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("Setting이 존재하지 않으면 404 Not Found 반환")
         void updateSetting_SettingNotFound_Returns404() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "NON_EXISTENT_KEY", "value", "DEFAULT", null
             );
 
@@ -453,7 +453,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("스키마 검증 실패 시 400 Bad Request 반환")
         void updateSetting_SchemaValidationFails_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "API_TIMEOUT", "invalid-number", "DEFAULT", null
             );
 
@@ -476,7 +476,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("여러 필드가 null이면 모든 validation 에러를 반환한다")
         void updateSetting_MultipleValidationErrors_Returns400() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 null, null, null, null
             );
 
@@ -502,7 +502,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("비밀 설정을 수정하면 새 값도 마스킹되어 반환된다 (200 OK)")
         void updateSetting_SecretSetting_ReturnsMasked() throws Exception {
             // Arrange
-            UpdateSettingRequest request = new UpdateSettingRequest(
+            UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "API_KEY", "new-secret-789", "DEFAULT", null
             );
             SettingResponse mockResponse = new SettingResponse(

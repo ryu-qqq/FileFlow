@@ -18,10 +18,11 @@ import jakarta.persistence.Table;
  *   <li>✅ JPA 어노테이션만 사용 (비즈니스 로직 없음)</li>
  *   <li>✅ Long FK 전략 (JPA 관계 어노테이션 금지)</li>
  *   <li>✅ Getter만 제공 (Setter 금지)</li>
- *   <li>✅ {@code private final} 필드 (변경 불가능한 필드)</li>
- *   <li>✅ Static Factory Methods: {@code create()}, {@code reconstitute()}</li>
+ *   <li>✅ 기본 생성자 + PK 포함/제외 생성자만 제공</li>
  *   <li>❌ Lombok 금지</li>
  *   <li>❌ JPA 관계 어노테이션 금지</li>
+ *   <li>❌ Static Factory Method 금지</li>
+ *   <li>❌ 비즈니스 로직 금지</li>
  * </ul>
  *
  * <h3>테이블 구조</h3>
@@ -57,7 +58,7 @@ public class RolePermissionJpaEntity {
      * <p><strong>제약</strong>: NOT NULL, Index 권장</p>
      */
     @Column(name = "role_code", nullable = false, length = 100)
-    private final String roleCode;
+    private String roleCode;
 
     /**
      * Permission 코드 (FK - String 전략)
@@ -66,24 +67,42 @@ public class RolePermissionJpaEntity {
      * <p><strong>제약</strong>: NOT NULL, Index 권장</p>
      */
     @Column(name = "permission_code", nullable = false, length = 100)
-    private final String permissionCode;
+    private String permissionCode;
 
     /**
      * JPA 전용 기본 생성자 (Protected)
      *
-     * <p>JPA Proxy 생성을 위해 필요합니다. 직접 호출 금지!</p>
+     * <p>JPA 스펙 요구사항입니다. 직접 호출 금지!</p>
      */
     protected RolePermissionJpaEntity() {
-        this.roleCode = null;
-        this.permissionCode = null;
     }
 
     /**
-     * Private 전체 생성자
+     * PK 제외 생성자 (새로 생성)
      *
-     * <p>Static Factory Method에서만 사용합니다.</p>
+     * <p>Role과 Permission을 연결할 때 사용합니다.</p>
+     *
+     * @param roleCode Role 코드
+     * @param permissionCode Permission 코드
      */
-    private RolePermissionJpaEntity(
+    public RolePermissionJpaEntity(
+        String roleCode,
+        String permissionCode
+    ) {
+        this.roleCode = roleCode;
+        this.permissionCode = permissionCode;
+    }
+
+    /**
+     * PK 포함 전체 생성자
+     *
+     * <p>DB에서 조회한 데이터를 Entity로 변환할 때 사용합니다.</p>
+     *
+     * @param id RolePermission ID (PK)
+     * @param roleCode Role 코드
+     * @param permissionCode Permission 코드
+     */
+    public RolePermissionJpaEntity(
         Long id,
         String roleCode,
         String permissionCode
@@ -93,63 +112,8 @@ public class RolePermissionJpaEntity {
         this.permissionCode = permissionCode;
     }
 
-    /**
-     * 새로운 RolePermission Entity 생성 (Static Factory Method)
-     *
-     * <p>Role과 Permission을 연결할 때 사용합니다.</p>
-     *
-     * <p><strong>검증</strong>: 필수 필드 null 체크만 수행 (비즈니스 검증은 Domain Layer에서)</p>
-     *
-     * @param roleCode Role 코드
-     * @param permissionCode Permission 코드
-     * @return 새로운 RolePermissionJpaEntity
-     * @throws IllegalArgumentException 필수 필드가 null인 경우
-     * @author ryu-qqq
-     * @since 2025-10-24
-     */
-    public static RolePermissionJpaEntity create(
-        String roleCode,
-        String permissionCode
-    ) {
-        if (roleCode == null || permissionCode == null) {
-            throw new IllegalArgumentException(
-                "Required fields (roleCode, permissionCode) must not be null"
-            );
-        }
-
-        return new RolePermissionJpaEntity(
-            null,               // id는 DB에서 자동 생성
-            roleCode,
-            permissionCode
-        );
-    }
-
-    /**
-     * DB에서 조회한 데이터로 Entity 재구성 (Static Factory Method)
-     *
-     * <p>DB 조회 결과를 Entity로 변환할 때 사용합니다.</p>
-     *
-     * @param id RolePermission ID
-     * @param roleCode Role 코드
-     * @param permissionCode Permission 코드
-     * @return 재구성된 RolePermissionJpaEntity
-     * @author ryu-qqq
-     * @since 2025-10-24
-     */
-    public static RolePermissionJpaEntity reconstitute(
-        Long id,
-        String roleCode,
-        String permissionCode
-    ) {
-        return new RolePermissionJpaEntity(
-            id,
-            roleCode,
-            permissionCode
-        );
-    }
-
     // ========================================
-    // Getters (Public, 비즈니스 메서드 없음!)
+    // Getters
     // ========================================
 
     public Long getId() {

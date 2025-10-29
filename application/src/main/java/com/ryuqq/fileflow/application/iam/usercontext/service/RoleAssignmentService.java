@@ -1,10 +1,10 @@
 package com.ryuqq.fileflow.application.iam.usercontext.service;
 
 import com.ryuqq.fileflow.application.iam.permission.port.out.GrantsCachePort;
-import com.ryuqq.fileflow.application.iam.usercontext.dto.AssignRoleCommand;
+import com.ryuqq.fileflow.application.iam.usercontext.dto.command.AssignRoleCommand;
 import com.ryuqq.fileflow.application.iam.usercontext.event.RoleAssignedEvent;
 import com.ryuqq.fileflow.application.iam.usercontext.port.out.UserContextRepositoryPort;
-import com.ryuqq.fileflow.application.iam.usercontext.usecase.AssignRoleUseCase;
+import com.ryuqq.fileflow.application.iam.usercontext.port.in.AssignRoleUseCase;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.iam.usercontext.Membership;

@@ -41,7 +41,7 @@ public class Role {
     private String description;
     private Set<PermissionCode> permissionCodes;
     private LocalDateTime updatedAt;
-    private boolean deleted;
+    private LocalDateTime deletedAt;
 
     /**
      * Role을 생성합니다 (Package-private 생성자).
@@ -106,7 +106,7 @@ public class Role {
         this.permissionCodes = new HashSet<>(permissionCodes); // 방어적 복사
         this.createdAt = LocalDateTime.now(clock);
         this.updatedAt = LocalDateTime.now(clock);
-        this.deleted = false;
+        this.deletedAt = null;
     }
 
     /**
@@ -118,7 +118,7 @@ public class Role {
      * @param clock 시간 제공자
      * @param createdAt 생성 일시
      * @param updatedAt 수정 일시
-     * @param deleted 삭제 여부
+     * @param deletedAt 삭제 일시
      * @author ryu-qqq
      * @since 2025-10-24
      */
@@ -129,7 +129,7 @@ public class Role {
         Clock clock,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        boolean deleted
+        LocalDateTime deletedAt
     ) {
         this.code = code;
         this.description = description;
@@ -137,21 +137,21 @@ public class Role {
         this.clock = clock;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.deleted = deleted;
+        this.deletedAt = deletedAt;
     }
 
     /**
      * DB에서 조회한 데이터로 Role 재구성 (Static Factory Method)
      *
      * <p>Persistence Layer에서 DB 데이터를 Domain으로 변환할 때 사용합니다.</p>
-     * <p>모든 상태(deleted 포함)를 그대로 복원합니다.</p>
+     * <p>모든 상태(deletedAt 포함)를 그대로 복원합니다.</p>
      *
      * @param code Role 코드
      * @param description Role 설명
      * @param permissionCodes 포함된 Permission 코드들
      * @param createdAt 생성 일시
      * @param updatedAt 수정 일시
-     * @param deleted 삭제 여부
+     * @param deletedAt 삭제 일시
      * @return 재구성된 Role
      * @author ryu-qqq
      * @since 2025-10-24
@@ -162,7 +162,7 @@ public class Role {
         Set<PermissionCode> permissionCodes,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        boolean deleted
+        LocalDateTime deletedAt
     ) {
         return new Role(
             code,
@@ -171,7 +171,7 @@ public class Role {
             Clock.systemDefaultZone(),
             createdAt,
             updatedAt,
-            deleted
+            deletedAt
         );
     }
 
@@ -191,7 +191,7 @@ public class Role {
             throw new IllegalArgumentException("새로운 Role 설명은 필수입니다");
         }
 
-        if (this.deleted) {
+        if (this.deletedAt != null) {
             throw new IllegalStateException("삭제된 Role의 설명은 변경할 수 없습니다");
         }
 
@@ -213,7 +213,7 @@ public class Role {
             throw new IllegalArgumentException("추가할 Permission 코드는 필수입니다");
         }
 
-        if (this.deleted) {
+        if (this.deletedAt != null) {
             throw new IllegalStateException("삭제된 Role에 Permission을 추가할 수 없습니다");
         }
 
@@ -236,7 +236,7 @@ public class Role {
             throw new IllegalArgumentException("제거할 Permission 코드는 필수입니다");
         }
 
-        if (this.deleted) {
+        if (this.deletedAt != null) {
             throw new IllegalStateException("삭제된 Role에서 Permission을 제거할 수 없습니다");
         }
 
@@ -259,11 +259,11 @@ public class Role {
      * @since 2025-10-24
      */
     public void softDelete() {
-        if (this.deleted) {
+        if (this.deletedAt != null) {
             throw new IllegalStateException("이미 삭제된 Role입니다");
         }
 
-        this.deleted = true;
+        this.deletedAt = LocalDateTime.now(clock);
         this.updatedAt = LocalDateTime.now(clock);
     }
 
@@ -279,7 +279,7 @@ public class Role {
      * @since 2025-10-24
      */
     public boolean isActive() {
-        return !this.deleted;
+        return this.deletedAt == null;
     }
 
     /**
@@ -389,13 +389,13 @@ public class Role {
     }
 
     /**
-     * 삭제 여부를 반환합니다.
+     * 삭제 일시를 반환합니다.
      *
-     * @return 삭제되었으면 true
+     * @return 삭제 일시 (null이면 삭제되지 않음)
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    public boolean isDeleted() {
-        return deleted;
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
     }
 }

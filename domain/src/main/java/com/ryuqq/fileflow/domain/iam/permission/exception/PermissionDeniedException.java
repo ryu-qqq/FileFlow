@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.iam.permission.exception;
 
-import com.ryuqq.fileflow.domain.shared.exception.BusinessException;
+import com.ryuqq.fileflow.domain.common.DomainException;
 
 /**
  * PermissionDeniedException - 권한 거부 예외
@@ -41,7 +41,7 @@ import com.ryuqq.fileflow.domain.shared.exception.BusinessException;
  * <p><strong>규칙 준수:</strong></p>
  * <ul>
  *   <li>❌ Lombok 사용 안함 - Pure Java</li>
- *   <li>✅ BusinessException 상속</li>
+ *   <li>✅ DomainException 상속</li>
  *   <li>✅ DenialReason 포함 (거부 사유)</li>
  *   <li>✅ 상세 메시지 제공</li>
  * </ul>
@@ -49,7 +49,7 @@ import com.ryuqq.fileflow.domain.shared.exception.BusinessException;
  * @author ryu-qqq
  * @since 2025-10-25
  */
-public class PermissionDeniedException extends BusinessException {
+public class PermissionDeniedException extends DomainException {
 
     private final DenialReason denialReason;
     private final String permissionCode;

@@ -55,6 +55,7 @@ public class RedisConfig {
      *   <li>Key Serializer: StringRedisSerializer (UTF-8)</li>
      *   <li>Value Serializer: GenericJackson2JsonRedisSerializer (JSON)</li>
      *   <li>Hash Key/Value Serializer: 동일하게 설정 (Hash 자료구조용)</li>
+     *   <li>ObjectMapper: Redis 전용 (타입 힌트 활성화)</li>
      * </ul>
      *
      * <p><strong>사용 예시:</strong></p>
@@ -87,10 +88,10 @@ public class RedisConfig {
         template.setKeySerializer(keySerializer);
         template.setHashKeySerializer(keySerializer);
 
-        // Value Serializer: JSON (Jackson) with custom ObjectMapper + type hints
+        // Value Serializer: JSON (Jackson) with Redis-specific ObjectMapper + type hints
         // Must configure ObjectMapper with JavaTimeModule AND activateDefaultTyping
         GenericJackson2JsonRedisSerializer valueSerializer =
-            new GenericJackson2JsonRedisSerializer(objectMapper());
+            new GenericJackson2JsonRedisSerializer(redisObjectMapper());
         template.setValueSerializer(valueSerializer);
         template.setHashValueSerializer(valueSerializer);
 
@@ -99,34 +100,40 @@ public class RedisConfig {
     }
 
     /**
-     * ObjectMapper Bean 생성 (JSON 직렬화용)
+     * Redis 전용 ObjectMapper 생성 (타입 힌트 활성화)
      *
-     * <p>Redis Value 직렬화를 위한 ObjectMapper를 생성합니다.</p>
+     * <p>Redis Value 직렬화를 위한 Redis 전용 ObjectMapper를 생성합니다.</p>
+     * <p>전역 ObjectMapper와 다르게 타입 힌트가 활성화되어 있습니다.</p>
      *
-     * <p><strong>설정 내용:</strong></p>
+     * <p><strong>전역 ObjectMapper vs Redis ObjectMapper 차이:</strong></p>
      * <ul>
-     *   <li>JavaTimeModule: Java 8 Time API 지원 (LocalDateTime, Instant 등)</li>
-     *   <li>WRITE_DATES_AS_TIMESTAMPS: false → ISO-8601 문자열로 저장</li>
-     *   <li>날짜 형식: "2025-10-26T15:30:00" (사람이 읽기 쉬움)</li>
+     *   <li>전역 ObjectMapper (CoreConfiguration): 타입 힌트 없음 → REST API, JSON 검증 등</li>
+     *   <li>Redis ObjectMapper (이 메서드): 타입 힌트 활성화 → Redis 캐시 직렬화</li>
      * </ul>
      *
-     * <p><strong>직렬화 예시:</strong></p>
-     * <pre>{@code
-     * // LocalDateTime 직렬화
-     * LocalDateTime now = LocalDateTime.now();
-     * // JSON: "2025-10-26T15:30:00"
+     * <p><strong>Redis 전용 설정:</strong></p>
+     * <ul>
+     *   <li>activateDefaultTyping: NON_FINAL 타입에 @class 타입 힌트 추가</li>
+     *   <li>Clock MixIn: Domain 객체의 Clock 필드 무시</li>
+     *   <li>필수 이유: GenericJackson2JsonRedisSerializer가 역직렬화 시 타입 정보 필요</li>
+     * </ul>
      *
-     * // Instant 직렬화
-     * Instant instant = Instant.now();
-     * // JSON: "2025-10-26T06:30:00Z"
+     * <p><strong>타입 힌트 예시:</strong></p>
+     * <pre>{@code
+     * // Redis에 저장될 JSON (타입 힌트 포함):
+     * {
+     *   "@class": "com.ryuqq.fileflow.adapter.out.persistence.redis.dto.CachedSetting",
+     *   "id": 1,
+     *   "key": "theme",
+     *   "value": "dark"
+     * }
      * }</pre>
      *
-     * @return ObjectMapper (Java 8 Time 지원)
+     * @return Redis 전용 ObjectMapper (타입 힌트 활성화)
      * @author ryu-qqq
-     * @since 2025-10-26
+     * @since 2025-10-29
      */
-    @Bean
-    public ObjectMapper objectMapper() {
+    private ObjectMapper redisObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
 
         // Java 8 Time API 지원

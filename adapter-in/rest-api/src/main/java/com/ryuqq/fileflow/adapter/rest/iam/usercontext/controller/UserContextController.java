@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.adapter.rest.iam.usercontext.controller;
 
 import com.ryuqq.fileflow.adapter.rest.common.dto.ApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.CreateUserContextRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.UserContextApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.usercontext.mapper.UserContextDtoMapper;
+import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.request.CreateUserContextApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.response.UserContextApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.usercontext.mapper.UserContextApiMapper;
 import com.ryuqq.fileflow.application.iam.usercontext.dto.command.CreateUserContextCommand;
 import com.ryuqq.fileflow.application.iam.usercontext.dto.response.UserContextResponse;
 import com.ryuqq.fileflow.application.iam.usercontext.port.in.CreateUserContextUseCase;
@@ -31,15 +31,15 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-10-27
  */
 @RestController
-@RequestMapping("/api/v1/user-contexts")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.iam.user-context.base}")
 public class UserContextController {
 
     private final CreateUserContextUseCase createUserContextUseCase;
-    private final UserContextDtoMapper mapper;
+    private final UserContextApiMapper mapper;
 
     public UserContextController(
         CreateUserContextUseCase createUserContextUseCase,
-        UserContextDtoMapper mapper
+        UserContextApiMapper mapper
     ) {
         this.createUserContextUseCase = createUserContextUseCase;
         this.mapper = mapper;
@@ -50,7 +50,7 @@ public class UserContextController {
      *
      * <p><strong>HTTP Method</strong>: POST</p>
      * <p><strong>Path</strong>: /api/v1/user-contexts</p>
-     * <p><strong>Request Body</strong>: {@link CreateUserContextRequest}</p>
+     * <p><strong>Request Body</strong>: {@link CreateUserContextApiRequest}</p>
      * <p><strong>Response</strong>: 201 Created + {@link UserContextApiResponse}</p>
      *
      * <p><strong>비즈니스 규칙</strong>:</p>
@@ -64,7 +64,7 @@ public class UserContextController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<UserContextApiResponse>> createUserContext(
-        @Valid @RequestBody CreateUserContextRequest request
+        @Valid @RequestBody CreateUserContextApiRequest request
     ) {
         // 1. Request → Command 변환
         CreateUserContextCommand command = mapper.toCommand(request);
