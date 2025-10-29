@@ -8,7 +8,7 @@
 
 # CloudWatch Log Group
 module "fileflow_logs" {
-  source = "../modules/modules/cloudwatch-log-group"
+  source = "../modules/cloudwatch-log-group"
 
   name              = local.log_group_name
   retention_in_days = local.log_retention_days
@@ -125,7 +125,7 @@ resource "aws_iam_role" "fileflow_task_role" {
 
 # ECS Service
 module "fileflow_service" {
-  source = "../modules/modules/ecs-service"
+  source = "../modules/ecs-service"
 
   # Required variables
   name               = local.service_name

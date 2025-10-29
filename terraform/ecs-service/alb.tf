@@ -50,7 +50,7 @@ resource "aws_security_group" "fileflow_alb" {
 
 # Application Load Balancer
 module "fileflow_alb" {
-  source = "../modules/modules/alb"
+  source = "../modules/alb"
 
   # Required variables
   name       = "${local.name_prefix}-alb"
