@@ -19,7 +19,10 @@ public class QTenantJpaEntity extends EntityPathBase<TenantJpaEntity> {
 
     public static final QTenantJpaEntity tenantJpaEntity = new QTenantJpaEntity("tenantJpaEntity");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QBaseAuditEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QBaseAuditEntity(this);
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final BooleanPath deleted = createBoolean("deleted");
 
@@ -29,7 +32,8 @@ public class QTenantJpaEntity extends EntityPathBase<TenantJpaEntity> {
 
     public final EnumPath<com.ryuqq.fileflow.domain.iam.tenant.TenantStatus> status = createEnum("status", com.ryuqq.fileflow.domain.iam.tenant.TenantStatus.class);
 
-    public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public QTenantJpaEntity(String variable) {
         super(TenantJpaEntity.class, forVariable(variable));

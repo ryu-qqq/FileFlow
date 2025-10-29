@@ -64,29 +64,29 @@ public class PermissionApiMapper {
         EvaluationContext userContext;
         if (request.hasRoleCode()) {
             userContext = EvaluationContext.withRole(
-                request.getUserId(),
-                request.getTenantId(),
-                request.getOrganizationId(),
-                request.getRoleCode()
+                request.userId(),
+                request.tenantId(),
+                request.organizationId(),
+                request.roleCode()
             );
         } else {
             userContext = EvaluationContext.withoutRole(
-                request.getUserId(),
-                request.getTenantId(),
-                request.getOrganizationId()
+                request.userId(),
+                request.tenantId(),
+                request.organizationId()
             );
         }
 
         // 2. Scope 변환
-        Scope scope = parseScope(request.getScope());
+        Scope scope = parseScope(request.scope());
 
         // 3. ResourceAttributes 생성
-        ResourceAttributes resourceAttributes = buildResourceAttributes(request.getResourceAttributes());
+        ResourceAttributes resourceAttributes = buildResourceAttributes(request.resourceAttributes());
 
         // 4. Command 생성
         return EvaluatePermissionCommand.builder()
             .userContext(userContext)
-            .permissionCode(request.getPermissionCode())
+            .permissionCode(request.permissionCode())
             .scope(scope)
             .resourceAttributes(resourceAttributes)
             .build();

@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.redis.settings.dto;
 
 import com.ryuqq.fileflow.domain.settings.Setting;
+import com.ryuqq.fileflow.domain.settings.SettingId;
 import com.ryuqq.fileflow.domain.settings.SettingKey;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 import com.ryuqq.fileflow.domain.settings.SettingType;
@@ -42,7 +43,7 @@ public class CachedSetting {
      */
     public static CachedSetting from(Setting domain) {
         CachedSetting cached = new CachedSetting();
-        cached.setId(domain.getId());
+        cached.setId(domain.getIdValue());
         cached.setKeyValue(domain.getKeyValue());
         cached.setSettingValue(domain.getRawValue());
         cached.setSettingType(domain.getValueType().name());
@@ -67,7 +68,7 @@ public class CachedSetting {
         SettingLevel settingLevel = SettingLevel.valueOf(level);
 
         return Setting.reconstitute(
-            id,
+            SettingId.from(id),
             key,
             value,
             settingLevel,

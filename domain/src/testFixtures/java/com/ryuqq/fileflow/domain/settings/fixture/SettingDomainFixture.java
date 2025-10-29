@@ -1,6 +1,7 @@
-package com.ryuqq.fileflow.fixtures;
+package com.ryuqq.fileflow.domain.settings.fixture;
 
 import com.ryuqq.fileflow.domain.settings.Setting;
+import com.ryuqq.fileflow.domain.settings.SettingId;
 import com.ryuqq.fileflow.domain.settings.SettingKey;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 import com.ryuqq.fileflow.domain.settings.SettingType;
@@ -9,27 +10,34 @@ import com.ryuqq.fileflow.domain.settings.SettingValue;
 import java.time.LocalDateTime;
 
 /**
- * Setting Object Mother Pattern
+ * SettingDomain 테스트 Fixture
  *
- * <p>테스트에서 사용할 Setting 객체를 일관되게 생성하기 위한 Fixture입니다.</p>
- * <p>Object Mother 패턴을 사용하여 테스트 데이터 생성의 중복을 제거합니다.</p>
+ * <p>테스트에서 Setting Domain 객체를 쉽게 생성하기 위한 Factory 클래스입니다.</p>
  *
- * <p><strong>설계 원칙:</strong></p>
+ * <h3>네이밍 규칙:</h3>
  * <ul>
- *   <li>✅ Static Factory Method 사용</li>
- *   <li>✅ 명확한 메서드명 (의도 표현)</li>
- *   <li>✅ 테스트별 커스터마이징 가능</li>
- *   <li>✅ 실제 도메인 규칙 준수</li>
+ *   <li>클래스명: {@code *Fixture} 접미사 필수</li>
+ *   <li>기본 생성 메서드: {@code create*()} - 기본값으로 객체 생성</li>
+ *   <li>커스터마이징 메서드: {@code create*With*()} - 특정 값 지정하여 생성</li>
  * </ul>
  *
+ * <h3>사용 예시:</h3>
+ * <pre>{@code
+ * // 기본값으로 생성
+ * Setting setting = SettingDomainFixture.createDefaultSetting();
+ *
+ * // 특정 레벨로 생성
+ * Setting setting = SettingDomainFixture.createOrgSetting(1L);
+ *
+ * // ID 포함하여 생성 (조회 시나리오)
+ * Setting setting = SettingDomainFixture.createWithId(123L, SettingLevel.DEFAULT);
+ * }</pre>
+ *
  * @author ryu-qqq
- * @since 2025-10-25
+ * @since 2025-10-29
+ * @see Setting
  */
-public final class SettingFixtures {
-
-    private SettingFixtures() {
-        // Utility class - 인스턴스 생성 방지
-    }
+public class SettingDomainFixture {
 
     // ============================================================
     // DEFAULT Level Settings
@@ -41,8 +49,7 @@ public final class SettingFixtures {
      * @return DEFAULT 레벨 Setting (MAX_UPLOAD_SIZE = 100MB)
      */
     public static Setting createDefaultSetting() {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("MAX_UPLOAD_SIZE"),
             SettingValue.of("100MB", SettingType.STRING),
             SettingLevel.DEFAULT,
@@ -56,8 +63,7 @@ public final class SettingFixtures {
      * @return DEFAULT 레벨 비밀 Setting (API_KEY = secret-key-123)
      */
     public static Setting createDefaultSecretSetting() {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("API_KEY"),
             SettingValue.secret("secret-key-123", SettingType.STRING),
             SettingLevel.DEFAULT,
@@ -71,8 +77,7 @@ public final class SettingFixtures {
      * @return DEFAULT 레벨 숫자 Setting (API_TIMEOUT = 30)
      */
     public static Setting createDefaultNumberSetting() {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("API_TIMEOUT"),
             SettingValue.of("30", SettingType.NUMBER),
             SettingLevel.DEFAULT,
@@ -86,8 +91,7 @@ public final class SettingFixtures {
      * @return DEFAULT 레벨 Boolean Setting (ENABLE_CACHE = true)
      */
     public static Setting createDefaultBooleanSetting() {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("ENABLE_CACHE"),
             SettingValue.of("true", SettingType.BOOLEAN),
             SettingLevel.DEFAULT,
@@ -102,8 +106,7 @@ public final class SettingFixtures {
      */
     public static Setting createDefaultJsonSetting() {
         String jsonValue = "{\"host\":\"localhost\",\"port\":5432}";
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("DATABASE_CONFIG"),
             SettingValue.of(jsonValue, SettingType.JSON_OBJECT),
             SettingLevel.DEFAULT,
@@ -122,8 +125,7 @@ public final class SettingFixtures {
      * @return ORG 레벨 Setting (MAX_UPLOAD_SIZE = 200MB)
      */
     public static Setting createOrgSetting(Long orgId) {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("MAX_UPLOAD_SIZE"),
             SettingValue.of("200MB", SettingType.STRING),
             SettingLevel.ORG,
@@ -138,8 +140,7 @@ public final class SettingFixtures {
      * @return ORG 레벨 비밀 Setting (ORG_API_KEY = org-secret-456)
      */
     public static Setting createOrgSecretSetting(Long orgId) {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("ORG_API_KEY"),
             SettingValue.secret("org-secret-456", SettingType.STRING),
             SettingLevel.ORG,
@@ -158,8 +159,7 @@ public final class SettingFixtures {
      * @return TENANT 레벨 Setting (MAX_UPLOAD_SIZE = 50MB)
      */
     public static Setting createTenantSetting(Long tenantId) {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("MAX_UPLOAD_SIZE"),
             SettingValue.of("50MB", SettingType.STRING),
             SettingLevel.TENANT,
@@ -174,8 +174,7 @@ public final class SettingFixtures {
      * @return TENANT 레벨 비밀 Setting (TENANT_API_KEY = tenant-secret-789)
      */
     public static Setting createTenantSecretSetting(Long tenantId) {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of("TENANT_API_KEY"),
             SettingValue.secret("tenant-secret-789", SettingType.STRING),
             SettingLevel.TENANT,
@@ -193,9 +192,9 @@ public final class SettingFixtures {
      * @param id Setting ID
      * @return 재구성된 Setting (ID 포함)
      */
-    public static Setting reconstituteDefaultSetting(Long id) {
+    public static Setting createDefaultSettingWithId(Long id) {
         return Setting.reconstitute(
-            id,
+            SettingId.of(id),
             SettingKey.of("MAX_UPLOAD_SIZE"),
             SettingValue.of("100MB", SettingType.STRING),
             SettingLevel.DEFAULT,
@@ -212,9 +211,9 @@ public final class SettingFixtures {
      * @param orgId Organization ID
      * @return 재구성된 ORG Setting (ID 포함)
      */
-    public static Setting reconstituteOrgSetting(Long id, Long orgId) {
+    public static Setting createOrgSettingWithId(Long id, Long orgId) {
         return Setting.reconstitute(
-            id,
+            SettingId.of(id),
             SettingKey.of("MAX_UPLOAD_SIZE"),
             SettingValue.of("200MB", SettingType.STRING),
             SettingLevel.ORG,
@@ -231,9 +230,9 @@ public final class SettingFixtures {
      * @param tenantId Tenant ID (Long FK)
      * @return 재구성된 TENANT Setting (ID 포함)
      */
-    public static Setting reconstituteTenantSetting(Long id, Long tenantId) {
+    public static Setting createTenantSettingWithId(Long id, Long tenantId) {
         return Setting.reconstitute(
-            id,
+            SettingId.of(id),
             SettingKey.of("MAX_UPLOAD_SIZE"),
             SettingValue.of("50MB", SettingType.STRING),
             SettingLevel.TENANT,
@@ -256,8 +255,7 @@ public final class SettingFixtures {
      * @return 커스텀 DEFAULT Setting
      */
     public static Setting createCustomDefaultSetting(String key, String value, SettingType type) {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of(key),
             SettingValue.of(value, type),
             SettingLevel.DEFAULT,
@@ -275,8 +273,7 @@ public final class SettingFixtures {
      * @return 커스텀 ORG Setting
      */
     public static Setting createCustomOrgSetting(String key, String value, SettingType type, Long orgId) {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of(key),
             SettingValue.of(value, type),
             SettingLevel.ORG,
@@ -294,12 +291,63 @@ public final class SettingFixtures {
      * @return 커스텀 TENANT Setting
      */
     public static Setting createCustomTenantSetting(String key, String value, SettingType type, Long tenantId) {
-        return Setting.of(
-            null, // id
+        return Setting.forNew(
             SettingKey.of(key),
             SettingValue.of(value, type),
             SettingLevel.TENANT,
             tenantId
         );
+    }
+
+    /**
+     * 여러 개의 Setting을 생성합니다 (목록 테스트용).
+     *
+     * @param level Setting Level
+     * @param contextId Context ID (ORG or TENANT)
+     * @param count 생성할 개수
+     * @return Setting 배열
+     */
+    public static Setting[] createMultiple(SettingLevel level, Long contextId, int count) {
+        Setting[] settings = new Setting[count];
+        for (int i = 0; i < count; i++) {
+            settings[i] = Setting.forNew(
+                SettingKey.of("TEST_KEY_" + (i + 1)),
+                SettingValue.of("value_" + (i + 1), SettingType.STRING),
+                level,
+                contextId
+            );
+        }
+        return settings;
+    }
+
+    /**
+     * ID를 포함한 여러 개의 Setting을 생성합니다.
+     *
+     * @param startId 시작 ID
+     * @param level Setting Level
+     * @param contextId Context ID
+     * @param count 생성할 개수
+     * @return Setting 배열
+     */
+    public static Setting[] createMultipleWithId(long startId, SettingLevel level, Long contextId, int count) {
+        Setting[] settings = new Setting[count];
+        LocalDateTime now = LocalDateTime.now();
+        for (int i = 0; i < count; i++) {
+            settings[i] = Setting.reconstitute(
+                SettingId.of(startId + i),
+                SettingKey.of("TEST_KEY_" + (i + 1)),
+                SettingValue.of("value_" + (i + 1), SettingType.STRING),
+                level,
+                contextId,
+                now.minusDays(1),
+                now
+            );
+        }
+        return settings;
+    }
+
+    // Private 생성자 - Utility 클래스이므로 인스턴스화 방지
+    private SettingDomainFixture() {
+        throw new AssertionError("Fixture 클래스는 인스턴스화할 수 없습니다.");
     }
 }

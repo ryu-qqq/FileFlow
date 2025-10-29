@@ -96,7 +96,7 @@ class RoleAssignmentServiceTest {
         // Given: AssignRoleCommand 생성
         command = AssignRoleCommand.of(
             123L,
-            "tenant-1",
+            1L,  // Long FK 전략: tenant-1 → 1L
             456L,
             "EMPLOYEE"
         );
@@ -202,7 +202,7 @@ class RoleAssignmentServiceTest {
     void shouldThrowExceptionWhenDuplicateMembershipExists() {
         // Given: 이미 Membership 존재
         Membership existingMembership = Membership.of(
-            TenantId.of("tenant-1"),
+            TenantId.of(1L),
             OrganizationId.of(456L),
             MembershipType.EMPLOYEE
         );

@@ -19,7 +19,10 @@ public class QUserContextJpaEntity extends EntityPathBase<UserContextJpaEntity> 
 
     public static final QUserContextJpaEntity userContextJpaEntity = new QUserContextJpaEntity("userContextJpaEntity");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QBaseAuditEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QBaseAuditEntity(this);
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final BooleanPath deleted = createBoolean("deleted");
 
@@ -29,7 +32,8 @@ public class QUserContextJpaEntity extends EntityPathBase<UserContextJpaEntity> 
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public QUserContextJpaEntity(String variable) {
         super(UserContextJpaEntity.class, forVariable(variable));

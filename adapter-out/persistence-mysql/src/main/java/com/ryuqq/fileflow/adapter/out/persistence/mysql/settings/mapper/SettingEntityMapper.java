@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.entity.SettingJpaEntity;
 import com.ryuqq.fileflow.domain.settings.Setting;
+import com.ryuqq.fileflow.domain.settings.SettingId;
 import com.ryuqq.fileflow.domain.settings.SettingKey;
 import com.ryuqq.fileflow.domain.settings.SettingValue;
 
@@ -107,7 +108,7 @@ public final class SettingEntityMapper {
 
         // Domain → Entity 변환 (reconstitute - ID 포함)
         return SettingJpaEntity.reconstitute(
-            setting.getId(),                 // Long id (업데이트 대상 식별)
+            setting.getIdValue(),            // Long id (업데이트 대상 식별)
             setting.getKeyValue(),           // SettingKey → String
             setting.getRawValue(),           // SettingValue → String (원본 값)
             setting.getValueType(),          // SettingType (Enum)
@@ -154,7 +155,7 @@ public final class SettingEntityMapper {
 
         // Domain Setting 재구성 (reconstitute)
         return Setting.reconstitute(
-            entity.getId(),                  // Long id
+            SettingId.of(entity.getId()),  // SettingId (Value Object)
             key,                             // SettingKey
             value,                           // SettingValue (비밀 여부 포함)
             entity.getLevel(),               // SettingLevel

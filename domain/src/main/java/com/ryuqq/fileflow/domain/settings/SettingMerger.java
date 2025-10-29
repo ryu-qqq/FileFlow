@@ -9,34 +9,45 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Setting Merger Domain Service
+ * Setting Merger Utility
  *
- * <p>3단계 우선순위 병합 전략(ORG > TENANT > DEFAULT)을 담당하는 도메인 서비스입니다.</p>
+ * <p>3단계 우선순위 병합 전략(ORG > TENANT > DEFAULT)을 담당하는 유틸리티 클래스입니다.</p>
  * <p>여러 레벨의 설정을 병합하여 최종 설정 맵을 생성합니다.</p>
  *
- * <p><strong>규칙 준수:</strong></p>
+ * <p><strong>설계 원칙:</strong></p>
  * <ul>
- *   <li>❌ Lombok 사용 안함 - Pure Java</li>
- *   <li>✅ Domain Service 패턴 - 여러 Aggregate를 조율</li>
+ *   <li>✅ Static Utility - 완전히 stateless, 의존성 없음</li>
+ *   <li>✅ Pure Functions - 부작용 없이 결과만 반환</li>
  *   <li>✅ Law of Demeter - 캡슐화된 병합 로직</li>
  *   <li>✅ 불변성 - 원본 Setting 객체 변경 없이 결과 반환</li>
+ *   <li>❌ Lombok 사용 안함 - Pure Java</li>
  * </ul>
+ *
+ * <p><strong>사용 예시:</strong></p>
+ * <pre>{@code
+ * Map<SettingKey, Setting> merged = SettingMerger.merge(
+ *     orgSettings,
+ *     tenantSettings,
+ *     defaultSettings
+ * );
+ * }</pre>
  *
  * @author ryu-qqq
  * @since 2025-10-25
  */
-public class SettingMerger {
+public final class SettingMerger {
 
     /**
-     * SettingMerger 생성자.
+     * Private 생성자 - 인스턴스화 방지.
      *
-     * <p>Domain Service는 상태를 가지지 않으므로 단순 생성자입니다.</p>
+     * <p>유틸리티 클래스는 인스턴스화할 수 없습니다.</p>
      *
+     * @throws UnsupportedOperationException 항상 예외 발생
      * @author ryu-qqq
-     * @since 2025-10-25
+     * @since 2025-10-29
      */
-    public SettingMerger() {
-        // Domain Service - stateless
+    private SettingMerger() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
     /**
@@ -58,7 +69,7 @@ public class SettingMerger {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public Map<SettingKey, Setting> merge(
+    public static Map<SettingKey, Setting> merge(
         List<Setting> orgSettings,
         List<Setting> tenantSettings,
         List<Setting> defaultSettings
@@ -97,7 +108,7 @@ public class SettingMerger {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    private void addSettingsToMap(
+    private static void addSettingsToMap(
         Map<SettingKey, Setting> targetMap,
         List<Setting> settings
     ) {
@@ -126,7 +137,7 @@ public class SettingMerger {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public Optional<Setting> mergeByKey(
+    public static Optional<Setting> mergeByKey(
         SettingKey key,
         List<Setting> orgSettings,
         List<Setting> tenantSettings,
@@ -159,7 +170,7 @@ public class SettingMerger {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    private Optional<Setting> findByKey(SettingKey key, List<Setting> settings) {
+    private static Optional<Setting> findByKey(SettingKey key, List<Setting> settings) {
         if (settings == null || settings.isEmpty()) {
             return Optional.empty();
         }
@@ -181,7 +192,7 @@ public class SettingMerger {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public List<Setting> mergeToList(
+    public static List<Setting> mergeToList(
         List<Setting> orgSettings,
         List<Setting> tenantSettings,
         List<Setting> defaultSettings
@@ -203,7 +214,7 @@ public class SettingMerger {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public Map<String, String> mergeToValueMap(
+    public static Map<String, String> mergeToValueMap(
         List<Setting> orgSettings,
         List<Setting> tenantSettings,
         List<Setting> defaultSettings
@@ -232,7 +243,7 @@ public class SettingMerger {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public Map<String, String> mergeToRawValueMap(
+    public static Map<String, String> mergeToRawValueMap(
         List<Setting> orgSettings,
         List<Setting> tenantSettings,
         List<Setting> defaultSettings
