@@ -203,7 +203,7 @@ class RoleRevocationServiceTest {
         // Given: 다른 tenant/org의 Command
         RevokeRoleCommand nonExistentCommand = RevokeRoleCommand.of(
             123L,
-            1L,  // 존재하지 않는 tenant
+            2L,  // 존재하지 않는 tenant (setUp에서 1L만 추가됨)
             999L         // 존재하지 않는 org
         );
 
