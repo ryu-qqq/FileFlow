@@ -65,19 +65,45 @@ public class UserContext {
     }
 
     /**
-     * UserContext를 생성합니다 (Static Factory Method).
+     * 신규 UserContext를 생성합니다 (Static Factory Method).
      *
-     * <p>생성 시 멤버십은 빈 리스트로 초기화되며, 삭제되지 않은 상태입니다.</p>
+     * <p><strong>ID 없이 신규 도메인 객체를 생성</strong>합니다 (DB 저장 전 상태).</p>
+     * <p>초기 상태: deleted = false, memberships = 빈 리스트, ID = null</p>
      *
-     * @param id UserContext 식별자
+     * <p><strong>사용 시기</strong>: Application Layer에서 Command를 받아 새로운 Entity를 생성할 때</p>
+     *
      * @param externalUserId 외부 IDP 사용자 식별자
      * @param email 이메일
-     * @return 생성된 UserContext
+     * @return 생성된 UserContext (ID = null)
+     * @throws IllegalArgumentException externalUserId 또는 email이 null인 경우
+     * @author ryu-qqq
+     * @since 2025-10-29
+     */
+    public static UserContext forNew(ExternalUserId externalUserId, Email email) {
+        return new UserContext(null, externalUserId, email, Clock.systemDefaultZone());
+    }
+
+    /**
+     * UserContext를 생성합니다 (기존 ID 존재, Static Factory Method).
+     *
+     * <p><strong>ID가 이미 있는 도메인 객체를 생성</strong>합니다.</p>
+     * <p>초기 상태: deleted = false, memberships = 빈 리스트</p>
+     *
+     * <p><strong>사용 시기</strong>: 테스트 또는 ID가 미리 정해진 특수한 경우</p>
+     * <p><strong>주의</strong>: 일반적인 신규 생성에는 {@code forNew()} 사용 권장</p>
+     *
+     * @param id UserContext 식별자 (필수)
+     * @param externalUserId 외부 IDP 사용자 식별자
+     * @param email 이메일
+     * @return 생성된 UserContext (ID 포함)
      * @throws IllegalArgumentException id, externalUserId, email 중 하나라도 null인 경우
      * @author ryu-qqq
-     * @since 2025-10-24
+     * @since 2025-10-29
      */
     public static UserContext of(UserContextId id, ExternalUserId externalUserId, Email email) {
+        if (id == null) {
+            throw new IllegalArgumentException("UserContext ID는 필수입니다");
+        }
         return new UserContext(id, externalUserId, email, Clock.systemDefaultZone());
     }
 
@@ -169,10 +195,13 @@ public class UserContext {
     /**
      * DB에서 조회한 데이터로 UserContext 재구성 (Static Factory Method)
      *
-     * <p>Persistence Layer에서 DB 데이터를 Domain으로 변환할 때 사용합니다.</p>
+     * <p><strong>Persistence Layer → Domain Layer 변환 전용</strong></p>
+     * <p>DB에서 조회한 데이터를 Domain 객체로 복원할 때 사용합니다.</p>
      * <p>모든 상태(memberships, deleted 포함)를 그대로 복원합니다.</p>
      *
-     * @param id UserContext ID
+     * <p><strong>사용 시기</strong>: Persistence Layer에서 JPA Entity → Domain 변환 시</p>
+     *
+     * @param id UserContext ID (필수 - DB에서 조회된 ID)
      * @param externalUserId 외부 IDP 사용자 식별자
      * @param email 이메일
      * @param memberships 멤버십 리스트
@@ -180,6 +209,7 @@ public class UserContext {
      * @param updatedAt 수정 일시
      * @param deleted 삭제 여부
      * @return 재구성된 UserContext
+     * @throws IllegalArgumentException id가 null인 경우
      * @author ryu-qqq
      * @since 2025-10-24
      */
@@ -192,6 +222,9 @@ public class UserContext {
         LocalDateTime updatedAt,
         boolean deleted
     ) {
+        if (id == null) {
+            throw new IllegalArgumentException("DB reconstitute는 ID가 필수입니다");
+        }
         return new UserContext(id, externalUserId, email, memberships, Clock.systemDefaultZone(), createdAt, updatedAt, deleted);
     }
 

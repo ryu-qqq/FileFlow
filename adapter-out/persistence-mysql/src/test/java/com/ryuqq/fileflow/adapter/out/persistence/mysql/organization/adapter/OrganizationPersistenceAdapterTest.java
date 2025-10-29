@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.config.IntegrationTestBase;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.adapter.OrganizationPersistenceAdapter;
 import com.ryuqq.fileflow.domain.iam.organization.OrgCode;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.fixtures.OrganizationFixtures;

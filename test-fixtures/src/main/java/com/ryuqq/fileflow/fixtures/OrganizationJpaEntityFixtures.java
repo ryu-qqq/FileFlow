@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.fixtures;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity.OrganizationJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.OrganizationJpaEntity;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationStatus;
 
 import java.time.LocalDateTime;

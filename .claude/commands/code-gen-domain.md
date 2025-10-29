@@ -2,6 +2,23 @@
 
 당신은 DDD(Domain-Driven Design) Aggregate를 생성하는 전문가입니다.
 
+## 🧠 Serena 메모리 자동 로드
+
+먼저 Serena 메모리에서 Domain Layer 코딩 컨벤션을 로드합니다:
+
+```python
+# 1. Domain Layer 컨벤션 로드
+domain_conventions = read_memory("coding_convention_domain_layer")
+
+# 2. 주요 규칙 확인
+# - Lombok 금지
+# - Law of Demeter (Getter 체이닝 금지)
+# - Aggregate Root 패턴
+# - Tell, Don't Ask 패턴
+```
+
+**메모리에서 로드된 규칙이 최우선이며, 아래 규칙은 보조 참고용입니다.**
+
 ## 🎯 컨텍스트 주입 (자동)
 
 ---
@@ -41,17 +58,28 @@
 - **Aggregate 이름**: 첫 번째 인자로 전달된 엔티티명 (예: `Order`, `Payment`, `Shipment`)
 - **PRD 파일** (선택): 두 번째 인자로 PRD 문서 경로 (있을 경우 분석하여 비즈니스 로직 구현)
 
-### 2. 생성할 파일
+### 2. 생성할 파일 (유연한 구조)
 
-다음 파일을 `domain/src/main/java/com/company/template/domain/model/` 경로에 생성:
+**⚠️ 중요**: 아래는 예시일 뿐이며, **PRD 요구사항에 따라 필요한 파일만** 생성하세요!
+
+다음 파일을 `domain/src/main/java/com/ryuqq/domain/{aggregateLower}/` 경로에 생성:
 
 ```
-domain/src/main/java/com/company/template/domain/model/
-├── {AggregateName}.java          # Aggregate Root
-├── {AggregateName}Id.java        # Typed ID (record)
-├── {AggregateName}Status.java    # Status Enum
-└── {Entity}.java                 # 내부 Entity (필요시)
+domain/src/main/java/com/ryuqq/domain/{aggregateLower}/
+├── {Aggregate}Domain.java          # Aggregate Root (필수)
+├── {Aggregate}Id.java              # ID Value Object (필수)
+├── (Value Objects - PRD에 따라)    # Content, Name, Amount 등 필요한 것만
+├── (Enums - PRD에 따라)            # Status, Type 등 필요한 것만
+└── exception/                      # Exception Hierarchy (필수)
+    ├── {Aggregate}Exception.java
+    └── (Specific Exceptions - 필요한 것만)
 ```
+
+**생성 원칙**:
+- ✅ **PRD 분석**: 요구사항에서 필요한 필드만 추출
+- ✅ **최소 구조**: Aggregate Root + ID + Exception만 필수
+- ❌ **과도한 생성 금지**: Content, Status, Audit 등을 무조건 만들지 말 것
+- ❌ **고정 템플릿 금지**: 매번 동일한 구조를 만들지 말 것
 
 ### 3. 필수 준수 규칙
 

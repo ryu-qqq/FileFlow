@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.iam.tenant.exception;
 
-import com.ryuqq.fileflow.domain.shared.exception.ErrorCode;
+import com.ryuqq.fileflow.domain.common.ErrorCode;
 
 /**
  * TenantErrorCode - Tenant Bounded Context 에러 코드

@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.e2e.fixture;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.entity.UserOrgMembershipJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.repository.UserOrgMembershipJpaRepository;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.CreateOrganizationApiRequest;
 import org.springframework.stereotype.Component;
 
 /**
@@ -46,8 +46,8 @@ public class OrganizationFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateOrganizationRequest createRequest(Long tenantId, String orgCode, String name) {
-        return new CreateOrganizationRequest(tenantId, orgCode, name);
+    public static CreateOrganizationApiRequest createRequest(Long tenantId, String orgCode, String name) {
+        return new CreateOrganizationApiRequest(tenantId, orgCode, name);
     }
 
     /**
@@ -59,7 +59,7 @@ public class OrganizationFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateOrganizationRequest createRequest(Long tenantId, String orgCode) {
+    public static CreateOrganizationApiRequest createRequest(Long tenantId, String orgCode) {
         return createRequest(tenantId, orgCode, "Org-" + orgCode);
     }
 
@@ -71,7 +71,7 @@ public class OrganizationFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateOrganizationRequest createRequest(Long tenantId) {
+    public static CreateOrganizationApiRequest createRequest(Long tenantId) {
         String orgCode = "ORG" + System.currentTimeMillis();
         return createRequest(tenantId, orgCode);
     }
@@ -85,8 +85,8 @@ public class OrganizationFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateOrganizationRequest[] createRequests(Long tenantId, int count) {
-        CreateOrganizationRequest[] requests = new CreateOrganizationRequest[count];
+    public static CreateOrganizationApiRequest[] createRequests(Long tenantId, int count) {
+        CreateOrganizationApiRequest[] requests = new CreateOrganizationApiRequest[count];
         long timestamp = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
             String orgCode = "ORG" + timestamp + "-" + i;

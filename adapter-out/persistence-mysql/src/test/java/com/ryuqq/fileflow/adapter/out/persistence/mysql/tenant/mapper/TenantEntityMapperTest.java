@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.mapper;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.entity.TenantJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.entity.TenantJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.mapper.TenantEntityMapper;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantStatus;
 import com.ryuqq.fileflow.fixtures.TenantFixtures;

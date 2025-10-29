@@ -1,8 +1,10 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.config.IntegrationTestBase;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity.OrganizationJpaEntity;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.repository.OrganizationJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.adapter.OrganizationPersistenceAdapter;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.adapter.OrganizationQueryRepositoryAdapter;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.OrganizationJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.repository.OrganizationJpaRepository;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationStatus;

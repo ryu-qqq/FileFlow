@@ -16,6 +16,7 @@
 
 plugins {
     java
+    `java-test-fixtures`  // TestFixtures 플러그인
 }
 
 dependencies {

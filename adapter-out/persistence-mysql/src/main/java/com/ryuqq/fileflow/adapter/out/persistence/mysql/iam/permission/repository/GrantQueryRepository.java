@@ -126,12 +126,12 @@ public class GrantQueryRepository {
             .from(userRoleMappingJpaEntity)
             .innerJoin(roleJpaEntity)
                 .on(userRoleMappingJpaEntity.roleCode.eq(roleJpaEntity.code)
-                    .and(roleJpaEntity.deleted.isFalse()))
+                    .and(roleJpaEntity.deletedAt.isNull()))
             .innerJoin(rolePermissionJpaEntity)
                 .on(roleJpaEntity.code.eq(rolePermissionJpaEntity.roleCode))
             .innerJoin(permissionJpaEntity)
                 .on(rolePermissionJpaEntity.permissionCode.eq(permissionJpaEntity.code)
-                    .and(permissionJpaEntity.deleted.isFalse()))
+                    .and(permissionJpaEntity.deletedAt.isNull()))
             .where(
                 userRoleMappingJpaEntity.userContextId.eq(userContextId),
                 userRoleMappingJpaEntity.tenantId.eq(tenantId),

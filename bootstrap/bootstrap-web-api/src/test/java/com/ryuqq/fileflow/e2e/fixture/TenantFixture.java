@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.e2e.fixture;
 
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.CreateTenantRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.CreateTenantApiRequest;
 
 /**
  * TenantFixture - Tenant 테스트 데이터 생성 유틸리티
@@ -27,8 +27,8 @@ public class TenantFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateTenantRequest createRequest(String name) {
-        return new CreateTenantRequest(name);
+    public static CreateTenantApiRequest createRequest(String name) {
+        return new CreateTenantApiRequest(name);
     }
 
     /**
@@ -38,7 +38,7 @@ public class TenantFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateTenantRequest createRequest() {
+    public static CreateTenantApiRequest createRequest() {
         return createRequest("test-tenant-" + System.currentTimeMillis());
     }
 
@@ -50,8 +50,8 @@ public class TenantFixture {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateTenantRequest[] createRequests(int count) {
-        CreateTenantRequest[] requests = new CreateTenantRequest[count];
+    public static CreateTenantApiRequest[] createRequests(int count) {
+        CreateTenantApiRequest[] requests = new CreateTenantApiRequest[count];
         for (int i = 0; i < count; i++) {
             requests[i] = createRequest("test-tenant-" + System.currentTimeMillis() + "-" + i);
         }

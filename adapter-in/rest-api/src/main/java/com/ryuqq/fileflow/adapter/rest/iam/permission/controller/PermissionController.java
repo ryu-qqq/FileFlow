@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.adapter.rest.iam.permission.controller;
 
 import com.ryuqq.fileflow.adapter.rest.common.dto.ApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.permission.dto.EvaluatePermissionRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.permission.dto.PermissionEvaluationApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.permission.mapper.PermissionDtoMapper;
+import com.ryuqq.fileflow.adapter.rest.iam.permission.dto.request.EvaluatePermissionApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.permission.dto.response.PermissionEvaluationApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.permission.mapper.PermissionApiMapper;
 import com.ryuqq.fileflow.application.iam.permission.dto.command.EvaluatePermissionCommand;
 import com.ryuqq.fileflow.application.iam.permission.dto.response.EvaluatePermissionResponse;
 import com.ryuqq.fileflow.application.iam.permission.port.in.EvaluatePermissionUseCase;
@@ -38,11 +38,11 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-10-27
  */
 @RestController
-@RequestMapping("/api/v1/permissions")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.iam.permission.base}")
 public class PermissionController {
 
     private final EvaluatePermissionUseCase evaluatePermissionUseCase;
-    private final PermissionDtoMapper mapper;
+    private final PermissionApiMapper mapper;
 
     /**
      * Constructor - Spring이 의존성 자동 주입
@@ -54,7 +54,7 @@ public class PermissionController {
      */
     public PermissionController(
         EvaluatePermissionUseCase evaluatePermissionUseCase,
-        PermissionDtoMapper mapper
+        PermissionApiMapper mapper
     ) {
         this.evaluatePermissionUseCase = evaluatePermissionUseCase;
         this.mapper = mapper;
@@ -110,7 +110,7 @@ public class PermissionController {
      */
     @GetMapping("/evaluate")
     public ResponseEntity<ApiResponse<PermissionEvaluationApiResponse>> evaluatePermission(
-        @Valid @ModelAttribute EvaluatePermissionRequest request
+        @Valid @ModelAttribute EvaluatePermissionApiRequest request
     ) {
         // 1. Request → Command 변환
         EvaluatePermissionCommand command = mapper.toCommand(request);

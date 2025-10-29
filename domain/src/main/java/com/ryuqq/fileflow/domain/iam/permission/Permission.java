@@ -38,7 +38,7 @@ public class Permission {
     private String description;
     private Scope defaultScope;
     private LocalDateTime updatedAt;
-    private boolean deleted;
+    private LocalDateTime deletedAt;
 
     /**
      * Permission을 생성합니다 (Package-private 생성자).
@@ -103,7 +103,7 @@ public class Permission {
         this.defaultScope = defaultScope;
         this.createdAt = LocalDateTime.now(clock);
         this.updatedAt = LocalDateTime.now(clock);
-        this.deleted = false;
+        this.deletedAt = null;
     }
 
     /**
@@ -115,7 +115,7 @@ public class Permission {
      * @param clock 시간 제공자
      * @param createdAt 생성 일시
      * @param updatedAt 수정 일시
-     * @param deleted 삭제 여부
+     * @param deletedAt 삭제 일시
      * @author ryu-qqq
      * @since 2025-10-24
      */
@@ -126,7 +126,7 @@ public class Permission {
         Clock clock,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        boolean deleted
+        LocalDateTime deletedAt
     ) {
         this.code = code;
         this.description = description;
@@ -134,7 +134,7 @@ public class Permission {
         this.clock = clock;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.deleted = deleted;
+        this.deletedAt = deletedAt;
     }
 
     /**
@@ -148,7 +148,7 @@ public class Permission {
      * @param defaultScope 기본 적용 범위
      * @param createdAt 생성 일시
      * @param updatedAt 수정 일시
-     * @param deleted 삭제 여부
+     * @param deletedAt 삭제 일시
      * @return 재구성된 Permission
      * @author ryu-qqq
      * @since 2025-10-24
@@ -159,7 +159,7 @@ public class Permission {
         Scope defaultScope,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        boolean deleted
+        LocalDateTime deletedAt
     ) {
         return new Permission(
             code,
@@ -168,7 +168,7 @@ public class Permission {
             Clock.systemDefaultZone(),
             createdAt,
             updatedAt,
-            deleted
+            deletedAt
         );
     }
 
@@ -188,7 +188,7 @@ public class Permission {
             throw new IllegalArgumentException("새로운 Permission 설명은 필수입니다");
         }
 
-        if (this.deleted) {
+        if (this.deletedAt != null) {
             throw new IllegalStateException("삭제된 Permission의 설명은 변경할 수 없습니다");
         }
 
@@ -210,7 +210,7 @@ public class Permission {
             throw new IllegalArgumentException("새로운 기본 범위는 필수입니다");
         }
 
-        if (this.deleted) {
+        if (this.deletedAt != null) {
             throw new IllegalStateException("삭제된 Permission의 기본 범위는 변경할 수 없습니다");
         }
 
@@ -228,11 +228,11 @@ public class Permission {
      * @since 2025-10-24
      */
     public void softDelete() {
-        if (this.deleted) {
+        if (this.deletedAt != null) {
             throw new IllegalStateException("이미 삭제된 Permission입니다");
         }
 
-        this.deleted = true;
+        this.deletedAt = LocalDateTime.now(clock);
         this.updatedAt = LocalDateTime.now(clock);
     }
 
@@ -240,7 +240,7 @@ public class Permission {
      * Permission이 활성 상태인지 확인합니다.
      *
      * <p>Law of Demeter 준수: 상태를 묻는 메서드</p>
-     * <p>❌ Bad: permission.isDeleted() == false</p>
+     * <p>❌ Bad: permission.getDeletedAt() == null</p>
      * <p>✅ Good: permission.isActive()</p>
      *
      * @return 삭제되지 않았으면 true
@@ -248,7 +248,7 @@ public class Permission {
      * @since 2025-10-24
      */
     public boolean isActive() {
-        return !this.deleted;
+        return this.deletedAt == null;
     }
 
     /**
@@ -341,13 +341,13 @@ public class Permission {
     }
 
     /**
-     * 삭제 여부를 반환합니다.
+     * 삭제 일시를 반환합니다.
      *
-     * @return 삭제되었으면 true
+     * @return 삭제 일시 (null이면 삭제되지 않음)
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    public boolean isDeleted() {
-        return deleted;
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
     }
 }

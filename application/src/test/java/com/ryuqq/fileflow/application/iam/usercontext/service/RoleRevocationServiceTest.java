@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.application.iam.usercontext.service;
 
 import com.ryuqq.fileflow.application.iam.permission.port.out.GrantsCachePort;
-import com.ryuqq.fileflow.application.iam.usercontext.dto.RevokeRoleCommand;
+import com.ryuqq.fileflow.application.iam.usercontext.dto.command.RevokeRoleCommand;
 import com.ryuqq.fileflow.application.iam.usercontext.event.RoleRevokedEvent;
 import com.ryuqq.fileflow.application.iam.usercontext.port.out.UserContextRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;

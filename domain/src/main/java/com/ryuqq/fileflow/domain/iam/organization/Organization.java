@@ -35,46 +35,54 @@ public class Organization {
     private boolean deleted;
 
     /**
-     * Organization을 생성합니다 (Static Factory Method).
+     * 신규 Organization을 생성합니다 (Static Factory Method).
      *
-     * <p>생성 시 모든 필수 필드를 검증하고 초기 상태를 설정합니다.</p>
-     * <p>ID가 null이면 신규 Organization (DB 저장 전 상태), 아니면 저장 후 상태입니다.</p>
-     * <p>초기 상태: ACTIVE, deleted = false</p>
+     * <p><strong>ID 없이 신규 도메인 객체를 생성</strong>합니다 (DB 저장 전 상태).</p>
+     * <p>초기 상태: ACTIVE, deleted = false, ID = null</p>
      *
-     * @param id Organization 식별자 (null 가능 - 신규 생성 시)
+     * <p><strong>사용 시기</strong>: Application Layer에서 Command를 받아 새로운 Entity를 생성할 때</p>
+     * <p><strong>예시</strong>:</p>
+     * <pre>{@code
+     * // Application Layer (UseCase)
+     * Organization org = Organization.forNew(tenantId, orgCode, name);
+     * // Persistence Layer에서 저장하면서 ID 자동 생성
+     * }</pre>
+     *
      * @param tenantId Tenant 식별자 (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
-     * @return 생성된 Organization
+     * @return 생성된 Organization (ID = null)
      * @throws IllegalArgumentException 필수 필드가 null이거나 유효하지 않은 경우
      * @author ryu-qqq
-     * @since 2025-10-22
+     * @since 2025-10-29
      */
-    public static Organization of(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
-        return new Organization(id, tenantId, orgCode, name, Clock.systemDefaultZone());
+    public static Organization forNew(Long tenantId, OrgCode orgCode, String name) {
+        return new Organization(null, tenantId, orgCode, name, Clock.systemDefaultZone());
     }
 
     /**
-     * Organization 생성자 (테스트용, package-private).
+     * Organization을 생성합니다 (기존 ID 존재, Static Factory Method).
      *
-     * <p>테스트에서 시간을 제어하기 위한 package-private 생성자입니다.</p>
-     * <p>4개 파라미터: ID 필수 (null이면 예외)</p>
-     * <p>5개 파라미터(Clock 포함): ID nullable (신규 생성 시 null 허용)</p>
+     * <p><strong>ID가 이미 있는 도메인 객체를 생성</strong>합니다.</p>
      * <p>초기 상태: ACTIVE, deleted = false</p>
      *
-     * @param id Organization 식별자 (4개 파라미터에서는 필수)
+     * <p><strong>사용 시기</strong>: 테스트 또는 ID가 미리 정해진 특수한 경우</p>
+     * <p><strong>주의</strong>: 일반적인 신규 생성에는 {@code forNew()} 사용 권장</p>
+     *
+     * @param id Organization 식별자 (필수)
      * @param tenantId Tenant 식별자 (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
-     * @throws IllegalArgumentException 필수 필드가 null이거나 유효하지 않은 경우
+     * @return 생성된 Organization (ID 포함)
+     * @throws IllegalArgumentException id가 null이거나 필수 필드가 유효하지 않은 경우
      * @author ryu-qqq
-     * @since 2025-10-22
+     * @since 2025-10-29
      */
-    Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
-        this(id, tenantId, orgCode, name, Clock.systemDefaultZone());
+    public static Organization of(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
         if (id == null) {
             throw new IllegalArgumentException("Organization ID는 필수입니다");
         }
+        return new Organization(id, tenantId, orgCode, name, Clock.systemDefaultZone());
     }
 
     /**
@@ -151,10 +159,27 @@ public class Organization {
     /**
      * DB에서 조회한 데이터로 Organization 재구성 (Static Factory Method)
      *
-     * <p>Persistence Layer에서 DB 데이터를 Domain으로 변환할 때 사용합니다.</p>
+     * <p><strong>Persistence Layer → Domain Layer 변환 전용</strong></p>
+     * <p>DB에서 조회한 데이터를 Domain 객체로 복원할 때 사용합니다.</p>
      * <p>모든 상태(status, deleted 포함)를 그대로 복원합니다.</p>
      *
-     * @param id Organization ID
+     * <p><strong>사용 시기</strong>: Persistence Layer에서 JPA Entity → Domain 변환 시</p>
+     * <p><strong>예시</strong>:</p>
+     * <pre>{@code
+     * // OrganizationEntityMapper.java (Persistence Layer)
+     * return Organization.reconstitute(
+     *     OrganizationId.of(entity.getId()),
+     *     entity.getTenantId(),
+     *     OrgCode.of(entity.getOrgCode()),
+     *     entity.getName(),
+     *     entity.getStatus(),
+     *     entity.getCreatedAt(),
+     *     entity.getUpdatedAt(),
+     *     entity.isDeleted()
+     * );
+     * }</pre>
+     *
+     * @param id Organization ID (필수 - DB에서 조회된 ID)
      * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
      * @param orgCode 조직 코드
      * @param name 조직 이름
@@ -163,6 +188,7 @@ public class Organization {
      * @param updatedAt 수정 일시
      * @param deleted 삭제 여부
      * @return 재구성된 Organization
+     * @throws IllegalArgumentException id가 null인 경우
      * @author ryu-qqq
      * @since 2025-10-22
      */
@@ -176,6 +202,9 @@ public class Organization {
         LocalDateTime updatedAt,
         boolean deleted
     ) {
+        if (id == null) {
+            throw new IllegalArgumentException("DB reconstitute는 ID가 필수입니다");
+        }
         return new Organization(
             id, tenantId, orgCode, name, status,
             Clock.systemDefaultZone(), createdAt, updatedAt, deleted
@@ -291,12 +320,14 @@ public class Organization {
      * <p>❌ Bad: organization.getId().value()</p>
      * <p>✅ Good: organization.getIdValue()</p>
      *
-     * @return Organization ID 원시 값
+     * <p><strong>주의</strong>: {@code forNew()}로 생성된 신규 객체는 null을 반환합니다.</p>
+     *
+     * @return Organization ID 원시 값 (신규 생성 시 null)
      * @author ryu-qqq
      * @since 2025-10-22
      */
     public Long getIdValue() {
-        return id.value();
+        return id != null ? id.value() : null;
     }
 
     /**

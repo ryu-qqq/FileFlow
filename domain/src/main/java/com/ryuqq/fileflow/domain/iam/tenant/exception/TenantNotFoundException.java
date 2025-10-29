@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.iam.tenant.exception;
 
-import com.ryuqq.fileflow.domain.shared.exception.BusinessException;
+import com.ryuqq.fileflow.domain.common.DomainException;
 
 /**
  * TenantNotFoundException - Tenant를 찾을 수 없을 때 발생하는 예외
@@ -23,7 +23,7 @@ import com.ryuqq.fileflow.domain.shared.exception.BusinessException;
  * @author ryu-qqq
  * @since 2025-10-23
  */
-public class TenantNotFoundException extends BusinessException {
+public class TenantNotFoundException extends DomainException {
 
     /**
      * Constructor - Tenant ID를 포함한 예외 생성

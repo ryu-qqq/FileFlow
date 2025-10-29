@@ -24,7 +24,7 @@ import java.util.Objects;
  */
 public class Setting {
 
-    private final Long id;
+    private final SettingId id;
     private final SettingKey key;
     private final SettingLevel level;
     private final Long contextId;
@@ -34,28 +34,65 @@ public class Setting {
     private LocalDateTime updatedAt;
 
     /**
-     * Setting을 생성합니다 (Static Factory Method).
+     * 신규 Setting을 생성합니다 (Static Factory Method).
      *
-     * <p>생성 시 모든 필수 필드를 검증하고 초기 상태를 설정합니다.</p>
-     * <p>ID가 null이면 신규 Setting (DB 저장 전 상태), 아니면 저장 후 상태입니다.</p>
+     * <p><strong>ID 없이 신규 도메인 객체를 생성</strong>합니다 (DB 저장 전 상태).</p>
+     * <p>ID = null로 초기화됩니다.</p>
      *
-     * @param id Setting 식별자 (null 가능 - 신규 생성 시)
+     * <p><strong>사용 시기</strong>: Application Layer에서 Command를 받아 새로운 Entity를 생성할 때</p>
+     * <p><strong>예시</strong>:</p>
+     * <pre>{@code
+     * // CreateSettingService.java (Application Layer)
+     * Setting setting = Setting.forNew(key, value, level, contextId);
+     * // Persistence Layer에서 저장하면서 ID 자동 생성
+     * }</pre>
+     *
      * @param key 설정 키
      * @param value 설정 값
      * @param level 설정 레벨 (ORG/TENANT/DEFAULT)
      * @param contextId 컨텍스트 ID (ORG/TENANT의 경우 해당 ID, DEFAULT는 null)
-     * @return 생성된 Setting
+     * @return 생성된 Setting (ID = null)
      * @throws IllegalArgumentException 필수 필드가 null이거나 유효하지 않은 경우
      * @author ryu-qqq
-     * @since 2025-10-25
+     * @since 2025-10-29
      */
-    public static Setting of(
-        Long id,
+    public static Setting forNew(
         SettingKey key,
         SettingValue value,
         SettingLevel level,
         Long contextId
     ) {
+        return new Setting(null, key, value, level, contextId, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Setting을 생성합니다 (기존 ID 존재, Static Factory Method).
+     *
+     * <p><strong>ID가 이미 있는 도메인 객체를 생성</strong>합니다.</p>
+     *
+     * <p><strong>사용 시기</strong>: 테스트 또는 ID가 미리 정해진 특수한 경우</p>
+     * <p><strong>주의</strong>: 일반적인 신규 생성에는 {@code forNew()} 사용 권장</p>
+     *
+     * @param id Setting 식별자 (필수)
+     * @param key 설정 키
+     * @param value 설정 값
+     * @param level 설정 레벨 (ORG/TENANT/DEFAULT)
+     * @param contextId 컨텍스트 ID (ORG/TENANT의 경우 해당 ID, DEFAULT는 null)
+     * @return 생성된 Setting (ID 포함)
+     * @throws IllegalArgumentException id가 null이거나 필수 필드가 유효하지 않은 경우
+     * @author ryu-qqq
+     * @since 2025-10-29
+     */
+    public static Setting of(
+        SettingId id,
+        SettingKey key,
+        SettingValue value,
+        SettingLevel level,
+        Long contextId
+    ) {
+        if (id == null) {
+            throw new IllegalArgumentException("Setting ID는 필수입니다");
+        }
         return new Setting(id, key, value, level, contextId, Clock.systemDefaultZone());
     }
 
@@ -73,7 +110,7 @@ public class Setting {
      * @since 2025-10-25
      */
     Setting(
-        Long id,
+        SettingId id,
         SettingKey key,
         SettingValue value,
         SettingLevel level,
@@ -107,7 +144,7 @@ public class Setting {
      * @since 2025-10-25
      */
     private Setting(
-        Long id,
+        SettingId id,
         SettingKey key,
         SettingValue value,
         SettingLevel level,
@@ -129,9 +166,12 @@ public class Setting {
     /**
      * DB에서 조회한 데이터로 Setting 재구성 (Static Factory Method)
      *
-     * <p>Persistence Layer에서 DB 데이터를 Domain으로 변환할 때 사용합니다.</p>
+     * <p><strong>Persistence Layer → Domain Layer 변환 전용</strong></p>
+     * <p>DB에서 조회한 데이터를 Domain 객체로 복원할 때 사용합니다.</p>
      *
-     * @param id Setting ID
+     * <p><strong>사용 시기</strong>: Persistence Layer에서 JPA Entity → Domain 변환 시</p>
+     *
+     * @param id Setting ID (필수 - DB에서 조회된 ID)
      * @param key 설정 키
      * @param value 설정 값
      * @param level 설정 레벨
@@ -139,11 +179,12 @@ public class Setting {
      * @param createdAt 생성 일시
      * @param updatedAt 수정 일시
      * @return 재구성된 Setting
+     * @throws IllegalArgumentException id가 null인 경우
      * @author ryu-qqq
      * @since 2025-10-25
      */
     public static Setting reconstitute(
-        Long id,
+        SettingId id,
         SettingKey key,
         SettingValue value,
         SettingLevel level,
@@ -151,6 +192,9 @@ public class Setting {
         LocalDateTime createdAt,
         LocalDateTime updatedAt
     ) {
+        if (id == null) {
+            throw new IllegalArgumentException("DB reconstitute는 ID가 필수입니다");
+        }
         return new Setting(
             id, key, value, level, contextId,
             Clock.systemDefaultZone(), createdAt, updatedAt
@@ -292,8 +336,22 @@ public class Setting {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public Long getId() {
+    public SettingId getId() {
         return id;
+    }
+
+    /**
+     * Setting ID 원시 값을 반환합니다 (Law of Demeter 준수).
+     *
+     * <p>❌ Bad: setting.getId().value()</p>
+     * <p>✅ Good: setting.getIdValue()</p>
+     *
+     * @return Setting ID 원시 값
+     * @author ryu-qqq
+     * @since 2025-10-29
+     */
+    public Long getIdValue() {
+        return id != null ? id.value() : null;
     }
 
     /**
