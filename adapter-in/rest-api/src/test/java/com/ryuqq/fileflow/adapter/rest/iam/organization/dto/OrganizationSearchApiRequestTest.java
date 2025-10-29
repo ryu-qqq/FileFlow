@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.rest.iam.organization.dto;
 
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.OrganizationSearchApiRequest;
 import com.ryuqq.fileflow.application.iam.organization.dto.query.GetOrganizationsQuery;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -33,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 2025-10-23
  */
 @DisplayName("OrganizationListQueryParam DTO Validation 테스트")
-class OrganizationListQueryParamTest {
+class OrganizationSearchApiRequestTest {
 
     private static Validator validator;
 
@@ -51,16 +52,16 @@ class OrganizationListQueryParamTest {
         @DisplayName("page가 음수이면 검증 실패")
         void page_negative_shouldFail() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 -1, 20, null, "tenant-123", null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<OrganizationListQueryParam> violation = violations.iterator().next();
+            ConstraintViolation<OrganizationSearchApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("page");
             assertThat(violation.getMessage()).isEqualTo("페이지 번호는 0 이상이어야 합니다");
         }
@@ -69,12 +70,12 @@ class OrganizationListQueryParamTest {
         @DisplayName("page가 0이면 검증 성공")
         void page_zero_shouldPass() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, "tenant-123", null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -89,16 +90,16 @@ class OrganizationListQueryParamTest {
         @DisplayName("size가 0이면 검증 실패")
         void size_zero_shouldFail() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 0, null, "tenant-123", null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<OrganizationListQueryParam> violation = violations.iterator().next();
+            ConstraintViolation<OrganizationSearchApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("size");
             assertThat(violation.getMessage()).isEqualTo("페이지 크기는 1 이상이어야 합니다");
         }
@@ -107,16 +108,16 @@ class OrganizationListQueryParamTest {
         @DisplayName("size가 101이면 검증 실패")
         void size_overMax_shouldFail() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 101, null, "tenant-123", null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<OrganizationListQueryParam> violation = violations.iterator().next();
+            ConstraintViolation<OrganizationSearchApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("size");
             assertThat(violation.getMessage()).isEqualTo("페이지 크기는 100 이하여야 합니다");
         }
@@ -125,12 +126,12 @@ class OrganizationListQueryParamTest {
         @DisplayName("size가 1~100 사이면 검증 성공")
         void size_validRange_shouldPass() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 50, null, "tenant-123", null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -145,16 +146,16 @@ class OrganizationListQueryParamTest {
         @DisplayName("tenantId가 빈 문자열이면 검증 실패")
         void tenantId_empty_shouldFail() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, "", null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<OrganizationListQueryParam> violation = violations.iterator().next();
+            ConstraintViolation<OrganizationSearchApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("tenantId");
             assertThat(violation.getMessage()).isEqualTo("Tenant ID는 빈 문자열일 수 없습니다");
         }
@@ -163,16 +164,16 @@ class OrganizationListQueryParamTest {
         @DisplayName("tenantId가 공백 문자열이면 검증 실패")
         void tenantId_blank_shouldFail() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, "   ", null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<OrganizationListQueryParam> violation = violations.iterator().next();
+            ConstraintViolation<OrganizationSearchApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("tenantId");
             assertThat(violation.getMessage()).isEqualTo("Tenant ID는 빈 문자열일 수 없습니다");
         }
@@ -181,12 +182,12 @@ class OrganizationListQueryParamTest {
         @DisplayName("tenantId가 null이면 검증 성공 (Optional 필터)")
         void tenantId_null_shouldPass() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, null, null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -196,12 +197,12 @@ class OrganizationListQueryParamTest {
         @DisplayName("tenantId가 유효한 값이면 검증 성공")
         void tenantId_valid_shouldPass() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, "tenant-uuid-123", null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -216,7 +217,7 @@ class OrganizationListQueryParamTest {
         @DisplayName("size가 null이면 기본값 20이 적용된다")
         void size_null_shouldApplyDefault() {
             // Given & When
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, null, null, "tenant-123", null, null, null
             );
 
@@ -228,7 +229,7 @@ class OrganizationListQueryParamTest {
         @DisplayName("size가 명시되면 그 값이 유지된다")
         void size_specified_shouldBePreserved() {
             // Given & When
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 50, null, "tenant-123", null, null, null
             );
 
@@ -245,7 +246,7 @@ class OrganizationListQueryParamTest {
         @DisplayName("page가 제공되면 Offset-based Pagination")
         void page_provided_shouldBeOffsetBased() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, "tenant-123", null, null, null
             );
 
@@ -260,7 +261,7 @@ class OrganizationListQueryParamTest {
         @DisplayName("cursor가 제공되면 Cursor-based Pagination")
         void cursor_provided_shouldBeCursorBased() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 null, 20, "cursor123", "tenant-123", null, null, null
             );
 
@@ -280,7 +281,7 @@ class OrganizationListQueryParamTest {
         @DisplayName("모든 필드가 Application Layer Query로 변환된다")
         void allFields_shouldBeConvertedToQuery() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, "tenant-123", "ORG", "test", false
             );
 
@@ -301,7 +302,7 @@ class OrganizationListQueryParamTest {
         @DisplayName("Cursor-based Pagination도 올바르게 변환된다")
         void cursorBased_shouldBeConvertedCorrectly() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 null, 20, "cursor-abc", "tenant-123", null, null, null
             );
 
@@ -323,12 +324,12 @@ class OrganizationListQueryParamTest {
         @DisplayName("모든 필드가 유효하면 검증 성공")
         void allFieldsValid_shouldPass() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, "tenant-123", "ORG001", "Engineering", false
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -338,12 +339,12 @@ class OrganizationListQueryParamTest {
         @DisplayName("필터가 null이어도 검증 성공")
         void filters_null_shouldPass() {
             // Given
-            OrganizationListQueryParam param = new OrganizationListQueryParam(
+            OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
                 0, 20, null, null, null, null, null
             );
 
             // When
-            Set<ConstraintViolation<OrganizationListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<OrganizationSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();

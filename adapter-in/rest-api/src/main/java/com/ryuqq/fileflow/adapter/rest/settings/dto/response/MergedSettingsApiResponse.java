@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.settings.dto;
+package com.ryuqq.fileflow.adapter.rest.settings.dto.response;
 
 import java.util.Map;
 

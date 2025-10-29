@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto;
 
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.TenantSearchApiRequest;
 import com.ryuqq.fileflow.application.iam.tenant.dto.query.GetTenantsQuery;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -32,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 2025-10-23
  */
 @DisplayName("TenantListQueryParam DTO Validation 테스트")
-class TenantListQueryParamTest {
+class TenantSearchApiRequestTest {
 
     private static Validator validator;
 
@@ -50,14 +51,14 @@ class TenantListQueryParamTest {
         @DisplayName("page가 음수이면 검증 실패")
         void page_negative_shouldFail() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(-1, 20, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(-1, 20, null, null, null);
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<TenantListQueryParam> violation = violations.iterator().next();
+            ConstraintViolation<TenantSearchApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("page");
             assertThat(violation.getMessage()).isEqualTo("페이지 번호는 0 이상이어야 합니다");
         }
@@ -66,10 +67,10 @@ class TenantListQueryParamTest {
         @DisplayName("page가 0이면 검증 성공")
         void page_zero_shouldPass() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(0, 20, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(0, 20, null, null, null);
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -79,10 +80,10 @@ class TenantListQueryParamTest {
         @DisplayName("page가 null이면 검증 성공 (Cursor-based Pagination)")
         void page_null_shouldPass() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(null, 20, "cursor123", null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(null, 20, "cursor123", null, null);
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -97,14 +98,14 @@ class TenantListQueryParamTest {
         @DisplayName("size가 0이면 검증 실패")
         void size_zero_shouldFail() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(0, 0, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(0, 0, null, null, null);
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<TenantListQueryParam> violation = violations.iterator().next();
+            ConstraintViolation<TenantSearchApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("size");
             assertThat(violation.getMessage()).isEqualTo("페이지 크기는 1 이상이어야 합니다");
         }
@@ -113,14 +114,14 @@ class TenantListQueryParamTest {
         @DisplayName("size가 101이면 검증 실패")
         void size_overMax_shouldFail() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(0, 101, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(0, 101, null, null, null);
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<TenantListQueryParam> violation = violations.iterator().next();
+            ConstraintViolation<TenantSearchApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("size");
             assertThat(violation.getMessage()).isEqualTo("페이지 크기는 100 이하여야 합니다");
         }
@@ -129,10 +130,10 @@ class TenantListQueryParamTest {
         @DisplayName("size가 1이면 검증 성공")
         void size_min_shouldPass() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(0, 1, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(0, 1, null, null, null);
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -142,10 +143,10 @@ class TenantListQueryParamTest {
         @DisplayName("size가 100이면 검증 성공")
         void size_max_shouldPass() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(0, 100, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(0, 100, null, null, null);
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -160,7 +161,7 @@ class TenantListQueryParamTest {
         @DisplayName("size가 null이면 기본값 20이 적용된다")
         void size_null_shouldApplyDefault() {
             // Given & When
-            TenantListQueryParam param = new TenantListQueryParam(0, null, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(0, null, null, null, null);
 
             // Then
             assertThat(param.size()).isEqualTo(20);
@@ -170,7 +171,7 @@ class TenantListQueryParamTest {
         @DisplayName("size가 명시되면 그 값이 유지된다")
         void size_specified_shouldBePreserved() {
             // Given & When
-            TenantListQueryParam param = new TenantListQueryParam(0, 50, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(0, 50, null, null, null);
 
             // Then
             assertThat(param.size()).isEqualTo(50);
@@ -185,7 +186,7 @@ class TenantListQueryParamTest {
         @DisplayName("page가 제공되면 Offset-based Pagination")
         void page_provided_shouldBeOffsetBased() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(0, 20, null, null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(0, 20, null, null, null);
 
             // When
             boolean isOffsetBased = param.isOffsetBased();
@@ -198,7 +199,7 @@ class TenantListQueryParamTest {
         @DisplayName("cursor가 제공되면 Cursor-based Pagination")
         void cursor_provided_shouldBeCursorBased() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(null, 20, "cursor123", null, null);
+            TenantSearchApiRequest param = new TenantSearchApiRequest(null, 20, "cursor123", null, null);
 
             // When
             boolean isOffsetBased = param.isOffsetBased();
@@ -216,7 +217,7 @@ class TenantListQueryParamTest {
         @DisplayName("모든 필드가 Application Layer Query로 변환된다")
         void allFields_shouldBeConvertedToQuery() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(
+            TenantSearchApiRequest param = new TenantSearchApiRequest(
                 0, 20, null, "test", false
             );
 
@@ -235,7 +236,7 @@ class TenantListQueryParamTest {
         @DisplayName("Cursor-based Pagination도 올바르게 변환된다")
         void cursorBased_shouldBeConvertedCorrectly() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(
+            TenantSearchApiRequest param = new TenantSearchApiRequest(
                 null, 20, "cursor-abc", null, null
             );
 
@@ -257,12 +258,12 @@ class TenantListQueryParamTest {
         @DisplayName("모든 필드가 유효하면 검증 성공")
         void allFieldsValid_shouldPass() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(
+            TenantSearchApiRequest param = new TenantSearchApiRequest(
                 0, 20, null, "test-tenant", false
             );
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();
@@ -272,12 +273,12 @@ class TenantListQueryParamTest {
         @DisplayName("필터가 null이어도 검증 성공")
         void filters_null_shouldPass() {
             // Given
-            TenantListQueryParam param = new TenantListQueryParam(
+            TenantSearchApiRequest param = new TenantSearchApiRequest(
                 0, 20, null, null, null
             );
 
             // When
-            Set<ConstraintViolation<TenantListQueryParam>> violations = validator.validate(param);
+            Set<ConstraintViolation<TenantSearchApiRequest>> violations = validator.validate(param);
 
             // Then
             assertThat(violations).isEmpty();

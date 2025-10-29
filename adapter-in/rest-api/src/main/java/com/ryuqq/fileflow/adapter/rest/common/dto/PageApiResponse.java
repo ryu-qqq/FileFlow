@@ -1,10 +1,5 @@
-package com.ryuqq.adapter.in.rest.example.dto.response;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
- * Example 페이지 조회 REST API 응답 DTO (Offset 기반)
+ * PageApiResponse - 페이지 조회 REST API 응답 DTO (Offset 기반)
  *
  * <p>REST API Layer 전용 응답 DTO로, Application Layer의 PageResponse를 변환하여 사용합니다.</p>
  *
@@ -28,6 +23,7 @@ import java.util.stream.Collectors;
  * }
  * }</pre>
  *
+ * @param <T> 콘텐츠 타입
  * @param content 현재 페이지의 데이터 목록
  * @param page 현재 페이지 번호 (0부터 시작)
  * @param size 페이지 크기
@@ -38,8 +34,8 @@ import java.util.stream.Collectors;
  * @author windsurf
  * @since 1.0.0
  */
-public record ExamplePageApiResponse(
-    List<ExampleDetailApiResponse> content,
+public record PageApiResponse<T>(
+    List<T> content,
     int page,
     int size,
     long totalElements,
@@ -51,24 +47,59 @@ public record ExamplePageApiResponse(
     /**
      * Compact Constructor - Defensive Copy
      */
-    public ExamplePageApiResponse {
+    public PageApiResponse {
         content = List.copyOf(content);  // Immutability 보장
     }
 
     /**
-     * Application Layer PageResponse로부터 REST API PageResponse 생성
+     * Application Layer PageResponse로부터 REST API PageApiResponse 생성
      *
+     * <p>Application Layer의 PageResponse를 Adapter-In Layer의 PageApiResponse로 변환합니다.</p>
+     * <p>콘텐츠는 그대로 전달되며, 각 컨트롤러에서 적절한 ApiResponse DTO로 변환해야 합니다.</p>
+     *
+     * @param <T> 콘텐츠 타입
      * @param appPageResponse Application Layer의 PageResponse
-     * @return REST API Layer의 ExamplePageApiResponse
+     * @return REST API Layer의 PageApiResponse
+     * @author windsurf
+     * @since 1.0.0
      */
-    public static ExamplePageApiResponse from(
-            com.ryuqq.application.common.dto.response.PageResponse<com.ryuqq.application.example.dto.response.ExampleDetailResponse> appPageResponse) {
+    public static <T> PageApiResponse<T> from(
+            com.ryuqq.fileflow.application.common.dto.PageResponse<T> appPageResponse) {
 
-        List<ExampleDetailApiResponse> content = appPageResponse.content().stream()
-            .map(ExampleDetailApiResponse::from)
+        return new PageApiResponse<>(
+            appPageResponse.content(),
+            appPageResponse.page(),
+            appPageResponse.size(),
+            appPageResponse.totalElements(),
+            appPageResponse.totalPages(),
+            appPageResponse.first(),
+            appPageResponse.last()
+        );
+    }
+
+    /**
+     * Application Layer PageResponse로부터 REST API PageApiResponse 생성 (매퍼 함수 적용)
+     *
+     * <p>Application Layer의 PageResponse를 Adapter-In Layer의 PageApiResponse로 변환하면서,</p>
+     * <p>각 콘텐츠 항목을 매퍼 함수를 통해 ApiResponse DTO로 변환합니다.</p>
+     *
+     * @param <S> Application Layer 콘텐츠 타입
+     * @param <T> REST API Layer 콘텐츠 타입
+     * @param appPageResponse Application Layer의 PageResponse
+     * @param mapper 콘텐츠 변환 함수 (Application Response → API Response)
+     * @return REST API Layer의 PageApiResponse
+     * @author windsurf
+     * @since 1.0.0
+     */
+    public static <S, T> PageApiResponse<T> from(
+            com.ryuqq.fileflow.application.common.dto.PageResponse<S> appPageResponse,
+            java.util.function.Function<S, T> mapper) {
+
+        List<T> content = appPageResponse.content().stream()
+            .map(mapper)
             .collect(Collectors.toList());
 
-        return new ExamplePageApiResponse(
+        return new PageApiResponse<>(
             content,
             appPageResponse.page(),
             appPageResponse.size(),

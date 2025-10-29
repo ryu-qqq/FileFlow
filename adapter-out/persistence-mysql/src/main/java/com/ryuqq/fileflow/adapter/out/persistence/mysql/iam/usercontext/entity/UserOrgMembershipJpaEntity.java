@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
  * <h3>설계 원칙</h3>
  * <ul>
  *   <li>✅ JPA 어노테이션만 사용 (비즈니스 로직 없음)</li>
- *   <li>✅ Long FK 전략 (JPA 관계 어노테이션 금지 - {@code @ManyToOne} 등 사용 안함)</li>
+ *   <li>✅ Long FK 전략 (JPA 관계 어노테이션 금지)</li>
  *   <li>✅ Getter만 제공 (Setter 금지)</li>
  *   <li>✅ {@code private final} 필드 (변경 불가능한 필드)</li>
  *   <li>✅ Static Factory Methods: {@code create()}, {@code reconstitute()}</li>

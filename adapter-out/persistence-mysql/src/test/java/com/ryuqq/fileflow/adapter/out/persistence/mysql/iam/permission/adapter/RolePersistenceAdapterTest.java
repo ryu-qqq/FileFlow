@@ -1,7 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.permission.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.config.IntegrationTestBase;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.config.QueryDslConfig;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.permission.repository.GrantQueryRepository;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.permission.Grant;

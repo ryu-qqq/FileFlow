@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.shared.exception;
+package com.ryuqq.fileflow.domain.common;
 
 /**
  * ErrorCode - 비즈니스 예외 에러 코드 인터페이스

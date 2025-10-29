@@ -1,6 +1,6 @@
-package com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.repository;
+package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.repository;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity.OrganizationJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.OrganizationJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

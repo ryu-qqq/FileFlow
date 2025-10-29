@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.adapter.rest.iam.tenant.mapper;
 
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.CreateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.TenantApiResponse;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.UpdateTenantStatusRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.CreateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.response.TenantApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantStatusApiRequest;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.CreateTenantCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.UpdateTenantCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.UpdateTenantStatusCommand;
@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Tag("adapter")
 @Tag("fast")
 @DisplayName("TenantDtoMapper 테스트")
-class TenantDtoMapperTest {
+class TenantApiMapperTest {
 
     @Nested
     @DisplayName("toCommand() - CreateTenantRequest → CreateTenantCommand 변환")
@@ -55,10 +55,10 @@ class TenantDtoMapperTest {
         @DisplayName("CreateTenantRequest를 CreateTenantCommand로 변환한다")
         void toCommand_CreateTenantRequest_ReturnsCommand() {
             // Given
-            CreateTenantRequest request = new CreateTenantRequest("Test Company");
+            CreateTenantApiRequest request = new CreateTenantApiRequest("Test Company");
 
             // When
-            CreateTenantCommand command = TenantDtoMapper.toCommand(request);
+            CreateTenantCommand command = TenantApiMapper.toCommand(request);
 
             // Then
             assertThat(command).isNotNull();
@@ -75,7 +75,7 @@ class TenantDtoMapperTest {
         @DisplayName("null CreateTenantRequest 전달 시 IllegalArgumentException이 발생한다")
         void toCommand_NullCreateTenantRequest_ThrowsException() {
             // When & Then
-            assertThatThrownBy(() -> TenantDtoMapper.toCommand((CreateTenantRequest) null))
+            assertThatThrownBy(() -> TenantApiMapper.toCommand((CreateTenantApiRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("CreateTenantRequest는 null일 수 없습니다");
         }
@@ -96,10 +96,10 @@ class TenantDtoMapperTest {
         void toCommand_UpdateTenantRequest_ReturnsCommand() {
             // Given
             String tenantId = "tenant-uuid-123";
-            UpdateTenantRequest request = new UpdateTenantRequest("Updated Company Name");
+            UpdateTenantApiRequest request = new UpdateTenantApiRequest("Updated Company Name");
 
             // When
-            UpdateTenantCommand command = TenantDtoMapper.toCommand(tenantId, request);
+            UpdateTenantCommand command = TenantApiMapper.toCommand(tenantId, request);
 
             // Then
             assertThat(command).isNotNull();
@@ -117,10 +117,10 @@ class TenantDtoMapperTest {
         @DisplayName("null tenantId 전달 시 IllegalArgumentException이 발생한다")
         void toCommand_NullTenantId_ThrowsException() {
             // Given
-            UpdateTenantRequest request = new UpdateTenantRequest("Updated Company Name");
+            UpdateTenantApiRequest request = new UpdateTenantApiRequest("Updated Company Name");
 
             // When & Then
-            assertThatThrownBy(() -> TenantDtoMapper.toCommand(null, request))
+            assertThatThrownBy(() -> TenantApiMapper.toCommand(null, request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Tenant ID는 null일 수 없습니다");
         }
@@ -138,7 +138,7 @@ class TenantDtoMapperTest {
             String tenantId = "tenant-uuid-123";
 
             // When & Then
-            assertThatThrownBy(() -> TenantDtoMapper.toCommand(tenantId, (UpdateTenantRequest) null))
+            assertThatThrownBy(() -> TenantApiMapper.toCommand(tenantId, (UpdateTenantApiRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("UpdateTenantRequest는 null일 수 없습니다");
         }
@@ -159,10 +159,10 @@ class TenantDtoMapperTest {
         void toCommand_UpdateTenantStatusRequestActive_ReturnsCommand() {
             // Given
             String tenantId = "tenant-uuid-123";
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest("ACTIVE");
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("ACTIVE");
 
             // When
-            UpdateTenantStatusCommand command = TenantDtoMapper.toCommand(tenantId, request);
+            UpdateTenantStatusCommand command = TenantApiMapper.toCommand(tenantId, request);
 
             // Then
             assertThat(command).isNotNull();
@@ -181,10 +181,10 @@ class TenantDtoMapperTest {
         void toCommand_UpdateTenantStatusRequestSuspended_ReturnsCommand() {
             // Given
             String tenantId = "tenant-uuid-456";
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest("SUSPENDED");
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("SUSPENDED");
 
             // When
-            UpdateTenantStatusCommand command = TenantDtoMapper.toCommand(tenantId, request);
+            UpdateTenantStatusCommand command = TenantApiMapper.toCommand(tenantId, request);
 
             // Then
             assertThat(command).isNotNull();
@@ -202,10 +202,10 @@ class TenantDtoMapperTest {
         @DisplayName("null tenantId 전달 시 IllegalArgumentException이 발생한다")
         void toCommand_NullTenantId_ThrowsException() {
             // Given
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest("ACTIVE");
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("ACTIVE");
 
             // When & Then
-            assertThatThrownBy(() -> TenantDtoMapper.toCommand(null, request))
+            assertThatThrownBy(() -> TenantApiMapper.toCommand(null, request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Tenant ID는 null일 수 없습니다");
         }
@@ -223,7 +223,7 @@ class TenantDtoMapperTest {
             String tenantId = "tenant-uuid-123";
 
             // When & Then
-            assertThatThrownBy(() -> TenantDtoMapper.toCommand(tenantId, (UpdateTenantStatusRequest) null))
+            assertThatThrownBy(() -> TenantApiMapper.toCommand(tenantId, (UpdateTenantStatusApiRequest) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("UpdateTenantStatusRequest는 null일 수 없습니다");
         }
@@ -254,7 +254,7 @@ class TenantDtoMapperTest {
             );
 
             // When
-            TenantApiResponse apiResponse = TenantDtoMapper.toApiResponse(response);
+            TenantApiResponse apiResponse = TenantApiMapper.toApiResponse(response);
 
             // Then
             assertThat(apiResponse).isNotNull();
@@ -287,7 +287,7 @@ class TenantDtoMapperTest {
             );
 
             // When
-            TenantApiResponse apiResponse = TenantDtoMapper.toApiResponse(response);
+            TenantApiResponse apiResponse = TenantApiMapper.toApiResponse(response);
 
             // Then
             assertThat(apiResponse).isNotNull();
@@ -316,7 +316,7 @@ class TenantDtoMapperTest {
             );
 
             // When
-            TenantApiResponse apiResponse = TenantDtoMapper.toApiResponse(response);
+            TenantApiResponse apiResponse = TenantApiMapper.toApiResponse(response);
 
             // Then
             assertThat(apiResponse).isNotNull();
@@ -334,7 +334,7 @@ class TenantDtoMapperTest {
         @DisplayName("null TenantResponse 전달 시 IllegalArgumentException이 발생한다")
         void toApiResponse_NullTenantResponse_ThrowsException() {
             // When & Then
-            assertThatThrownBy(() -> TenantDtoMapper.toApiResponse(null))
+            assertThatThrownBy(() -> TenantApiMapper.toApiResponse(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("TenantResponse는 null일 수 없습니다");
         }
@@ -355,8 +355,8 @@ class TenantDtoMapperTest {
         void utilityClass_CannotBeInstantiated() {
             // When & Then - Reflection으로 인스턴스 생성 시도 시 UnsupportedOperationException 발생
             assertThatThrownBy(() -> {
-                java.lang.reflect.Constructor<TenantDtoMapper> constructor =
-                    TenantDtoMapper.class.getDeclaredConstructor();
+                java.lang.reflect.Constructor<TenantApiMapper> constructor =
+                    TenantApiMapper.class.getDeclaredConstructor();
                 constructor.setAccessible(true);
                 constructor.newInstance();
             })

@@ -1,10 +1,10 @@
 package com.ryuqq.fileflow.adapter.rest.settings.mapper;
 
-import com.ryuqq.fileflow.adapter.rest.settings.dto.CreateSettingRequest;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.CreateSettingResponse;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.MergedSettingsApiResponse;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingRequest;
-import com.ryuqq.fileflow.adapter.rest.settings.dto.UpdateSettingResponse;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.request.CreateSettingApiRequest;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.response.CreateSettingApiResponse;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.response.MergedSettingsApiResponse;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.request.UpdateSettingApiRequest;
+import com.ryuqq.fileflow.adapter.rest.settings.dto.response.UpdateSettingApiResponse;
 import com.ryuqq.fileflow.application.settings.port.in.CreateSettingUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
@@ -33,7 +33,7 @@ import com.ryuqq.fileflow.domain.settings.SettingLevel;
  * @author ryu-qqq
  * @since 2025-10-25
  */
-public final class SettingsDtoMapper {
+public final class SettingsApiMapper {
 
     /**
      * Private Constructor - 인스턴스 생성 방지
@@ -44,7 +44,7 @@ public final class SettingsDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    private SettingsDtoMapper() {
+    private SettingsApiMapper() {
         throw new AssertionError("Cannot instantiate SettingsDtoMapper");
     }
 
@@ -70,7 +70,7 @@ public final class SettingsDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateSettingUseCase.Command toCommand(CreateSettingRequest request) {
+    public static CreateSettingUseCase.Command toCommand(CreateSettingApiRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("CreateSettingRequest는 필수입니다");
         }
@@ -99,12 +99,12 @@ public final class SettingsDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-26
      */
-    public static CreateSettingResponse toCreateResponse(CreateSettingUseCase.Response response) {
+    public static CreateSettingApiResponse toCreateResponse(CreateSettingUseCase.Response response) {
         if (response == null) {
             throw new IllegalArgumentException("CreateSettingUseCase.Response는 필수입니다");
         }
 
-        return new CreateSettingResponse(
+        return new CreateSettingApiResponse(
             response.id(),
             response.key(),
             response.value(),
@@ -137,7 +137,7 @@ public final class SettingsDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public static UpdateSettingUseCase.Command toCommand(UpdateSettingRequest request) {
+    public static UpdateSettingUseCase.Command toCommand(UpdateSettingApiRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("UpdateSettingRequest는 필수입니다");
         }
@@ -164,12 +164,12 @@ public final class SettingsDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public static UpdateSettingResponse toUpdateResponse(UpdateSettingUseCase.Response response) {
+    public static UpdateSettingApiResponse toUpdateResponse(UpdateSettingUseCase.Response response) {
         if (response == null) {
             throw new IllegalArgumentException("UpdateSettingUseCase.Response는 필수입니다");
         }
 
-        return new UpdateSettingResponse(
+        return new UpdateSettingApiResponse(
             response.id(),
             response.key(),
             response.value(),

@@ -1,9 +1,9 @@
-package com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.adapter;
+package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.adapter;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity.OrganizationJpaEntity;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.mapper.OrganizationEntityMapper;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.OrganizationJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.mapper.OrganizationEntityMapper;
 import com.ryuqq.fileflow.application.iam.organization.port.out.OrganizationQueryRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;

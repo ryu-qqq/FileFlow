@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.e2e;
 
 import com.jayway.jsonpath.JsonPath;
-import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.CreateOrganizationRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.CreateOrganizationApiRequest;
 import com.ryuqq.fileflow.e2e.fixture.OrganizationFixture;
 import com.ryuqq.fileflow.e2e.fixture.PermissionFixture;
 import org.junit.jupiter.api.AfterEach;
@@ -10,7 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -97,7 +96,7 @@ class Scenario04_SelfScopePermissionE2ETest extends EndToEndTestBase {
         // 2. Organization 생성
         long timestamp = System.nanoTime();
         String orgCode = "S4-" + (timestamp % 100000000);  // 최대 13자 (20자 제한)
-        CreateOrganizationRequest orgRequest = OrganizationFixture.createRequest(
+        CreateOrganizationApiRequest orgRequest = OrganizationFixture.createRequest(
             tenantId,
             orgCode
         );

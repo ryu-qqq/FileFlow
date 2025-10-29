@@ -1,8 +1,10 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.config.IntegrationTestBase;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.entity.TenantJpaEntity;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.repository.TenantJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.adapter.TenantPersistenceAdapter;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.adapter.TenantQueryRepositoryAdapter;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.entity.TenantJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.repository.TenantJpaRepository;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantStatus;

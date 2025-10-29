@@ -11,21 +11,51 @@
 # ===============================================
 # API Endpoint Configuration
 # ===============================================
-# REST API 엔드포인트 경로 중앙 관리
-# @see com.ryuqq.adapter.in.rest.config.properties.ApiEndpointProperties
+# REST API 엔드포인트 경로 중앙 관리 (바운디드 컨텍스트별 분리)
+# @see com.ryuqq.fileflow.adapter.rest.config.properties.ApiEndpointProperties
+# @see com.ryuqq.fileflow.adapter.rest.config.properties.IamEndpointProperties
+# @see com.ryuqq.fileflow.adapter.rest.config.properties.SettingsEndpointProperties
 api:
   endpoints:
     # API v1 베이스 경로
     base-v1: /api/v1
 
-    # Example 도메인 엔드포인트
-    example:
-      base: /examples
-      by-id: /{id}
-      admin-search: /admin/examples/search
+    # ===============================================
+    # IAM Bounded Context
+    # ===============================================
+    iam:
+      # Organization 도메인
+      organization:
+        base: /organizations
+        by-id: /{organizationId}
+        status: /{organizationId}/status
 
-  # 에러 응답 설정 (RFC 7807 Problem Details)
-  # @see com.ryuqq.adapter.in.rest.config.properties.ApiErrorProperties
+      # Tenant 도메인
+      tenant:
+        base: /tenants
+        by-id: /{tenantId}
+        status: /{tenantId}/status
+        tree: /{tenantId}/tree
+
+      # Permission 도메인
+      permission:
+        base: /permissions
+        evaluate: /evaluate
+
+      # UserContext 도메인
+      user-context:
+        base: /user-contexts
+
+    # ===============================================
+    # Settings Bounded Context
+    # ===============================================
+    settings:
+      base: /settings
+
+  # ===============================================
+  # Error Response Configuration (RFC 7807)
+  # ===============================================
+  # @see com.ryuqq.fileflow.adapter.rest.config.properties.ApiErrorProperties
   error:
     # 에러 타입 문서 베이스 URL
     # 프로덕션: https://api.example.com/problems

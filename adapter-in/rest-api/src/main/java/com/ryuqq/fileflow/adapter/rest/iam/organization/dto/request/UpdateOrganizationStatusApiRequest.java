@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.organization.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -34,7 +34,7 @@ import jakarta.validation.constraints.NotNull;
  * @author ryu-qqq
  * @since 2025-10-23
  */
-public record UpdateOrganizationStatusRequest(
+public record UpdateOrganizationStatusApiRequest(
     @NotNull(message = "상태는 필수입니다")
     String status
 ) {

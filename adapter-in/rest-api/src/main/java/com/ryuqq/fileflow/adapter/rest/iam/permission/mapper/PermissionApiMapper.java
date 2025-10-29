@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.rest.iam.permission.mapper;
 
-import com.ryuqq.fileflow.adapter.rest.iam.permission.dto.EvaluatePermissionRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.permission.dto.PermissionEvaluationApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.permission.dto.request.EvaluatePermissionApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.permission.dto.response.PermissionEvaluationApiResponse;
 import com.ryuqq.fileflow.application.iam.permission.dto.command.EvaluatePermissionCommand;
 import com.ryuqq.fileflow.application.iam.permission.dto.context.EvaluationContext;
 import com.ryuqq.fileflow.application.iam.permission.dto.context.ResourceAttributes;
@@ -33,7 +33,7 @@ import java.util.Map;
  * @since 2025-10-27
  */
 @Component
-public class PermissionDtoMapper {
+public class PermissionApiMapper {
 
     /**
      * Default Constructor (Spring Component Scan용)
@@ -41,7 +41,7 @@ public class PermissionDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-27
      */
-    public PermissionDtoMapper() {
+    public PermissionApiMapper() {
     }
 
     /**
@@ -55,7 +55,7 @@ public class PermissionDtoMapper {
      * @author ryu-qqq
      * @since 2025-10-27
      */
-    public EvaluatePermissionCommand toCommand(EvaluatePermissionRequest request) {
+    public EvaluatePermissionCommand toCommand(EvaluatePermissionApiRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("EvaluatePermissionRequest는 null일 수 없습니다");
         }

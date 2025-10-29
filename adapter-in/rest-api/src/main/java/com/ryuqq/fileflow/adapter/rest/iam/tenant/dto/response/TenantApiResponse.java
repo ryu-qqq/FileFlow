@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.response;
 
 import java.time.LocalDateTime;
 

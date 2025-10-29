@@ -1,4 +1,4 @@
-package com.ryuqq.adapter.out.persistence.config;
+package com.ryuqq.fileflow.adapter.out.persistence.mysql.config;
 
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
 import org.springframework.context.annotation.Bean;

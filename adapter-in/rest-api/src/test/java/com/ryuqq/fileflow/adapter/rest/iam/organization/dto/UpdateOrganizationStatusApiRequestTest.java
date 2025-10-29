@@ -4,6 +4,9 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationStatusApiRequest;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 2025-10-23
  */
 @DisplayName("UpdateOrganizationStatusRequest DTO Validation 테스트")
-class UpdateOrganizationStatusRequestTest {
+class UpdateOrganizationStatusApiRequestTest {
 
     private static Validator validator;
 
@@ -53,14 +56,14 @@ class UpdateOrganizationStatusRequestTest {
         @DisplayName("status가 null이면 검증 실패")
         void status_null_shouldFail() {
             // Given
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest(null);
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest(null);
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<UpdateOrganizationStatusRequest> violation = violations.iterator().next();
+            ConstraintViolation<UpdateOrganizationStatusApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("status");
             assertThat(violation.getMessage()).isEqualTo("상태는 필수입니다");
         }
@@ -74,10 +77,10 @@ class UpdateOrganizationStatusRequestTest {
         @DisplayName("status가 ACTIVE이면 검증 성공")
         void status_active_shouldPass() {
             // Given
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("ACTIVE");
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("ACTIVE");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -87,10 +90,10 @@ class UpdateOrganizationStatusRequestTest {
         @DisplayName("status가 INACTIVE이면 검증 성공")
         void status_inactive_shouldPass() {
             // Given
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("INACTIVE");
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("INACTIVE");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -100,10 +103,10 @@ class UpdateOrganizationStatusRequestTest {
         @DisplayName("빈 문자열도 검증 통과 (Controller에서 추가 검증 필요)")
         void status_empty_shouldPassValidation() {
             // Given
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("");
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             // @NotNull만 있으므로 빈 문자열은 통과
@@ -120,8 +123,8 @@ class UpdateOrganizationStatusRequestTest {
         @DisplayName("동일한 값으로 생성된 Record는 equals()가 true")
         void sameValues_shouldBeEqual() {
             // Given
-            UpdateOrganizationStatusRequest request1 = new UpdateOrganizationStatusRequest("INACTIVE");
-            UpdateOrganizationStatusRequest request2 = new UpdateOrganizationStatusRequest("INACTIVE");
+            UpdateOrganizationStatusApiRequest request1 = new UpdateOrganizationStatusApiRequest("INACTIVE");
+            UpdateOrganizationStatusApiRequest request2 = new UpdateOrganizationStatusApiRequest("INACTIVE");
 
             // When & Then
             assertThat(request1).isEqualTo(request2);
@@ -132,8 +135,8 @@ class UpdateOrganizationStatusRequestTest {
         @DisplayName("다른 값으로 생성된 Record는 equals()가 false")
         void differentValues_shouldNotBeEqual() {
             // Given
-            UpdateOrganizationStatusRequest request1 = new UpdateOrganizationStatusRequest("ACTIVE");
-            UpdateOrganizationStatusRequest request2 = new UpdateOrganizationStatusRequest("INACTIVE");
+            UpdateOrganizationStatusApiRequest request1 = new UpdateOrganizationStatusApiRequest("ACTIVE");
+            UpdateOrganizationStatusApiRequest request2 = new UpdateOrganizationStatusApiRequest("INACTIVE");
 
             // When & Then
             assertThat(request1).isNotEqualTo(request2);
@@ -148,10 +151,10 @@ class UpdateOrganizationStatusRequestTest {
         @DisplayName("ACTIVE → INACTIVE 전환 요청 (Soft Delete)")
         void activeToInactive_shouldBeValid() {
             // Given
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("INACTIVE");
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("INACTIVE");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -161,10 +164,10 @@ class UpdateOrganizationStatusRequestTest {
         @DisplayName("INACTIVE → ACTIVE 전환 요청 (비즈니스 규칙 위반은 UseCase에서 검증)")
         void inactiveToActive_validationPasses_butBusinessRuleWillReject() {
             // Given
-            UpdateOrganizationStatusRequest request = new UpdateOrganizationStatusRequest("ACTIVE");
+            UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("ACTIVE");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             // Validation은 통과하지만, UseCase에서 비즈니스 규칙으로 거부됨

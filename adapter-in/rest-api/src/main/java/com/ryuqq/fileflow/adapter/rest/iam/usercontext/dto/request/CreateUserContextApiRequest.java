@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -15,7 +15,7 @@ import jakarta.validation.constraints.NotBlank;
  * @author ryu-qqq
  * @since 2025-10-27
  */
-public record CreateUserContextRequest(
+public record CreateUserContextApiRequest(
     @NotBlank(message = "외부 사용자 ID는 필수입니다")
     String externalUserId,
 

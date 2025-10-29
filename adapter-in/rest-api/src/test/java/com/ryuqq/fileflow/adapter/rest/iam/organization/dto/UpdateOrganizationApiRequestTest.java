@@ -4,6 +4,9 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+
+import com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request.UpdateOrganizationApiRequest;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 2025-10-23
  */
 @DisplayName("UpdateOrganizationRequest DTO Validation 테스트")
-class UpdateOrganizationRequestTest {
+class UpdateOrganizationApiRequestTest {
 
     private static Validator validator;
 
@@ -47,14 +50,14 @@ class UpdateOrganizationRequestTest {
         @DisplayName("name이 null이면 검증 실패")
         void name_null_shouldFail() {
             // Given
-            UpdateOrganizationRequest request = new UpdateOrganizationRequest(null);
+            UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest(null);
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<UpdateOrganizationRequest> violation = violations.iterator().next();
+            ConstraintViolation<UpdateOrganizationApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("name");
             assertThat(violation.getMessage()).isEqualTo("조직 이름은 필수입니다");
         }
@@ -63,14 +66,14 @@ class UpdateOrganizationRequestTest {
         @DisplayName("name이 빈 문자열이면 검증 실패")
         void name_empty_shouldFail() {
             // Given
-            UpdateOrganizationRequest request = new UpdateOrganizationRequest("");
+            UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<UpdateOrganizationRequest> violation = violations.iterator().next();
+            ConstraintViolation<UpdateOrganizationApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("name");
             assertThat(violation.getMessage()).isEqualTo("조직 이름은 필수입니다");
         }
@@ -79,14 +82,14 @@ class UpdateOrganizationRequestTest {
         @DisplayName("name이 공백 문자열이면 검증 실패")
         void name_blank_shouldFail() {
             // Given
-            UpdateOrganizationRequest request = new UpdateOrganizationRequest("   ");
+            UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("   ");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<UpdateOrganizationRequest> violation = violations.iterator().next();
+            ConstraintViolation<UpdateOrganizationApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("name");
             assertThat(violation.getMessage()).isEqualTo("조직 이름은 필수입니다");
         }
@@ -100,10 +103,10 @@ class UpdateOrganizationRequestTest {
         @DisplayName("유효한 name이면 검증 성공")
         void validName_shouldPass() {
             // Given
-            UpdateOrganizationRequest request = new UpdateOrganizationRequest("Updated Department Name");
+            UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("Updated Department Name");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -113,10 +116,10 @@ class UpdateOrganizationRequestTest {
         @DisplayName("name이 최소 길이(1자)여도 검증 성공")
         void name_minLength_shouldPass() {
             // Given
-            UpdateOrganizationRequest request = new UpdateOrganizationRequest("X");
+            UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("X");
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -127,10 +130,10 @@ class UpdateOrganizationRequestTest {
         void name_longString_shouldPass() {
             // Given
             String longName = "Very Long Department Name That Exceeds Normal Length But Still Valid";
-            UpdateOrganizationRequest request = new UpdateOrganizationRequest(longName);
+            UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest(longName);
 
             // When
-            Set<ConstraintViolation<UpdateOrganizationRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateOrganizationApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -145,8 +148,8 @@ class UpdateOrganizationRequestTest {
         @DisplayName("동일한 값으로 생성된 Record는 equals()가 true")
         void sameValues_shouldBeEqual() {
             // Given
-            UpdateOrganizationRequest request1 = new UpdateOrganizationRequest("Updated Department");
-            UpdateOrganizationRequest request2 = new UpdateOrganizationRequest("Updated Department");
+            UpdateOrganizationApiRequest request1 = new UpdateOrganizationApiRequest("Updated Department");
+            UpdateOrganizationApiRequest request2 = new UpdateOrganizationApiRequest("Updated Department");
 
             // When & Then
             assertThat(request1).isEqualTo(request2);
@@ -157,8 +160,8 @@ class UpdateOrganizationRequestTest {
         @DisplayName("다른 값으로 생성된 Record는 equals()가 false")
         void differentValues_shouldNotBeEqual() {
             // Given
-            UpdateOrganizationRequest request1 = new UpdateOrganizationRequest("Dept A");
-            UpdateOrganizationRequest request2 = new UpdateOrganizationRequest("Dept B");
+            UpdateOrganizationApiRequest request1 = new UpdateOrganizationApiRequest("Dept A");
+            UpdateOrganizationApiRequest request2 = new UpdateOrganizationApiRequest("Dept B");
 
             // When & Then
             assertThat(request1).isNotEqualTo(request2);

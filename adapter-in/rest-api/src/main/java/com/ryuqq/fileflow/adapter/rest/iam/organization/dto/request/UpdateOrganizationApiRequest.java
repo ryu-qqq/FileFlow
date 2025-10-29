@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.organization.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -29,7 +29,7 @@ import jakarta.validation.constraints.NotBlank;
  * @author ryu-qqq
  * @since 2025-10-22
  */
-public record UpdateOrganizationRequest(
+public record UpdateOrganizationApiRequest(
     @NotBlank(message = "조직 이름은 필수입니다")
     String name
 ) {

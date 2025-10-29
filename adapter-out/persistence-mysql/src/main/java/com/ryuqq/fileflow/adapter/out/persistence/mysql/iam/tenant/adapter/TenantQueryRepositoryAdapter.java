@@ -1,9 +1,9 @@
-package com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.adapter;
+package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.adapter;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.entity.TenantJpaEntity;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.mapper.TenantEntityMapper;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.entity.TenantJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.mapper.TenantEntityMapper;
 import com.ryuqq.fileflow.application.iam.tenant.port.out.TenantQueryRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;

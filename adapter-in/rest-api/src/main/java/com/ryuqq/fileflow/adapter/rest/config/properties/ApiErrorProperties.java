@@ -1,4 +1,4 @@
-package com.ryuqq.adapter.in.rest.config.properties;
+package com.ryuqq.fileflow.adapter.rest.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

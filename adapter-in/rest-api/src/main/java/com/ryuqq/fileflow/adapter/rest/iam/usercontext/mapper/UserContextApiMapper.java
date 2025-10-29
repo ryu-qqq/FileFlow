@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.rest.iam.usercontext.mapper;
 
-import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.CreateUserContextRequest;
-import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.UserContextApiResponse;
+import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.request.CreateUserContextApiRequest;
+import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.response.UserContextApiResponse;
 import com.ryuqq.fileflow.application.iam.usercontext.dto.command.CreateUserContextCommand;
 import com.ryuqq.fileflow.application.iam.usercontext.dto.response.UserContextResponse;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
  * @since 2025-10-27
  */
 @Component
-public class UserContextDtoMapper {
+public class UserContextApiMapper {
 
     /**
      * REST API Request → Application Command 변환
@@ -30,7 +30,7 @@ public class UserContextDtoMapper {
      * @return CreateUserContextCommand
      * @throws IllegalArgumentException request가 null인 경우
      */
-    public CreateUserContextCommand toCommand(CreateUserContextRequest request) {
+    public CreateUserContextCommand toCommand(CreateUserContextApiRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("CreateUserContextRequest는 필수입니다");
         }

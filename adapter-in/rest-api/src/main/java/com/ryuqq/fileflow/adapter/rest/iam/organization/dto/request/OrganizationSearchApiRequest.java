@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.rest.iam.organization.dto;
+package com.ryuqq.fileflow.adapter.rest.iam.organization.dto.request;
 
 import com.ryuqq.fileflow.application.iam.organization.dto.query.GetOrganizationsQuery;
 import jakarta.validation.constraints.Max;
@@ -47,7 +47,7 @@ import jakarta.validation.constraints.Positive;
  * @author ryu-qqq
  * @since 2025-10-23
  */
-public record OrganizationListQueryParam(
+public record OrganizationSearchApiRequest(
     @Min(value = 0, message = "페이지 번호는 0 이상이어야 합니다")
     Integer page,
 
@@ -77,7 +77,7 @@ public record OrganizationListQueryParam(
      * @param nameContains 이름 필터
      * @param deleted 삭제 여부 필터
      */
-    public OrganizationListQueryParam {
+    public OrganizationSearchApiRequest {
         size = (size == null) ? 20 : size;
     }
 

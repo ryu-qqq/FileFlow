@@ -4,6 +4,9 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+
+import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantStatusApiRequest;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -34,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 2025-10-23
  */
 @DisplayName("UpdateTenantStatusRequest DTO Validation 테스트")
-class UpdateTenantStatusRequestTest {
+class UpdateTenantStatusApiRequestTest {
 
     private static Validator validator;
 
@@ -52,14 +55,14 @@ class UpdateTenantStatusRequestTest {
         @DisplayName("status가 null이면 검증 실패")
         void status_null_shouldFail() {
             // Given
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest(null);
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest(null);
 
             // When
-            Set<ConstraintViolation<UpdateTenantStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).hasSize(1);
-            ConstraintViolation<UpdateTenantStatusRequest> violation = violations.iterator().next();
+            ConstraintViolation<UpdateTenantStatusApiRequest> violation = violations.iterator().next();
             assertThat(violation.getPropertyPath().toString()).isEqualTo("status");
             assertThat(violation.getMessage()).isEqualTo("상태는 필수입니다");
         }
@@ -73,10 +76,10 @@ class UpdateTenantStatusRequestTest {
         @DisplayName("status가 ACTIVE이면 검증 성공")
         void status_active_shouldPass() {
             // Given
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest("ACTIVE");
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("ACTIVE");
 
             // When
-            Set<ConstraintViolation<UpdateTenantStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -86,10 +89,10 @@ class UpdateTenantStatusRequestTest {
         @DisplayName("status가 SUSPENDED이면 검증 성공")
         void status_suspended_shouldPass() {
             // Given
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest("SUSPENDED");
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("SUSPENDED");
 
             // When
-            Set<ConstraintViolation<UpdateTenantStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -99,10 +102,10 @@ class UpdateTenantStatusRequestTest {
         @DisplayName("빈 문자열도 검증 통과 (Controller에서 추가 검증 필요)")
         void status_empty_shouldPassValidation() {
             // Given
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest("");
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("");
 
             // When
-            Set<ConstraintViolation<UpdateTenantStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             // @NotNull만 있으므로 빈 문자열은 통과
@@ -119,8 +122,8 @@ class UpdateTenantStatusRequestTest {
         @DisplayName("동일한 값으로 생성된 Record는 equals()가 true")
         void sameValues_shouldBeEqual() {
             // Given
-            UpdateTenantStatusRequest request1 = new UpdateTenantStatusRequest("ACTIVE");
-            UpdateTenantStatusRequest request2 = new UpdateTenantStatusRequest("ACTIVE");
+            UpdateTenantStatusApiRequest request1 = new UpdateTenantStatusApiRequest("ACTIVE");
+            UpdateTenantStatusApiRequest request2 = new UpdateTenantStatusApiRequest("ACTIVE");
 
             // When & Then
             assertThat(request1).isEqualTo(request2);
@@ -131,8 +134,8 @@ class UpdateTenantStatusRequestTest {
         @DisplayName("다른 값으로 생성된 Record는 equals()가 false")
         void differentValues_shouldNotBeEqual() {
             // Given
-            UpdateTenantStatusRequest request1 = new UpdateTenantStatusRequest("ACTIVE");
-            UpdateTenantStatusRequest request2 = new UpdateTenantStatusRequest("SUSPENDED");
+            UpdateTenantStatusApiRequest request1 = new UpdateTenantStatusApiRequest("ACTIVE");
+            UpdateTenantStatusApiRequest request2 = new UpdateTenantStatusApiRequest("SUSPENDED");
 
             // When & Then
             assertThat(request1).isNotEqualTo(request2);
@@ -147,10 +150,10 @@ class UpdateTenantStatusRequestTest {
         @DisplayName("ACTIVE → SUSPENDED 전환 요청")
         void activeToSuspended_shouldBeValid() {
             // Given
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest("SUSPENDED");
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("SUSPENDED");
 
             // When
-            Set<ConstraintViolation<UpdateTenantStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
@@ -160,10 +163,10 @@ class UpdateTenantStatusRequestTest {
         @DisplayName("SUSPENDED → ACTIVE 전환 요청")
         void suspendedToActive_shouldBeValid() {
             // Given
-            UpdateTenantStatusRequest request = new UpdateTenantStatusRequest("ACTIVE");
+            UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("ACTIVE");
 
             // When
-            Set<ConstraintViolation<UpdateTenantStatusRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<UpdateTenantStatusApiRequest>> violations = validator.validate(request);
 
             // Then
             assertThat(violations).isEmpty();
