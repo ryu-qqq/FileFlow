@@ -78,7 +78,7 @@ resource "aws_ecr_repository_policy" "fileflow_github_actions" {
         Sid    = "AllowGitHubActions"
         Effect = "Allow"
         Principal = {
-          AWS = data.aws_caller_identity.current.account_id
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/GitHubActionsRole"
         }
         Action = [
           "ecr:GetDownloadUrlForLayer",
