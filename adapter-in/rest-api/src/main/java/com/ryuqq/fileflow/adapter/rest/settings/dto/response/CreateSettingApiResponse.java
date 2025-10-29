@@ -43,7 +43,7 @@ import java.time.LocalDateTime;
  * @author ryu-qqq
  * @since 2025-10-26
  */
-public record CreateSettingResponse(
+public record CreateSettingApiResponse(
     Long id,
     String key,
     String value,
