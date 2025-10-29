@@ -14,11 +14,6 @@ include("domain")
 include("application")
 
 // ========================================
-// Test Support Modules
-// ========================================
-include("test-fixtures")
-
-// ========================================
 // Adapter Modules (Ports & Adapters)
 // ========================================
 // Inbound Adapters (Driving)

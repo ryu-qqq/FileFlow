@@ -29,5 +29,5 @@ dependencies {
     // ========================================
     // Test Dependencies
     // ========================================
-    testImplementation(project(":test-fixtures"))
+    // testFixtures source set을 사용하므로 별도 의존성 불필요
 }

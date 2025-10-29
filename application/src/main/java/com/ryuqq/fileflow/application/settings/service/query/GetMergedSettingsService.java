@@ -20,7 +20,7 @@ import java.util.Map;
  *   <li>✅ CQRS 패턴 - Query Handler (읽기 작업)</li>
  *   <li>✅ Hexagonal Architecture - LoadSettingsPort 사용</li>
  *   <li>✅ Transaction 경계 - 읽기 전용 트랜잭션</li>
- *   <li>✅ Domain Service 활용 - SettingMerger 위임</li>
+ *   <li>✅ Static Utility 활용 - SettingMerger 직접 호출</li>
  *   <li>✅ 부작용 없음 - 순수 조회만 수행</li>
  * </ul>
  *
@@ -32,7 +32,6 @@ import java.util.Map;
 public class GetMergedSettingsService implements GetMergedSettingsUseCase {
 
     private final LoadSettingsPort loadSettingsPort;
-    private final SettingMerger settingMerger;
 
     /**
      * GetMergedSettingsService 생성자.
@@ -40,16 +39,11 @@ public class GetMergedSettingsService implements GetMergedSettingsUseCase {
      * <p>생성자 주입을 통한 의존성 주입입니다.</p>
      *
      * @param loadSettingsPort Load Settings Port (Query 전용 Outbound Port)
-     * @param settingMerger Setting Merger (Domain Service)
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    public GetMergedSettingsService(
-        LoadSettingsPort loadSettingsPort,
-        SettingMerger settingMerger
-    ) {
+    public GetMergedSettingsService(LoadSettingsPort loadSettingsPort) {
         this.loadSettingsPort = loadSettingsPort;
-        this.settingMerger = settingMerger;
     }
 
     /**
@@ -78,8 +72,8 @@ public class GetMergedSettingsService implements GetMergedSettingsUseCase {
             query.tenantId()
         );
 
-        // 2. Domain Service를 통한 병합 (ORG > TENANT > DEFAULT 우선순위)
-        Map<String, String> mergedSettings = settingMerger.mergeToValueMap(
+        // 2. Static Utility를 통한 병합 (ORG > TENANT > DEFAULT 우선순위)
+        Map<String, String> mergedSettings = SettingMerger.mergeToValueMap(
             settingsForMerge.orgSettings(),
             settingsForMerge.tenantSettings(),
             settingsForMerge.defaultSettings()

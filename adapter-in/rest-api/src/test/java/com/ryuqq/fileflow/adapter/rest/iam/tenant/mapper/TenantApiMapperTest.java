@@ -95,7 +95,7 @@ class TenantApiMapperTest {
         @DisplayName("UpdateTenantRequest를 UpdateTenantCommand로 변환한다")
         void toCommand_UpdateTenantRequest_ReturnsCommand() {
             // Given
-            String tenantId = "tenant-uuid-123";
+            Long tenantId = 1L;
             UpdateTenantApiRequest request = new UpdateTenantApiRequest("Updated Company Name");
 
             // When
@@ -135,7 +135,7 @@ class TenantApiMapperTest {
         @DisplayName("null UpdateTenantRequest 전달 시 IllegalArgumentException이 발생한다")
         void toCommand_NullUpdateTenantRequest_ThrowsException() {
             // Given
-            String tenantId = "tenant-uuid-123";
+            Long tenantId = 1L;
 
             // When & Then
             assertThatThrownBy(() -> TenantApiMapper.toCommand(tenantId, (UpdateTenantApiRequest) null))
@@ -158,7 +158,7 @@ class TenantApiMapperTest {
         @DisplayName("UpdateTenantStatusRequest를 UpdateTenantStatusCommand로 변환한다 (ACTIVE)")
         void toCommand_UpdateTenantStatusRequestActive_ReturnsCommand() {
             // Given
-            String tenantId = "tenant-uuid-123";
+            Long tenantId = 1L;
             UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("ACTIVE");
 
             // When
@@ -180,7 +180,7 @@ class TenantApiMapperTest {
         @DisplayName("UpdateTenantStatusRequest를 UpdateTenantStatusCommand로 변환한다 (SUSPENDED)")
         void toCommand_UpdateTenantStatusRequestSuspended_ReturnsCommand() {
             // Given
-            String tenantId = "tenant-uuid-456";
+            Long tenantId = 2L;
             UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("SUSPENDED");
 
             // When
@@ -220,7 +220,7 @@ class TenantApiMapperTest {
         @DisplayName("null UpdateTenantStatusRequest 전달 시 IllegalArgumentException이 발생한다")
         void toCommand_NullUpdateTenantStatusRequest_ThrowsException() {
             // Given
-            String tenantId = "tenant-uuid-123";
+            Long tenantId = 1L;
 
             // When & Then
             assertThatThrownBy(() -> TenantApiMapper.toCommand(tenantId, (UpdateTenantStatusApiRequest) null))
@@ -243,7 +243,7 @@ class TenantApiMapperTest {
         @DisplayName("ACTIVE 상태 TenantResponse를 TenantApiResponse로 변환한다")
         void toApiResponse_ActiveTenantResponse_ReturnsApiResponse() {
             // Given
-            String tenantId = "tenant-uuid-123";
+            Long tenantId = 1L;
             String name = "Test Company";
             String status = "ACTIVE";
             LocalDateTime createdAt = LocalDateTime.now().minusDays(30);
@@ -276,7 +276,7 @@ class TenantApiMapperTest {
         @DisplayName("SUSPENDED 상태 TenantResponse를 TenantApiResponse로 변환한다")
         void toApiResponse_SuspendedTenantResponse_ReturnsApiResponse() {
             // Given
-            String tenantId = "tenant-uuid-456";
+            Long tenantId = 2L;
             String name = "Suspended Company";
             String status = "SUSPENDED";
             LocalDateTime createdAt = LocalDateTime.now().minusDays(60);
@@ -305,7 +305,7 @@ class TenantApiMapperTest {
         @DisplayName("deleted=true인 TenantResponse를 TenantApiResponse로 변환한다")
         void toApiResponse_DeletedTenantResponse_ReturnsApiResponse() {
             // Given
-            String tenantId = "tenant-uuid-789";
+            Long tenantId = 3L;
             String name = "Deleted Company";
             String status = "SUSPENDED";
             LocalDateTime createdAt = LocalDateTime.now().minusDays(90);

@@ -19,7 +19,10 @@ public class QOrganizationJpaEntity extends EntityPathBase<OrganizationJpaEntity
 
     public static final QOrganizationJpaEntity organizationJpaEntity = new QOrganizationJpaEntity("organizationJpaEntity");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QBaseAuditEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QBaseAuditEntity(this);
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final BooleanPath deleted = createBoolean("deleted");
 
@@ -33,7 +36,8 @@ public class QOrganizationJpaEntity extends EntityPathBase<OrganizationJpaEntity
 
     public final NumberPath<Long> tenantId = createNumber("tenantId", Long.class);
 
-    public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public QOrganizationJpaEntity(String variable) {
         super(OrganizationJpaEntity.class, forVariable(variable));

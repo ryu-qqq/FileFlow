@@ -88,13 +88,13 @@ class OrganizationControllerIntegrationTest {
     void createOrganization_Success_Returns201() throws Exception {
         // Given
         CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(
-            "TEST001",
+            1L,
             "ORG001",
             "Engineering Department"
         );
         OrganizationResponse mockResponse = new OrganizationResponse(
             1L,
-            "TEST001",
+            1L,
             "ORG001",
             "Engineering Department",
             "ACTIVE",
@@ -111,7 +111,7 @@ class OrganizationControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.data.organizationId").value(1))
-            .andExpect(jsonPath("$.data.tenantId").value("TEST001"))
+            .andExpect(jsonPath("$.data.tenantId").value(1L))
             .andExpect(jsonPath("$.data.orgCode").value("ORG001"))
             .andExpect(jsonPath("$.data.name").value("Engineering Department"))
             .andExpect(jsonPath("$.data.deleted").value(false));
@@ -128,7 +128,7 @@ class OrganizationControllerIntegrationTest {
     void createOrganization_ValidationFails_Returns400() throws Exception {
         // Given - orgCode가 빈 문자열
         CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(
-            "TEST001",
+            1L,
             "",  // Invalid: 빈 문자열
             "Engineering Department"
         );
@@ -157,7 +157,7 @@ class OrganizationControllerIntegrationTest {
     void createOrganization_DuplicateOrgCode_Returns409() throws Exception {
         // Given
         CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(
-            "TEST001",
+            1L,
             "ORG001",
             "Engineering Department"
         );
@@ -193,7 +193,7 @@ class OrganizationControllerIntegrationTest {
         UpdateOrganizationApiRequest request = new UpdateOrganizationApiRequest("Updated Department Name");
         OrganizationResponse mockResponse = new OrganizationResponse(
             organizationId,
-            "TEST001",
+            1L,
             "ORG001",
             "Updated Department Name",
             "ACTIVE",
@@ -252,7 +252,7 @@ class OrganizationControllerIntegrationTest {
         UpdateOrganizationStatusApiRequest request = new UpdateOrganizationStatusApiRequest("SUSPENDED");
         OrganizationResponse mockResponse = new OrganizationResponse(
             organizationId,
-            "TEST001",
+            1L,
             "ORG001",
             "Engineering Department",
             "SUSPENDED",
@@ -284,7 +284,7 @@ class OrganizationControllerIntegrationTest {
         List<OrganizationResponse> organizations = new ArrayList<>();
         organizations.add(new OrganizationResponse(
             1L,
-            "TEST001",
+            1L,
             "ORG001",
             "Engineering Department",
             "ACTIVE",
@@ -294,7 +294,7 @@ class OrganizationControllerIntegrationTest {
         ));
         organizations.add(new OrganizationResponse(
             2L,
-            "TEST001",
+            1L,
             "ORG002",
             "Marketing Department",
             "ACTIVE",
@@ -341,7 +341,7 @@ class OrganizationControllerIntegrationTest {
         List<OrganizationResponse> organizations = new ArrayList<>();
         organizations.add(new OrganizationResponse(
             1L,
-            "TEST001",
+            1L,
             "ORG001",
             "Engineering Department",
             "ACTIVE",
@@ -384,7 +384,7 @@ class OrganizationControllerIntegrationTest {
         Long organizationId = 1L;
         OrganizationResponse mockResponse = new OrganizationResponse(
             organizationId,
-            "TEST001",
+            1L,
             "ORG001",
             "Engineering Department",
             "ACTIVE",

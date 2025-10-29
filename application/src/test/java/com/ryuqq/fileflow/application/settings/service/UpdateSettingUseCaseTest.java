@@ -9,7 +9,7 @@ import com.ryuqq.fileflow.application.settings.service.command.UpdateSettingServ
 import com.ryuqq.fileflow.domain.settings.exception.InvalidSettingException;
 import com.ryuqq.fileflow.domain.settings.Setting;
 import com.ryuqq.fileflow.domain.settings.SettingKey;
-import com.ryuqq.fileflow.fixtures.SettingFixtures;
+import com.ryuqq.fileflow.domain.settings.fixture.SettingDomainFixture;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 import com.ryuqq.fileflow.domain.settings.exception.SettingNotFoundException;
 import com.ryuqq.fileflow.domain.settings.SettingType;
@@ -75,8 +75,8 @@ class UpdateSettingUseCaseTest {
             String newValue = "200MB";
             UpdateSettingUseCase.Command command = new UpdateSettingUseCase.Command(key, newValue, "DEFAULT", null);
 
-            Setting existingSetting = SettingFixtures.createDefaultSetting(); // 100MB
-            Setting updatedSetting = SettingFixtures.createCustomDefaultSetting(key, newValue, SettingType.STRING);
+            Setting existingSetting = SettingDomainFixture.createDefaultSetting(); // 100MB
+            Setting updatedSetting = SettingDomainFixture.createCustomDefaultSetting(key, newValue, SettingType.STRING);
             UpdateSettingUseCase.Response expectedResponse = new UpdateSettingUseCase.Response(
                 null, key, newValue, SettingType.STRING.name(), "DEFAULT", null, false,
                 LocalDateTime.now(), LocalDateTime.now()
@@ -115,8 +115,8 @@ class UpdateSettingUseCaseTest {
             Long orgId = 1L;
             UpdateSettingUseCase.Command command = new UpdateSettingUseCase.Command(key, newValue, "ORG", orgId);
 
-            Setting existingSetting = SettingFixtures.createOrgSetting(orgId); // 200MB
-            Setting updatedSetting = SettingFixtures.createCustomOrgSetting(key, newValue, SettingType.STRING, orgId);
+            Setting existingSetting = SettingDomainFixture.createOrgSetting(orgId); // 200MB
+            Setting updatedSetting = SettingDomainFixture.createCustomOrgSetting(key, newValue, SettingType.STRING, orgId);
             UpdateSettingUseCase.Response expectedResponse = new UpdateSettingUseCase.Response(
                 null, key, newValue, SettingType.STRING.name(), "ORG", orgId, false,
                 LocalDateTime.now(), LocalDateTime.now()
@@ -154,8 +154,8 @@ class UpdateSettingUseCaseTest {
             Long tenantId = 100L;
             UpdateSettingUseCase.Command command = new UpdateSettingUseCase.Command(key, newValue, "TENANT", tenantId);
 
-            Setting existingSetting = SettingFixtures.createTenantSetting(tenantId); // 50MB
-            Setting updatedSetting = SettingFixtures.createCustomTenantSetting(key, newValue, SettingType.STRING, tenantId);
+            Setting existingSetting = SettingDomainFixture.createTenantSetting(tenantId); // 50MB
+            Setting updatedSetting = SettingDomainFixture.createCustomTenantSetting(key, newValue, SettingType.STRING, tenantId);
             UpdateSettingUseCase.Response expectedResponse = new UpdateSettingUseCase.Response(
                 null, key, newValue, SettingType.STRING.name(), "TENANT", tenantId, false,
                 LocalDateTime.now(), LocalDateTime.now()
@@ -225,7 +225,7 @@ class UpdateSettingUseCaseTest {
             String invalidValue = "invalid-number";
             UpdateSettingUseCase.Command command = new UpdateSettingUseCase.Command(key, invalidValue, "DEFAULT", null);
 
-            Setting existingSetting = SettingFixtures.createDefaultNumberSetting(); // API_TIMEOUT = 30
+            Setting existingSetting = SettingDomainFixture.createDefaultNumberSetting(); // API_TIMEOUT = 30
 
             when(loadSettingsPort.findByKeyAndLevel(any(SettingKey.class), eq(SettingLevel.DEFAULT), eq(null)))
                 .thenReturn(Optional.of(existingSetting));
@@ -298,7 +298,7 @@ class UpdateSettingUseCaseTest {
             // Arrange
             UpdateSettingUseCase.Command command = new UpdateSettingUseCase.Command("KEY", "value", "INVALID", null);
 
-            Setting existingSetting = SettingFixtures.createDefaultSetting();
+            Setting existingSetting = SettingDomainFixture.createDefaultSetting();
 
             when(loadSettingsPort.findByKeyAndLevel(any(), any(), any()))
                 .thenReturn(Optional.of(existingSetting));
@@ -323,8 +323,8 @@ class UpdateSettingUseCaseTest {
             String newSecretValue = "new-secret-789";
             UpdateSettingUseCase.Command command = new UpdateSettingUseCase.Command(key, newSecretValue, "DEFAULT", null);
 
-            Setting existingSecretSetting = SettingFixtures.createDefaultSecretSetting(); // API_KEY = secret-key-123
-            Setting updatedSecretSetting = SettingFixtures.createDefaultSecretSetting();
+            Setting existingSecretSetting = SettingDomainFixture.createDefaultSecretSetting(); // API_KEY = secret-key-123
+            Setting updatedSecretSetting = SettingDomainFixture.createDefaultSecretSetting();
             UpdateSettingUseCase.Response expectedResponse = new UpdateSettingUseCase.Response(
                 null, key, "********", SettingType.STRING.name(), "DEFAULT", null, true,
                 LocalDateTime.now(), LocalDateTime.now()
