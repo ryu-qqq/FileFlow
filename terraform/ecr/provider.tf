@@ -12,13 +12,13 @@ terraform {
     }
   }
 
-  # S3 Backend (Infrastructure 레포지토리와 동일한 bucket 사용)
+  # S3 Backend
   backend "s3" {
-    bucket         = "terraform-state-ryuqqq-infrastructure-prod"
+    bucket         = "prod-connectly"
     key            = "fileflow/ecr/terraform.tfstate"
     region         = "ap-northeast-2"
     encrypt        = true
-    dynamodb_table = "terraform-state-lock-ryuqqq-infrastructure-prod"
+    dynamodb_table = "prod-connectly-tf-lock"
   }
 }
 
