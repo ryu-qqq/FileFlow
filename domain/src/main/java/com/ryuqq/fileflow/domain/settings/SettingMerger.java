@@ -221,13 +221,15 @@ public final class SettingMerger {
     ) {
         Map<SettingKey, Setting> mergedMap = merge(orgSettings, tenantSettings, defaultSettings);
 
-        return mergedMap.entrySet().stream()
-            .collect(Collectors.toMap(
-                entry -> entry.getKey().getValue(),
-                entry -> entry.getValue().getDisplayValue(),
-                (v1, v2) -> v1,
-                LinkedHashMap::new
-            ));
+        return Collections.unmodifiableMap(
+            mergedMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                    entry -> entry.getKey().getValue(),
+                    entry -> entry.getValue().getDisplayValue(),
+                    (v1, v2) -> v1,
+                    LinkedHashMap::new
+                ))
+        );
     }
 
     /**
@@ -250,12 +252,14 @@ public final class SettingMerger {
     ) {
         Map<SettingKey, Setting> mergedMap = merge(orgSettings, tenantSettings, defaultSettings);
 
-        return mergedMap.entrySet().stream()
-            .collect(Collectors.toMap(
-                entry -> entry.getKey().getValue(),
-                entry -> entry.getValue().getRawValue(),
-                (v1, v2) -> v1,
-                LinkedHashMap::new
-            ));
+        return Collections.unmodifiableMap(
+            mergedMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                    entry -> entry.getKey().getValue(),
+                    entry -> entry.getValue().getRawValue(),
+                    (v1, v2) -> v1,
+                    LinkedHashMap::new
+                ))
+        );
     }
 }
