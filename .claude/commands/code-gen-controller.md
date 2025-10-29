@@ -2,7 +2,27 @@
 
 당신은 Spring REST API Controller를 생성하는 전문가입니다.
 
-## 🎯 컨텍스트 주입 (자동)
+## 🧠 Serena 메모리 자동 로드
+
+먼저 Serena 메모리에서 REST API Layer 코딩 컨벤션을 로드합니다:
+
+```python
+# 세션 시작 시 /sc:load로 이미 로드되어 있어야 함
+# REST API Layer 컨벤션이 메모리에 상주
+conventions = mcp__serena__read_memory("coding_convention_rest_api_layer")
+```
+
+**로드되는 규칙**:
+- RESTful API 설계 (18개 규칙)
+- Controller Thin 원칙
+- Request/Response DTO 패턴
+- GlobalExceptionHandler 전략
+- ApiResponse 표준화
+- 유효성 검증 패턴
+
+---
+
+## 🎯 컨텍스트 주입 (Cache 보조)
 
 ---
 
@@ -42,21 +62,34 @@
 - **Resource 이름**: 첫 번째 인자 (예: `Order`, `Payment`, `User`)
 - **PRD 파일** (선택): 두 번째 인자로 PRD 문서 경로
 
-### 2. 생성할 파일
+### 2. 생성할 파일 (올바른 디렉토리 구조)
 
-다음 파일을 `adapter/in/web/src/main/java/com/company/template/adapter/in/web/` 경로에 생성:
+**⚠️ 중요**: API DTO는 반드시 ApiRequest/ApiResponse 네이밍!
+
+다음 파일을 `adapter-in/rest-api/src/main/java/com/ryuqq/adapter/in/rest/{aggregateLower}/` 경로에 생성:
 
 ```
-adapter/in/web/src/main/java/com/company/template/adapter/in/web/
+adapter-in/rest-api/src/main/java/com/ryuqq/adapter/in/rest/{aggregateLower}/
 ├── controller/
-│   └── {Resource}Controller.java
+│   └── {Aggregate}Controller.java
 ├── dto/
-│   ├── {Resource}CreateRequest.java
-│   ├── {Resource}Response.java
-│   └── ErrorResponse.java
+│   ├── request/
+│   │   ├── Create{Aggregate}ApiRequest.java   # ApiRequest로 끝나야 함
+│   │   ├── Update{Aggregate}ApiRequest.java
+│   │   └── {Aggregate}SearchRequest.java      # Query 파라미터용
+│   └── response/
+│       ├── {Aggregate}ApiResponse.java        # ApiResponse로 끝나야 함
+│       ├── {Aggregate}DetailApiResponse.java
+│       └── {Aggregate}ListApiResponse.java
 └── mapper/
-    └── {Resource}ApiMapper.java
+    └── {Aggregate}Mapper.java                 # API ↔ Application DTO 변환
 ```
+
+**생성 원칙**:
+- ✅ **ApiRequest/ApiResponse**: API DTO는 반드시 이 네이밍
+- ✅ **request/response 분리**: dto 하위에 각각 디렉토리 분리
+- ✅ **SearchRequest**: Query 파라미터는 SearchRequest
+- ✅ **PRD 분석**: 필요한 API만 생성 (CRUD 전체가 아닐 수 있음)
 
 ### 3. 필수 준수 규칙
 
