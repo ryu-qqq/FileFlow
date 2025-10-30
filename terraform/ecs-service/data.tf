@@ -44,6 +44,20 @@ data "aws_secretsmanager_secret_version" "db_password" {
   secret_id = data.aws_ssm_parameter.master_password_secret_name.value
 }
 
+# ECR Repository
+data "aws_ecr_repository" "fileflow" {
+  name = "fileflow"
+}
+
+# Redis (ElastiCache)
+data "aws_ssm_parameter" "redis_endpoint" {
+  name = "/fileflow/prod/redis/endpoint"
+}
+
+data "aws_ssm_parameter" "redis_port" {
+  name = "/fileflow/prod/redis/port"
+}
+
 
 # ============================================================================
 # Locals
@@ -59,5 +73,12 @@ locals {
   db_address  = data.aws_ssm_parameter.db_instance_address.value
   db_port     = data.aws_ssm_parameter.db_instance_port.value
   db_password = jsondecode(data.aws_secretsmanager_secret_version.db_password.secret_string)["password"]
+
+  # Redis Cache
+  redis_endpoint = data.aws_ssm_parameter.redis_endpoint.value
+  redis_port     = data.aws_ssm_parameter.redis_port.value
+
+  # ECR Image
+  ecr_image_uri = "${data.aws_ecr_repository.fileflow.repository_url}:latest"
 
 }

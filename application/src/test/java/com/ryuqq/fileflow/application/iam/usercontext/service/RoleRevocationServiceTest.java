@@ -92,7 +92,7 @@ class RoleRevocationServiceTest {
             Email.of("test@example.com")
         );
         Membership membership = Membership.of(
-            TenantId.of("tenant-1"),
+            TenantId.of(1L),
             OrganizationId.of(456L),
             MembershipType.EMPLOYEE
         );
@@ -101,7 +101,7 @@ class RoleRevocationServiceTest {
         // Given: RevokeRoleCommand 생성
         command = RevokeRoleCommand.of(
             123L,
-            "tenant-1",
+            1L,
             456L
         );
     }
@@ -203,7 +203,7 @@ class RoleRevocationServiceTest {
         // Given: 다른 tenant/org의 Command
         RevokeRoleCommand nonExistentCommand = RevokeRoleCommand.of(
             123L,
-            "tenant-2",  // 존재하지 않는 tenant
+            2L,  // 존재하지 않는 tenant (setUp에서 1L만 추가됨)
             999L         // 존재하지 않는 org
         );
 

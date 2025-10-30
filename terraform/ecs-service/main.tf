@@ -8,7 +8,7 @@
 
 # CloudWatch Log Group
 module "fileflow_logs" {
-  source = "../../modules/cloudwatch-log-group"
+  source = "../modules/cloudwatch-log-group"
 
   name              = local.log_group_name
   retention_in_days = local.log_retention_days
@@ -83,6 +83,28 @@ resource "aws_iam_role_policy_attachment" "fileflow_execution_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Additional policy for ECR access
+resource "aws_iam_role_policy" "fileflow_ecr_access" {
+  name = "${local.name_prefix}-ecr-access"
+  role = aws_iam_role.fileflow_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # IAM Role for ECS Task
 resource "aws_iam_role" "fileflow_task_role" {
   name = "${local.name_prefix}-ecs-task-role"
@@ -103,14 +125,14 @@ resource "aws_iam_role" "fileflow_task_role" {
 
 # ECS Service
 module "fileflow_service" {
-  source = "../../modules/ecs-service"
+  source = "../modules/ecs-service"
 
   # Required variables
   name               = local.service_name
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = local.container_name
   container_port     = local.container_port
-  container_image    = "nginx:latest"
+  container_image    = local.ecr_image_uri
   cpu                = 1024
   memory             = 2048
   desired_count      = 1
@@ -150,12 +172,40 @@ module "fileflow_service" {
       value = local.service_name
     },
     {
+      name  = "SPRING_PROFILES_ACTIVE"
+      value = "prod"
+    },
+    {
       name  = "DB_HOST"
       value = local.db_address
     },
     {
       name  = "DB_PORT"
       value = tostring(local.db_port)
+    },
+    {
+      name  = "DB_NAME"
+      value = "fileflow"
+    },
+    {
+      name  = "DB_USER"
+      value = "admin"
+    },
+    {
+      name  = "FLYWAY_ENABLED"
+      value = "true"
+    },
+    {
+      name  = "FLYWAY_BASELINE_ON_MIGRATE"
+      value = "true"
+    },
+    {
+      name  = "REDIS_HOST"
+      value = local.redis_endpoint
+    },
+    {
+      name  = "REDIS_PORT"
+      value = tostring(local.redis_port)
     }
   ]
 

@@ -44,5 +44,5 @@ dependencies {
     // Test Dependencies
     // ========================================
     testImplementation(project(":domain"))
-    testImplementation(project(":test-fixtures"))
+    testImplementation(testFixtures(project(":domain")))
 }

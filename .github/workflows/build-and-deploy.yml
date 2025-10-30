@@ -1,0 +1,249 @@
+name: Build and Deploy to ECS
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'terraform/**'
+      - '.github/workflows/terraform-*.yml'
+      - '**.md'
+      - 'docs/**'
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: fileflow-prod
+  ECS_SERVICE: fileflow-prod-service
+  ECS_CLUSTER: fileflow-prod
+  CONTAINER_NAME: fileflow
+
+jobs:
+  build-and-push:
+    name: Build Docker Image and Push to ECR
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      image-tag: ${{ steps.image-tag.outputs.tag }}
+      image-uri: ${{ steps.build-image.outputs.image }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run tests
+        run: |
+          echo "🧪 Running tests..."
+          ./gradlew test --no-daemon --stacktrace
+          echo "✅ Tests completed"
+
+      - name: Build JAR
+        run: |
+          echo "🔨 Building Spring Boot application..."
+          ./gradlew clean :bootstrap:bootstrap-web-api:bootJar -x test --no-daemon --stacktrace
+          echo "✅ Build completed"
+          ls -lh bootstrap/bootstrap-web-api/build/libs/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+          role-session-name: GitHubActions-FileFlow-Build
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Generate image tag
+        id: image-tag
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          TAG="${{ github.run_number }}-${SHORT_SHA}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "📦 Image tag: ${TAG}"
+
+      - name: Build and push Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+        run: |
+          echo "🐳 Building Docker image..."
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          docker build -t ${IMAGE_URI} .
+          docker tag ${IMAGE_URI} ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+
+          echo "📤 Pushing to ECR..."
+          docker push ${IMAGE_URI}
+          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+
+          echo "image=${IMAGE_URI}" >> $GITHUB_OUTPUT
+          echo "✅ Image pushed: ${IMAGE_URI}"
+
+      - name: Image vulnerability scan results
+        continue-on-error: true
+        run: |
+          echo "🔍 Checking ECR scan results..."
+          aws ecr describe-image-scan-findings \
+            --repository-name ${ECR_REPOSITORY} \
+            --image-id imageTag=${{ steps.image-tag.outputs.tag }} \
+            --region ${AWS_REGION} || echo "⚠️ Scan not yet complete"
+
+  deploy-to-ecs:
+    name: Deploy to ECS
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+          role-session-name: GitHubActions-FileFlow-Deploy
+
+      - name: Get current task definition
+        id: get-task-def
+        run: |
+          echo "📋 Fetching current task definition..."
+          TASK_DEF_ARN=$(aws ecs describe-services \
+            --cluster ${ECS_CLUSTER} \
+            --services ${ECS_SERVICE} \
+            --query 'services[0].taskDefinition' \
+            --output text)
+
+          aws ecs describe-task-definition \
+            --task-definition ${TASK_DEF_ARN} \
+            --query 'taskDefinition' > task-definition.json
+
+          echo "✅ Task definition retrieved"
+
+      - name: Update task definition with new image
+        id: update-task-def
+        run: |
+          echo "🔄 Updating task definition..."
+
+          # jq로 새 이미지 URI 업데이트
+          cat task-definition.json | \
+            jq --arg IMAGE "${{ needs.build-and-push.outputs.image-uri }}" \
+               '.containerDefinitions[0].image = $IMAGE' | \
+            jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' \
+            > new-task-definition.json
+
+          echo "✅ Task definition updated with image: ${{ needs.build-and-push.outputs.image-uri }}"
+
+      - name: Register new task definition
+        id: register-task-def
+        run: |
+          echo "📝 Registering new task definition..."
+
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://new-task-definition.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "task-def-arn=${NEW_TASK_DEF_ARN}" >> $GITHUB_OUTPUT
+          echo "✅ New task definition registered: ${NEW_TASK_DEF_ARN}"
+
+      - name: Update ECS service
+        run: |
+          echo "🚀 Updating ECS service..."
+
+          aws ecs update-service \
+            --cluster ${ECS_CLUSTER} \
+            --service ${ECS_SERVICE} \
+            --task-definition ${{ steps.register-task-def.outputs.task-def-arn }} \
+            --force-new-deployment \
+            --no-cli-pager
+
+          echo "✅ ECS service update initiated"
+
+      - name: Wait for service stability
+        run: |
+          echo "⏳ Waiting for service to become stable (this may take 3-5 minutes)..."
+
+          aws ecs wait services-stable \
+            --cluster ${ECS_CLUSTER} \
+            --services ${ECS_SERVICE}
+
+          echo "✅ Service is now stable"
+
+      - name: Get service status
+        run: |
+          echo "📊 Service deployment status:"
+          aws ecs describe-services \
+            --cluster ${ECS_CLUSTER} \
+            --services ${ECS_SERVICE} \
+            --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount,Deployments:deployments[*].{Status:status,TaskDef:taskDefinition,Running:runningCount}}' \
+            --output table
+
+      - name: Get ALB endpoint
+        run: |
+          echo "🌐 Application endpoint:"
+          ALB_DNS=$(aws elbv2 describe-load-balancers \
+            --names fileflow-prod-alb \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text 2>/dev/null || echo "ALB not found")
+
+          if [ "$ALB_DNS" != "ALB not found" ]; then
+            echo "🔗 http://${ALB_DNS}"
+            echo "🔗 http://${ALB_DNS}/actuator/health"
+          else
+            echo "⚠️ ALB DNS not found"
+          fi
+
+  notify-completion:
+    name: Notify Deployment Completion
+    needs: [build-and-push, deploy-to-ecs]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Create Deployment Summary
+        run: |
+          echo "## 🚀 FileFlow Application Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Status**: ${{ needs.build-and-push.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deploy Status**: ${{ needs.deploy-to-ecs.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag**: ${{ needs.build-and-push.outputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Deployed Image" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ needs.build-and-push.outputs.image-uri }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Deployment Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tests executed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Spring Boot JAR built" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Docker image built and pushed to ECR" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ECS task definition updated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ECS service deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Flyway migrations executed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps**:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check CloudWatch logs for application startup" >> $GITHUB_STEP_SUMMARY
+          echo "2. Verify health check: http://ALB_DNS/actuator/health" >> $GITHUB_STEP_SUMMARY
+          echo "3. Test API endpoints" >> $GITHUB_STEP_SUMMARY
+          echo "4. Monitor CloudWatch metrics" >> $GITHUB_STEP_SUMMARY

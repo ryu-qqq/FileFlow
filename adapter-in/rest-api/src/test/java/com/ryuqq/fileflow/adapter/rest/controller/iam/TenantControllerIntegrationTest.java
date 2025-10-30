@@ -89,7 +89,7 @@ class TenantControllerIntegrationTest {
         // Given
         CreateTenantApiRequest request = new CreateTenantApiRequest("my-tenant");
         TenantResponse mockResponse = new TenantResponse(
-            "tenant-id-123",
+            1L,
             "my-tenant",
             "ACTIVE",
             false,
@@ -104,7 +104,7 @@ class TenantControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.data.tenantId").value("tenant-id-123"))
+            .andExpect(jsonPath("$.data.tenantId").value(1L))
             .andExpect(jsonPath("$.data.name").value("my-tenant"))
             .andExpect(jsonPath("$.data.status").value("ACTIVE"))
             .andExpect(jsonPath("$.data.deleted").value(false));
@@ -172,7 +172,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("PATCH /api/v1/tenants/{tenantId} - Tenant 수정 성공 (200 OK)")
     void updateTenant_Success_Returns200() throws Exception {
         // Given
-        String tenantId = "tenant-id-123";
+        Long tenantId = 1L;
         UpdateTenantApiRequest request = new UpdateTenantApiRequest("updated-tenant-name");
         TenantResponse mockResponse = new TenantResponse(
             tenantId,
@@ -205,7 +205,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("PATCH /api/v1/tenants/{tenantId} - Validation 실패 (400 Bad Request)")
     void updateTenant_ValidationFails_Returns400() throws Exception {
         // Given - name이 빈 문자열
-        String tenantId = "tenant-id-123";
+        Long tenantId = 1L;
         UpdateTenantApiRequest request = new UpdateTenantApiRequest("");
 
         // When & Then - RFC 7807 응답 검증
@@ -229,7 +229,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("PATCH /api/v1/tenants/{tenantId}/status - Tenant 상태 변경 성공 (200 OK)")
     void updateTenantStatus_Success_Returns200() throws Exception {
         // Given
-        String tenantId = "tenant-id-123";
+        Long tenantId = 1L;
         UpdateTenantStatusApiRequest request = new UpdateTenantStatusApiRequest("SUSPENDED");
         TenantResponse mockResponse = new TenantResponse(
             tenantId,
@@ -263,7 +263,7 @@ class TenantControllerIntegrationTest {
         // Given
         List<TenantResponse> tenants = new ArrayList<>();
         tenants.add(new TenantResponse(
-            "tenant-1",
+            1L,
             "tenant-one",
             "ACTIVE",
             false,
@@ -271,7 +271,7 @@ class TenantControllerIntegrationTest {
             LocalDateTime.now()
         ));
         tenants.add(new TenantResponse(
-            "tenant-2",
+            2L,
             "tenant-two",
             "ACTIVE",
             false,
@@ -316,7 +316,7 @@ class TenantControllerIntegrationTest {
         // Given
         List<TenantResponse> tenants = new ArrayList<>();
         tenants.add(new TenantResponse(
-            "tenant-1",
+            1L,
             "tenant-one",
             "ACTIVE",
             false,
@@ -355,7 +355,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("GET /api/v1/tenants/{tenantId} - Tenant 단건 조회 (200 OK)")
     void getTenant_Success_Returns200() throws Exception {
         // Given
-        String tenantId = "tenant-id-123";
+        Long tenantId = 1L;
         TenantResponse mockResponse = new TenantResponse(
             tenantId,
             "my-tenant",
@@ -385,7 +385,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("GET /api/v1/tenants/{tenantId}/tree - Tenant 트리 조회 (200 OK)")
     void getTenantTree_Success_Returns200() throws Exception {
         // Given
-        String tenantId = "tenant-id-123";
+        Long tenantId = 1L;
         TenantTreeResponse mockResponse = new TenantTreeResponse(
             tenantId,
             "my-tenant",

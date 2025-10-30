@@ -53,7 +53,7 @@ resource "aws_sqs_queue" "dlq" {
   name = local.dlq_name
 
 
-  message_retention_seconds = 1209600  # 14 days
+  message_retention_seconds  = 1209600 # 14 days
   visibility_timeout_seconds = var.visibility_timeout
 
   kms_master_key_id                 = aws_kms_key.sqs.id
@@ -75,10 +75,10 @@ resource "aws_sqs_queue" "main" {
 
   message_retention_seconds  = var.message_retention
   visibility_timeout_seconds = var.visibility_timeout
-  delay_seconds             = 0
-  receive_wait_time_seconds = 20  # Long polling
+  delay_seconds              = 0
+  receive_wait_time_seconds  = 20 # Long polling
 
-  max_message_size = 262144  # 256 KB
+  max_message_size = 262144 # 256 KB
 
   kms_master_key_id                 = aws_kms_key.sqs.id
   kms_data_key_reuse_period_seconds = 300
@@ -105,11 +105,11 @@ resource "aws_sqs_queue_policy" "main" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "DenyInsecureTransport"
-        Effect = "Deny"
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
         Principal = "*"
-        Action = "sqs:*"
-        Resource = aws_sqs_queue.main.arn
+        Action    = "sqs:*"
+        Resource  = aws_sqs_queue.main.arn
         Condition = {
           Bool = {
             "aws:SecureTransport" = "false"
@@ -127,11 +127,11 @@ resource "aws_sqs_queue_policy" "dlq" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "DenyInsecureTransport"
-        Effect = "Deny"
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
         Principal = "*"
-        Action = "sqs:*"
-        Resource = aws_sqs_queue.dlq.arn
+        Action    = "sqs:*"
+        Resource  = aws_sqs_queue.dlq.arn
         Condition = {
           Bool = {
             "aws:SecureTransport" = "false"
@@ -176,7 +176,7 @@ resource "aws_cloudwatch_metric_alarm" "message_age" {
   namespace           = "AWS/SQS"
   period              = 300
   statistic           = "Maximum"
-  threshold           = 3600  # 1 hour
+  threshold           = 3600 # 1 hour
   alarm_description   = "Messages are aging in the queue"
   treat_missing_data  = "notBreaching"
 

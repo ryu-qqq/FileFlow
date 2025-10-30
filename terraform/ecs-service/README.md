@@ -136,8 +136,8 @@ ManagedBy   = "terraform"
 
 ## 📚 Related Documentation
 
-- [ECS Module](../../modules/ecs-service/README.md)
-- [ALB Module](../../modules/alb/README.md)
+- [ECS Module](../modules/modules/ecs-service/README.md)
+- [ALB Module](../modules/modules/alb/README.md)
 - [Infrastructure Governance](../../docs/governance/)
 - [Atlantis Operations](../../docs/guides/atlantis-operations.md)
 

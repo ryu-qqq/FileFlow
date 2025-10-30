@@ -96,7 +96,7 @@ class RoleAssignmentServiceTest {
         // Given: AssignRoleCommand 생성
         command = AssignRoleCommand.of(
             123L,
-            "tenant-1",
+            1L,  // Long FK 전략: tenant-1 → 1L
             456L,
             "EMPLOYEE"
         );
@@ -120,7 +120,7 @@ class RoleAssignmentServiceTest {
         // Then: UserContext에 Membership 추가됨
         assertThat(userContext.getMemberships()).hasSize(1);
         Membership addedMembership = userContext.getMemberships().iterator().next();
-        assertThat(addedMembership.getTenantIdValue()).isEqualTo("tenant-1");
+        assertThat(addedMembership.getTenantIdValue()).isEqualTo(1L);
         assertThat(addedMembership.getOrganizationIdValue()).isEqualTo(456L);
 
         // Then: Repository save 호출됨
@@ -135,7 +135,7 @@ class RoleAssignmentServiceTest {
 
         RoleAssignedEvent publishedEvent = eventCaptor.getValue();
         assertThat(publishedEvent.userId()).isEqualTo(123L);
-        assertThat(publishedEvent.tenantId()).isEqualTo("tenant-1");
+        assertThat(publishedEvent.tenantId()).isEqualTo(1L);
         assertThat(publishedEvent.organizationId()).isEqualTo(456L);
         assertThat(publishedEvent.membershipType()).isEqualTo("EMPLOYEE");
         assertThat(publishedEvent.occurredAt()).isEqualTo(fixedTime);
@@ -202,7 +202,7 @@ class RoleAssignmentServiceTest {
     void shouldThrowExceptionWhenDuplicateMembershipExists() {
         // Given: 이미 Membership 존재
         Membership existingMembership = Membership.of(
-            TenantId.of("tenant-1"),
+            TenantId.of(1L),
             OrganizationId.of(456L),
             MembershipType.EMPLOYEE
         );

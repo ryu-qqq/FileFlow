@@ -1,3 +1,11 @@
+package com.ryuqq.fileflow.adapter.rest.common.dto;
+
+import com.ryuqq.fileflow.application.common.dto.PageResponse;
+
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 /**
  * PageApiResponse - 페이지 조회 REST API 응답 DTO (Offset 기반)
  *
@@ -92,12 +100,13 @@ public record PageApiResponse<T>(
      * @since 1.0.0
      */
     public static <S, T> PageApiResponse<T> from(
-            com.ryuqq.fileflow.application.common.dto.PageResponse<S> appPageResponse,
-            java.util.function.Function<S, T> mapper) {
+            PageResponse<S> appPageResponse,
+            Function<S, T> mapper) {
 
-        List<T> content = appPageResponse.content().stream()
+        List<T> content = appPageResponse.content()
+            .stream()
             .map(mapper)
-            .collect(Collectors.toList());
+            .toList();
 
         return new PageApiResponse<>(
             content,

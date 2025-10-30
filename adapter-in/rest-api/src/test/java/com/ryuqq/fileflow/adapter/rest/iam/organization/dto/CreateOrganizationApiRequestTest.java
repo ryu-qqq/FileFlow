@@ -68,7 +68,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("tenantId가 빈 문자열이면 검증 실패")
         void tenantId_empty_shouldFail() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("", "ORG001", "Test Org");
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest( null, "ORG001", "Test Org");
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -84,7 +84,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("tenantId가 공백 문자열이면 검증 실패")
         void tenantId_blank_shouldFail() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("   ", "ORG001", "Test Org");
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest( null, "ORG001", "Test Org");
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -105,7 +105,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("orgCode가 null이면 검증 실패")
         void orgCode_null_shouldFail() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("tenant-123", null, "Test Org");
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(1L, null, "Test Org");
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -121,7 +121,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("orgCode가 빈 문자열이면 검증 실패")
         void orgCode_empty_shouldFail() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("tenant-123", "", "Test Org");
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(1L, "", "Test Org");
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -137,7 +137,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("orgCode가 공백 문자열이면 검증 실패")
         void orgCode_blank_shouldFail() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("tenant-123", "   ", "Test Org");
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(1L, "   ", "Test Org");
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -158,7 +158,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("name이 null이면 검증 실패")
         void name_null_shouldFail() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("tenant-123", "ORG001", null);
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(1L, "ORG001", null);
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -174,7 +174,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("name이 빈 문자열이면 검증 실패")
         void name_empty_shouldFail() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("tenant-123", "ORG001", "");
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(1L, "ORG001", "");
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -190,7 +190,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("name이 공백 문자열이면 검증 실패")
         void name_blank_shouldFail() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("tenant-123", "ORG001", "   ");
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(1L, "ORG001", "   ");
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -212,7 +212,7 @@ class CreateOrganizationApiRequestTest {
         void allFieldsValid_shouldPass() {
             // Given
             CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(
-                "tenant-uuid-123",
+                1L,
                 "ORG001",
                 "Engineering Department"
             );
@@ -228,7 +228,7 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("최소 길이 필드들도 검증 성공")
         void minLengthFields_shouldPass() {
             // Given
-            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest("t", "O", "N");
+            CreateOrganizationApiRequest request = new CreateOrganizationApiRequest(null, "O", "N");
 
             // When
             Set<ConstraintViolation<CreateOrganizationApiRequest>> violations = validator.validate(request);
@@ -246,8 +246,8 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("동일한 값으로 생성된 Record는 equals()가 true")
         void sameValues_shouldBeEqual() {
             // Given
-            CreateOrganizationApiRequest request1 = new CreateOrganizationApiRequest("t1", "ORG1", "Org A");
-            CreateOrganizationApiRequest request2 = new CreateOrganizationApiRequest("t1", "ORG1", "Org A");
+            CreateOrganizationApiRequest request1 = new CreateOrganizationApiRequest(1L, "ORG1", "Org A");
+            CreateOrganizationApiRequest request2 = new CreateOrganizationApiRequest(1L, "ORG1", "Org A");
 
             // When & Then
             assertThat(request1).isEqualTo(request2);
@@ -258,8 +258,8 @@ class CreateOrganizationApiRequestTest {
         @DisplayName("다른 값으로 생성된 Record는 equals()가 false")
         void differentValues_shouldNotBeEqual() {
             // Given
-            CreateOrganizationApiRequest request1 = new CreateOrganizationApiRequest("t1", "ORG1", "Org A");
-            CreateOrganizationApiRequest request2 = new CreateOrganizationApiRequest("t2", "ORG2", "Org B");
+            CreateOrganizationApiRequest request1 = new CreateOrganizationApiRequest(1L, "ORG1", "Org A");
+            CreateOrganizationApiRequest request2 = new CreateOrganizationApiRequest(2L, "ORG2", "Org B");
 
             // When & Then
             assertThat(request1).isNotEqualTo(request2);

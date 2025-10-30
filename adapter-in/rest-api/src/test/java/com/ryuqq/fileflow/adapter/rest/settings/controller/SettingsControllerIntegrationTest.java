@@ -3,10 +3,10 @@ package com.ryuqq.fileflow.adapter.rest.settings.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler;
 import com.ryuqq.fileflow.adapter.rest.settings.dto.request.UpdateSettingApiRequest;
-import com.ryuqq.fileflow.application.settings.dto.MergedSettingsResponse;
-import com.ryuqq.fileflow.application.settings.dto.SettingResponse;
-import com.ryuqq.fileflow.application.settings.service.GetMergedSettingsUseCase;
-import com.ryuqq.fileflow.application.settings.service.UpdateSettingUseCase;
+
+
+import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
+import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
 import com.ryuqq.fileflow.domain.settings.exception.SettingNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -84,7 +84,7 @@ class SettingsControllerIntegrationTest {
                 "ENABLE_CACHE", "true",
                 "API_KEY", "********"
             );
-            MergedSettingsResponse mockResponse = new MergedSettingsResponse(mergedSettings);
+            GetMergedSettingsUseCase.Response mockResponse = new GetMergedSettingsUseCase.Response(mergedSettings);
 
             when(getMergedSettingsUseCase.execute(any())).thenReturn(mockResponse);
 
@@ -112,7 +112,7 @@ class SettingsControllerIntegrationTest {
                 "MAX_UPLOAD_SIZE", "200MB",
                 "API_TIMEOUT", "30"
             );
-            MergedSettingsResponse mockResponse = new MergedSettingsResponse(mergedSettings);
+            GetMergedSettingsUseCase.Response mockResponse = new GetMergedSettingsUseCase.Response(mergedSettings);
 
             when(getMergedSettingsUseCase.execute(any())).thenReturn(mockResponse);
 
@@ -134,7 +134,7 @@ class SettingsControllerIntegrationTest {
                 "MAX_UPLOAD_SIZE", "50MB",
                 "API_TIMEOUT", "30"
             );
-            MergedSettingsResponse mockResponse = new MergedSettingsResponse(mergedSettings);
+            GetMergedSettingsUseCase.Response mockResponse = new GetMergedSettingsUseCase.Response(mergedSettings);
 
             when(getMergedSettingsUseCase.execute(any())).thenReturn(mockResponse);
 
@@ -157,7 +157,7 @@ class SettingsControllerIntegrationTest {
                 "API_TIMEOUT", "30",
                 "ENABLE_CACHE", "true"
             );
-            MergedSettingsResponse mockResponse = new MergedSettingsResponse(mergedSettings);
+            GetMergedSettingsUseCase.Response mockResponse = new GetMergedSettingsUseCase.Response(mergedSettings);
 
             when(getMergedSettingsUseCase.execute(any())).thenReturn(mockResponse);
 
@@ -180,7 +180,7 @@ class SettingsControllerIntegrationTest {
                 "API_KEY", "********",
                 "MAX_UPLOAD_SIZE", "100MB"
             );
-            MergedSettingsResponse mockResponse = new MergedSettingsResponse(mergedSettings);
+            GetMergedSettingsUseCase.Response mockResponse = new GetMergedSettingsUseCase.Response(mergedSettings);
 
             when(getMergedSettingsUseCase.execute(any())).thenReturn(mockResponse);
 
@@ -197,7 +197,7 @@ class SettingsControllerIntegrationTest {
         @DisplayName("설정이 없으면 빈 Map을 반환한다 (200 OK)")
         void getMergedSettings_NoSettings_ReturnsEmptyMap() throws Exception {
             // Arrange
-            MergedSettingsResponse mockResponse = new MergedSettingsResponse(Map.of());
+            GetMergedSettingsUseCase.Response mockResponse = new GetMergedSettingsUseCase.Response(Map.of());
 
             when(getMergedSettingsUseCase.execute(any())).thenReturn(mockResponse);
 
@@ -222,7 +222,7 @@ class SettingsControllerIntegrationTest {
             UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "MAX_UPLOAD_SIZE", "200MB", "DEFAULT", null
             );
-            SettingResponse mockResponse = new SettingResponse(
+            UpdateSettingUseCase.Response mockResponse = new UpdateSettingUseCase.Response(
                 1L, "MAX_UPLOAD_SIZE", "200MB", "STRING", "DEFAULT", null, false,
                 LocalDateTime.now(), LocalDateTime.now()
             );
@@ -248,7 +248,7 @@ class SettingsControllerIntegrationTest {
             UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "MAX_UPLOAD_SIZE", "300MB", "ORG", 1L
             );
-            SettingResponse mockResponse = new SettingResponse(
+            UpdateSettingUseCase.Response mockResponse = new UpdateSettingUseCase.Response(
                 1L, "MAX_UPLOAD_SIZE", "300MB", "STRING", "ORG", 1L, false,
                 LocalDateTime.now(), LocalDateTime.now()
             );
@@ -272,7 +272,7 @@ class SettingsControllerIntegrationTest {
             UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "MAX_UPLOAD_SIZE", "80MB", "TENANT", 100L
             );
-            SettingResponse mockResponse = new SettingResponse(
+            UpdateSettingUseCase.Response mockResponse = new UpdateSettingUseCase.Response(
                 1L, "MAX_UPLOAD_SIZE", "80MB", "STRING", "TENANT", 100L, false,
                 LocalDateTime.now(), LocalDateTime.now()
             );
@@ -505,7 +505,7 @@ class SettingsControllerIntegrationTest {
             UpdateSettingApiRequest request = new UpdateSettingApiRequest(
                 "API_KEY", "new-secret-789", "DEFAULT", null
             );
-            SettingResponse mockResponse = new SettingResponse(
+            UpdateSettingUseCase.Response mockResponse = new UpdateSettingUseCase.Response(
                 1L, "API_KEY", "********", "STRING", "DEFAULT", null, true,
                 LocalDateTime.now(), LocalDateTime.now()
             );

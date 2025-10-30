@@ -42,7 +42,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("OrganizationDtoMapper 테스트")
 class OrganizationApiMapperTest {
 
-    private static final String DEFAULT_TENANT_ID = "tenant-uuid-123";
+    private static final Long DEFAULT_TENANT_ID = 1L;
 
     @Nested
     @DisplayName("toCommand() - CreateOrganizationRequest → CreateOrganizationCommand 변환")
@@ -253,7 +253,7 @@ class OrganizationApiMapperTest {
         void toApiResponse_ActiveOrganizationResponse_ReturnsApiResponse() {
             // Given
             Long organizationId = 1L;
-            String tenantId = DEFAULT_TENANT_ID;
+            Long tenantId = DEFAULT_TENANT_ID;
             String orgCode = "ORG001";
             String name = "Engineering Department";
             String status = "ACTIVE";
@@ -289,7 +289,7 @@ class OrganizationApiMapperTest {
         void toApiResponse_InactiveOrganizationResponse_ReturnsApiResponse() {
             // Given
             Long organizationId = 2L;
-            String tenantId = DEFAULT_TENANT_ID;
+            Long tenantId = DEFAULT_TENANT_ID;
             String orgCode = "HR";
             String name = "HR Department";
             String status = "INACTIVE";
@@ -319,7 +319,7 @@ class OrganizationApiMapperTest {
         void toApiResponse_DeletedOrganizationResponse_ReturnsApiResponse() {
             // Given
             Long organizationId = 3L;
-            String tenantId = DEFAULT_TENANT_ID;
+            Long tenantId = DEFAULT_TENANT_ID;
             String orgCode = "IT";
             String name = "IT Department";
             String status = "INACTIVE";

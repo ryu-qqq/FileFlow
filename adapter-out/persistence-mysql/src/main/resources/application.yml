@@ -14,15 +14,16 @@
 spring:
   datasource:
     # JDBC URL
-    # 로컬: localhost:3306
-    # 개발/운영: 환경변수 또는 외부 설정으로 주입
-    url: jdbc:mysql://localhost:3306/spring_standards?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    # 환경 변수로 호스트, 포트, 데이터베이스명 제어
+    # 로컬: localhost:3306/spring_standards
+    # 개발/운영: DB_HOST, DB_PORT, DB_NAME 환경변수로 주입
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:spring_standards}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
 
     # 드라이버 클래스
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     # 인증 정보 (환경변수 또는 외부 설정 권장)
-    username: ${DB_USERNAME:root}
+    username: ${DB_USER:root}
     password: ${DB_PASSWORD:password}
 
     # HikariCP 커넥션 풀 설정

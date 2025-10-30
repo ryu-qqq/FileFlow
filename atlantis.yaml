@@ -20,6 +20,14 @@ projects:
   # Shared Resources: RDS MySQL (from Infrastructure repo)
   # ============================================================================
 
+  # 0. ECR Repository - Docker image registry (must be created first)
+  - name: fileflow-ecr-prod
+    dir: terraform/ecr
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
+
   # 1. ElastiCache Redis - Dedicated cache layer
   - name: fileflow-redis-prod
     dir: terraform/elasticache-redis

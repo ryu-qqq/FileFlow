@@ -1,6 +1,9 @@
 package com.ryuqq.fileflow.adapter.rest.common.dto;
 
+import com.ryuqq.fileflow.application.common.dto.SliceResponse;
+
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -86,12 +89,13 @@ public record SliceApiResponse<T>(
      * @since 1.0.0
      */
     public static <S, T> SliceApiResponse<T> from(
-            com.ryuqq.fileflow.application.common.dto.SliceResponse<S> appSliceResponse,
-            java.util.function.Function<S, T> mapper) {
+            SliceResponse<S> appSliceResponse,
+            Function<S, T> mapper) {
 
-        List<T> content = appSliceResponse.content().stream()
+        List<T> content = appSliceResponse.content()
+            .stream()
             .map(mapper)
-            .collect(Collectors.toList());
+            .toList();
 
         return new SliceApiResponse<>(
             content,

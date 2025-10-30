@@ -27,6 +27,6 @@ locals {
   container_port = 8080
 
   # CloudWatch Log Group
-  log_group_name = "/aws/ecs/${local.service_name}"
+  log_group_name     = "/aws/ecs/${local.service_name}"
   log_retention_days = 30
 }

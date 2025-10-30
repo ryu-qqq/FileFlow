@@ -93,7 +93,7 @@ public final class RoleEntityMapper {
             permissionCodes,
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
-            entity.isDeleted()
+            entity.getDeletedAt()
         );
     }
 
