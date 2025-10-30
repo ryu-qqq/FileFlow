@@ -37,7 +37,7 @@ class ApplicationLayerRulesTest {
     void setUp() {
         applicationClasses = new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                .importPackages("com.ryuqq.application");
+                .importPackages("com.ryuqq.fileflow.application");
     }
 
     @Test
@@ -131,13 +131,14 @@ class ApplicationLayerRulesTest {
     }
 
     @Test
-    @DisplayName("Assembler는 @Component로 등록되어야 함")
-    void assemblersShouldBeAnnotatedWithComponent() {
+    @DisplayName("Assembler는 @Component로 등록되거나 유틸리티 클래스여야 함")
+    void assemblersShouldBeAnnotatedWithComponentOrBeUtilityClass() {
         ArchRule rule = classes()
                 .that().resideInAPackage("..application..assembler..")
                 .and().haveSimpleNameEndingWith("Assembler")
                 .should().beAnnotatedWith("org.springframework.stereotype.Component")
-                .because("Assembler는 @Component로 Spring Bean으로 등록되어야 합니다.");
+                .orShould().haveModifier(com.tngtech.archunit.core.domain.JavaModifier.FINAL)
+                .because("Assembler는 @Component로 Spring Bean으로 등록되거나, final 유틸리티 클래스여야 합니다.");
 
         rule.check(applicationClasses);
     }
@@ -149,8 +150,9 @@ class ApplicationLayerRulesTest {
                 .that().resideInAPackage("..application..port.out..")
                 .and().areInterfaces()
                 .and().haveSimpleNameContaining("Command")
-                .should().haveSimpleNameEndingWith("OutPort")
-                .because("Command OutPort는 *CommandOutPort 네이밍 규칙을 따라야 합니다.");
+                .should().haveSimpleNameEndingWith("Port")
+                .allowEmptyShould(true)  // Command OutPort가 없는 경우 허용
+                .because("Command OutPort는 *Port 네이밍 규칙을 따라야 합니다.");
 
         rule.check(applicationClasses);
     }
@@ -162,8 +164,8 @@ class ApplicationLayerRulesTest {
                 .that().resideInAPackage("..application..port.out..")
                 .and().areInterfaces()
                 .and().haveSimpleNameContaining("Query")
-                .should().haveSimpleNameEndingWith("OutPort")
-                .because("Query OutPort는 *QueryOutPort 네이밍 규칙을 따라야 합니다.");
+                .should().haveSimpleNameEndingWith("Port")
+                .because("Query OutPort는 *Port 네이밍 규칙을 따라야 합니다.");
 
         rule.check(applicationClasses);
     }

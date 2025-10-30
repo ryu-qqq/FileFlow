@@ -48,10 +48,10 @@ class CommonTestingRulesTest {
         // 모든 모듈의 testFixtures 스캔
         allModulesClasses = new ClassFileImporter()
             .importPackages(
-                "com.ryuqq.domain",
-                "com.ryuqq.application",
-                "com.ryuqq.adapter.in.rest",
-                "com.ryuqq.adapter.out.persistence"
+                "com.ryuqq.fileflow.domain",
+                "com.ryuqq.fileflow.application",
+                "com.ryuqq.fileflow.adapter.rest",
+                "com.ryuqq.fileflow.adapter.out.persistence"
             );
     }
 
@@ -67,6 +67,7 @@ class CommonTestingRulesTest {
             .and().areNotMemberClasses()
             .and().areNotInterfaces()
             .and().areNotEnums()
+            .and().areNotAnonymousClasses()  // 익명 클래스 제외 (람다 표현식의 내부 클래스)
             .should().haveSimpleNameEndingWith("Fixture")
             .because("Fixture 클래스는 Fixture 접미사를 사용해야 합니다. " +
                      "예: ExampleDomainFixture, CreateExampleCommandFixture");

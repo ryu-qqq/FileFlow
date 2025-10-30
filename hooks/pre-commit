@@ -84,10 +84,19 @@ ADAPTER_OUT_FILES=()
 PERSISTENCE_FILES=()
 CONTROLLER_FILES=()
 BOOTSTRAP_FILES=()
+ORCHESTRATION_FILES=()
 OTHER_FILES=()
 
 while IFS= read -r file; do
-    if [[ $file == domain/* ]]; then
+    # Orchestration Pattern 파일 감지 (최우선)
+    if [[ $file == *"Orchestrator.java" ]] || \
+       [[ $file == *"Command.java" && $file == *"/command/"* ]] || \
+       [[ $file == *"OperationEntity.java" ]] || \
+       [[ $file == *"WriteAheadLog"* ]] || \
+       [[ $file == *"Finalizer.java" ]] || \
+       [[ $file == *"Reaper.java" ]]; then
+        ORCHESTRATION_FILES+=("$file")
+    elif [[ $file == domain/* ]]; then
         DOMAIN_FILES+=("$file")
     elif [[ $file == application/* ]]; then
         APPLICATION_FILES+=("$file")
@@ -111,6 +120,7 @@ done <<< "$CHANGED_FILES"
 # ========================================
 
 log_info "Changed files by module:"
+[ ${#ORCHESTRATION_FILES[@]} -gt 0 ] && echo "  🔄 Orchestration: ${#ORCHESTRATION_FILES[@]} files"
 [ ${#DOMAIN_FILES[@]} -gt 0 ] && echo "  📦 Domain: ${#DOMAIN_FILES[@]} files"
 [ ${#APPLICATION_FILES[@]} -gt 0 ] && echo "  🔧 Application: ${#APPLICATION_FILES[@]} files"
 [ ${#PERSISTENCE_FILES[@]} -gt 0 ] && echo "  💾 Persistence: ${#PERSISTENCE_FILES[@]} files"
@@ -125,6 +135,17 @@ log_info "Changed files by module:"
 # ========================================
 
 VALIDATION_FAILED=0
+
+# Orchestration validation (최우선)
+if [ ${#ORCHESTRATION_FILES[@]} -gt 0 ]; then
+    log_info "Validating Orchestration Pattern..."
+    if bash "$VALIDATORS_DIR/orchestration-validator.sh" "${ORCHESTRATION_FILES[@]}"; then
+        log_success "Orchestration validation passed"
+    else
+        log_error "Orchestration validation failed"
+        VALIDATION_FAILED=1
+    fi
+fi
 
 # Domain validation
 if [ ${#DOMAIN_FILES[@]} -gt 0 ]; then

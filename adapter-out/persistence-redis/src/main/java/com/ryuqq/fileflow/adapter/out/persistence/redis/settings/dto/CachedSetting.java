@@ -68,7 +68,7 @@ public class CachedSetting {
         SettingLevel settingLevel = SettingLevel.valueOf(level);
 
         return Setting.reconstitute(
-            SettingId.from(id),
+            SettingId.of(id),
             key,
             value,
             settingLevel,

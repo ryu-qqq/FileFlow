@@ -156,6 +156,13 @@ class Validator:
         rule_id = rule["id"]
         metadata = rule["metadata"]
 
+        # Orchestration Pattern 특수 검증
+        if "orchestration" in rule_id.lower():
+            orchestration_result = self.validate_orchestration_pattern(content, file_path, rule)
+            if orchestration_result:
+                self.results.append(orchestration_result)
+                return
+
         # Anti-pattern 검증
         anti_keywords = metadata.get("keywords", {}).get("anti", [])
 
@@ -214,6 +221,87 @@ class Validator:
             True,
             ""
         ))
+
+    def validate_orchestration_pattern(self, content: str, file_path: str, rule: Dict[str, Any]) -> Optional[ValidationResult]:
+        """Orchestration Pattern 전용 검증"""
+
+        rule_id = rule["id"]
+
+        # 1. executeInternal()에 @Transactional 금지
+        if "Orchestrator" in file_path:
+            # executeInternal 메서드 찾기
+            execute_internal_pattern = r'(protected|public)\s+\w+\s+executeInternal\s*\('
+            execute_match = re.search(execute_internal_pattern, content)
+
+            if execute_match:
+                # executeInternal 메서드 영역 추출 (간단히 다음 메서드까지)
+                start_pos = execute_match.start()
+                method_content = content[start_pos:start_pos + 500]  # 500자 정도만 체크
+
+                # @Transactional 체크
+                if re.search(r'@Transactional', method_content):
+                    return ValidationResult(
+                        rule_id,
+                        False,
+                        "executeInternal() must NOT have @Transactional (외부 API 호출은 트랜잭션 밖에서)"
+                    )
+
+                # @Async 체크 (필수)
+                if not re.search(r'@Async', method_content):
+                    return ValidationResult(
+                        rule_id,
+                        False,
+                        "executeInternal() must have @Async annotation"
+                    )
+
+        # 2. Operation Entity: IdemKey Unique 제약 체크
+        if "OperationEntity" in file_path:
+            if not re.search(r'@UniqueConstraint.*idem_key', content, re.DOTALL):
+                return ValidationResult(
+                    rule_id,
+                    False,
+                    "IdemKey must have Unique constraint (@UniqueConstraint)"
+                )
+
+        # 3. Command Record: Lombok 금지
+        if "Command" in file_path and file_path.endswith(".java"):
+            if re.search(r'@(Data|Builder|Getter|Setter|AllArgsConstructor|NoArgsConstructor)', content):
+                return ValidationResult(
+                    rule_id,
+                    False,
+                    "Command must use Record pattern, NOT Lombok"
+                )
+
+            # Record 패턴 체크
+            if not re.search(r'public\s+record\s+\w+Command', content):
+                return ValidationResult(
+                    rule_id,
+                    False,
+                    "Command must use Record pattern (public record XxxCommand)"
+                )
+
+        # 4. Outcome 반환 체크
+        if "Orchestrator" in file_path:
+            # executeInternal이 Outcome을 반환하는지
+            if re.search(r'executeInternal', content):
+                if not re.search(r'protected\s+Outcome\s+executeInternal', content):
+                    return ValidationResult(
+                        rule_id,
+                        False,
+                        "executeInternal() must return Outcome (not boolean/void/throws Exception)"
+                    )
+
+        # 5. BaseOrchestrator 상속 체크
+        if "Orchestrator" in file_path and not "Base" in file_path:
+            if not re.search(r'extends\s+BaseOrchestrator', content):
+                return ValidationResult(
+                    rule_id,
+                    False,
+                    "Orchestrator must extend BaseOrchestrator<Command>"
+                )
+
+        # 통과
+        return None
 
     def print_results(self, file_path: str):
         """검증 결과 출력"""

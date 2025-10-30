@@ -59,8 +59,10 @@ export LANGFUSE_HOST="https://cloud.langfuse.com"
 #### 2. Python 의존성 설치
 
 ```bash
-pip install requests
+pip install requests  # HTTP 요청용
 ```
+
+**참고**: LangFuse Python SDK는 **필요하지 않습니다**. 이 스크립트는 LangFuse Ingestion API를 직접 사용합니다.
 
 #### 3. 로그 집계 및 업로드
 
@@ -96,7 +98,12 @@ python3 scripts/langfuse/upload-to-langfuse.py \
 
 ### upload-to-langfuse.py
 
-**기능**: LangFuse API로 Trace/Observation 전송
+**기능**: LangFuse Ingestion API로 Trace/Observation 배치 전송
+
+**기술 스택**:
+- `requests` 라이브러리 사용
+- LangFuse Ingestion API (`/api/public/ingestion`) 직접 호출
+- LangFuse Python SDK 불필요
 
 **환경 변수**:
 - `LANGFUSE_PUBLIC_KEY`
@@ -105,6 +112,25 @@ python3 scripts/langfuse/upload-to-langfuse.py \
 
 **옵션**:
 - `--telemetry`: 텔레메트리 모드 (`.langfuse.telemetry`에서 credentials 자동 읽기)
+
+**API 형식**:
+```python
+# Batch 형식으로 전송
+{
+  'batch': [
+    {
+      'type': 'trace-create',
+      'timestamp': '2025-10-30T12:00:00Z',
+      'body': { 'id': '...', 'name': '...', ... }
+    },
+    {
+      'type': 'event-create',
+      'timestamp': '2025-10-30T12:00:01Z',
+      'body': { 'traceId': '...', 'name': '...', ... }
+    }
+  ]
+}
+```
 
 ### monitor.sh
 
@@ -207,6 +233,10 @@ jobs:
 
 ## 💡 자주 묻는 질문
 
+### Q: LangFuse Python SDK를 설치해야 하나요?
+
+**A**: **아니요**. 이 스크립트는 LangFuse Ingestion API를 직접 사용하므로 SDK가 필요하지 않습니다. `requests` 라이브러리만 있으면 됩니다.
+
 ### Q: 여러 프로젝트에서 같은 LangFuse 프로젝트를 사용해도 되나요?
 
 **A**: 권장하지 않습니다. 팀별/프로젝트별 독립 LangFuse 프로젝트를 생성하세요.
@@ -218,6 +248,10 @@ jobs:
 ### Q: Self-Hosted LangFuse를 사용할 수 있나요?
 
 **A**: 가능합니다. `LANGFUSE_HOST` 환경 변수를 Self-Hosted URL로 설정하세요.
+
+### Q: Timestamp 형식 오류가 발생하면?
+
+**A**: `aggregate-logs.py`가 자동으로 ISO 8601 UTC 형식 (`2025-10-30T12:00:00Z`)으로 변환합니다. 만약 오류가 발생하면 `aggregate-logs.py`를 최신 버전으로 업데이트하세요.
 
 ## 📚 참고 문서
 

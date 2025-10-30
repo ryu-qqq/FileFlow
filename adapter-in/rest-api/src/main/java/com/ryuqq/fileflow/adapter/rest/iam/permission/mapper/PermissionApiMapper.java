@@ -7,8 +7,6 @@ import com.ryuqq.fileflow.application.iam.permission.dto.context.EvaluationConte
 import com.ryuqq.fileflow.application.iam.permission.dto.context.ResourceAttributes;
 import com.ryuqq.fileflow.application.iam.permission.dto.response.EvaluatePermissionResponse;
 import com.ryuqq.fileflow.domain.iam.permission.Scope;
-import org.springframework.stereotype.Component;
-
 import java.util.Map;
 
 /**
@@ -25,23 +23,24 @@ import java.util.Map;
  * <p><strong>규칙 준수:</strong></p>
  * <ul>
  *   <li>❌ Lombok 사용 안함 - Pure Java</li>
- *   <li>✅ Static Utility Class 또는 Component 선택 (Component 선택 - DI 활용)</li>
+ *   <li>✅ Static Utility Class (Stateless, 인스턴스 생성 금지)</li>
  *   <li>✅ Null-safe 변환</li>
  * </ul>
  *
  * @author ryu-qqq
  * @since 2025-10-27
  */
-@Component
-public class PermissionApiMapper {
+public final class PermissionApiMapper {
 
     /**
-     * Default Constructor (Spring Component Scan용)
+     * Private Constructor - 인스턴스 생성 방지
      *
+     * @throws UnsupportedOperationException 항상 발생
      * @author ryu-qqq
      * @since 2025-10-27
      */
-    public PermissionApiMapper() {
+    private PermissionApiMapper() {
+        throw new UnsupportedOperationException("Utility 클래스는 인스턴스화할 수 없습니다");
     }
 
     /**
@@ -55,7 +54,7 @@ public class PermissionApiMapper {
      * @author ryu-qqq
      * @since 2025-10-27
      */
-    public EvaluatePermissionCommand toCommand(EvaluatePermissionApiRequest request) {
+    public static EvaluatePermissionCommand toCommand(EvaluatePermissionApiRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("EvaluatePermissionRequest는 null일 수 없습니다");
         }
@@ -103,7 +102,7 @@ public class PermissionApiMapper {
      * @author ryu-qqq
      * @since 2025-10-27
      */
-    public PermissionEvaluationApiResponse toApiResponse(EvaluatePermissionResponse response) {
+    public static PermissionEvaluationApiResponse toApiResponse(EvaluatePermissionResponse response) {
         if (response == null) {
             throw new IllegalArgumentException("EvaluatePermissionResponse는 null일 수 없습니다");
         }
@@ -127,7 +126,7 @@ public class PermissionApiMapper {
      * @author ryu-qqq
      * @since 2025-10-27
      */
-    private Scope parseScope(String scopeCode) {
+    private static Scope parseScope(String scopeCode) {
         if (scopeCode == null || scopeCode.isBlank()) {
             throw new IllegalArgumentException("Scope 코드는 필수입니다");
         }
@@ -152,7 +151,7 @@ public class PermissionApiMapper {
      * @author ryu-qqq
      * @since 2025-10-27
      */
-    private ResourceAttributes buildResourceAttributes(Map<String, Object> attributesMap) {
+    private static ResourceAttributes buildResourceAttributes(Map<String, Object> attributesMap) {
         if (attributesMap == null || attributesMap.isEmpty()) {
             return ResourceAttributes.empty();
         }

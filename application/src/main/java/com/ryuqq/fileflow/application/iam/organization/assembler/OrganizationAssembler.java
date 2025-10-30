@@ -70,8 +70,7 @@ public final class OrganizationAssembler {
             throw new IllegalArgumentException("OrgCode는 필수입니다");
         }
 
-        return Organization.of(
-            null,  // ID는 저장 후 자동 생성
+        return Organization.forNew(
             command.tenantId(),
             orgCode,
             command.name()

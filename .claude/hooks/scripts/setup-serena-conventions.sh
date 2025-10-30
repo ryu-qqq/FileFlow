@@ -136,16 +136,119 @@ try:
 - Docs: `docs/coding_convention/01-adapter-rest-api-layer/`
 """,
 
+        "coding_convention_orchestration_layer": """# Orchestration Pattern Coding Conventions (NEW) ⭐
+
+## 🎯 Core Principles (Zero-Tolerance)
+
+### 1️⃣ @Async Required, @Transactional Prohibited
+- **Rule**: `executeInternal()` 메서드는 반드시 `@Async`, `@Transactional` 금지
+- **Reason**: 외부 API 호출은 트랜잭션 밖에서 실행해야 안전
+- **Detection**: `@Transactional.*executeInternal` (정규식 매칭)
+- **Fix**: `@Async` 어노테이션만 사용, 트랜잭션은 Accept Phase에서만
+
+### 2️⃣ Command Record Pattern (Lombok 금지)
+- **Rule**: Command는 반드시 Record 패턴 사용, Lombok 금지
+- **Pattern**: `public record XxxCommand(String idemKey, ...) { }`
+- **Detection**: `@Data|@Builder|@Getter` in Command files
+- **Fix**: Record 패턴으로 변환, Compact Constructor 활용
+
+### 3️⃣ IdemKey Unique Constraint
+- **Rule**: Operation Entity는 IdemKey에 DB Unique 제약 필수
+- **Pattern**: `@UniqueConstraint(name = "uk_xxx_idem_key", columnNames = {"idem_key"})`
+- **Reason**: Race Condition 방지, 중복 실행 차단 (DB 레벨)
+- **Detection**: `@Table` without `@UniqueConstraint` in OperationEntity
+
+### 4️⃣ Outcome Modeling (boolean/void 금지)
+- **Rule**: `executeInternal()`은 반드시 `Outcome` 반환
+- **Prohibited**: `boolean`, `void`, `throws Exception`
+- **Pattern**: Sealed interface (Ok/Retry/Fail)
+- **Reason**: 타입 안전, 명시적 결과 처리, Pattern Matching
+
+### 5️⃣ BaseOrchestrator Inheritance
+- **Rule**: 모든 Orchestrator는 `BaseOrchestrator<Command>` 상속 필수
+- **Reason**: 3-Phase Lifecycle (Accept → Execute → Finalize) 강제
+- **Detection**: `class.*Orchestrator` without `extends BaseOrchestrator`
+
+## 🔄 3-Phase Lifecycle
+
+```
+┌─────────────┐
+│ 1️⃣ Accept  │  @Transactional, IdemKey 검증, WAL 저장
+└─────────────┘
+      ↓
+┌─────────────┐
+│ 2️⃣ Execute │  @Async, 외부 API 호출 (트랜잭션 밖)
+└─────────────┘
+      ↓
+┌─────────────┐
+│ 3️⃣ Finalize│  @Transactional, 결과 저장, 보상 처리
+└─────────────┘
+```
+
+## 🛡️ Idempotency Strategy
+
+1. **IdemKey**: Unique 식별자 (요청 중복 방지)
+2. **DB Unique Constraint**: Race Condition 방지 (최종 방어선)
+3. **WAL (Write-Ahead Log)**: 크래시 복구
+4. **Finalizer/Reaper**: PENDING/TIMEOUT 처리 (@Scheduled)
+
+## 🎯 Outcome Modeling
+
+```java
+public sealed interface Outcome permits Ok, Retry, Fail {
+    record Ok(T data) implements Outcome { }
+    record Retry(String reason, int delaySeconds) implements Outcome { }
+    record Fail(ErrorCode errorCode, String message) implements Outcome { }
+}
+```
+
+**Pattern Matching 활용**:
+```java
+return switch (outcome) {
+    case Ok(var data) -> handleSuccess(data);
+    case Retry(var reason, var delay) -> scheduleRetry(delay);
+    case Fail(var code, var msg) -> handleError(code, msg);
+};
+```
+
+## 🚀 Automation
+
+**Command**: `/code-gen-orchestrator <Domain> <EventType>`
+
+**Auto-Generated (10 files, 80-85% complete)**:
+1. Orchestrator.java (@Async)
+2. Command.java (Record)
+3. OperationEntity.java (@UniqueConstraint)
+4. Finalizer.java (@Scheduled)
+5. Reaper.java (@Scheduled)
+6. Outcome.java (Sealed)
+7. Mapper.java
+8. Repository.java
+9. Status.java (Enum)
+10. WriteAheadLog.java
+
+**Developer Work (15-20%)**:
+- executeInternal(): External API call logic
+- Mapper: Command → Domain conversion
+- Outcome: Success/Retry/Fail conditions
+
+## 📚 Reference
+- Cache Location: `.claude/cache/rules/orchestration-patterns-*`
+- Docs: `docs/coding_convention/09-orchestration-patterns/`
+- Quick Start: `docs/coding_convention/09-orchestration-patterns/quick-start-guide/01_10-minute-tutorial.md`
+""",
+
         "coding_convention_index": """# Spring Standards Project - Coding Convention Master Index
 
 ## 🎯 Quick Reference
 
 ### 레이어별 메모리 접근
 ```
-read_memory("coding_convention_domain_layer")       → Domain Layer 규칙
-read_memory("coding_convention_application_layer")  → Application Layer 규칙
-read_memory("coding_convention_persistence_layer")  → Persistence Layer 규칙
-read_memory("coding_convention_rest_api_layer")     → REST API Layer 규칙
+read_memory("coding_convention_domain_layer")         → Domain Layer 규칙
+read_memory("coding_convention_application_layer")    → Application Layer 규칙
+read_memory("coding_convention_persistence_layer")    → Persistence Layer 규칙
+read_memory("coding_convention_rest_api_layer")       → REST API Layer 규칙
+read_memory("coding_convention_orchestration_layer")  → Orchestration Pattern 규칙 ⭐ NEW
 ```
 
 ## 🚨 Zero-Tolerance Rules
@@ -156,10 +259,15 @@ read_memory("coding_convention_rest_api_layer")     → REST API Layer 규칙
 4. Transaction Boundary (Application)
 5. Spring 프록시 제약사항 (Application)
 6. Javadoc 필수 (All Layers)
+7. @Async Required, @Transactional Prohibited (Orchestration) ⭐ NEW
+8. Command Record Pattern (Orchestration) ⭐ NEW
+9. IdemKey Unique Constraint (Orchestration) ⭐ NEW
+10. Outcome Modeling (Orchestration) ⭐ NEW
 
 ## 📚 Reference
 - Cache Location: `.claude/cache/rules/`
-- Total Rules: 90개 (Layer별)
+- Total Rules: 98개 (Orchestration 포함)
+- Automation: `/code-gen-orchestrator` (10 files, 80-85% complete)
 """
     }
 

@@ -1,0 +1,41 @@
+{
+  "id": "application-layer-facade-01_facade-usage-guide",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/03-application-layer/facade/01_facade-usage-guide.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "facade",
+        "usage",
+        "guide"
+      ],
+      "secondary": [
+        "facade",
+        "사용",
+        "가이드"
+      ],
+      "anti": []
+    },
+    "layer": "application",
+    "priority": "high",
+    "tokenEstimate": 1891
+  },
+  "rules": {
+    "prohibited": [
+      "❌ No → 다음 단계로",
+      "❌ No (모두 아님) → UseCase 직접 호출",
+      "❌ No → Facade 유지"
+    ],
+    "allowed": [
+      "✅ **Controller 의존성 감소**: 여러 UseCase → 하나의 Facade",
+      "✅ **트랜잭션 조율**: 여러 UseCase를 하나의 트랜잭션으로",
+      "✅ **논리적 그룹화**: 관련된 기능을 하나의 진입점으로",
+      "✅ Yes → Facade 필수",
+      "✅ Yes (하나라도) → Facade 권장",
+      "✅ Yes → Facade 제거, UseCase 직접 호출"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/03-application-layer/facade/01_facade-usage-guide.md",
+    "summary": "Auto-generated from 01_facade-usage-guide.md"
+  }
+}

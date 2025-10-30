@@ -1,10 +1,13 @@
 package com.ryuqq.fileflow.adapter.rest.controller.iam;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ryuqq.fileflow.adapter.rest.common.error.ErrorMapperRegistry;
+import com.ryuqq.fileflow.adapter.rest.config.properties.ApiEndpointProperties;
+import com.ryuqq.fileflow.adapter.rest.config.properties.IamEndpointProperties;
 import com.ryuqq.fileflow.adapter.rest.iam.tenant.controller.TenantController;
 import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.CreateTenantApiRequest;
 import com.ryuqq.fileflow.adapter.rest.iam.tenant.dto.request.UpdateTenantApiRequest;
-import com.ryuqq.fileflow.adapter.rest.exception.GlobalExceptionHandler;
+import com.ryuqq.fileflow.adapter.rest.common.controller.GlobalExceptionHandler;
 import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
 import com.ryuqq.fileflow.application.iam.tenant.facade.TenantCommandFacade;
 import com.ryuqq.fileflow.application.iam.tenant.facade.TenantQueryFacade;
@@ -16,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -49,7 +53,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("controller")
 @Tag("slow")
 @WebMvcTest(controllers = TenantController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, ApiEndpointProperties.class, IamEndpointProperties.class})
+@TestPropertySource(properties = {
+    "api.endpoints.base-v1=/api/v1",
+    "api.endpoints.iam.tenant.base=/tenants",
+    "api.endpoints.iam.tenant.by-id=/{tenantId}",
+    "api.endpoints.iam.tenant.status=/{tenantId}/status"
+})
 @DisplayName("TenantController Integration Test")
 class TenantControllerIntegrationTest {
 
@@ -64,6 +74,9 @@ class TenantControllerIntegrationTest {
 
     @MockBean
     private TenantQueryFacade tenantQueryFacade;
+
+    @MockBean
+    private ErrorMapperRegistry errorMapperRegistry;
 
     /**
      * POST /api/v1/tenants - Tenant 생성 성공 (201 Created)
@@ -93,7 +106,7 @@ class TenantControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.tenantId").value("tenant-id-123"))
+            .andExpect(jsonPath("$.data.tenantId").value(123))
             .andExpect(jsonPath("$.data.name").value("my-tenant"))
             .andExpect(jsonPath("$.data.status").value("ACTIVE"))
             .andExpect(jsonPath("$.data.deleted").value(false));
@@ -195,7 +208,7 @@ class TenantControllerIntegrationTest {
     @DisplayName("PATCH /api/v1/tenants/{tenantId} - Validation 실패 (400 Bad Request)")
     void updateTenant_ValidationFails_Returns400() throws Exception {
         // Given - name이 빈 문자열
-        String tenantId = "tenant-id-123";
+        Long tenantId = 123L;
         UpdateTenantApiRequest request = new UpdateTenantApiRequest("");
 
         // When & Then - RFC 7807 응답 검증

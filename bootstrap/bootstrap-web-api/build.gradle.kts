@@ -76,6 +76,14 @@ dependencies {
     testImplementation(libs.testcontainers.mysql)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.rest.assured)
+
+    // ========================================
+    // TestFixtures Dependencies (for ArchUnit)
+    // ========================================
+    testImplementation(testFixtures(project(":domain")))
+    testImplementation(testFixtures(project(":application")))
+    testImplementation(testFixtures(project(":adapter-in:rest-api")))
+    testImplementation(testFixtures(project(":adapter-out:persistence-mysql")))
 }
 
 // ========================================
