@@ -16,7 +16,7 @@ permissions:
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: fileflow-prod
+  ECR_REPOSITORY: fileflow
   ECS_SERVICE: fileflow-prod-service
   ECS_CLUSTER: fileflow-prod
   CONTAINER_NAME: fileflow
