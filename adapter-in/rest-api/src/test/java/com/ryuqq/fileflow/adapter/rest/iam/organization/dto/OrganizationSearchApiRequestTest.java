@@ -53,7 +53,7 @@ class OrganizationSearchApiRequestTest {
         void page_negative_shouldFail() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                -1, 20, null, "tenant-123", null, null, null
+                -1, 20, null, 1L, null, null, null
             );
 
             // When
@@ -71,7 +71,7 @@ class OrganizationSearchApiRequestTest {
         void page_zero_shouldPass() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 20, null, "tenant-123", null, null, null
+                0, 20, null, 1L, null, null, null
             );
 
             // When
@@ -91,7 +91,7 @@ class OrganizationSearchApiRequestTest {
         void size_zero_shouldFail() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 0, null, "tenant-123", null, null, null
+                0, 0, null, 1L, null, null, null
             );
 
             // When
@@ -109,7 +109,7 @@ class OrganizationSearchApiRequestTest {
         void size_overMax_shouldFail() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 101, null, "tenant-123", null, null, null
+                0, 101, null, 1L, null, null, null
             );
 
             // When
@@ -127,7 +127,7 @@ class OrganizationSearchApiRequestTest {
         void size_validRange_shouldPass() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 50, null, "tenant-123", null, null, null
+                0, 50, null, 1L, null, null, null
             );
 
             // When
@@ -147,7 +147,7 @@ class OrganizationSearchApiRequestTest {
         void tenantId_empty_shouldFail() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 20, null, "", null, null, null
+                0, 20, null, null, null, null, null
             );
 
             // When
@@ -165,7 +165,7 @@ class OrganizationSearchApiRequestTest {
         void tenantId_blank_shouldFail() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 20, null, "   ", null, null, null
+                0, 20, null, null, null, null, null
             );
 
             // When
@@ -198,7 +198,7 @@ class OrganizationSearchApiRequestTest {
         void tenantId_valid_shouldPass() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 20, null, "tenant-uuid-123", null, null, null
+                0, 20, null, 1L, null, null, null
             );
 
             // When
@@ -218,7 +218,7 @@ class OrganizationSearchApiRequestTest {
         void size_null_shouldApplyDefault() {
             // Given & When
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, null, null, "tenant-123", null, null, null
+                0, null, null, 1L, null, null, null
             );
 
             // Then
@@ -230,7 +230,7 @@ class OrganizationSearchApiRequestTest {
         void size_specified_shouldBePreserved() {
             // Given & When
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 50, null, "tenant-123", null, null, null
+                0, 50, null, 1L, null, null, null
             );
 
             // Then
@@ -247,7 +247,7 @@ class OrganizationSearchApiRequestTest {
         void page_provided_shouldBeOffsetBased() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 20, null, "tenant-123", null, null, null
+                0, 20, null, 1L, null, null, null
             );
 
             // When
@@ -262,7 +262,7 @@ class OrganizationSearchApiRequestTest {
         void cursor_provided_shouldBeCursorBased() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                null, 20, "cursor123", "tenant-123", null, null, null
+                null, 20, "cursor123", 1L, null, null, null
             );
 
             // When
@@ -282,7 +282,7 @@ class OrganizationSearchApiRequestTest {
         void allFields_shouldBeConvertedToQuery() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 20, null, "tenant-123", "ORG", "test", false
+                0, 20, null, 1L, "ORG", "test", false
             );
 
             // When
@@ -292,7 +292,7 @@ class OrganizationSearchApiRequestTest {
             assertThat(query.page()).isEqualTo(0);
             assertThat(query.size()).isEqualTo(20);
             assertThat(query.cursor()).isNull();
-            assertThat(query.tenantId()).isEqualTo("tenant-123");
+            assertThat(query.tenantId()).isEqualTo(1L);
             assertThat(query.orgCodeContains()).isEqualTo("ORG");
             assertThat(query.nameContains()).isEqualTo("test");
             assertThat(query.deleted()).isFalse();
@@ -303,7 +303,7 @@ class OrganizationSearchApiRequestTest {
         void cursorBased_shouldBeConvertedCorrectly() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                null, 20, "cursor-abc", "tenant-123", null, null, null
+                null, 20, "cursor-abc", 1L, null, null, null
             );
 
             // When
@@ -325,7 +325,7 @@ class OrganizationSearchApiRequestTest {
         void allFieldsValid_shouldPass() {
             // Given
             OrganizationSearchApiRequest param = new OrganizationSearchApiRequest(
-                0, 20, null, "tenant-123", "ORG001", "Engineering", false
+                0, 20, null, 1L, "ORG001", "Engineering", false
             );
 
             // When

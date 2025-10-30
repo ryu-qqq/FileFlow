@@ -13,7 +13,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-import static com.ryuqq.fileflow.adapter.out.persistence.mysql.organization.entity.QOrganizationJpaEntity.organizationJpaEntity;
+import static com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.QOrganizationJpaEntity.organizationJpaEntity;
 
 /**
  * OrganizationQueryRepositoryAdapter - Organization Query 전용 Persistence Adapter

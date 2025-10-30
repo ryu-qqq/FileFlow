@@ -54,7 +54,7 @@ public class SettingAssembler {
         }
 
         return new SettingResponse(
-            setting.getId(),
+            setting.getIdValue(),
             setting.getKeyValue(),
             setting.getDisplayValue(), // 비밀 키 자동 마스킹
             setting.getValueType().name(),
@@ -82,7 +82,7 @@ public class SettingAssembler {
         }
 
         return new UpdateSettingUseCase.Response(
-            setting.getId(),
+            setting.getIdValue(),
             setting.getKeyValue(),
             setting.getDisplayValue(), // 비밀 키 자동 마스킹
             setting.getValueType().name(),
@@ -110,7 +110,7 @@ public class SettingAssembler {
         }
 
         return new CreateSettingUseCase.Response(
-            setting.getId(),
+            setting.getIdValue(),
             setting.getKeyValue(),
             setting.getDisplayValue(), // 비밀 키 자동 마스킹
             setting.getValueType().name(),

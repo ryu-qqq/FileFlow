@@ -13,7 +13,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-import static com.ryuqq.fileflow.adapter.out.persistence.mysql.tenant.entity.QTenantJpaEntity.tenantJpaEntity;
+import static com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.entity.QTenantJpaEntity.tenantJpaEntity;
 
 /**
  * TenantQueryRepositoryAdapter - Tenant Query 전용 Persistence Adapter

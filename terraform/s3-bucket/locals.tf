@@ -8,5 +8,8 @@ locals {
     DataClass   = "internal"
   }
 
-  bucket_name = "${var.service_name}-${var.bucket_purpose}-${var.environment}"
+  # bucket_purpose가 비어있으면 하이픈 없이 생성
+  # 비어있음: fileflow-prod
+  # 설정됨: fileflow-uploads-prod
+  bucket_name = var.bucket_purpose != "" ? "${var.service_name}-${var.bucket_purpose}-${var.environment}" : "${var.service_name}-${var.environment}"
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.ryuqq.fileflow.domain.settings.SettingMerger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -29,7 +28,6 @@ import java.time.Clock;
  * <ul>
  *   <li>{@link Clock} - 시간 제어 및 테스트 용이성</li>
  *   <li>{@link ObjectMapper} - 전역 JSON 직렬화/역직렬화</li>
- *   <li>{@link SettingMerger} - Settings 병합 Domain Service</li>
  * </ul>
  *
  * @author ryu-qqq
@@ -118,37 +116,5 @@ public class CoreConfiguration {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         return mapper;
-    }
-
-    /**
-     * SettingMerger Domain Service Bean 생성
-     *
-     * <p>설정 병합 도메인 서비스를 Spring Bean으로 등록하여
-     * Application Layer에서 주입받을 수 있도록 합니다.</p>
-     *
-     * <p><strong>Domain Service 특징:</strong></p>
-     * <ul>
-     *   <li>✅ Stateless - 상태를 갖지 않음</li>
-     *   <li>✅ Singleton - 애플리케이션 전체에서 단일 인스턴스</li>
-     *   <li>✅ Pure Domain Logic - 비즈니스 로직만 포함</li>
-     * </ul>
-     *
-     * <p><strong>사용 예시:</strong></p>
-     * <pre>{@code
-     * // GetMergedSettingsService.java (Application Layer)
-     * private final SettingMerger settingMerger;
-     *
-     * public GetMergedSettingsService(SettingMerger settingMerger) {
-     *     this.settingMerger = settingMerger;
-     * }
-     * }</pre>
-     *
-     * @return SettingMerger 인스턴스
-     * @author ryu-qqq
-     * @since 2025-10-29
-     */
-    @Bean
-    public SettingMerger settingMerger() {
-        return new SettingMerger();
     }
 }

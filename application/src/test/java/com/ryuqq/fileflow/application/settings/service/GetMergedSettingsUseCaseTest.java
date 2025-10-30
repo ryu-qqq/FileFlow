@@ -4,8 +4,7 @@ import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
 import com.ryuqq.fileflow.application.settings.port.out.LoadSettingsPort;
 import com.ryuqq.fileflow.application.settings.service.query.GetMergedSettingsService;
 import com.ryuqq.fileflow.domain.settings.Setting;
-import com.ryuqq.fileflow.domain.settings.SettingMerger;
-import com.ryuqq.fileflow.fixtures.SettingFixtures;
+import com.ryuqq.fileflow.domain.settings.fixture.SettingDomainFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,14 +37,12 @@ import static org.mockito.Mockito.when;
 class GetMergedSettingsUseCaseTest {
 
     private LoadSettingsPort loadSettingsPort;
-    private SettingMerger settingMerger;
     private GetMergedSettingsService getMergedSettingsService;
 
     @BeforeEach
     void setUp() {
         loadSettingsPort = mock(LoadSettingsPort.class);
-        settingMerger = new SettingMerger();
-        getMergedSettingsService = new GetMergedSettingsService(loadSettingsPort, settingMerger);
+        getMergedSettingsService = new GetMergedSettingsService(loadSettingsPort);
     }
 
     @Nested
@@ -60,9 +57,9 @@ class GetMergedSettingsUseCaseTest {
             Long tenantId = 100L;
             GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(orgId, tenantId);
 
-            Setting orgSetting = SettingFixtures.createOrgSetting(orgId);           // MAX_UPLOAD_SIZE = 200MB
-            Setting tenantSetting = SettingFixtures.createTenantSetting(tenantId);  // MAX_UPLOAD_SIZE = 50MB
-            Setting defaultSetting = SettingFixtures.createDefaultSetting();        // MAX_UPLOAD_SIZE = 100MB
+            Setting orgSetting = SettingDomainFixture.createOrgSetting(orgId);           // MAX_UPLOAD_SIZE = 200MB
+            Setting tenantSetting = SettingDomainFixture.createTenantSetting(tenantId);  // MAX_UPLOAD_SIZE = 50MB
+            Setting defaultSetting = SettingDomainFixture.createDefaultSetting();        // MAX_UPLOAD_SIZE = 100MB
 
             List<Setting> orgSettings = List.of(orgSetting);
             List<Setting> tenantSettings = List.of(tenantSetting);
@@ -92,8 +89,8 @@ class GetMergedSettingsUseCaseTest {
             Long tenantId = 100L;
             GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, tenantId);
 
-            Setting tenantSetting = SettingFixtures.createTenantSetting(tenantId);  // MAX_UPLOAD_SIZE = 50MB
-            Setting defaultSetting = SettingFixtures.createDefaultSetting();        // MAX_UPLOAD_SIZE = 100MB
+            Setting tenantSetting = SettingDomainFixture.createTenantSetting(tenantId);  // MAX_UPLOAD_SIZE = 50MB
+            Setting defaultSetting = SettingDomainFixture.createDefaultSetting();        // MAX_UPLOAD_SIZE = 100MB
 
             List<Setting> orgSettings = List.of();
             List<Setting> tenantSettings = List.of(tenantSetting);
@@ -122,7 +119,7 @@ class GetMergedSettingsUseCaseTest {
             // Arrange
             GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, null);
 
-            Setting defaultSetting = SettingFixtures.createDefaultSetting(); // MAX_UPLOAD_SIZE = 100MB
+            Setting defaultSetting = SettingDomainFixture.createDefaultSetting(); // MAX_UPLOAD_SIZE = 100MB
 
             List<Setting> orgSettings = List.of();
             List<Setting> tenantSettings = List.of();
@@ -151,8 +148,8 @@ class GetMergedSettingsUseCaseTest {
             // Arrange
             GetMergedSettingsUseCase.Query query = new GetMergedSettingsUseCase.Query(null, null);
 
-            Setting defaultSecret = SettingFixtures.createDefaultSecretSetting(); // API_KEY = secret-key-123 (masked)
-            Setting defaultNormal = SettingFixtures.createDefaultSetting();       // MAX_UPLOAD_SIZE = 100MB
+            Setting defaultSecret = SettingDomainFixture.createDefaultSecretSetting(); // API_KEY = secret-key-123 (masked)
+            Setting defaultNormal = SettingDomainFixture.createDefaultSetting();       // MAX_UPLOAD_SIZE = 100MB
 
             List<Setting> orgSettings = List.of();
             List<Setting> tenantSettings = List.of();

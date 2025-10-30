@@ -73,7 +73,7 @@ public final class PermissionEntityMapper {
             scope,
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
-            entity.isDeleted()
+            entity.getDeletedAt()
         );
     }
 

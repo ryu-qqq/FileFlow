@@ -43,7 +43,7 @@ dependencies {
     // ========================================
     // Test Dependencies
     // ========================================
-    testImplementation(project(":test-fixtures"))
+    testImplementation(testFixtures(project(":domain")))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(rootProject.libs.testcontainers.junit)
     testImplementation(rootProject.libs.testcontainers.redis)
