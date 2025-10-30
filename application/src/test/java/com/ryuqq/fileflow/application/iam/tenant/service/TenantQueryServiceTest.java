@@ -7,7 +7,7 @@ import com.ryuqq.fileflow.application.iam.tenant.dto.query.GetTenantsQuery;
 import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
 import com.ryuqq.fileflow.application.iam.tenant.port.out.TenantQueryRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
-import com.ryuqq.fileflow.domain.iam.tenant.TenantFixture;
+import com.ryuqq.fileflow.domain.iam.tenant.fixture.TenantFixture;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

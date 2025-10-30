@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.iam.organization.service;
 
-import com.ryuqq.fileflow.application.iam.organization.OrganizationCommandFixture;
+import com.ryuqq.fileflow.application.iam.organization.fixture.OrganizationCommandFixture;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.CreateOrganizationCommand;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.SoftDeleteOrganizationCommand;
 import com.ryuqq.fileflow.application.iam.organization.dto.command.UpdateOrganizationCommand;
@@ -9,7 +9,7 @@ import com.ryuqq.fileflow.application.iam.organization.dto.response.Organization
 import com.ryuqq.fileflow.application.iam.organization.port.out.OrganizationRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.organization.OrgCode;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
-import com.ryuqq.fileflow.domain.iam.organization.OrganizationFixture;
+import com.ryuqq.fileflow.domain.iam.organization.fixture.OrganizationFixture;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

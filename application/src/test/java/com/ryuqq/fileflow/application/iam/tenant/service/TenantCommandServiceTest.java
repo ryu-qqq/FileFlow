@@ -1,13 +1,13 @@
 package com.ryuqq.fileflow.application.iam.tenant.service;
 
-import com.ryuqq.fileflow.application.iam.tenant.TenantCommandFixture;
+import com.ryuqq.fileflow.application.iam.tenant.fixture.TenantCommandFixture;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.CreateTenantCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.UpdateTenantCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.command.UpdateTenantStatusCommand;
 import com.ryuqq.fileflow.application.iam.tenant.dto.response.TenantResponse;
 import com.ryuqq.fileflow.application.iam.tenant.port.out.TenantRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
-import com.ryuqq.fileflow.domain.iam.tenant.TenantFixture;
+import com.ryuqq.fileflow.domain.iam.tenant.fixture.TenantFixture;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantName;
 import org.junit.jupiter.api.DisplayName;

@@ -7,7 +7,7 @@ import com.ryuqq.fileflow.application.iam.organization.dto.query.GetOrganization
 import com.ryuqq.fileflow.application.iam.organization.dto.response.OrganizationResponse;
 import com.ryuqq.fileflow.application.iam.organization.port.out.OrganizationQueryRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
-import com.ryuqq.fileflow.domain.iam.organization.OrganizationFixture;
+import com.ryuqq.fileflow.domain.iam.organization.fixture.OrganizationFixture;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

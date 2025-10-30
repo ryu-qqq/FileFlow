@@ -1,10 +1,10 @@
 package com.ryuqq.fileflow.application.settings.service.query;
 
-import com.ryuqq.fileflow.application.settings.GetMergedSettingsQueryFixture;
+import com.ryuqq.fileflow.application.settings.fixture.GetMergedSettingsQueryFixture;
 import com.ryuqq.fileflow.application.settings.port.in.GetMergedSettingsUseCase;
 import com.ryuqq.fileflow.application.settings.port.out.LoadSettingsPort;
 import com.ryuqq.fileflow.domain.settings.Setting;
-import com.ryuqq.fileflow.domain.settings.SettingFixture;
+import com.ryuqq.fileflow.domain.settings.fixture.SettingFixture;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
