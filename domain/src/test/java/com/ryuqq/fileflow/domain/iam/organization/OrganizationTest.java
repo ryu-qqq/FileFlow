@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.iam.organization;
 
+import com.ryuqq.fileflow.domain.iam.organization.fixture.OrganizationFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
