@@ -30,27 +30,25 @@ public interface PermissionJpaRepository extends JpaRepository<PermissionJpaEnti
     /**
      * Permission Code로 조회 (삭제되지 않은 Permission만)
      *
-     * <p>Soft Delete를 고려하여 {@code deleted=false}인 Permission만 조회합니다.</p>
+     * <p>Soft Delete를 고려하여 {@code deletedAt IS NULL}인 Permission만 조회합니다.</p>
      *
      * @param code Permission Code
-     * @param deleted 삭제 여부 (false로 고정)
      * @return Permission Entity (Optional)
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    Optional<PermissionJpaEntity> findByCodeAndDeleted(String code, boolean deleted);
+    Optional<PermissionJpaEntity> findByCodeAndDeletedAtIsNull(String code);
 
     /**
      * Permission Code 존재 여부 확인 (삭제되지 않은 Permission만)
      *
      * <p>Permission 생성 전 중복 확인을 위해 사용합니다.</p>
-     * <p>Soft Delete를 고려하여 {@code deleted=false}인 Permission만 확인합니다.</p>
+     * <p>Soft Delete를 고려하여 {@code deletedAt IS NULL}인 Permission만 확인합니다.</p>
      *
      * @param code Permission Code
-     * @param deleted 삭제 여부 (false로 고정)
      * @return 존재 여부
      * @author ryu-qqq
      * @since 2025-10-24
      */
-    boolean existsByCodeAndDeleted(String code, boolean deleted);
+    boolean existsByCodeAndDeletedAtIsNull(String code);
 }
