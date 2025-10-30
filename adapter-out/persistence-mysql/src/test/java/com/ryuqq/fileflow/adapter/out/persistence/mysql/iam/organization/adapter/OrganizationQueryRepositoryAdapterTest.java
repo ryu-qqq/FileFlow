@@ -5,7 +5,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.OrganizationJpaEntityFixture;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.fixture.OrganizationJpaEntityFixture;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.OrganizationJpaEntity;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;

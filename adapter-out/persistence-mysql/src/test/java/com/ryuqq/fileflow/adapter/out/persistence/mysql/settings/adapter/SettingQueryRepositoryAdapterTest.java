@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.adapter;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.SettingJpaEntityFixture;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.fixture.SettingJpaEntityFixture;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.entity.SettingJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.repository.SettingJpaRepository;
 import com.ryuqq.fileflow.application.settings.port.out.LoadSettingsPort.SettingsForMerge;

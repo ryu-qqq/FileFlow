@@ -4,7 +4,7 @@ import com.ryuqq.fileflow.application.settings.dto.SettingResponse;
 import com.ryuqq.fileflow.application.settings.port.in.CreateSettingUseCase;
 import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
 import com.ryuqq.fileflow.domain.settings.Setting;
-import com.ryuqq.fileflow.domain.settings.SettingFixture;
+import com.ryuqq.fileflow.domain.settings.fixture.SettingFixture;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.repository;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.UserContextJpaEntityFixture;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.fixture.UserContextJpaEntityFixture;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.usercontext.entity.UserContextJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

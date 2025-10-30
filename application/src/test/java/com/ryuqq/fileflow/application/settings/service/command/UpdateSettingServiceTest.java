@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.settings.service.command;
 
-import com.ryuqq.fileflow.application.settings.UpdateSettingCommandFixture;
+import com.ryuqq.fileflow.application.settings.fixture.UpdateSettingCommandFixture;
 import com.ryuqq.fileflow.application.settings.assembler.SettingAssembler;
 import com.ryuqq.fileflow.application.settings.port.SchemaValidator;
 import com.ryuqq.fileflow.application.settings.port.in.UpdateSettingUseCase;
@@ -8,7 +8,7 @@ import com.ryuqq.fileflow.application.settings.port.out.LoadSettingsPort;
 import com.ryuqq.fileflow.application.settings.port.out.SaveSettingPort;
 import com.ryuqq.fileflow.domain.settings.exception.InvalidSettingException;
 import com.ryuqq.fileflow.domain.settings.Setting;
-import com.ryuqq.fileflow.domain.settings.SettingFixture;
+import com.ryuqq.fileflow.domain.settings.fixture.SettingFixture;
 import com.ryuqq.fileflow.domain.settings.SettingKey;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 import com.ryuqq.fileflow.domain.settings.SettingType;
