@@ -2,6 +2,8 @@ package com.ryuqq.fileflow.domain.iam.usercontext;
 
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
+import com.ryuqq.fileflow.domain.iam.usercontext.fixture.UserContextFixture;
+import com.ryuqq.fileflow.domain.iam.usercontext.fixture.MembershipFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
