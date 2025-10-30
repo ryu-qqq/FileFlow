@@ -46,7 +46,7 @@ data "aws_secretsmanager_secret_version" "db_password" {
 
 # ECR Repository
 data "aws_ecr_repository" "fileflow" {
-  name = "fileflow-prod"
+  name = "fileflow"
 }
 
 # Redis (ElastiCache)

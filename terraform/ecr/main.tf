@@ -8,7 +8,7 @@
 # ============================================================================
 
 resource "aws_ecr_repository" "fileflow" {
-  name                 = "fileflow-prod"
+  name                 = "fileflow"
   image_tag_mutability = "MUTABLE"
 
   # 이미지 스캔 설정 (보안 취약점 검사)
@@ -18,16 +18,21 @@ resource "aws_ecr_repository" "fileflow" {
 
   # 암호화 설정
   encryption_configuration {
-    encryption_type = "AES256" # AWS 관리형 키 사용
+    encryption_type = "KMS"
+    kms_key         = "arn:aws:kms:ap-northeast-2:646886795421:key/6ed5bf61-9e05-4bf0-ab5e-2233f3e57a1a"
   }
 
   tags = {
-    Name        = "fileflow-prod-ecr"
+    Name        = "ecr-fileflow"
     Environment = "prod"
     Service     = "fileflow"
-    ManagedBy   = "terraform"
-    Team        = "platform-team"
-    Project     = "fileflow"
+    ManagedBy   = "Terraform"
+    Component   = "container-registry"
+    Module      = "ecr/fileflow"
+    Owner       = "fbtkdals2@naver.com"
+    CostCenter  = "engineering"
+    DataClass   = "confidential"
+    Lifecycle   = "production"
   }
 }
 
