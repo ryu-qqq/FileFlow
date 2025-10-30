@@ -133,8 +133,7 @@ public class CreateSettingService implements CreateSettingUseCase {
             ? SettingValue.secret(command.value(), type)
             : SettingValue.of(command.value(), type);
 
-        Setting setting = Setting.of(
-            null,  // 신규 생성이므로 id는 null
+        Setting setting = Setting.forNew(
             key,
             value,
             level,

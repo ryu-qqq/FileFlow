@@ -42,22 +42,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class PermissionController {
 
     private final EvaluatePermissionUseCase evaluatePermissionUseCase;
-    private final PermissionApiMapper mapper;
 
     /**
      * Constructor - Spring이 의존성 자동 주입
      *
      * @param evaluatePermissionUseCase Permission 평가 UseCase
-     * @param mapper DTO 변환 Mapper
      * @author ryu-qqq
      * @since 2025-10-27
      */
-    public PermissionController(
-        EvaluatePermissionUseCase evaluatePermissionUseCase,
-        PermissionApiMapper mapper
-    ) {
+    public PermissionController(EvaluatePermissionUseCase evaluatePermissionUseCase) {
         this.evaluatePermissionUseCase = evaluatePermissionUseCase;
-        this.mapper = mapper;
     }
 
     /**
@@ -113,13 +107,13 @@ public class PermissionController {
         @Valid @ModelAttribute EvaluatePermissionApiRequest request
     ) {
         // 1. Request → Command 변환
-        EvaluatePermissionCommand command = mapper.toCommand(request);
+        EvaluatePermissionCommand command = PermissionApiMapper.toCommand(request);
 
         // 2. UseCase 실행 (4단계 평가 파이프라인)
         EvaluatePermissionResponse response = evaluatePermissionUseCase.execute(command);
 
         // 3. Response 변환
-        PermissionEvaluationApiResponse apiResponse = mapper.toApiResponse(response);
+        PermissionEvaluationApiResponse apiResponse = PermissionApiMapper.toApiResponse(response);
 
         // 4. 200 OK 응답
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));

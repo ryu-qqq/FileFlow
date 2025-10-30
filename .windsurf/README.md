@@ -57,13 +57,15 @@
 └── .windsurf/
     ├── README.md (이 파일)
     ├── rules.md ⭐ (핵심 규칙 - 7,000자, Cascade 자동 로드)
-    └── workflows/ (12개 Markdown - SSOT 얇은 래퍼)
+    └── workflows/ (15개 Markdown - SSOT 얇은 래퍼)
         ├── 검증 (3개)
         ├── 테스트 (4개)
         ├── 빌드/배포 (4개)
         ├── 파이프라인 (3개)
         ├── Git 자동화 (4개)
-        └── 코드 품질 (3개)
+        ├── 코드 품질 (3개)
+        └── 메트릭 (1개) ✨ NEW
+            └── upload-langfuse.md
 ```
 
 **주요 사항**:
@@ -104,51 +106,93 @@
 
 ---
 
-## 🚀 Cascade Workflows (12개) - 정리 완료 ✨
+## 🚀 Cascade Workflows (12개) - 최적화 완료 ✨
 
-### ⭐ 필수 (Essential) - 5개
+### ⭐ 핵심 (Core) - 6개
 
-1. **`/pipeline-pr`** - PR 검증 파이프라인 (SSOT)
+1. **`/pipeline-pr`** - PR 검증 파이프라인 (Fast/Full Lane) ⭐ NEW
+   - **Fast Lane**: 30초, 변경된 Layer만 검증 (로컬 개발)
+   - **Full Lane**: 5분, 전체 검증 (PR 최종 승인)
    - Format → Conventions → Tests → Architecture → Coverage
    - 실제 로직: `tools/pipeline/pr_gate.sh`
 
-2. **`/validate-conventions`** - Zero-Tolerance 규칙 검증
+2. **`/test-runner`** - 지능형 테스트 실행 ⭐ NEW
+   - Git Diff 분석 → 변경된 Layer만 테스트
+   - Claude Code 자동 수정 통합
+   - LangFuse 메트릭 자동 업로드
+   - 대체: 기존 4개 test runner workflows
+
+3. **`/validate-conventions`** - Zero-Tolerance 규칙 검증 + Auto-Fix ⭐ ENHANCED
    - Lombok, Law of Demeter, JPA 관계, Setter 등
+   - **Auto-Fix**: 위반 감지 → 수정 제안 → 자동 적용
+   - **Serena Memory**: 패턴 학습 → 재발 방지
    - 실제 로직: `tools/pipeline/validate_conventions.sh`
 
-3. **`/run-unit-tests`** - 단위 테스트 (Fast/Full Lane)
-   - `--impacted` 옵션으로 빠른 피드백
-   - 실제 로직: `tools/pipeline/test_unit.sh`
-
-4. **`/validate-architecture`** - ArchUnit 검증
+4. **`/validate-architecture`** - ArchUnit 검증 + Auto-Fix ⭐ ENHANCED
    - 헥사고날 아키텍처, 레이어 의존성
+   - **Auto-Fix**: 아키텍처 위반 자동 수정
    - 테스트 위치: `bootstrap-web-api/src/test/.../architecture/`
 
-5. **`/git-pr`** - GitHub PR 자동 생성
-   - gh CLI 사용, 자동 라벨, 템플릿 적용
-
-### 📌 권장 (Recommended) - 7개
-
-6. **`/format-code`** - Spotless 포맷팅
+5. **`/format-code`** - Spotless 포맷팅 + Pre-commit Hook ⭐ ENHANCED
    - Google Java Format 적용
+   - **Pre-commit Hook**: 자동 설치 (`--setup-hook`)
+   - 커밋 전 자동 검증
 
-7. **`/git-commit-workflow`** - Conventional Commits
-   - 표준화된 커밋 메시지 가이드
+6. **`/git-complete-workflow`** - 통합 Git 워크플로우 ⭐ NEW
+   - Feature 브랜치 → 커밋 → PR 생성까지 완전한 가이드
+   - Conventional Commits + Git Flow 통합
+   - 대체: 기존 3개 git workflows
 
-8. **`/git-workflow`** - Git Branching 전략
-   - Feature/Hotfix/Release 워크플로우
+### 📌 유틸리티 (Utilities) - 3개
 
-9. **`/validate-tests`** - JaCoCo 커버리지 검증
+7. **`/validate-tests`** - JaCoCo 커버리지 검증
    - 최소 80% 커버리지 요구
 
-10. **`/run-integration-tests`** - 통합 테스트
-    - Testcontainers 기반 실제 DB 테스트
+8. **`/create-test-fixtures`** - Test Fixture 생성 안내 ⭐ UPDATED
+   - Claude Code `/test-gen-fixtures` 명령어 위임
+   - Layer별 자동 생성 (Domain, Application, REST, Persistence)
 
-11. **`/run-e2e-tests`** - E2E 테스트
-    - RestAssured 기반 전체 시스템 테스트
+### 📊 메트릭 & 분석 - 3개
 
-12. **`/run-all-tests`** - 전체 테스트 실행
-    - Unit → Integration → E2E 순차 실행
+9. **`/upload-langfuse`** - LangFuse 메트릭 업로드
+   - Claude Code 및 Cascade 로그를 LangFuse로 전송
+   - 토큰 사용량, 성능, 품질 메트릭 추적
+   - 실제 로직: `tools/pipeline/upload_langfuse.sh`
+   - **전제 조건**: 환경 변수 설정 필요
+     ```bash
+     export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+     export LANGFUSE_SECRET_KEY="sk-lf-..."
+     export LANGFUSE_HOST="https://us.cloud.langfuse.com"
+     ```
+   - **2단계 파이프라인**:
+     1. `scripts/langfuse/aggregate-logs.py` - 로그 집계 (Claude + Cascade → JSON)
+     2. `scripts/langfuse/upload-to-langfuse.py` - LangFuse API 업로드
+   - **메트릭 추적 항목**:
+     - Traces: Claude Code 세션 추적
+     - Observations: Hook 실행, Cascade 작업
+     - 토큰 사용량, 실행 시간, 성공/실패율
+   - **대시보드**: 업로드 후 LangFuse에서 확인 가능
+
+10. **`/git-cherry-pick`** - 커밋 체리픽
+    - 특정 커밋을 현재 브랜치로 가져오기
+
+### 🗑️ 제거된 Workflows (7개)
+
+**Test Runners (4개)** → `/test-runner`로 통합:
+- ❌ `run-unit-tests.md`
+- ❌ `run-integration-tests.md`
+- ❌ `run-e2e-tests.md`
+- ❌ `run-all-tests.md`
+
+**Git Workflows (3개)** → `/git-complete-workflow`로 통합:
+- ❌ `git-workflow.md`
+- ❌ `git-commit-workflow.md`
+- ❌ `git-pr.md`
+
+**제거 이유**:
+- 단순 Gradle 래퍼로 부가 가치 없음
+- 지능형 통합 워크플로우로 대체
+- 유지보수 비용 감소 및 일관성 향상
 
 ---
 

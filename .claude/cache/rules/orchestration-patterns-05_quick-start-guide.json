@@ -1,0 +1,36 @@
+{
+  "id": "orchestration-patterns-05_quick-start-guide",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/09-orchestration-patterns/05_quick-start-guide.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "quick",
+        "start",
+        "guide"
+      ],
+      "secondary": [
+        "05",
+        "quick",
+        "start",
+        "guide",
+        "10분",
+        "만에",
+        "orchestration",
+        "pattern",
+        "적용하기"
+      ],
+      "anti": []
+    },
+    "layer": "general",
+    "priority": "high",
+    "tokenEstimate": 1316
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/09-orchestration-patterns/05_quick-start-guide.md",
+    "summary": "Auto-generated from 05_quick-start-guide.md"
+  }
+}

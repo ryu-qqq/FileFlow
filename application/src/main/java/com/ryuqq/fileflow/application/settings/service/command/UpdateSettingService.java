@@ -129,7 +129,7 @@ public class UpdateSettingService implements UpdateSettingUseCase {
             SettingValue value = key.isSecretKey()
                 ? SettingValue.secret(command.value(), type)
                 : SettingValue.of(command.value(), type);
-            Setting newSetting = Setting.of(null, key, value, level, contextId);
+            Setting newSetting = Setting.forNew(key, value, level, contextId);
             savedSetting = saveSettingPort.save(newSetting);
         }
 

@@ -1,23 +1,60 @@
 {
   "version": "1.0.0",
-  "buildDate": "2025-10-29T08:51:01.673372Z",
-  "totalRules": 96,
+  "buildDate": "2025-10-30T12:36:50.919971Z",
+  "totalRules": 113,
   "keywordIndex": {
-    "restful": [
-      "adapter-rest-api-layer-controller-design-01_restful-api-design"
+    "rest": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
+      "adapter-rest-api-layer-testing-03_rest-docs"
     ],
     "api": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
       "adapter-rest-api-layer-controller-design-01_restful-api-design",
       "adapter-rest-api-layer-dto-patterns-01_api-request-dto",
       "adapter-rest-api-layer-dto-patterns-02_api-response-dto",
       "adapter-rest-api-layer-mapper-patterns-01_api-to-usecase-mapper",
       "testing-integration-testing-02_api-integration-tests"
     ],
+    "creation": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
+      "domain-layer-00_domain-object-creation-guide"
+    ],
+    "guide": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
+      "domain-layer-00_domain-object-creation-guide",
+      "application-layer-facade-01_facade-usage-guide",
+      "orchestration-patterns-05_quick-start-guide",
+      "orchestration-patterns-06_security-guide"
+    ],
+    "restful": [
+      "adapter-rest-api-layer-controller-design-01_restful-api-design"
+    ],
     "design": [
       "adapter-rest-api-layer-controller-design-01_restful-api-design",
       "domain-layer-aggregate-design-02_aggregate-root-design",
       "enterprise-patterns-event-driven-04_multi-module-event-design",
       "error-handling-02_domain-exception-design"
+    ],
+    "constructor": [
+      "adapter-rest-api-layer-controller-design-02_constructor-injection-pattern",
+      "persistence-layer-jpa-entity-design-04_constructor-and-factory-pattern"
+    ],
+    "injection": [
+      "adapter-rest-api-layer-controller-design-02_constructor-injection-pattern"
+    ],
+    "pattern": [
+      "adapter-rest-api-layer-controller-design-02_constructor-injection-pattern",
+      "domain-layer-law-of-demeter-02_tell-dont-ask-pattern",
+      "application-layer-usecase-design-03_orchestration-pattern",
+      "persistence-layer-jpa-entity-design-04_constructor-and-factory-pattern",
+      "persistence-layer-jpa-entity-design-05_audit-entity-pattern",
+      "persistence-layer-repository-patterns-03_specification-pattern",
+      "testing-02_test-fixture-pattern",
+      "java21-patterns-record-patterns-03_pattern-matching",
+      "enterprise-patterns-event-driven-03_saga-pattern",
+      "enterprise-patterns-resilience-03_bulkhead-pattern",
+      "orchestration-patterns-01_command-pattern",
+      "orchestration-patterns-03_write-ahead-log-pattern"
     ],
     "request": [
       "adapter-rest-api-layer-controller-design-02_request-validation",
@@ -38,7 +75,8 @@
     ],
     "handling": [
       "adapter-rest-api-layer-controller-design-03_response-handling",
-      "error-handling-01_error-handling-strategy"
+      "error-handling-01_error-handling-strategy",
+      "orchestration-patterns-02_idempotency-handling"
     ],
     "dto": [
       "adapter-rest-api-layer-dto-patterns-01_api-request-dto",
@@ -55,6 +93,14 @@
       "adapter-rest-api-layer-exception-handling-02_custom-error-codes",
       "error-handling-01_error-handling-strategy",
       "error-handling-04_error-response-format"
+    ],
+    "naming": [
+      "adapter-rest-api-layer-dto-patterns-03_naming-conventions",
+      "testing-archunit-rules-02_naming-convention-rules"
+    ],
+    "conventions": [
+      "adapter-rest-api-layer-dto-patterns-03_naming-conventions",
+      "adapter-rest-api-layer-testing-01_openapi-swagger-conventions"
     ],
     "global": [
       "adapter-rest-api-layer-exception-handling-01_global-exception-handler",
@@ -110,9 +156,16 @@
       "adapter-rest-api-layer-testing-01_controller-unit-test",
       "adapter-rest-api-layer-testing-02_integration-test",
       "persistence-layer-testing-03_test-tags-strategy",
+      "testing-02_test-fixture-pattern",
       "testing-integration-testing-04_test-data-management",
       "testing-multi-module-testing-02_shared-test-fixtures",
       "testing-multi-module-testing-04_test-tags-and-execution"
+    ],
+    "openapi": [
+      "adapter-rest-api-layer-testing-01_openapi-swagger-conventions"
+    ],
+    "swagger": [
+      "adapter-rest-api-layer-testing-01_openapi-swagger-conventions"
     ],
     "integration": [
       "adapter-rest-api-layer-testing-02_integration-test",
@@ -121,11 +174,21 @@
       "testing-multi-module-testing-03_cross-module-integration",
       "java21-patterns-virtual-threads-04_spring-integration"
     ],
-    "rest": [
-      "adapter-rest-api-layer-testing-03_rest-docs"
-    ],
     "docs": [
       "adapter-rest-api-layer-testing-03_rest-docs"
+    ],
+    "domain": [
+      "domain-layer-00_domain-object-creation-guide",
+      "domain-layer-law-of-demeter-03_domain-encapsulation",
+      "domain-layer-testing-05_domain-event-testing",
+      "java21-patterns-sealed-classes-01_domain-modeling",
+      "enterprise-patterns-event-driven-01_domain-events",
+      "error-handling-02_domain-exception-design"
+    ],
+    "object": [
+      "domain-layer-00_domain-object-creation-guide",
+      "domain-layer-testing-02_value-object-testing",
+      "java21-patterns-record-patterns-05_entity-vs-value-object"
     ],
     "aggregate": [
       "domain-layer-aggregate-design-01_aggregate-boundaries",
@@ -153,7 +216,8 @@
       "domain-layer-law-of-demeter-01_getter-chaining-prohibition"
     ],
     "prohibition": [
-      "domain-layer-law-of-demeter-01_getter-chaining-prohibition"
+      "domain-layer-law-of-demeter-01_getter-chaining-prohibition",
+      "persistence-layer-jpa-entity-design-00_lombok-prohibition"
     ],
     "tell": [
       "domain-layer-law-of-demeter-02_tell-dont-ask-pattern"
@@ -163,21 +227,6 @@
     ],
     "ask": [
       "domain-layer-law-of-demeter-02_tell-dont-ask-pattern"
-    ],
-    "pattern": [
-      "domain-layer-law-of-demeter-02_tell-dont-ask-pattern",
-      "application-layer-usecase-design-03_orchestration-pattern",
-      "persistence-layer-repository-patterns-03_specification-pattern",
-      "java21-patterns-record-patterns-03_pattern-matching",
-      "enterprise-patterns-event-driven-03_saga-pattern",
-      "enterprise-patterns-resilience-03_bulkhead-pattern"
-    ],
-    "domain": [
-      "domain-layer-law-of-demeter-03_domain-encapsulation",
-      "domain-layer-testing-05_domain-event-testing",
-      "java21-patterns-sealed-classes-01_domain-modeling",
-      "enterprise-patterns-event-driven-01_domain-events",
-      "error-handling-02_domain-exception-design"
     ],
     "encapsulation": [
       "domain-layer-law-of-demeter-03_domain-encapsulation"
@@ -206,12 +255,9 @@
       "java21-patterns-record-patterns-02_value-objects-with-records",
       "java21-patterns-record-patterns-05_entity-vs-value-object"
     ],
-    "object": [
-      "domain-layer-testing-02_value-object-testing",
-      "java21-patterns-record-patterns-05_entity-vs-value-object"
-    ],
     "factory": [
-      "domain-layer-testing-04_factory-testing"
+      "domain-layer-testing-04_factory-testing",
+      "persistence-layer-jpa-entity-design-04_constructor-and-factory-pattern"
     ],
     "event": [
       "domain-layer-testing-05_domain-event-testing",
@@ -231,12 +277,19 @@
     ],
     "command": [
       "application-layer-dto-patterns-02_command-query-dto",
-      "application-layer-usecase-design-01_command-usecase"
+      "application-layer-usecase-design-01_command-usecase",
+      "orchestration-patterns-01_command-pattern"
     ],
     "query": [
       "application-layer-dto-patterns-02_command-query-dto",
       "application-layer-usecase-design-02_query-usecase",
       "persistence-layer-querydsl-optimization-02_dynamic-query"
+    ],
+    "facade": [
+      "application-layer-facade-01_facade-usage-guide"
+    ],
+    "usage": [
+      "application-layer-facade-01_facade-usage-guide"
     ],
     "application_package_guide": [
       "application-layer-package-guide-01_application_package_guide"
@@ -270,6 +323,9 @@
     "orchestration": [
       "application-layer-usecase-design-03_orchestration-pattern"
     ],
+    "lombok": [
+      "persistence-layer-jpa-entity-design-00_lombok-prohibition"
+    ],
     "long": [
       "persistence-layer-jpa-entity-design-01_long-fk-strategy"
     ],
@@ -284,6 +340,7 @@
     ],
     "entity": [
       "persistence-layer-jpa-entity-design-02_entity-immutability",
+      "persistence-layer-jpa-entity-design-05_audit-entity-pattern",
       "java21-patterns-record-patterns-05_entity-vs-value-object"
     ],
     "immutability": [
@@ -300,6 +357,15 @@
     ],
     "prevention": [
       "persistence-layer-jpa-entity-design-03_n-plus-one-prevention"
+    ],
+    "and": [
+      "persistence-layer-jpa-entity-design-04_constructor-and-factory-pattern",
+      "testing-integration-testing-05_performance-and-benchmark",
+      "testing-multi-module-testing-04_test-tags-and-execution",
+      "enterprise-patterns-resilience-02_retry-and-timeout"
+    ],
+    "audit": [
+      "persistence-layer-jpa-entity-design-05_audit-entity-pattern"
     ],
     "persistence_package_guide": [
       "persistence-layer-package-guide-01_persistence_package_guide"
@@ -333,6 +399,9 @@
       "persistence-layer-testing-03_test-tags-strategy",
       "testing-multi-module-testing-04_test-tags-and-execution"
     ],
+    "fixture": [
+      "testing-02_test-fixture-pattern"
+    ],
     "layer": [
       "testing-archunit-rules-01_layer-dependency-rules"
     ],
@@ -343,9 +412,6 @@
       "testing-archunit-rules-01_layer-dependency-rules",
       "testing-archunit-rules-02_naming-convention-rules",
       "testing-archunit-rules-03_annotation-rules"
-    ],
-    "naming": [
-      "testing-archunit-rules-02_naming-convention-rules"
     ],
     "convention": [
       "testing-archunit-rules-02_naming-convention-rules"
@@ -373,11 +439,6 @@
     "performance": [
       "testing-integration-testing-05_performance-and-benchmark",
       "java21-patterns-virtual-threads-03_performance-tuning"
-    ],
-    "and": [
-      "testing-integration-testing-05_performance-and-benchmark",
-      "testing-multi-module-testing-04_test-tags-and-execution",
-      "enterprise-patterns-resilience-02_retry-and-timeout"
     ],
     "benchmark": [
       "testing-integration-testing-05_performance-and-benchmark"
@@ -425,7 +486,8 @@
     "modeling": [
       "java21-patterns-sealed-classes-01_domain-modeling",
       "java21-patterns-sealed-classes-02_event-modeling",
-      "java21-patterns-sealed-classes-04_aggregate-state-modeling"
+      "java21-patterns-sealed-classes-04_aggregate-state-modeling",
+      "orchestration-patterns-04_outcome-modeling"
     ],
     "result": [
       "java21-patterns-sealed-classes-03_result-types"
@@ -504,10 +566,41 @@
     ],
     "errorcode": [
       "error-handling-05_errorcode-management"
+    ],
+    "idempotency": [
+      "orchestration-patterns-02_idempotency-handling"
+    ],
+    "write": [
+      "orchestration-patterns-03_write-ahead-log-pattern"
+    ],
+    "ahead": [
+      "orchestration-patterns-03_write-ahead-log-pattern"
+    ],
+    "log": [
+      "orchestration-patterns-03_write-ahead-log-pattern"
+    ],
+    "outcome": [
+      "orchestration-patterns-04_outcome-modeling"
+    ],
+    "quick": [
+      "orchestration-patterns-05_quick-start-guide"
+    ],
+    "start": [
+      "orchestration-patterns-05_quick-start-guide"
+    ],
+    "security": [
+      "orchestration-patterns-06_security-guide"
+    ],
+    "automation": [
+      "orchestration-patterns-07_automation-analysis"
+    ],
+    "analysis": [
+      "orchestration-patterns-07_automation-analysis"
     ]
   },
   "layerIndex": {
     "domain": [
+      "domain-layer-00_domain-object-creation-guide",
       "domain-layer-aggregate-design-01_aggregate-boundaries",
       "domain-layer-aggregate-design-02_aggregate-root-design",
       "domain-layer-aggregate-design-03_consistency-boundaries",
@@ -528,6 +621,7 @@
       "application-layer-dto-patterns-01_request-response-dto",
       "application-layer-dto-patterns-02_command-query-dto",
       "application-layer-dto-patterns-03_dto-validation",
+      "application-layer-facade-01_facade-usage-guide",
       "application-layer-package-guide-01_application_package_guide",
       "application-layer-testing-01_application-service-testing",
       "application-layer-transaction-management-01_transaction-boundaries",
@@ -538,12 +632,15 @@
       "application-layer-usecase-design-03_orchestration-pattern"
     ],
     "adapter-rest": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
       "adapter-rest-api-layer-controller-design-01_restful-api-design",
+      "adapter-rest-api-layer-controller-design-02_constructor-injection-pattern",
       "adapter-rest-api-layer-controller-design-02_request-validation",
       "adapter-rest-api-layer-controller-design-03_response-handling",
       "adapter-rest-api-layer-dto-patterns-01_api-request-dto",
       "adapter-rest-api-layer-dto-patterns-02_api-response-dto",
       "adapter-rest-api-layer-dto-patterns-03_error-response",
+      "adapter-rest-api-layer-dto-patterns-03_naming-conventions",
       "adapter-rest-api-layer-exception-handling-01_global-exception-handler",
       "adapter-rest-api-layer-exception-handling-02_custom-error-codes",
       "adapter-rest-api-layer-exception-handling-03_validation-exception",
@@ -551,13 +648,17 @@
       "adapter-rest-api-layer-mapper-patterns-02_mapper-responsibility",
       "adapter-rest-api-layer-package-guide-01_rest_api_package_guide",
       "adapter-rest-api-layer-testing-01_controller-unit-test",
+      "adapter-rest-api-layer-testing-01_openapi-swagger-conventions",
       "adapter-rest-api-layer-testing-02_integration-test",
       "adapter-rest-api-layer-testing-03_rest-docs"
     ],
     "adapter-persistence": [
+      "persistence-layer-jpa-entity-design-00_lombok-prohibition",
       "persistence-layer-jpa-entity-design-01_long-fk-strategy",
       "persistence-layer-jpa-entity-design-02_entity-immutability",
       "persistence-layer-jpa-entity-design-03_n-plus-one-prevention",
+      "persistence-layer-jpa-entity-design-04_constructor-and-factory-pattern",
+      "persistence-layer-jpa-entity-design-05_audit-entity-pattern",
       "persistence-layer-package-guide-01_persistence_package_guide",
       "persistence-layer-querydsl-optimization-01_dto-projection",
       "persistence-layer-querydsl-optimization-02_dynamic-query",
@@ -570,6 +671,7 @@
       "persistence-layer-testing-03_test-tags-strategy"
     ],
     "testing": [
+      "testing-02_test-fixture-pattern",
       "testing-archunit-rules-01_layer-dependency-rules",
       "testing-archunit-rules-02_naming-convention-rules",
       "testing-archunit-rules-03_annotation-rules",

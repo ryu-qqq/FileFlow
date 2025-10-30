@@ -35,14 +35,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserContextController {
 
     private final CreateUserContextUseCase createUserContextUseCase;
-    private final UserContextApiMapper mapper;
 
-    public UserContextController(
-        CreateUserContextUseCase createUserContextUseCase,
-        UserContextApiMapper mapper
-    ) {
+    public UserContextController(CreateUserContextUseCase createUserContextUseCase) {
         this.createUserContextUseCase = createUserContextUseCase;
-        this.mapper = mapper;
     }
 
     /**
@@ -67,13 +62,13 @@ public class UserContextController {
         @Valid @RequestBody CreateUserContextApiRequest request
     ) {
         // 1. Request → Command 변환
-        CreateUserContextCommand command = mapper.toCommand(request);
+        CreateUserContextCommand command = UserContextApiMapper.toCommand(request);
 
         // 2. UseCase 실행
         UserContextResponse response = createUserContextUseCase.createUserContext(command);
 
         // 3. Response 변환
-        UserContextApiResponse apiResponse = mapper.toApiResponse(response);
+        UserContextApiResponse apiResponse = UserContextApiMapper.toApiResponse(response);
 
         // 4. 201 Created 응답
         return ResponseEntity

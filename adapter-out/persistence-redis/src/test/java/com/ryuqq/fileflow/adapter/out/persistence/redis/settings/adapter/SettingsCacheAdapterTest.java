@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.redis.config.RedisIntegrationTestBase;
 import com.ryuqq.fileflow.application.settings.port.out.LoadSettingsPort.SettingsForMerge;
 import com.ryuqq.fileflow.domain.settings.Setting;
+import com.ryuqq.fileflow.domain.settings.SettingId;
 import com.ryuqq.fileflow.domain.settings.SettingKey;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 import com.ryuqq.fileflow.domain.settings.SettingType;
@@ -64,15 +65,15 @@ class SettingsCacheAdapterTest extends RedisIntegrationTestBase {
     void setUp() {
         sampleSettings = new SettingsForMerge(
             List.of(
-                Setting.of(1L, SettingKey.of("file.max_size"), SettingValue.of("10MB", SettingType.STRING), SettingLevel.ORG, ORG_ID),
-                Setting.of(2L, SettingKey.of("file.allowed_types"), SettingValue.of("jpg,png", SettingType.STRING), SettingLevel.ORG, ORG_ID)
+                Setting.of(SettingId.of(1L), SettingKey.of("file.max_size"), SettingValue.of("10MB", SettingType.STRING), SettingLevel.ORG, ORG_ID),
+                Setting.of(SettingId.of(2L), SettingKey.of("file.allowed_types"), SettingValue.of("jpg,png", SettingType.STRING), SettingLevel.ORG, ORG_ID)
             ),
             List.of(
-                Setting.of(3L, SettingKey.of("ui.theme"), SettingValue.of("dark", SettingType.STRING), SettingLevel.TENANT, TENANT_ID),
-                Setting.of(4L, SettingKey.of("ui.language"), SettingValue.of("ko", SettingType.STRING), SettingLevel.TENANT, TENANT_ID)
+                Setting.of(SettingId.of(3L), SettingKey.of("ui.theme"), SettingValue.of("dark", SettingType.STRING), SettingLevel.TENANT, TENANT_ID),
+                Setting.of(SettingId.of(4L), SettingKey.of("ui.language"), SettingValue.of("ko", SettingType.STRING), SettingLevel.TENANT, TENANT_ID)
             ),
             List.of(
-                Setting.of(5L, SettingKey.of("default.timezone"), SettingValue.of("Asia/Seoul", SettingType.STRING), SettingLevel.DEFAULT, null)
+                Setting.of(SettingId.of(5L), SettingKey.of("default.timezone"), SettingValue.of("Asia/Seoul", SettingType.STRING), SettingLevel.DEFAULT, null)
             )
         );
     }
@@ -308,12 +309,12 @@ class SettingsCacheAdapterTest extends RedisIntegrationTestBase {
         void differentOrgId_UsesDifferentCacheKey() {
             // given
             SettingsForMerge settings1 = new SettingsForMerge(
-                List.of(Setting.of(null, SettingKey.of("key1"), SettingValue.of("value1", SettingType.STRING), SettingLevel.ORG, ORG_ID)),
+                List.of(Setting.forNew( SettingKey.of("key1"), SettingValue.of("value1", SettingType.STRING), SettingLevel.ORG, ORG_ID)),
                 List.of(),
                 List.of()
             );
             SettingsForMerge settings2 = new SettingsForMerge(
-                List.of(Setting.of(null, SettingKey.of("key2"), SettingValue.of("value2", SettingType.STRING), SettingLevel.ORG, ORG_ID + 1)),
+                List.of(Setting.forNew( SettingKey.of("key2"), SettingValue.of("value2", SettingType.STRING), SettingLevel.ORG, ORG_ID + 1)),
                 List.of(),
                 List.of()
             );

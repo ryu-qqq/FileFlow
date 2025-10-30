@@ -4,8 +4,6 @@ import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.request.CreateUserCon
 import com.ryuqq.fileflow.adapter.rest.iam.usercontext.dto.response.UserContextApiResponse;
 import com.ryuqq.fileflow.application.iam.usercontext.dto.command.CreateUserContextCommand;
 import com.ryuqq.fileflow.application.iam.usercontext.dto.response.UserContextResponse;
-import org.springframework.stereotype.Component;
-
 /**
  * UserContext DTO Mapper
  *
@@ -15,13 +13,24 @@ import org.springframework.stereotype.Component;
  * <ul>
  *   <li>❌ Lombok 사용 안함</li>
  *   <li>✅ Pure Java 구현</li>
+ *   <li>✅ Static Utility Class (Stateless, 인스턴스 생성 금지)</li>
  * </ul>
  *
  * @author ryu-qqq
  * @since 2025-10-27
  */
-@Component
-public class UserContextApiMapper {
+public final class UserContextApiMapper {
+
+    /**
+     * Private Constructor - 인스턴스 생성 방지
+     *
+     * @throws UnsupportedOperationException 항상 발생
+     * @author ryu-qqq
+     * @since 2025-10-27
+     */
+    private UserContextApiMapper() {
+        throw new UnsupportedOperationException("Utility 클래스는 인스턴스화할 수 없습니다");
+    }
 
     /**
      * REST API Request → Application Command 변환
@@ -30,7 +39,7 @@ public class UserContextApiMapper {
      * @return CreateUserContextCommand
      * @throws IllegalArgumentException request가 null인 경우
      */
-    public CreateUserContextCommand toCommand(CreateUserContextApiRequest request) {
+    public static CreateUserContextCommand toCommand(CreateUserContextApiRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("CreateUserContextRequest는 필수입니다");
         }
@@ -48,7 +57,7 @@ public class UserContextApiMapper {
      * @return UserContextApiResponse
      * @throws IllegalArgumentException response가 null인 경우
      */
-    public UserContextApiResponse toApiResponse(UserContextResponse response) {
+    public static UserContextApiResponse toApiResponse(UserContextResponse response) {
         if (response == null) {
             throw new IllegalArgumentException("UserContextResponse는 필수입니다");
         }

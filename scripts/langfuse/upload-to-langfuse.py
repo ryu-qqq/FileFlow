@@ -3,6 +3,7 @@
 LangFuse Uploader
 
 LangFuse API로 Trace/Observation 데이터 전송
+timestamp 정규화 포함
 
 Usage:
     export LANGFUSE_PUBLIC_KEY="pk-lf-..."
@@ -42,41 +43,72 @@ class LangFuseUploader:
 
     def upload_traces(self, traces: List[Dict]) -> int:
         """Trace 업로드"""
-        url = f"{self.host}/api/public/traces"
+        url = f"{self.host}/api/public/ingestion"
         success_count = 0
 
-        for trace in traces:
-            try:
-                response = self.session.post(url, json=trace)
-                response.raise_for_status()
-                print(f"   ✅ Trace: {trace.get('id', 'unknown')}")
-                success_count += 1
-            except requests.exceptions.HTTPError as e:
-                print(f"   ❌ Trace failed: {trace.get('id')}")
-                print(f"      Error: {e.response.text if hasattr(e, 'response') else str(e)}")
-            except Exception as e:
-                print(f"   ❌ Trace failed: {trace.get('id')}")
-                print(f"      Error: {str(e)}")
+        # Batch 형식으로 전송
+        batch = {
+            'batch': [{
+                'type': 'trace-create',
+                'timestamp': trace.get('timestamp'),
+                'body': {
+                    'id': trace.get('id'),
+                    'name': trace.get('name'),
+                    'timestamp': trace.get('timestamp'),
+                    'metadata': trace.get('metadata', {}),
+                    'tags': trace.get('tags', [])
+                }
+            } for trace in traces]
+        }
+
+        try:
+            response = self.session.post(url, json=batch)
+            response.raise_for_status()
+            success_count = len(traces)
+            print(f"   ✅ Traces uploaded: {success_count}")
+        except requests.exceptions.HTTPError as e:
+            print(f"   ❌ Traces upload failed")
+            print(f"      Error: {e.response.text if hasattr(e, 'response') else str(e)}")
+        except Exception as e:
+            print(f"   ❌ Traces upload failed")
+            print(f"      Error: {str(e)}")
 
         return success_count
 
     def upload_observations(self, observations: List[Dict]) -> int:
         """Observation 업로드"""
-        url = f"{self.host}/api/public/observations"
+        url = f"{self.host}/api/public/ingestion"
         success_count = 0
 
-        for observation in observations:
-            try:
-                response = self.session.post(url, json=observation)
-                response.raise_for_status()
-                print(f"   ✅ Observation: {observation.get('name', 'unknown')}")
-                success_count += 1
-            except requests.exceptions.HTTPError as e:
-                print(f"   ❌ Observation failed: {observation.get('name')}")
-                print(f"      Error: {e.response.text if hasattr(e, 'response') else str(e)}")
-            except Exception as e:
-                print(f"   ❌ Observation failed: {observation.get('name')}")
-                print(f"      Error: {str(e)}")
+        # Batch 형식으로 전송
+        batch = {
+            'batch': [{
+                'type': 'event-create',
+                'timestamp': obs.get('startTime'),
+                'body': {
+                    'traceId': obs.get('traceId'),
+                    'name': obs.get('name'),
+                    'startTime': obs.get('startTime'),
+                    'level': obs.get('level', 'DEFAULT'),
+                    'statusMessage': obs.get('statusMessage'),
+                    'metadata': obs.get('metadata', {}),
+                    'input': obs.get('input'),
+                    'output': obs.get('output')
+                }
+            } for obs in observations]
+        }
+
+        try:
+            response = self.session.post(url, json=batch)
+            response.raise_for_status()
+            success_count = len(observations)
+            print(f"   ✅ Observations uploaded: {success_count}")
+        except requests.exceptions.HTTPError as e:
+            print(f"   ❌ Observations upload failed")
+            print(f"      Error: {e.response.text if hasattr(e, 'response') else str(e)}")
+        except Exception as e:
+            print(f"   ❌ Observations upload failed")
+            print(f"      Error: {str(e)}")
 
         return success_count
 
