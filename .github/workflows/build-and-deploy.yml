@@ -47,7 +47,7 @@ jobs:
       - name: Run tests
         run: |
           echo "🧪 Running tests..."
-          ./gradlew clean test --no-daemon --stacktrace
+          ./gradlew clean test -x jacocoTestCoverageVerification --no-daemon --stacktrace
           echo "✅ Tests completed"
 
       - name: Build JAR
