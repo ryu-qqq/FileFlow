@@ -95,7 +95,7 @@ public class PermissionPersistenceAdapter implements PermissionRepositoryPort {
 
         String codeValue = code.getValue();
 
-        return permissionJpaRepository.findByCodeAndDeleted(codeValue, false)
+        return permissionJpaRepository.findByCodeAndDeletedAtIsNull(codeValue)
             .map(PermissionEntityMapper::toDomain);
     }
 
@@ -136,7 +136,7 @@ public class PermissionPersistenceAdapter implements PermissionRepositoryPort {
 
         String codeValue = code.getValue();
 
-        return permissionJpaRepository.existsByCodeAndDeleted(codeValue, false);
+        return permissionJpaRepository.existsByCodeAndDeletedAtIsNull(codeValue);
     }
 
     /**
