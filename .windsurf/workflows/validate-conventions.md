@@ -92,7 +92,7 @@ Violations found:
 
 ## Metrics
 
-실행 결과는 자동으로 `.cascade/metrics.jsonl`에 기록됩니다:
+실행 결과는 자동으로 `.pipeline-metrics/metrics.jsonl`에 기록됩니다:
 - Task name: `validate_conventions`
 - Status code: `0` (성공) / `1` (실패)
 - Duration: 초 단위
@@ -113,7 +113,7 @@ tools/pipeline/validate_conventions.sh (SSOT)
 
 - ✅ **No Drift**: Cascade와 CI가 동일한 스크립트 사용
 - ✅ **Fast Execution**: 최적화된 검색 알고리즘 (grep + find)
-- ✅ **Clear Reports**: 위반 사항 상세 리포트 (.cascade/report.md)
+- ✅ **Clear Reports**: 위반 사항 상세 리포트 (.pipeline-metrics/report.md)
 - ✅ **Metrics**: 자동 메트릭 수집 및 분석
 
 ## Claude Code Integration
@@ -192,7 +192,7 @@ tools/pipeline/validate_conventions.sh (SSOT)
 - **Script**: `tools/pipeline/validate_conventions.sh`
 - **Rules**: `.windsurf/rules-core.md`
 - **Detailed Rules**: `docs/coding_convention/`
-- **Metrics**: `.cascade/metrics.jsonl`
-- **Reports**: `.cascade/report.md`
+- **Metrics**: `.pipeline-metrics/metrics.jsonl`
+- **Reports**: `.pipeline-metrics/report.md`
 - **Claude Code**: `/validate-conventions` command
 - **Serena Memory**: 위반 패턴 자동 학습 및 예방

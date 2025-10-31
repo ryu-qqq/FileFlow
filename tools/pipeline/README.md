@@ -11,7 +11,7 @@ CI Jobs (.github/workflows/)
         ↓ (동일한 스크립트 호출)
 tools/pipeline/ (SSOT - 실제 로직)
         ↓
-.cascade/ (메트릭 & 리포트)
+.pipeline-metrics/ (메트릭 & 리포트)
 ```
 
 ## Scripts
@@ -58,8 +58,8 @@ metric task_name 0 120  # Success, 120 seconds
 - `1`: Violations detected
 
 **Output**:
-- Metrics: `.cascade/metrics.jsonl`
-- Report: `.cascade/report.md` (on failure)
+- Metrics: `.pipeline-metrics/metrics.jsonl`
+- Report: `.pipeline-metrics/report.md` (on failure)
 
 ### 3. test_unit.sh
 **Purpose**: Unit test execution with optional impacted-only mode
@@ -85,7 +85,7 @@ metric task_name 0 120  # Success, 120 seconds
 - `1`: Tests failed
 
 **Output**:
-- Metrics: `.cascade/metrics.jsonl`
+- Metrics: `.pipeline-metrics/metrics.jsonl`
 - Report: `build/reports/tests/test/index.html`
 
 ### 4. pr_gate.sh
@@ -108,7 +108,7 @@ metric task_name 0 120  # Success, 120 seconds
 - `1`: One or more steps failed
 
 **Output**:
-- Metrics: `.cascade/metrics.jsonl`
+- Metrics: `.pipeline-metrics/metrics.jsonl`
 - Reports: Multiple locations (see output)
 
 **Expected Duration**:
@@ -124,7 +124,7 @@ metric task_name 0 120  # Success, 120 seconds
 
 ## Metrics Collection
 
-All scripts automatically write metrics to `.cascade/metrics.jsonl`:
+All scripts automatically write metrics to `.pipeline-metrics/metrics.jsonl`:
 
 ```
 <timestamp>\t<task_name>\t<status_code>\t<duration_seconds>
@@ -140,18 +140,18 @@ All scripts automatically write metrics to `.cascade/metrics.jsonl`:
 **Analysis**:
 ```bash
 # Average duration by task
-cat .cascade/metrics.jsonl | awk '{sum[$2]+=$4; count[$2]++} END {for (task in sum) print task, sum[task]/count[task]}'
+cat .pipeline-metrics/metrics.jsonl | awk '{sum[$2]+=$4; count[$2]++} END {for (task in sum) print task, sum[task]/count[task]}'
 
 # Success rate by task
-cat .cascade/metrics.jsonl | awk '{total[$2]++; if($3==0) success[$2]++} END {for (task in total) print task, (success[task]/total[task])*100 "%"}'
+cat .pipeline-metrics/metrics.jsonl | awk '{total[$2]++; if($3==0) success[$2]++} END {for (task in total) print task, (success[task]/total[task])*100 "%"}'
 
 # Last 10 executions
-tail -10 .cascade/metrics.jsonl | column -t
+tail -10 .pipeline-metrics/metrics.jsonl | column -t
 ```
 
 ## Failure Reports
 
-On failure, scripts generate `.cascade/report.md`:
+On failure, scripts generate `.pipeline-metrics/report.md`:
 
 ```markdown
 ## Pipeline Failure Report
@@ -189,7 +189,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: pipeline-metrics
-          path: .cascade/
+          path: .pipeline-metrics/
 ```
 
 ## Adding New Scripts
@@ -243,6 +243,6 @@ exit $status
 ## Related
 
 - **Cascade Workflows**: `.windsurf/workflows/`
-- **Metrics**: `.cascade/metrics.jsonl`
-- **Reports**: `.cascade/report.md`
+- **Metrics**: `.pipeline-metrics/metrics.jsonl`
+- **Reports**: `.pipeline-metrics/report.md`
 - **Documentation**: `claudedocs/windsurf-refactoring-summary.md`

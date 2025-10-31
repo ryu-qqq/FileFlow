@@ -236,7 +236,7 @@ fi
 ### LangFuse 자동 수집
 
 ```jsonl
-# .cascade/metrics.jsonl
+# .pipeline-metrics/metrics.jsonl
 {
   "task": "test_runner_smart",
   "status": 0,
@@ -291,7 +291,7 @@ layers:
 
 metrics:
   langfuse_upload: true
-  local_report: .cascade/test-metrics.jsonl
+  local_report: .pipeline-metrics/test-metrics.jsonl
 ```
 
 ---

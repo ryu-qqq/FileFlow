@@ -164,7 +164,7 @@ bash scripts/langfuse/monitor.sh
 # 출력:
 # 🚀 LangFuse Monitor Started (Telemetry Mode)
 #    Claude logs:  .claude/hooks/logs/hook-execution.jsonl
-#    Cascade logs: .cascade/metrics.jsonl
+#    Cascade logs: .pipeline-metrics/metrics.jsonl
 #    Interval:     300s
 #    Telemetry:    enabled (anonymized)
 #    Host:         https://us.cloud.langfuse.com

@@ -10,7 +10,7 @@ export JAVA_TOOL_OPTIONS="-XX:+UseZGC"
 
 # Project root directory
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CACHE_DIR="${PROJECT_ROOT}/.cascade"
+CACHE_DIR="${PROJECT_ROOT}/.pipeline-metrics"
 
 # Colors for output
 RED='\033[0;31m'

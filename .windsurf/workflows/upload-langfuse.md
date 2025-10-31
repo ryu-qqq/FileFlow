@@ -34,7 +34,7 @@ LangFuse에 로그를 업로드해줘
 ```bash
 python3 scripts/langfuse/aggregate-logs.py \
   --claude-logs .claude/hooks/logs/hook-execution.jsonl \
-  --cascade-logs .cascade/metrics.jsonl \
+  --cascade-logs .pipeline-metrics/metrics.jsonl \
   --output langfuse-data.json \
   --anonymize
 ```
@@ -89,7 +89,7 @@ echo $LANGFUSE_PUBLIC_KEY
 ```
 🚀 LangFuse Log Aggregator
    Claude logs: .claude/hooks/logs/hook-execution.jsonl
-   Cascade logs: .cascade/metrics.jsonl
+   Cascade logs: .pipeline-metrics/metrics.jsonl
    Anonymize: True
 
 ✅ Export complete!
