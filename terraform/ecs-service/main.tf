@@ -105,6 +105,34 @@ resource "aws_iam_role_policy" "fileflow_ecr_access" {
   })
 }
 
+# Additional policy for Secrets Manager access
+resource "aws_iam_role_policy" "fileflow_secrets_access" {
+  name = "${local.name_prefix}-secrets-access"
+  role = aws_iam_role.fileflow_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = [
+          "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = data.aws_kms_key.ecs_secrets.arn
+      }
+    ]
+  })
+}
+
 # IAM Role for ECS Task
 resource "aws_iam_role" "fileflow_task_role" {
   name = "${local.name_prefix}-ecs-task-role"
@@ -213,7 +241,7 @@ module "fileflow_service" {
   container_secrets = [
     {
       name      = "DB_PASSWORD"
-      valueFrom = data.aws_ssm_parameter.master_password_secret_name.value
+      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
     }
   ]
 

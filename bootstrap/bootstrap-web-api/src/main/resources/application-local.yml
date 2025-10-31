@@ -1,0 +1,47 @@
+# ===============================================
+# Local Profile Configuration
+# ===============================================
+# Docker Compose 환경에서 로컬 개발을 위한 설정
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3307/fileflow?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: fileflow_user
+    password: fileflow_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ""
+
+  flyway:
+    clean-disabled: false  # 로컬 환경에서는 clean 허용
+
+# ===============================================
+# API Endpoint Configuration
+# ===============================================
+api:
+  endpoints:
+    base-v1: /api/v1
+    iam:
+      organization:
+        base: /organizations
+        by-id: /{organizationId}
+        status: /{organizationId}/status
+      tenant:
+        base: /tenants
+        by-id: /{tenantId}
+        status: /{tenantId}/status
+        tree: /{tenantId}/tree
+      permission:
+        base: /permissions
+        evaluate: /evaluate
+      user-context:
+        base: /user-contexts
+    settings:
+      base: /settings
+  error:
+    base-url: about:blank
+    use-about-blank: true
