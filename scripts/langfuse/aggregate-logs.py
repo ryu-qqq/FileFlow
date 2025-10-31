@@ -245,7 +245,7 @@ def main():
     )
     parser.add_argument(
         '--cascade-logs',
-        default='.cascade/metrics.jsonl',
+        default='.pipeline-metrics/metrics.jsonl',
         help='Path to Cascade logs'
     )
     parser.add_argument(
@@ -294,14 +294,14 @@ def main():
 
     print("🚀 LangFuse Log Aggregator")
     print(f"   Claude logs: {args.claude_logs}")
-    print(f"   Cascade logs: {args.cascade_logs}")
+    print(f"   Cascade logs: {args.pipeline-metrics_logs}")
     print(f"   Anonymize: {args.anonymize}")
 
     aggregator = LangFuseAggregator(anonymize=args.anonymize)
 
     # 로그 로드
     aggregator.load_claude_logs(args.claude_logs)
-    aggregator.load_cascade_logs(args.cascade_logs)
+    aggregator.load_cascade_logs(args.pipeline-metrics_logs)
 
     # LangFuse 형식으로 내보내기
     data = aggregator.export_to_langfuse()

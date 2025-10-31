@@ -543,5 +543,5 @@ Git Pre-commit Hook (최종 안전망)
 
 - **모범 사례**: `domain/src/main/java/com/ryuqq/fileflow/domain/settings/`
 - **ArchUnit 테스트**: `application/src/test/java/com/ryuqq/fileflow/architecture/DomainObjectConventionTest.java`
-- **Windsurf Cascade**: `.cascade/cc-domain.md`
+- **Windsurf Cascade**: `.pipeline-metrics/cc-domain.md`
 - **다른 레이어 규칙**: `docs/coding_convention/02-domain-layer/`

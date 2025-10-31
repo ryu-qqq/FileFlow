@@ -70,7 +70,7 @@ pip install requests  # HTTP 요청용
 # 1. 로그 집계 (JSONL → LangFuse 형식)
 python3 scripts/langfuse/aggregate-logs.py \
   --claude-logs .claude/hooks/logs/hook-execution.jsonl \
-  --cascade-logs .cascade/metrics.jsonl \
+  --cascade-logs .pipeline-metrics/metrics.jsonl \
   --output langfuse-data.json \
   --anonymize  # 개인정보 익명화 (선택)
 
@@ -87,7 +87,7 @@ python3 scripts/langfuse/upload-to-langfuse.py \
 
 **입력**:
 - `.claude/hooks/logs/hook-execution.jsonl`
-- `.cascade/metrics.jsonl`
+- `.pipeline-metrics/metrics.jsonl`
 
 **출력**:
 - `langfuse-data.json` (LangFuse API 호환 형식)

@@ -61,7 +61,7 @@ check_python() {
 # 로그 파일 확인
 check_logs() {
     local claude_logs="$PROJECT_ROOT/.claude/hooks/logs/hook-execution.jsonl"
-    local cascade_logs="$PROJECT_ROOT/.cascade/metrics.jsonl"
+    local cascade_logs="$PROJECT_ROOT/.pipeline-metrics/metrics.jsonl"
 
     if [ ! -f "$claude_logs" ]; then
         echo -e "${YELLOW}⚠️  Warning: Claude logs not found${NC}"
@@ -96,7 +96,7 @@ aggregate_logs() {
 
     python3 "$PROJECT_ROOT/scripts/langfuse/aggregate-logs.py" \
         --claude-logs "$PROJECT_ROOT/.claude/hooks/logs/hook-execution.jsonl" \
-        --cascade-logs "$PROJECT_ROOT/.cascade/metrics.jsonl" \
+        --cascade-logs "$PROJECT_ROOT/.pipeline-metrics/metrics.jsonl" \
         --output "$output_file" \
         --anonymize
 
