@@ -350,21 +350,21 @@ public class UploadPolicy {
 
             if (!allowedMimeTypes.isEmpty() &&
                 !allowedMimeTypes.contains(file.getMimeType().value())) {
-                violations.add("MIME type not allowed: " + file.getMimeType().value());
+                violations.add("허용되지 않은 MIME 타입: " + file.getMimeType().value());
             }
 
             if (file.getSize().bytes() > maxFileSize) {
-                violations.add("File too large: " + file.getSize().bytes());
+                violations.add("최대 파일 크기 초과: " + file.getSize().bytes());
             }
 
             if (file.getSize().bytes() < minFileSize) {
-                violations.add("File too small: " + file.getSize().bytes());
+                violations.add("최소 파일 크기 미만: " + file.getSize().bytes());
             }
 
             String extension = extractExtension(file.getName().value());
             if (!allowedExtensions.isEmpty() &&
                 !allowedExtensions.contains(extension)) {
-                violations.add("Extension not allowed: " + extension);
+                violations.add("허용되지 않은 확장자: " + extension);
             }
 
             return violations.isEmpty()

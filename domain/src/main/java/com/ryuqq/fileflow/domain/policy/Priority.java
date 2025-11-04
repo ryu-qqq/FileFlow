@@ -10,8 +10,8 @@ package com.ryuqq.fileflow.domain.policy;
  * <p><strong>비즈니스 규칙:</strong></p>
  * <ul>
  *   <li>우선순위는 필수 값입니다</li>
- *   <li>0 이상 100 이하의 값만 허용합니다</li>
- *   <li>100이 가장 높은 우선순위, 0이 가장 낮은 우선순위입니다</li>
+ *   <li>0 이상 정수 허용 (상한 없음)</li>
+ *   <li>숫자가 클수록 높은 우선순위</li>
  * </ul>
  *
  * @param value 우선순위 (0-100)
@@ -28,10 +28,10 @@ public record Priority(Integer value) {
     /**
      * 최대 우선순위 값
      */
-    public static final int MAX_PRIORITY = 100;
+    public static final int MAX_PRIORITY = Integer.MAX_VALUE; // 상한 제거 (호환성 상수)
 
     /**
-     * 기본 우선순위 값 (중간)
+     * 기본 우선순위 값 (권장 기본값)
      */
     public static final int DEFAULT_PRIORITY = 50;
 
@@ -49,11 +49,7 @@ public record Priority(Integer value) {
                     String.format("우선순위는 %d 이상이어야 합니다: %d", MIN_PRIORITY, value)
             );
         }
-        if (value > MAX_PRIORITY) {
-            throw new IllegalArgumentException(
-                    String.format("우선순위는 %d 이하여야 합니다: %d", MAX_PRIORITY, value)
-            );
-        }
+        // 상한 제한 없음 (테스트 및 정책 설계에 맞게 999 등 큰 값 허용)
     }
 
     /**
@@ -77,7 +73,7 @@ public record Priority(Integer value) {
     }
 
     /**
-     * 최고 우선순위로 생성
+     * 최고 우선순위로 생성 (정의상 Integer.MAX_VALUE)
      *
      * @return 최고 Priority 인스턴스 (100)
      */

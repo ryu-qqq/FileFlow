@@ -26,6 +26,12 @@ public record FailureReason(String value) {
     public static final int MAX_LENGTH = 500;
 
     /**
+     * Presigned URL 만료
+     */
+    public static final FailureReason PRESIGNED_URL_EXPIRED =
+        new FailureReason("Presigned URL has expired");
+
+    /**
      * Compact 생성자 - 유효성 검증
      *
      * @throws IllegalArgumentException 실패 사유가 빈 문자열이거나 최대 길이를 초과한 경우

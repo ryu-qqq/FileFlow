@@ -4,7 +4,6 @@ import com.ryuqq.fileflow.application.common.dto.PageResponse;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * PageApiResponse - 페이지 조회 REST API 응답 DTO (Offset 기반)

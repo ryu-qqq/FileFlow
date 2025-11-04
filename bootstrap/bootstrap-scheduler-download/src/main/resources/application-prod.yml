@@ -1,0 +1,118 @@
+# ===============================================
+# Production Profile Configuration - Download Scheduler
+# ===============================================
+# 프로덕션 환경 전용 설정
+# 모든 민감한 정보는 환경변수로 주입
+#
+# @author FileFlow Team
+# @since 1.0.0
+# ===============================================
+
+spring:
+  # ===============================================
+  # DataSource Configuration (Production)
+  # ===============================================
+  datasource:
+    # Terraform에서 주입 (ECS Task Definition)
+    # DOWNLOAD_DB_HOST: ${ssm:/shared/rds/db-instance-address}
+    # DOWNLOAD_DB_PORT: ${ssm:/shared/rds/db-instance-port}
+    # DOWNLOAD_DB_PASSWORD: ${secrets:prod-shared-mysql-master-password}
+    url: jdbc:mysql://${DOWNLOAD_DB_HOST:${DB_HOST}}:${DOWNLOAD_DB_PORT:${DB_PORT:3306}}/fileflow?useSSL=true&serverTimezone=UTC&characterEncoding=UTF-8
+    username: ${DOWNLOAD_DB_USERNAME:admin}
+    password: ${DOWNLOAD_DB_PASSWORD:${DB_PASSWORD}}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DOWNLOAD_DB_POOL_MAX_SIZE:15}
+      minimum-idle: ${DOWNLOAD_DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DOWNLOAD_DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DOWNLOAD_DB_IDLE_TIMEOUT:600000}
+      max-lifetime: ${DOWNLOAD_DB_MAX_LIFETIME:1800000}
+      pool-name: DownloadScheduler-Prod-HikariPool
+      leak-detection-threshold: 120000
+      register-mbeans: true
+
+  # ===============================================
+  # Redis Configuration (Production)
+  # ===============================================
+  data:
+    redis:
+      # Terraform에서 주입 (ECS Task Definition)
+      # REDIS_HOST: ${ssm:/fileflow/prod/redis/endpoint}
+      # REDIS_PORT: ${ssm:/fileflow/prod/redis/port}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 8
+          min-idle: 3
+
+# ===============================================
+# AWS S3 Configuration (Production)
+# ===============================================
+aws:
+  s3:
+    # Terraform에서 설정: fileflow-prod
+    region: ${AWS_REGION:ap-northeast-2}
+    bucket-name: ${AWS_S3_BUCKET:fileflow-prod}
+    # IAM Role 사용 (ECS Task Role)
+
+  # CloudWatch Logs (Production)
+  cloudwatch:
+    # Terraform에서 설정: /aws/ecs/fileflow-scheduler-download
+    region: ${AWS_REGION:ap-northeast-2}
+    log-group: ${AWS_CLOUDWATCH_LOG_GROUP:/aws/ecs/fileflow-scheduler-download}
+    log-stream: ${AWS_CLOUDWATCH_LOG_STREAM:download-scheduler-${HOSTNAME}}
+
+# ===============================================
+# Download Scheduler Configuration (Production)
+# ===============================================
+fileflow:
+  download:
+    outbox:
+      fixed-delay: ${DOWNLOAD_SCHEDULER_FIXED_DELAY:30000}  # 30초
+      initial-delay: ${DOWNLOAD_SCHEDULER_INITIAL_DELAY:10000}
+      batch-size: ${DOWNLOAD_SCHEDULER_BATCH_SIZE:10}
+      max-retry-count: ${DOWNLOAD_SCHEDULER_MAX_RETRY:3}
+      retry-base-delay-seconds: 60
+      retry-multiplier: 2.0
+      retry-max-delay-seconds: 3600
+      stale-minutes: 5
+
+# ===============================================
+# Actuator Configuration (Production)
+# ===============================================
+management:
+  server:
+    port: ${ACTUATOR_PORT:9091}
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      service: download-scheduler
+      environment: production
+
+# ===============================================
+# Logging Configuration (Production)
+# ===============================================
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: DEBUG  # 스케줄러는 작업 추적을 위해 DEBUG
+    org.springframework: INFO
+    org.springframework.scheduling: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN

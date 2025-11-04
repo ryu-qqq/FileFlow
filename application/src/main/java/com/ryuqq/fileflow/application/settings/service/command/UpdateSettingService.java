@@ -9,7 +9,6 @@ import com.ryuqq.fileflow.domain.settings.exception.InvalidSettingException;
 import com.ryuqq.fileflow.domain.settings.Setting;
 import com.ryuqq.fileflow.domain.settings.SettingKey;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
-import com.ryuqq.fileflow.domain.settings.exception.SettingNotFoundException;
 import com.ryuqq.fileflow.domain.settings.SettingType;
 import com.ryuqq.fileflow.domain.settings.SettingValue;
 import org.springframework.stereotype.Service;
@@ -100,7 +99,7 @@ public class UpdateSettingService implements UpdateSettingUseCase {
     public Response execute(Command command) {
         // 1. Command → Domain Value Object 변환
         SettingKey key = SettingKey.of(command.key());
-        SettingLevel level = SettingLevel.valueOf(command.level().toUpperCase());
+        SettingLevel level = SettingLevel.valueOf(command.level().toUpperCase(java.util.Locale.ROOT));
         Long contextId = command.contextId();
 
         // 2. 기존 Setting 조회 (Query Port 사용)

@@ -41,8 +41,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // ========================================
+    // JSON Processing (for ExtractedData metadata serialization)
+    // ========================================
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+
+    // ========================================
     // Test Dependencies
     // ========================================
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(project(":domain"))
     testImplementation(testFixtures(project(":domain")))
 }

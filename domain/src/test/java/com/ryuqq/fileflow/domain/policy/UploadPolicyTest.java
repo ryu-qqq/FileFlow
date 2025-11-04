@@ -2,6 +2,10 @@ package com.ryuqq.fileflow.domain.policy;
 
 import com.ryuqq.fileflow.domain.policy.fixture.FileMetadataFixture;
 import com.ryuqq.fileflow.domain.policy.fixture.UploadPolicyFixture;
+import com.ryuqq.fileflow.domain.upload.FileName;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.MimeType;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -60,8 +64,8 @@ class UploadPolicyTest {
             PolicyEvaluationResult result = policy.evaluate(metadata);
 
             // Then
-            assertThat(result.getStatus()).isEqualTo(PolicyEvaluationResult.EvaluationStatus.PASSED);
-            assertThat(result.getViolations()).isEmpty();
+            assertThat(result.status()).isEqualTo(EvaluationStatus.PASSED);
+            assertThat(result.violations()).isEmpty();
         }
 
         @Test
@@ -75,8 +79,8 @@ class UploadPolicyTest {
             PolicyEvaluationResult result = policy.evaluate(metadata);
 
             // Then
-            assertThat(result.getStatus()).isEqualTo(PolicyEvaluationResult.EvaluationStatus.FAILED);
-            assertThat(result.getViolations()).isNotEmpty();
+            assertThat(result.status()).isEqualTo(EvaluationStatus.FAILED);
+            assertThat(result.violations()).isNotEmpty();
         }
 
         @Test
@@ -90,8 +94,8 @@ class UploadPolicyTest {
             PolicyEvaluationResult result = policy.evaluate(metadata);
 
             // Then
-            assertThat(result.getStatus()).isEqualTo(PolicyEvaluationResult.EvaluationStatus.FAILED);
-            assertThat(result.getViolations()).anyMatch(v -> v.contains("최대 파일 크기"));
+            assertThat(result.status()).isEqualTo(EvaluationStatus.FAILED);
+            assertThat(result.violations()).anyMatch(v -> v.contains("최대 파일 크기"));
         }
 
         @Test
@@ -99,14 +103,18 @@ class UploadPolicyTest {
         void evaluate_FailedWhenBelowMinFileSize() {
             // Given
             UploadPolicy policy = UploadPolicyFixture.createDefault(); // 1KB 최소
-            FileMetadata metadata = FileMetadataFixture.create("tiny.txt", "text/plain", 100L); // 100 bytes
+            FileMetadata metadata = FileMetadataFixture.create(
+                com.ryuqq.fileflow.domain.upload.FileName.of("tiny.txt"),
+                MimeType.of("text/plain"),
+                com.ryuqq.fileflow.domain.upload.FileSize.of(100L)
+            ); // 100 bytes
 
             // When
             PolicyEvaluationResult result = policy.evaluate(metadata);
 
             // Then
-            assertThat(result.getStatus()).isEqualTo(PolicyEvaluationResult.EvaluationStatus.FAILED);
-            assertThat(result.getViolations()).anyMatch(v -> v.contains("최소 파일 크기"));
+            assertThat(result.status()).isEqualTo(EvaluationStatus.FAILED);
+            assertThat(result.violations()).anyMatch(v -> v.contains("최소 파일 크기"));
         }
     }
 
@@ -150,18 +158,18 @@ class UploadPolicyTest {
         void builder_CreatesRules() {
             // When
             UploadPolicy.PolicyRules rules = UploadPolicy.PolicyRules.builder()
-                .allowedMimeTypes(List.of("image/jpeg"))
+                .allowMimeTypes("image/jpeg")
                 .maxFileSize(10485760L)
                 .minFileSize(1024L)
-                .allowedExtensions(List.of(".jpg"))
-                .requireVirusScan(true)
-                .requireOcr(false)
+                .allowExtensions(".jpg")
+                .requireScan()
                 .build();
 
             // Then
             assertThat(rules).isNotNull();
             assertThat(rules.getAllowedMimeTypes()).contains("image/jpeg");
             assertThat(rules.getMaxFileSize()).isEqualTo(10485760L);
+            assertThat(rules.getScanRequired()).isTrue();
         }
     }
 }

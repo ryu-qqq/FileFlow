@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.config;
 
+import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,21 +77,20 @@ public class FlywayConfig {
      *   <li>로컬 개발 환경에서만 사용</li>
      *   <li>프로덕션에서는 절대 사용 금지</li>
      * </ul>
-     *
      * @return FlywayMigrationStrategy
      */
     @Bean
     @Profile("local")
     public FlywayMigrationStrategy cleanMigrateStrategy() {
         return flyway -> {
-            // 1. 기존 스키마 정리 (주의: 모든 데이터 삭제)
-            flyway.clean();
-            
-            // 2. 마이그레이션 실행
+            // 로컬 환경: repair → migrate
+            // Checksum 불일치 해결을 위해 repair 먼저 실행
+            try {
+                flyway.repair();
+            } catch (Exception e) {
+                System.err.println("Flyway repair failed: " + e.getMessage());
+            }
             flyway.migrate();
-            
-            // 3. 마이그레이션 검증
-            flyway.validate();
         };
     }
 

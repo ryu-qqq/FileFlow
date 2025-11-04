@@ -1,7 +1,8 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.download.repository;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.download.entity.ExternalDownloadJpaEntity;
-import com.ryuqq.fileflow.domain.download.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadStatus;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -46,7 +47,7 @@ public interface ExternalDownloadJpaRepository
      * @return ExternalDownloadJpaEntity 목록
      */
     List<ExternalDownloadJpaEntity> findByStatus(
-        ExternalDownload.ExternalDownloadStatus status
+        ExternalDownloadStatus status
     );
 
     /**
@@ -72,7 +73,7 @@ public interface ExternalDownloadJpaRepository
      * @param status External Download 상태
      * @return 개수
      */
-    long countByStatus(ExternalDownload.ExternalDownloadStatus status);
+    long countByStatus(ExternalDownloadStatus status);
 
     /**
      * Upload Session ID 목록으로 조회
@@ -94,7 +95,7 @@ public interface ExternalDownloadJpaRepository
      * @return ExternalDownloadJpaEntity 목록
      */
     List<ExternalDownloadJpaEntity> findByStatusAndCreatedAtBefore(
-        ExternalDownload.ExternalDownloadStatus status,
+        ExternalDownloadStatus status,
         LocalDateTime createdBefore
     );
 }

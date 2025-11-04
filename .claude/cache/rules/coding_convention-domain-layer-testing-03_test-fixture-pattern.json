@@ -1,0 +1,40 @@
+{
+  "id": "coding_convention-domain-layer-testing-03_test-fixture-pattern",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/02-domain-layer/testing/03_test-fixture-pattern.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "test",
+        "fixture",
+        "pattern"
+      ],
+      "secondary": [
+        "domain",
+        "test",
+        "fixture",
+        "패턴"
+      ],
+      "anti": [
+        "createWithStatus(APPROVED)"
+      ]
+    },
+    "layer": "domain",
+    "priority": "critical",
+    "tokenEstimate": 1519
+  },
+  "rules": {
+    "prohibited": [
+      "❌ `createWithStatus(APPROVED)`가 무엇을 의미하는지 불명확",
+      "❌ 승인 과정 (상품 추가, 승인 메서드 호출)이 생략됨",
+      "❌ 테스트만 봐도 비즈니스 흐름을 이해할 수 없음"
+    ],
+    "allowed": [
+      "✅ **Fixture**: 특정 필드만 설정, 비즈니스 맥락 불필요",
+      "✅ **Object Mother**: 여러 단계 상태 전이, 비즈니스 의미 명확히 표현"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/02-domain-layer/testing/03_test-fixture-pattern.md",
+    "summary": "Auto-generated from 03_test-fixture-pattern.md"
+  }
+}

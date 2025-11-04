@@ -1,7 +1,8 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.download.entity;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.BaseAuditEntity;
-import com.ryuqq.fileflow.domain.download.ExternalDownload;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.BaseAuditEntity;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,10 +25,11 @@ import java.time.LocalDateTime;
  * <ul>
  *   <li>✅ JPA 어노테이션만 사용 (비즈니스 로직 없음)</li>
  *   <li>✅ Long FK 전략 (JPA 관계 어노테이션 금지)</li>
- *   <li>✅ Setter 제공 (JPA 전용, 외부 노출 금지)</li>
+ *   <li>✅ 불변성 (Setter 금지, Mapper에서 reconstitute() 사용)</li>
  *   <li>✅ Static Factory Methods: {@code create()}, {@code reconstitute()}</li>
  *   <li>❌ Lombok 금지</li>
- *   <li>❌ JPA 관계 어노테이션 금지 (@ManyToOne 등)</li>
+ *   <li>❌ JPA 관계 어노테이션 금지 (ManyToOne 등)</li>
+ *   <li>❌ Setter 금지 (Domain → Entity 변환은 Mapper의 reconstitute() 사용)</li>
  * </ul>
  *
  * <h3>테이블 스키마</h3>
@@ -65,7 +67,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
 
     /**
      * Upload Session ID (Long FK Strategy)
-     * ❌ @ManyToOne 사용 안함!
+     * ❌ ManyToOne 관계 어노테이션 사용 안함!
      */
     @Column(name = "upload_session_id", nullable = false)
     private Long uploadSessionId;
@@ -81,7 +83,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
 
     @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private ExternalDownload.ExternalDownloadStatus status;
+    private ExternalDownloadStatus status;
 
     @Column(name = "retry_count")
     private Integer retryCount;
@@ -124,7 +126,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
         String sourceUrl,
         Long bytesTransferred,
         Long totalBytes,
-        ExternalDownload.ExternalDownloadStatus status,
+        ExternalDownloadStatus status,
         Integer retryCount,
         LocalDateTime lastRetryAt,
         String errorCode,
@@ -156,7 +158,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
     public static ExternalDownloadJpaEntity create(
         Long uploadSessionId,
         String sourceUrl,
-        ExternalDownload.ExternalDownloadStatus status
+        ExternalDownloadStatus status
     ) {
         ExternalDownloadJpaEntity entity = new ExternalDownloadJpaEntity();
         entity.uploadSessionId = uploadSessionId;
@@ -191,7 +193,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
         String sourceUrl,
         Long bytesTransferred,
         Long totalBytes,
-        ExternalDownload.ExternalDownloadStatus status,
+        ExternalDownloadStatus status,
         Integer retryCount,
         LocalDateTime lastRetryAt,
         String errorCode,
@@ -265,7 +267,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
      *
      * @return 상태
      */
-    public ExternalDownload.ExternalDownloadStatus getStatus() {
+    public ExternalDownloadStatus getStatus() {
         return status;
     }
 
@@ -305,100 +307,4 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
         return errorMessage;
     }
 
-    /**
-     * ID를 설정합니다 (JPA 전용).
-     *
-     * @param id External Download ID
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * Upload Session ID를 설정합니다 (JPA 전용).
-     *
-     * @param uploadSessionId Upload Session ID
-     */
-    public void setUploadSessionId(Long uploadSessionId) {
-        this.uploadSessionId = uploadSessionId;
-    }
-
-    /**
-     * 소스 URL을 설정합니다 (JPA 전용).
-     *
-     * @param sourceUrl 소스 URL
-     */
-    public void setSourceUrl(String sourceUrl) {
-        this.sourceUrl = sourceUrl;
-    }
-
-    /**
-     * 전송된 바이트 수를 설정합니다 (JPA 전용).
-     *
-     * @param bytesTransferred 전송된 바이트 수
-     */
-    public void setBytesTransferred(Long bytesTransferred) {
-        this.bytesTransferred = bytesTransferred;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 총 바이트 수를 설정합니다 (JPA 전용).
-     *
-     * @param totalBytes 총 바이트 수
-     */
-    public void setTotalBytes(Long totalBytes) {
-        this.totalBytes = totalBytes;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 상태를 설정합니다 (JPA 전용).
-     *
-     * @param status 상태
-     */
-    public void setStatus(ExternalDownload.ExternalDownloadStatus status) {
-        this.status = status;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 재시도 횟수를 설정합니다 (JPA 전용).
-     *
-     * @param retryCount 재시도 횟수
-     */
-    public void setRetryCount(Integer retryCount) {
-        this.retryCount = retryCount;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 마지막 재시도 시간을 설정합니다 (JPA 전용).
-     *
-     * @param lastRetryAt 마지막 재시도 시간
-     */
-    public void setLastRetryAt(LocalDateTime lastRetryAt) {
-        this.lastRetryAt = lastRetryAt;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 오류 코드를 설정합니다 (JPA 전용).
-     *
-     * @param errorCode 오류 코드
-     */
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 오류 메시지를 설정합니다 (JPA 전용).
-     *
-     * @param errorMessage 오류 메시지
-     */
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-        this.markAsUpdated();
-    }
 }

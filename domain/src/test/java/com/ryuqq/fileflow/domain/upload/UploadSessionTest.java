@@ -29,8 +29,8 @@ class UploadSessionTest {
             UploadSession session = UploadSessionFixture.createSingle();
 
             // Then
-            assertThat(session.getUploadType()).isEqualTo(UploadSession.UploadType.SINGLE);
-            assertThat(session.getStatus()).isEqualTo(UploadSession.SessionStatus.PENDING);
+            assertThat(session.getUploadType()).isEqualTo(UploadType.SINGLE);
+            assertThat(session.getStatus()).isEqualTo(SessionStatus.PENDING);
             assertThat(session.isMultipart()).isFalse();
         }
 
@@ -41,8 +41,8 @@ class UploadSessionTest {
             UploadSession session = UploadSessionFixture.createMultipart();
 
             // Then
-            assertThat(session.getUploadType()).isEqualTo(UploadSession.UploadType.MULTIPART);
-            assertThat(session.getStatus()).isEqualTo(UploadSession.SessionStatus.PENDING);
+            assertThat(session.getUploadType()).isEqualTo(UploadType.MULTIPART);
+            assertThat(session.getStatus()).isEqualTo(SessionStatus.PENDING);
             assertThat(session.isMultipart()).isTrue();
         }
     }
@@ -61,7 +61,7 @@ class UploadSessionTest {
             session.start();
 
             // Then
-            assertThat(session.getStatus()).isEqualTo(UploadSession.SessionStatus.IN_PROGRESS);
+            assertThat(session.getStatus()).isEqualTo(SessionStatus.IN_PROGRESS);
             assertThat(session.isInProgress()).isTrue();
         }
 
@@ -77,24 +77,23 @@ class UploadSessionTest {
             session.complete(fileId);
 
             // Then
-            assertThat(session.getStatus()).isEqualTo(UploadSession.SessionStatus.COMPLETED);
+            assertThat(session.getStatus()).isEqualTo(SessionStatus.COMPLETED);
             assertThat(session.isCompleted()).isTrue();
             assertThat(session.getFileId()).isEqualTo(fileId);
         }
 
-        @Test
         @DisplayName("* → FAILED: fail() 성공")
         void fail_Success() {
             // Given
             UploadSession session = UploadSessionFixture.createSingle();
             session.start();
-            String reason = "Network error";
+            FailureReason reason = FailureReason.of("Network error");
 
             // When
             session.fail(reason);
 
             // Then
-            assertThat(session.getStatus()).isEqualTo(UploadSession.SessionStatus.FAILED);
+            assertThat(session.getStatus()).isEqualTo(SessionStatus.FAILED);
             assertThat(session.isFailed()).isTrue();
             assertThat(session.getFailureReason()).isEqualTo(reason);
         }
@@ -133,7 +132,7 @@ class UploadSessionTest {
             UploadSession session = UploadSessionFixture.createSingleCompleted(100L);
 
             // When & Then
-            assertThatThrownBy(() -> session.fail("reason"))
+            assertThatThrownBy(() -> session.fail(FailureReason.of("reason")))
                 .isInstanceOf(IllegalStateException.class);
         }
     }

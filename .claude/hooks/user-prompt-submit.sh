@@ -1,29 +1,36 @@
 #!/bin/bash
 
 # =====================================================
-# Claude Code Hook: user-prompt-submit (JSON Logging)
+# Claude Code Hook: user-prompt-submit (JSONL Logging)
 # Trigger: 사용자가 프롬프트를 제출할 때
 # Strategy: Keyword → Layer → inject-rules.py (Cache-based)
+# Logging: log-to-langfuse.py (JSONL, LangFuse 호환)
 # Bash 3.2 호환 (macOS 기본 Bash)
 # =====================================================
 
-# 로그 헬퍼 경로
-LOG_HELPER=".claude/hooks/scripts/log-helper.py"
+# LangFuse 로거 경로
+LANGFUSE_LOGGER="langfuse/scripts/log-to-langfuse.py"
 
-# 세션 ID
-SESSION_ID="$(date +%s)-$$"
+# 프로젝트 정보
 PROJECT_NAME=$(basename "$(pwd)")
 
 # 입력 읽기
 USER_INPUT=$(cat)
 
-# JSON 로그 함수
+# JSONL 로그 함수 (log-to-langfuse.py 사용)
 log_event() {
-    echo "$2" | python3 "$LOG_HELPER" "$1" 2>/dev/null
+    local event_type="$1"
+    local data="$2"
+
+    if [[ -f "$LANGFUSE_LOGGER" ]]; then
+        python3 "$LANGFUSE_LOGGER" log \
+            --event-type "$event_type" \
+            --data "$data" 2>/dev/null
+    fi
 }
 
-# 세션 시작
-log_event "session_start" "{\"session_id\":\"$SESSION_ID\",\"project\":\"$PROJECT_NAME\",\"hook\":\"user-prompt-submit\",\"user_command\":\"$USER_INPUT\"}"
+# 세션 시작 로그
+log_event "session_start" "{\"project\":\"$PROJECT_NAME\",\"user_command\":\"$USER_INPUT\"}"
 
 # ==================== Context 분석 ====================
 
@@ -42,7 +49,7 @@ get_layer_from_keyword() {
             echo "domain"
             ;;
         # Application layer
-        usecase|service|command|query|transaction|assembler|spring|proxy|orchestration)
+        usecase|service|command|query|transaction|assembler|spring|proxy|orchestration|orchestrator|idempotency|idemkey|wal|write*ahead*log|outcome|finalizer|reaper)
             echo "application"
             ;;
         # Adapter-REST layer (adapter-in 포함)
@@ -76,7 +83,7 @@ get_layer_from_keyword() {
 }
 
 # 키워드 목록 (프로젝트별 패키지 구조 포함)
-KEYWORDS="aggregate entity value.object value_object valueobject domain.event domain_event domainevent getter factory policy usecase service command query transaction assembler spring proxy orchestration controller rest.api rest_api restapi endpoint adapter-in adapter_in adapterin validation request response handling repository jpa entity.mapping entity_mapping entitymapping adapter-out adapter_out adapterout persistence-mysql persistence_mysql persistencemysql persistence-postgresql persistence-mongo querydsl batch specification test archunit testcontainers benchmark fixture mother builder record sealed virtual threads async dto mapper cache event circuit.breaker circuit_breaker circuitbreaker resilience saga exception error"
+KEYWORDS="aggregate entity value.object value_object valueobject domain.event domain_event domainevent getter factory policy usecase service command query transaction assembler spring proxy orchestration orchestrator idempotency idemkey wal write.ahead.log write_ahead_log writeaheadlog outcome finalizer reaper controller rest.api rest_api restapi endpoint adapter-in adapter_in adapterin validation request response handling repository jpa entity.mapping entity_mapping entitymapping adapter-out adapter_out adapterout persistence-mysql persistence_mysql persistencemysql persistence-postgresql persistence-mongo querydsl batch specification test archunit testcontainers benchmark fixture mother builder record sealed virtual threads async dto mapper cache event circuit.breaker circuit_breaker circuitbreaker resilience saga exception error"
 
 # Primary Keywords 검색 (30점)
 for keyword in $KEYWORDS; do
@@ -161,63 +168,14 @@ fi
 LAYERS_JSON=$(printf '%s\n' "${DETECTED_LAYERS[@]}" | jq -R . | jq -s . 2>/dev/null || echo "[]")
 KEYWORDS_JSON=$(printf '%s\n' "${DETECTED_KEYWORDS[@]}" | jq -R . | jq -s . 2>/dev/null || echo "[]")
 
-log_event "keyword_analysis" "{\"session_id\":\"$SESSION_ID\",\"context_score\":$CONTEXT_SCORE,\"threshold\":25,\"detected_layers\":$LAYERS_JSON,\"detected_keywords\":$KEYWORDS_JSON,\"priority_filter\":\"$PRIORITY_FILTER\"}"
+log_event "keyword_analysis" "{\"context_score\":$CONTEXT_SCORE,\"threshold\":25,\"detected_layers\":$LAYERS_JSON,\"detected_keywords\":$KEYWORDS_JSON,\"priority_filter\":\"$PRIORITY_FILTER\"}"
 
 # ==================== 규칙 주입 ====================
 
 if [[ $CONTEXT_SCORE -ge 25 ]]; then
-    log_event "decision" "{\"session_id\":\"$SESSION_ID\",\"action\":\"cache_injection\",\"reason\":\"score_above_threshold\"}"
+    log_event "decision" "{\"action\":\"cache_injection\",\"reason\":\"score_above_threshold\"}"
 
-    # ==================== Serena 메모리 자동 로드 ====================
-
-    cat << 'EOF'
-
----
-
-## 🧠 Serena 메모리 자동 로드 (Context-aware)
-
-```python
-# Detected Layers:
-EOF
-
-    for layer in "${DETECTED_LAYERS[@]}"; do
-        echo "# - $layer"
-    done
-
-    cat << 'EOF'
-
-# 레이어별 컨벤션 자동 로드:
-EOF
-
-    for layer in "${DETECTED_LAYERS[@]}"; do
-        case "$layer" in
-            domain)
-                echo 'conventions = read_memory("coding_convention_domain_layer")'
-                ;;
-            application)
-                echo 'conventions = read_memory("coding_convention_application_layer")'
-                ;;
-            adapter-rest)
-                echo 'conventions = read_memory("coding_convention_rest_api_layer")'
-                ;;
-            adapter-persistence)
-                echo 'conventions = read_memory("coding_convention_persistence_layer")'
-                ;;
-        esac
-    done
-
-    cat << 'EOF'
-```
-
-**Serena 메모리가 최우선 규칙이며, 아래 Cache 규칙은 보조 참고용입니다.**
-
----
-
-EOF
-
-    log_event "serena_memory_load" "{\"session_id\":\"$SESSION_ID\",\"layers_loaded\":${#DETECTED_LAYERS[@]}}"
-
-    # ==================== Cache 기반 규칙 주입 ====================
+    # ==================== Cache 기반 규칙 주입 (단일 진실 공급원) ====================
 
     INJECT_SCRIPT=".claude/commands/lib/inject-rules.py"
 
@@ -231,7 +189,7 @@ EOF
             fi
         done
 
-        log_event "cache_injection_complete" "{\"session_id\":\"$SESSION_ID\",\"layers_count\":${#DETECTED_LAYERS[@]}}"
+        log_event "cache_injection_complete" "{\"layers_count\":${#DETECTED_LAYERS[@]}}"
 
         # 레이어가 없으면 일반 규칙
         if [[ ${#DETECTED_LAYERS[@]} -eq 0 ]]; then
@@ -255,10 +213,10 @@ EOF
 EOF
         fi
     else
-        log_event "error" "{\"session_id\":\"$SESSION_ID\",\"message\":\"inject-rules.py not found\"}"
+        log_event "error" "{\"message\":\"inject-rules.py not found\"}"
     fi
 else
-    log_event "decision" "{\"session_id\":\"$SESSION_ID\",\"action\":\"skip_injection\",\"reason\":\"score_below_threshold\"}"
+    log_event "decision" "{\"action\":\"skip_injection\",\"reason\":\"score_below_threshold\"}"
 fi
 
 # 원본 입력 반환

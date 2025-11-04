@@ -1,0 +1,37 @@
+{
+  "id": "coding_convention-adapter-rest-api-layer-testing-02_integration-test-guide",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/01-adapter-rest-api-layer/testing/02_integration-test-guide.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "integration",
+        "test",
+        "guide"
+      ],
+      "secondary": [
+        "rest",
+        "api",
+        "integration",
+        "test",
+        "가이드"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-rest",
+    "priority": "high",
+    "tokenEstimate": 4114
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": [
+      "✅ **BDD 스타일**: Given-When-Then (가독성 높음)",
+      "✅ **간결한 구문**: JsonPath, Hamcrest Matcher 내장",
+      "✅ **실제 HTTP**: 진짜 HTTP 요청/응답 테스트",
+      "✅ **API 문서화**: API Contract 명확히 표현"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/01-adapter-rest-api-layer/testing/02_integration-test-guide.md",
+    "summary": "Auto-generated from 02_integration-test-guide.md"
+  }
+}

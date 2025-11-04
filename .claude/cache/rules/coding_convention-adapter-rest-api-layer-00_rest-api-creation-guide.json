@@ -1,0 +1,40 @@
+{
+  "id": "coding_convention-adapter-rest-api-layer-00_rest-api-creation-guide",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/01-adapter-rest-api-layer/00_rest-api-creation-guide.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "rest",
+        "api",
+        "creation",
+        "guide"
+      ],
+      "secondary": [
+        "rest",
+        "api",
+        "adapter",
+        "layer",
+        "생성",
+        "가이드"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-rest",
+    "priority": "critical",
+    "tokenEstimate": 3044
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": [
+      "✅ **Thin Controller**: 비즈니스 로직 없이 Facade 호출만",
+      "✅ **Pure Java**: Lombok 사용 금지",
+      "✅ **Static Mapper**: Stateless Utility Class 패턴",
+      "✅ **Bean Validation**: 모든 Request DTO 검증",
+      "✅ **RFC 7807**: Problem Details 표준 준수"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/01-adapter-rest-api-layer/00_rest-api-creation-guide.md",
+    "summary": "Auto-generated from 00_rest-api-creation-guide.md"
+  }
+}

@@ -1,0 +1,162 @@
+= FileFlow REST API Documentation
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+[[overview]]
+= Overview
+
+FileFlow REST API 문서입니다.
+
+[[overview-http-verbs]]
+== HTTP verbs
+
+|===
+| Verb | Usage
+
+| `GET`
+| 리소스를 조회합니다.
+
+| `POST`
+| 새로운 리소스를 생성합니다.
+
+| `PUT`
+| 기존 리소스를 수정합니다.
+
+| `DELETE`
+| 기존 리소스를 삭제합니다.
+|===
+
+[[overview-http-status-codes]]
+== HTTP status codes
+
+|===
+| Status code | Usage
+
+| `200 OK`
+| 요청이 성공적으로 처리되었습니다.
+
+| `201 Created`
+| 새로운 리소스가 생성되었습니다.
+
+| `204 No Content`
+| 요청이 성공적으로 처리되었으나 응답 본문이 없습니다.
+
+| `400 Bad Request`
+| 잘못된 요청입니다.
+
+| `401 Unauthorized`
+| 인증이 필요합니다.
+
+| `403 Forbidden`
+| 권한이 없습니다.
+
+| `404 Not Found`
+| 요청한 리소스를 찾을 수 없습니다.
+
+| `500 Internal Server Error`
+| 서버 내부 오류가 발생했습니다.
+|===
+
+[[resources]]
+= Resources
+
+[[resources-file]]
+== File
+
+파일 관련 API
+
+[[resources-file-upload]]
+=== 파일 업로드
+
+`POST` 요청으로 파일을 업로드합니다.
+
+operation::file-upload[snippets='http-request,request-parameters,http-response,response-fields']
+
+[[resources-file-query]]
+=== 파일 조회
+
+`GET` 요청으로 파일 정보를 조회합니다.
+
+operation::file-query[snippets='http-request,path-parameters,http-response,response-fields']
+
+[[resources-file-delete]]
+=== 파일 삭제
+
+`DELETE` 요청으로 파일을 삭제합니다.
+
+operation::file-delete[snippets='http-request,path-parameters,http-response']
+
+[[resources-download]]
+== Download
+
+다운로드 관련 API
+
+[[resources-download-request]]
+=== 다운로드 요청
+
+`POST` 요청으로 파일 다운로드를 요청합니다.
+
+operation::download-request[snippets='http-request,request-fields,http-response,response-fields']
+
+[[resources-download-query]]
+=== 다운로드 조회
+
+`GET` 요청으로 다운로드 정보를 조회합니다.
+
+operation::download-query[snippets='http-request,path-parameters,http-response,response-fields']
+
+[[resources-iam]]
+== IAM
+
+IAM 관련 API
+
+[[resources-iam-user-register]]
+=== 사용자 등록
+
+`POST` 요청으로 사용자를 등록합니다.
+
+operation::iam-user-register[snippets='http-request,request-fields,http-response,response-fields']
+
+[[resources-iam-user-query]]
+=== 사용자 조회
+
+`GET` 요청으로 사용자 정보를 조회합니다.
+
+operation::iam-user-query[snippets='http-request,path-parameters,http-response,response-fields']
+
+[[resources-iam-role-register]]
+=== 역할 등록
+
+`POST` 요청으로 역할을 등록합니다.
+
+operation::iam-role-register[snippets='http-request,request-fields,http-response,response-fields']
+
+[[resources-iam-role-query]]
+=== 역할 조회
+
+`GET` 요청으로 역할 정보를 조회합니다.
+
+operation::iam-role-query[snippets='http-request,path-parameters,http-response,response-fields']
+
+[[resources-settings]]
+== Settings
+
+설정 관련 API
+
+[[resources-settings-query]]
+=== 설정 조회
+
+`GET` 요청으로 설정 정보를 조회합니다.
+
+operation::settings-query[snippets='http-request,path-parameters,http-response,response-fields']
+
+[[resources-settings-update]]
+=== 설정 수정
+
+`PUT` 요청으로 설정을 수정합니다.
+
+operation::settings-update[snippets='http-request,path-parameters,request-fields,http-response,response-fields']

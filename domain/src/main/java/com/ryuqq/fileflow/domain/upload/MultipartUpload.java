@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.upload;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,13 +25,15 @@ import java.util.stream.Collectors;
  */
 public class MultipartUpload {
 
-    private final Long id;
+    private final MultipartUploadId id;
     private final UploadSessionId uploadSessionId;
+    private final Clock clock;
     private ProviderUploadId providerUploadId;
     private MultipartStatus status;
     private TotalParts totalParts;
     private final List<UploadPart> uploadedParts;
-    private final LocalDateTime startedAt;
+    private final LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private LocalDateTime completedAt;
     private LocalDateTime abortedAt;
 
@@ -46,20 +49,28 @@ public class MultipartUpload {
     }
 
     /**
-     * Private 생성자 (외부에서 직접 생성 불가)
+     * Package-private 주요 생성자 (검증 포함)
      *
-     * @param id Multipart Upload ID (null 가능 - 신규 생성 시)
+     * <p>외부 패키지에서 직접 생성할 수 없습니다. 정적 팩토리 메서드 또는 같은 패키지 내 테스트에서 사용하세요.</p>
+     *
+     * @param id Multipart Upload ID (null 허용 - 신규 엔티티)
      * @param uploadSessionId Upload Session ID
+     * @param clock 시간 제공자
+     * @throws IllegalArgumentException uploadSessionId가 null인 경우
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
-    private MultipartUpload(Long id, UploadSessionId uploadSessionId) {
+    MultipartUpload(MultipartUploadId id, UploadSessionId uploadSessionId, Clock clock) {
         if (uploadSessionId == null) {
             throw new IllegalArgumentException("Upload Session ID는 필수입니다");
         }
         this.id = id;
         this.uploadSessionId = uploadSessionId;
+        this.clock = clock;
         this.status = MultipartStatus.INIT;
         this.uploadedParts = new ArrayList<>();
-        this.startedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -67,70 +78,95 @@ public class MultipartUpload {
      *
      * @param id Multipart Upload ID
      * @param uploadSessionId Upload Session ID
+     * @param clock 시간 제공자
      * @param providerUploadId Provider Upload ID
      * @param status 상태
      * @param totalParts 총 파트 수
      * @param uploadedParts 업로드된 파트 목록
-     * @param startedAt 시작 시간
+     * @param createdAt 생성 시간
+     * @param updatedAt 수정 시간
      * @param completedAt 완료 시간
      * @param abortedAt 중단 시간
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     private MultipartUpload(
-        Long id,
+        MultipartUploadId id,
         UploadSessionId uploadSessionId,
+        Clock clock,
         ProviderUploadId providerUploadId,
         MultipartStatus status,
         TotalParts totalParts,
         List<UploadPart> uploadedParts,
-        LocalDateTime startedAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
         LocalDateTime completedAt,
         LocalDateTime abortedAt
     ) {
         this.id = id;
         this.uploadSessionId = uploadSessionId;
+        this.clock = clock;
         this.providerUploadId = providerUploadId;
         this.status = status;
         this.totalParts = totalParts;
         this.uploadedParts = new ArrayList<>(uploadedParts);
-        this.startedAt = startedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.completedAt = completedAt;
         this.abortedAt = abortedAt;
     }
 
     /**
-     * Static Factory Method - 신규 Multipart Upload 생성
+     * 신규 Multipart Upload를 생성합니다 (Static Factory Method).
+     *
+     * <p><strong>ID 없이 신규 도메인 객체를 생성</strong>합니다 (DB 저장 전 상태).</p>
+     * <p>초기 상태: INIT, ID = null</p>
+     *
+     * <p><strong>사용 시기</strong>: Application Layer에서 Command를 받아 새로운 Entity를 생성할 때</p>
      *
      * @param uploadSessionId Upload Session ID
      * @return 생성된 MultipartUpload (ID = null)
      * @throws IllegalArgumentException Upload Session ID가 null인 경우
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
-    public static MultipartUpload create(UploadSessionId uploadSessionId) {
-        return new MultipartUpload(null, uploadSessionId);
+    public static MultipartUpload forNew(UploadSessionId uploadSessionId) {
+        return new MultipartUpload(null, uploadSessionId, Clock.systemDefaultZone());
     }
 
     /**
      * DB에서 조회한 데이터로 MultipartUpload 재구성 (Static Factory Method)
      *
-     * @param id Multipart Upload ID (필수)
+     * <p><strong>Persistence Layer → Domain Layer 변환 전용</strong></p>
+     * <p>DB에서 조회한 데이터를 Domain 객체로 복원할 때 사용합니다.</p>
+     * <p>모든 상태(status, totalParts, uploadedParts 포함)를 그대로 복원합니다.</p>
+     *
+     * <p><strong>사용 시기</strong>: Persistence Layer에서 JPA Entity → Domain 변환 시</p>
+     *
+     * @param id Multipart Upload ID (필수 - DB에서 조회된 ID)
      * @param uploadSessionId Upload Session ID
      * @param providerUploadId Provider Upload ID
      * @param status 상태
      * @param totalParts 총 파트 수
      * @param uploadedParts 업로드된 파트 목록
-     * @param startedAt 시작 시간
+     * @param createdAt 생성 시간
+     * @param updatedAt 수정 시간
      * @param completedAt 완료 시간
      * @param abortedAt 중단 시간
      * @return 재구성된 MultipartUpload
      * @throws IllegalArgumentException id가 null인 경우
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public static MultipartUpload reconstitute(
-        Long id,
+        MultipartUploadId id,
         UploadSessionId uploadSessionId,
         ProviderUploadId providerUploadId,
         MultipartStatus status,
         TotalParts totalParts,
         List<UploadPart> uploadedParts,
-        LocalDateTime startedAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
         LocalDateTime completedAt,
         LocalDateTime abortedAt
     ) {
@@ -140,11 +176,13 @@ public class MultipartUpload {
         return new MultipartUpload(
             id,
             uploadSessionId,
+            Clock.systemDefaultZone(),
             providerUploadId,
             status,
             totalParts,
             uploadedParts,
-            startedAt,
+            createdAt,
+            updatedAt,
             completedAt,
             abortedAt
         );
@@ -158,6 +196,8 @@ public class MultipartUpload {
      * @param totalParts 총 파트 수
      * @throws IllegalStateException 이미 초기화된 경우
      * @throws IllegalArgumentException providerUploadId나 totalParts가 유효하지 않은 경우
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public void initiate(ProviderUploadId providerUploadId, TotalParts totalParts) {
         validateInitiation();
@@ -172,6 +212,7 @@ public class MultipartUpload {
         this.providerUploadId = providerUploadId;
         this.totalParts = totalParts;
         this.status = MultipartStatus.IN_PROGRESS;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -181,10 +222,13 @@ public class MultipartUpload {
      * @param part 업로드된 파트
      * @throws IllegalArgumentException part가 null이거나 중복된 경우
      * @throws IllegalStateException 진행 중 상태가 아닌 경우
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public void addPart(UploadPart part) {
         validatePartAddition(part);
         this.uploadedParts.add(part);
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -192,15 +236,18 @@ public class MultipartUpload {
      * 상태: IN_PROGRESS → COMPLETED
      *
      * @throws IllegalStateException 완료 조건을 만족하지 않는 경우
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public void complete() {
         if (!canComplete()) {
             throw new IllegalStateException(
-                "Cannot complete: not all parts uploaded or invalid state"
+                "완료할 수 없습니다: 모든 파트가 업로드되지 않았거나 잘못된 상태입니다"
             );
         }
         this.status = MultipartStatus.COMPLETED;
-        this.completedAt = LocalDateTime.now();
+        this.completedAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -208,21 +255,28 @@ public class MultipartUpload {
      * 상태: * → ABORTED
      *
      * @throws IllegalStateException 이미 완료된 경우
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public void abort() {
         if (this.status == MultipartStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot abort completed upload");
+            throw new IllegalStateException("완료된 업로드는 중단할 수 없습니다");
         }
         this.status = MultipartStatus.ABORTED;
-        this.abortedAt = LocalDateTime.now();
+        this.abortedAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * Multipart 업로드 실패
      * 상태: * → FAILED
+     *
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public void fail() {
         this.status = MultipartStatus.FAILED;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -263,7 +317,7 @@ public class MultipartUpload {
     private void validateInitiation() {
         if (this.status != MultipartStatus.INIT) {
             throw new IllegalStateException(
-                "Multipart already initiated: " + status
+                "이미 초기화된 업로드입니다: " + status
             );
         }
     }
@@ -282,7 +336,7 @@ public class MultipartUpload {
 
         if (this.status != MultipartStatus.IN_PROGRESS) {
             throw new IllegalStateException(
-                "Cannot add part in status: " + status
+                "업로드가 시작되지 않았습니다: " + status
             );
         }
 
@@ -292,7 +346,7 @@ public class MultipartUpload {
 
         if (duplicate) {
             throw new IllegalArgumentException(
-                "Duplicate part number: " + partNumber.value()
+                "이미 업로드된 파트입니다: " + partNumber.value()
             );
         }
     }
@@ -319,93 +373,98 @@ public class MultipartUpload {
         return true;
     }
 
+
     /**
      * Multipart Upload ID를 반환합니다.
      *
      * @return Multipart Upload ID
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public Long getId() {
-        return id;
+        return id != null ? id.value() : null;
+    }
+
+    public Long getIdValue() {
+        return id != null ? id.value() : null;
     }
 
     /**
      * Upload Session ID를 반환합니다.
      *
      * @return Upload Session ID
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public UploadSessionId getUploadSessionId() {
         return uploadSessionId;
+    }
+
+    public Long getUploadSessionIdValue() {
+        return uploadSessionId.value();
     }
 
     /**
      * Provider Upload ID를 반환합니다.
      *
      * @return Provider Upload ID
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public ProviderUploadId getProviderUploadId() {
         return providerUploadId;
     }
 
-    /**
-     * 상태를 반환합니다.
-     *
-     * @return 상태
-     */
-    public MultipartStatus getStatus() {
-        return status;
-    }
-
-    /**
-     * 총 파트 수를 반환합니다.
-     *
-     * @return 총 파트 수
-     */
-    public TotalParts getTotalParts() {
-        return totalParts;
-    }
-
-    /**
-     * 업로드된 파트 목록을 반환합니다 (방어적 복사).
-     *
-     * @return 업로드된 파트 목록 (불변)
-     */
-    public List<UploadPart> getUploadedParts() {
-        return Collections.unmodifiableList(uploadedParts);
+    public String getProviderUploadIdValue() {
+        return providerUploadId != null ? providerUploadId.value() : null;
     }
 
     /**
      * 시작 시간을 반환합니다.
      *
      * @return 시작 시간
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     public LocalDateTime getStartedAt() {
-        return startedAt;
+        return createdAt;
     }
 
-    /**
-     * 완료 시간을 반환합니다.
-     *
-     * @return 완료 시간
-     */
+
+    public MultipartStatus getStatus() {
+        return status;
+    }
+
+
+    public TotalParts getTotalParts() {
+        return totalParts;
+    }
+
+
+    public List<UploadPart> getUploadedParts() {
+        return Collections.unmodifiableList(uploadedParts);
+    }
+
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+
     public LocalDateTime getCompletedAt() {
         return completedAt;
     }
 
-    /**
-     * 중단 시간을 반환합니다.
-     *
-     * @return 중단 시간
-     */
+
     public LocalDateTime getAbortedAt() {
         return abortedAt;
     }
 
-    /**
-     * 동등성을 비교합니다.
-     *
-     * @param o 비교 대상 객체
-     * @return 동등 여부
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {

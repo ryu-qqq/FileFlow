@@ -1,0 +1,80 @@
+spring:
+  # Datasource는 @ServiceConnection으로 자동 설정됨 (Testcontainers)
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 테스트 시 테이블 자동 생성/삭제
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Flyway 비활성화 (Hibernate가 스키마 생성)
+  flyway:
+    enabled: false
+
+# AWS S3 Mock Configuration
+aws:
+  s3:
+    region: us-east-1
+    bucket: test-bucket
+    endpoint: http://localhost:4566
+    access-key: test-access-key
+    secret-key: test-secret-key
+
+# API Endpoint Configuration (for Controllers)
+api:
+  endpoints:
+    base-v1: /api/v1
+    
+    iam:
+      organization:
+        base: /organizations
+        by-id: /{organizationId}
+        status: /{organizationId}/status
+      tenant:
+        base: /tenants
+        by-id: /{tenantId}
+        status: /{tenantId}/status
+        tree: /{tenantId}/tree
+      permission:
+        base: /permissions
+        evaluate: /evaluate
+      user-context:
+        base: /user-contexts
+    
+    settings:
+      base: /settings
+    
+    upload:
+      base: /uploads
+      multipart:
+        init: /multipart/init
+        part-url: /multipart/{sessionKey}/parts/{partNumber}/url
+        mark-part: /multipart/{sessionKey}/parts/{partNumber}
+        complete: /multipart/{sessionKey}/complete
+    
+    download:
+      base: /downloads
+      external:
+        start: /external
+        status: /external/{downloadId}/status
+    
+    file:
+      base: /files
+      by-id: /{fileId}
+      download-url: /{fileId}/download-url
+  
+  error:
+    base-url: about:blank
+    use-about-blank: true
+
+# Logging
+logging:
+  level:
+    com.ryuqq.fileflow: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.testcontainers: DEBUG
+    com.github.dockerjava: DEBUG

@@ -1,9 +1,16 @@
 package com.ryuqq.fileflow.domain.download.fixture;
 
+import com.ryuqq.fileflow.domain.download.ErrorCode;
+import com.ryuqq.fileflow.domain.download.ErrorMessage;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
-import com.ryuqq.fileflow.domain.download.ExternalDownload.DownloadStatus;
-import com.ryuqq.fileflow.domain.download.ExternalDownload.ErrorType;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadId;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadStatus;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
+import com.ryuqq.fileflow.domain.upload.UploadSessionId;
+import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
 
+import java.net.URL;
 import java.time.LocalDateTime;
 
 /**
@@ -23,29 +30,27 @@ public class ExternalDownloadFixture {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
-    private static final Long DEFAULT_TENANT_ID = 1L;
-    private static final String DEFAULT_URL = "https://example.com/files/test-file.pdf";
-    private static final String DEFAULT_TARGET_PATH = "downloads/test-file.pdf";
+    private static final UploadSession DEFAULT_UPLOAD_SESSION = UploadSessionFixture.createSingle();
+    private static final String DEFAULT_SOURCE_URL = "https://example.com/files/test-file.pdf";
 
     /**
-     * 기본 ExternalDownload 생성 (PENDING 상태)
+     * 기본 ExternalDownload 생성 (INIT 상태)
      *
      * @return ExternalDownload 인스턴스
      */
     public static ExternalDownload createNew() {
-        return ExternalDownload.create(DEFAULT_TENANT_ID, DEFAULT_URL, DEFAULT_TARGET_PATH);
+        return ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
     }
 
     /**
      * 특정 값으로 ExternalDownload 생성
      *
-     * @param tenantId 테넌트 ID
-     * @param url 다운로드 URL
-     * @param targetPath 대상 경로
+     * @param sourceUrl 소스 URL
+     * @param uploadSession Upload Session
      * @return ExternalDownload 인스턴스
      */
-    public static ExternalDownload create(Long tenantId, String url, String targetPath) {
-        return ExternalDownload.create(tenantId, url, targetPath);
+    public static ExternalDownload create(String sourceUrl, UploadSession uploadSession) {
+        return ExternalDownload.forNew(sourceUrl, uploadSession);
     }
 
     /**
@@ -54,20 +59,19 @@ public class ExternalDownloadFixture {
      * @return ExternalDownload 인스턴스
      */
     public static ExternalDownload createWithHttpUrl() {
-        return ExternalDownload.create(
-            DEFAULT_TENANT_ID,
+        return ExternalDownload.forNew(
             "http://example.com/files/document.pdf",
-            DEFAULT_TARGET_PATH
+            DEFAULT_UPLOAD_SESSION
         );
     }
 
     /**
-     * 진행 중인 ExternalDownload 생성 (IN_PROGRESS 상태)
+     * 진행 중인 ExternalDownload 생성 (DOWNLOADING 상태)
      *
      * @return ExternalDownload 인스턴스
      */
     public static ExternalDownload createInProgress() {
-        ExternalDownload download = ExternalDownload.create(DEFAULT_TENANT_ID, DEFAULT_URL, DEFAULT_TARGET_PATH);
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
         download.start();
         return download;
     }
@@ -75,65 +79,64 @@ public class ExternalDownloadFixture {
     /**
      * 진행률이 있는 ExternalDownload 생성
      *
-     * @param bytesDownloaded 다운로드된 바이트
+     * @param bytesTransferred 전송된 바이트
      * @param totalBytes 전체 바이트
      * @return ExternalDownload 인스턴스
      */
-    public static ExternalDownload createWithProgress(Long bytesDownloaded, Long totalBytes) {
-        ExternalDownload download = ExternalDownload.create(DEFAULT_TENANT_ID, DEFAULT_URL, DEFAULT_TARGET_PATH);
+    public static ExternalDownload createWithProgress(FileSize bytesTransferred, FileSize totalBytes) {
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
         download.start();
-        download.updateProgress(bytesDownloaded, totalBytes);
+        download.updateProgress(bytesTransferred, totalBytes);
         return download;
     }
 
     /**
      * 완료된 ExternalDownload 생성 (COMPLETED 상태)
      *
-     * @param fileId 생성된 파일 ID
      * @return ExternalDownload 인스턴스
      */
-    public static ExternalDownload createCompleted(Long fileId) {
-        ExternalDownload download = ExternalDownload.create(DEFAULT_TENANT_ID, DEFAULT_URL, DEFAULT_TARGET_PATH);
+    public static ExternalDownload createCompleted() {
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
         download.start();
-        download.complete(fileId, "downloaded-file.pdf", 1024L);
+        download.complete();
         return download;
     }
 
     /**
      * 실패한 ExternalDownload 생성 (FAILED 상태)
      *
-     * @param errorType 에러 타입
+     * @param errorCode 에러 코드
      * @param errorMessage 에러 메시지
      * @return ExternalDownload 인스턴스
      */
-    public static ExternalDownload createFailed(ErrorType errorType, String errorMessage) {
-        ExternalDownload download = ExternalDownload.create(DEFAULT_TENANT_ID, DEFAULT_URL, DEFAULT_TARGET_PATH);
+    public static ExternalDownload createFailed(ErrorCode errorCode, ErrorMessage errorMessage) {
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
         download.start();
-        download.fail(errorType, errorMessage);
+        download.fail(errorCode, errorMessage);
         return download;
     }
 
     /**
-     * 재시도 가능한 실패 ExternalDownload 생성
+     * 재시도 가능한 실패 ExternalDownload 생성 (5xx 에러)
      *
      * @return ExternalDownload 인스턴스
      */
     public static ExternalDownload createRetryableFailed() {
-        ExternalDownload download = ExternalDownload.create(DEFAULT_TENANT_ID, DEFAULT_URL, DEFAULT_TARGET_PATH);
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
         download.start();
-        download.fail(ErrorType.HTTP_5XX, "Internal Server Error");
+        download.fail(ErrorCode.of("500"), ErrorMessage.of("Internal Server Error"));
         return download;
     }
 
     /**
-     * 재시도 불가능한 실패 ExternalDownload 생성
+     * 재시도 불가능한 실패 ExternalDownload 생성 (4xx 에러)
      *
      * @return ExternalDownload 인스턴스
      */
     public static ExternalDownload createNonRetryableFailed() {
-        ExternalDownload download = ExternalDownload.create(DEFAULT_TENANT_ID, DEFAULT_URL, DEFAULT_TARGET_PATH);
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
         download.start();
-        download.fail(ErrorType.HTTP_4XX, "Not Found");
+        download.fail(ErrorCode.of("404"), ErrorMessage.of("Not Found"));
         return download;
     }
 
@@ -143,13 +146,36 @@ public class ExternalDownloadFixture {
      * @return ExternalDownload 인스턴스
      */
     public static ExternalDownload createMaxRetriesReached() {
-        ExternalDownload download = ExternalDownload.create(DEFAULT_TENANT_ID, DEFAULT_URL, DEFAULT_TARGET_PATH);
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
+        download.start();
+        // 최대 재시도 횟수(3회)까지 실패 처리
+        download.fail(ErrorCode.of("500"), ErrorMessage.of("Internal Server Error"));
+        download.fail(ErrorCode.of("500"), ErrorMessage.of("Internal Server Error"));
+        download.fail(ErrorCode.of("500"), ErrorMessage.of("Internal Server Error"));
+        return download;
+    }
 
-        for (int i = 0; i < 5; i++) {
-            download.start();
-            download.fail(ErrorType.HTTP_5XX, "Server Error");
-        }
+    /**
+     * Timeout 실패 ExternalDownload 생성 (재시도 가능)
+     *
+     * @return ExternalDownload 인스턴스
+     */
+    public static ExternalDownload createTimeoutFailed() {
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
+        download.start();
+        download.fail(ErrorCode.of("TIMEOUT"), ErrorMessage.of("Request timeout"));
+        return download;
+    }
 
+    /**
+     * 중단된 ExternalDownload 생성 (ABORTED 상태)
+     *
+     * @return ExternalDownload 인스턴스
+     */
+    public static ExternalDownload createAborted() {
+        ExternalDownload download = ExternalDownload.forNew(DEFAULT_SOURCE_URL, DEFAULT_UPLOAD_SESSION);
+        download.start();
+        download.abort();
         return download;
     }
 
@@ -157,58 +183,46 @@ public class ExternalDownloadFixture {
      * DB에서 복원한 ExternalDownload 생성 (Reconstitute)
      *
      * @param id Download ID
-     * @param tenantId 테넌트 ID
-     * @param url 다운로드 URL
-     * @param targetPath 대상 경로
+     * @param uploadSessionId Upload Session ID
+     * @param sourceUrl 소스 URL
+     * @param bytesTransferred 전송된 바이트 수
+     * @param totalBytes 총 바이트 수
      * @param status 상태
      * @param retryCount 재시도 횟수
-     * @param lastErrorType 마지막 에러 타입
-     * @param lastErrorMessage 마지막 에러 메시지
-     * @param fileId 파일 ID
-     * @param fileName 파일명
-     * @param fileSize 파일 크기
-     * @param bytesDownloaded 다운로드된 바이트
-     * @param totalBytes 전체 바이트
-     * @param startedAt 시작 시간
-     * @param completedAt 완료 시간
-     * @param failedAt 실패 시간
+     * @param lastRetryAt 마지막 재시도 시간
+     * @param createdAt 생성 시간
+     * @param updatedAt 수정 시간
+     * @param errorCode 오류 코드
+     * @param errorMessage 오류 메시지
      * @return ExternalDownload 인스턴스
      */
     public static ExternalDownload reconstitute(
         Long id,
-        Long tenantId,
-        String url,
-        String targetPath,
-        DownloadStatus status,
+        UploadSessionId uploadSessionId,
+        URL sourceUrl,
+        FileSize bytesTransferred,
+        FileSize totalBytes,
+        ExternalDownloadStatus status,
         Integer retryCount,
-        ErrorType lastErrorType,
-        String lastErrorMessage,
-        Long fileId,
-        String fileName,
-        Long fileSize,
-        Long bytesDownloaded,
-        Long totalBytes,
-        LocalDateTime startedAt,
-        LocalDateTime completedAt,
-        LocalDateTime failedAt
+        LocalDateTime lastRetryAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        ErrorCode errorCode,
+        ErrorMessage errorMessage
     ) {
         return ExternalDownload.reconstitute(
-            id,
-            tenantId,
-            url,
-            targetPath,
+            new ExternalDownloadId(id),
+            uploadSessionId,
+            sourceUrl,
+            bytesTransferred,
+            totalBytes,
             status,
             retryCount,
-            lastErrorType,
-            lastErrorMessage,
-            fileId,
-            fileName,
-            fileSize,
-            bytesDownloaded,
-            totalBytes,
-            startedAt,
-            completedAt,
-            failedAt
+            lastRetryAt,
+            createdAt,
+            updatedAt,
+            errorCode,
+            errorMessage
         );
     }
 
@@ -217,26 +231,28 @@ public class ExternalDownloadFixture {
      *
      * @param id Download ID
      * @return ExternalDownload 인스턴스
+     * @throws Exception URL 파싱 실패 시
      */
     public static ExternalDownload reconstituteDefault(Long id) {
-        return ExternalDownload.reconstitute(
-            id,
-            DEFAULT_TENANT_ID,
-            DEFAULT_URL,
-            DEFAULT_TARGET_PATH,
-            DownloadStatus.PENDING,
-            0,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        );
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            return ExternalDownload.reconstitute(
+                new ExternalDownloadId(id),
+                DEFAULT_UPLOAD_SESSION.getId(),
+                new URL(DEFAULT_SOURCE_URL),
+                FileSize.of(0L),
+                FileSize.of(0L),
+                ExternalDownloadStatus.INIT,
+                0,
+                null,
+                now,
+                now,
+                null,
+                null
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create default ExternalDownload", e);
+        }
     }
 
     /**
@@ -252,32 +268,24 @@ public class ExternalDownloadFixture {
      * ExternalDownload Builder
      */
     public static class ExternalDownloadBuilder {
-        private Long tenantId = DEFAULT_TENANT_ID;
-        private String url = DEFAULT_URL;
-        private String targetPath = DEFAULT_TARGET_PATH;
+        private UploadSession uploadSession = DEFAULT_UPLOAD_SESSION;
+        private String sourceUrl = DEFAULT_SOURCE_URL;
         private boolean shouldStart = false;
         private boolean shouldComplete = false;
-        private Long fileId = null;
-        private String fileName = null;
-        private Long fileSize = null;
         private boolean shouldFail = false;
-        private ErrorType errorType = null;
-        private String errorMessage = null;
-        private Long bytesDownloaded = null;
-        private Long totalBytes = null;
+        private ErrorCode errorCode = null;
+        private ErrorMessage errorMessage = null;
+        private FileSize bytesTransferred = null;
+        private FileSize totalBytes = null;
+        private boolean shouldAbort = false;
 
-        public ExternalDownloadBuilder tenantId(Long tenantId) {
-            this.tenantId = tenantId;
+        public ExternalDownloadBuilder uploadSession(UploadSession uploadSession) {
+            this.uploadSession = uploadSession;
             return this;
         }
 
-        public ExternalDownloadBuilder url(String url) {
-            this.url = url;
-            return this;
-        }
-
-        public ExternalDownloadBuilder targetPath(String targetPath) {
-            this.targetPath = targetPath;
+        public ExternalDownloadBuilder sourceUrl(String sourceUrl) {
+            this.sourceUrl = sourceUrl;
             return this;
         }
 
@@ -286,42 +294,46 @@ public class ExternalDownloadFixture {
             return this;
         }
 
-        public ExternalDownloadBuilder complete(Long fileId, String fileName, Long fileSize) {
+        public ExternalDownloadBuilder complete() {
             this.shouldComplete = true;
-            this.fileId = fileId;
-            this.fileName = fileName;
-            this.fileSize = fileSize;
             return this;
         }
 
-        public ExternalDownloadBuilder fail(ErrorType errorType, String errorMessage) {
+        public ExternalDownloadBuilder fail(ErrorCode errorCode, ErrorMessage errorMessage) {
             this.shouldFail = true;
-            this.errorType = errorType;
+            this.errorCode = errorCode;
             this.errorMessage = errorMessage;
             return this;
         }
 
-        public ExternalDownloadBuilder progress(Long bytesDownloaded, Long totalBytes) {
-            this.bytesDownloaded = bytesDownloaded;
+        public ExternalDownloadBuilder progress(FileSize bytesTransferred, FileSize totalBytes) {
+            this.bytesTransferred = bytesTransferred;
             this.totalBytes = totalBytes;
             return this;
         }
 
+        public ExternalDownloadBuilder abort() {
+            this.shouldAbort = true;
+            return this;
+        }
+
         public ExternalDownload build() {
-            ExternalDownload download = ExternalDownload.create(tenantId, url, targetPath);
+            ExternalDownload download = ExternalDownload.forNew(sourceUrl, uploadSession);
 
             if (shouldStart) {
                 download.start();
             }
 
-            if (bytesDownloaded != null && totalBytes != null) {
-                download.updateProgress(bytesDownloaded, totalBytes);
+            if (bytesTransferred != null && totalBytes != null) {
+                download.updateProgress(bytesTransferred, totalBytes);
             }
 
-            if (shouldComplete && fileId != null) {
-                download.complete(fileId, fileName, fileSize);
+            if (shouldComplete) {
+                download.complete();
             } else if (shouldFail) {
-                download.fail(errorType, errorMessage);
+                download.fail(errorCode, errorMessage);
+            } else if (shouldAbort) {
+                download.abort();
             }
 
             return download;

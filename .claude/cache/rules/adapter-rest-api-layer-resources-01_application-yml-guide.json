@@ -1,0 +1,40 @@
+{
+  "id": "adapter-rest-api-layer-resources-01_application-yml-guide",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/01-adapter-rest-api-layer/resources/01_application-yml-guide.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "application",
+        "yml",
+        "guide"
+      ],
+      "secondary": [
+        "applicationyml",
+        "설정",
+        "가이드",
+        "spring",
+        "boot",
+        "rest",
+        "api"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-rest",
+    "priority": "critical",
+    "tokenEstimate": 2207
+  },
+  "rules": {
+    "prohibited": [
+      "❌ **프로덕션 설정**: 절대 repository에 커밋하지 않음 (환경 변수 사용)"
+    ],
+    "allowed": [
+      "✅ **공통 설정**: `application.yml`에 모든 환경에서 공통으로 사용하는 설정",
+      "✅ **환경별 설정**: Profile별 YAML로 분리하거나 `---` 구분자로 같은 파일 내 분리",
+      "✅ **민감 정보**: 환경 변수 또는 외부 설정 서버 사용 (application.yml에 하드코딩 금지)"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/01-adapter-rest-api-layer/resources/01_application-yml-guide.md",
+    "summary": "Auto-generated from 01_application-yml-guide.md"
+  }
+}
