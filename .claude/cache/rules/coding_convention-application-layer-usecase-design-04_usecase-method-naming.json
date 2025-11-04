@@ -1,0 +1,30 @@
+{
+  "id": "coding_convention-application-layer-usecase-design-04_usecase-method-naming",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/03-application-layer/usecase-design/04_usecase-method-naming.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "usecase",
+        "method",
+        "naming"
+      ],
+      "secondary": [
+        "usecase",
+        "메서드명",
+        "컨벤션"
+      ],
+      "anti": []
+    },
+    "layer": "application",
+    "priority": "high",
+    "tokenEstimate": 1666
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/03-application-layer/usecase-design/04_usecase-method-naming.md",
+    "summary": "Auto-generated from 04_usecase-method-naming.md"
+  }
+}

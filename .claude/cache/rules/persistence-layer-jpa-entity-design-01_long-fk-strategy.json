@@ -17,7 +17,7 @@
     },
     "layer": "adapter-persistence",
     "priority": "critical",
-    "tokenEstimate": 1848
+    "tokenEstimate": 1027
   },
   "rules": {
     "prohibited": [],

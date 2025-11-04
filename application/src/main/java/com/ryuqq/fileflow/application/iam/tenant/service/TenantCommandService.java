@@ -240,7 +240,7 @@ public class TenantCommandService implements
         }
 
         try {
-            return TenantStatus.valueOf(status.toUpperCase());
+            return TenantStatus.valueOf(status.toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("잘못된 상태값입니다: " + status + ". ACTIVE 또는 SUSPENDED만 가능합니다.", e);
         }

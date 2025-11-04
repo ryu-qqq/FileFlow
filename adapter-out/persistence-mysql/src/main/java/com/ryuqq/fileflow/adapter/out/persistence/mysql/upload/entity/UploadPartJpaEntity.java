@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity;
 
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.BaseAuditEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -48,7 +49,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "upload_part")
-public class UploadPartJpaEntity {
+public class UploadPartJpaEntity extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -77,8 +78,7 @@ public class UploadPartJpaEntity {
     @Column(name = "uploaded_at", nullable = false)
     private LocalDateTime uploadedAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    // createdAt/updatedAt are provided by BaseAuditEntity
 
     /**
      * 기본 생성자 (JPA 스펙 요구사항)
@@ -108,6 +108,7 @@ public class UploadPartJpaEntity {
         LocalDateTime uploadedAt,
         LocalDateTime createdAt
     ) {
+        super(createdAt, createdAt);
         this.id = id;
         this.multipartUploadId = multipartUploadId;
         this.partNumber = partNumber;
@@ -115,7 +116,6 @@ public class UploadPartJpaEntity {
         this.size = size;
         this.checksum = checksum;
         this.uploadedAt = uploadedAt;
-        this.createdAt = createdAt;
     }
 
     /**
@@ -144,7 +144,7 @@ public class UploadPartJpaEntity {
         entity.size = size;
         entity.checksum = checksum;
         entity.uploadedAt = uploadedAt;
-        entity.createdAt = LocalDateTime.now();
+        entity.initializeAuditFields();
         return entity;
     }
 
@@ -246,75 +246,5 @@ public class UploadPartJpaEntity {
         return uploadedAt;
     }
 
-    /**
-     * 생성 시간을 반환합니다.
-     *
-     * @return 생성 시간
-     */
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 
-    /**
-     * ID를 설정합니다 (JPA 전용).
-     *
-     * @param id Upload Part ID
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * Multipart Upload ID를 설정합니다 (JPA 전용).
-     *
-     * @param multipartUploadId Multipart Upload ID
-     */
-    public void setMultipartUploadId(Long multipartUploadId) {
-        this.multipartUploadId = multipartUploadId;
-    }
-
-    /**
-     * 파트 번호를 설정합니다 (JPA 전용).
-     *
-     * @param partNumber 파트 번호
-     */
-    public void setPartNumber(Integer partNumber) {
-        this.partNumber = partNumber;
-    }
-
-    /**
-     * ETag를 설정합니다 (JPA 전용).
-     *
-     * @param etag ETag
-     */
-    public void setEtag(String etag) {
-        this.etag = etag;
-    }
-
-    /**
-     * 파트 크기를 설정합니다 (JPA 전용).
-     *
-     * @param size 파트 크기
-     */
-    public void setSize(Long size) {
-        this.size = size;
-    }
-
-    /**
-     * 체크섬을 설정합니다 (JPA 전용).
-     *
-     * @param checksum 체크섬
-     */
-    public void setChecksum(String checksum) {
-        this.checksum = checksum;
-    }
-
-    /**
-     * 업로드 완료 시간을 설정합니다 (JPA 전용).
-     *
-     * @param uploadedAt 업로드 완료 시간
-     */
-    public void setUploadedAt(LocalDateTime uploadedAt) {
-        this.uploadedAt = uploadedAt;
-    }
 }

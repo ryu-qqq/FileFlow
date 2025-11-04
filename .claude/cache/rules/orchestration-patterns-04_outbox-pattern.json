@@ -1,0 +1,34 @@
+{
+  "id": "orchestration-patterns-04_outbox-pattern",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/09-orchestration-patterns/04_outbox-pattern.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "outbox",
+        "pattern"
+      ],
+      "secondary": [
+        "outbox",
+        "pattern",
+        "ecs",
+        "환경에",
+        "최적화된",
+        "메시지",
+        "발행",
+        "패턴"
+      ],
+      "anti": []
+    },
+    "layer": "general",
+    "priority": "high",
+    "tokenEstimate": 5392
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/09-orchestration-patterns/04_outbox-pattern.md",
+    "summary": "Auto-generated from 04_outbox-pattern.md"
+  }
+}

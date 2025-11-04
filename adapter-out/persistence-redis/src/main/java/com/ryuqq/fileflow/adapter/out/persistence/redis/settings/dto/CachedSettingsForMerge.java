@@ -1,7 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.redis.settings.dto;
 
 import com.ryuqq.fileflow.application.settings.port.out.LoadSettingsPort.SettingsForMerge;
-import com.ryuqq.fileflow.domain.settings.Setting;
 import java.util.List;
 import java.util.stream.Collectors;
 

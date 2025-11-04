@@ -306,7 +306,7 @@ public class OrganizationCommandService implements
         }
 
         try {
-            return OrganizationStatus.valueOf(status.toUpperCase());
+            return OrganizationStatus.valueOf(status.toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
                 "잘못된 상태값입니다: " + status + ". ACTIVE 또는 INACTIVE만 가능합니다.", e

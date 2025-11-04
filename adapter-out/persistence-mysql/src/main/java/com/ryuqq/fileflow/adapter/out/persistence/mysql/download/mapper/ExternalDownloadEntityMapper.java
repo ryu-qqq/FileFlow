@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.download.entity.External
 import com.ryuqq.fileflow.domain.download.ErrorCode;
 import com.ryuqq.fileflow.domain.download.ErrorMessage;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 
@@ -84,7 +85,7 @@ public final class ExternalDownloadEntityMapper {
 
         // 2. Domain reconstitute
         return ExternalDownload.reconstitute(
-            entity.getId(),
+            new ExternalDownloadId(entity.getId()),
             uploadSessionId,
             sourceUrl,
             bytesTransferred,
@@ -92,6 +93,8 @@ public final class ExternalDownloadEntityMapper {
             entity.getStatus(),
             entity.getRetryCount(),
             entity.getLastRetryAt(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt(),
             errorCode,
             errorMessage
         );
@@ -117,34 +120,26 @@ public final class ExternalDownloadEntityMapper {
         }
 
         // 신규 생성 vs 기존 데이터 업데이트 구분
-        if (download.getId() == null) {
+        if (download.getIdValue() == null) {
             // 신규 생성
             return ExternalDownloadJpaEntity.create(
-                download.getUploadSessionId().value(),
-                download.getSourceUrl().toString(),
+                download.getUploadSessionIdValue(),
+                download.getSourceUrlString(),
                 download.getStatus()
             );
         } else {
             // 기존 데이터 reconstitute
             return ExternalDownloadJpaEntity.reconstitute(
-                download.getId(),
-                download.getUploadSessionId().value(),
-                download.getSourceUrl().toString(),
-                download.getBytesTransferred() != null
-                    ? download.getBytesTransferred().bytes()
-                    : 0L,
-                download.getTotalBytes() != null
-                    ? download.getTotalBytes().bytes()
-                    : null,
+                download.getIdValue(),
+                download.getUploadSessionIdValue(),
+                download.getSourceUrlString(),
+                download.getBytesTransferredValue(),
+                download.getTotalBytesValue(),
                 download.getStatus(),
                 download.getRetryCount(),
                 download.getLastRetryAt(),
-                download.getErrorCode() != null
-                    ? download.getErrorCode().value()
-                    : null,
-                download.getErrorMessage() != null
-                    ? download.getErrorMessage().value()
-                    : null,
+                download.getErrorCodeValue(),
+                download.getErrorMessageValue(),
                 download.getCreatedAt(),
                 download.getUpdatedAt()
             );

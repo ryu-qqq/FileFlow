@@ -1,0 +1,39 @@
+{
+  "id": "persistence-layer-query-adapter-patterns-03_query-adapter-implementation",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/04-persistence-layer/query-adapter-patterns/03_query-adapter-implementation.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "query",
+        "adapter",
+        "implementation"
+      ],
+      "secondary": [
+        "query",
+        "adapter",
+        "implementation"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-persistence",
+    "priority": "critical",
+    "tokenEstimate": 1467
+  },
+  "rules": {
+    "prohibited": [
+      "❌ JpaRepository 사용 금지 (Command Adapter에서 사용)",
+      "❌ Entity 조회 후 DTO 변환 금지 (성능 저하)",
+      "❌ Command 메서드 없음 (저장/삭제는 Command Adapter)"
+    ],
+    "allowed": [
+      "✅ `@Component` 어노테이션",
+      "✅ Query Port 인터페이스 구현",
+      "✅ JPAQueryFactory 사용",
+      "✅ DTO 직접 반환 (Domain 변환 없음)"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/04-persistence-layer/query-adapter-patterns/03_query-adapter-implementation.md",
+    "summary": "Auto-generated from 03_query-adapter-implementation.md"
+  }
+}

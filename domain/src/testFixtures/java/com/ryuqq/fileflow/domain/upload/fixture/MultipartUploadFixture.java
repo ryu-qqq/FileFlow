@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.domain.upload.fixture;
 
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload.MultipartStatus;
+import com.ryuqq.fileflow.domain.upload.MultipartUploadId;
 import com.ryuqq.fileflow.domain.upload.ProviderUploadId;
 import com.ryuqq.fileflow.domain.upload.TotalParts;
 import com.ryuqq.fileflow.domain.upload.UploadPart;
@@ -37,7 +38,7 @@ public class MultipartUploadFixture {
      * @return MultipartUpload 인스턴스
      */
     public static MultipartUpload createNew() {
-        return MultipartUpload.create(DEFAULT_UPLOAD_SESSION_ID);
+        return MultipartUpload.forNew(DEFAULT_UPLOAD_SESSION_ID);
     }
 
     /**
@@ -47,7 +48,7 @@ public class MultipartUploadFixture {
      * @return MultipartUpload 인스턴스
      */
     public static MultipartUpload createNew(UploadSessionId uploadSessionId) {
-        return MultipartUpload.create(uploadSessionId);
+        return MultipartUpload.forNew(uploadSessionId);
     }
 
     /**
@@ -56,7 +57,7 @@ public class MultipartUploadFixture {
      * @return MultipartUpload 인스턴스
      */
     public static MultipartUpload createInitiated() {
-        MultipartUpload upload = MultipartUpload.create(DEFAULT_UPLOAD_SESSION_ID);
+        MultipartUpload upload = MultipartUpload.forNew(DEFAULT_UPLOAD_SESSION_ID);
         upload.initiate(DEFAULT_PROVIDER_UPLOAD_ID, DEFAULT_TOTAL_PARTS);
         return upload;
     }
@@ -74,7 +75,7 @@ public class MultipartUploadFixture {
         ProviderUploadId providerUploadId,
         TotalParts totalParts
     ) {
-        MultipartUpload upload = MultipartUpload.create(uploadSessionId);
+        MultipartUpload upload = MultipartUpload.forNew(uploadSessionId);
         upload.initiate(providerUploadId, totalParts);
         return upload;
     }
@@ -86,7 +87,7 @@ public class MultipartUploadFixture {
      * @return MultipartUpload 인스턴스
      */
     public static MultipartUpload createWithParts(int partsCount) {
-        MultipartUpload upload = MultipartUpload.create(DEFAULT_UPLOAD_SESSION_ID);
+        MultipartUpload upload = MultipartUpload.forNew(DEFAULT_UPLOAD_SESSION_ID);
         upload.initiate(DEFAULT_PROVIDER_UPLOAD_ID, DEFAULT_TOTAL_PARTS);
 
         for (int i = 1; i <= partsCount; i++) {
@@ -102,7 +103,7 @@ public class MultipartUploadFixture {
      * @return MultipartUpload 인스턴스
      */
     public static MultipartUpload createCompleted() {
-        MultipartUpload upload = MultipartUpload.create(DEFAULT_UPLOAD_SESSION_ID);
+        MultipartUpload upload = MultipartUpload.forNew(DEFAULT_UPLOAD_SESSION_ID);
         upload.initiate(DEFAULT_PROVIDER_UPLOAD_ID, DEFAULT_TOTAL_PARTS);
 
         // 모든 파트 추가
@@ -120,7 +121,7 @@ public class MultipartUploadFixture {
      * @return MultipartUpload 인스턴스
      */
     public static MultipartUpload createAborted() {
-        MultipartUpload upload = MultipartUpload.create(DEFAULT_UPLOAD_SESSION_ID);
+        MultipartUpload upload = MultipartUpload.forNew(DEFAULT_UPLOAD_SESSION_ID);
         upload.initiate(DEFAULT_PROVIDER_UPLOAD_ID, DEFAULT_TOTAL_PARTS);
         upload.abort();
         return upload;
@@ -132,9 +133,9 @@ public class MultipartUploadFixture {
      * @return MultipartUpload 인스턴스
      */
     public static MultipartUpload createFailed() {
-        MultipartUpload upload = MultipartUpload.create(DEFAULT_UPLOAD_SESSION_ID);
+        MultipartUpload upload = MultipartUpload.forNew(DEFAULT_UPLOAD_SESSION_ID);
         upload.initiate(DEFAULT_PROVIDER_UPLOAD_ID, DEFAULT_TOTAL_PARTS);
-        upload.fail("Upload failed due to network error");
+        upload.fail();
         return upload;
     }
 
@@ -147,7 +148,8 @@ public class MultipartUploadFixture {
      * @param status 상태
      * @param totalParts 전체 파트 수
      * @param uploadedParts 업로드된 파트 리스트
-     * @param startedAt 시작 시간
+     * @param createdAt 생성 시간
+     * @param updatedAt 수정 시간
      * @param completedAt 완료 시간
      * @param abortedAt 중단 시간
      * @return MultipartUpload 인스턴스
@@ -159,18 +161,20 @@ public class MultipartUploadFixture {
         MultipartStatus status,
         TotalParts totalParts,
         List<UploadPart> uploadedParts,
-        LocalDateTime startedAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
         LocalDateTime completedAt,
         LocalDateTime abortedAt
     ) {
         return MultipartUpload.reconstitute(
-            id,
+            MultipartUploadId.of(id),
             uploadSessionId,
             providerUploadId,
             status,
             totalParts,
             uploadedParts,
-            startedAt,
+            createdAt,
+            updatedAt,
             completedAt,
             abortedAt
         );
@@ -183,14 +187,16 @@ public class MultipartUploadFixture {
      * @return MultipartUpload 인스턴스
      */
     public static MultipartUpload reconstituteDefault(Long id) {
+        LocalDateTime now = LocalDateTime.now();
         return MultipartUpload.reconstitute(
-            id,
+            MultipartUploadId.of(id),
             DEFAULT_UPLOAD_SESSION_ID,
             DEFAULT_PROVIDER_UPLOAD_ID,
             MultipartStatus.IN_PROGRESS,
             DEFAULT_TOTAL_PARTS,
             List.of(),
-            LocalDateTime.now(),
+            now,
+            now,
             null,
             null
         );
@@ -259,7 +265,7 @@ public class MultipartUploadFixture {
         }
 
         public MultipartUpload build() {
-            MultipartUpload upload = MultipartUpload.create(uploadSessionId);
+            MultipartUpload upload = MultipartUpload.forNew(uploadSessionId);
 
             if (shouldInitiate) {
                 upload.initiate(providerUploadId, totalParts);
@@ -276,7 +282,7 @@ public class MultipartUploadFixture {
             } else if (shouldAbort) {
                 upload.abort();
             } else if (shouldFail) {
-                upload.fail("Test failure");
+                upload.fail();
             }
 
             return upload;

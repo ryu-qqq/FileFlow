@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.BaseAuditEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.BaseAuditEntity;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

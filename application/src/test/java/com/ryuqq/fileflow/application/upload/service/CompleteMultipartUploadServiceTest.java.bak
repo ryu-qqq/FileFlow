@@ -1,0 +1,271 @@
+package com.ryuqq.fileflow.application.upload.service;
+
+import com.ryuqq.fileflow.application.file.manager.FileManager;
+import com.ryuqq.fileflow.application.iam.context.IamContext;
+import com.ryuqq.fileflow.application.iam.context.IamContextFacade;
+import com.ryuqq.fileflow.application.upload.dto.command.CompleteMultipartCommand;
+import com.ryuqq.fileflow.application.upload.dto.response.CompleteMultipartResponse;
+import com.ryuqq.fileflow.application.upload.dto.response.S3CompleteResultResponse;
+import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
+import com.ryuqq.fileflow.application.upload.facade.S3MultipartFacade;
+import com.ryuqq.fileflow.application.upload.manager.MultipartUploadManager;
+import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
+import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.domain.file.asset.FileAsset;
+import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
+import com.ryuqq.fileflow.domain.upload.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
+/**
+ * CompleteMultipartUploadService 통합 테스트
+ *
+ * <p><strong>테스트 범위:</strong></p>
+ * <ul>
+ *   <li>S3 Complete API 호출 후 HeadObject 검증</li>
+ *   <li>FileAsset 생성 및 UploadSession 완료</li>
+ *   <li>검증 실패 시 예외 처리</li>
+ * </ul>
+ *
+ * @author Sangwon Ryu
+ * @since 1.0.0
+ */
+@SpringBootTest
+@Transactional
+class CompleteMultipartUploadServiceTest {
+
+    @Autowired
+    private CompleteMultipartUploadService completeMultipartUploadService;
+
+    @Autowired
+    private UploadSessionPort uploadSessionPort;
+
+    @Autowired
+    private MultipartUploadManager multipartUploadManager;
+
+    @Autowired
+    private FileManager fileManager;
+
+    @MockBean
+    private IamContextFacade iamContextFacade;
+
+    @MockBean
+    private S3MultipartFacade s3MultipartFacade;
+
+    @MockBean
+    private S3StoragePort s3StoragePort;
+
+    private UploadSession testSession;
+    private MultipartUpload testMultipart;
+    private final String testBucket = "test-bucket";
+    private final String testSessionKey = "test-session-key-123";
+
+    @BeforeEach
+    void setUp() {
+        // UploadSession 생성
+        testSession = UploadSession.forMultipartUpload(
+            TenantId.of(1L),
+            null, // organizationId
+            null, // userContextId
+            FileName.of("test-file.jpg"),
+            FileSize.of(10_485_760L), // 10 MB
+            StorageKey.of("uploads/2025/01/test-file.jpg"),
+            MimeType.of("image/jpeg")
+        );
+        testSession = uploadSessionPort.save(testSession);
+
+        // MultipartUpload 생성 (5 MB chunk = 2 parts)
+        testMultipart = MultipartUpload.forNew(
+            testSession.getId(),
+            ProviderUploadId.of("test-upload-id-123"),
+            ChunkSize.of(5_242_880L) // 5 MB
+        );
+
+        // 모든 파트 업로드 완료 상태로 설정
+        for (int i = 1; i <= testMultipart.getTotalParts().value(); i++) {
+            testMultipart.markPartUploaded(
+                PartNumber.of(i),
+                ETag.of("etag-" + i),
+                PartSize.of(5_242_880L)
+            );
+        }
+
+        testMultipart = multipartUploadManager.save(testMultipart);
+
+        // Mock 설정
+        given(iamContextFacade.loadContext(any(), any(), any()))
+            .willReturn(new IamContext(TenantId.of(1L), null, null));
+
+        given(s3MultipartFacade.completeMultipart(any(), any(), anyString(), anyList(), anyLong()))
+            .willReturn(S3CompleteResultResponse.of(
+                "final-etag-123",
+                "https://s3.amazonaws.com/test-bucket/uploads/2025/01/test-file.jpg"
+            ));
+
+        given(s3StoragePort.headObject(anyString(), anyString()))
+            .willReturn(S3HeadObjectResponse.of(
+                10_485_760L, // 10 MB
+                "final-etag-123",
+                "image/jpeg"
+            ));
+    }
+
+    /**
+     * 성공 케이스: S3 Complete → HeadObject 검증 → FileAsset 생성
+     */
+    @Test
+    void execute_성공_S3검증_및_FileAsset생성() {
+        // Given
+        CompleteMultipartCommand command = CompleteMultipartCommand.of(testSessionKey);
+
+        // When
+        CompleteMultipartResponse response = completeMultipartUploadService.execute(command);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.fileId()).isNotNull();
+        assertThat(response.etag()).isEqualTo("final-etag-123");
+
+        // S3 HeadObject 호출 확인
+        verify(s3StoragePort).headObject(testBucket, "uploads/2025/01/test-file.jpg");
+
+        // UploadSession 완료 상태 확인
+        UploadSession updatedSession = uploadSessionPort.findBySessionKey(SessionKey.of(testSessionKey))
+            .orElseThrow();
+        assertThat(updatedSession.getStatus()).isEqualTo(UploadSessionStatus.COMPLETED);
+        assertThat(updatedSession.getFileAssetIdValue()).isNotNull();
+
+        // FileAsset 생성 확인
+        FileAsset fileAsset = fileManager.findById(updatedSession.getFileAssetIdValue())
+            .orElseThrow();
+        assertThat(fileAsset.getFileName().value()).isEqualTo("test-file.jpg");
+        assertThat(fileAsset.getFileSize().bytes()).isEqualTo(10_485_760L);
+    }
+
+    /**
+     * 실패 케이스: UploadSession이 존재하지 않음
+     */
+    @Test
+    void execute_실패_UploadSession_존재하지않음() {
+        // Given
+        CompleteMultipartCommand command = CompleteMultipartCommand.of("non-existent-key");
+
+        // When & Then
+        assertThatThrownBy(() -> completeMultipartUploadService.execute(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Upload session not found");
+    }
+
+    /**
+     * 실패 케이스: MultipartUpload가 존재하지 않음 (Single Upload 세션)
+     */
+    @Test
+    void execute_실패_MultipartUpload_존재하지않음() {
+        // Given: Single Upload 세션 생성
+        UploadSession singleSession = UploadSession.forSingleUpload(
+            TenantId.of(1L),
+            null,
+            null,
+            FileName.of("single-file.jpg"),
+            FileSize.of(1024L),
+            StorageKey.of("uploads/single-file.jpg"),
+            MimeType.of("image/jpeg")
+        );
+        singleSession = uploadSessionPort.save(singleSession);
+
+        CompleteMultipartCommand command = CompleteMultipartCommand.of(singleSession.getSessionKeyValue());
+
+        // When & Then
+        assertThatThrownBy(() -> completeMultipartUploadService.execute(command))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Not a multipart upload");
+    }
+
+    /**
+     * 실패 케이스: 모든 파트가 업로드되지 않음
+     */
+    @Test
+    void execute_실패_파트_업로드_미완료() {
+        // Given: 일부 파트만 업로드된 MultipartUpload
+        UploadSession incompleteSession = UploadSession.forMultipartUpload(
+            TenantId.of(1L),
+            null,
+            null,
+            FileName.of("incomplete-file.jpg"),
+            FileSize.of(20_971_520L), // 20 MB
+            StorageKey.of("uploads/incomplete-file.jpg"),
+            MimeType.of("image/jpeg")
+        );
+        incompleteSession = uploadSessionPort.save(incompleteSession);
+
+        MultipartUpload incompleteMultipart = MultipartUpload.forNew(
+            incompleteSession.getId(),
+            ProviderUploadId.of("incomplete-upload-id"),
+            ChunkSize.of(5_242_880L) // 5 MB → 4 parts
+        );
+
+        // 4개 중 2개만 업로드
+        incompleteMultipart.markPartUploaded(PartNumber.of(1), ETag.of("etag-1"), PartSize.of(5_242_880L));
+        incompleteMultipart.markPartUploaded(PartNumber.of(2), ETag.of("etag-2"), PartSize.of(5_242_880L));
+
+        multipartUploadManager.save(incompleteMultipart);
+
+        CompleteMultipartCommand command = CompleteMultipartCommand.of(incompleteSession.getSessionKeyValue());
+
+        // When & Then
+        assertThatThrownBy(() -> completeMultipartUploadService.execute(command))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Cannot complete multipart upload");
+    }
+
+    /**
+     * 실패 케이스: S3 HeadObject 실패 (파일이 존재하지 않음)
+     */
+    @Test
+    void execute_실패_S3파일_존재하지않음() {
+        // Given
+        given(s3StoragePort.headObject(anyString(), anyString()))
+            .willThrow(new com.ryuqq.fileflow.adapter.out.aws.s3.exception.S3StorageException(
+                "Object not found",
+                new RuntimeException("NoSuchKey")
+            ));
+
+        CompleteMultipartCommand command = CompleteMultipartCommand.of(testSessionKey);
+
+        // When & Then
+        assertThatThrownBy(() -> completeMultipartUploadService.execute(command))
+            .isInstanceOf(com.ryuqq.fileflow.adapter.out.aws.s3.exception.S3StorageException.class)
+            .hasMessageContaining("Object not found");
+    }
+
+    /**
+     * 검증: S3 Complete 후 HeadObject 호출 순서 확인
+     */
+    @Test
+    void execute_검증_S3_Complete와_HeadObject_순서() {
+        // Given
+        CompleteMultipartCommand command = CompleteMultipartCommand.of(testSessionKey);
+
+        // When
+        completeMultipartUploadService.execute(command);
+
+        // Then: S3MultipartFacade → S3StoragePort 순서로 호출
+        var inOrder = org.mockito.Mockito.inOrder(s3MultipartFacade, s3StoragePort);
+        inOrder.verify(s3MultipartFacade).completeMultipart(any(), any(), anyString(), anyList(), anyLong());
+        inOrder.verify(s3StoragePort).headObject(anyString(), anyString());
+    }
+}

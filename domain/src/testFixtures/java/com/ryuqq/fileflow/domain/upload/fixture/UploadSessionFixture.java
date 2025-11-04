@@ -6,9 +6,11 @@ import com.ryuqq.fileflow.domain.upload.FileName;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
+import com.ryuqq.fileflow.domain.upload.SessionStatus;
+import com.ryuqq.fileflow.domain.upload.StorageKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
-import com.ryuqq.fileflow.domain.upload.UploadSession.SessionStatus;
-import com.ryuqq.fileflow.domain.upload.UploadSession.UploadType;
+import com.ryuqq.fileflow.domain.upload.UploadSessionId;
+import com.ryuqq.fileflow.domain.upload.UploadType;
 
 import java.time.LocalDateTime;
 
@@ -39,7 +41,7 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession createSingle() {
-        return UploadSession.create(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
+        return UploadSession.forNew(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
     }
 
     /**
@@ -51,7 +53,7 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession createSingle(TenantId tenantId, FileName fileName, FileSize fileSize) {
-        return UploadSession.create(tenantId, fileName, fileSize);
+        return UploadSession.forNew(tenantId, fileName, fileSize);
     }
 
     /**
@@ -60,7 +62,9 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession createMultipart() {
-        return UploadSession.createForMultipart(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
+        com.ryuqq.fileflow.domain.upload.StorageKey storageKey =
+            com.ryuqq.fileflow.domain.upload.StorageKey.of("test/multipart/file.txt");
+        return UploadSession.forNewMultipart(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE, storageKey);
     }
 
     /**
@@ -72,7 +76,9 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession createMultipart(TenantId tenantId, FileName fileName, FileSize fileSize) {
-        return UploadSession.createForMultipart(tenantId, fileName, fileSize);
+        com.ryuqq.fileflow.domain.upload.StorageKey storageKey =
+            com.ryuqq.fileflow.domain.upload.StorageKey.of("test/multipart/" + fileName.value());
+        return UploadSession.forNewMultipart(tenantId, fileName, fileSize, storageKey);
     }
 
     /**
@@ -81,10 +87,13 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession createMultipartWithAttachment() {
-        UploadSession session = UploadSession.createForMultipart(
+        com.ryuqq.fileflow.domain.upload.StorageKey storageKey =
+            com.ryuqq.fileflow.domain.upload.StorageKey.of("test/multipart/file.txt");
+        UploadSession session = UploadSession.forNewMultipart(
             DEFAULT_TENANT_ID,
             DEFAULT_FILE_NAME,
-            DEFAULT_FILE_SIZE
+            DEFAULT_FILE_SIZE,
+            storageKey
         );
 
         // Note: MultipartUpload를 생성하고 연결하려면 UploadSession의 ID가 필요
@@ -98,7 +107,7 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession createSingleInProgress() {
-        UploadSession session = UploadSession.create(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
+        UploadSession session = UploadSession.forNew(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
         session.start();
         return session;
     }
@@ -110,7 +119,7 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession createSingleCompleted(Long fileId) {
-        UploadSession session = UploadSession.create(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
+        UploadSession session = UploadSession.forNew(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
         session.start();
         session.complete(fileId);
         return session;
@@ -123,7 +132,7 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession createFailed(FailureReason reason) {
-        UploadSession session = UploadSession.create(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
+        UploadSession session = UploadSession.forNew(DEFAULT_TENANT_ID, DEFAULT_FILE_NAME, DEFAULT_FILE_SIZE);
         session.start();
         session.fail(reason);
         return session;
@@ -138,10 +147,12 @@ public class UploadSessionFixture {
      * @param fileName 파일명
      * @param fileSize 파일 크기
      * @param uploadType 업로드 타입
+     * @param storageKey 스토리지 키
      * @param status 상태
      * @param fileId 파일 ID
      * @param failureReason 실패 사유
      * @param createdAt 생성 시간
+     * @param updatedAt 수정 시간
      * @param completedAt 완료 시간
      * @param failedAt 실패 시간
      * @return UploadSession 인스턴스
@@ -153,24 +164,28 @@ public class UploadSessionFixture {
         FileName fileName,
         FileSize fileSize,
         UploadType uploadType,
+        StorageKey storageKey,
         SessionStatus status,
         Long fileId,
         FailureReason failureReason,
         LocalDateTime createdAt,
+        LocalDateTime updatedAt,
         LocalDateTime completedAt,
         LocalDateTime failedAt
     ) {
         return UploadSession.reconstitute(
-            id,
+            UploadSessionId.of(id),
             sessionKey,
             tenantId,
             fileName,
             fileSize,
             uploadType,
+            storageKey,
             status,
             fileId,
             failureReason,
             createdAt,
+            updatedAt,
             completedAt,
             failedAt
         );
@@ -183,17 +198,20 @@ public class UploadSessionFixture {
      * @return UploadSession 인스턴스
      */
     public static UploadSession reconstituteDefault(Long id) {
+        LocalDateTime now = LocalDateTime.now();
         return UploadSession.reconstitute(
-            id,
+            UploadSessionId.of(id),
             SessionKey.of("session-key-" + id),
             DEFAULT_TENANT_ID,
             DEFAULT_FILE_NAME,
             DEFAULT_FILE_SIZE,
             UploadType.SINGLE,
+            null, // storageKey (SINGLE 타입은 null 가능)
             SessionStatus.PENDING,
             null,
             null,
-            LocalDateTime.now(),
+            now,
+            now,
             null,
             null
         );
@@ -265,9 +283,14 @@ public class UploadSessionFixture {
         }
 
         public UploadSession build() {
-            UploadSession session = uploadType == UploadType.MULTIPART
-                ? UploadSession.createForMultipart(tenantId, fileName, fileSize)
-                : UploadSession.create(tenantId, fileName, fileSize);
+            UploadSession session;
+            if (uploadType == UploadType.MULTIPART) {
+                com.ryuqq.fileflow.domain.upload.StorageKey storageKey =
+                    com.ryuqq.fileflow.domain.upload.StorageKey.of("test/multipart/" + fileName.value());
+                session = UploadSession.forNewMultipart(tenantId, fileName, fileSize, storageKey);
+            } else {
+                session = UploadSession.forNew(tenantId, fileName, fileSize);
+            }
 
             if (shouldStart) {
                 session.start();

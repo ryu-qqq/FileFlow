@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.domain.upload.Checksum;
 import com.ryuqq.fileflow.domain.upload.ETag;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
+import com.ryuqq.fileflow.domain.upload.MultipartUploadId;
 import com.ryuqq.fileflow.domain.upload.PartNumber;
 import com.ryuqq.fileflow.domain.upload.ProviderUploadId;
 import com.ryuqq.fileflow.domain.upload.TotalParts;
@@ -86,13 +87,14 @@ public final class MultipartUploadEntityMapper {
 
         // 3. Domain reconstitute
         return MultipartUpload.reconstitute(
-            entity.getId(),
+            MultipartUploadId.of(entity.getId()),
             uploadSessionId,
             providerUploadId,
             entity.getStatus(),
             totalParts,
             uploadedParts,
-            entity.getStartedAt(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt(),
             entity.getCompletedAt(),
             entity.getAbortedAt()
         );
@@ -118,32 +120,28 @@ public final class MultipartUploadEntityMapper {
         }
 
         // 신규 생성 vs 기존 데이터 업데이트 구분
-        if (multipart.getId() == null) {
+        if (multipart.getIdValue() == null) {
             // 신규 생성
             return MultipartUploadJpaEntity.create(
-                multipart.getUploadSessionId().value(),
-                multipart.getProviderUploadId() != null
-                    ? multipart.getProviderUploadId().value()
-                    : null,
+                multipart.getUploadSessionIdValue(),
+                multipart.getProviderUploadIdValue(),
                 multipart.getStatus(),
                 multipart.getTotalParts() != null
                     ? multipart.getTotalParts().value()
                     : null,
-                multipart.getStartedAt()
+                multipart.getCreatedAt()
             );
         } else {
             // 기존 데이터 reconstitute
             return MultipartUploadJpaEntity.reconstitute(
-                multipart.getId(),
-                multipart.getUploadSessionId().value(),
-                multipart.getProviderUploadId() != null
-                    ? multipart.getProviderUploadId().value()
-                    : null,
+                multipart.getIdValue(),
+                multipart.getUploadSessionIdValue(),
+                multipart.getProviderUploadIdValue(),
                 multipart.getStatus(),
                 multipart.getTotalParts() != null
                     ? multipart.getTotalParts().value()
                     : null,
-                multipart.getStartedAt(),
+                multipart.getCreatedAt(),        // startedAt (실제로는 createdAt)
                 multipart.getCompletedAt(),
                 multipart.getAbortedAt(),
                 multipart.getCreatedAt(),

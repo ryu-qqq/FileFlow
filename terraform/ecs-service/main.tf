@@ -250,3 +250,271 @@ module "fileflow_service" {
     aws_iam_role_policy_attachment.fileflow_execution_role_policy
   ]
 }
+
+# ============================================================================
+# Download Scheduler Service
+# ============================================================================
+
+# CloudWatch Log Group for Download Scheduler
+module "download_scheduler_logs" {
+  source = "../modules/cloudwatch-log-group"
+
+  name              = "/aws/ecs/${local.service_name}-scheduler-download"
+  retention_in_days = local.log_retention_days
+  kms_key_id        = data.aws_kms_key.cloudwatch_logs.arn
+
+  environment = local.environment
+  service     = "${local.service_name}-scheduler-download"
+  team        = "platform-team"
+  owner       = "platform-team@example.com"
+  cost_center = "engineering"
+  project     = "fileflow"
+}
+
+# Security Group for Download Scheduler
+resource "aws_security_group" "download_scheduler" {
+  name_prefix = "${local.name_prefix}-scheduler-download-"
+  description = "Security group for fileflow download scheduler tasks"
+  vpc_id      = local.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+
+  tags = merge(
+    local.required_tags,
+    {
+      Name      = "sg-${local.name_prefix}-scheduler-download"
+      Component = "security"
+    }
+  )
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Download Scheduler ECS Service
+module "download_scheduler_service" {
+  source = "../modules/ecs-service"
+
+  name               = "${local.service_name}-scheduler-download"
+  cluster_id         = aws_ecs_cluster.fileflow.id
+  container_name     = "fileflow-scheduler-download"
+  container_port     = 9091  # Actuator port
+  container_image    = "${local.ecr_image_uri}-download-scheduler"
+  cpu                = 512
+  memory             = 1024
+  desired_count      = 1  # 스케줄러는 항상 1개만
+  execution_role_arn = aws_iam_role.fileflow_execution_role.arn
+  task_role_arn      = aws_iam_role.fileflow_task_role.arn
+  subnet_ids         = local.private_subnet_ids
+  common_tags        = local.required_tags
+
+  security_group_ids = [aws_security_group.download_scheduler.id]
+
+  log_configuration = {
+    log_driver = "awslogs"
+    options = {
+      "awslogs-group"         = module.download_scheduler_logs.log_group_name
+      "awslogs-region"        = "ap-northeast-2"
+      "awslogs-stream-prefix" = "download-scheduler"
+    }
+  }
+
+  # No Load Balancer for scheduler
+  load_balancer_config = null
+
+  container_environment = [
+    {
+      name  = "SPRING_PROFILES_ACTIVE"
+      value = "prod"
+    },
+    {
+      name  = "DOWNLOAD_DB_HOST"
+      value = local.db_address
+    },
+    {
+      name  = "DOWNLOAD_DB_PORT"
+      value = tostring(local.db_port)
+    },
+    {
+      name  = "DOWNLOAD_DB_USERNAME"
+      value = "admin"
+    },
+    {
+      name  = "REDIS_HOST"
+      value = local.redis_endpoint
+    },
+    {
+      name  = "REDIS_PORT"
+      value = tostring(local.redis_port)
+    },
+    {
+      name  = "AWS_REGION"
+      value = "ap-northeast-2"
+    },
+    {
+      name  = "AWS_S3_BUCKET"
+      value = "fileflow-prod"
+    },
+    {
+      name  = "AWS_CLOUDWATCH_LOG_GROUP"
+      value = module.download_scheduler_logs.log_group_name
+    },
+    {
+      name  = "ACTUATOR_PORT"
+      value = "9091"
+    }
+  ]
+
+  container_secrets = [
+    {
+      name      = "DOWNLOAD_DB_PASSWORD"
+      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
+    }
+  ]
+
+  depends_on = [
+    module.download_scheduler_logs,
+    aws_iam_role_policy_attachment.fileflow_execution_role_policy
+  ]
+}
+
+# ============================================================================
+# Pipeline Scheduler Service
+# ============================================================================
+
+# CloudWatch Log Group for Pipeline Scheduler
+module "pipeline_scheduler_logs" {
+  source = "../modules/cloudwatch-log-group"
+
+  name              = "/aws/ecs/${local.service_name}-scheduler-pipeline"
+  retention_in_days = local.log_retention_days
+  kms_key_id        = data.aws_kms_key.cloudwatch_logs.arn
+
+  environment = local.environment
+  service     = "${local.service_name}-scheduler-pipeline"
+  team        = "platform-team"
+  owner       = "platform-team@example.com"
+  cost_center = "engineering"
+  project     = "fileflow"
+}
+
+# Security Group for Pipeline Scheduler
+resource "aws_security_group" "pipeline_scheduler" {
+  name_prefix = "${local.name_prefix}-scheduler-pipeline-"
+  description = "Security group for fileflow pipeline scheduler tasks"
+  vpc_id      = local.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+
+  tags = merge(
+    local.required_tags,
+    {
+      Name      = "sg-${local.name_prefix}-scheduler-pipeline"
+      Component = "security"
+    }
+  )
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Pipeline Scheduler ECS Service
+module "pipeline_scheduler_service" {
+  source = "../modules/ecs-service"
+
+  name               = "${local.service_name}-scheduler-pipeline"
+  cluster_id         = aws_ecs_cluster.fileflow.id
+  container_name     = "fileflow-scheduler-pipeline"
+  container_port     = 9092  # Actuator port
+  container_image    = "${local.ecr_image_uri}-pipeline-scheduler"
+  cpu                = 512
+  memory             = 1024
+  desired_count      = 1  # 스케줄러는 항상 1개만
+  execution_role_arn = aws_iam_role.fileflow_execution_role.arn
+  task_role_arn      = aws_iam_role.fileflow_task_role.arn
+  subnet_ids         = local.private_subnet_ids
+  common_tags        = local.required_tags
+
+  security_group_ids = [aws_security_group.pipeline_scheduler.id]
+
+  log_configuration = {
+    log_driver = "awslogs"
+    options = {
+      "awslogs-group"         = module.pipeline_scheduler_logs.log_group_name
+      "awslogs-region"        = "ap-northeast-2"
+      "awslogs-stream-prefix" = "pipeline-scheduler"
+    }
+  }
+
+  # No Load Balancer for scheduler
+  load_balancer_config = null
+
+  container_environment = [
+    {
+      name  = "SPRING_PROFILES_ACTIVE"
+      value = "prod"
+    },
+    {
+      name  = "PIPELINE_DB_HOST"
+      value = local.db_address
+    },
+    {
+      name  = "PIPELINE_DB_PORT"
+      value = tostring(local.db_port)
+    },
+    {
+      name  = "PIPELINE_DB_USERNAME"
+      value = "admin"
+    },
+    {
+      name  = "REDIS_HOST"
+      value = local.redis_endpoint
+    },
+    {
+      name  = "REDIS_PORT"
+      value = tostring(local.redis_port)
+    },
+    {
+      name  = "AWS_REGION"
+      value = "ap-northeast-2"
+    },
+    {
+      name  = "AWS_S3_BUCKET"
+      value = "fileflow-prod"
+    },
+    {
+      name  = "AWS_CLOUDWATCH_LOG_GROUP"
+      value = module.pipeline_scheduler_logs.log_group_name
+    },
+    {
+      name  = "ACTUATOR_PORT"
+      value = "9092"
+    }
+  ]
+
+  container_secrets = [
+    {
+      name      = "PIPELINE_DB_PASSWORD"
+      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
+    }
+  ]
+
+  depends_on = [
+    module.pipeline_scheduler_logs,
+    aws_iam_role_policy_attachment.fileflow_execution_role_policy
+  ]
+}

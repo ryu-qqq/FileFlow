@@ -1,0 +1,111 @@
+# ===============================================
+# Production Profile Configuration - Persistence MySQL Adapter
+# ===============================================
+# 프로덕션 환경 전용 설정
+# 모든 민감한 정보는 환경변수로 주입
+#
+# @author FileFlow Team
+# @since 1.0.0
+# ===============================================
+
+spring:
+  # ===============================================
+  # DataSource Configuration (Production)
+  # ===============================================
+  datasource:
+    # 환경변수로 주입 (필수)
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    hikari:
+      pool-name: FileFlow-Prod-HikariPool
+      minimum-idle: ${DB_POOL_MIN_IDLE:10}
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:50}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      validation-timeout: 5000
+      leak-detection-threshold: 120000  # 프로덕션은 2분
+      auto-commit: true
+      read-only: false
+      register-mbeans: true
+      
+      # MySQL 최적화 설정
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+
+  # ===============================================
+  # JPA Configuration (Production)
+  # ===============================================
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: validate  # 프로덕션에서는 반드시 validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    
+    properties:
+      hibernate:
+        format_sql: false  # 프로덕션에서는 포맷팅 비활성화
+        use_sql_comments: false
+        jdbc:
+          batch_size: 50
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+        query:
+          plan_cache_max_size: 2048
+          plan_parameter_metadata_max_size: 128
+        generate_statistics: false  # 프로덕션에서는 통계 비활성화
+        connection:
+          provider_disables_autocommit: false
+    
+    open-in-view: false
+    show-sql: false
+
+  # ===============================================
+  # Flyway Configuration (Production)
+  # ===============================================
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    encoding: UTF-8
+    sql-migration-prefix: V
+    sql-migration-separator: __
+    sql-migration-suffixes: .sql
+    placeholder-replacement: true
+    placeholders:
+      charset: utf8mb4
+      collation: utf8mb4_unicode_ci
+    validate-on-migrate: true
+    out-of-order: false
+    clean-disabled: true  # 프로덕션에서는 clean 절대 금지
+    group: false
+    mixed: false
+    repeatable-sql-migration-prefix: R
+    table: flyway_schema_history
+
+# ===============================================
+# Logging Configuration (Production)
+# ===============================================
+logging:
+  level:
+    com.zaxxer.hikari: INFO
+    org.hibernate.SQL: WARN  # 프로덕션에서는 SQL 로깅 최소화
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.hibernate.stat: WARN

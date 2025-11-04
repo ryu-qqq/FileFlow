@@ -74,6 +74,9 @@ subprojects {
     checkstyle {
         toolVersion = rootProject.libs.versions.checkstyle.get()
         configFile = rootProject.file("config/checkstyle/checkstyle.xml")
+        configProperties = mapOf(
+            "config_loc" to rootProject.file("config/checkstyle").absolutePath
+        )
         isIgnoreFailures = false
         maxWarnings = 0
     }

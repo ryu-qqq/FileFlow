@@ -52,6 +52,34 @@ api:
     settings:
       base: /settings
 
+    # ===============================================
+    # Upload Bounded Context
+    # ===============================================
+    upload:
+      base: /uploads
+      multipart:
+        init: /multipart/init
+        part-url: /multipart/{sessionKey}/parts/{partNumber}/url
+        mark-part: /multipart/{sessionKey}/parts/{partNumber}
+        complete: /multipart/{sessionKey}/complete
+
+    # ===============================================
+    # Download Bounded Context
+    # ===============================================
+    download:
+      base: /downloads
+      external:
+        start: /external
+        status: /external/{downloadId}/status
+
+    # ===============================================
+    # File Management Bounded Context
+    # ===============================================
+    file:
+      base: /files
+      by-id: /{fileId}
+      download-url: /{fileId}/download-url
+
   # ===============================================
   # Error Response Configuration (RFC 7807)
   # ===============================================

@@ -1,6 +1,9 @@
 package com.ryuqq.fileflow.domain.policy.fixture;
 
 import com.ryuqq.fileflow.domain.policy.FileMetadata;
+import com.ryuqq.fileflow.domain.upload.FileName;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.MimeType;
 
 /**
  * FileMetadata Test Fixture
@@ -25,7 +28,11 @@ public class FileMetadataFixture {
      * @return FileMetadata 인스턴스
      */
     public static FileMetadata createDefault() {
-        return FileMetadata.of("test-image.jpg", "image/jpeg", 1048576L);
+        return FileMetadata.of(
+            FileName.of("test-image.jpg"),
+            MimeType.of("image/jpeg"),
+            FileSize.of(1048576L)
+        );
     }
 
     /**
@@ -36,7 +43,7 @@ public class FileMetadataFixture {
      * @param size 파일 크기
      * @return FileMetadata 인스턴스
      */
-    public static FileMetadata create(String name, String mimeType, Long size) {
+    public static FileMetadata create(FileName name, MimeType mimeType, FileSize size) {
         return FileMetadata.of(name, mimeType, size);
     }
 
@@ -46,7 +53,11 @@ public class FileMetadataFixture {
      * @return FileMetadata 인스턴스
      */
     public static FileMetadata createJpgImage() {
-        return FileMetadata.of("image.jpg", "image/jpeg", 2097152L); // 2MB
+        return FileMetadata.of(
+            FileName.of("image.jpg"),
+            MimeType.of("image/jpeg"),
+            FileSize.of(2097152L) // 2MB
+        );
     }
 
     /**
@@ -55,7 +66,11 @@ public class FileMetadataFixture {
      * @return FileMetadata 인스턴스
      */
     public static FileMetadata createPngImage() {
-        return FileMetadata.of("image.png", "image/png", 3145728L); // 3MB
+        return FileMetadata.of(
+            FileName.of("image.png"),
+            MimeType.of("image/png"),
+            FileSize.of(3145728L) // 3MB
+        );
     }
 
     /**
@@ -64,7 +79,11 @@ public class FileMetadataFixture {
      * @return FileMetadata 인스턴스
      */
     public static FileMetadata createPdfDocument() {
-        return FileMetadata.of("document.pdf", "application/pdf", 5242880L); // 5MB
+        return FileMetadata.of(
+            FileName.of("document.pdf"),
+            MimeType.of("application/pdf"),
+            FileSize.of(5242880L) // 5MB
+        );
     }
 
     /**
@@ -73,7 +92,11 @@ public class FileMetadataFixture {
      * @return FileMetadata 인스턴스
      */
     public static FileMetadata createTextFile() {
-        return FileMetadata.of("document.txt", "text/plain", 10240L); // 10KB
+        return FileMetadata.of(
+            FileName.of("document.txt"),
+            MimeType.of("text/plain"),
+            FileSize.of(10240L) // 10KB
+        );
     }
 
     /**
@@ -82,7 +105,11 @@ public class FileMetadataFixture {
      * @return FileMetadata 인스턴스
      */
     public static FileMetadata createVideoFile() {
-        return FileMetadata.of("video.mp4", "video/mp4", 104857600L); // 100MB
+        return FileMetadata.of(
+            FileName.of("video.mp4"),
+            MimeType.of("video/mp4"),
+            FileSize.of(104857600L) // 100MB
+        );
     }
 
     /**
@@ -91,7 +118,11 @@ public class FileMetadataFixture {
      * @return FileMetadata 인스턴스
      */
     public static FileMetadata createMinimumSize() {
-        return FileMetadata.of("tiny.txt", "text/plain", 1L); // 1 byte
+        return FileMetadata.of(
+            FileName.of("tiny.txt"),
+            MimeType.of("text/plain"),
+            FileSize.of(1L) // 1 byte
+        );
     }
 
     /**
@@ -100,6 +131,47 @@ public class FileMetadataFixture {
      * @return FileMetadata 인스턴스
      */
     public static FileMetadata createLargeFile() {
-        return FileMetadata.of("large-video.mkv", "video/x-matroska", 1073741824L); // 1GB
+        return FileMetadata.of(
+            FileName.of("large-video.mkv"),
+            MimeType.of("video/x-matroska"),
+            FileSize.of(1073741824L) // 1GB
+        );
+    }
+
+    /**
+     * Builder 패턴으로 FileMetadata 생성
+     *
+     * @return FileMetadataBuilder 인스턴스
+     */
+    public static FileMetadataBuilder builder() {
+        return new FileMetadataBuilder();
+    }
+
+    /**
+     * FileMetadata Builder
+     */
+    public static class FileMetadataBuilder {
+        private FileName name = FileName.of("test-file.txt");
+        private MimeType mimeType = MimeType.of("text/plain");
+        private FileSize size = FileSize.of(1024L);
+
+        public FileMetadataBuilder name(FileName name) {
+            this.name = name;
+            return this;
+        }
+
+        public FileMetadataBuilder mimeType(MimeType mimeType) {
+            this.mimeType = mimeType;
+            return this;
+        }
+
+        public FileMetadataBuilder size(FileSize size) {
+            this.size = size;
+            return this;
+        }
+
+        public FileMetadata build() {
+            return FileMetadata.of(name, mimeType, size);
+        }
     }
 }

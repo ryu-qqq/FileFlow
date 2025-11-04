@@ -24,7 +24,7 @@
     },
     "layer": "java21",
     "priority": "high",
-    "tokenEstimate": 1561
+    "tokenEstimate": 1534
   },
   "rules": {
     "prohibited": [],

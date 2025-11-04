@@ -1,5 +1,9 @@
 package com.ryuqq.fileflow.domain.upload.fixture;
 
+import com.ryuqq.fileflow.domain.upload.Checksum;
+import com.ryuqq.fileflow.domain.upload.ETag;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.PartNumber;
 import com.ryuqq.fileflow.domain.upload.UploadPart;
 
 /**
@@ -25,7 +29,7 @@ public class UploadPartFixture {
      * @return UploadPart 인스턴스
      */
     public static UploadPart createDefault() {
-        return UploadPart.of(1, "etag-default-123", 5242880L);
+        return UploadPart.of(PartNumber.of(1), ETag.of("etag-default-123"), FileSize.of(5242880L));
     }
 
     /**
@@ -36,7 +40,7 @@ public class UploadPartFixture {
      * @return UploadPart 인스턴스
      */
     public static UploadPart create(Integer partNumber, Long size) {
-        return UploadPart.of(partNumber, "etag-" + partNumber, size);
+        return UploadPart.of(PartNumber.of(partNumber), ETag.of("etag-" + partNumber), FileSize.of(size));
     }
 
     /**
@@ -48,7 +52,7 @@ public class UploadPartFixture {
      * @return UploadPart 인스턴스
      */
     public static UploadPart create(Integer partNumber, String etag, Long size) {
-        return UploadPart.of(partNumber, etag, size);
+        return UploadPart.of(PartNumber.of(partNumber), ETag.of(etag), FileSize.of(size));
     }
 
     /**
@@ -66,7 +70,12 @@ public class UploadPartFixture {
         Long size,
         String checksum
     ) {
-        return UploadPart.of(partNumber, etag, size, checksum);
+        return UploadPart.of(
+            PartNumber.of(partNumber),
+            ETag.of(etag),
+            FileSize.of(size),
+            checksum != null ? Checksum.of(checksum) : null
+        );
     }
 
     /**
@@ -76,7 +85,7 @@ public class UploadPartFixture {
      * @return UploadPart 인스턴스
      */
     public static UploadPart createMinimumSize(Integer partNumber) {
-        return UploadPart.of(partNumber, "etag-" + partNumber, 5242880L); // 5MB
+        return UploadPart.of(PartNumber.of(partNumber), ETag.of("etag-" + partNumber), FileSize.of(5242880L)); // 5MB
     }
 
     /**
@@ -86,7 +95,7 @@ public class UploadPartFixture {
      * @return UploadPart 인스턴스
      */
     public static UploadPart createLargeSize(Integer partNumber) {
-        return UploadPart.of(partNumber, "etag-" + partNumber, 104857600L); // 100MB
+        return UploadPart.of(PartNumber.of(partNumber), ETag.of("etag-" + partNumber), FileSize.of(104857600L)); // 100MB
     }
 
     /**
@@ -101,7 +110,7 @@ public class UploadPartFixture {
         }
 
         return java.util.stream.IntStream.rangeClosed(1, count)
-            .mapToObj(i -> UploadPart.of(i, "etag-" + i, 5242880L))
+            .mapToObj(i -> UploadPart.of(PartNumber.of(i), ETag.of("etag-" + i), FileSize.of(5242880L)))
             .toList();
     }
 }

@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.entity;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.BaseAuditEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.BaseAuditEntity;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

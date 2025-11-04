@@ -28,10 +28,10 @@ class MultipartUploadTest {
         @DisplayName("신규 MultipartUpload 생성 성공 (INIT 상태)")
         void create_Success() {
             // Given
-            Long uploadSessionId = 1L;
+            UploadSessionId uploadSessionId = UploadSessionId.of(1L);
 
             // When
-            MultipartUpload upload = MultipartUpload.create(uploadSessionId);
+            MultipartUpload upload = MultipartUpload.forNew(uploadSessionId);
 
             // Then
             assertThat(upload.getUploadSessionId()).isEqualTo(uploadSessionId);
@@ -61,8 +61,8 @@ class MultipartUploadTest {
         void initiate_Success() {
             // Given
             MultipartUpload upload = MultipartUploadFixture.createNew();
-            String providerUploadId = "aws-upload-id-123";
-            Integer totalParts = 3;
+            ProviderUploadId providerUploadId = ProviderUploadId.of("aws-upload-id-123");
+            TotalParts totalParts = TotalParts.of(3);
 
             // When
             upload.initiate(providerUploadId, totalParts);
@@ -78,7 +78,11 @@ class MultipartUploadTest {
         @DisplayName("IN_PROGRESS → COMPLETED: 모든 파트 업로드 후 complete() 성공")
         void complete_Success() {
             // Given
-            MultipartUpload upload = MultipartUploadFixture.createInitiated(1L, "upload-id", 2);
+            MultipartUpload upload = MultipartUploadFixture.createInitiated(
+                UploadSessionId.of(1L),
+                ProviderUploadId.of("upload-id"),
+                TotalParts.of(2)
+            );
             upload.addPart(UploadPartFixture.create(1, 5242880L));
             upload.addPart(UploadPartFixture.create(2, 5242880L));
 
@@ -110,10 +114,9 @@ class MultipartUploadTest {
         void fail_Success() {
             // Given
             MultipartUpload upload = MultipartUploadFixture.createInitiated();
-            String failureReason = "Network timeout";
 
             // When
-            upload.fail(failureReason);
+            upload.fail();
 
             // Then
             assertThat(upload.getStatus()).isEqualTo(MultipartUpload.MultipartStatus.FAILED);
@@ -128,7 +131,11 @@ class MultipartUploadTest {
         @DisplayName("파트 추가 성공")
         void addPart_Success() {
             // Given
-            MultipartUpload upload = MultipartUploadFixture.createInitiated(1L, "upload-id", 3);
+            MultipartUpload upload = MultipartUploadFixture.createInitiated(
+                UploadSessionId.of(1L),
+                ProviderUploadId.of("upload-id"),
+                TotalParts.of(3)
+            );
             UploadPart part1 = UploadPartFixture.create(1, 5242880L);
 
             // When
@@ -143,7 +150,11 @@ class MultipartUploadTest {
         @DisplayName("여러 파트 순차 추가 성공")
         void addMultipleParts_Success() {
             // Given
-            MultipartUpload upload = MultipartUploadFixture.createInitiated(1L, "upload-id", 3);
+            MultipartUpload upload = MultipartUploadFixture.createInitiated(
+                UploadSessionId.of(1L),
+                ProviderUploadId.of("upload-id"),
+                TotalParts.of(3)
+            );
 
             // When
             upload.addPart(UploadPartFixture.create(1, 5242880L));
@@ -160,10 +171,10 @@ class MultipartUploadTest {
     class ExceptionTests {
 
         @Test
-        @DisplayName("create() - uploadSessionId가 null이면 예외 발생")
-        void create_ThrowsException_WhenUploadSessionIdIsNull() {
+        @DisplayName("forNew() - uploadSessionId가 null이면 예외 발생")
+        void forNew_ThrowsException_WhenUploadSessionIdIsNull() {
             // When & Then
-            assertThatThrownBy(() -> MultipartUpload.create(null))
+            assertThatThrownBy(() -> MultipartUpload.forNew(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Upload Session ID는 필수입니다");
         }
@@ -175,7 +186,10 @@ class MultipartUploadTest {
             MultipartUpload upload = MultipartUploadFixture.createInitiated();
 
             // When & Then
-            assertThatThrownBy(() -> upload.initiate("new-upload-id", 3))
+            assertThatThrownBy(() -> upload.initiate(
+                ProviderUploadId.of("new-upload-id"),
+                TotalParts.of(3)
+            ))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("이미 초기화된 업로드입니다");
         }
@@ -187,21 +201,21 @@ class MultipartUploadTest {
             MultipartUpload upload = MultipartUploadFixture.createNew();
 
             // When & Then
-            assertThatThrownBy(() -> upload.initiate(null, 3))
+            assertThatThrownBy(() -> upload.initiate(null, TotalParts.of(3)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Provider Upload ID는 필수입니다");
         }
 
         @Test
-        @DisplayName("initiate() - totalParts가 1보다 작으면 예외 발생")
-        void initiate_ThrowsException_WhenTotalPartsLessThanOne() {
+        @DisplayName("initiate() - totalParts가 null이면 예외 발생")
+        void initiate_ThrowsException_WhenTotalPartsIsNull() {
             // Given
             MultipartUpload upload = MultipartUploadFixture.createNew();
 
             // When & Then
-            assertThatThrownBy(() -> upload.initiate("upload-id", 0))
+            assertThatThrownBy(() -> upload.initiate(ProviderUploadId.of("upload-id"), null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Total parts는 1 이상이어야 합니다");
+                .hasMessageContaining("Total Parts는 필수입니다");
         }
 
         @Test
@@ -221,7 +235,11 @@ class MultipartUploadTest {
         @DisplayName("addPart() - 중복 partNumber 추가 시 예외 발생")
         void addPart_ThrowsException_WhenDuplicatePartNumber() {
             // Given
-            MultipartUpload upload = MultipartUploadFixture.createInitiated(1L, "upload-id", 3);
+            MultipartUpload upload = MultipartUploadFixture.createInitiated(
+                UploadSessionId.of(1L),
+                ProviderUploadId.of("upload-id"),
+                TotalParts.of(3)
+            );
             upload.addPart(UploadPartFixture.create(1, 5242880L));
 
             // When & Then
@@ -234,7 +252,11 @@ class MultipartUploadTest {
         @DisplayName("complete() - 모든 파트가 업로드되지 않았으면 예외 발생")
         void complete_ThrowsException_WhenNotAllPartsUploaded() {
             // Given
-            MultipartUpload upload = MultipartUploadFixture.createInitiated(1L, "upload-id", 3);
+            MultipartUpload upload = MultipartUploadFixture.createInitiated(
+                UploadSessionId.of(1L),
+                ProviderUploadId.of("upload-id"),
+                TotalParts.of(3)
+            );
             upload.addPart(UploadPartFixture.create(1, 5242880L));
             // Part 2, 3 누락
 
@@ -265,7 +287,11 @@ class MultipartUploadTest {
         @DisplayName("canComplete() - 완료 가능 여부 확인")
         void canComplete_Success() {
             // Given
-            MultipartUpload upload = MultipartUploadFixture.createInitiated(1L, "upload-id", 2);
+            MultipartUpload upload = MultipartUploadFixture.createInitiated(
+                UploadSessionId.of(1L),
+                ProviderUploadId.of("upload-id"),
+                TotalParts.of(2)
+            );
             upload.addPart(UploadPartFixture.create(1, 5242880L));
             upload.addPart(UploadPartFixture.create(2, 5242880L));
 
@@ -280,7 +306,11 @@ class MultipartUploadTest {
         @DisplayName("canComplete() - 파트 누락 시 false 반환")
         void canComplete_ReturnsFalse_WhenPartsAreMissing() {
             // Given
-            MultipartUpload upload = MultipartUploadFixture.createInitiated(1L, "upload-id", 3);
+            MultipartUpload upload = MultipartUploadFixture.createInitiated(
+                UploadSessionId.of(1L),
+                ProviderUploadId.of("upload-id"),
+                TotalParts.of(3)
+            );
             upload.addPart(UploadPartFixture.create(1, 5242880L));
             // Part 2, 3 누락
 

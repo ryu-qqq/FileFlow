@@ -19,7 +19,7 @@ public class QPermissionJpaEntity extends EntityPathBase<PermissionJpaEntity> {
 
     public static final QPermissionJpaEntity permissionJpaEntity = new QPermissionJpaEntity("permissionJpaEntity");
 
-    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QSoftDeletableEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QSoftDeletableEntity(this);
+    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.QSoftDeletableEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.QSoftDeletableEntity(this);
 
     public final StringPath code = createString("code");
 

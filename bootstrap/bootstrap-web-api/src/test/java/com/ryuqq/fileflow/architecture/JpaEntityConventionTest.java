@@ -11,7 +11,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.BaseAuditEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.BaseAuditEntity;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;

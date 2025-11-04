@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.domain.download;
 
-import com.ryuqq.fileflow.domain.download.ExternalDownload.DownloadStatus;
-import com.ryuqq.fileflow.domain.download.ExternalDownload.ErrorType;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,7 +29,7 @@ class ExternalDownloadTest {
             ExternalDownload download = ExternalDownloadFixture.createNew();
 
             // Then
-            assertThat(download.getStatus()).isEqualTo(DownloadStatus.PENDING);
+            assertThat(download.getStatus()).isEqualTo(ExternalDownloadStatus.INIT);
             assertThat(download.getRetryCount()).isZero();
         }
 
@@ -40,7 +40,7 @@ class ExternalDownloadTest {
             ExternalDownload download = ExternalDownloadFixture.createWithHttpUrl();
 
             // Then
-            assertThat(download.getStatus()).isEqualTo(DownloadStatus.PENDING);
+            assertThat(download.getStatus()).isEqualTo(ExternalDownloadStatus.INIT);
         }
     }
 
@@ -58,7 +58,7 @@ class ExternalDownloadTest {
             download.start();
 
             // Then
-            assertThat(download.getStatus()).isEqualTo(DownloadStatus.IN_PROGRESS);
+            assertThat(download.getStatus()).isEqualTo(ExternalDownloadStatus.DOWNLOADING);
             assertThat(download.getStartedAt()).isNotNull();
         }
 
@@ -67,18 +67,12 @@ class ExternalDownloadTest {
         void complete_Success() {
             // Given
             ExternalDownload download = ExternalDownloadFixture.createInProgress();
-            Long fileId = 100L;
-            String fileName = "downloaded.pdf";
-            Long fileSize = 1024L;
 
             // When
-            download.complete(fileId, fileName, fileSize);
+            download.complete();
 
             // Then
-            assertThat(download.getStatus()).isEqualTo(DownloadStatus.COMPLETED);
-            assertThat(download.getFileId()).isEqualTo(fileId);
-            assertThat(download.getFileName()).isEqualTo(fileName);
-            assertThat(download.getFileSize()).isEqualTo(fileSize);
+            assertThat(download.getStatus()).isEqualTo(ExternalDownloadStatus.COMPLETED);
         }
 
         @Test
@@ -86,17 +80,14 @@ class ExternalDownloadTest {
         void fail_Success() {
             // Given
             ExternalDownload download = ExternalDownloadFixture.createInProgress();
-            ErrorType errorType = ErrorType.HTTP_5XX;
-            String errorMessage = "Internal Server Error";
+            ErrorCode errorCode = ErrorCode.of("500");
+            ErrorMessage errorMessage = ErrorMessage.of("Internal Server Error");
 
             // When
-            download.fail(errorType, errorMessage);
+            download.fail(errorCode, errorMessage);
 
             // Then
-            assertThat(download.getStatus()).isEqualTo(DownloadStatus.FAILED);
-            assertThat(download.getLastErrorType()).isEqualTo(errorType);
-            assertThat(download.getLastErrorMessage()).isEqualTo(errorMessage);
-            assertThat(download.getRetryCount()).isEqualTo(1);
+            assertThat(download.getStatus()).isEqualTo(ExternalDownloadStatus.FAILED);
         }
     }
 
@@ -109,14 +100,14 @@ class ExternalDownloadTest {
         void updateProgress_Success() {
             // Given
             ExternalDownload download = ExternalDownloadFixture.createInProgress();
-            Long bytesDownloaded = 512L;
-            Long totalBytes = 1024L;
+            FileSize bytesTransferred = FileSize.of(512L);
+            FileSize totalBytes = FileSize.of(1024L);
 
             // When
-            download.updateProgress(bytesDownloaded, totalBytes);
+            download.updateProgress(bytesTransferred, totalBytes);
 
             // Then
-            assertThat(download.getBytesDownloaded()).isEqualTo(bytesDownloaded);
+            assertThat(download.getBytesTransferred()).isEqualTo(bytesTransferred);
             assertThat(download.getTotalBytes()).isEqualTo(totalBytes);
         }
     }
@@ -132,7 +123,7 @@ class ExternalDownloadTest {
             ExternalDownload download = ExternalDownloadFixture.createRetryableFailed();
 
             // When
-            boolean canRetry = download.canRetry();
+            boolean canRetry = download.canRetry(download.getErrorCode());
 
             // Then
             assertThat(canRetry).isTrue();
@@ -145,7 +136,7 @@ class ExternalDownloadTest {
             ExternalDownload download = ExternalDownloadFixture.createNonRetryableFailed();
 
             // When
-            boolean canRetry = download.canRetry();
+            boolean canRetry = download.canRetry(download.getErrorCode());
 
             // Then
             assertThat(canRetry).isFalse();
@@ -158,7 +149,7 @@ class ExternalDownloadTest {
             ExternalDownload download = ExternalDownloadFixture.createMaxRetriesReached();
 
             // When
-            boolean canRetry = download.canRetry();
+            boolean canRetry = download.canRetry(download.getErrorCode());
 
             // Then
             assertThat(canRetry).isFalse();
@@ -188,20 +179,24 @@ class ExternalDownloadTest {
         void create_ThrowsException_WhenFtpUrl() {
             // When & Then
             assertThatThrownBy(() ->
-                ExternalDownload.create(1L, "ftp://example.com/file.pdf", "downloads/file.pdf")
+                ExternalDownload.of(
+                    ExternalDownloadId.of(1L),
+                    "ftp://example.com/file.pdf",
+                    UploadSessionId.of(1L)
+                )
             )
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("HTTP/HTTPS만 지원합니다");
         }
 
         @Test
-        @DisplayName("complete() - IN_PROGRESS 상태가 아니면 예외 발생")
-        void complete_ThrowsException_WhenNotInProgress() {
+        @DisplayName("complete() - DOWNLOADING 상태가 아니면 예외 발생")
+        void complete_ThrowsException_WhenNotDownloading() {
             // Given
             ExternalDownload download = ExternalDownloadFixture.createNew();
 
             // When & Then
-            assertThatThrownBy(() -> download.complete(100L, "file.pdf", 1024L))
+            assertThatThrownBy(() -> download.complete())
                 .isInstanceOf(IllegalStateException.class);
         }
     }

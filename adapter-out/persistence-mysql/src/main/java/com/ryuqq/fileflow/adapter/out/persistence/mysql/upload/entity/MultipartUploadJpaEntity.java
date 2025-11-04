@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.BaseAuditEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.BaseAuditEntity;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,10 +24,11 @@ import java.time.LocalDateTime;
  * <ul>
  *   <li>✅ JPA 어노테이션만 사용 (비즈니스 로직 없음)</li>
  *   <li>✅ Long FK 전략 (JPA 관계 어노테이션 금지)</li>
- *   <li>✅ Setter 제공 (JPA 전용, 외부 노출 금지)</li>
+ *   <li>✅ 불변성 (Setter 금지, Mapper에서 reconstitute() 사용)</li>
  *   <li>✅ Static Factory Methods: {@code create()}, {@code reconstitute()}</li>
  *   <li>❌ Lombok 금지</li>
- *   <li>❌ JPA 관계 어노테이션 금지 (@ManyToOne, @OneToMany 등)</li>
+ *   <li>❌ JPA 관계 어노테이션 금지 (ManyToOne, OneToMany 등)</li>
+ *   <li>❌ Setter 금지 (Domain → Entity 변환은 Mapper의 reconstitute() 사용)</li>
  * </ul>
  *
  * <h3>테이블 스키마</h3>
@@ -63,7 +64,7 @@ public class MultipartUploadJpaEntity extends BaseAuditEntity {
 
     /**
      * Upload Session ID (Long FK Strategy)
-     * ❌ @ManyToOne 사용 안함!
+     * ❌ ManyToOne 관계 어노테이션 사용 안함!
      */
     @Column(name = "upload_session_id", nullable = false)
     private Long uploadSessionId;
@@ -271,79 +272,4 @@ public class MultipartUploadJpaEntity extends BaseAuditEntity {
         return abortedAt;
     }
 
-    /**
-     * ID를 설정합니다 (JPA 전용).
-     *
-     * @param id Multipart Upload ID
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * Upload Session ID를 설정합니다 (JPA 전용).
-     *
-     * @param uploadSessionId Upload Session ID
-     */
-    public void setUploadSessionId(Long uploadSessionId) {
-        this.uploadSessionId = uploadSessionId;
-    }
-
-    /**
-     * Provider Upload ID를 설정합니다 (JPA 전용).
-     *
-     * @param providerUploadId Provider Upload ID
-     */
-    public void setProviderUploadId(String providerUploadId) {
-        this.providerUploadId = providerUploadId;
-    }
-
-    /**
-     * 상태를 설정합니다 (JPA 전용).
-     *
-     * @param status 상태
-     */
-    public void setStatus(MultipartUpload.MultipartStatus status) {
-        this.status = status;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 총 파트 수를 설정합니다 (JPA 전용).
-     *
-     * @param totalParts 총 파트 수
-     */
-    public void setTotalParts(Integer totalParts) {
-        this.totalParts = totalParts;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 시작 시간을 설정합니다 (JPA 전용).
-     *
-     * @param startedAt 시작 시간
-     */
-    public void setStartedAt(LocalDateTime startedAt) {
-        this.startedAt = startedAt;
-    }
-
-    /**
-     * 완료 시간을 설정합니다 (JPA 전용).
-     *
-     * @param completedAt 완료 시간
-     */
-    public void setCompletedAt(LocalDateTime completedAt) {
-        this.completedAt = completedAt;
-        this.markAsUpdated();
-    }
-
-    /**
-     * 중단 시간을 설정합니다 (JPA 전용).
-     *
-     * @param abortedAt 중단 시간
-     */
-    public void setAbortedAt(LocalDateTime abortedAt) {
-        this.abortedAt = abortedAt;
-        this.markAsUpdated();
-    }
 }
