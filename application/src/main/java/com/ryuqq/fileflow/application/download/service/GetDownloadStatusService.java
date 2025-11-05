@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.application.download.service;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
 import com.ryuqq.fileflow.application.download.port.in.GetDownloadStatusUseCase;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxQueryPort;
-import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadPort;
+import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadOutbox;
 
@@ -33,12 +33,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class GetDownloadStatusService implements GetDownloadStatusUseCase {
 
-    private final ExternalDownloadPort externalDownloadPort;
+    private final ExternalDownloadQueryPort downloadQueryPort;
     private final ExternalDownloadOutboxQueryPort outboxQueryPort;
 
-    public GetDownloadStatusService(ExternalDownloadPort externalDownloadPort,
-                                    ExternalDownloadOutboxQueryPort outboxQueryPort) {
-        this.externalDownloadPort = externalDownloadPort;
+    public GetDownloadStatusService(
+        ExternalDownloadQueryPort downloadQueryPort,
+        ExternalDownloadOutboxQueryPort outboxQueryPort
+    ) {
+        this.downloadQueryPort = downloadQueryPort;
         this.outboxQueryPort = outboxQueryPort;
     }
 
@@ -55,7 +57,7 @@ public class GetDownloadStatusService implements GetDownloadStatusUseCase {
     @Transactional(readOnly = true)
     public ExternalDownloadResponse execute(Long downloadId) {
         // 1. ExternalDownload 조회
-        ExternalDownload download = externalDownloadPort.findById(downloadId)
+        ExternalDownload download = downloadQueryPort.findById(downloadId)
             .orElseThrow(() -> new IllegalArgumentException(
                 "External download not found: id=" + downloadId
             ));

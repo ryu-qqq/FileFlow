@@ -10,10 +10,12 @@ import com.ryuqq.fileflow.application.upload.dto.response.S3CompleteResultRespon
 import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
 import com.ryuqq.fileflow.application.upload.dto.response.ValidationResultResponse;
 import com.ryuqq.fileflow.application.upload.facade.S3MultipartFacade;
-import com.ryuqq.fileflow.application.upload.manager.MultipartUploadManager;
+import com.ryuqq.fileflow.application.upload.manager.MultipartUploadStateManager;
 import com.ryuqq.fileflow.application.upload.port.in.CompleteMultipartUploadUseCase;
 import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
@@ -39,8 +41,11 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
 
     private static final Logger log = LoggerFactory.getLogger(CompleteMultipartUploadService.class);
 
-    private final UploadSessionPort uploadSessionPort;
-    private final MultipartUploadManager multipartUploadManager;
+    // ✅ 변경: Port 분리
+    private final LoadUploadSessionPort loadUploadSessionPort;           // Query Port
+    private final MultipartUploadStateManager multipartUploadStateManager; // Command Manager
+    private final LoadMultipartUploadPort loadMultipartUploadPort;       // Query Port
+    private final SaveUploadSessionPort saveUploadSessionPort;           // Command Port
     private final IamContextFacade iamContextFacade;
     private final S3MultipartFacade s3MultipartFacade;
     private final S3StoragePort s3StoragePort;
@@ -48,16 +53,20 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
     private final String s3Bucket;
 
     public CompleteMultipartUploadService(
-        UploadSessionPort uploadSessionPort,
-        MultipartUploadManager multipartUploadManager,
+        LoadUploadSessionPort loadUploadSessionPort,
+        MultipartUploadStateManager multipartUploadStateManager,
+        LoadMultipartUploadPort loadMultipartUploadPort,
+        SaveUploadSessionPort saveUploadSessionPort,
         IamContextFacade iamContextFacade,
         S3MultipartFacade s3MultipartFacade,
         S3StoragePort s3StoragePort,
         FileCommandManager fileCommandManager,
         @Value("${aws.s3.bucket}") String s3Bucket
     ) {
-        this.uploadSessionPort = uploadSessionPort;
-        this.multipartUploadManager = multipartUploadManager;
+        this.loadUploadSessionPort = loadUploadSessionPort;
+        this.multipartUploadStateManager = multipartUploadStateManager;
+        this.loadMultipartUploadPort = loadMultipartUploadPort;
+        this.saveUploadSessionPort = saveUploadSessionPort;
         this.iamContextFacade = iamContextFacade;
         this.s3MultipartFacade = s3MultipartFacade;
         this.s3StoragePort = s3StoragePort;
@@ -89,19 +98,22 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
      * 완료 가능 검증
      *
      * <p>⭐ Read-only 트랜잭션</p>
+     * <p>✅ 변경: Query Port 직접 사용</p>
      *
      * @param sessionKey 세션 키
      * @return 검증 결과
      */
     public ValidationResultResponse validateCanComplete(String sessionKey) {
-        UploadSession session = uploadSessionPort
+        // ✅ Query Port 직접 호출
+        UploadSession session = loadUploadSessionPort
             .findBySessionKey(SessionKey.of(sessionKey))
             .orElseThrow(() ->
                 new IllegalArgumentException("Upload session not found: " + sessionKey)
             );
 
-        MultipartUpload multipart = multipartUploadManager
-            .findByUploadSessionId(session.getId())
+        // ✅ Query Port 직접 호출
+        MultipartUpload multipart = loadMultipartUploadPort
+            .findByUploadSessionId(session.getIdValue())
             .orElseThrow(() ->
                 new IllegalStateException("Not a multipart upload")
             );
@@ -186,6 +198,7 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
      * Domain 상태 업데이트
      *
      * <p>⭐ 트랜잭션 내에서 실행</p>
+     * <p>✅ 변경: StateManager 사용</p>
      *
      * @param session UploadSession
      * @param multipart MultipartUpload
@@ -198,8 +211,8 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
         S3CompleteResultResponse s3Result,
         S3HeadObjectResponse s3HeadResult
     ) {
-        // 1. MultipartUpload 완료 (Manager 사용)
-        multipartUploadManager.complete(multipart);
+        // 1. MultipartUpload 완료 (StateManager 사용)
+        multipartUploadStateManager.complete(multipart);
 
         // 2. FileAsset Aggregate 생성 (S3 검증 결과 활용)
         FileAsset fileAsset = FileAsset.forNew(
@@ -221,8 +234,8 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
         // 3. UploadSession 완료 (FileAsset ID 전달)
         session.complete(savedFileAsset.getIdValue());
 
-        // 4. 저장
-        uploadSessionPort.save(session);
+        // 4. 저장 (Command Port 사용)
+        saveUploadSessionPort.save(session);
 
         log.info("Multipart upload completed: sessionId={}, fileAssetId={}, etag={}",
             session.getIdValue(), savedFileAsset.getIdValue(), s3Result.etag());

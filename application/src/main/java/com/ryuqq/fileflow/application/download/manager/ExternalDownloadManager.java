@@ -1,24 +1,28 @@
 package com.ryuqq.fileflow.application.download.manager;
 
-import com.ryuqq.fileflow.application.download.dto.response.DownloadResult;
-import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadPort;
-import com.ryuqq.fileflow.application.file.manager.FileCommandManager;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
-import com.ryuqq.fileflow.domain.download.ErrorCode;
-import com.ryuqq.fileflow.domain.download.ErrorMessage;
-import com.ryuqq.fileflow.domain.download.ExternalDownload;
-import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.upload.Checksum;
-import com.ryuqq.fileflow.domain.upload.MimeType;
-import com.ryuqq.fileflow.domain.upload.FileSize;
-import com.ryuqq.fileflow.domain.upload.UploadSession;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import com.ryuqq.fileflow.application.download.dto.response.DownloadResult;
+import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadCommandPort;
+import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
+import com.ryuqq.fileflow.application.file.manager.FileCommandManager;
+import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
+import com.ryuqq.fileflow.domain.download.ErrorCode;
+import com.ryuqq.fileflow.domain.download.ErrorMessage;
+import com.ryuqq.fileflow.domain.download.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.exception.DownloadNotFoundException;
+import com.ryuqq.fileflow.domain.file.asset.FileAsset;
+import com.ryuqq.fileflow.domain.upload.Checksum;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.MimeType;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
 
 /**
  * External Download Manager
@@ -48,17 +52,23 @@ public class ExternalDownloadManager {
 
     private static final Logger log = LoggerFactory.getLogger(ExternalDownloadManager.class);
 
-    private final ExternalDownloadPort downloadPort;
-    private final UploadSessionPort uploadSessionPort;
+    private final ExternalDownloadCommandPort downloadCommandPort;
+    private final ExternalDownloadQueryPort downloadQueryPort;
+    private final LoadUploadSessionPort loadUploadSessionPort;
+    private final UploadSessionStateManager uploadSessionStateManager;
     private final FileCommandManager fileCommandManager;
 
     public ExternalDownloadManager(
-        ExternalDownloadPort downloadPort,
-        UploadSessionPort uploadSessionPort,
+        ExternalDownloadCommandPort downloadCommandPort,
+        ExternalDownloadQueryPort downloadQueryPort,
+        LoadUploadSessionPort loadUploadSessionPort,
+        UploadSessionStateManager uploadSessionStateManager,
         FileCommandManager fileCommandManager
     ) {
-        this.downloadPort = downloadPort;
-        this.uploadSessionPort = uploadSessionPort;
+        this.downloadCommandPort = downloadCommandPort;
+        this.downloadQueryPort = downloadQueryPort;
+        this.loadUploadSessionPort = loadUploadSessionPort;
+        this.uploadSessionStateManager = uploadSessionStateManager;
         this.fileCommandManager = fileCommandManager;
     }
 
@@ -70,7 +80,7 @@ public class ExternalDownloadManager {
      */
     @Transactional(readOnly = true)
     public Optional<ExternalDownload> findById(Long downloadId) {
-        return downloadPort.findById(downloadId);
+        return downloadQueryPort.findById(downloadId);
     }
 
     /**
@@ -78,14 +88,12 @@ public class ExternalDownloadManager {
      *
      * @param downloadId Download ID
      * @return ExternalDownload
-     * @throws IllegalStateException 존재하지 않는 경우
+     * @throws DownloadNotFoundException 존재하지 않는 경우
      */
     @Transactional(readOnly = true)
     public ExternalDownload getById(Long downloadId) {
-        return downloadPort.findById(downloadId)
-            .orElseThrow(() -> new IllegalStateException(
-                "ExternalDownload not found: " + downloadId
-            ));
+        return downloadQueryPort.findById(downloadId)
+            .orElseThrow(() -> new DownloadNotFoundException(downloadId));
     }
 
     /**
@@ -100,7 +108,7 @@ public class ExternalDownloadManager {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ExternalDownload startDownloading(ExternalDownload download) {
         download.start();
-        ExternalDownload saved = downloadPort.save(download);
+        ExternalDownload saved = downloadCommandPort.save(download);
         log.info("Download started: downloadId={}, status={}",
             saved.getIdValue(), saved.getStatus());
         return saved;
@@ -117,7 +125,7 @@ public class ExternalDownloadManager {
     @Transactional
     public ExternalDownload updateProgress(ExternalDownload download, long transferred, long total) {
         download.updateProgress(FileSize.of(transferred), FileSize.of(total));
-        return downloadPort.save(download);
+        return downloadCommandPort.save(download);
     }
 
     /**
@@ -135,7 +143,7 @@ public class ExternalDownloadManager {
         download.updateProgress(FileSize.of(fileSize), FileSize.of(fileSize));
         // 완료 상태로 전환
         download.complete();
-        ExternalDownload saved = downloadPort.save(download);
+        ExternalDownload saved = downloadCommandPort.save(download);
         log.info("Download completed: downloadId={}, fileSize={}",
             saved.getIdValue(), fileSize);
         return saved;
@@ -154,7 +162,7 @@ public class ExternalDownloadManager {
     @Transactional
     public ExternalDownload failWithRetry(ExternalDownload download, ErrorCode errorCode, String errorMessage) {
         download.fail(errorCode, ErrorMessage.of(errorMessage));
-        ExternalDownload saved = downloadPort.save(download);
+        ExternalDownload saved = downloadCommandPort.save(download);
         log.warn("Download failed (retry {}): downloadId={}, error={}",
             saved.getRetryCount(), saved.getIdValue(), errorMessage);
         return saved;
@@ -173,7 +181,7 @@ public class ExternalDownloadManager {
     @Transactional
     public ExternalDownload failPermanently(ExternalDownload download, ErrorCode errorCode, String errorMessage) {
         download.fail(errorCode, ErrorMessage.of(errorMessage));
-        ExternalDownload saved = downloadPort.save(download);
+        ExternalDownload saved = downloadCommandPort.save(download);
         log.error("Download permanently failed: downloadId={}, error={}",
             saved.getIdValue(), errorMessage);
         return saved;
@@ -210,7 +218,7 @@ public class ExternalDownloadManager {
      */
     @Transactional
     public ExternalDownload save(ExternalDownload download) {
-        return downloadPort.save(download);
+        return downloadCommandPort.save(download);
     }
 
     /**
@@ -233,7 +241,7 @@ public class ExternalDownloadManager {
 
         // UploadSession의 fileSize도 업데이트
         session.updateFileSize(FileSize.of(contentLength));
-        uploadSessionPort.save(session);
+        uploadSessionStateManager.save(session);
 
         log.info("Total size updated: downloadId={}, contentLength={}",
             download.getIdValue(), contentLength);
@@ -262,7 +270,7 @@ public class ExternalDownloadManager {
 
         // UploadSession의 fileSize 최종 업데이트
         session.updateFileSize(FileSize.of(fileSize));
-        uploadSessionPort.save(session);
+        uploadSessionStateManager.save(session);
 
         // FileAsset Aggregate 생성
         FileAsset fileAsset = FileAsset.forNew(
@@ -281,7 +289,7 @@ public class ExternalDownloadManager {
 
         // UploadSession 완료 (FileAsset ID 전달)
         session.complete(savedFileAsset.getIdValue());
-        uploadSessionPort.save(session);
+        uploadSessionStateManager.save(session);
 
         log.info("Download and file creation completed: downloadId={}, fileAssetId={}",
             download.getIdValue(), savedFileAsset.getIdValue());

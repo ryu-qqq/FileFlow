@@ -1,36 +1,36 @@
 package com.ryuqq.fileflow.application.upload.service;
 
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.ryuqq.fileflow.application.iam.context.IamContext;
 import com.ryuqq.fileflow.application.iam.context.IamContextFacade;
 import com.ryuqq.fileflow.application.upload.config.PresignedUrlProperties;
 import com.ryuqq.fileflow.application.upload.dto.command.InitSingleUploadCommand;
 import com.ryuqq.fileflow.application.upload.dto.response.SingleUploadResponse;
 import com.ryuqq.fileflow.application.upload.facade.S3PresignedUrlFacade;
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
+import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionCachePort;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.iam.tenant.fixture.TenantFixture;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * InitSingleUploadService 단위 테스트
@@ -49,7 +49,7 @@ class InitSingleUploadServiceTest {
     private S3PresignedUrlFacade s3PresignedUrlFacade;
 
     @Mock
-    private UploadSessionManager uploadSessionManager;
+    private UploadSessionStateManager uploadSessionStateManager;
 
     @Mock
     private UploadSessionCachePort uploadSessionCachePort;
@@ -100,7 +100,7 @@ class InitSingleUploadServiceTest {
             String presignedUrl = "https://s3.amazonaws.com/bucket/key?presigned-params";
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3PresignedUrlFacade.generateSingleUploadUrl(any(), any(), any()))
                 .thenReturn(presignedUrl);
             when(presignedUrlProperties.getSingleUploadDuration()).thenReturn(Duration.ofHours(1));
@@ -115,7 +115,7 @@ class InitSingleUploadServiceTest {
             assertThat(response.storageKey()).isEqualTo(savedSession.getStorageKey().value());
 
             verify(iamContextFacade).loadContext(tenantId, null, null);
-            verify(uploadSessionManager).save(any(UploadSession.class));
+            verify(uploadSessionStateManager).save(any(UploadSession.class));
             verify(s3PresignedUrlFacade).generateSingleUploadUrl(any(), any(), eq("text/plain"));
             verify(uploadSessionCachePort).trackSession(anyString(), any(Duration.class));
         }
@@ -145,7 +145,7 @@ class InitSingleUploadServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Tenant not found");
 
-            verify(uploadSessionManager, never()).save(any(UploadSession.class));
+            verify(uploadSessionStateManager, never()).save(any(UploadSession.class));
             verify(s3PresignedUrlFacade, never()).generateSingleUploadUrl(any(), any(), any());
         }
     }

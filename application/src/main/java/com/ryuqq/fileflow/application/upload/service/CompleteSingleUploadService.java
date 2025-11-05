@@ -1,26 +1,27 @@
 package com.ryuqq.fileflow.application.upload.service;
 
-import com.ryuqq.fileflow.application.file.manager.FileCommandManager;
-import com.ryuqq.fileflow.application.upload.dto.command.CompleteSingleUploadCommand;
-import com.ryuqq.fileflow.application.upload.dto.response.CompleteSingleUploadResponse;
-import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
-import com.ryuqq.fileflow.application.upload.port.in.CompleteSingleUploadUseCase;
-import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
-import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.upload.Checksum;
-import com.ryuqq.fileflow.domain.upload.FileSize;
-import com.ryuqq.fileflow.domain.upload.MimeType;
-import com.ryuqq.fileflow.domain.upload.SessionKey;
-import com.ryuqq.fileflow.domain.upload.UploadSession;
-import com.ryuqq.fileflow.domain.upload.UploadType;
-import com.ryuqq.fileflow.domain.upload.SessionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.ryuqq.fileflow.application.file.manager.FileCommandManager;
+import com.ryuqq.fileflow.application.upload.dto.command.CompleteSingleUploadCommand;
+import com.ryuqq.fileflow.application.upload.dto.response.CompleteSingleUploadResponse;
+import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
+import com.ryuqq.fileflow.application.upload.port.in.CompleteSingleUploadUseCase;
+import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
+import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
+import com.ryuqq.fileflow.domain.file.asset.FileAsset;
+import com.ryuqq.fileflow.domain.upload.Checksum;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.MimeType;
+import com.ryuqq.fileflow.domain.upload.SessionKey;
+import com.ryuqq.fileflow.domain.upload.SessionStatus;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
+import com.ryuqq.fileflow.domain.upload.UploadType;
 
 /**
  * Single Upload 완료 Service
@@ -57,8 +58,8 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
 
     private static final Logger log = LoggerFactory.getLogger(CompleteSingleUploadService.class);
 
-    private final UploadSessionPort uploadSessionPort;
-    private final UploadSessionManager uploadSessionManager;
+    private final LoadUploadSessionPort loadUploadSessionPort;
+    private final SaveUploadSessionPort saveUploadSessionPort;
     private final S3StoragePort s3StoragePort;
     private final FileCommandManager fileCommandManager;
     private final String s3Bucket;
@@ -66,21 +67,21 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
     /**
      * 생성자
      *
-     * @param uploadSessionPort UploadSession Port
-     * @param uploadSessionManager UploadSession Manager
+     * @param loadUploadSessionPort Load UploadSession Port (Query)
+     * @param saveUploadSessionPort Save UploadSession Port (Command)
      * @param s3StoragePort S3 Storage Port
      * @param fileCommandManager File Command Manager
      * @param s3Bucket S3 Bucket 이름
      */
     public CompleteSingleUploadService(
-        UploadSessionPort uploadSessionPort,
-        UploadSessionManager uploadSessionManager,
+        LoadUploadSessionPort loadUploadSessionPort,
+        SaveUploadSessionPort saveUploadSessionPort,
         S3StoragePort s3StoragePort,
         FileCommandManager fileCommandManager,
         @Value("${aws.s3.bucket}") String s3Bucket
     ) {
-        this.uploadSessionPort = uploadSessionPort;
-        this.uploadSessionManager = uploadSessionManager;
+        this.loadUploadSessionPort = loadUploadSessionPort;
+        this.saveUploadSessionPort = saveUploadSessionPort;
         this.s3StoragePort = s3StoragePort;
         this.fileCommandManager = fileCommandManager;
         this.s3Bucket = s3Bucket;
@@ -139,7 +140,7 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
      */
     public UploadSession validateSession(String sessionKey) {
         SessionKey key = SessionKey.of(sessionKey);
-        UploadSession session = uploadSessionPort.findBySessionKey(key)
+        UploadSession session = loadUploadSessionPort.findBySessionKey(key)
             .orElseThrow(() -> new IllegalStateException(
                 "UploadSession not found: " + key
             ));
@@ -234,8 +235,8 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
         // 3. UploadSession 완료 (Tell, Don't Ask 패턴)
         session.complete(savedFileAsset.getIdValue());
 
-        // 4. UploadSession 저장
-        uploadSessionPort.save(session);
+        // 4. UploadSession 저장 (Command Port 사용)
+        saveUploadSessionPort.save(session);
 
         log.info("UploadSession completed: sessionId={}, fileAssetId={}",
             session.getIdValue(), savedFileAsset.getIdValue());

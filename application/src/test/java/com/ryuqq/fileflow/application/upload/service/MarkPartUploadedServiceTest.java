@@ -1,8 +1,25 @@
 package com.ryuqq.fileflow.application.upload.service;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.ryuqq.fileflow.application.upload.dto.command.MarkPartUploadedCommand;
-import com.ryuqq.fileflow.application.upload.manager.MultipartUploadManager;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.manager.MultipartUploadStateManager;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import com.ryuqq.fileflow.domain.upload.ProviderUploadId;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
@@ -12,22 +29,6 @@ import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 import com.ryuqq.fileflow.domain.upload.fixture.MultipartUploadFixture;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * MarkPartUploadedService 단위 테스트
@@ -42,10 +43,13 @@ import static org.mockito.Mockito.when;
 class MarkPartUploadedServiceTest {
 
     @Mock
-    private UploadSessionPort uploadSessionPort;
+    private LoadUploadSessionPort loadUploadSessionPort;
 
     @Mock
-    private MultipartUploadManager multipartUploadManager;
+    private LoadMultipartUploadPort loadMultipartUploadPort;
+
+    @Mock
+    private MultipartUploadStateManager multipartUploadStateManager;
 
     @InjectMocks
     private MarkPartUploadedService service;
@@ -99,20 +103,20 @@ class MarkPartUploadedServiceTest {
                 .addParts(1)
                 .build();
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
-            when(multipartUploadManager.addPart(eq(multipart), any(UploadPart.class)))
+            when(multipartUploadStateManager.addPart(eq(multipart), any(UploadPart.class)))
                 .thenReturn(savedMultipart);
 
             // When
             service.execute(command);
 
             // Then
-            verify(uploadSessionPort).findBySessionKey(SessionKey.of(sessionKey));
-            verify(multipartUploadManager).findByUploadSessionId(UploadSessionId.of(session.getIdValue()));
-            verify(multipartUploadManager).addPart(eq(multipart), any(UploadPart.class));
+            verify(loadUploadSessionPort).findBySessionKey(SessionKey.of(sessionKey));
+            verify(loadMultipartUploadPort).findByUploadSessionId(session.getIdValue());
+            verify(multipartUploadStateManager).addPart(eq(multipart), any(UploadPart.class));
         }
 
         @Test
@@ -144,21 +148,21 @@ class MarkPartUploadedServiceTest {
                 .initiate()
                 .build();
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
 
             // 첫 번째 파트
             MarkPartUploadedCommand command1 = MarkPartUploadedCommand.of(sessionKey, 1, "etag-1", 5242880L);
-            when(multipartUploadManager.addPart(eq(multipart), any(UploadPart.class)))
+            when(multipartUploadStateManager.addPart(eq(multipart), any(UploadPart.class)))
                 .thenReturn(multipart);
 
             // When
             service.execute(command1);
 
             // Then
-            verify(multipartUploadManager).addPart(eq(multipart), any(UploadPart.class));
+            verify(multipartUploadStateManager).addPart(eq(multipart), any(UploadPart.class));
         }
     }
 
@@ -178,7 +182,7 @@ class MarkPartUploadedServiceTest {
                 5242880L
             );
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.empty());
 
             // When & Then
@@ -186,8 +190,8 @@ class MarkPartUploadedServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Upload session not found");
 
-            verify(multipartUploadManager, never()).findByUploadSessionId(any(UploadSessionId.class));
-            verify(multipartUploadManager, never()).addPart(any(), any());
+            verify(loadMultipartUploadPort, never()).findByUploadSessionId(any(Long.class));
+            verify(multipartUploadStateManager, never()).addPart(any(), any());
         }
 
         @Test
@@ -220,9 +224,9 @@ class MarkPartUploadedServiceTest {
                 null
             );
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.empty());
 
             // When & Then
@@ -230,7 +234,7 @@ class MarkPartUploadedServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Not a multipart upload");
 
-            verify(multipartUploadManager, never()).addPart(any(), any());
+            verify(multipartUploadStateManager, never()).addPart(any(), any());
         }
 
         @Test
@@ -270,11 +274,11 @@ class MarkPartUploadedServiceTest {
                 .addParts(1) // 이미 파트 1이 추가됨
                 .build();
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
-            when(multipartUploadManager.addPart(eq(multipart), any(UploadPart.class)))
+            when(multipartUploadStateManager.addPart(eq(multipart), any(UploadPart.class)))
                 .thenThrow(new com.ryuqq.fileflow.domain.upload.exception.DuplicatePartNumberException(1));
 
             // When & Then
