@@ -218,20 +218,8 @@ public class IntegrationTestConfiguration {
     // ========================================
     // API Mappers (실제 구현체 사용)
     // ========================================
-    @Bean
-    public com.ryuqq.fileflow.adapter.rest.file.mapper.FileApiMapper fileApiMapper() {
-        return new com.ryuqq.fileflow.adapter.rest.file.mapper.FileApiMapper();
-    }
-
-    @Bean
-    public com.ryuqq.fileflow.adapter.rest.download.mapper.DownloadApiMapper downloadApiMapper() {
-        return new com.ryuqq.fileflow.adapter.rest.download.mapper.DownloadApiMapper();
-    }
-
-    @Bean
-    public com.ryuqq.fileflow.adapter.rest.upload.mapper.UploadApiMapper uploadApiMapper() {
-        return new com.ryuqq.fileflow.adapter.rest.upload.mapper.UploadApiMapper();
-    }
+    // Mapper는 static 메서드만 있는 유틸리티 클래스이므로 Bean 등록 불필요
+    // ========================================
 
     /**
      * ErrorMapperRegistry Bean 등록

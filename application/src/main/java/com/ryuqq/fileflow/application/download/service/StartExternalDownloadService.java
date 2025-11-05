@@ -10,9 +10,9 @@ import com.ryuqq.fileflow.application.download.dto.command.StartExternalDownload
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
 import com.ryuqq.fileflow.application.download.port.in.StartExternalDownloadUseCase;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadCommandPort;
+import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxCommandPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxQueryPort;
-import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
