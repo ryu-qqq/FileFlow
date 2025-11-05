@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+========================================
+Logback Configuration for Download Scheduler
+========================================
+CloudWatch Logs + Console Logging
+JSON 포맷 (Logstash Encoder)
+@author FileFlow Team
+@since 1.0.0
+========================================
+-->
+<configuration>
+    <!-- ========================================
+         Property Definitions
+         ======================================== -->
+    <springProperty scope="context" name="APPLICATION_NAME" source="spring.application.name" defaultValue="fileflow-scheduler-download"/>
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    
+    <!-- AWS CloudWatch 설정 (환경변수로 주입) -->
+    <springProperty scope="context" name="AWS_REGION" source="aws.cloudwatch.region" defaultValue="ap-northeast-2"/>
+    <springProperty scope="context" name="LOG_GROUP_NAME" source="aws.cloudwatch.log-group" defaultValue="/aws/ecs/fileflow-scheduler-download"/>
+    <springProperty scope="context" name="LOG_STREAM_NAME" source="aws.cloudwatch.log-stream" defaultValue="download-scheduler"/>
+
+    <!-- ========================================
+         Console Appender (개발 환경)
+         ======================================== -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ========================================
+         Console Appender - JSON 포맷 (프로덕션)
+         ======================================== -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"application":"${APPLICATION_NAME}","service":"download-scheduler","scheduler_type":"outbox"}</customFields>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>batchId</includeMdcKeyName>
+            <includeMdcKeyName>downloadId</includeMdcKeyName>
+        </encoder>
+    </appender>
+
+    <!-- ========================================
+         Async Appender (성능 향상)
+         ======================================== -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="CONSOLE_JSON"/>
+    </appender>
+
+    <!-- ========================================
+         Logger Configuration
+         ======================================== -->
+    <!-- Application Logger -->
+    <logger name="com.ryuqq.fileflow" level="DEBUG" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </logger>
+
+    <!-- Spring Framework -->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.scheduling" level="DEBUG"/>
+    
+    <!-- Hibernate (JPA) -->
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    
+    <!-- HikariCP -->
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+    
+    <!-- AWS SDK -->
+    <logger name="software.amazon.awssdk" level="INFO"/>
+
+    <!-- ========================================
+         Profile-Specific Configuration
+         ======================================== -->
+    <!-- Local 환경: 일반 콘솔 로깅 -->
+    <springProfile name="local">
+        <root level="DEBUG">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Production 환경: JSON 콘솔 로깅 (CloudWatch로 전송) -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="ASYNC_CONSOLE"/>
+        </root>
+        
+        <!-- Application Logger는 DEBUG 레벨 (스케줄러 작업 추적) -->
+        <logger name="com.ryuqq.fileflow" level="DEBUG" additivity="false">
+            <appender-ref ref="ASYNC_CONSOLE"/>
+        </logger>
+    </springProfile>
+
+    <!-- Default: JSON 콘솔 로깅 -->
+    <root level="INFO">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </root>
+
+</configuration>

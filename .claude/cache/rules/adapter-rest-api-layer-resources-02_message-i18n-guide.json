@@ -1,0 +1,40 @@
+{
+  "id": "adapter-rest-api-layer-resources-02_message-i18n-guide",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/01-adapter-rest-api-layer/resources/02_message-i18n-guide.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "message",
+        "i18n",
+        "guide"
+      ],
+      "secondary": [
+        "메시지",
+        "국제화",
+        "가이드",
+        "message",
+        "internationalization"
+      ],
+      "anti": [
+        "messages-ko.properties"
+      ]
+    },
+    "layer": "adapter-rest",
+    "priority": "critical",
+    "tokenEstimate": 2124
+  },
+  "rules": {
+    "prohibited": [
+      "❌ `messages-ko.properties`: 하이픈 사용 금지 (언더스코어 사용)"
+    ],
+    "allowed": [
+      "✅ `messages.properties`: Locale이 없을 때 fallback으로 사용",
+      "✅ `messages_ko.properties`: 한국어 (`ko`, `ko_KR`)",
+      "✅ `messages_en.properties`: 영어 (`en`, `en_US`, `en_GB`)"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/01-adapter-rest-api-layer/resources/02_message-i18n-guide.md",
+    "summary": "Auto-generated from 02_message-i18n-guide.md"
+  }
+}

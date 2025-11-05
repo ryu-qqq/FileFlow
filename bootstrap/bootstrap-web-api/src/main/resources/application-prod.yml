@@ -1,0 +1,128 @@
+# ===============================================
+# Production Profile Configuration - Web API
+# ===============================================
+# 프로덕션 환경 전용 설정
+# 모든 민감한 정보는 환경변수로 주입
+#
+# @author FileFlow Team
+# @since 1.0.0
+# ===============================================
+
+spring:
+  # ===============================================
+  # DataSource Configuration (Production)
+  # ===============================================
+  datasource:
+    # Terraform에서 주입 (ECS Task Definition)
+    # DB_HOST: ${ssm:/shared/rds/db-instance-address}
+    # DB_PORT: ${ssm:/shared/rds/db-instance-port}
+    # DB_PASSWORD: ${secrets:prod-shared-mysql-master-password}
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/fileflow?useSSL=true&serverTimezone=UTC&characterEncoding=UTF-8
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:50}
+      minimum-idle: ${DB_POOL_MIN_IDLE:10}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}
+      pool-name: WebAPI-Prod-HikariPool
+      # 프로덕션 최적화
+      leak-detection-threshold: 120000  # 2분
+      register-mbeans: true
+
+  # ===============================================
+  # Redis Configuration (Production)
+  # ===============================================
+  data:
+    redis:
+      # Terraform에서 주입 (ECS Task Definition)
+      # REDIS_HOST: ${ssm:/fileflow/prod/redis/endpoint}
+      # REDIS_PORT: ${ssm:/fileflow/prod/redis/port}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+
+  # ===============================================
+  # Flyway Configuration (Production)
+  # ===============================================
+  flyway:
+    clean-disabled: true  # 프로덕션에서는 clean 절대 금지
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+# ===============================================
+# AWS S3 Configuration (Production)
+# ===============================================
+aws:
+  s3:
+    # Terraform에서 설정: fileflow-prod
+    region: ${AWS_REGION:ap-northeast-2}
+    bucket-name: ${AWS_S3_BUCKET:fileflow-prod}
+    # IAM Role 사용 (ECS Task Role)
+    # access-key, secret-key 불필요
+
+  # CloudWatch Logs (Production)
+  cloudwatch:
+    # Terraform에서 설정: /aws/ecs/fileflow-web-api
+    region: ${AWS_REGION:ap-northeast-2}
+    log-group: ${AWS_CLOUDWATCH_LOG_GROUP:/aws/ecs/fileflow-web-api}
+    log-stream: ${AWS_CLOUDWATCH_LOG_STREAM:web-api-${HOSTNAME}}
+
+# ===============================================
+# Server Configuration (Production)
+# ===============================================
+server:
+  port: 8083
+  tomcat:
+    threads:
+      min-spare: 10
+      max: 200  # 프로덕션 최대 스레드
+    connection-timeout: 20s
+    keep-alive-timeout: 60s
+    max-connections: 8192
+    accept-count: 100
+  shutdown: graceful
+  graceful-shutdown-timeout: 30s
+
+# ===============================================
+# Logging Configuration (Production)
+# ===============================================
+logging:
+  level:
+    root: WARN
+    com.ryuqq.fileflow: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN  # 프로덕션에서는 SQL 로깅 최소화
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+# ===============================================
+# Management & Actuator (Production)
+# ===============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        # 프로덕션에서는 필수 엔드포인트만 노출
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized  # 인증된 사용자에게만 상세 정보
+      probes:
+        enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      service: web-api
+      environment: production

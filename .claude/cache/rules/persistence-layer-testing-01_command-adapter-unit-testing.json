@@ -1,0 +1,39 @@
+{
+  "id": "persistence-layer-testing-01_command-adapter-unit-testing",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/04-persistence-layer/testing/01_command-adapter-unit-testing.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "command",
+        "adapter",
+        "unit",
+        "testing"
+      ],
+      "secondary": [
+        "command",
+        "adapter",
+        "unit",
+        "testing"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-persistence",
+    "priority": "critical",
+    "tokenEstimate": 1306
+  },
+  "rules": {
+    "prohibited": [
+      "❌ Query 테스트 금지 (Query Adapter 테스트로 분리)"
+    ],
+    "allowed": [
+      "✅ `@DataJpaTest` (JPA 슬라이스 테스트)",
+      "✅ H2 In-Memory DB 사용",
+      "✅ `@Tag(\"unit\")`, `@Tag(\"command\")` 필수",
+      "✅ Domain Model 중심 테스트"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/04-persistence-layer/testing/01_command-adapter-unit-testing.md",
+    "summary": "Auto-generated from 01_command-adapter-unit-testing.md"
+  }
+}

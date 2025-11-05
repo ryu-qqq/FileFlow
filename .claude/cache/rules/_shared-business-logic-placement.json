@@ -1,0 +1,61 @@
+{
+  "id": "_shared-business-logic-placement",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/_shared/business-logic-placement.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "business",
+        "logic",
+        "placement"
+      ],
+      "secondary": [
+        "비즈니스",
+        "로직",
+        "배치",
+        "원칙"
+      ],
+      "anti": [
+        "order.setStatus()",
+        "entity.setStatus()",
+        "if (entity.getAmount() > 1000) ..."
+      ]
+    },
+    "layer": "general",
+    "priority": "critical",
+    "tokenEstimate": 1368
+  },
+  "rules": {
+    "prohibited": [
+      "❌ 외부 시스템 호출 (API, DB, 메시징)",
+      "❌ 프레임워크 의존 (Spring, JPA)",
+      "❌ DTO/Entity 변환 로직",
+      "❌ **비즈니스 로직 작성**: Domain 메서드로 위임",
+      "❌ **데이터 직접 변경**: `order.setStatus()` 같은 setter 호출",
+      "❌ **조건 분기 과다**: 복잡한 if-else는 Domain으로",
+      "❌ **데이터 직접 변경**: `entity.setStatus()` 같은 setter 호출",
+      "❌ **비즈니스 로직**: `if (entity.getAmount() > 1000) ...` 같은 조건 분기",
+      "❌ **상태 전이**: Domain 메서드 없이 필드 직접 수정",
+      "❌ Anemic Domain Model (빈약한 도메인)",
+      "❌ 비즈니스 로직 중복 (Application, Persistence 곳곳에 흩어짐)",
+      "❌ 테스트 어려움 (Domain 단독 테스트 불가)",
+      "❌ 유지보수 악화 (규칙 변경 시 여러 곳 수정)"
+    ],
+    "allowed": [
+      "✅ **비즈니스 규칙 구현**: 주문 취소 조건, 재고 차감 규칙 등",
+      "✅ **데이터 변경(상태 전이)**: `Order.cancel()`, `Stock.decrease()` 등",
+      "✅ **불변식 보장**: 생성자/메서드에서 검증",
+      "✅ **도메인 이벤트 발행**: `OrderCancelledEvent` 등",
+      "✅ **UseCase 구현**: 여러 Domain 객체 호출 순서 제어",
+      "✅ **트랜잭션 경계**: `@Transactional` 설정",
+      "✅ **Port 호출**: Repository, External API 호출",
+      "✅ **DTO ↔ Domain 변환**: Command → Domain, Domain → Response",
+      "✅ **저장/조회**: JPA Entity ↔ Domain Entity 변환",
+      "✅ **쿼리 최적화**: N+1 방지, Fetch Join",
+      "✅ **변경 감지**: JPA Dirty Checking으로 UPDATE 자동 처리"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/_shared/business-logic-placement.md",
+    "summary": "Auto-generated from business-logic-placement.md"
+  }
+}

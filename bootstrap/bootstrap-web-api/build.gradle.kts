@@ -32,6 +32,10 @@ dependencies {
     implementation(project(":adapter-out:persistence-mysql"))
     implementation(project(":adapter-out:persistence-redis"))
     implementation(project(":adapter-out:abac-cel"))
+    implementation(project(":adapter-out:aws-s3"))
+    implementation(project(":adapter-out:http-client"))
+    implementation(project(":adapter-out:image-processor"))
+    implementation(project(":adapter-out:metadata-extractor"))
 
 
     // ========================================

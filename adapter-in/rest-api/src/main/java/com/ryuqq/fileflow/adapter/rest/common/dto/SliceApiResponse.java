@@ -4,7 +4,6 @@ import com.ryuqq.fileflow.application.common.dto.SliceResponse;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * SliceApiResponse - 슬라이스 조회 REST API 응답 DTO (Cursor 기반)

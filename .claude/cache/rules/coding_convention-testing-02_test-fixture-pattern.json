@@ -1,0 +1,29 @@
+{
+  "id": "coding_convention-testing-02_test-fixture-pattern",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/05-testing/02_test-fixture-pattern.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "test",
+        "fixture",
+        "pattern"
+      ],
+      "secondary": [
+        "testfixture",
+        "패턴"
+      ],
+      "anti": []
+    },
+    "layer": "testing",
+    "priority": "critical",
+    "tokenEstimate": 1804
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/05-testing/02_test-fixture-pattern.md",
+    "summary": "Auto-generated from 02_test-fixture-pattern.md"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "coding_convention-testing-archunit-rules-05_archunit-jpa-entity-rules",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/05-testing/archunit-rules/05_archunit-jpa-entity-rules.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "archunit",
+        "jpa",
+        "entity",
+        "rules"
+      ],
+      "secondary": [
+        "archunit",
+        "jpa",
+        "entity",
+        "rules"
+      ],
+      "anti": []
+    },
+    "layer": "testing",
+    "priority": "critical",
+    "tokenEstimate": 1121
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/05-testing/archunit-rules/05_archunit-jpa-entity-rules.md",
+    "summary": "Auto-generated from 05_archunit-jpa-entity-rules.md"
+  }
+}

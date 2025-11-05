@@ -1,0 +1,372 @@
+package com.ryuqq.fileflow.application.file.scheduler;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ryuqq.fileflow.application.file.manager.FileQueryManager;
+import com.ryuqq.fileflow.application.file.port.out.MetadataPort;
+import com.ryuqq.fileflow.application.file.port.out.SaveExtractedDataPort;
+import com.ryuqq.fileflow.application.file.port.out.SaveFileVariantPort;
+import com.ryuqq.fileflow.application.file.port.out.ThumbnailPort;
+import com.ryuqq.fileflow.domain.file.asset.FileAsset;
+import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.extraction.ExtractedData;
+import com.ryuqq.fileflow.domain.file.variant.FileVariantId;
+import com.ryuqq.fileflow.domain.file.extraction.ExtractionMethod;
+import com.ryuqq.fileflow.domain.file.extraction.ExtractionType;
+import com.ryuqq.fileflow.domain.file.metadata.FileMetadata;
+import com.ryuqq.fileflow.domain.file.thumbnail.ThumbnailInfo;
+import com.ryuqq.fileflow.domain.file.variant.FileVariant;
+import com.ryuqq.fileflow.domain.file.variant.VariantType;
+import com.ryuqq.fileflow.domain.upload.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
+
+/**
+ * PipelineWorker 통합 테스트
+ *
+ * <p><strong>테스트 범위:</strong></p>
+ * <ul>
+ *   <li>Phase 1: 썸네일 생성 및 FileVariant 저장</li>
+ *   <li>Phase 2: 메타데이터 추출 및 ExtractedData 저장</li>
+ *   <li>에러 처리 (FileAsset 미존재, 썸네일 실패, 메타데이터 실패)</li>
+ * </ul>
+ *
+ * <p><strong>테스트 전략:</strong></p>
+ * <ul>
+ *   <li>@SpringBootTest: Spring Context 로딩 (PipelineWorker Bean 필요)</li>
+ *   <li>@MockBean: 외부 Port를 Mock으로 대체</li>
+ *   <li>Given-When-Then 패턴</li>
+ * </ul>
+ *
+ * @author Sangwon Ryu
+ * @since 1.0.0
+ */
+@SpringBootTest
+@Transactional
+class PipelineWorkerTest {
+
+    @Autowired
+    private PipelineWorker pipelineWorker;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private FileQueryManager fileQueryManager;
+
+    @MockBean
+    private ThumbnailPort thumbnailPort;
+
+    @MockBean
+    private MetadataPort metadataPort;
+
+    @MockBean
+    private SaveFileVariantPort saveFileVariantPort;
+
+    @MockBean
+    private SaveExtractedDataPort saveExtractedDataPort;
+
+    private FileAsset imageFileAsset;
+    private FileAsset documentFileAsset;
+    private ThumbnailInfo thumbnailInfo;
+    private FileMetadata fileMetadata;
+    private FileVariant fileVariant;
+    private ExtractedData extractedData;
+
+    @BeforeEach
+    void setUp() {
+        // 이미지 FileAsset Mock (썸네일 생성 대상)
+        imageFileAsset = mock(FileAsset.class);
+        given(imageFileAsset.getFileId()).willReturn(FileId.of(1L));
+        given(imageFileAsset.getMimeType()).willReturn(new MimeType("image/jpeg"));
+        given(imageFileAsset.getStorageKey()).willReturn(StorageKey.of("uploads/test-image.jpg"));
+
+        // 문서 FileAsset Mock (썸네일 생성 안함)
+        documentFileAsset = mock(FileAsset.class);
+        given(documentFileAsset.getFileId()).willReturn(FileId.of(2L));
+        given(documentFileAsset.getMimeType()).willReturn(new MimeType("application/pdf"));
+        given(documentFileAsset.getStorageKey()).willReturn(StorageKey.of("uploads/test-document.pdf"));
+
+        // ThumbnailInfo
+        thumbnailInfo = new ThumbnailInfo(
+            StorageKey.of("thumbnails/test-image_thumb.jpg"),
+            512000L,
+            "image/jpeg"
+        );
+
+        // FileMetadata
+        fileMetadata = new FileMetadata(
+            FileId.of(1L),
+            Map.of(
+                "Content-Type", "image/jpeg",
+                "Width", "1920",
+                "Height", "1080",
+                "Author", "Test Author"
+            )
+        );
+
+        // FileVariant (Mock 반환용)
+        fileVariant = FileVariant.reconstitute(
+            new FileVariantId(1L),
+            1L, // parentFileAssetId (Long FK)
+            VariantType.THUMBNAIL,
+            StorageKey.of("thumbnails/test-image_thumb.jpg"),
+            new FileSize(512000L),
+            new MimeType("image/jpeg"),
+            Instant.now()
+        );
+
+        // ExtractedData (Mock 반환용)
+        extractedData = ExtractedData.reconstitute(
+            null, // ID는 null (신규 생성)
+            "550e8400-e29b-41d4-a716-446655440000",
+            1L,
+            1L,
+            1L,
+            ExtractionType.METADATA,
+            ExtractionMethod.TIKA,
+            1,
+            null,
+            "{\"Content-Type\":\"image/jpeg\",\"Width\":\"1920\",\"Height\":\"1080\",\"Author\":\"Test Author\"}",
+            null,
+            null,
+            1.0,
+            1.0,
+            null,
+            null,
+            Instant.now(),
+            Instant.now()
+        );
+    }
+
+    @Test
+    @DisplayName("Phase 1: 이미지 파일의 썸네일이 FileVariant로 저장되어야 한다")
+    void phase1_saveThumbnailAsFileVariant_success() throws Exception {
+        // Given: 이미지 FileAsset 조회 성공
+        given(fileQueryManager.findById(1L))
+            .willReturn(Optional.of(imageFileAsset));
+
+        // Given: 썸네일 생성 성공
+        given(thumbnailPort.generateThumbnail(any(FileAsset.class)))
+            .willReturn(thumbnailInfo);
+
+        // Given: 메타데이터 추출 성공
+        given(metadataPort.extractMetadata(any(FileAsset.class)))
+            .willReturn(fileMetadata);
+
+        // Given: FileVariant 저장 성공
+        given(saveFileVariantPort.save(any(FileVariant.class)))
+            .willReturn(fileVariant);
+
+        // Given: ExtractedData 저장 성공
+        given(saveExtractedDataPort.save(any(ExtractedData.class)))
+            .willReturn(extractedData);
+
+        // When: Pipeline 실행
+        pipelineWorker.startPipeline(1L);
+
+        // Then: FileVariant 저장 호출 검증
+        verify(saveFileVariantPort).save(argThat(fv ->
+            fv.getParentFileAssetId().equals(1L) &&
+            fv.getVariantType() == VariantType.THUMBNAIL &&
+            fv.getStorageKey().value().equals("thumbnails/test-image_thumb.jpg")
+        ));
+    }
+
+    @Test
+    @DisplayName("Phase 2: 메타데이터가 ExtractedData로 저장되어야 한다")
+    void phase2_saveMetadataAsExtractedData_success() throws Exception {
+        // Given: 이미지 FileAsset 조회 성공
+        given(fileQueryManager.findById(1L))
+            .willReturn(Optional.of(imageFileAsset));
+
+        // Given: 썸네일 생성 성공
+        given(thumbnailPort.generateThumbnail(any(FileAsset.class)))
+            .willReturn(thumbnailInfo);
+
+        // Given: 메타데이터 추출 성공
+        given(metadataPort.extractMetadata(any(FileAsset.class)))
+            .willReturn(fileMetadata);
+
+        // Given: FileVariant 저장 성공
+        given(saveFileVariantPort.save(any(FileVariant.class)))
+            .willReturn(fileVariant);
+
+        // Given: ExtractedData 저장 성공
+        given(saveExtractedDataPort.save(any(ExtractedData.class)))
+            .willReturn(extractedData);
+
+        // When: Pipeline 실행
+        pipelineWorker.startPipeline(1L);
+
+        // Then: ExtractedData 저장 호출 검증
+        verify(saveExtractedDataPort).save(argThat(ed ->
+            ed.getFileId().equals(1L) &&
+            ed.getExtractionType() == ExtractionType.METADATA &&
+            ed.getExtractionMethod() == ExtractionMethod.TIKA &&
+            ed.getStructuredData() != null &&
+            ed.getConfidenceScore() == 1.0 &&
+            ed.getQualityScore() == 1.0
+        ));
+    }
+
+    @Test
+    @DisplayName("문서 파일은 썸네일이 생성되지 않아야 한다")
+    void skipThumbnailForNonImageFiles() throws Exception {
+        // Given: 문서 FileAsset 조회 성공
+        given(fileQueryManager.findById(2L))
+            .willReturn(Optional.of(documentFileAsset));
+
+        // Given: 메타데이터 추출 성공
+        given(metadataPort.extractMetadata(any(FileAsset.class)))
+            .willReturn(fileMetadata);
+
+        // Given: ExtractedData 저장 성공
+        given(saveExtractedDataPort.save(any(ExtractedData.class)))
+            .willReturn(extractedData);
+
+        // When: Pipeline 실행
+        pipelineWorker.startPipeline(2L);
+
+        // Then: 썸네일 생성 호출 안됨
+        verify(thumbnailPort, never()).generateThumbnail(any(FileAsset.class));
+
+        // Then: FileVariant 저장 호출 안됨
+        verify(saveFileVariantPort, never()).save(any(FileVariant.class));
+
+        // Then: ExtractedData는 저장됨
+        verify(saveExtractedDataPort).save(any(ExtractedData.class));
+    }
+
+    @Test
+    @DisplayName("FileAsset이 존재하지 않으면 Pipeline이 종료되어야 한다")
+    void stopPipelineWhenFileAssetNotFound() {
+        // Given: FileAsset 조회 실패
+        given(fileQueryManager.findById(999L))
+            .willReturn(Optional.empty());
+
+        // When: Pipeline 실행
+        pipelineWorker.startPipeline(999L);
+
+        // Then: 썸네일 생성 호출 안됨
+        verify(thumbnailPort, never()).generateThumbnail(any(FileAsset.class));
+
+        // Then: 메타데이터 추출 호출 안됨
+        verify(metadataPort, never()).extractMetadata(any(FileAsset.class));
+
+        // Then: FileVariant 저장 호출 안됨
+        verify(saveFileVariantPort, never()).save(any(FileVariant.class));
+
+        // Then: ExtractedData 저장 호출 안됨
+        verify(saveExtractedDataPort, never()).save(any(ExtractedData.class));
+    }
+
+    @Test
+    @DisplayName("썸네일 생성 실패 시에도 메타데이터 추출은 계속되어야 한다")
+    void continueAfterThumbnailFailure() throws Exception {
+        // Given: 이미지 FileAsset 조회 성공
+        given(fileQueryManager.findById(1L))
+            .willReturn(Optional.of(imageFileAsset));
+
+        // Given: 썸네일 생성 실패 (예외 발생)
+        given(thumbnailPort.generateThumbnail(any(FileAsset.class)))
+            .willThrow(new RuntimeException("Thumbnail generation failed"));
+
+        // Given: 메타데이터 추출 성공
+        given(metadataPort.extractMetadata(any(FileAsset.class)))
+            .willReturn(fileMetadata);
+
+        // Given: ExtractedData 저장 성공
+        given(saveExtractedDataPort.save(any(ExtractedData.class)))
+            .willReturn(extractedData);
+
+        // When: Pipeline 실행
+        pipelineWorker.startPipeline(1L);
+
+        // Then: 메타데이터 추출 호출됨
+        verify(metadataPort).extractMetadata(any(FileAsset.class));
+
+        // Then: ExtractedData 저장 호출됨
+        verify(saveExtractedDataPort).save(any(ExtractedData.class));
+
+        // Then: FileVariant 저장 호출 안됨 (썸네일 실패)
+        verify(saveFileVariantPort, never()).save(any(FileVariant.class));
+    }
+
+    @Test
+    @DisplayName("메타데이터 추출 실패 시에도 Pipeline이 정상 종료되어야 한다")
+    void continueAfterMetadataFailure() throws Exception {
+        // Given: 이미지 FileAsset 조회 성공
+        given(fileQueryManager.findById(1L))
+            .willReturn(Optional.of(imageFileAsset));
+
+        // Given: 썸네일 생성 성공
+        given(thumbnailPort.generateThumbnail(any(FileAsset.class)))
+            .willReturn(thumbnailInfo);
+
+        // Given: 메타데이터 추출 실패 (예외 발생)
+        given(metadataPort.extractMetadata(any(FileAsset.class)))
+            .willThrow(new RuntimeException("Metadata extraction failed"));
+
+        // Given: FileVariant 저장 성공
+        given(saveFileVariantPort.save(any(FileVariant.class)))
+            .willReturn(fileVariant);
+
+        // When: Pipeline 실행
+        pipelineWorker.startPipeline(1L);
+
+        // Then: FileVariant 저장 호출됨 (썸네일 성공)
+        verify(saveFileVariantPort).save(any(FileVariant.class));
+
+        // Then: ExtractedData 저장 호출 안됨 (메타데이터 실패)
+        verify(saveExtractedDataPort, never()).save(any(ExtractedData.class));
+    }
+
+    @Test
+    @DisplayName("빈 메타데이터는 저장되지 않아야 한다")
+    void skipEmptyMetadata() throws Exception {
+        // Given: 이미지 FileAsset 조회 성공
+        given(fileQueryManager.findById(1L))
+            .willReturn(Optional.of(imageFileAsset));
+
+        // Given: 썸네일 생성 성공
+        given(thumbnailPort.generateThumbnail(any(FileAsset.class)))
+            .willReturn(thumbnailInfo);
+
+        // Given: 빈 메타데이터 반환
+        FileMetadata emptyMetadata = new FileMetadata(
+            new FileAssetId(1L),
+            Map.of() // 빈 Map
+        );
+        given(metadataPort.extractMetadata(any(FileAsset.class)))
+            .willReturn(emptyMetadata);
+
+        // Given: FileVariant 저장 성공
+        given(saveFileVariantPort.save(any(FileVariant.class)))
+            .willReturn(fileVariant);
+
+        // When: Pipeline 실행
+        pipelineWorker.startPipeline(1L);
+
+        // Then: FileVariant 저장 호출됨
+        verify(saveFileVariantPort).save(any(FileVariant.class));
+
+        // Then: ExtractedData 저장 호출 안됨 (빈 메타데이터)
+        verify(saveExtractedDataPort, never()).save(any(ExtractedData.class));
+    }
+}

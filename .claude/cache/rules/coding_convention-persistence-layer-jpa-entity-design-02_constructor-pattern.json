@@ -1,0 +1,28 @@
+{
+  "id": "coding_convention-persistence-layer-jpa-entity-design-02_constructor-pattern",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/04-persistence-layer/jpa-entity-design/02_constructor-pattern.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "constructor",
+        "pattern"
+      ],
+      "secondary": [
+        "constructor",
+        "pattern"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-persistence",
+    "priority": "critical",
+    "tokenEstimate": 1604
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/04-persistence-layer/jpa-entity-design/02_constructor-pattern.md",
+    "summary": "Auto-generated from 02_constructor-pattern.md"
+  }
+}

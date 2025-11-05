@@ -19,7 +19,7 @@ public class QTenantJpaEntity extends EntityPathBase<TenantJpaEntity> {
 
     public static final QTenantJpaEntity tenantJpaEntity = new QTenantJpaEntity("tenantJpaEntity");
 
-    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QBaseAuditEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QBaseAuditEntity(this);
+    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.QBaseAuditEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.QBaseAuditEntity(this);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;

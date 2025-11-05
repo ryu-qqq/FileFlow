@@ -1,0 +1,32 @@
+{
+  "id": "coding_convention-orchestration-patterns-04_outcome-modeling",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/09-orchestration-patterns/04_outcome-modeling.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "outcome",
+        "modeling"
+      ],
+      "secondary": [
+        "outcome",
+        "modeling",
+        "실행",
+        "결과",
+        "타입",
+        "안전성"
+      ],
+      "anti": []
+    },
+    "layer": "general",
+    "priority": "high",
+    "tokenEstimate": 2585
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/09-orchestration-patterns/04_outcome-modeling.md",
+    "summary": "Auto-generated from 04_outcome-modeling.md"
+  }
+}
