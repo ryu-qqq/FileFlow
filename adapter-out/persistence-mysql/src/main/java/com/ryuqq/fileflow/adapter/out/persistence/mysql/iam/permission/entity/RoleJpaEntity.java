@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.permission.entity;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.SoftDeletableEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.SoftDeletableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

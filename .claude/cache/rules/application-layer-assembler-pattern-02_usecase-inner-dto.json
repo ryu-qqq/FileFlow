@@ -18,7 +18,7 @@
     },
     "layer": "application",
     "priority": "high",
-    "tokenEstimate": 1536
+    "tokenEstimate": 1756
   },
   "rules": {
     "prohibited": [],

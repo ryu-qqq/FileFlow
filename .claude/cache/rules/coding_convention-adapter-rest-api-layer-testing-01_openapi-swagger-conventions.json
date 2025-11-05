@@ -1,0 +1,30 @@
+{
+  "id": "coding_convention-adapter-rest-api-layer-testing-01_openapi-swagger-conventions",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/01-adapter-rest-api-layer/testing/01_openapi-swagger-conventions.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "openapi",
+        "swagger",
+        "conventions"
+      ],
+      "secondary": [
+        "openapiswagger",
+        "문서화",
+        "컨벤션"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-rest",
+    "priority": "critical",
+    "tokenEstimate": 1489
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/01-adapter-rest-api-layer/testing/01_openapi-swagger-conventions.md",
+    "summary": "Auto-generated from 01_openapi-swagger-conventions.md"
+  }
+}

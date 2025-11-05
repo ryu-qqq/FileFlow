@@ -19,7 +19,7 @@ public class QRoleJpaEntity extends EntityPathBase<RoleJpaEntity> {
 
     public static final QRoleJpaEntity roleJpaEntity = new QRoleJpaEntity("roleJpaEntity");
 
-    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QSoftDeletableEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.entity.QSoftDeletableEntity(this);
+    public final com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.QSoftDeletableEntity _super = new com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.QSoftDeletableEntity(this);
 
     public final StringPath code = createString("code");
 

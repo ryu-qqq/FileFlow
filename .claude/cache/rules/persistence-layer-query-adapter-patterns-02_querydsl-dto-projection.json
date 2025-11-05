@@ -1,0 +1,37 @@
+{
+  "id": "persistence-layer-query-adapter-patterns-02_querydsl-dto-projection",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/04-persistence-layer/query-adapter-patterns/02_querydsl-dto-projection.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "querydsl",
+        "dto",
+        "projection"
+      ],
+      "secondary": [
+        "querydsl",
+        "dto",
+        "projection"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-persistence",
+    "priority": "critical",
+    "tokenEstimate": 1224
+  },
+  "rules": {
+    "prohibited": [
+      "❌ Entity 조회 후 DTO 변환 금지 (성능 저하)",
+      "❌ Domain Model 거치지 않음"
+    ],
+    "allowed": [
+      "✅ `Projections.constructor()` 사용",
+      "✅ DTO Record 패턴",
+      "✅ N+1 문제 방지 (Join + Fetch)"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/04-persistence-layer/query-adapter-patterns/02_querydsl-dto-projection.md",
+    "summary": "Auto-generated from 02_querydsl-dto-projection.md"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "coding_convention-persistence-layer-config-02_redis-lettuce-configuration",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/04-persistence-layer/config/02_redis-lettuce-configuration.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "redis",
+        "lettuce",
+        "configuration"
+      ],
+      "secondary": [
+        "redis",
+        "lettuce",
+        "엔터프라이즈급",
+        "설정",
+        "가이드"
+      ],
+      "anti": [
+        "cache-null-values: true",
+        "KEYS"
+      ]
+    },
+    "layer": "adapter-persistence",
+    "priority": "critical",
+    "tokenEstimate": 3179
+  },
+  "rules": {
+    "prohibited": [
+      "❌ `cache-null-values: true` (Null 캐싱)",
+      "❌ 비밀번호 하드코딩",
+      "❌ Prod에서 `KEYS` 명령어 사용 (SCAN 사용)",
+      "❌ 대용량 데이터 단일 키 저장 (10MB 이상)"
+    ],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/04-persistence-layer/config/02_redis-lettuce-configuration.md",
+    "summary": "Auto-generated from 02_redis-lettuce-configuration.md"
+  }
+}

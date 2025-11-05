@@ -65,4 +65,52 @@ output "alb_security_group_id" {
   value       = aws_security_group.fileflow_alb.id
 }
 
+# ============================================================================
+# Download Scheduler Outputs
+# ============================================================================
+
+output "download_scheduler_service_id" {
+  description = "Download scheduler ECS service ID"
+  value       = module.download_scheduler_service.service_id
+}
+
+output "download_scheduler_service_name" {
+  description = "Download scheduler ECS service name"
+  value       = module.download_scheduler_service.service_name
+}
+
+output "download_scheduler_log_group_name" {
+  description = "Download scheduler CloudWatch log group name"
+  value       = module.download_scheduler_logs.log_group_name
+}
+
+output "download_scheduler_security_group_id" {
+  description = "Download scheduler security group ID"
+  value       = aws_security_group.download_scheduler.id
+}
+
+# ============================================================================
+# Pipeline Scheduler Outputs
+# ============================================================================
+
+output "pipeline_scheduler_service_id" {
+  description = "Pipeline scheduler ECS service ID"
+  value       = module.pipeline_scheduler_service.service_id
+}
+
+output "pipeline_scheduler_service_name" {
+  description = "Pipeline scheduler ECS service name"
+  value       = module.pipeline_scheduler_service.service_name
+}
+
+output "pipeline_scheduler_log_group_name" {
+  description = "Pipeline scheduler CloudWatch log group name"
+  value       = module.pipeline_scheduler_logs.log_group_name
+}
+
+output "pipeline_scheduler_security_group_id" {
+  description = "Pipeline scheduler security group ID"
+  value       = aws_security_group.pipeline_scheduler.id
+}
+
 

@@ -1,0 +1,254 @@
+# ===============================================
+# Docker Profile Configuration
+# ===============================================
+# Docker Compose 환경 전용 설정
+#
+# @author Claude Code
+# @since 1.0.0
+# ===============================================
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  # ===============================================
+  # DataSource Configuration
+  # ===============================================
+  datasource:
+    # Docker Compose에서 mysql 서비스명으로 접근
+    url: jdbc:mysql://mysql:3306/fileflow?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: fileflow_user
+    password: fileflow_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # HikariCP 커넥션 풀 설정 (Docker 환경 최적화)
+    hikari:
+      # 최소 유휴 커넥션 수
+      minimum-idle: 5
+      # 최대 풀 크기
+      maximum-pool-size: 20
+      # 커넥션 타임아웃 (밀리초)
+      connection-timeout: 30000
+      # 유휴 커넥션 타임아웃 (밀리초)
+      idle-timeout: 600000
+      # 커넥션 최대 수명 (밀리초)
+      max-lifetime: 1800000
+      # 커넥션 테스트 쿼리
+      connection-test-query: SELECT 1
+
+  # ===============================================
+  # JPA/Hibernate Configuration
+  # ===============================================
+  jpa:
+    hibernate:
+      # DDL 자동 생성 비활성화 (Flyway 사용)
+      ddl-auto: none
+
+    # JPA 속성
+    properties:
+      hibernate:
+        # SQL 포맷팅
+        format_sql: true
+        # SQL 주석 표시
+        use_sql_comments: true
+        # 배치 사이즈
+        jdbc:
+          batch_size: 20
+        # 2차 캐시 비활성화 (Redis 사용)
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        # 통계 활성화
+        generate_statistics: false
+
+  # ===============================================
+  # Redis Configuration
+  # ===============================================
+  data:
+    redis:
+      # Docker Compose에서 redis 서비스명으로 접근
+      host: redis
+      port: 6379
+      # 비밀번호 없음 (로컬 개발 환경)
+      password:
+      # 타임아웃 설정
+      timeout: 60s
+      # Lettuce 커넥션 풀
+      lettuce:
+        pool:
+          # 최소 유휴 커넥션
+          min-idle: 5
+          # 최대 유휴 커넥션
+          max-idle: 10
+          # 최대 활성 커넥션
+          max-active: 20
+          # 커넥션 대기 시간
+          max-wait: -1ms
+
+  # ===============================================
+  # Flyway Configuration
+  # ===============================================
+  flyway:
+    # Flyway 활성화
+    enabled: true
+    # Docker 환경에서는 clean 허용 (개발 환경)
+    clean-disabled: false
+    # 베이스라인 설정
+    baseline-on-migrate: true
+    baseline-version: 0
+
+# ===============================================
+# Server Configuration
+# ===============================================
+server:
+  # Docker 내부 포트
+  port: 8083
+
+  # Tomcat 설정 (Docker 환경 최적화)
+  tomcat:
+    threads:
+      # Docker 컨테이너에서는 리소스 제한 고려
+      min-spare: 10
+      max: 100
+
+    # 타임아웃 설정
+    connection-timeout: 20s
+    keep-alive-timeout: 60s
+
+    # 커넥션 수
+    max-connections: 4096
+    accept-count: 100
+
+  # Graceful Shutdown
+  shutdown: graceful
+
+# ===============================================
+# Logging Configuration (Docker)
+# ===============================================
+logging:
+  level:
+    root: INFO
+    com.ryuqq: DEBUG
+
+    # Spring Framework
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+
+    # Hibernate (SQL 로깅)
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+    # HikariCP
+    com.zaxxer.hikari: DEBUG
+
+  # 콘솔 로그 패턴 (Docker logs 출력)
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ===============================================
+# Management & Actuator
+# ===============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        # Docker 환경에서는 모든 엔드포인트 노출 (개발용)
+        include: "*"
+      base-path: /actuator
+
+  endpoint:
+    health:
+      # 상세 정보 항상 표시 (개발 환경)
+      show-details: always
+
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+  health:
+    # 데이터베이스 헬스체크
+    db:
+      enabled: true
+    # Redis 헬스체크
+    redis:
+      enabled: true
+
+# ===============================================
+# API Endpoint Configuration
+# ===============================================
+# REST API 엔드포인트 경로 중앙 관리
+api:
+  endpoints:
+    # API v1 베이스 경로
+    base-v1: /api/v1
+
+    # ===============================================
+    # IAM Bounded Context
+    # ===============================================
+    iam:
+      # Organization 도메인
+      organization:
+        base: /organizations
+        by-id: /{organizationId}
+        status: /{organizationId}/status
+
+      # Tenant 도메인
+      tenant:
+        base: /tenants
+        by-id: /{tenantId}
+        status: /{tenantId}/status
+        tree: /{tenantId}/tree
+
+      # Permission 도메인
+      permission:
+        base: /permissions
+        evaluate: /evaluate
+
+      # UserContext 도메인
+      user-context:
+        base: /user-contexts
+
+    # ===============================================
+    # Settings Bounded Context
+    # ===============================================
+    settings:
+      base: /settings
+
+    # ===============================================
+    # Upload Bounded Context
+    # ===============================================
+    upload:
+      base: /uploads
+      multipart:
+        init: /multipart/init
+        part-url: /multipart/{sessionKey}/parts/{partNumber}/url
+        mark-part: /multipart/{sessionKey}/parts/{partNumber}
+        complete: /multipart/{sessionKey}/complete
+
+    # ===============================================
+    # Download Bounded Context
+    # ===============================================
+    download:
+      base: /downloads
+      external:
+        start: /external
+        status: /external/{downloadId}/status
+
+    # ===============================================
+    # File Management Bounded Context
+    # ===============================================
+    file:
+      base: /files
+      by-id: /{fileId}
+      download-url: /{fileId}/download-url
+
+  # ===============================================
+  # Error Response Configuration (RFC 7807)
+  # ===============================================
+  error:
+    # 에러 타입 문서 베이스 URL
+    base-url: about:blank
+    # about:blank 사용 여부
+    use-about-blank: true

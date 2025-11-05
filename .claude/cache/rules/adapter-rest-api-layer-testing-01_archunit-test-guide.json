@@ -1,0 +1,39 @@
+{
+  "id": "adapter-rest-api-layer-testing-01_archunit-test-guide",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/01-adapter-rest-api-layer/testing/01_archunit-test-guide.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "archunit",
+        "test",
+        "guide"
+      ],
+      "secondary": [
+        "rest",
+        "api",
+        "layer",
+        "archunit",
+        "테스트",
+        "가이드"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-rest",
+    "priority": "critical",
+    "tokenEstimate": 5508
+  },
+  "rules": {
+    "prohibited": [
+      "❌ 규칙 위반 시: 빌드 실패 (커밋 불가)"
+    ],
+    "allowed": [
+      "✅ **UseCase 2개 이상**: Facade 사용 (의존성 감소)",
+      "✅ **UseCase 1개 + 단순 위임**: UseCase 직접 호출 (Facade 불필요)",
+      "✅ 규칙 준수 시: 빌드 성공"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/01-adapter-rest-api-layer/testing/01_archunit-test-guide.md",
+    "summary": "Auto-generated from 01_archunit-test-guide.md"
+  }
+}

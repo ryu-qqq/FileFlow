@@ -1,0 +1,36 @@
+{
+  "id": "persistence-layer-testing-04_test-tags-strategy",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/04-persistence-layer/testing/04_test-tags-strategy.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "test",
+        "tags",
+        "strategy"
+      ],
+      "secondary": [
+        "test",
+        "tags",
+        "strategy"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-persistence",
+    "priority": "critical",
+    "tokenEstimate": 1609
+  },
+  "rules": {
+    "prohibited": [
+      "❌ 임의의 태그 생성 금지 (표준 태그만 사용)"
+    ],
+    "allowed": [
+      "✅ 모든 테스트 클래스에 최소 2개 태그 필수",
+      "✅ 실행 범위 태그 1개 + CQRS 태그 1개",
+      "✅ 명확한 네이밍 규칙 (소문자, 하이픈 없음)"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/04-persistence-layer/testing/04_test-tags-strategy.md",
+    "summary": "Auto-generated from 04_test-tags-strategy.md"
+  }
+}

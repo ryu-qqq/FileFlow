@@ -1,0 +1,30 @@
+{
+  "id": "coding_convention-persistence-layer-jpa-entity-design-03_audit-entity-pattern",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/04-persistence-layer/jpa-entity-design/03_audit-entity-pattern.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "audit",
+        "entity",
+        "pattern"
+      ],
+      "secondary": [
+        "audit",
+        "entity",
+        "pattern"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-persistence",
+    "priority": "critical",
+    "tokenEstimate": 1114
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/04-persistence-layer/jpa-entity-design/03_audit-entity-pattern.md",
+    "summary": "Auto-generated from 03_audit-entity-pattern.md"
+  }
+}

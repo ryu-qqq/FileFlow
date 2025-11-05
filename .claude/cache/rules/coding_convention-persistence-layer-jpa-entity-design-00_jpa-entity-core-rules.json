@@ -1,0 +1,46 @@
+{
+  "id": "coding_convention-persistence-layer-jpa-entity-design-00_jpa-entity-core-rules",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/04-persistence-layer/jpa-entity-design/00_jpa-entity-core-rules.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "jpa",
+        "entity",
+        "core",
+        "rules"
+      ],
+      "secondary": [
+        "jpa",
+        "entity",
+        "핵심",
+        "설계",
+        "규칙"
+      ],
+      "anti": [
+        "confirm()",
+        "cancel()",
+        "ship()"
+      ]
+    },
+    "layer": "adapter-persistence",
+    "priority": "critical",
+    "tokenEstimate": 1675
+  },
+  "rules": {
+    "prohibited": [
+      "❌ 비즈니스 메서드 (`confirm()`, `cancel()`, `ship()` 등)",
+      "❌ Setter 메서드",
+      "❌ 상태 변경 로직",
+      "❌ 검증 로직"
+    ],
+    "allowed": [
+      "✅ Getter 메서드",
+      "✅ 3개 생성자 (no-args, create, reconstitute)",
+      "✅ Static factory 메서드"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/04-persistence-layer/jpa-entity-design/00_jpa-entity-core-rules.md",
+    "summary": "Auto-generated from 00_jpa-entity-core-rules.md"
+  }
+}

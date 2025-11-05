@@ -1,0 +1,30 @@
+{
+  "id": "coding_convention-persistence-layer-query-adapter-patterns-04_query-performance-optimization",
+  "sourceFile": "/Users/sangwon-ryu/fileflow/docs/coding_convention/coding_convention/04-persistence-layer/query-adapter-patterns/04_query-performance-optimization.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "query",
+        "performance",
+        "optimization"
+      ],
+      "secondary": [
+        "query",
+        "performance",
+        "optimization"
+      ],
+      "anti": []
+    },
+    "layer": "adapter-persistence",
+    "priority": "high",
+    "tokenEstimate": 1511
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": []
+  },
+  "documentation": {
+    "path": "docs/coding_convention/coding_convention/04-persistence-layer/query-adapter-patterns/04_query-performance-optimization.md",
+    "summary": "Auto-generated from 04_query-performance-optimization.md"
+  }
+}
