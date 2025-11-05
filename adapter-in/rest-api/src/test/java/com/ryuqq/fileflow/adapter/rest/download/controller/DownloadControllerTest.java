@@ -17,8 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -62,9 +60,6 @@ class DownloadControllerTest {
     @MockBean
     private GetDownloadStatusUseCase getDownloadStatusUseCase;
 
-    @MockBean
-    private DownloadApiMapper mapper;
-
     @Test
     @DisplayName("POST /api/v1/downloads/external - 외부 다운로드 시작 성공 (202 Accepted)")
     void startExternalDownload_Success_ReturnsAccepted() throws Exception {
@@ -79,15 +74,6 @@ class DownloadControllerTest {
         Long tenantId = 1L;
         Long uploadSessionId = 12345L;
         Long downloadId = 67890L;
-        String idempotencyKey = "test-idem-key-001";
-
-        StartExternalDownloadCommand command = new StartExternalDownloadCommand(
-            idempotencyKey,
-            new com.ryuqq.fileflow.domain.iam.tenant.TenantId(tenantId),
-            "https://example.com/files/document.pdf",
-            com.ryuqq.fileflow.domain.upload.FileName.of("document.pdf"),
-            com.ryuqq.fileflow.domain.upload.FileSize.of(1024000L) // 1MB
-        );
 
         ExternalDownloadResponse useCaseResponse = ExternalDownloadResponse.ofLegacy(
             downloadId,
@@ -96,18 +82,10 @@ class DownloadControllerTest {
             "PENDING"
         );
 
-        StartDownloadApiResponse apiResponse = new StartDownloadApiResponse(
-            downloadId,
-            uploadSessionId,
-            "PENDING"
-        );
+        StartDownloadApiResponse apiResponse = DownloadApiMapper.toApiResponse(useCaseResponse);
 
-        when(mapper.toCommand(any(StartDownloadApiRequest.class), eq(tenantId), anyString()))
-            .thenReturn(command);
-        when(startExternalDownloadUseCase.execute(command))
+        when(startExternalDownloadUseCase.execute(any(StartExternalDownloadCommand.class)))
             .thenReturn(useCaseResponse);
-        when(mapper.toApiResponse(useCaseResponse))
-            .thenReturn(apiResponse);
 
         // When & Then
         mockMvc.perform(post("/api/v1/downloads/external")
@@ -215,17 +193,10 @@ class DownloadControllerTest {
             "DOWNLOADING"
         );
 
-        DownloadStatusApiResponse apiResponse = new DownloadStatusApiResponse(
-            downloadId,
-            "DOWNLOADING",
-            "https://example.com/files/document.pdf",
-            uploadSessionId
-        );
+        DownloadStatusApiResponse apiResponse = DownloadApiMapper.toStatusApiResponse(useCaseResponse);
 
         when(getDownloadStatusUseCase.execute(downloadId))
             .thenReturn(useCaseResponse);
-        when(mapper.toStatusApiResponse(useCaseResponse))
-            .thenReturn(apiResponse);
 
         // When & Then
         mockMvc.perform(get("/api/v1/downloads/external/{downloadId}/status", downloadId))
@@ -252,17 +223,10 @@ class DownloadControllerTest {
             "COMPLETED"
         );
 
-        DownloadStatusApiResponse apiResponse = new DownloadStatusApiResponse(
-            downloadId,
-            "COMPLETED",
-            "https://example.com/files/document.pdf",
-            uploadSessionId
-        );
+        DownloadStatusApiResponse apiResponse = DownloadApiMapper.toStatusApiResponse(useCaseResponse);
 
         when(getDownloadStatusUseCase.execute(downloadId))
             .thenReturn(useCaseResponse);
-        when(mapper.toStatusApiResponse(useCaseResponse))
-            .thenReturn(apiResponse);
 
         // When & Then
         mockMvc.perform(get("/api/v1/downloads/external/{downloadId}/status", downloadId))
@@ -286,17 +250,10 @@ class DownloadControllerTest {
             "FAILED"
         );
 
-        DownloadStatusApiResponse apiResponse = new DownloadStatusApiResponse(
-            downloadId,
-            "FAILED",
-            "https://example.com/files/document.pdf",
-            uploadSessionId
-        );
+        DownloadStatusApiResponse apiResponse = DownloadApiMapper.toStatusApiResponse(useCaseResponse);
 
         when(getDownloadStatusUseCase.execute(downloadId))
             .thenReturn(useCaseResponse);
-        when(mapper.toStatusApiResponse(useCaseResponse))
-            .thenReturn(apiResponse);
 
         // When & Then
         mockMvc.perform(get("/api/v1/downloads/external/{downloadId}/status", downloadId))

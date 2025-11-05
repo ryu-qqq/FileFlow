@@ -31,7 +31,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -86,9 +85,6 @@ class UploadControllerTest {
     @MockBean
     private CompleteMultipartUploadUseCase completeMultipartUploadUseCase;
 
-    @MockBean
-    private UploadApiMapper mapper;
-
     // ========================================
     // 단일 업로드 테스트
     // ========================================
@@ -111,27 +107,14 @@ class UploadControllerTest {
         String uploadUrl = "https://s3.amazonaws.com/bucket/uploads/document.pdf?signature=...";
         String storageKey = "uploads/2024/10/31/document.pdf";
 
-        InitSingleUploadCommand command = InitSingleUploadCommand.of(
-            com.ryuqq.fileflow.domain.iam.tenant.TenantId.of(tenantId),
-            "document.pdf",
-            5242880L,
-            "application/pdf"
-        );
-
         SingleUploadResponse useCaseResponse = new SingleUploadResponse(
             sessionKey, uploadUrl, storageKey
         );
 
-        SingleUploadApiResponse apiResponse = SingleUploadApiResponse.of(
-            sessionKey, uploadUrl, storageKey
-        );
+        SingleUploadApiResponse apiResponse = UploadApiMapper.toApiResponse(useCaseResponse);
 
-        when(mapper.toCommand(any(SingleUploadApiRequest.class), eq(tenantId)))
-            .thenReturn(command);
-        when(initSingleUploadUseCase.execute(command))
+        when(initSingleUploadUseCase.execute(any(InitSingleUploadCommand.class)))
             .thenReturn(useCaseResponse);
-        when(mapper.toApiResponse(useCaseResponse))
-            .thenReturn(apiResponse);
 
         // When & Then
         mockMvc.perform(post("/api/v1/uploads/single")
@@ -213,27 +196,14 @@ class UploadControllerTest {
         int totalParts = 10;
         String storageKey = "uploads/2024/10/31/large-video.mp4";
 
-        InitMultipartCommand command = InitMultipartCommand.of(
-            com.ryuqq.fileflow.domain.iam.tenant.TenantId.of(tenantId),
-            "large-video.mp4",
-            524288000L,
-            "video/mp4"
-        );
-
         InitMultipartResponse useCaseResponse = new InitMultipartResponse(
             sessionKey, uploadId, totalParts, storageKey
         );
 
-        InitMultipartApiResponse apiResponse = InitMultipartApiResponse.of(
-            sessionKey, uploadId, totalParts, storageKey
-        );
+        InitMultipartApiResponse apiResponse = UploadApiMapper.toApiResponse(useCaseResponse);
 
-        when(mapper.toCommand(any(InitMultipartApiRequest.class), eq(tenantId)))
-            .thenReturn(command);
-        when(initMultipartUploadUseCase.execute(command))
+        when(initMultipartUploadUseCase.execute(any(InitMultipartCommand.class)))
             .thenReturn(useCaseResponse);
-        when(mapper.toApiResponse(useCaseResponse))
-            .thenReturn(apiResponse);
 
         // When & Then
         mockMvc.perform(post("/api/v1/uploads/multipart/init")
@@ -262,22 +232,14 @@ class UploadControllerTest {
         String presignedUrl = "https://s3.amazonaws.com/bucket/uploads/part1?signature=...";
         Long expiresInSeconds = 3600L;
 
-        GeneratePartUrlCommand command = new GeneratePartUrlCommand(sessionKey, partNumber);
-
         PartPresignedUrlResponse useCaseResponse = new PartPresignedUrlResponse(
             partNumber, presignedUrl, java.time.Duration.ofSeconds(expiresInSeconds)
         );
 
-        PartPresignedUrlApiResponse apiResponse = PartPresignedUrlApiResponse.of(
-            partNumber, presignedUrl, expiresInSeconds
-        );
+        PartPresignedUrlApiResponse apiResponse = UploadApiMapper.toApiResponse(useCaseResponse);
 
-        when(mapper.toCommand(sessionKey, partNumber))
-            .thenReturn(command);
-        when(generatePartPresignedUrlUseCase.execute(command))
+        when(generatePartPresignedUrlUseCase.execute(any(GeneratePartUrlCommand.class)))
             .thenReturn(useCaseResponse);
-        when(mapper.toApiResponse(useCaseResponse))
-            .thenReturn(apiResponse);
 
         // When & Then
         mockMvc.perform(post("/api/v1/uploads/multipart/{sessionKey}/parts/{partNumber}/url",
@@ -335,13 +297,7 @@ class UploadControllerTest {
             }
             """;
 
-        MarkPartUploadedCommand command = new MarkPartUploadedCommand(
-            sessionKey, partNumber, "\"d41d8cd98f00b204e9800998ecf8427e\"", 5242880L
-        );
-
-        when(mapper.toCommand(eq(sessionKey), eq(partNumber), any(MarkPartUploadedApiRequest.class)))
-            .thenReturn(command);
-        doNothing().when(markPartUploadedUseCase).execute(command);
+        doNothing().when(markPartUploadedUseCase).execute(any(MarkPartUploadedCommand.class));
 
         // When & Then
         mockMvc.perform(put("/api/v1/uploads/multipart/{sessionKey}/parts/{partNumber}",
@@ -387,22 +343,14 @@ class UploadControllerTest {
         String etag = "\"abc123def456\"";
         String location = "https://s3.amazonaws.com/bucket/uploads/2024/10/31/large-video.mp4";
 
-        CompleteMultipartCommand command = new CompleteMultipartCommand(sessionKey);
-
         CompleteMultipartResponse useCaseResponse = new CompleteMultipartResponse(
             fileId, etag, location
         );
 
-        CompleteMultipartApiResponse apiResponse = CompleteMultipartApiResponse.of(
-            fileId, etag, location
-        );
+        CompleteMultipartApiResponse apiResponse = UploadApiMapper.toApiResponse(useCaseResponse);
 
-        when(mapper.toCommand(sessionKey))
-            .thenReturn(command);
-        when(completeMultipartUploadUseCase.execute(command))
+        when(completeMultipartUploadUseCase.execute(any(CompleteMultipartCommand.class)))
             .thenReturn(useCaseResponse);
-        when(mapper.toApiResponse(useCaseResponse))
-            .thenReturn(apiResponse);
 
         // When & Then
         mockMvc.perform(post("/api/v1/uploads/multipart/{sessionKey}/complete", sessionKey))
