@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.application.download.scheduler;
 
 import com.ryuqq.fileflow.application.download.config.ExternalDownloadOutboxProperties;
 import com.ryuqq.fileflow.application.download.manager.ExternalDownloadOutboxManager;
-import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadPort;
+import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.ProcessResult;
@@ -50,18 +50,18 @@ public class ExternalDownloadOutboxScheduler {
     private static final Logger log = LoggerFactory.getLogger(ExternalDownloadOutboxScheduler.class);
 
     private final ExternalDownloadOutboxManager outboxManager;
-    private final ExternalDownloadPort downloadPort;
+    private final ExternalDownloadQueryPort downloadQueryPort;
     private final ExternalDownloadWorker downloadWorker;
     private final ExternalDownloadOutboxProperties properties;
 
     public ExternalDownloadOutboxScheduler(
         ExternalDownloadOutboxManager outboxManager,
-        ExternalDownloadPort downloadPort,
+        ExternalDownloadQueryPort downloadQueryPort,
         ExternalDownloadWorker downloadWorker,
         ExternalDownloadOutboxProperties properties
     ) {
         this.outboxManager = outboxManager;
-        this.downloadPort = downloadPort;
+        this.downloadQueryPort = downloadQueryPort;
         this.downloadWorker = downloadWorker;
         this.properties = properties;
     }
@@ -167,7 +167,7 @@ public class ExternalDownloadOutboxScheduler {
             outboxManager.markProcessing(outbox);
 
             // 2. ExternalDownload 조회
-            ExternalDownload download = downloadPort.findById(outbox.getDownloadIdValue())
+            ExternalDownload download = downloadQueryPort.findById(outbox.getDownloadIdValue())
                 .orElseThrow(() -> new IllegalStateException(
                     "Download not found for outbox: " + outbox.getIdValue()
                 ));

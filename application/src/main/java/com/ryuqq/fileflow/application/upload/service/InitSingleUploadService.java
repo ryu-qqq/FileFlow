@@ -7,7 +7,7 @@ import com.ryuqq.fileflow.application.upload.config.PresignedUrlProperties;
 import com.ryuqq.fileflow.application.upload.dto.command.InitSingleUploadCommand;
 import com.ryuqq.fileflow.application.upload.dto.response.SingleUploadResponse;
 import com.ryuqq.fileflow.application.upload.facade.S3PresignedUrlFacade;
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
+import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
 import com.ryuqq.fileflow.application.upload.port.in.InitSingleUploadUseCase;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionCachePort;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
@@ -49,7 +49,7 @@ public class InitSingleUploadService implements InitSingleUploadUseCase {
 
     private final IamContextFacade iamContextFacade;
     private final S3PresignedUrlFacade s3PresignedUrlFacade;
-    private final UploadSessionManager uploadSessionManager;
+    private final UploadSessionStateManager uploadSessionStateManager;
     private final UploadSessionCachePort uploadSessionCachePort;
     private final PresignedUrlProperties presignedUrlProperties;
 
@@ -58,20 +58,20 @@ public class InitSingleUploadService implements InitSingleUploadUseCase {
      *
      * @param iamContextFacade IAM Context Facade
      * @param s3PresignedUrlFacade S3 Presigned URL Facade
-     * @param uploadSessionManager Upload Session Manager
+     * @param uploadSessionStateManager Upload Session State Manager
      * @param uploadSessionCachePort Upload Session Cache Port (Hexagonal Architecture)
      * @param presignedUrlProperties Presigned URL 설정 (Type-Safe Configuration)
      */
     public InitSingleUploadService(
         IamContextFacade iamContextFacade,
         S3PresignedUrlFacade s3PresignedUrlFacade,
-        UploadSessionManager uploadSessionManager,
+        UploadSessionStateManager uploadSessionStateManager,
         UploadSessionCachePort uploadSessionCachePort,
         PresignedUrlProperties presignedUrlProperties
     ) {
         this.iamContextFacade = iamContextFacade;
         this.s3PresignedUrlFacade = s3PresignedUrlFacade;
-        this.uploadSessionManager = uploadSessionManager;
+        this.uploadSessionStateManager = uploadSessionStateManager;
         this.uploadSessionCachePort = uploadSessionCachePort;
         this.presignedUrlProperties = presignedUrlProperties;
     }
@@ -137,7 +137,7 @@ public class InitSingleUploadService implements InitSingleUploadUseCase {
         );
 
         // 5. UploadSession 저장 (트랜잭션 내)
-        UploadSession savedSession = uploadSessionManager.save(session);
+        UploadSession savedSession = uploadSessionStateManager.save(session);
 
         // 6. Redis 캐시 등록 (TTL 기반 만료 추적)
         uploadSessionCachePort.trackSession(

@@ -51,4 +51,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(project(":domain"))
     testImplementation(testFixtures(project(":domain")))
+
+    // ========================================
+    // TestFixtures Dependencies
+    // ========================================
+    testFixturesImplementation(project(":domain"))
 }

@@ -5,9 +5,9 @@ import com.ryuqq.fileflow.application.iam.context.IamContextFacade;
 import com.ryuqq.fileflow.application.upload.dto.command.GeneratePartUrlCommand;
 import com.ryuqq.fileflow.application.upload.dto.response.PartPresignedUrlResponse;
 import com.ryuqq.fileflow.application.upload.facade.S3PresignedUrlFacade;
-import com.ryuqq.fileflow.application.upload.manager.MultipartUploadManager;
 import com.ryuqq.fileflow.application.upload.port.in.GeneratePartPresignedUrlUseCase;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
@@ -27,19 +27,19 @@ public class GeneratePartPresignedUrlService implements GeneratePartPresignedUrl
 
     private static final Duration URL_EXPIRATION = Duration.ofHours(1);
 
-    private final UploadSessionPort uploadSessionPort;
-    private final MultipartUploadManager multipartUploadManager;
+    private final LoadUploadSessionPort loadUploadSessionPort;
+    private final LoadMultipartUploadPort loadMultipartUploadPort;
     private final IamContextFacade iamContextFacade;
     private final S3PresignedUrlFacade s3PresignedUrlFacade;
 
     public GeneratePartPresignedUrlService(
-        UploadSessionPort uploadSessionPort,
-        MultipartUploadManager multipartUploadManager,
+        LoadUploadSessionPort loadUploadSessionPort,
+        LoadMultipartUploadPort loadMultipartUploadPort,
         IamContextFacade iamContextFacade,
         S3PresignedUrlFacade s3PresignedUrlFacade
     ) {
-        this.uploadSessionPort = uploadSessionPort;
-        this.multipartUploadManager = multipartUploadManager;
+        this.loadUploadSessionPort = loadUploadSessionPort;
+        this.loadMultipartUploadPort = loadMultipartUploadPort;
         this.iamContextFacade = iamContextFacade;
         this.s3PresignedUrlFacade = s3PresignedUrlFacade;
     }
@@ -70,12 +70,13 @@ public class GeneratePartPresignedUrlService implements GeneratePartPresignedUrl
      * 업로드 세션 조회
      *
      * <p>⭐ Read-only 트랜잭션</p>
+     * <p>✅ 변경: Query Port 직접 사용</p>
      *
      * @param sessionKey 세션 키
      * @return UploadSession
      */
     public UploadSession findUploadSession(String sessionKey) {
-        return uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey))
+        return loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey))
             .orElseThrow(() ->
                 new IllegalArgumentException("Upload session not found: " + sessionKey)
             );
@@ -84,11 +85,13 @@ public class GeneratePartPresignedUrlService implements GeneratePartPresignedUrl
     /**
      * Multipart Upload 조회
      *
+     * <p>✅ 변경: Query Port 직접 사용</p>
+     *
      * @param sessionId 세션 ID
      * @return MultipartUpload
      */
     public MultipartUpload findMultipartUpload(Long sessionId) {
-        return multipartUploadManager.findByUploadSessionId(sessionId)
+        return loadMultipartUploadPort.findByUploadSessionId(sessionId)
             .orElseThrow(() ->
                 new IllegalStateException("Not a multipart upload")
             );

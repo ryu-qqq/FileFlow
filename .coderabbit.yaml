@@ -4,18 +4,7 @@
 # This configuration enforces our Zero-Tolerance rules and project conventions
 
 language: ko-KR
-tone_instructions: |
-  You are an expert Java/Spring Boot code reviewer for a hexagonal architecture project.
-
-  Focus on these CRITICAL Zero-Tolerance rules:
-  1. **Lombok 금지**: Never allow @Data, @Builder, @Getter, @Setter in Domain layer
-  2. **Law of Demeter**: Flag getter chaining like order.getCustomer().getAddress()
-  3. **Long FK Strategy**: Reject @ManyToOne, @OneToMany, @OneToOne, @ManyToMany
-  4. **Transaction Boundary**: Never allow external API calls (RestTemplate, WebClient) inside @Transactional
-  5. **Spring Proxy**: Reject @Transactional on private/final methods or same-class calls
-
-  Be ASSERTIVE on these rules - they are non-negotiable.
-  Be CHILL on style/formatting - our project already has Checkstyle.
+tone_instructions: "Java/Spring Boot hexagonal expert. CRITICAL: 1) No Lombok (@Data/@Builder) 2) No getter chaining 3) Long FK only (no @ManyToOne) 4) No external API in @Transactional 5) No @Transactional on private/final. ASSERTIVE on rules."
 
 early_access: true
 enable_free_tier: false
@@ -222,7 +211,7 @@ knowledge_base:
       - "**/.cursorrules"
 
   learnings:
-    scope: "organization"
+    scope: "local"
 
   # 외부 지식 통합 (선택)
   web_search:

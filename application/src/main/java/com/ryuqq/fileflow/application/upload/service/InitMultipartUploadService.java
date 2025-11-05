@@ -8,8 +8,8 @@ import com.ryuqq.fileflow.application.upload.dto.command.InitMultipartCommand;
 import com.ryuqq.fileflow.application.upload.dto.response.InitMultipartResponse;
 import com.ryuqq.fileflow.application.upload.dto.response.S3InitResultResponse;
 import com.ryuqq.fileflow.application.upload.facade.S3MultipartFacade;
-import com.ryuqq.fileflow.application.upload.manager.MultipartUploadManager;
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
+import com.ryuqq.fileflow.application.upload.manager.MultipartUploadStateManager;
+import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
 import com.ryuqq.fileflow.application.upload.port.in.InitMultipartUploadUseCase;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionCachePort;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
@@ -55,8 +55,8 @@ public class InitMultipartUploadService implements InitMultipartUploadUseCase {
 
     private final IamContextFacade iamContextFacade;
     private final S3MultipartFacade s3MultipartFacade;
-    private final UploadSessionManager uploadSessionManager;
-    private final MultipartUploadManager multipartUploadManager;
+    private final UploadSessionStateManager uploadSessionStateManager;
+    private final MultipartUploadStateManager multipartUploadStateManager;
     private final UploadSessionCachePort uploadSessionCachePort;
     private final PresignedUrlProperties presignedUrlProperties;
 
@@ -65,23 +65,23 @@ public class InitMultipartUploadService implements InitMultipartUploadUseCase {
      *
      * @param iamContextFacade IAM Context Facade
      * @param s3MultipartFacade S3 Multipart Facade
-     * @param uploadSessionManager Upload Session Manager
-     * @param multipartUploadManager Multipart Upload Manager
+     * @param uploadSessionStateManager Upload Session State Manager
+     * @param multipartUploadStateManager Multipart Upload State Manager
      * @param uploadSessionCachePort Upload Session Cache Port (Hexagonal Architecture)
      * @param presignedUrlProperties Presigned URL 설정 (Type-Safe Configuration)
      */
     public InitMultipartUploadService(
         IamContextFacade iamContextFacade,
         S3MultipartFacade s3MultipartFacade,
-        UploadSessionManager uploadSessionManager,
-        MultipartUploadManager multipartUploadManager,
+        UploadSessionStateManager uploadSessionStateManager,
+        MultipartUploadStateManager multipartUploadStateManager,
         UploadSessionCachePort uploadSessionCachePort,
         PresignedUrlProperties presignedUrlProperties
     ) {
         this.iamContextFacade = iamContextFacade;
         this.s3MultipartFacade = s3MultipartFacade;
-        this.uploadSessionManager = uploadSessionManager;
-        this.multipartUploadManager = multipartUploadManager;
+        this.uploadSessionStateManager = uploadSessionStateManager;
+        this.multipartUploadStateManager = multipartUploadStateManager;
         this.uploadSessionCachePort = uploadSessionCachePort;
         this.presignedUrlProperties = presignedUrlProperties;
     }
@@ -143,7 +143,7 @@ public class InitMultipartUploadService implements InitMultipartUploadUseCase {
         session.setExpiresAt(expiresAt);
 
         // 4. UploadSession 저장 (트랜잭션 내)
-        UploadSession savedSession = uploadSessionManager.save(session);
+        UploadSession savedSession = uploadSessionStateManager.save(session);
 
         // 5. S3 Multipart 초기화 (트랜잭션 밖, S3 외부 API 호출)
         S3InitResultResponse s3Result = s3MultipartFacade.initializeMultipart(
@@ -160,7 +160,7 @@ public class InitMultipartUploadService implements InitMultipartUploadUseCase {
             s3Result.uploadId(),
             s3Result.partCount()
         );
-        multipartUploadManager.save(multipartUpload);
+        multipartUploadStateManager.save(multipartUpload);
 
         // 7. Redis 캐시 등록 (TTL 기반 만료 추적)
         uploadSessionCachePort.trackSession(

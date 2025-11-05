@@ -1,9 +1,10 @@
 package com.ryuqq.fileflow.application.upload.service;
 
 import com.ryuqq.fileflow.application.upload.dto.command.MarkPartUploadedCommand;
-import com.ryuqq.fileflow.application.upload.manager.MultipartUploadManager;
+import com.ryuqq.fileflow.application.upload.manager.MultipartUploadStateManager;
 import com.ryuqq.fileflow.application.upload.port.in.MarkPartUploadedUseCase;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.ETag;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
@@ -23,22 +24,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MarkPartUploadedService implements MarkPartUploadedUseCase {
 
-    private final UploadSessionPort uploadSessionPort;
-    private final MultipartUploadManager multipartUploadManager;
+    private final LoadUploadSessionPort loadUploadSessionPort;
+    private final LoadMultipartUploadPort loadMultipartUploadPort;
+    private final MultipartUploadStateManager multipartUploadStateManager;
 
     public MarkPartUploadedService(
-        UploadSessionPort uploadSessionPort,
-        MultipartUploadManager multipartUploadManager
+        LoadUploadSessionPort loadUploadSessionPort,
+        LoadMultipartUploadPort loadMultipartUploadPort,
+        MultipartUploadStateManager multipartUploadStateManager
     ) {
-        this.uploadSessionPort = uploadSessionPort;
-        this.multipartUploadManager = multipartUploadManager;
+        this.loadUploadSessionPort = loadUploadSessionPort;
+        this.loadMultipartUploadPort = loadMultipartUploadPort;
+        this.multipartUploadStateManager = multipartUploadStateManager;
     }
 
     @Override
     @Transactional
     public void execute(MarkPartUploadedCommand command) {
-        // 1. 업로드 세션 조회
-        UploadSession session = uploadSessionPort
+        // 1. 업로드 세션 조회 (Query Port)
+        UploadSession session = loadUploadSessionPort
             .findBySessionKey(SessionKey.of(command.sessionKey()))
             .orElseThrow(() ->
                 new IllegalArgumentException(
@@ -46,9 +50,9 @@ public class MarkPartUploadedService implements MarkPartUploadedUseCase {
                 )
             );
 
-        // 2. Multipart 정보 확인
-        MultipartUpload multipart = multipartUploadManager
-            .findByUploadSessionId(session.getId())
+        // 2. Multipart 정보 확인 (Query Port)
+        MultipartUpload multipart = loadMultipartUploadPort
+            .findByUploadSessionId(session.getIdValue())
             .orElseThrow(() ->
                 new IllegalStateException("Not a multipart upload")
             );
@@ -60,7 +64,7 @@ public class MarkPartUploadedService implements MarkPartUploadedUseCase {
             FileSize.of(command.partSize())
         );
 
-        // 4. 파트 추가 및 저장 (Manager 사용)
-        multipartUploadManager.addPart(multipart, part);
+        // 4. 파트 추가 및 저장 (StateManager 사용)
+        multipartUploadStateManager.addPart(multipart, part);
     }
 }

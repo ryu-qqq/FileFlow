@@ -236,9 +236,11 @@ public class ExternalDownloadFixture {
     public static ExternalDownload reconstituteDefault(Long id) {
         try {
             LocalDateTime now = LocalDateTime.now();
+            // UploadSessionId는 ID가 있어야 하므로 직접 생성
+            UploadSessionId uploadSessionId = UploadSessionId.of(1L);
             return ExternalDownload.reconstitute(
                 new ExternalDownloadId(id),
-                DEFAULT_UPLOAD_SESSION.getId(),
+                uploadSessionId,
                 new URL(DEFAULT_SOURCE_URL),
                 FileSize.of(0L),
                 FileSize.of(0L),

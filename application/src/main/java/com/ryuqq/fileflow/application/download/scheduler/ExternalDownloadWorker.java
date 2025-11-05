@@ -1,5 +1,15 @@
 package com.ryuqq.fileflow.application.download.scheduler;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.SocketTimeoutException;
+import java.net.URL;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
 import com.ryuqq.fileflow.application.download.config.ExternalDownloadWorkerProperties;
 import com.ryuqq.fileflow.application.download.dto.response.DownloadResult;
 import com.ryuqq.fileflow.application.download.dto.response.HttpDownloadResult;
@@ -7,20 +17,11 @@ import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
 import com.ryuqq.fileflow.application.download.port.out.HttpDownloadPort;
 import com.ryuqq.fileflow.application.upload.dto.command.UploadStreamResult;
 import com.ryuqq.fileflow.application.upload.facade.StorageUploadFacade;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.download.ErrorCode;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.SocketTimeoutException;
-import java.net.URL;
 
 /**
  * External Download Worker
@@ -59,20 +60,20 @@ public class ExternalDownloadWorker {
     private static final Logger log = LoggerFactory.getLogger(ExternalDownloadWorker.class);
 
     private final ExternalDownloadManager downloadManager;
-    private final UploadSessionPort uploadSessionPort;
+    private final LoadUploadSessionPort loadUploadSessionPort;
     private final StorageUploadFacade storageUploadFacade;
     private final HttpDownloadPort httpDownloadPort;
     private final ExternalDownloadWorkerProperties properties;
 
     public ExternalDownloadWorker(
         ExternalDownloadManager downloadManager,
-        UploadSessionPort uploadSessionPort,
+        LoadUploadSessionPort loadUploadSessionPort,
         StorageUploadFacade storageUploadFacade,
         HttpDownloadPort httpDownloadPort,
         ExternalDownloadWorkerProperties properties
     ) {
         this.downloadManager = downloadManager;
-        this.uploadSessionPort = uploadSessionPort;
+        this.loadUploadSessionPort = loadUploadSessionPort;
         this.storageUploadFacade = storageUploadFacade;
         this.httpDownloadPort = httpDownloadPort;
         this.properties = properties;
@@ -90,7 +91,7 @@ public class ExternalDownloadWorker {
         ExternalDownload download = downloadManager.findById(downloadId)
             .orElseThrow(() -> new IllegalArgumentException("Download not found: " + downloadId));
 
-        UploadSession session = uploadSessionPort.findById(download.getUploadSessionId().value())
+        UploadSession session = loadUploadSessionPort.findById(download.getUploadSessionId().value())
             .orElseThrow(() -> new IllegalStateException("Upload session not found"));
 
         try {

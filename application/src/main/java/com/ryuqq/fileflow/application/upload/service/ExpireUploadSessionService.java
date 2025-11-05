@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.upload.service;
 
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
+import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import org.slf4j.Logger;
@@ -53,15 +54,21 @@ public class ExpireUploadSessionService {
 
     private static final Logger log = LoggerFactory.getLogger(ExpireUploadSessionService.class);
 
-    private final UploadSessionManager uploadSessionManager;
+    private final LoadUploadSessionPort loadUploadSessionPort;
+    private final UploadSessionStateManager uploadSessionStateManager;
 
     /**
      * 생성자
      *
-     * @param uploadSessionManager Upload Session Manager
+     * @param loadUploadSessionPort Load Upload Session Port (Query)
+     * @param uploadSessionStateManager Upload Session State Manager (Command)
      */
-    public ExpireUploadSessionService(UploadSessionManager uploadSessionManager) {
-        this.uploadSessionManager = uploadSessionManager;
+    public ExpireUploadSessionService(
+        LoadUploadSessionPort loadUploadSessionPort,
+        UploadSessionStateManager uploadSessionStateManager
+    ) {
+        this.loadUploadSessionPort = loadUploadSessionPort;
+        this.uploadSessionStateManager = uploadSessionStateManager;
     }
 
     /**
@@ -96,9 +103,9 @@ public class ExpireUploadSessionService {
             throw new IllegalArgumentException("Session key는 필수입니다");
         }
 
-        // 1. UploadSession 조회
+        // 1. UploadSession 조회 (Query Port)
         SessionKey key = SessionKey.of(sessionKey);
-        Optional<UploadSession> sessionOpt = uploadSessionManager.findBySessionKey(key);
+        Optional<UploadSession> sessionOpt = loadUploadSessionPort.findBySessionKey(key);
 
         if (sessionOpt.isEmpty()) {
             // 세션이 없는 경우: 이미 삭제되었거나 완료됨
@@ -115,8 +122,8 @@ public class ExpireUploadSessionService {
         // 2. Domain 메서드 호출: expire()
         session.expire();
 
-        // 3. 변경 사항 저장 (트랜잭션 내)
-        uploadSessionManager.save(session);
+        // 3. 변경 사항 저장 (트랜잭션 내, StateManager 사용)
+        uploadSessionStateManager.save(session);
 
         // 4. 만료 로그
         log.info(

@@ -4,7 +4,6 @@ import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.upload.FailureReason;
 import com.ryuqq.fileflow.domain.upload.FileName;
 import com.ryuqq.fileflow.domain.upload.FileSize;
-import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.SessionStatus;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
@@ -199,9 +198,11 @@ public class UploadSessionFixture {
      */
     public static UploadSession reconstituteDefault(Long id) {
         LocalDateTime now = LocalDateTime.now();
+        // UUID 형식의 SessionKey 생성 (테스트 일관성을 위해 ID 기반 UUID 생성)
+        SessionKey sessionKey = SessionKey.generate();
         return UploadSession.reconstitute(
             UploadSessionId.of(id),
-            SessionKey.of("session-key-" + id),
+            sessionKey,
             DEFAULT_TENANT_ID,
             DEFAULT_FILE_NAME,
             DEFAULT_FILE_SIZE,
