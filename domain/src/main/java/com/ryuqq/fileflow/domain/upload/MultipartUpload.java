@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.upload;
 
+import com.ryuqq.fileflow.domain.upload.exception.*;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class MultipartUpload {
      */
     MultipartUpload(MultipartUploadId id, UploadSessionId uploadSessionId, Clock clock) {
         if (uploadSessionId == null) {
-            throw new IllegalArgumentException("Upload Session ID는 필수입니다");
+            throw new InvalidUploadRequestException("uploadSessionId", "Upload Session ID는 필수입니다");
         }
         this.id = id;
         this.uploadSessionId = uploadSessionId;
@@ -171,7 +172,7 @@ public class MultipartUpload {
         LocalDateTime abortedAt
     ) {
         if (id == null) {
-            throw new IllegalArgumentException("DB reconstitute는 ID가 필수입니다");
+            throw new InvalidUploadRequestException("id", "DB reconstitute는 ID가 필수입니다");
         }
         return new MultipartUpload(
             id,
@@ -203,10 +204,10 @@ public class MultipartUpload {
         validateInitiation();
 
         if (providerUploadId == null) {
-            throw new IllegalArgumentException("Provider Upload ID는 필수입니다");
+            throw new InvalidUploadRequestException("providerUploadId", "Provider Upload ID는 필수입니다");
         }
         if (totalParts == null) {
-            throw new IllegalArgumentException("Total Parts는 필수입니다");
+            throw new InvalidUploadRequestException("totalParts", "Total Parts는 필수입니다");
         }
 
         this.providerUploadId = providerUploadId;
@@ -241,9 +242,9 @@ public class MultipartUpload {
      */
     public void complete() {
         if (!canComplete()) {
-            throw new IllegalStateException(
-                "완료할 수 없습니다: 모든 파트가 업로드되지 않았거나 잘못된 상태입니다"
-            );
+            int uploadedCount = this.uploadedParts.size();
+            int totalCount = this.totalParts != null ? this.totalParts.value() : 0;
+            throw new IncompleteMultipartUploadException(uploadedCount, totalCount);
         }
         this.status = MultipartStatus.COMPLETED;
         this.completedAt = LocalDateTime.now(clock);
@@ -260,7 +261,9 @@ public class MultipartUpload {
      */
     public void abort() {
         if (this.status == MultipartStatus.COMPLETED) {
-            throw new IllegalStateException("완료된 업로드는 중단할 수 없습니다");
+            String sessionKey = this.uploadSessionId != null ?
+                String.valueOf(this.uploadSessionId.value()) : "unknown";
+            throw new UploadAlreadyCompletedException(sessionKey, "abort()");
         }
         this.status = MultipartStatus.ABORTED;
         this.abortedAt = LocalDateTime.now(clock);
@@ -316,7 +319,8 @@ public class MultipartUpload {
      */
     private void validateInitiation() {
         if (this.status != MultipartStatus.INIT) {
-            throw new IllegalStateException(
+            throw new InvalidUploadRequestException(
+                "status",
                 "이미 초기화된 업로드입니다: " + status
             );
         }
@@ -331,13 +335,13 @@ public class MultipartUpload {
      */
     private void validatePartAddition(UploadPart part) {
         if (part == null) {
-            throw new IllegalArgumentException("Part cannot be null");
+            throw new InvalidUploadRequestException("part", "Part cannot be null");
         }
 
         if (this.status != MultipartStatus.IN_PROGRESS) {
-            throw new IllegalStateException(
-                "업로드가 시작되지 않았습니다: " + status
-            );
+            String sessionKey = this.uploadSessionId != null ?
+                String.valueOf(this.uploadSessionId.value()) : "unknown";
+            throw new MultipartNotInitializedException(sessionKey, "addPart()");
         }
 
         PartNumber partNumber = part.getPartNumber();
@@ -345,9 +349,7 @@ public class MultipartUpload {
             .anyMatch(p -> p.getPartNumber().equals(partNumber));
 
         if (duplicate) {
-            throw new IllegalArgumentException(
-                "이미 업로드된 파트입니다: " + partNumber.value()
-            );
+            throw new DuplicatePartNumberException(partNumber.value());
         }
     }
 

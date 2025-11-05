@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.upload;
 
+import com.ryuqq.fileflow.domain.upload.exception.*;
 import com.ryuqq.fileflow.domain.upload.fixture.MultipartUploadFixture;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadPartFixture;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
@@ -111,7 +112,7 @@ class UploadSessionTest {
 
             // When & Then
             assertThatThrownBy(() -> session.start())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidUploadSessionStateException.class);
         }
 
         @Test
@@ -122,7 +123,7 @@ class UploadSessionTest {
 
             // When & Then
             assertThatThrownBy(() -> session.complete(100L))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidUploadSessionStateException.class);
         }
 
         @Test
@@ -133,7 +134,7 @@ class UploadSessionTest {
 
             // When & Then
             assertThatThrownBy(() -> session.fail(FailureReason.of("reason")))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(UploadAlreadyCompletedException.class);
         }
     }
 

@@ -62,6 +62,24 @@ excluded_tools: []
 
 # initial prompt for the project. It will always be given to the LLM upon activating the project
 # (contrary to the memories, which are loaded on demand).
-initial_prompt: ""
+initial_prompt: |
+  이 프로젝트는 **Spring Boot 3.5 + Java 21 + Hexagonal Architecture** 기반입니다.
+
+  🚨 **Zero-Tolerance 규칙** (절대 위반 금지):
+  1. Lombok 금지 (모든 레이어)
+  2. Law of Demeter 엄격 준수 (Domain)
+  3. Long FK 전략 (JPA 관계 어노테이션 금지)
+  4. @Transactional 내 외부 API 호출 금지
+  5. Spring 프록시 제약 (private/final 메서드 @Transactional 금지)
+  6. Orchestration Pattern (@Async 필수, Command는 Record)
+  7. Javadoc 필수 (public 클래스/메서드)
+  8. Scope 준수 (요청된 코드만 작성)
+
+  📚 **컨벤션 자동 로드**: 프로젝트 활성화 시 `/cc:load`를 실행하여 10개 Memory 파일을 로드하세요.
+
+  **Dynamic Hooks 시스템**:
+  - 키워드 감지 → Layer 매핑 → Cache 규칙 자동 주입
+  - 실시간 검증: validation-helper.py (148ms)
+  - A/B 테스트 검증: 컨벤션 위반 40회 → 0회 (100% Zero-Tolerance)
 
 project_name: "fileflow"
