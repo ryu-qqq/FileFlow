@@ -17,6 +17,7 @@ import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPor
 import com.ryuqq.fileflow.domain.download.ErrorCode;
 import com.ryuqq.fileflow.domain.download.ErrorMessage;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.exception.DownloadNotFoundException;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
 import com.ryuqq.fileflow.domain.upload.Checksum;
@@ -93,7 +94,7 @@ public class ExternalDownloadManager {
     @Transactional(readOnly = true)
     public ExternalDownload getById(Long downloadId) {
         return downloadQueryPort.findById(downloadId)
-            .orElseThrow(() -> new DownloadNotFoundException(downloadId));
+            .orElseThrow(() -> new DownloadNotFoundException(ExternalDownloadId.of(downloadId)));
     }
 
     /**

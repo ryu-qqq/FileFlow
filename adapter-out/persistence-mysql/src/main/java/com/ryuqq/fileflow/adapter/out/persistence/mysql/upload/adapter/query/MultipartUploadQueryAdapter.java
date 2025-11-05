@@ -8,7 +8,9 @@ import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadP
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -89,15 +91,41 @@ public class MultipartUploadQueryAdapter implements LoadMultipartUploadPort {
     /**
      * 상태별 Multipart Upload 목록 조회
      *
+     * <p>N+1 쿼리 문제를 방지하기 위해 배치 조회를 사용합니다.</p>
+     *
      * @param status Multipart 상태
      * @return Multipart Upload 목록
      */
     @Override
     public List<MultipartUpload> findByStatus(MultipartUpload.MultipartStatus status) {
-        return multipartRepository.findByStatus(status)
-            .stream()
+        List<com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.MultipartUploadJpaEntity> multipartEntities =
+            multipartRepository.findByStatus(status);
+
+        if (multipartEntities.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 모든 MultipartUpload ID 수집
+        List<Long> multipartIds = multipartEntities.stream()
+            .map(com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.MultipartUploadJpaEntity::getId)
+            .collect(Collectors.toList());
+
+        // 한 번의 쿼리로 모든 관련 Parts 조회
+        List<UploadPartJpaEntity> allParts = partRepository.findByMultipartUploadIds(multipartIds);
+
+        // MultipartUpload ID별로 그룹핑
+        Map<Long, List<UploadPartJpaEntity>> partsByMultipartId = allParts.stream()
+            .collect(Collectors.groupingBy(
+                com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.UploadPartJpaEntity::getMultipartUploadId
+            ));
+
+        // Domain 객체로 변환
+        return multipartEntities.stream()
             .map(entity -> {
-                List<UploadPartJpaEntity> parts = partRepository.findByMultipartUploadId(entity.getId());
+                List<UploadPartJpaEntity> parts = partsByMultipartId.getOrDefault(
+                    entity.getId(),
+                    Collections.emptyList()
+                );
                 return MultipartUploadEntityMapper.toDomain(entity, parts);
             })
             .collect(Collectors.toList());
