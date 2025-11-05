@@ -6,12 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler;
 import org.springframework.restdocs.operation.preprocess.OperationRequestPreprocessor;
 import org.springframework.restdocs.operation.preprocess.OperationResponsePreprocessor;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.modifyUris;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -69,8 +71,6 @@ public abstract class AbstractRestDocsTest {
     @Autowired
     protected ObjectMapper objectMapper;
 
-    protected RestDocumentationResultHandler restDocs;
-
     /**
      * MockMvc + REST Docs 설정
      *
@@ -84,18 +84,6 @@ public abstract class AbstractRestDocsTest {
         WebApplicationContext webApplicationContext,
         RestDocumentationContextProvider restDocumentation
     ) {
-        this.restDocs = MockMvcRestDocumentation.document(
-            "{class-name}/{method-name}",  // Snippet 경로 패턴
-            preprocessRequest(
-                modifyUris()
-                    .scheme("https")
-                    .host("api.fileflow.com")  // 실제 API 도메인으로 변경
-                    .removePort(),
-                prettyPrint()  // 예쁜 JSON 포맷
-            ),
-            preprocessResponse(prettyPrint())  // 예쁜 JSON 포맷
-        );
-
         this.mockMvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
             .apply(documentationConfiguration(restDocumentation)
@@ -108,7 +96,6 @@ public abstract class AbstractRestDocsTest {
                     .withRequestDefaults(prettyPrint())
                     .withResponseDefaults(prettyPrint())
             )
-            .alwaysDo(restDocs)  // 모든 요청에 REST Docs 적용
             .build();
     }
 
@@ -119,7 +106,7 @@ public abstract class AbstractRestDocsTest {
      *
      * @return OperationRequestPreprocessor
      */
-    protected OperationRequestPreprocessor preprocessRequest() {
+    protected OperationRequestPreprocessor defaultPreprocessRequest() {
         return preprocessRequest(
             modifyUris()
                 .scheme("https")
@@ -136,7 +123,7 @@ public abstract class AbstractRestDocsTest {
      *
      * @return OperationResponsePreprocessor
      */
-    protected OperationResponsePreprocessor preprocessResponse() {
+    protected OperationResponsePreprocessor defaultPreprocessResponse() {
         return preprocessResponse(prettyPrint());
     }
 }
