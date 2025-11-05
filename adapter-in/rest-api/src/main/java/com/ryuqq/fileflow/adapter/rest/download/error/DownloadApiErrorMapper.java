@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Download 바운디드 컨텍스트 에러 매퍼
@@ -39,6 +42,17 @@ import java.util.Locale;
 public class DownloadApiErrorMapper implements ErrorMapper {
 
     private static final String PREFIX = "DOWNLOAD-";
+
+    /**
+     * 에러 코드를 DownloadErrorCode enum으로 매핑하는 정적 Map
+     *
+     * <p>O(1) 조회 성능과 확장성을 위해 Map 기반 조회를 사용합니다.</p>
+     */
+    private static final Map<String, DownloadErrorCode> CODE_MAP = Stream.of(DownloadErrorCode.values())
+        .collect(Collectors.toUnmodifiableMap(
+            DownloadErrorCode::getCode,
+            e -> e
+        ));
 
     private final MessageSource messageSource;
     private final ApiErrorProperties errorProperties;
@@ -116,21 +130,14 @@ public class DownloadApiErrorMapper implements ErrorMapper {
     /**
      * 에러 코드 문자열을 DownloadErrorCode enum으로 변환
      *
+     * <p>Map 기반 조회를 사용하여 O(1) 시간 복잡도로 조회합니다.</p>
+     * <p>불필요한 try-catch를 제거하여 런타임 예외를 숨기지 않습니다.</p>
+     *
      * @param code 에러 코드 문자열 (예: "DOWNLOAD-001")
      * @return DownloadErrorCode enum 또는 null
      */
     private DownloadErrorCode findErrorCode(String code) {
-        try {
-            // "DOWNLOAD-001" → DownloadErrorCode.DOWNLOAD_NOT_FOUND
-            return switch (code) {
-                case "DOWNLOAD-001" -> DownloadErrorCode.DOWNLOAD_NOT_FOUND;
-                case "DOWNLOAD-002" -> DownloadErrorCode.INVALID_DOWNLOAD_STATE;
-                case "DOWNLOAD-003" -> DownloadErrorCode.INVALID_URL;
-                default -> null;
-            };
-        } catch (Exception e) {
-            return null;
-        }
+        return CODE_MAP.get(code);
     }
 
     /**

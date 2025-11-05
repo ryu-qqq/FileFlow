@@ -8,7 +8,8 @@ import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadCommandP
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxCommandPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxQueryPort;
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
+import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.IdempotencyKey;
@@ -56,7 +57,10 @@ import static org.mockito.Mockito.verify;
 class StartExternalDownloadServiceTest {
 
     @Mock
-    private UploadSessionManager uploadSessionManager;
+    private UploadSessionStateManager uploadSessionStateManager;
+
+    @Mock
+    private LoadUploadSessionPort loadUploadSessionPort;
 
     @Mock
     private ExternalDownloadCommandPort downloadCommandPort;
@@ -82,34 +86,18 @@ class StartExternalDownloadServiceTest {
         void execute_Success() {
             // Given
             StartExternalDownloadCommand command = StartExternalDownloadCommandFixture.create();
-            UploadSession session = UploadSessionFixture.createSingle();
-            UploadSession savedSession = UploadSessionFixture.reconstitute(
-                session.getIdValue(),
-                session.getSessionKey(),
-                session.getTenantId(),
-                session.getFileName(),
-                session.getFileSize(),
-                session.getUploadType(),
-                session.getStorageKey(),
-                session.getStatus(),
-                null,
-                null,
-                session.getCreatedAt(),
-                session.getUpdatedAt(),
-                null,
-                null
-            );
+            UploadSession savedSession = UploadSessionFixture.reconstituteDefault(12345L);
 
             ExternalDownload download = ExternalDownloadFixture.createNew();
             ExternalDownload savedDownload = ExternalDownloadFixture.reconstituteDefault(
                 download.getIdValue() != null ? download.getIdValue() : 67890L
             );
 
-            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.createNew();
 
             given(outboxQueryPort.findByIdempotencyKey(command.idempotencyKey()))
                 .willReturn(Optional.empty());
-            given(uploadSessionManager.save(any(UploadSession.class)))
+            given(uploadSessionStateManager.save(any(UploadSession.class)))
                 .willReturn(savedSession);
             given(downloadCommandPort.save(any(ExternalDownload.class)))
                 .willReturn(savedDownload);
@@ -126,7 +114,7 @@ class StartExternalDownloadServiceTest {
             assertThat(response.status()).isEqualTo("INIT");
 
             verify(outboxQueryPort).findByIdempotencyKey(command.idempotencyKey());
-            verify(uploadSessionManager).save(any(UploadSession.class));
+            verify(uploadSessionStateManager).save(any(UploadSession.class));
             verify(downloadCommandPort).save(any(ExternalDownload.class));
             verify(outboxCommandPort).save(any(ExternalDownloadOutbox.class));
         }
@@ -136,7 +124,7 @@ class StartExternalDownloadServiceTest {
         void execute_Success_WithIdempotencyKey() {
             // Given
             StartExternalDownloadCommand command = StartExternalDownloadCommandFixture.create();
-            ExternalDownloadOutbox existingOutbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownloadOutbox existingOutbox = ExternalDownloadOutboxFixture.createWithId(1L);
             ExternalDownload existingDownload = ExternalDownloadFixture.reconstituteDefault(67890L);
             UploadSession existingSession = UploadSessionFixture.reconstitute(
                 existingOutbox.getUploadSessionIdValue(),
@@ -159,7 +147,7 @@ class StartExternalDownloadServiceTest {
                 .willReturn(Optional.of(existingOutbox));
             given(downloadQueryPort.findById(existingOutbox.getDownloadIdValue()))
                 .willReturn(Optional.of(existingDownload));
-            given(uploadSessionManager.findById(existingOutbox.getUploadSessionIdValue()))
+            given(loadUploadSessionPort.findById(existingOutbox.getUploadSessionIdValue()))
                 .willReturn(Optional.of(existingSession));
 
             // When
@@ -171,7 +159,7 @@ class StartExternalDownloadServiceTest {
 
             verify(outboxQueryPort).findByIdempotencyKey(command.idempotencyKey());
             verify(downloadQueryPort).findById(existingOutbox.getDownloadIdValue());
-            verify(uploadSessionManager).findById(existingOutbox.getUploadSessionIdValue());
+            verify(loadUploadSessionPort).findById(existingOutbox.getUploadSessionIdValue());
             verify(downloadCommandPort, never()).save(any(ExternalDownload.class));
             verify(outboxCommandPort, never()).save(any(ExternalDownloadOutbox.class));
         }
@@ -186,7 +174,7 @@ class StartExternalDownloadServiceTest {
         void execute_ThrowsException_WhenDownloadNotFound() {
             // Given
             StartExternalDownloadCommand command = StartExternalDownloadCommandFixture.create();
-            ExternalDownloadOutbox existingOutbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownloadOutbox existingOutbox = ExternalDownloadOutboxFixture.createWithId(1L);
 
             given(outboxQueryPort.findByIdempotencyKey(command.idempotencyKey()))
                 .willReturn(Optional.of(existingOutbox));
@@ -195,8 +183,8 @@ class StartExternalDownloadServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> service.execute(command))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Download not found for outbox");
+                .isInstanceOf(DownloadNotFoundException.class)
+                .hasMessageContaining("Download not found");
 
             verify(downloadQueryPort).findById(existingOutbox.getDownloadIdValue());
             verify(downloadCommandPort, never()).save(any(ExternalDownload.class));
@@ -212,13 +200,13 @@ class StartExternalDownloadServiceTest {
         void commandPortShouldOnlyUseWriteMethods() {
             // Given
             StartExternalDownloadCommand command = StartExternalDownloadCommandFixture.create();
-            UploadSession session = UploadSessionFixture.createSingle();
+            UploadSession session = UploadSessionFixture.reconstituteDefault(12345L);
             ExternalDownload download = ExternalDownloadFixture.reconstituteDefault(67890L);
-            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.createNew();
 
             given(outboxQueryPort.findByIdempotencyKey(any()))
                 .willReturn(Optional.empty());
-            given(uploadSessionManager.save(any()))
+            given(uploadSessionStateManager.save(any()))
                 .willReturn(session);
             given(downloadCommandPort.save(any()))
                 .willReturn(download);
@@ -239,13 +227,13 @@ class StartExternalDownloadServiceTest {
         void queryPortShouldOnlyUseReadMethods() {
             // Given
             StartExternalDownloadCommand command = StartExternalDownloadCommandFixture.create();
-            UploadSession session = UploadSessionFixture.createSingle();
+            UploadSession session = UploadSessionFixture.reconstituteDefault(12345L);
             ExternalDownload download = ExternalDownloadFixture.reconstituteDefault(67890L);
-            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.createNew();
 
             given(outboxQueryPort.findByIdempotencyKey(any()))
                 .willReturn(Optional.empty());
-            given(uploadSessionManager.save(any()))
+            given(uploadSessionStateManager.save(any()))
                 .willReturn(session);
             given(downloadCommandPort.save(any()))
                 .willReturn(download);

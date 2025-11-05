@@ -5,9 +5,12 @@ import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPor
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxQueryPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadOutbox;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.exception.DownloadNotFoundException;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadOutboxFixture;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -61,7 +64,7 @@ class GetDownloadStatusServiceTest {
             // Given
             Long downloadId = 67890L;
             ExternalDownload download = ExternalDownloadFixture.reconstituteDefault(downloadId);
-            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.createNew();
 
             given(downloadQueryPort.findById(downloadId))
                 .willReturn(Optional.of(download));
@@ -79,11 +82,24 @@ class GetDownloadStatusServiceTest {
 
         @Test
         @DisplayName("execute_Success_DOWNLOADING - DOWNLOADING 상태 조회 성공")
-        void execute_Success_DOWNLOADING() {
+        void execute_Success_DOWNLOADING() throws java.net.MalformedURLException {
             // Given
             Long downloadId = 67890L;
-            ExternalDownload download = ExternalDownloadFixture.createInProgress();
-            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownload download = ExternalDownloadFixture.reconstitute(
+                downloadId,
+                UploadSessionId.of(1L),
+                new java.net.URL("https://example.com/files/test-file.pdf"),
+                FileSize.of(1024L),
+                FileSize.of(2048L),
+                ExternalDownloadStatus.DOWNLOADING,
+                0,
+                null,
+                java.time.LocalDateTime.now(),
+                java.time.LocalDateTime.now(),
+                null,
+                null
+            );
+            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.createNew();
 
             given(downloadQueryPort.findById(downloadId))
                 .willReturn(Optional.of(download));
@@ -100,11 +116,24 @@ class GetDownloadStatusServiceTest {
 
         @Test
         @DisplayName("execute_Success_COMPLETED - COMPLETED 상태 조회 성공")
-        void execute_Success_COMPLETED() {
+        void execute_Success_COMPLETED() throws java.net.MalformedURLException {
             // Given
             Long downloadId = 67890L;
-            ExternalDownload download = ExternalDownloadFixture.createCompleted();
-            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownload download = ExternalDownloadFixture.reconstitute(
+                downloadId,
+                UploadSessionId.of(1L),
+                new java.net.URL("https://example.com/files/test-file.pdf"),
+                FileSize.of(2048L),
+                FileSize.of(2048L),
+                ExternalDownloadStatus.COMPLETED,
+                0,
+                null,
+                java.time.LocalDateTime.now(),
+                java.time.LocalDateTime.now(),
+                null,
+                null
+            );
+            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.createNew();
 
             given(downloadQueryPort.findById(downloadId))
                 .willReturn(Optional.of(download));
@@ -168,7 +197,7 @@ class GetDownloadStatusServiceTest {
             // Given
             Long downloadId = 67890L;
             ExternalDownload download = ExternalDownloadFixture.reconstituteDefault(downloadId);
-            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.create();
+            ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.createNew();
 
             given(downloadQueryPort.findById(downloadId))
                 .willReturn(Optional.of(download));

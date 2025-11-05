@@ -16,9 +16,12 @@ import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPor
 import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.IdempotencyKey;
+import com.ryuqq.fileflow.domain.download.exception.DownloadNotFoundException;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
+import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 
 /**
  * Start External Download Service
@@ -119,11 +122,11 @@ public class StartExternalDownloadService implements StartExternalDownloadUseCas
     private ExternalDownloadResponse buildResponseFromOutbox(ExternalDownloadOutbox outbox) {
         // 기존 다운로드 조회
         ExternalDownload download = downloadQueryPort.findById(outbox.getDownloadIdValue())
-            .orElseThrow(() -> new IllegalStateException("Download not found for outbox: " + outbox.getId()));
+            .orElseThrow(() -> new DownloadNotFoundException(ExternalDownloadId.of(outbox.getDownloadIdValue())));
 
         // UploadSession 조회 (Query Port 사용)
         UploadSession session = loadUploadSessionPort.findById(outbox.getUploadSessionIdValue())
-            .orElseThrow(() -> new IllegalStateException("Session not found for outbox: " + outbox.getId()));
+            .orElseThrow(() -> new UploadSessionNotFoundException(outbox.getUploadSessionIdValue()));
 
         return ExternalDownloadAssembler.toResponse(
             download,
