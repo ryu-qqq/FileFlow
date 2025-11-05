@@ -1,21 +1,27 @@
 package com.ryuqq.fileflow.application.download.service;
 
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ryuqq.fileflow.application.download.assembler.ExternalDownloadAssembler;
 import com.ryuqq.fileflow.application.download.dto.command.StartExternalDownloadCommand;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
 import com.ryuqq.fileflow.application.download.port.in.StartExternalDownloadUseCase;
-import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadPort;
+import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadCommandPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxCommandPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxQueryPort;
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
+import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
+import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.IdempotencyKey;
+import com.ryuqq.fileflow.domain.download.exception.DownloadNotFoundException;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
+import com.ryuqq.fileflow.domain.upload.exception.UploadSessionNotFoundException;
 
 /**
  * Start External Download Service
@@ -43,19 +49,25 @@ import java.util.Optional;
 @Service
 public class StartExternalDownloadService implements StartExternalDownloadUseCase {
 
-    private final UploadSessionManager uploadSessionManager;
-    private final ExternalDownloadPort externalDownloadPort;
+    private final UploadSessionStateManager uploadSessionStateManager;
+    private final LoadUploadSessionPort loadUploadSessionPort;
+    private final ExternalDownloadCommandPort downloadCommandPort;
+    private final ExternalDownloadQueryPort downloadQueryPort;
     private final ExternalDownloadOutboxCommandPort outboxCommandPort;
     private final ExternalDownloadOutboxQueryPort outboxQueryPort;
 
     public StartExternalDownloadService(
-        UploadSessionManager uploadSessionManager,
-        ExternalDownloadPort externalDownloadPort,
+        UploadSessionStateManager uploadSessionStateManager,
+        LoadUploadSessionPort loadUploadSessionPort,
+        ExternalDownloadCommandPort downloadCommandPort,
+        ExternalDownloadQueryPort downloadQueryPort,
         ExternalDownloadOutboxCommandPort outboxCommandPort,
         ExternalDownloadOutboxQueryPort outboxQueryPort
     ) {
-        this.uploadSessionManager = uploadSessionManager;
-        this.externalDownloadPort = externalDownloadPort;
+        this.uploadSessionStateManager = uploadSessionStateManager;
+        this.loadUploadSessionPort = loadUploadSessionPort;
+        this.downloadCommandPort = downloadCommandPort;
+        this.downloadQueryPort = downloadQueryPort;
         this.outboxCommandPort = outboxCommandPort;
         this.outboxQueryPort = outboxQueryPort;
     }
@@ -80,12 +92,12 @@ public class StartExternalDownloadService implements StartExternalDownloadUseCas
             command.fileSize()
         );
 
-        // 3. UploadSession 저장 (Manager 사용)
-        UploadSession savedSession = uploadSessionManager.save(session);
+        // 3. UploadSession 저장 (StateManager 사용)
+        UploadSession savedSession = uploadSessionStateManager.save(session);
 
         // 4. ExternalDownload 생성 및 저장
         ExternalDownload download = ExternalDownloadAssembler.toDomain(command, savedSession);
-        download = externalDownloadPort.save(download);
+        download = downloadCommandPort.save(download);
 
         // 5. 아웃박스 메시지 저장 (트랜잭션 내, Command Port 사용)
         ExternalDownloadOutbox outbox = ExternalDownloadOutbox.forNew(
@@ -109,12 +121,12 @@ public class StartExternalDownloadService implements StartExternalDownloadUseCas
      */
     private ExternalDownloadResponse buildResponseFromOutbox(ExternalDownloadOutbox outbox) {
         // 기존 다운로드 조회
-        ExternalDownload download = externalDownloadPort.findById(outbox.getDownloadIdValue())
-            .orElseThrow(() -> new IllegalStateException("Download not found for outbox: " + outbox.getId()));
+        ExternalDownload download = downloadQueryPort.findById(outbox.getDownloadIdValue())
+            .orElseThrow(() -> new DownloadNotFoundException(ExternalDownloadId.of(outbox.getDownloadIdValue())));
 
-        // UploadSession 조회 (Manager 사용)
-        UploadSession session = uploadSessionManager.findById(outbox.getUploadSessionIdValue())
-            .orElseThrow(() -> new IllegalStateException("Session not found for outbox: " + outbox.getId()));
+        // UploadSession 조회 (Query Port 사용)
+        UploadSession session = loadUploadSessionPort.findById(outbox.getUploadSessionIdValue())
+            .orElseThrow(() -> new UploadSessionNotFoundException(outbox.getUploadSessionIdValue()));
 
         return ExternalDownloadAssembler.toResponse(
             download,

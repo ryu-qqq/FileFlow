@@ -1,35 +1,47 @@
 package com.ryuqq.fileflow.adapter.rest.upload.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ryuqq.fileflow.adapter.rest.upload.dto.request.InitMultipartApiRequest;
-import com.ryuqq.fileflow.adapter.rest.upload.dto.request.MarkPartUploadedApiRequest;
-import com.ryuqq.fileflow.adapter.rest.upload.dto.request.SingleUploadApiRequest;
-import com.ryuqq.fileflow.adapter.rest.upload.fixture.*;
-import com.ryuqq.fileflow.application.upload.dto.response.*;
-import com.ryuqq.fileflow.application.upload.port.in.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
-import com.ryuqq.fileflow.adapter.rest.integration.IntegrationTestConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.payload.JsonFieldType;
-import org.springframework.test.web.servlet.MockMvc;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.restdocs.request.RequestDocumentation.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
+import org.springframework.restdocs.payload.JsonFieldType;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.ryuqq.fileflow.adapter.rest.integration.IntegrationTestConfiguration;
+import com.ryuqq.fileflow.adapter.rest.support.AbstractRestDocsTest;
+import com.ryuqq.fileflow.adapter.rest.upload.dto.request.InitMultipartApiRequest;
+import com.ryuqq.fileflow.adapter.rest.upload.dto.request.MarkPartUploadedApiRequest;
+import com.ryuqq.fileflow.adapter.rest.upload.dto.request.SingleUploadApiRequest;
+import com.ryuqq.fileflow.adapter.rest.upload.fixture.InitMultipartApiRequestFixture;
+import com.ryuqq.fileflow.adapter.rest.upload.fixture.MarkPartUploadedApiRequestFixture;
+import com.ryuqq.fileflow.adapter.rest.upload.fixture.SingleUploadApiRequestFixture;
+import com.ryuqq.fileflow.application.upload.dto.response.CompleteMultipartResponse;
+import com.ryuqq.fileflow.application.upload.dto.response.CompleteSingleUploadResponse;
+import com.ryuqq.fileflow.application.upload.dto.response.InitMultipartResponse;
+import com.ryuqq.fileflow.application.upload.dto.response.PartPresignedUrlResponse;
+import com.ryuqq.fileflow.application.upload.dto.response.SingleUploadResponse;
+import com.ryuqq.fileflow.application.upload.port.in.CompleteMultipartUploadUseCase;
+import com.ryuqq.fileflow.application.upload.port.in.CompleteSingleUploadUseCase;
+import com.ryuqq.fileflow.application.upload.port.in.GeneratePartPresignedUrlUseCase;
+import com.ryuqq.fileflow.application.upload.port.in.InitMultipartUploadUseCase;
+import com.ryuqq.fileflow.application.upload.port.in.InitSingleUploadUseCase;
+import com.ryuqq.fileflow.application.upload.port.in.MarkPartUploadedUseCase;
 
 /**
  * UploadController REST API Documentation Test
@@ -53,13 +65,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureRestDocs
 @Import(IntegrationTestConfiguration.class)
 @DisplayName("UploadController API 문서 생성 테스트")
-class UploadControllerDocsTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+class UploadControllerDocsTest extends AbstractRestDocsTest {
 
     @MockBean
     private InitSingleUploadUseCase initSingleUploadUseCase;
@@ -103,9 +109,9 @@ class UploadControllerDocsTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.sessionKey").exists())
         .andExpect(jsonPath("$.data.uploadUrl").exists())
-        .andDo(document("upload/single-init",
-            preprocessRequest(prettyPrint()),
-            preprocessResponse(prettyPrint()),
+        .andDo(restDocs.document(
+            preprocessRequest(),
+            preprocessResponse(),
             requestHeaders(
                 headerWithName("X-Tenant-Id")
                     .description("테넌트 ID (필수)")
@@ -171,8 +177,8 @@ class UploadControllerDocsTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.fileId").value(12345L))
-        .andDo(document("upload/single-complete",
-            preprocessResponse(prettyPrint()),
+        .andDo(restDocs.document(
+            preprocessResponse(),
             pathParameters(
                 parameterWithName("sessionKey")
                     .description("세션 키 (initSingleUpload에서 반환받은 값)")
@@ -228,9 +234,9 @@ class UploadControllerDocsTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.sessionKey").exists())
-        .andDo(document("upload/multipart-init",
-            preprocessRequest(prettyPrint()),
-            preprocessResponse(prettyPrint()),
+        .andDo(restDocs.document(
+            preprocessRequest(),
+            preprocessResponse(),
             requestHeaders(
                 headerWithName("X-Tenant-Id")
                     .description("테넌트 ID (필수)"),
@@ -286,8 +292,8 @@ class UploadControllerDocsTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.partNumber").value(1))
-        .andDo(document("upload/multipart-part-url",
-            preprocessResponse(prettyPrint()),
+        .andDo(restDocs.document(
+            preprocessResponse(),
             pathParameters(
                 parameterWithName("sessionKey").description("세션 키"),
                 parameterWithName("partNumber").description("파트 번호 (1~10000)")
@@ -321,8 +327,8 @@ class UploadControllerDocsTest {
                 .content(objectMapper.writeValueAsString(request))
         )
         .andExpect(status().isNoContent())
-        .andDo(document("upload/multipart-part-mark",
-            preprocessRequest(prettyPrint()),
+        .andDo(restDocs.document(
+            preprocessRequest(),
             pathParameters(
                 parameterWithName("sessionKey").description("세션 키"),
                 parameterWithName("partNumber").description("파트 번호 (1~10000)")
@@ -360,8 +366,8 @@ class UploadControllerDocsTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.fileId").value(67890L))
-        .andDo(document("upload/multipart-complete",
-            preprocessResponse(prettyPrint()),
+        .andDo(restDocs.document(
+            preprocessResponse(),
             pathParameters(
                 parameterWithName("sessionKey").description("세션 키")
             ),

@@ -1,36 +1,36 @@
 package com.ryuqq.fileflow.application.upload.service;
 
-import com.ryuqq.fileflow.application.file.manager.FileCommandManager;
-import com.ryuqq.fileflow.application.upload.dto.command.CompleteSingleUploadCommand;
-import com.ryuqq.fileflow.application.upload.dto.response.CompleteSingleUploadResponse;
-import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
-import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
-import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
-import com.ryuqq.fileflow.domain.upload.SessionKey;
-import com.ryuqq.fileflow.domain.upload.UploadSession;
-import com.ryuqq.fileflow.domain.upload.UploadType;
-import com.ryuqq.fileflow.domain.upload.SessionStatus;
-import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.ryuqq.fileflow.application.file.manager.FileCommandManager;
+import com.ryuqq.fileflow.application.upload.dto.command.CompleteSingleUploadCommand;
+import com.ryuqq.fileflow.application.upload.dto.response.CompleteSingleUploadResponse;
+import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
+import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
+import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
+import com.ryuqq.fileflow.domain.file.asset.FileAsset;
+import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.upload.SessionKey;
+import com.ryuqq.fileflow.domain.upload.SessionStatus;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
+import com.ryuqq.fileflow.domain.upload.UploadType;
+import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
 
 /**
  * CompleteSingleUploadService 단위 테스트
@@ -43,10 +43,10 @@ import static org.mockito.Mockito.when;
 class CompleteSingleUploadServiceTest {
 
     @Mock
-    private UploadSessionPort uploadSessionPort;
+    private LoadUploadSessionPort loadUploadSessionPort;
 
     @Mock
-    private UploadSessionManager uploadSessionManager;
+    private SaveUploadSessionPort saveUploadSessionPort;
 
     @Mock
     private S3StoragePort s3StoragePort;
@@ -124,11 +124,11 @@ class CompleteSingleUploadServiceTest {
                 fileAsset.getDeletedAt()
             );
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
             when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
-            when(uploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
+            when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
 
             // When
             CompleteSingleUploadResponse response = service.execute(command);
@@ -139,10 +139,10 @@ class CompleteSingleUploadServiceTest {
             assertThat(response.etag()).isEqualTo("etag-123");
             assertThat(response.fileSize()).isEqualTo(10485760L);
 
-            verify(uploadSessionPort).findBySessionKey(SessionKey.of(sessionKey));
+            verify(loadUploadSessionPort).findBySessionKey(SessionKey.of(sessionKey));
             verify(s3StoragePort).headObject(anyString(), anyString());
             verify(fileCommandManager).save(any(FileAsset.class));
-            verify(uploadSessionPort).save(any(UploadSession.class));
+            verify(saveUploadSessionPort).save(any(UploadSession.class));
         }
     }
 
@@ -157,7 +157,7 @@ class CompleteSingleUploadServiceTest {
             String sessionKey = "non-existent-session";
             CompleteSingleUploadCommand command = CompleteSingleUploadCommand.of(sessionKey);
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.empty());
 
             // When & Then
@@ -194,7 +194,7 @@ class CompleteSingleUploadServiceTest {
                 null
             );
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
 
             // When & Then

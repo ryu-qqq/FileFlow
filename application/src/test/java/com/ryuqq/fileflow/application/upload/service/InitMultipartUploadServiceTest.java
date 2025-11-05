@@ -25,8 +25,8 @@ import com.ryuqq.fileflow.application.upload.dto.command.InitMultipartCommand;
 import com.ryuqq.fileflow.application.upload.dto.response.InitMultipartResponse;
 import com.ryuqq.fileflow.application.upload.dto.response.S3InitResultResponse;
 import com.ryuqq.fileflow.application.upload.facade.S3MultipartFacade;
-import com.ryuqq.fileflow.application.upload.manager.MultipartUploadManager;
-import com.ryuqq.fileflow.application.upload.manager.UploadSessionManager;
+import com.ryuqq.fileflow.application.upload.manager.MultipartUploadStateManager;
+import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
 import com.ryuqq.fileflow.application.upload.port.out.UploadSessionCachePort;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.domain.iam.organization.fixture.OrganizationFixture;
@@ -59,10 +59,10 @@ class InitMultipartUploadServiceTest {
     private S3MultipartFacade s3MultipartFacade;
 
     @Mock
-    private UploadSessionManager uploadSessionManager;
+    private UploadSessionStateManager uploadSessionStateManager;
 
     @Mock
-    private MultipartUploadManager multipartUploadManager;
+    private MultipartUploadStateManager multipartUploadStateManager;
 
     @Mock
     private UploadSessionCachePort uploadSessionCachePort;
@@ -126,10 +126,10 @@ class InitMultipartUploadServiceTest {
             );
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3MultipartFacade.initializeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(multipartUploadManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
+            when(multipartUploadStateManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
             when(presignedUrlProperties.getMultipartPartDuration()).thenReturn(Duration.ofHours(24));
 
             // When
@@ -143,9 +143,9 @@ class InitMultipartUploadServiceTest {
             assertThat(response.storageKey()).isEqualTo(savedSession.getStorageKey().value());
 
             verify(iamContextFacade).loadContext(tenantId, 1L, 1L);
-            verify(uploadSessionManager).save(any(UploadSession.class));
+            verify(uploadSessionStateManager).save(any(UploadSession.class));
             verify(s3MultipartFacade).initializeMultipart(eq(iamContext), any(), eq("test-file.txt"), eq(104857600L), eq("text/plain"));
-            verify(multipartUploadManager).save(any(MultipartUpload.class));
+            verify(multipartUploadStateManager).save(any(MultipartUpload.class));
             verify(uploadSessionCachePort).trackSession(anyString(), any(Duration.class));
         }
 
@@ -199,10 +199,10 @@ class InitMultipartUploadServiceTest {
             );
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3MultipartFacade.initializeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(multipartUploadManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
+            when(multipartUploadStateManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
             when(presignedUrlProperties.getMultipartPartDuration()).thenReturn(Duration.ofHours(24));
 
             // When
@@ -259,10 +259,10 @@ class InitMultipartUploadServiceTest {
             );
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3MultipartFacade.initializeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(multipartUploadManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
+            when(multipartUploadStateManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
             when(presignedUrlProperties.getMultipartPartDuration()).thenReturn(Duration.ofHours(24));
 
             // When
@@ -324,10 +324,10 @@ class InitMultipartUploadServiceTest {
             );
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3MultipartFacade.initializeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(multipartUploadManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
+            when(multipartUploadStateManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
             when(presignedUrlProperties.getMultipartPartDuration()).thenReturn(Duration.ofHours(24));
 
             // When
@@ -383,10 +383,10 @@ class InitMultipartUploadServiceTest {
             );
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3MultipartFacade.initializeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(multipartUploadManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
+            when(multipartUploadStateManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
             when(presignedUrlProperties.getMultipartPartDuration()).thenReturn(Duration.ofHours(24));
 
             // When
@@ -442,10 +442,10 @@ class InitMultipartUploadServiceTest {
             );
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3MultipartFacade.initializeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(multipartUploadManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
+            when(multipartUploadStateManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
             when(presignedUrlProperties.getMultipartPartDuration()).thenReturn(Duration.ofHours(24));
 
             // When
@@ -501,10 +501,10 @@ class InitMultipartUploadServiceTest {
             );
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3MultipartFacade.initializeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(multipartUploadManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
+            when(multipartUploadStateManager.save(any(MultipartUpload.class))).thenReturn(multipartUpload);
             when(presignedUrlProperties.getMultipartPartDuration()).thenReturn(Duration.ofHours(24));
 
             // When
@@ -540,7 +540,7 @@ class InitMultipartUploadServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Tenant not found");
 
-            verify(uploadSessionManager, never()).save(any(UploadSession.class));
+            verify(uploadSessionStateManager, never()).save(any(UploadSession.class));
             verify(s3MultipartFacade, never()).initializeMultipart(any(), any(), any(), any(), any());
         }
 
@@ -578,7 +578,7 @@ class InitMultipartUploadServiceTest {
             );
 
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
-            when(uploadSessionManager.save(any(UploadSession.class))).thenReturn(savedSession);
+            when(uploadSessionStateManager.save(any(UploadSession.class))).thenReturn(savedSession);
             when(s3MultipartFacade.initializeMultipart(any(), any(), any(), any(), any()))
                 .thenThrow(new RuntimeException("S3 initialization failed"));
             when(presignedUrlProperties.getMultipartPartDuration()).thenReturn(Duration.ofHours(24));
@@ -588,7 +588,7 @@ class InitMultipartUploadServiceTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("S3 initialization failed");
 
-            verify(multipartUploadManager, never()).save(any(MultipartUpload.class));
+            verify(multipartUploadStateManager, never()).save(any(MultipartUpload.class));
         }
     }
 }

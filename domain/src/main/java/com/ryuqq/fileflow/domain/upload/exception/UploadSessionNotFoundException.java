@@ -20,12 +20,22 @@ import java.util.Map;
 public class UploadSessionNotFoundException extends UploadException {
 
     /**
-     * 생성자
+     * 생성자 - Session Key
      *
      * @param sessionKey 찾을 수 없는 Session Key
      */
     public UploadSessionNotFoundException(String sessionKey) {
         super(UploadErrorCode.UPLOAD_SESSION_NOT_FOUND,
               Map.of("sessionKey", sessionKey));
+    }
+
+    /**
+     * 생성자 - Upload Session ID
+     *
+     * @param uploadSessionId 찾을 수 없는 Upload Session ID
+     */
+    public UploadSessionNotFoundException(Long uploadSessionId) {
+        super(UploadErrorCode.UPLOAD_SESSION_NOT_FOUND,
+              Map.of("uploadSessionId", uploadSessionId.toString()));
     }
 }

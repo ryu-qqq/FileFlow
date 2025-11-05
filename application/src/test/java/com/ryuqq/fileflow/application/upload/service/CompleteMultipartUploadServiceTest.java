@@ -1,5 +1,22 @@
 package com.ryuqq.fileflow.application.upload.service;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.ryuqq.fileflow.application.file.manager.FileCommandManager;
 import com.ryuqq.fileflow.application.iam.context.IamContext;
 import com.ryuqq.fileflow.application.iam.context.IamContextFacade;
@@ -8,9 +25,11 @@ import com.ryuqq.fileflow.application.upload.dto.response.CompleteMultipartRespo
 import com.ryuqq.fileflow.application.upload.dto.response.S3CompleteResultResponse;
 import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
 import com.ryuqq.fileflow.application.upload.facade.S3MultipartFacade;
-import com.ryuqq.fileflow.application.upload.manager.MultipartUploadManager;
+import com.ryuqq.fileflow.application.upload.manager.MultipartUploadStateManager;
 import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
-import com.ryuqq.fileflow.application.upload.port.out.UploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadPort;
+import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
 import com.ryuqq.fileflow.domain.file.asset.FileId;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
@@ -23,23 +42,6 @@ import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 import com.ryuqq.fileflow.domain.upload.fixture.MultipartUploadFixture;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * CompleteMultipartUploadService 단위 테스트
@@ -54,10 +56,16 @@ import static org.mockito.Mockito.when;
 class CompleteMultipartUploadServiceTest {
 
     @Mock
-    private UploadSessionPort uploadSessionPort;
+    private LoadUploadSessionPort loadUploadSessionPort;
 
     @Mock
-    private MultipartUploadManager multipartUploadManager;
+    private MultipartUploadStateManager multipartUploadStateManager;
+
+    @Mock
+    private LoadMultipartUploadPort loadMultipartUploadPort;
+
+    @Mock
+    private SaveUploadSessionPort saveUploadSessionPort;
 
     @Mock
     private IamContextFacade iamContextFacade;
@@ -159,17 +167,17 @@ class CompleteMultipartUploadServiceTest {
             Tenant tenant = TenantFixture.createWithId(session.getTenantId().value());
             IamContext iamContext = IamContext.of(tenant);
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
             when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
-            when(uploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
-            when(multipartUploadManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
+            when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
+            when(multipartUploadStateManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
 
             // When
             CompleteMultipartResponse response = service.execute(command);
@@ -180,12 +188,13 @@ class CompleteMultipartUploadServiceTest {
             assertThat(response.etag()).isEqualTo("etag-123");
             assertThat(response.location()).isEqualTo("s3://bucket/key");
 
-            verify(uploadSessionPort).findBySessionKey(SessionKey.of(sessionKey));
-            verify(multipartUploadManager).findByUploadSessionId(session.getIdValue());
+            verify(loadUploadSessionPort).findBySessionKey(SessionKey.of(sessionKey));
+            verify(loadMultipartUploadPort).findByUploadSessionId(session.getIdValue());
             verify(s3MultipartFacade).completeMultipart(any(), any(), any(), any(), any());
             verify(s3StoragePort).headObject(anyString(), anyString());
             verify(fileCommandManager).save(any(FileAsset.class));
-            verify(uploadSessionPort).save(any(UploadSession.class));
+            verify(saveUploadSessionPort).save(any(UploadSession.class));
+            verify(multipartUploadStateManager).complete(any(MultipartUpload.class));
         }
 
         @Test
@@ -254,17 +263,17 @@ class CompleteMultipartUploadServiceTest {
             Tenant tenant = TenantFixture.createWithId(session.getTenantId().value());
             IamContext iamContext = IamContext.of(tenant);
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
             when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
-            when(uploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
-            when(multipartUploadManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
+            when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
+            when(multipartUploadStateManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
 
             // When
             CompleteMultipartResponse response = service.execute(command);
@@ -341,17 +350,17 @@ class CompleteMultipartUploadServiceTest {
             Tenant tenant = TenantFixture.createWithId(session.getTenantId().value());
             IamContext iamContext = IamContext.of(tenant);
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
             when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
-            when(uploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
-            when(multipartUploadManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
+            when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
+            when(multipartUploadStateManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
 
             // When
             CompleteMultipartResponse response = service.execute(command);
@@ -428,17 +437,17 @@ class CompleteMultipartUploadServiceTest {
             Tenant tenant = TenantFixture.createWithId(session.getTenantId().value());
             IamContext iamContext = IamContext.of(tenant);
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
             when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
-            when(uploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
-            when(multipartUploadManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
+            when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
+            when(multipartUploadStateManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
 
             // When
             CompleteMultipartResponse response = service.execute(command);
@@ -460,7 +469,7 @@ class CompleteMultipartUploadServiceTest {
             String sessionKey = "non-existent-session";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.empty());
 
             // When & Then
@@ -468,7 +477,7 @@ class CompleteMultipartUploadServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Upload session not found");
 
-            verify(multipartUploadManager, never()).findByUploadSessionId(any(UploadSessionId.class));
+            verify(loadMultipartUploadPort, never()).findByUploadSessionId(any(Long.class));
             verify(s3MultipartFacade, never()).completeMultipart(any(), any(), any(), any(), any());
         }
 
@@ -504,9 +513,9 @@ class CompleteMultipartUploadServiceTest {
                 .addParts(2) // 3개 중 2개만 업로드
                 .build();
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
 
             // When & Then
@@ -551,9 +560,9 @@ class CompleteMultipartUploadServiceTest {
             Tenant tenant = TenantFixture.createWithId(session.getTenantId().value());
             IamContext iamContext = IamContext.of(tenant);
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.of(multipart));
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
@@ -592,12 +601,12 @@ class CompleteMultipartUploadServiceTest {
                 null
             );
 
-            when(uploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
+            when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
 
             // When & Then
             // MultipartUpload가 없으면 IllegalStateException 발생
-            when(multipartUploadManager.findByUploadSessionId(UploadSessionId.of(session.getIdValue())))
+            when(loadMultipartUploadPort.findByUploadSessionId(session.getIdValue()))
                 .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.execute(command))
