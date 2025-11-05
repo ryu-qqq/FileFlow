@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =====================================================
-# Claude Spring Standards Template Installer v2.3
+# Claude Spring Standards Template Installer v2.4
 # =====================================================
 #
 # 이 스크립트는 Claude Code Dynamic Hooks + Cache 시스템을
@@ -10,7 +10,10 @@
 # 사용법:
 #   bash install-template.sh /path/to/target-project
 #
-# v2.3 추가 항목:
+# v2.4 추가 항목:
+# - .serena/memories/ 복사 (Coding Convention Memory 자동 로드)
+#
+# v2.3 항목:
 # - Claude Skills (5개 전문가 에이전트: convention-reviewer, domain-expert, rest-api-expert, application-expert, test-expert)
 #
 # v2.2 항목:
@@ -43,9 +46,9 @@ cat << 'EOF'
   ___) | || (_| | | | | (_| | (_| |  _ <  __/\__ \ |_ / /  /   ___) | || (_| | | | | (_| | (_| | | | (_| \__ \
  |____/ \__\__,_|_| |_|\__,_|\__,_|_| \_\___||___/\__/_/  /   |____/ \__\__,_|_| |_|\__,_|\__,_|_|  \__,_|___/
 
-  Template Installer v2.3
+  Template Installer v2.4
   Dynamic Hooks + Cache System (100% Zero-Tolerance)
-  + Claude Skills + ArchUnit + Cursor IDE + LangFuse + Git Hooks
+  + Serena Memories + Claude Skills + ArchUnit + Cursor IDE + LangFuse + Git Hooks
 
 EOF
 
@@ -86,7 +89,7 @@ fi
 # 2. 의존성 확인
 # =====================================================
 
-echo -e "${BLUE}🔍 Step 1/12: 의존성 확인${NC}"
+echo -e "${BLUE}🔍 Step 1/14: 의존성 확인${NC}"
 echo "-----------------------------------"
 
 # Python 3 확인
@@ -118,7 +121,7 @@ echo ""
 # 3. .claude/ 디렉토리 복사
 # =====================================================
 
-echo -e "${BLUE}🔧 Step 2/12: .claude/ 디렉토리 복사${NC}"
+echo -e "${BLUE}🔧 Step 2/14: .claude/ 디렉토리 복사${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$TARGET_DIR/.claude" ]]; then
@@ -149,7 +152,7 @@ echo ""
 # 4. .cursorrules 복사 (Cursor IDE 통합) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}🎨 Step 3/12: .cursorrules 복사 (Cursor IDE 통합)${NC}"
+echo -e "${BLUE}🎨 Step 3/14: .cursorrules 복사 (Cursor IDE 통합)${NC}"
 echo "-----------------------------------"
 
 if [[ -f "$SOURCE_DIR/.cursorrules" ]]; then
@@ -165,7 +168,7 @@ echo ""
 # 5. .env.example 복사 (LangFuse 설정 템플릿) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}📝 Step 4/12: .env.example 복사 (LangFuse 설정 템플릿)${NC}"
+echo -e "${BLUE}📝 Step 4/14: .env.example 복사 (LangFuse 설정 템플릿)${NC}"
 echo "-----------------------------------"
 
 if [[ -f "$SOURCE_DIR/.env.example" ]]; then
@@ -182,7 +185,7 @@ echo ""
 # 6. Hook 스크립트 권한 설정
 # =====================================================
 
-echo -e "${BLUE}🔑 Step 5/12: Hook 스크립트 권한 설정${NC}"
+echo -e "${BLUE}🔑 Step 5/14: Hook 스크립트 권한 설정${NC}"
 echo "-----------------------------------"
 
 chmod +x "$TARGET_DIR/.claude/hooks"/*.sh
@@ -196,7 +199,7 @@ echo ""
 # 7. 환경 변수 설정 안내
 # =====================================================
 
-echo -e "${BLUE}🌍 Step 6/12: 환경 변수 설정${NC}"
+echo -e "${BLUE}🌍 Step 6/14: 환경 변수 설정${NC}"
 echo "-----------------------------------"
 
 if [[ ! -f "$TARGET_DIR/.env" ]]; then
@@ -251,7 +254,7 @@ echo ""
 # 8. docs/coding_convention/ 복사 (선택적)
 # =====================================================
 
-echo -e "${BLUE}📚 Step 7/12: 코딩 컨벤션 규칙 복사 (필수)${NC}"
+echo -e "${BLUE}📚 Step 7/14: 코딩 컨벤션 규칙 복사 (필수)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/docs/coding_convention" ]]; then
@@ -278,7 +281,7 @@ echo ""
 # 9. langfuse/ 디렉토리 복사 (선택적) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}📊 Step 8/12: LangFuse 통합 스크립트 복사 (선택적)${NC}"
+echo -e "${BLUE}📊 Step 8/14: LangFuse 통합 스크립트 복사 (선택적)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/langfuse" ]]; then
@@ -306,7 +309,7 @@ echo ""
 # 10. config/ 디렉토리 복사 (선택적) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}🔧 Step 9/12: config/ 디렉토리 복사 (선택적)${NC}"
+echo -e "${BLUE}🔧 Step 9/14: config/ 디렉토리 복사 (선택적)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/config" ]]; then
@@ -340,7 +343,7 @@ echo ""
 # 11. ArchUnit 테스트 자동 생성 ⭐ NEW v2.2
 # =====================================================
 
-echo -e "${BLUE}🧪 Step 10/12: ArchUnit 테스트 자동 생성 (Zero-Tolerance 검증)${NC}"
+echo -e "${BLUE}🧪 Step 10/14: ArchUnit 테스트 자동 생성 (Zero-Tolerance 검증)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/.claude/templates/archunit" ]]; then
@@ -404,7 +407,7 @@ echo ""
 # 12. Claude Skills 복사 ⭐ NEW v2.3
 # =====================================================
 
-echo -e "${BLUE}🎓 Step 11/12: Claude Skills 복사 (컨벤션 전문가)${NC}"
+echo -e "${BLUE}🎓 Step 11/14: Claude Skills 복사 (컨벤션 전문가)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/.claude/skills" ]]; then
@@ -442,7 +445,7 @@ echo ""
 # 13. DEVELOPMENT_GUIDE.md 복사 (선택적) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}📖 Step 12/12: DEVELOPMENT_GUIDE.md 복사 (선택적)${NC}"
+echo -e "${BLUE}📖 Step 12/14: DEVELOPMENT_GUIDE.md 복사 (선택적)${NC}"
 echo "-----------------------------------"
 
 if [[ -f "$SOURCE_DIR/DEVELOPMENT_GUIDE.md" ]]; then
@@ -465,10 +468,44 @@ fi
 echo ""
 
 # =====================================================
+# 13. Serena Memories 복사 (필수 - /cc:load 지원)
+# =====================================================
+
+echo -e "${BLUE}🧠 Step 13/13: Serena Memories 복사 (Coding Convention 로드)${NC}"
+echo "-----------------------------------"
+
+if [[ -d "$SOURCE_DIR/.serena/memories" ]]; then
+    echo "Serena Memory 파일 복사 중..."
+
+    # .serena 디렉토리가 없으면 생성
+    if [[ ! -d "$TARGET_DIR/.serena" ]]; then
+        mkdir -p "$TARGET_DIR/.serena"
+        echo -e "${GREEN}✅ .serena/ 디렉토리 생성 완료${NC}"
+    fi
+
+    # memories 디렉토리 복사
+    cp -r "$SOURCE_DIR/.serena/memories" "$TARGET_DIR/.serena/"
+
+    echo -e "${GREEN}✅ Serena Memories 복사 완료${NC}"
+    echo ""
+    echo -e "${BLUE}📚 복사된 메모리:${NC}"
+    echo "   1. application-layer-conventions-2025 (Application Layer 최신 규칙)"
+    echo "   2. manager-statemanager-facade-pattern (Manager 패턴 가이드)"
+    echo "   3. transactional-outbox-pattern-2025 (Outbox Pattern 전체)"
+    echo ""
+    echo -e "${GREEN}✅ /cc:load 명령어로 메모리를 로드할 수 있습니다!${NC}"
+else
+    echo -e "${YELLOW}⚠️  소스 프로젝트에 .serena/memories/ 폴더가 없습니다.${NC}"
+    echo "   /cc:load 명령어가 제대로 작동하지 않을 수 있습니다."
+fi
+
+echo ""
+
+# =====================================================
 # 14. Cache 빌드
 # =====================================================
 
-echo -e "${BLUE}🏗️  추가: Cache 빌드${NC}"
+echo -e "${BLUE}🏗️  Step 14/14: Cache 빌드${NC}"
 echo "-----------------------------------"
 
 cd "$TARGET_DIR"
@@ -500,15 +537,16 @@ echo ""
 
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}✅ 설치 완료! (v2.3)${NC}"
+echo -e "${GREEN}✅ 설치 완료! (v2.4)${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${BLUE}📦 복사된 항목:${NC}"
 echo "   ✅ .claude/ (Dynamic Hooks + Cache 시스템)"
 echo "   ✅ .cursorrules (Cursor IDE 통합)"
 echo "   ✅ .env.example (LangFuse 설정 템플릿)"
+echo "   ✅ .serena/memories/ (Coding Convention Memory) ⭐ NEW v2.4"
 echo "   ✅ docs/coding_convention/ (98개 규칙)"
-echo "   ✅ Claude Skills (5개 전문가 에이전트) - 선택 시 ⭐ NEW v2.3"
+echo "   ✅ Claude Skills (5개 전문가 에이전트) - 선택 시"
 echo "   ✅ ArchUnit 테스트 (5개 핵심 규칙 자동 검증) - 선택 시"
 echo "   ✅ langfuse/ (메트릭 추적 스크립트) - 선택 시"
 echo "   ✅ config/ (Git Hooks, Checkstyle 등) - 선택 시"
@@ -523,7 +561,11 @@ echo "2. Claude Code 실행:"
 echo "   cd $TARGET_DIR"
 echo "   claude code"
 echo ""
-echo "3. 첫 코드 생성 테스트:"
+echo "3. Coding Convention 로드 (필수):"
+echo "   /cc:load"
+echo "   (Serena Memory에서 최신 컨벤션 로드)"
+echo ""
+echo "4. 첫 코드 생성 테스트:"
 echo "   /code-gen-domain Order"
 echo "   (자동 규칙 주입 + 실시간 검증)"
 echo ""

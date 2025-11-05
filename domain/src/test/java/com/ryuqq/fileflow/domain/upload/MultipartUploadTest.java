@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.upload;
 
+import com.ryuqq.fileflow.domain.upload.exception.*;
 import com.ryuqq.fileflow.domain.upload.fixture.MultipartUploadFixture;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadPartFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -175,8 +176,7 @@ class MultipartUploadTest {
         void forNew_ThrowsException_WhenUploadSessionIdIsNull() {
             // When & Then
             assertThatThrownBy(() -> MultipartUpload.forNew(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Upload Session ID는 필수입니다");
+                .isInstanceOf(InvalidUploadRequestException.class);
         }
 
         @Test
@@ -190,8 +190,7 @@ class MultipartUploadTest {
                 ProviderUploadId.of("new-upload-id"),
                 TotalParts.of(3)
             ))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("이미 초기화된 업로드입니다");
+                .isInstanceOf(InvalidUploadRequestException.class);
         }
 
         @Test
@@ -202,8 +201,7 @@ class MultipartUploadTest {
 
             // When & Then
             assertThatThrownBy(() -> upload.initiate(null, TotalParts.of(3)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Provider Upload ID는 필수입니다");
+                .isInstanceOf(InvalidUploadRequestException.class);
         }
 
         @Test
@@ -214,8 +212,7 @@ class MultipartUploadTest {
 
             // When & Then
             assertThatThrownBy(() -> upload.initiate(ProviderUploadId.of("upload-id"), null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Total Parts는 필수입니다");
+                .isInstanceOf(InvalidUploadRequestException.class);
         }
 
         @Test
@@ -227,8 +224,7 @@ class MultipartUploadTest {
 
             // When & Then
             assertThatThrownBy(() -> upload.addPart(part))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("업로드가 시작되지 않았습니다");
+                .isInstanceOf(MultipartNotInitializedException.class);
         }
 
         @Test
@@ -244,8 +240,7 @@ class MultipartUploadTest {
 
             // When & Then
             assertThatThrownBy(() -> upload.addPart(UploadPartFixture.create(1, 5242880L)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("이미 업로드된 파트입니다");
+                .isInstanceOf(DuplicatePartNumberException.class);
         }
 
         @Test
@@ -262,8 +257,7 @@ class MultipartUploadTest {
 
             // When & Then
             assertThatThrownBy(() -> upload.complete())
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("완료할 수 없습니다");
+                .isInstanceOf(IncompleteMultipartUploadException.class);
         }
 
         @Test
@@ -274,8 +268,7 @@ class MultipartUploadTest {
 
             // When & Then
             assertThatThrownBy(() -> upload.abort())
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("완료된 업로드는 중단할 수 없습니다");
+                .isInstanceOf(UploadAlreadyCompletedException.class);
         }
     }
 

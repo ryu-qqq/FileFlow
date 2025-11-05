@@ -245,20 +245,26 @@ onboarding_status = mcp__serena__check_onboarding_performed()
 
 세션 로드 후 다음 작업을 수행할 수 있습니다:
 
-### 1️⃣ 코드 생성 (Claude Code 직접 요청)
+### 1️⃣ 코드 생성 (자연어 요청)
 
 ```bash
+# Hook이 자동으로 키워드 감지 → 규칙 주입
+
 # 예시: Domain Aggregate 요청
 "Order Aggregate를 생성해줘. 주문 생성, 취소, 상태 변경 기능이 필요해."
+→ Hook: "domain", "aggregate" 감지 → Domain Layer 규칙 15개 자동 주입
 
 # 예시: Application UseCase 요청
 "PlaceOrderUseCase를 생성해줘. Order를 생성하고 저장하는 로직이 필요해."
+→ Hook: "usecase" 감지 → Application Layer 규칙 18개 자동 주입
 
 # 예시: REST Controller 요청
 "OrderController를 생성해줘. POST /orders, GET /orders/{id} API가 필요해."
+→ Hook: "controller" 감지 → REST API Layer 규칙 18개 자동 주입
 
-# Orchestration Pattern 생성 (실제 Slash Command)
-/code-gen-orchestrator Order PlacementConfirmed
+# 예시: Orchestration Pattern 요청
+"Order 주문 확정 이벤트에 대한 Orchestrator를 생성해줘. 외부 API 호출이 필요해."
+→ Hook: "orchestrator" 감지 → Orchestration 규칙 8개 자동 주입
 ```
 
 **Hook 시스템이 자동 적용**:
@@ -451,12 +457,13 @@ A: **Hook이 실시간 주입 중**. 정상 동작! (3-5초) ✅
 # 1. 세션 시작 시 한 번만 실행
 /cc:load
 
-# 2. 로딩 완료 대기 (3-5초)
+# 2. 로딩 완료 대기 (5-10초)
 # ...
 
 # 3. 작업 시작 (Hook이 자동으로 규칙 주입)
-/code-gen-domain Order
-# → Hook이 자동으로 Domain Layer 15개 규칙 주입!
+"Order Aggregate를 생성해줘"
+# → Hook이 자동으로 "domain", "aggregate" 감지
+# → Domain Layer 15개 규칙 자동 주입!
 ```
 
 ---

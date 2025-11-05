@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.upload;
 
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
+import com.ryuqq.fileflow.domain.upload.exception.*;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -75,17 +76,14 @@ public class UploadSession {
         FileSize fileSize,
         Clock clock
     ) {
-        if (tenantId
-            == null) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다");
+        if (tenantId == null) {
+            throw new InvalidUploadRequestException("tenantId", "Tenant ID는 필수입니다");
         }
-        if (fileName
-            == null) {
-            throw new IllegalArgumentException("File Name은 필수입니다");
+        if (fileName == null) {
+            throw new InvalidFileNameException(null, "File Name은 필수입니다");
         }
-        if (fileSize
-            == null) {
-            throw new IllegalArgumentException("File Size는 필수입니다");
+        if (fileSize == null) {
+            throw new InvalidUploadRequestException("fileSize", "File Size는 필수입니다");
         }
 
         this.id = id;
@@ -210,7 +208,7 @@ public class UploadSession {
         FileSize fileSize
     ) {
         if (storageContext == null) {
-            throw new IllegalArgumentException("StorageContext는 필수입니다");
+            throw new MissingStorageContextException("(new-session)", "StorageContext");
         }
 
         // StorageContext에서 TenantId 추출 (Law of Demeter 준수)
@@ -255,10 +253,10 @@ public class UploadSession {
         FileSize fileSize
     ) {
         if (tenantId == null) {
-            throw new IllegalArgumentException("TenantId는 필수입니다");
+            throw new InvalidUploadRequestException("tenantId", "TenantId는 필수입니다");
         }
         if (fileName == null) {
-            throw new IllegalArgumentException("FileName은 필수입니다");
+            throw new InvalidFileNameException(null, "FileName은 필수입니다");
         }
         if (fileSize == null) {
             fileSize = FileSize.of(0L); // External Download는 초기 크기를 모를 수 있음
@@ -348,9 +346,8 @@ public class UploadSession {
         LocalDateTime completedAt,
         LocalDateTime failedAt
     ) {
-        if (id
-            == null) {
-            throw new IllegalArgumentException("DB reconstitute는 ID가 필수입니다");
+        if (id == null) {
+            throw new InvalidUploadRequestException("id", "DB reconstitute는 ID가 필수입니다");
         }
         return new UploadSession(
             id,
@@ -382,20 +379,15 @@ public class UploadSession {
      * @since 1.0.0
      */
     public void attachMultipart(MultipartUpload multipart) {
-        if (this.uploadType
-            != UploadType.MULTIPART) {
-            throw new IllegalStateException(
-                "Upload type is not MULTIPART: "
-                    + uploadType
-            );
+        if (this.uploadType != UploadType.MULTIPART) {
+            throw new UploadTypeMismatchException(this.uploadType, "attachMultipart()");
         }
 
         if (!multipart.getUploadSessionIdValue().equals(this.getIdValue())) {
-            throw new IllegalArgumentException(
-                "Multipart session ID mismatch: expected="
-                    + this.getIdValue()
-                    + ", actual="
-                    + multipart.getUploadSessionIdValue()
+            throw new InvalidUploadRequestException(
+                "sessionId",
+                "Multipart session ID mismatch: expected=" + this.getIdValue()
+                    + ", actual=" + multipart.getUploadSessionIdValue()
             );
         }
 
@@ -412,21 +404,19 @@ public class UploadSession {
      * @since 1.0.0
      */
     public void initMultipart(Integer totalParts) {
-        if (this.uploadType
-            != UploadType.MULTIPART) {
-            throw new IllegalStateException("Not a multipart upload session");
+        if (this.uploadType != UploadType.MULTIPART) {
+            throw new UploadTypeMismatchException(this.uploadType, "initMultipart()");
         }
 
-        if (this.multipartUpload
-            == null) {
-            throw new IllegalStateException("Multipart not attached");
-        }
-
-        if (this.status
-            != SessionStatus.PENDING) {
-            throw new IllegalStateException(
-                "Cannot initialize: session already started or completed"
+        if (this.multipartUpload == null) {
+            throw new MultipartNotInitializedException(
+                this.sessionKey != null ? this.sessionKey.value() : "unknown",
+                "initMultipart()"
             );
+        }
+
+        if (this.status != SessionStatus.PENDING) {
+            throw new InvalidUploadSessionStateException(this.status, SessionStatus.PENDING);
         }
 
         this.status = SessionStatus.IN_PROGRESS;
@@ -440,21 +430,19 @@ public class UploadSession {
      * @param part 업로드된 파트
      */
     public void markPartUploaded(UploadPart part) {
-        if (this.uploadType
-            != UploadType.MULTIPART) {
-            throw new IllegalStateException("Not a multipart upload session");
+        if (this.uploadType != UploadType.MULTIPART) {
+            throw new UploadTypeMismatchException(this.uploadType, "markPartUploaded()");
         }
 
-        if (this.multipartUpload
-            == null) {
-            throw new IllegalStateException("Multipart not initialized");
-        }
-
-        if (this.status
-            != SessionStatus.IN_PROGRESS) {
-            throw new IllegalStateException(
-                "Cannot mark part: session not in progress"
+        if (this.multipartUpload == null) {
+            throw new MultipartNotInitializedException(
+                this.sessionKey != null ? this.sessionKey.value() : "unknown",
+                "markPartUploaded()"
             );
+        }
+
+        if (this.status != SessionStatus.IN_PROGRESS) {
+            throw new InvalidUploadSessionStateException(this.status, "markPartUploaded()");
         }
 
         // Delegate to MultipartUpload
@@ -496,11 +484,8 @@ public class UploadSession {
      * @since 1.0.0
      */
     public void start() {
-        if (this.status
-            != SessionStatus.PENDING) {
-            throw new IllegalStateException(
-                "Cannot start: session already started or completed"
-            );
+        if (this.status != SessionStatus.PENDING) {
+            throw new InvalidUploadSessionStateException(this.status, SessionStatus.PENDING);
         }
 
         this.status = SessionStatus.IN_PROGRESS;
@@ -516,20 +501,18 @@ public class UploadSession {
      * @since 1.0.0
      */
     public void complete(Long fileId) {
-        if (this.status
-            != SessionStatus.IN_PROGRESS) {
-            throw new IllegalStateException(
-                "Cannot complete: session not in progress"
-            );
+        if (this.status != SessionStatus.IN_PROGRESS) {
+            throw new InvalidUploadSessionStateException(this.status, SessionStatus.IN_PROGRESS);
         }
 
         // MULTIPART 타입인 경우 추가 검증
-        if (this.uploadType
-            == UploadType.MULTIPART) {
+        if (this.uploadType == UploadType.MULTIPART) {
             if (!canCompleteMultipart()) {
-                throw new IllegalStateException(
-                    "Cannot complete: multipart upload not finished"
-                );
+                int uploadedParts = this.multipartUpload != null ?
+                    this.multipartUpload.getUploadedParts().size() : 0;
+                int totalParts = this.multipartUpload != null && this.multipartUpload.getTotalParts() != null ?
+                    this.multipartUpload.getTotalParts().value() : 0;
+                throw new IncompleteMultipartUploadException(uploadedParts, totalParts);
             }
             // MultipartUpload도 완료 상태로 변경
             this.multipartUpload.complete();
@@ -548,13 +531,14 @@ public class UploadSession {
      * @param fileSize 실제 파일 크기
      */
     public void updateFileSize(FileSize fileSize) {
-        if (this.status
-            == SessionStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot update file size: session already completed");
+        if (this.status == SessionStatus.COMPLETED) {
+            throw new UploadAlreadyCompletedException(
+                this.sessionKey != null ? this.sessionKey.value() : "unknown",
+                "updateFileSize()"
+            );
         }
-        if (this.status
-            == SessionStatus.FAILED) {
-            throw new IllegalStateException("Cannot update file size: session already failed");
+        if (this.status == SessionStatus.FAILED) {
+            throw new InvalidUploadSessionStateException(this.status, "updateFileSize()");
         }
         this.fileSize = fileSize;
     }
@@ -568,16 +552,15 @@ public class UploadSession {
      * @since 1.0.0
      */
     public void fail(FailureReason reason) {
-        if (this.status
-            == SessionStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot fail completed session");
+        if (this.status == SessionStatus.COMPLETED) {
+            throw new UploadAlreadyCompletedException(
+                this.sessionKey != null ? this.sessionKey.value() : "unknown",
+                "fail()"
+            );
         }
 
         // MULTIPART 타입인 경우 MultipartUpload도 실패 처리
-        if (this.uploadType
-            == UploadType.MULTIPART
-            && this.multipartUpload
-            != null) {
+        if (this.uploadType == UploadType.MULTIPART && this.multipartUpload != null) {
             this.multipartUpload.fail();
         }
 
@@ -611,7 +594,10 @@ public class UploadSession {
      */
     public void expire() {
         if (this.status == SessionStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot expire completed session");
+            throw new UploadAlreadyCompletedException(
+                this.sessionKey != null ? this.sessionKey.value() : "unknown",
+                "expire()"
+            );
         }
 
         // 멱등성: 이미 EXPIRED 상태면 무시

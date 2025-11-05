@@ -1,13 +1,9 @@
 package com.ryuqq.fileflow.bootstrap.architecture;
 
-import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
-import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
-import com.tngtech.archunit.lang.ConditionEvents;
-import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -124,22 +120,11 @@ class OrchestrationConventionTest {
     @Test
     @DisplayName("Finalizer는 @Scheduled 어노테이션 필수")
     void finalizersShouldHaveScheduledAnnotation() {
-        ArchCondition<JavaClass> haveScheduledMethod = new ArchCondition<JavaClass>("have @Scheduled method") {
-            @Override
-            public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasScheduled = javaClass.getMethods().stream()
-                    .anyMatch(method -> method.isAnnotatedWith(Scheduled.class));
-                if (!hasScheduled) {
-                    events.add(SimpleConditionEvent.violated(javaClass,
-                        String.format("%s does not have any @Scheduled method", javaClass.getName())));
-                }
-            }
-        };
-
         ArchRule rule = classes()
             .that().haveSimpleNameEndingWith("Finalizer")
             .and().resideInAPackage("..scheduler..")
-            .should(haveScheduledMethod)
+            .should().containAnyMethodsThat()
+                .areAnnotatedWith(Scheduled.class)
             .because("Finalizer는 PENDING WAL을 주기적으로 처리하기 위해 @Scheduled가 필수입니다");
 
         rule.check(classes);
@@ -148,22 +133,11 @@ class OrchestrationConventionTest {
     @Test
     @DisplayName("Reaper는 @Scheduled 어노테이션 필수")
     void reapersShouldHaveScheduledAnnotation() {
-        ArchCondition<JavaClass> haveScheduledMethod = new ArchCondition<JavaClass>("have @Scheduled method") {
-            @Override
-            public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasScheduled = javaClass.getMethods().stream()
-                    .anyMatch(method -> method.isAnnotatedWith(Scheduled.class));
-                if (!hasScheduled) {
-                    events.add(SimpleConditionEvent.violated(javaClass,
-                        String.format("%s does not have any @Scheduled method", javaClass.getName())));
-                }
-            }
-        };
-
         ArchRule rule = classes()
             .that().haveSimpleNameEndingWith("Reaper")
             .and().resideInAPackage("..scheduler..")
-            .should(haveScheduledMethod)
+            .should().containAnyMethodsThat()
+                .areAnnotatedWith(Scheduled.class)
             .because("Reaper는 TIMEOUT을 주기적으로 처리하기 위해 @Scheduled가 필수입니다");
 
         rule.check(classes);
@@ -172,22 +146,11 @@ class OrchestrationConventionTest {
     @Test
     @DisplayName("Operation Entity는 IdemKey를 가져야 함")
     void operationEntitiesShouldHaveIdemKey() {
-        ArchCondition<JavaClass> haveIdemKeyField = new ArchCondition<JavaClass>("have idemKey field") {
-            @Override
-            public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasIdemKey = javaClass.getFields().stream()
-                    .anyMatch(field -> field.getName().equals("idemKey"));
-                if (!hasIdemKey) {
-                    events.add(SimpleConditionEvent.violated(javaClass,
-                        String.format("%s does not have idemKey field", javaClass.getName())));
-                }
-            }
-        };
-
         ArchRule rule = classes()
             .that().haveSimpleNameEndingWith("OperationEntity")
             .and().resideInAPackage("..entity..")
-            .should(haveIdemKeyField)
+            .should().containAnyFieldsThat()
+                .haveName("idemKey")
             .because("Operation Entity는 멱등성 보장을 위해 IdemKey가 필수입니다");
 
         rule.check(classes);
@@ -198,12 +161,12 @@ class OrchestrationConventionTest {
     void orchestrationLayerShouldFollowDependencyRules() {
         ArchRule rule = layeredArchitecture()
             .consideringAllDependencies()
-            .layer("Orchestrator").definedBy("..application..orchestration..")
+            .layer("Orchestrator").definedBy("..application..*")
             .layer("Domain").definedBy("..domain..*")
             .layer("Port").definedBy("..port..*")
             .layer("Infrastructure").definedBy("..adapter.out..*")
 
-            .whereLayer("Orchestrator").mayOnlyAccessLayers("Domain", "Port")
+            .whereLayer("Orchestrator").mayOnlyAccessLayersIn("Domain", "Port")
             .because("Orchestrator는 Domain과 Port에만 의존해야 하며, Infrastructure에 직접 의존하면 안 됩니다");
 
         rule.check(classes);
