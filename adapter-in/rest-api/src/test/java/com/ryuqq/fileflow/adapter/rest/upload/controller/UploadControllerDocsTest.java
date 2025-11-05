@@ -12,9 +12,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
 import org.springframework.restdocs.payload.JsonFieldType;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -109,7 +113,7 @@ class UploadControllerDocsTest extends AbstractRestDocsTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.sessionKey").exists())
         .andExpect(jsonPath("$.data.uploadUrl").exists())
-        .andDo(restDocs.document(
+        .andDo(document("upload/init-single",
             preprocessRequest(),
             preprocessResponse(),
             requestHeaders(
@@ -177,7 +181,7 @@ class UploadControllerDocsTest extends AbstractRestDocsTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.fileId").value(12345L))
-        .andDo(restDocs.document(
+        .andDo(document("upload/complete-single",
             preprocessResponse(),
             pathParameters(
                 parameterWithName("sessionKey")
@@ -234,7 +238,7 @@ class UploadControllerDocsTest extends AbstractRestDocsTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.sessionKey").exists())
-        .andDo(restDocs.document(
+        .andDo(document("upload/init-multipart",
             preprocessRequest(),
             preprocessResponse(),
             requestHeaders(
@@ -292,7 +296,7 @@ class UploadControllerDocsTest extends AbstractRestDocsTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.partNumber").value(1))
-        .andDo(restDocs.document(
+        .andDo(document("upload/generate-part-url",
             preprocessResponse(),
             pathParameters(
                 parameterWithName("sessionKey").description("세션 키"),
@@ -327,7 +331,7 @@ class UploadControllerDocsTest extends AbstractRestDocsTest {
                 .content(objectMapper.writeValueAsString(request))
         )
         .andExpect(status().isNoContent())
-        .andDo(restDocs.document(
+        .andDo(document("upload/mark-part-uploaded",
             preprocessRequest(),
             pathParameters(
                 parameterWithName("sessionKey").description("세션 키"),
@@ -366,7 +370,7 @@ class UploadControllerDocsTest extends AbstractRestDocsTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.data.fileId").value(67890L))
-        .andDo(restDocs.document(
+        .andDo(document("upload/complete-multipart",
             preprocessResponse(),
             pathParameters(
                 parameterWithName("sessionKey").description("세션 키")
