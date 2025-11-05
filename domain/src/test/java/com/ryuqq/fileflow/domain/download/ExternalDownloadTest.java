@@ -1,8 +1,10 @@
 package com.ryuqq.fileflow.domain.download;
 
+import com.ryuqq.fileflow.domain.download.exception.InvalidDownloadStateException;
+import com.ryuqq.fileflow.domain.download.exception.InvalidUrlException;
+import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
-import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -185,8 +187,45 @@ class ExternalDownloadTest {
                     UploadSessionId.of(1L)
                 )
             )
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidUrlException.class)
                 .hasMessageContaining("HTTP/HTTPS만 지원합니다");
+        }
+
+        @Test
+        @DisplayName("create() - null URL은 예외 발생")
+        void create_ThrowsException_WhenNullUrl() {
+            // When & Then
+            assertThatThrownBy(() ->
+                ExternalDownload.forNew(null, com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture.createSingle())
+            )
+                .isInstanceOf(InvalidUrlException.class)
+                .hasMessageContaining("URL은 필수입니다");
+        }
+
+        @Test
+        @DisplayName("start() - INIT 상태가 아니면 예외 발생")
+        void start_ThrowsException_WhenNotInit() {
+            // Given
+            ExternalDownload download = ExternalDownloadFixture.createInProgress();
+
+            // When & Then
+            assertThatThrownBy(() -> download.start())
+                .isInstanceOf(InvalidDownloadStateException.class)
+                .hasMessageContaining("Can only start from INIT state");
+        }
+
+        @Test
+        @DisplayName("updateProgress() - DOWNLOADING 상태가 아니면 예외 발생")
+        void updateProgress_ThrowsException_WhenNotDownloading() {
+            // Given
+            ExternalDownload download = ExternalDownloadFixture.createNew();
+            FileSize bytesTransferred = FileSize.of(512L);
+            FileSize totalBytes = FileSize.of(1024L);
+
+            // When & Then
+            assertThatThrownBy(() -> download.updateProgress(bytesTransferred, totalBytes))
+                .isInstanceOf(InvalidDownloadStateException.class)
+                .hasMessageContaining("Not downloading");
         }
 
         @Test
@@ -197,7 +236,8 @@ class ExternalDownloadTest {
 
             // When & Then
             assertThatThrownBy(() -> download.complete())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidDownloadStateException.class)
+                .hasMessageContaining("Can only complete from DOWNLOADING state");
         }
     }
 }

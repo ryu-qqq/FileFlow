@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.download;
 
+import com.ryuqq.fileflow.domain.download.exception.InvalidDownloadStateException;
+import com.ryuqq.fileflow.domain.download.exception.InvalidUrlException;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 
@@ -252,14 +254,15 @@ public class ExternalDownload {
      *
      * <p>상태 전환: INIT → DOWNLOADING</p>
      *
-     * @throws IllegalStateException INIT 상태가 아닌 경우
+     * @throws InvalidDownloadStateException INIT 상태가 아닌 경우
      * @author Sangwon Ryu
      * @since 1.0.0
      */
     public void start() {
         if (this.status != ExternalDownloadStatus.INIT) {
-            throw new IllegalStateException(
-                "Can only start from INIT state: " + status
+            throw new InvalidDownloadStateException(
+                this.status,
+                "Can only start from INIT state"
             );
         }
         this.status = ExternalDownloadStatus.DOWNLOADING;
@@ -271,13 +274,16 @@ public class ExternalDownload {
      *
      * @param transferred 전송된 바이트 수
      * @param total 총 바이트 수
-     * @throws IllegalStateException 다운로드 중 상태가 아닌 경우
+     * @throws InvalidDownloadStateException 다운로드 중 상태가 아닌 경우
      * @author Sangwon Ryu
      * @since 1.0.0
      */
     public void updateProgress(FileSize transferred, FileSize total) {
         if (this.status != ExternalDownloadStatus.DOWNLOADING) {
-            throw new IllegalStateException("Not downloading: " + status);
+            throw new InvalidDownloadStateException(
+                this.status,
+                "Not downloading"
+            );
         }
         this.bytesTransferred = transferred;
         this.totalBytes = total;
@@ -289,13 +295,16 @@ public class ExternalDownload {
      *
      * <p>상태 전환: DOWNLOADING → COMPLETED</p>
      *
-     * @throws IllegalStateException 다운로드 중 상태가 아닌 경우
+     * @throws InvalidDownloadStateException 다운로드 중 상태가 아닌 경우
      * @author Sangwon Ryu
      * @since 1.0.0
      */
     public void complete() {
         if (this.status != ExternalDownloadStatus.DOWNLOADING) {
-            throw new IllegalStateException("Not downloading: " + status);
+            throw new InvalidDownloadStateException(
+                this.status,
+                "Can only complete from DOWNLOADING state"
+            );
         }
         this.status = ExternalDownloadStatus.COMPLETED;
         this.updatedAt = LocalDateTime.now(clock);
@@ -395,11 +404,11 @@ public class ExternalDownload {
      *
      * @param url URL 문자열
      * @return 파싱된 URL
-     * @throws IllegalArgumentException URL이 유효하지 않은 경우
+     * @throws InvalidUrlException URL이 유효하지 않은 경우
      */
     private static URL validateAndParseUrl(String url) {
         if (url == null || url.isBlank()) {
-            throw new IllegalArgumentException("유효하지 않은 URL입니다");
+            throw new InvalidUrlException("URL은 필수입니다");
         }
 
         try {
@@ -407,13 +416,13 @@ public class ExternalDownload {
             String protocol = parsedUrl.getProtocol();
 
             if (!protocol.matches("https?")) {
-                throw new IllegalArgumentException("HTTP/HTTPS만 지원합니다");
+                throw new InvalidUrlException("HTTP/HTTPS만 지원합니다");
             }
 
             return parsedUrl;
 
         } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("유효하지 않은 URL입니다", e);
+            throw new InvalidUrlException("URL 형식이 올바르지 않습니다", e);
         }
     }
 
