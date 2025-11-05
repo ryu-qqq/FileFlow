@@ -121,28 +121,36 @@ class OrchestrationConventionTest {
         rule.check(classes);
     }
 
-    @Test
-    @DisplayName("Finalizer는 @Scheduled 어노테이션 필수")
-    void finalizersShouldHaveScheduledAnnotation() {
-        ArchCondition<JavaClass> haveScheduledMethod = new ArchCondition<JavaClass>("contain @Scheduled method") {
+    /**
+     * @Scheduled 메서드 검증을 위한 재사용 가능한 ArchCondition
+     *
+     * @param componentType 컴포넌트 타입 (예: "Finalizer", "Reaper")
+     * @return ArchCondition
+     */
+    private ArchCondition<JavaClass> haveScheduledMethod(String componentType) {
+        return new ArchCondition<JavaClass>("contain @Scheduled method") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasScheduled = javaClass.getMethods().stream()
+                boolean hasScheduled = javaClass.getAllMethods().stream()
                     .anyMatch(method -> method.isAnnotatedWith(Scheduled.class));
                 if (!hasScheduled) {
                     String message = String.format(
-                        "Finalizer %s는 @Scheduled 어노테이션이 있는 메서드를 포함해야 합니다",
-                        javaClass.getSimpleName()
+                        "%s %s는 @Scheduled 어노테이션이 있는 메서드를 포함해야 합니다",
+                        componentType, javaClass.getSimpleName()
                     );
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
             }
         };
+    }
 
+    @Test
+    @DisplayName("Finalizer는 @Scheduled 어노테이션 필수")
+    void finalizersShouldHaveScheduledAnnotation() {
         ArchRule rule = classes()
             .that().haveSimpleNameEndingWith("Finalizer")
             .and().resideInAPackage("..scheduler..")
-            .should(haveScheduledMethod)
+            .should(haveScheduledMethod("Finalizer"))
             .because("Finalizer는 PENDING WAL을 주기적으로 처리하기 위해 @Scheduled가 필수입니다");
 
         rule.check(classes);
@@ -151,25 +159,10 @@ class OrchestrationConventionTest {
     @Test
     @DisplayName("Reaper는 @Scheduled 어노테이션 필수")
     void reapersShouldHaveScheduledAnnotation() {
-        ArchCondition<JavaClass> haveScheduledMethod = new ArchCondition<JavaClass>("contain @Scheduled method") {
-            @Override
-            public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasScheduled = javaClass.getMethods().stream()
-                    .anyMatch(method -> method.isAnnotatedWith(Scheduled.class));
-                if (!hasScheduled) {
-                    String message = String.format(
-                        "Reaper %s는 @Scheduled 어노테이션이 있는 메서드를 포함해야 합니다",
-                        javaClass.getSimpleName()
-                    );
-                    events.add(SimpleConditionEvent.violated(javaClass, message));
-                }
-            }
-        };
-
         ArchRule rule = classes()
             .that().haveSimpleNameEndingWith("Reaper")
             .and().resideInAPackage("..scheduler..")
-            .should(haveScheduledMethod)
+            .should(haveScheduledMethod("Reaper"))
             .because("Reaper는 TIMEOUT을 주기적으로 처리하기 위해 @Scheduled가 필수입니다");
 
         rule.check(classes);
@@ -181,7 +174,7 @@ class OrchestrationConventionTest {
         ArchCondition<JavaClass> haveIdemKeyField = new ArchCondition<JavaClass>("contain idemKey field") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasIdemKey = javaClass.getFields().stream()
+                boolean hasIdemKey = javaClass.getAllFields().stream()
                     .anyMatch(field -> field.getName().equals("idemKey"));
                 if (!hasIdemKey) {
                     String message = String.format(
