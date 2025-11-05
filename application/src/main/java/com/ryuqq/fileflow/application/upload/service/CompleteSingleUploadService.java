@@ -15,9 +15,7 @@ import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
 import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionPort;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.upload.Checksum;
-import com.ryuqq.fileflow.domain.upload.FileSize;
-import com.ryuqq.fileflow.domain.upload.MimeType;
+import com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.SessionStatus;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
@@ -213,29 +211,27 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
      */
     @Transactional
     public Long completeUpload(UploadSession session, S3HeadObjectResponse s3HeadResult) {
-        // 1. FileAsset Aggregate 생성 ⭐⭐⭐
-        FileAsset fileAsset = FileAsset.forNew(
-            session.getTenantId(),
-            null, // organizationId (optional)
-            null, // ownerUserId (optional, 나중에 추가 가능)
-            session.getFileName(),
-            FileSize.of(s3HeadResult.contentLength()),
-            MimeType.of(s3HeadResult.contentType() != null ? s3HeadResult.contentType() : "application/octet-stream"),
-            session.getStorageKey(),
-            Checksum.of(s3HeadResult.etag()), // ETag를 체크섬으로 사용
-            session.getId()
+        // 1. Application DTO → Domain VO 변환
+        S3UploadMetadata s3Metadata = S3UploadMetadata.of(
+            s3HeadResult.contentLength(),
+            s3HeadResult.etag(),
+            s3HeadResult.contentType(),
+            session.getStorageKey().value()  // storageKey는 session에서 가져옴
         );
 
-        // 2. FileAsset 저장
+        // 2. FileAsset Aggregate 생성 (Domain VO 사용)
+        FileAsset fileAsset = FileAsset.fromS3Upload(session, s3Metadata);
+
+        // 3. FileAsset 저장
         FileAsset savedFileAsset = fileCommandManager.save(fileAsset);
 
         log.debug("FileAsset created: fileAssetId={}, sessionId={}",
             savedFileAsset.getIdValue(), session.getIdValue());
 
-        // 3. UploadSession 완료 (Tell, Don't Ask 패턴)
+        // 4. UploadSession 완료 (Tell, Don't Ask 패턴)
         session.complete(savedFileAsset.getIdValue());
 
-        // 4. UploadSession 저장 (Command Port 사용)
+        // 5. UploadSession 저장 (Command Port 사용)
         saveUploadSessionPort.save(session);
 
         log.info("UploadSession completed: sessionId={}, fileAssetId={}",

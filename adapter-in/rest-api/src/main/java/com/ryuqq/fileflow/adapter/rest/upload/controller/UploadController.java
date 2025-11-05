@@ -11,6 +11,7 @@ import com.ryuqq.fileflow.adapter.rest.upload.dto.response.PartPresignedUrlApiRe
 import com.ryuqq.fileflow.adapter.rest.upload.dto.response.SingleUploadApiResponse;
 import com.ryuqq.fileflow.adapter.rest.upload.mapper.UploadApiMapper;
 import com.ryuqq.fileflow.application.upload.dto.command.CompleteMultipartCommand;
+import com.ryuqq.fileflow.application.upload.dto.command.CompleteSingleUploadCommand;
 import com.ryuqq.fileflow.application.upload.dto.command.GeneratePartUrlCommand;
 import com.ryuqq.fileflow.application.upload.dto.command.InitMultipartCommand;
 import com.ryuqq.fileflow.application.upload.dto.command.InitSingleUploadCommand;
@@ -202,7 +203,7 @@ public class UploadController {
     public ResponseEntity<ApiResponse<CompleteSingleUploadApiResponse>> completeSingleUpload(
         @PathVariable String sessionKey
     ) {
-        com.ryuqq.fileflow.application.upload.dto.command.CompleteSingleUploadCommand command =
+        CompleteSingleUploadCommand command =
             UploadApiMapper.toCompleteSingleCommand(sessionKey);
         CompleteSingleUploadResponse response = completeSingleUploadUseCase.execute(command);
         CompleteSingleUploadApiResponse apiResponse = UploadApiMapper.toApiResponse(response);

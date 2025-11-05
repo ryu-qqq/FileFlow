@@ -20,9 +20,7 @@ import com.ryuqq.fileflow.domain.download.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.exception.DownloadNotFoundException;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.upload.Checksum;
 import com.ryuqq.fileflow.domain.upload.FileSize;
-import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 
 /**
@@ -273,17 +271,11 @@ public class ExternalDownloadManager {
         session.updateFileSize(FileSize.of(fileSize));
         uploadSessionStateManager.save(session);
 
-        // FileAsset Aggregate 생성
-        FileAsset fileAsset = FileAsset.forNew(
-            session.getTenantId(),
-            null, // organizationId (optional)
-            null, // ownerUserId (optional, 다운로드는 시스템 소유)
-            session.getFileName(),
-            FileSize.of(fileSize),
-            MimeType.of("application/octet-stream"), // 기본 MIME 타입
+        // FileAsset Aggregate 생성 ⭐ Factory Method 사용
+        FileAsset fileAsset = FileAsset.fromCompletedUpload(
+            session,
             result.storageKey(),
-            Checksum.of("pending"), // 체크섬 계산 필요
-            session.getId()
+            FileSize.of(fileSize)
         );
 
         FileAsset savedFileAsset = fileCommandManager.save(fileAsset);
