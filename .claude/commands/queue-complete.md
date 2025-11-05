@@ -18,8 +18,14 @@
 ## 📝 사용법
 
 ```bash
-# 작업 완료
+# 기본 완료
 /queue-complete order
+
+# 메트릭 포함 완료 ⭐ NEW
+/queue-complete order --lines 450 --files 12
+
+# 중단 횟수 포함
+/queue-complete order --lines 450 --files 12 --interruptions 2
 ```
 
 ---
@@ -66,7 +72,12 @@ python3 .claude/scripts/queue-manager.py complete order
 ✅ 작업 완료됨: order
 
 📊 통계:
-  소요 시간: 25분
+  실제 소요 시간: 25분
+  예상 시간: 30분
+  정확도: 83.3% ⭐ NEW
+  생성 코드: 450 줄 ⭐ NEW
+  생성 파일: 12개 ⭐ NEW
+  중단 횟수: 2회 ⭐ NEW
   남은 작업: 2개
   완료된 작업: 1개
 

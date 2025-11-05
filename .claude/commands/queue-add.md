@@ -23,11 +23,14 @@
 # 작업지시서 포함
 /queue-add order order-aggregate.md
 
-# 높은 우선순위
-/queue-add payment payment-aggregate.md --priority high
+# Claude 예상 시간 포함 ⭐ NEW
+/queue-add order order-aggregate.md --estimate "30분"
+
+# 높은 우선순위 + 예상 시간
+/queue-add payment payment-aggregate.md --priority high --estimate "1시간 30분"
 
 # 일반 우선순위 (기본값)
-/queue-add product --priority normal
+/queue-add product --priority normal --estimate "45분"
 ```
 
 ---
@@ -55,7 +58,13 @@ python3 .claude/scripts/queue-manager.py add {feature} [work-order] [--priority 
       "status": "pending",
       "created_at": "2024-11-04T17:00:00Z",
       "started_at": null,
-      "completed_at": null
+      "completed_at": null,
+      "estimated_time": "30분",
+      "actual_time": null,
+      "accuracy": null,
+      "code_lines": 0,
+      "files_created": 0,
+      "interruptions": 0
     }
   ],
   "completed": [],
