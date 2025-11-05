@@ -1,8 +1,25 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.adapter.query;
 
+import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.UploadSessionJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.fixture.UploadSessionJpaEntityFixture;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository.UploadSessionJpaRepository;
+import com.ryuqq.fileflow.domain.upload.SessionKey;
+import com.ryuqq.fileflow.domain.upload.SessionStatus;
+import com.ryuqq.fileflow.domain.upload.UploadSession;
 
 /**
  * Upload Session Query Adapter 단위 테스트
