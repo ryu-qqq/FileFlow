@@ -9,7 +9,7 @@
       "detected_layers": [
         "enterprise"
       ],
-      "started_at": 1762397186.751277
+      "started_at": 1762441956.8230941
     },
     {
       "id": "task-74c902303335",
@@ -20,7 +20,154 @@
       "detected_layers": [
         "enterprise"
       ],
-      "started_at": 1762397186.751277
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-2f76c296b0b6",
+      "description": "야 현재 몇가지 고쳐야해 FileCommandManager가 save를 할때 파이프라인 아웃박스를 저장하잖아 그다음에 여기서 이벤트 파이프라인 스케쥴러를 직접 호출하기 위한 리스너",
+      "status": "in_progress",
+      "added_at": 1762417208.408484,
+      "context_score": 75,
+      "detected_layers": [
+        "application",
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-3e659bd5d8e9",
+      "description": "아 여기서 몇가지 아쉬운점 FileCommandManager에서 PipelineOutboxCreatedEvent를 생성하는데 이건 아니지 어차피 저게 생성되는 이유는 FileAss",
+      "status": "in_progress",
+      "added_at": 1762419084.997448,
+      "context_score": 75,
+      "detected_layers": [
+        "application",
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-7871c1db1428",
+      "description": "좋아 그리고 이제 아까 파일 베리언트 에 언급한 내용을 다른 워크트리에서 작업후 메인에 머지했거든 메인브랜치에 풀받아서 합쳐볼래? ",
+      "status": "in_progress",
+      "added_at": 1762420205.732451,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-628baef6b5f5",
+      "description": "좋아 그러면 이제 저 파일 베리언트가 언제 왜 필요한지 한번 분석해볼래? 이거 코드 만든사람이 무슨 의도로 파일 에셋 및 FileVariant를 만들었는지 그리고 이게 파일 에셋하",
+      "status": "in_progress",
+      "added_at": 1762420471.279872,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-6bc67dc6d75a",
+      "description": "/sc:analyze 그러면 이제 파일 에셋 및 파일 베리언트에 대해서는 우선적으로 mvp로 개발해야할건 다 갭라되어있는거지? 그렇다면 claudedocs에 있는 분석 문서처럼 E",
+      "status": "in_progress",
+      "added_at": 1762420935.8911529,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-1f9af7cb80c3",
+      "description": "우리는 무조건 현재는 사진 및 html(상품 상세 정보, 이미지 포함) 만 처리할거건데 여기서 필요한게 Ocr까지만 작업이 되면 좋을거같거든 이 상품이 어떤 정보를 갖고있는지 저 ",
+      "status": "in_progress",
+      "added_at": 1762421260.915107,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-d513d2ff8afb",
+      "description": "아 아니다 이건 그냥 투두리스트로 두자 너무 오래걸릴거같아 그러면 html을 이 파일서버에 올리면 그 html에 있는 이미지들도 우리 서버에 올리고 도메인을 변경 후에 제공해야할거",
+      "status": "in_progress",
+      "added_at": 1762422067.225526,
+      "context_score": 45,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-6196c51be62f",
+      "description": "그러면 이제 이걸 배포해야하는데  배포전에 Todo로 미구현되거나 구현체가 없는 애들이 있는지 논리적으로 이상한애들이 있는지 파악해 \\n둘쨰  전체 프로젝트에 대해 테스트 커버리지",
+      "status": "in_progress",
+      "added_at": 1762423468.804443,
+      "context_score": 60,
+      "detected_layers": [
+        "enterprise",
+        "testing"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-08aae88add4b",
+      "description": "왜 멈춰 다시해 ",
+      "status": "in_progress",
+      "added_at": 1762423702.6812139,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-79e398cd5ad0",
+      "description": "어떻게 할까 우선 뭐부터 가장 먼저 처리해야할거같아?",
+      "status": "in_progress",
+      "added_at": 1762436649.504684,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-208853d2ec53",
+      "description": "다음 작업을 진행해줘 ",
+      "status": "in_progress",
+      "added_at": 1762439536.117666,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-647855942e8c",
+      "description": "진행해줘 아니면 해야할 내용을 문서로 claudedocs 하위에 자세히  만들어줘봐 ",
+      "status": "in_progress",
+      "added_at": 1762441763.429866,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
+    },
+    {
+      "id": "task-19aeb80dcd49",
+      "description": "/Users/sangwon-ryu/fileflow/claudedocs/remaining-test-fixes-plan.md 이 문서만 참고하면 되는거야? 이걸 커서한테 보여주고 시킨",
+      "status": "in_progress",
+      "added_at": 1762441956.734779,
+      "context_score": 60,
+      "detected_layers": [
+        "testing",
+        "enterprise"
+      ],
+      "started_at": 1762441956.8230941
     }
   ]
 }

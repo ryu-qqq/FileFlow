@@ -32,7 +32,7 @@ public class QPipelineOutboxJpaEntity extends EntityPathBase<PipelineOutboxJpaEn
 
     public final NumberPath<Integer> retryCount = createNumber("retryCount", Integer.class);
 
-    public final EnumPath<com.ryuqq.fileflow.domain.download.OutboxStatus> status = createEnum("status", com.ryuqq.fileflow.domain.download.OutboxStatus.class);
+    public final EnumPath<com.ryuqq.fileflow.domain.common.OutboxStatus> status = createEnum("status", com.ryuqq.fileflow.domain.common.OutboxStatus.class);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;

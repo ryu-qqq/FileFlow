@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.download.fixture;
 
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 import com.ryuqq.fileflow.domain.download.*;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 

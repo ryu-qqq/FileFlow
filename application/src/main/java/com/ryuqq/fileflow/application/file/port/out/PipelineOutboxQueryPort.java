@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Pipeline Outbox Query Port (Out)
@@ -33,6 +34,19 @@ import java.util.List;
  * @since 1.0.0
  */
 public interface PipelineOutboxQueryPort {
+
+    /**
+     * FileId로 Outbox 조회
+     *
+     * <p><strong>사용 시기:</strong></p>
+     * <ul>
+     *   <li>PipelineOutboxEventListener - 이벤트 수신 시 Outbox 조회</li>
+     * </ul>
+     *
+     * @param fileId File ID
+     * @return PipelineOutbox (Optional)
+     */
+    Optional<PipelineOutbox> findByFileId(Long fileId);
 
     /**
      * 특정 상태의 Outbox 조회 (생성 시간 오름차순)

@@ -31,11 +31,11 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li>분리 이유: 조회와 변경의 책임 분리, 성능 최적화</li>
  * </ul>
  *
- * <p><strong>Transactional Outbox Pattern:</strong></p>
+ * <p><strong>Event-Driven Architecture:</strong></p>
  * <ul>
- *   <li>FileAsset 저장과 PipelineOutbox 저장을 동일 트랜잭션에서 수행</li>
+ *   <li>FileAsset 저장 → PipelineOutbox 저장 (Domain Event 자동 발행)</li>
+ *   <li>Event Listener가 트랜잭션 커밋 후 비동기로 Pipeline 처리 시작</li>
  *   <li>멱등성 보장: IdempotencyKey로 중복 이벤트 방지</li>
- *   <li>비동기 처리: PipelineOutboxScheduler → PipelineWorker</li>
  * </ul>
  *
  * <p><strong>트랜잭션:</strong></p>
@@ -81,14 +81,15 @@ public class FileCommandManager {
      * <ol>
      *   <li>FileAsset 저장 (DB에 INSERT, ID 자동 생성)</li>
      *   <li>Idempotency Key 생성 (fileAsset-{fileAssetId})</li>
-     *   <li>PipelineOutbox 저장 (PENDING 상태)</li>
-     *   <li>트랜잭션 커밋</li>
+     *   <li>PipelineOutbox 저장 (PENDING 상태, Domain Event 자동 등록)</li>
+     *   <li>트랜잭션 커밋 시 PipelineOutboxCreatedEvent 자동 발행</li>
      * </ol>
      *
      * <p><strong>이후 처리:</strong></p>
      * <ul>
-     *   <li>PipelineOutboxScheduler가 PENDING Outbox 조회</li>
-     *   <li>PipelineWorker가 Pipeline 처리 실행</li>
+     *   <li>트랜잭션 커밋 완료 후 PipelineOutboxEventListener가 이벤트 수신</li>
+     *   <li>EventListener가 비동기로 PipelineWorker.startPipeline() 호출</li>
+     *   <li>Worker가 Pipeline 처리 실행</li>
      * </ul>
      *
      * @param fileAsset FileAsset Domain Aggregate
@@ -110,7 +111,7 @@ public class FileCommandManager {
 
         pipelineOutboxPort.save(outbox);
 
-        log.info("PipelineOutbox created for FileAsset: fileAssetId={}, idempotencyKey={}",
+        log.info("PipelineOutbox created for FileAsset: fileAssetId={}, idempotencyKey={} (Domain Event will be published on commit)",
             savedFileAsset.getIdValue(), idempotencyKey.value());
 
         return savedFileAsset;

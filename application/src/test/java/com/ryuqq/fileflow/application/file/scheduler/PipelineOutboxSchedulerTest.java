@@ -19,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -84,10 +83,8 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(outbox))
             .willReturn(outbox);
 
-        CompletableFuture<PipelineResult> successFuture =
-            CompletableFuture.completedFuture(PipelineResultFixture.success());
         given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
-            .willReturn(successFuture);
+            .willReturn(PipelineResultFixture.success());
 
         given(outboxManager.markProcessed(outbox))
             .willReturn(outbox);
@@ -119,10 +116,8 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(outbox))
             .willReturn(outbox);
 
-        CompletableFuture<PipelineResult> failureFuture =
-            CompletableFuture.completedFuture(PipelineResultFixture.failure("Worker error"));
         given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
-            .willReturn(failureFuture);
+            .willReturn(PipelineResultFixture.failure("Worker error"));
 
         // 재시도 가능 (retryCount < maxRetryCount)
         // getRetryCount()는 0이므로 maxRetryCount(3)보다 작음
@@ -164,10 +159,8 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(outbox))
             .willReturn(outbox);
 
-        CompletableFuture<PipelineResult> failureFuture =
-            CompletableFuture.completedFuture(PipelineResultFixture.failure("Worker error"));
         given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
-            .willReturn(failureFuture);
+            .willReturn(PipelineResultFixture.failure("Worker error"));
 
         // 최대 재시도 횟수 초과
         given(properties.getMaxRetryCount()).willReturn(3);
@@ -203,10 +196,8 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(failedOutbox))
             .willReturn(failedOutbox);
 
-        CompletableFuture<PipelineResult> successFuture =
-            CompletableFuture.completedFuture(PipelineResultFixture.success());
         given(pipelineWorker.startPipeline(failedOutbox.getFileIdValue()))
-            .willReturn(successFuture);
+            .willReturn(PipelineResultFixture.success());
 
         given(outboxManager.markProcessed(failedOutbox))
             .willReturn(failedOutbox);
@@ -238,10 +229,8 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(staleOutbox))
             .willReturn(staleOutbox);
 
-        CompletableFuture<PipelineResult> successFuture =
-            CompletableFuture.completedFuture(PipelineResultFixture.success());
         given(pipelineWorker.startPipeline(staleOutbox.getFileIdValue()))
-            .willReturn(successFuture);
+            .willReturn(PipelineResultFixture.success());
 
         given(outboxManager.markProcessed(staleOutbox))
             .willReturn(staleOutbox);

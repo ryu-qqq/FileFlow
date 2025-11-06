@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Pipeline Outbox Manager
@@ -57,6 +58,22 @@ public class PipelineOutboxManager {
     ) {
         this.queryPort = queryPort;
         this.commandPort = commandPort;
+    }
+
+    /**
+     * FileId로 Outbox 조회
+     *
+     * <p><strong>사용 시기:</strong></p>
+     * <ul>
+     *   <li>PipelineOutboxEventListener - 이벤트 수신 시 Outbox 조회</li>
+     * </ul>
+     *
+     * @param fileId File ID
+     * @return PipelineOutbox (Optional)
+     */
+    @Transactional(readOnly = true)
+    public Optional<PipelineOutbox> findByFileId(Long fileId) {
+        return queryPort.findByFileId(fileId);
     }
 
     /**
