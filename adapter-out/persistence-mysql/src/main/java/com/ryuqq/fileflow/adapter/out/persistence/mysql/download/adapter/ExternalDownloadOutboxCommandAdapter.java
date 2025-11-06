@@ -5,7 +5,7 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.download.mapper.External
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.download.repository.ExternalDownloadOutboxJpaRepository;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxCommandPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadOutbox;
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

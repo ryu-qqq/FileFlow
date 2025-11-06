@@ -1,7 +1,8 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.repository;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.entity.PipelineOutboxJpaEntity;
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -45,6 +46,8 @@ public interface PipelineOutboxJpaRepository extends JpaRepository<PipelineOutbo
      *
      * <p><strong>인덱스:</strong> IDX_status_created_at (status, created_at)</p>
      *
+     * @param status 상태
+     * @param pageable 페이지 정보 (배치 크기 제한)
      * @return PENDING 상태의 Outbox 목록 (생성 시간 오름차순)
      */
     @Query("""
@@ -53,7 +56,8 @@ public interface PipelineOutboxJpaRepository extends JpaRepository<PipelineOutbo
         ORDER BY o.createdAt ASC
         """)
     List<PipelineOutboxJpaEntity> findByStatusOrderByCreatedAtAsc(
-        @Param("status") OutboxStatus status
+        @Param("status") OutboxStatus status,
+        Pageable pageable
     );
 
     /**
@@ -72,7 +76,8 @@ public interface PipelineOutboxJpaRepository extends JpaRepository<PipelineOutbo
      *
      * @param status              FAILED 상태
      * @param maxRetries          최대 재시도 횟수
-     * @param minIntervalMinutes  최소 재시도 간격 (분)
+     * @param retryAfter          이 시간 이전에 실패한 메시지만 재시도
+     * @param pageable            페이지 정보 (배치 크기 제한)
      * @return 재시도 가능한 FAILED Outbox 목록
      */
     @Query("""
@@ -85,7 +90,39 @@ public interface PipelineOutboxJpaRepository extends JpaRepository<PipelineOutbo
     List<PipelineOutboxJpaEntity> findRetryableFailedOutboxes(
         @Param("status") OutboxStatus status,
         @Param("maxRetries") Integer maxRetries,
-        @Param("retryAfter") LocalDateTime retryAfter
+        @Param("retryAfter") LocalDateTime retryAfter,
+        Pageable pageable
+    );
+
+    /**
+     * 오래된 PROCESSING 상태의 Outbox 조회 (장애 복구)
+     *
+     * <p><strong>사용 시기:</strong></p>
+     * <ul>
+     *   <li>PipelineOutboxScheduler에서 장애 복구용 메시지 조회</li>
+     * </ul>
+     *
+     * <p><strong>장애 시나리오:</strong></p>
+     * <ul>
+     *   <li>Worker 크래시로 PROCESSING 상태로 남은 메시지</li>
+     *   <li>네트워크 단절로 상태 업데이트 실패</li>
+     * </ul>
+     *
+     * @param status          PROCESSING 상태
+     * @param staleThreshold  이 시간보다 오래된 메시지
+     * @param pageable        페이지 정보 (배치 크기 제한)
+     * @return 오래된 PROCESSING 메시지 목록
+     */
+    @Query("""
+        SELECT o FROM PipelineOutboxJpaEntity o
+        WHERE o.status = :status
+          AND o.updatedAt < :staleThreshold
+        ORDER BY o.updatedAt ASC
+        """)
+    List<PipelineOutboxJpaEntity> findStaleProcessingMessages(
+        @Param("status") OutboxStatus status,
+        @Param("staleThreshold") LocalDateTime staleThreshold,
+        Pageable pageable
     );
 
     /**
