@@ -143,19 +143,28 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
     /**
      * 여러 상태 중 하나에 해당하고 생성 시간 기준으로 Upload Session 목록 조회
      *
-     * <p><strong>사용 시나리오:</strong> PENDING 또는 IN_PROGRESS 세션 중 오래된 것 조회</p>
+     * <p><strong>⚠️ Deprecated:</strong> IN 절 사용으로 인한 성능 이슈 및 무제한 결과셋 위험</p>
      *
-     * <p><strong>성능:</strong></p>
+     * <p><strong>권장 사용법:</strong></p>
+     * <ul>
+     *   <li>상태별로 개별 호출: {@link #findByStatusAndCreatedBefore} 사용</li>
+     *   <li>예: PENDING과 IN_PROGRESS를 각각 조회하여 병합</li>
+     * </ul>
+     *
+     * <p><strong>성능 이슈:</strong></p>
      * <ul>
      *   <li>⚠️ IN 절 사용 → Index 활용 제한적</li>
-     *   <li>가능하면 {@link #findByStatusAndCreatedBefore} 사용 권장</li>
+     *   <li>⚠️ 무제한 결과셋 → OOM 위험 (대량 데이터 조회 시)</li>
+     *   <li>가능하면 상태별로 개별 호출하여 사용 권장</li>
      * </ul>
      *
      * @param statuses 세션 상태 목록 (Not Null, Not Empty)
      * @param createdBefore 이 시간 이전에 생성된 세션
      * @return Upload Session 목록
      * @throws IllegalArgumentException statuses가 null 또는 빈 리스트인 경우
+     * @deprecated 상태별로 개별 호출하도록 변경 권장 (성능 및 안정성)
      */
+    @Deprecated
     @Override
     public List<UploadSession> findByStatusInAndCreatedBefore(
         List<SessionStatus> statuses,
