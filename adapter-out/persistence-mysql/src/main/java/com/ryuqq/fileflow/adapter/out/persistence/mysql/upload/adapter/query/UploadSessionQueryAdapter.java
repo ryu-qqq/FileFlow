@@ -114,26 +114,41 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * <p><strong>성능:</strong></p>
      * <ul>
      *   <li>복합 Index 활용: idx_status_created_at (status, created_at)</li>
-     *   <li>⚠️ 대량 데이터 반환 가능 → Batch 처리 시 LIMIT 사용 권장</li>
+     *   <li>LIMIT 절 사용으로 메모리 사용량 제한 (OOM 방지)</li>
      * </ul>
      *
      * @param status 세션 상태
      * @param createdBefore 이 시간 이전에 생성된 세션
+     * @param limit 최대 반환 개수 (0 이하이면 제한 없음, OOM 위험)
      * @return Upload Session 목록
      */
     @Override
     public List<UploadSession> findByStatusAndCreatedBefore(
         SessionStatus status,
-        LocalDateTime createdBefore
+        LocalDateTime createdBefore,
+        int limit
     ) {
-        List<UploadSessionJpaEntity> entities = queryFactory
+        if (status == null) {
+            throw new IllegalArgumentException("status must not be null");
+        }
+        if (createdBefore == null) {
+            throw new IllegalArgumentException("createdBefore must not be null");
+        }
+
+        var query = queryFactory
             .selectFrom(uploadSessionJpaEntity)
             .where(
                 uploadSessionJpaEntity.status.eq(status),
                 uploadSessionJpaEntity.createdAt.before(createdBefore)
             )
-            .orderBy(uploadSessionJpaEntity.createdAt.asc())
-            .fetch();
+            .orderBy(uploadSessionJpaEntity.createdAt.asc());
+
+        // LIMIT 적용 (0 이하이면 제한 없음)
+        if (limit > 0) {
+            query = query.limit(limit);
+        }
+
+        List<UploadSessionJpaEntity> entities = query.fetch();
 
         return entities.stream()
             .map(UploadSessionEntityMapper::toDomain)

@@ -74,6 +74,7 @@ public class CleanupExpiredSessionsJob {
     private final UploadSessionStateManager uploadSessionStateManager;
     private final int pendingExpirationMinutes;
     private final int inProgressExpirationHours;
+    private final int batchSize;
 
     /**
      * 생성자
@@ -82,17 +83,20 @@ public class CleanupExpiredSessionsJob {
      * @param uploadSessionStateManager UploadSession State Manager (트랜잭션 관리)
      * @param pendingExpirationMinutes PENDING 세션 만료 시간 (분)
      * @param inProgressExpirationHours IN_PROGRESS 세션 만료 시간 (시간)
+     * @param batchSize 배치 크기 (한 번에 처리할 최대 세션 개수, OOM 방지)
      */
     public CleanupExpiredSessionsJob(
         LoadUploadSessionPort loadUploadSessionPort,
         UploadSessionStateManager uploadSessionStateManager,
         @Value("${batch.cleanup.pending-expiration-minutes:30}") int pendingExpirationMinutes,
-        @Value("${batch.cleanup.in-progress-expiration-hours:24}") int inProgressExpirationHours
+        @Value("${batch.cleanup.in-progress-expiration-hours:24}") int inProgressExpirationHours,
+        @Value("${batch.cleanup.batch-size:1000}") int batchSize
     ) {
         this.loadUploadSessionPort = loadUploadSessionPort;
         this.uploadSessionStateManager = uploadSessionStateManager;
         this.pendingExpirationMinutes = pendingExpirationMinutes;
         this.inProgressExpirationHours = inProgressExpirationHours;
+        this.batchSize = batchSize;
     }
 
     /**
@@ -142,10 +146,11 @@ public class CleanupExpiredSessionsJob {
      */
     @Transactional(readOnly = true)
     public int cleanupPendingSessions(LocalDateTime threshold) {
-        // 1. 만료된 PENDING 세션 조회
+        // 1. 만료된 PENDING 세션 조회 (LIMIT 적용으로 OOM 방지)
         List<UploadSession> expiredSessions = loadUploadSessionPort.findByStatusAndCreatedBefore(
             SessionStatus.PENDING,
-            threshold
+            threshold,
+            batchSize
         );
 
         log.debug("Found {} expired PENDING sessions before {}", expiredSessions.size(), threshold);
@@ -174,10 +179,11 @@ public class CleanupExpiredSessionsJob {
      */
     @Transactional(readOnly = true)
     public int cleanupInProgressSessions(LocalDateTime threshold) {
-        // 1. 만료된 IN_PROGRESS 세션 조회
+        // 1. 만료된 IN_PROGRESS 세션 조회 (LIMIT 적용으로 OOM 방지)
         List<UploadSession> expiredSessions = loadUploadSessionPort.findByStatusAndCreatedBefore(
             SessionStatus.IN_PROGRESS,
-            threshold
+            threshold,
+            batchSize
         );
 
         log.debug("Found {} expired IN_PROGRESS sessions before {}", expiredSessions.size(), threshold);

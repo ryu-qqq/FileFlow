@@ -75,7 +75,7 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
         this.s3Bucket = s3Bucket;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public CompleteMultipartResponse execute(CompleteMultipartCommand command) {
         // 1. 완료 가능 검증 (트랜잭션 내)
