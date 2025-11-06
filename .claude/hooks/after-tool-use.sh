@@ -209,3 +209,24 @@ EOF
 EOF
     fi
 fi
+
+# =====================================================
+# Phase 3: Queue 자동 완료 (Write/Edit 도구 사용 시)
+# =====================================================
+
+QUEUE_MANAGER=".claude/queue/queue-manager.sh"
+
+# Write/Edit 도구 감지
+if echo "$TOOL_DATA" | jq -e '.tool_name' &>/dev/null; then
+    TOOL_NAME=$(echo "$TOOL_DATA" | jq -r '.tool_name // empty')
+
+    if [[ "$TOOL_NAME" =~ ^(Write|Edit|MultiEdit)$ && -f "$QUEUE_MANAGER" ]]; then
+        # Queue 작업 완료
+        COMPLETED_TASK=$(bash "$QUEUE_MANAGER" complete 2>&1)
+
+        if [[ "$COMPLETED_TASK" =~ "Task completed" ]]; then
+            TASK_ID=$(echo "$COMPLETED_TASK" | grep -oE 'task-[a-f0-9]+')
+            log_event "queue_complete" "{\"task_id\":\"$TASK_ID\",\"file\":\"$FILE_PATH\",\"layer\":\"$LAYER\"}"
+        fi
+    fi
+fi

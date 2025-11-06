@@ -58,7 +58,6 @@ public class CheckUploadRateLimitService implements CheckUploadRateLimitUseCase 
      *
      * @param loadUploadSessionPort Load UploadSession Port (Query)
      * @param maxConcurrentPerTenant Tenant당 최대 동시 업로드 수 (설정)
-     * @throws IllegalArgumentException maxConcurrentPerTenant가 0 이하인 경우
      */
     public CheckUploadRateLimitService(
         LoadUploadSessionPort loadUploadSessionPort,
@@ -66,7 +65,7 @@ public class CheckUploadRateLimitService implements CheckUploadRateLimitUseCase 
     ) {
         if (maxConcurrentPerTenant <= 0) {
             throw new IllegalArgumentException(
-                "maxConcurrentPerTenant must be positive, but got: " + maxConcurrentPerTenant
+                "maxConcurrentPerTenant는 0보다 커야 합니다: " + maxConcurrentPerTenant
             );
         }
         this.loadUploadSessionPort = loadUploadSessionPort;
@@ -90,13 +89,9 @@ public class CheckUploadRateLimitService implements CheckUploadRateLimitUseCase 
     @Transactional(readOnly = true)
     public RateLimitResponse execute(CheckRateLimitCommand command) {
         if (command == null) {
-            throw new IllegalArgumentException("CheckRateLimitCommand cannot be null");
+            throw new IllegalArgumentException("CheckRateLimitCommand는 null일 수 없습니다.");
         }
-
         Long tenantId = command.tenantId();
-        if (tenantId == null) {
-            throw new IllegalArgumentException("TenantId cannot be null");
-        }
 
         // 1. Tenant의 진행 중인 업로드 세션 개수 조회 (IN_PROGRESS 상태)
         // ⭐ Index 활용: idx_tenant_status (tenant_id, status)
@@ -109,17 +104,11 @@ public class CheckUploadRateLimitService implements CheckUploadRateLimitUseCase 
         boolean allowed = currentCount < maxConcurrentPerTenant;
         long remaining = Math.max(0, maxConcurrentPerTenant - currentCount);
 
-        // 3. 로깅 (Rate Limit 초과 시 INFO 레벨)
-        if (allowed) {
-            log.debug("Rate limit check for tenantId={}: current={}, max={}, remaining={}",
-                tenantId, currentCount, maxConcurrentPerTenant, remaining);
-        } else {
-            log.info("Rate limit EXCEEDED for tenantId={}: current={}, max={}",
-                tenantId, currentCount, maxConcurrentPerTenant);
-        }
+        log.debug("Rate limit check for tenantId={}: current={}, max={}, remaining={}, allowed={}",
+            tenantId, currentCount, maxConcurrentPerTenant, remaining, allowed);
 
-        // 4. 응답 생성
-        return new RateLimitResponse(
+        // 3. 응답 생성
+        return RateLimitResponse.of(
             tenantId,
             currentCount,
             maxConcurrentPerTenant,

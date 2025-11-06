@@ -1,0 +1,26 @@
+{
+  "tasks": [
+    {
+      "id": "task-0ff2f7329e20",
+      "description": "/cc:load ",
+      "status": "in_progress",
+      "added_at": 1762396978.117103,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762397186.751277
+    },
+    {
+      "id": "task-74c902303335",
+      "description": "/sc:analyze FileVariant 바운더리 컨텍스트 분석 해줘 claudedocs/PIPELINE_COMPREHENSIVE_ANALYSIS.md 처럼 우리가 정의한 레이어",
+      "status": "in_progress",
+      "added_at": 1762397186.428948,
+      "context_score": 30,
+      "detected_layers": [
+        "enterprise"
+      ],
+      "started_at": 1762397186.751277
+    }
+  ]
+}

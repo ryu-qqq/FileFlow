@@ -137,6 +137,6 @@ public class ExternalDownloadFacade {
     @Transactional(readOnly = true)
     public ExternalDownload getByUploadSessionId(Long uploadSessionId) {
         return queryPort.findByUploadSessionId(uploadSessionId)
-            .orElseThrow(() -> new DownloadNotFoundException());
+            .orElseThrow(DownloadNotFoundException::new);
     }
 }

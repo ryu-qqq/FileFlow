@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.application.download.manager;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxCommandPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxQueryPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadOutbox;
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;

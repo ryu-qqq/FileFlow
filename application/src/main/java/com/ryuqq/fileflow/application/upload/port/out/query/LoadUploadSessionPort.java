@@ -102,35 +102,34 @@ public interface LoadUploadSessionPort {
      *
      * <p><strong>성능 고려사항:</strong></p>
      * <ul>
+     *   <li>⚠️ 대량 데이터 반환 가능 → <strong>Pagination 권장</strong></li>
      *   <li>복합 Index 필수: {@code (status, created_at)}</li>
-     *   <li>⚠️ LIMIT 파라미터로 메모리 사용량 제한 (OOM 방지)</li>
-     *   <li>Batch 처리 시 적절한 배치 크기 설정 권장 (예: 1000건)</li>
+     *   <li>Batch 처리 시 {@code LIMIT} 절 사용 권장 (예: 1000건씩)</li>
      * </ul>
      *
      * <p><strong>주의:</strong></p>
      * <ul>
-     *   <li>limit이 0 이하이면 모든 결과 반환 (OOM 위험)</li>
-     *   <li>대량 데이터 처리 시 반복 호출로 페이징 처리 권장</li>
+     *   <li>결과가 많을 경우 메모리 부족 위험</li>
+     *   <li>Adapter 구현체에서 적절한 Limit 설정 필요</li>
+     *   <li>향후 {@code Pageable} 파라미터 추가 고려</li>
      * </ul>
      *
      * <p><strong>예시:</strong></p>
      * <pre>{@code
-     * // 30분 이상 PENDING 상태인 세션 조회 (최대 1000건)
+     * // 30분 이상 PENDING 상태인 세션 조회
      * LocalDateTime threshold = LocalDateTime.now().minusMinutes(30);
      * List<UploadSession> expiredSessions =
-     *     loadPort.findByStatusAndCreatedBefore(SessionStatus.PENDING, threshold, 1000);
+     *     loadPort.findByStatusAndCreatedBefore(SessionStatus.PENDING, threshold);
      * }</pre>
      *
      * @param status 세션 상태 (Not Null)
      * @param createdBefore 이 시간 이전에 생성된 세션 (Not Null)
-     * @param limit 최대 반환 개수 (0 이하이면 제한 없음, OOM 위험)
      * @return Upload Session 목록 (결과 없으면 빈 List, null 아님)
      * @throws IllegalArgumentException status 또는 createdBefore가 null인 경우
      */
     List<UploadSession> findByStatusAndCreatedBefore(
         SessionStatus status,
-        LocalDateTime createdBefore,
-        int limit
+        LocalDateTime createdBefore
     );
 
     /**

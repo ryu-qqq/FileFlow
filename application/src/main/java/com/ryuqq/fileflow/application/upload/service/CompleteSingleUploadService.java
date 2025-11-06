@@ -15,7 +15,6 @@ import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
 import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionPort;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.SessionStatus;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
@@ -212,12 +211,7 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
     @Transactional
     public Long completeUpload(UploadSession session, S3HeadObjectResponse s3HeadResult) {
         // 1. Application DTO → Domain VO 변환
-        S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-            s3HeadResult.contentLength(),
-            s3HeadResult.etag(),
-            s3HeadResult.contentType(),
-            session.getStorageKey().value()  // storageKey는 session에서 가져옴
-        );
+        com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata s3Metadata = s3HeadResult.toDomain();
 
         // 2. FileAsset Aggregate 생성 (Domain VO 사용)
         FileAsset fileAsset = FileAsset.fromS3Upload(session, s3Metadata);

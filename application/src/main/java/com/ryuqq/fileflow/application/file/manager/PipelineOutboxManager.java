@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.application.file.manager;
 
 import com.ryuqq.fileflow.application.file.port.out.PipelineOutboxPort;
 import com.ryuqq.fileflow.application.file.port.out.PipelineOutboxQueryPort;
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;

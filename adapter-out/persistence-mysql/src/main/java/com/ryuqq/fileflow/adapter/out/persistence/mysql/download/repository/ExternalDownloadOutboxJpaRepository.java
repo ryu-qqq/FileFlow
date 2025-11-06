@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.download.repository;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.download.entity.ExternalDownloadOutboxJpaEntity;
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

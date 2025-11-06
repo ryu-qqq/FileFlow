@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.application.upload.batch;
 
 import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
+import com.ryuqq.fileflow.domain.upload.FailureReason;
 import com.ryuqq.fileflow.domain.upload.SessionStatus;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import org.slf4j.Logger;
@@ -20,19 +21,10 @@ import java.util.List;
  *
  * <p>만료된 업로드 세션을 자동 정리하는 Batch Job입니다.</p>
  *
- * <p><strong>⚠️ 주의: UploadSessionExpirationListener와의 관계</strong></p>
- * <ul>
- *   <li>✅ <strong>UploadSessionExpirationListener</strong>: Redis TTL 만료 이벤트 실시간 처리 → EXPIRED 상태</li>
- *   <li>✅ <strong>CleanupExpiredSessionsJob</strong>: 시간 기반 만료 처리 Fallback → EXPIRED 상태 (동일 상태)</li>
- *   <li>⚠️ 대부분의 경우 UploadSessionExpirationListener가 처리하므로 이 Job은 Fallback 역할</li>
- *   <li>⚠️ Redis 다운, Keyspace Notification 미설정 등의 경우에만 필요</li>
- *   <li>✅ <strong>상태 일관성 보장</strong>: 두 경로 모두 EXPIRED 상태 사용</li>
- * </ul>
- *
  * <p><strong>책임:</strong></p>
  * <ul>
- *   <li>오래된 PENDING 또는 IN_PROGRESS 세션 조회 (DB 기반)</li>
- *   <li>세션 상태를 EXPIRED로 전환 (UploadSession.expire() 사용)</li>
+ *   <li>오래된 PENDING 또는 IN_PROGRESS 세션 조회</li>
+ *   <li>세션 상태를 FAILED로 전환</li>
  *   <li>리소스 정리 (S3 미완료 업로드 제거 등)</li>
  * </ul>
  *
@@ -52,14 +44,7 @@ import java.util.List;
  * <ul>
  *   <li>✅ DB Index 활용: idx_status_created_at (status, created_at)</li>
  *   <li>✅ Batch 크기 제한: 최대 1000건씩 처리</li>
- *   <li>✅ 트랜잭션 분리: 조회(readOnly) + 업데이트(write via UploadSessionStateManager)</li>
- * </ul>
- *
- * <p><strong>트랜잭션 처리:</strong></p>
- * <ul>
- *   <li>✅ UploadSessionStateManager.save()가 @Transactional로 트랜잭션 보장</li>
- *   <li>✅ expireSession() 메서드에 @Transactional 추가: 각 세션별 독립 트랜잭션</li>
- *   <li>✅ 하나 실패해도 다른 세션 처리 계속</li>
+ *   <li>✅ 트랜잭션 분리: 조회(readOnly) + 업데이트(write)</li>
  * </ul>
  *
  * @author Sangwon Ryu
@@ -74,29 +59,25 @@ public class CleanupExpiredSessionsJob {
     private final UploadSessionStateManager uploadSessionStateManager;
     private final int pendingExpirationMinutes;
     private final int inProgressExpirationHours;
-    private final int batchSize;
 
     /**
      * 생성자
      *
      * @param loadUploadSessionPort Load UploadSession Port (Query)
-     * @param uploadSessionStateManager UploadSession State Manager (트랜잭션 관리)
+     * @param uploadSessionStateManager UploadSession State Manager
      * @param pendingExpirationMinutes PENDING 세션 만료 시간 (분)
      * @param inProgressExpirationHours IN_PROGRESS 세션 만료 시간 (시간)
-     * @param batchSize 배치 크기 (한 번에 처리할 최대 세션 개수, OOM 방지)
      */
     public CleanupExpiredSessionsJob(
         LoadUploadSessionPort loadUploadSessionPort,
         UploadSessionStateManager uploadSessionStateManager,
         @Value("${batch.cleanup.pending-expiration-minutes:30}") int pendingExpirationMinutes,
-        @Value("${batch.cleanup.in-progress-expiration-hours:24}") int inProgressExpirationHours,
-        @Value("${batch.cleanup.batch-size:1000}") int batchSize
+        @Value("${batch.cleanup.in-progress-expiration-hours:24}") int inProgressExpirationHours
     ) {
         this.loadUploadSessionPort = loadUploadSessionPort;
         this.uploadSessionStateManager = uploadSessionStateManager;
         this.pendingExpirationMinutes = pendingExpirationMinutes;
         this.inProgressExpirationHours = inProgressExpirationHours;
-        this.batchSize = batchSize;
     }
 
     /**
@@ -144,22 +125,21 @@ public class CleanupExpiredSessionsJob {
      * @param threshold 이 시간 이전에 생성된 세션을 만료 처리
      * @return 정리된 세션 개수
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public int cleanupPendingSessions(LocalDateTime threshold) {
-        // 1. 만료된 PENDING 세션 조회 (LIMIT 적용으로 OOM 방지)
+        // 1. 만료된 PENDING 세션 조회
         List<UploadSession> expiredSessions = loadUploadSessionPort.findByStatusAndCreatedBefore(
             SessionStatus.PENDING,
-            threshold,
-            batchSize
+            threshold
         );
 
         log.debug("Found {} expired PENDING sessions before {}", expiredSessions.size(), threshold);
 
-        // 2. 각 세션을 EXPIRED 상태로 전환 (UploadSessionStateManager가 트랜잭션 처리)
+        // 2. 각 세션을 FAILED 상태로 전환
         int count = 0;
         for (UploadSession session : expiredSessions) {
             try {
-                expireSession(session, "Session expired (PENDING > " + pendingExpirationMinutes + " minutes)");
+                failExpiredSession(session, "Session expired (PENDING > " + pendingExpirationMinutes + " minutes)");
                 count++;
             } catch (Exception e) {
                 log.error("Failed to cleanup session: sessionId={}", session.getIdValue(), e);
@@ -177,22 +157,21 @@ public class CleanupExpiredSessionsJob {
      * @param threshold 이 시간 이전에 생성된 세션을 만료 처리
      * @return 정리된 세션 개수
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public int cleanupInProgressSessions(LocalDateTime threshold) {
-        // 1. 만료된 IN_PROGRESS 세션 조회 (LIMIT 적용으로 OOM 방지)
+        // 1. 만료된 IN_PROGRESS 세션 조회
         List<UploadSession> expiredSessions = loadUploadSessionPort.findByStatusAndCreatedBefore(
             SessionStatus.IN_PROGRESS,
-            threshold,
-            batchSize
+            threshold
         );
 
         log.debug("Found {} expired IN_PROGRESS sessions before {}", expiredSessions.size(), threshold);
 
-        // 2. 각 세션을 EXPIRED 상태로 전환 (UploadSessionStateManager가 트랜잭션 처리)
+        // 2. 각 세션을 FAILED 상태로 전환
         int count = 0;
         for (UploadSession session : expiredSessions) {
             try {
-                expireSession(session, "Session expired (IN_PROGRESS > " + inProgressExpirationHours + " hours)");
+                failExpiredSession(session, "Session expired (IN_PROGRESS > " + inProgressExpirationHours + " hours)");
                 count++;
             } catch (Exception e) {
                 log.error("Failed to cleanup session: sessionId={}", session.getIdValue(), e);
@@ -203,33 +182,25 @@ public class CleanupExpiredSessionsJob {
     }
 
     /**
-     * 만료된 세션을 EXPIRED 상태로 전환
+     * 만료된 세션을 FAILED 상태로 전환
      *
-     * <p><strong>트랜잭션 처리:</strong></p>
-     * <ul>
-     *   <li>✅ UploadSessionStateManager.save()가 @Transactional로 트랜잭션 보장</li>
-     *   <li>✅ 각 세션별 독립 트랜잭션: 하나 실패해도 다른 세션 처리 계속</li>
-     *   <li>✅ Redis TTL 만료와 동일한 상태(EXPIRED) 사용: 일관성 보장</li>
-     * </ul>
-     *
-     * <p><strong>상태 일관성:</strong></p>
-     * <ul>
-     *   <li>✅ UploadSessionExpirationListener: Redis TTL 만료 → EXPIRED</li>
-     *   <li>✅ CleanupExpiredSessionsJob: 시간 기반 만료 → EXPIRED (동일 상태)</li>
-     * </ul>
+     * <p>별도 트랜잭션에서 실행 (각 세션별 독립 트랜잭션)</p>
      *
      * @param session UploadSession
-     * @param reason 만료 사유 (로깅용)
+     * @param reason 실패 사유
      */
     @Transactional
-    public void expireSession(UploadSession session, String reason) {
-        // Domain 메서드 호출: expire() → EXPIRED 상태로 변경
-        session.expire();
+    public void failExpiredSession(UploadSession session, String reason) {
+        // String → FailureReason VO 변환
+        FailureReason failureReason = FailureReason.of(reason);
 
-        // StateManager를 통한 저장 (트랜잭션 보장)
+        // Domain 메서드 호출 (Tell, Don't Ask)
+        session.fail(failureReason);
+
+        // StateManager를 통한 저장
         uploadSessionStateManager.save(session);
 
-        log.info("Session expired and marked as EXPIRED: sessionId={}, reason={}",
+        log.info("Session expired and marked as FAILED: sessionId={}, reason={}",
             session.getIdValue(), reason);
     }
 
@@ -243,7 +214,7 @@ public class CleanupExpiredSessionsJob {
      * @param threshold 이 시간 이전에 생성된 세션을 만료 처리
      * @return 정리된 세션 개수
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public int cleanupMultipleStatuses(LocalDateTime threshold) {
         List<SessionStatus> targetStatuses = Arrays.asList(
             SessionStatus.PENDING,
@@ -261,7 +232,7 @@ public class CleanupExpiredSessionsJob {
         for (UploadSession session : expiredSessions) {
             try {
                 String reason = String.format("Session expired (%s state)", session.getStatus());
-                expireSession(session, reason);
+                failExpiredSession(session, reason);
                 count++;
             } catch (Exception e) {
                 log.error("Failed to cleanup session: sessionId={}", session.getIdValue(), e);
