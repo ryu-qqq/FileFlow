@@ -17,6 +17,7 @@ import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionP
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadPort;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
+import com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
@@ -74,7 +75,7 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
         this.s3Bucket = s3Bucket;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public CompleteMultipartResponse execute(CompleteMultipartCommand command) {
         // 1. 완료 가능 검증 (트랜잭션 내)
@@ -214,27 +215,25 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
         // 1. MultipartUpload 완료 (StateManager 사용)
         multipartUploadStateManager.complete(multipart);
 
-        // 2. FileAsset Aggregate 생성 (S3 검증 결과 활용)
-        FileAsset fileAsset = FileAsset.forNew(
-            session.getTenantId(),
-            null, // organizationId는 나중에 추가 가능
-            null, // ownerUserId는 나중에 추가 가능
-            session.getFileName(),
-            session.getFileSize(),
-            null, // mimeType은 나중에 추가 가능 (또는 s3HeadResult.contentType() 사용)
-            session.getStorageKey(),
-            null, // checksum은 나중에 추가 가능 (또는 s3HeadResult.etag() 사용)
-            session.getId()
+        // 2. Application DTO → Domain VO 변환
+        S3UploadMetadata s3Metadata = S3UploadMetadata.of(
+            s3HeadResult.contentLength(),
+            s3HeadResult.etag(),
+            s3HeadResult.contentType(),
+            session.getStorageKey().value()  // storageKey는 session에서 가져옴
         );
+
+        // 3. FileAsset Aggregate 생성 (Domain VO 사용)
+        FileAsset fileAsset = FileAsset.fromS3Upload(session, s3Metadata);
         FileAsset savedFileAsset = fileCommandManager.save(fileAsset);
 
         log.debug("FileAsset created from multipart upload: fileAssetId={}, sessionId={}, verifiedSize={} bytes",
             savedFileAsset.getIdValue(), session.getIdValue(), s3HeadResult.contentLength());
 
-        // 3. UploadSession 완료 (FileAsset ID 전달)
+        // 4. UploadSession 완료 (FileAsset ID 전달)
         session.complete(savedFileAsset.getIdValue());
 
-        // 4. 저장 (Command Port 사용)
+        // 5. 저장 (Command Port 사용)
         saveUploadSessionPort.save(session);
 
         log.info("Multipart upload completed: sessionId={}, fileAssetId={}, etag={}",

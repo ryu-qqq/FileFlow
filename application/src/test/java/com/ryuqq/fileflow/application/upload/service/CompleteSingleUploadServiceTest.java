@@ -26,8 +26,10 @@ import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionP
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
 import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.fixture.FileAssetFixture;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.SessionStatus;
+import com.ryuqq.fileflow.domain.upload.StorageKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.UploadType;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
@@ -92,37 +94,9 @@ class CompleteSingleUploadServiceTest {
                 "text/plain"
             );
 
-            FileAsset fileAsset = FileAsset.forNew(
-                session.getTenantId(),
-                null,
-                null,
-                session.getFileName(),
-                session.getFileSize(),
-                null,
-                session.getStorageKey(),
-                null,
-                session.getId()
-            );
-
-            FileAsset savedFileAsset = FileAsset.reconstitute(
-                FileId.of(100L),
-                fileAsset.getTenantId(),
-                fileAsset.getOrganizationId(),
-                fileAsset.getOwnerUserId(),
-                fileAsset.getFileName(),
-                fileAsset.getFileSize(),
-                fileAsset.getMimeType(),
-                fileAsset.getStorageKey(),
-                fileAsset.getChecksum(),
-                fileAsset.getUploadSessionId(),
-                fileAsset.getStatus(),
-                fileAsset.getVisibility(),
-                fileAsset.getUploadedAt(),
-                fileAsset.getProcessedAt(),
-                fileAsset.getExpiresAt(),
-                fileAsset.getRetentionDays(),
-                fileAsset.getDeletedAt()
-            );
+            // FileAsset은 Application Layer에서 S3UploadMetadata로 변환 후 생성되므로
+            // 테스트에서는 FileAssetFixture를 사용
+            FileAsset savedFileAsset = FileAssetFixture.createWithId(100L);
 
             when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));

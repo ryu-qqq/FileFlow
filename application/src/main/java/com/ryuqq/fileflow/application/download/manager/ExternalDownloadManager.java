@@ -12,6 +12,7 @@ import com.ryuqq.fileflow.application.download.dto.response.DownloadResult;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadCommandPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.application.file.manager.FileCommandManager;
+import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
 import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.download.ErrorCode;
@@ -20,9 +21,7 @@ import com.ryuqq.fileflow.domain.download.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.exception.DownloadNotFoundException;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.upload.Checksum;
 import com.ryuqq.fileflow.domain.upload.FileSize;
-import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 
 /**
@@ -254,9 +253,15 @@ public class ExternalDownloadManager {
      * <p>⭐ 트랜잭션 내에서 실행</p>
      * <p>Worker에서 호출 시 @Transactional이 정상 작동 (별도 Bean)</p>
      *
+     * <p><strong>Checksum/MimeType 처리:</strong></p>
+     * <ul>
+     *   <li>S3 메타데이터에서 ETag (Checksum)와 ContentType (MimeType) 사용</li>
+     *   <li>FileAsset.fromS3Upload()를 사용하여 실제 메타데이터로 FileAsset 생성</li>
+     * </ul>
+     *
      * @param download ExternalDownload
      * @param session UploadSession
-     * @param result 다운로드 결과
+     * @param result 다운로드 결과 (S3 메타데이터 포함)
      */
     @Transactional
     public void markCompleted(
@@ -264,6 +269,15 @@ public class ExternalDownloadManager {
         UploadSession session,
         DownloadResult result
     ) {
+        // S3 메타데이터를 사용하여 FileAsset 생성 ⭐ fromS3Upload 사용 (Checksum, MimeType 포함)
+        // ⚠️ completeDownload 전에 검증하여 COMPLETED 상태 전환 후 실패 방지
+        S3HeadObjectResponse s3Metadata = result.s3Metadata();
+        if (s3Metadata == null) {
+            log.warn("S3 metadata is null: downloadId={}, storageKey={}", download.getIdValue(), result.storageKey().value());
+            failWithRetry(download, ErrorCode.of("S3_METADATA_MISSING"), "S3 메타데이터 수집 실패");
+            return;
+        }
+
         long fileSize = result.uploadResult().size();
 
         // ExternalDownload 완료
@@ -273,27 +287,23 @@ public class ExternalDownloadManager {
         session.updateFileSize(FileSize.of(fileSize));
         uploadSessionStateManager.save(session);
 
-        // FileAsset Aggregate 생성
-        FileAsset fileAsset = FileAsset.forNew(
-            session.getTenantId(),
-            null, // organizationId (optional)
-            null, // ownerUserId (optional, 다운로드는 시스템 소유)
-            session.getFileName(),
-            FileSize.of(fileSize),
-            MimeType.of("application/octet-stream"), // 기본 MIME 타입
-            result.storageKey(),
-            Checksum.of("pending"), // 체크섬 계산 필요
-            session.getId()
-        );
+        com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata s3UploadMetadata =
+            com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata.of(
+                s3Metadata.contentLength(),
+                s3Metadata.etag(),
+                s3Metadata.contentType(),
+                result.storageKey().value()
+            );
 
+        FileAsset fileAsset = FileAsset.fromS3Upload(session, s3UploadMetadata);
         FileAsset savedFileAsset = fileCommandManager.save(fileAsset);
 
         // UploadSession 완료 (FileAsset ID 전달)
         session.complete(savedFileAsset.getIdValue());
         uploadSessionStateManager.save(session);
 
-        log.info("Download and file creation completed: downloadId={}, fileAssetId={}",
-            download.getIdValue(), savedFileAsset.getIdValue());
+        log.info("Download and file creation completed: downloadId={}, fileAssetId={}, checksum={}, mimeType={}",
+            download.getIdValue(), savedFileAsset.getIdValue(), s3Metadata.etag(), s3Metadata.contentType());
     }
 
 }

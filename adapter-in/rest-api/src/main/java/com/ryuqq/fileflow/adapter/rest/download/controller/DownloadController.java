@@ -53,14 +53,12 @@ public class DownloadController {
 
     private final StartExternalDownloadUseCase startExternalDownloadUseCase;
     private final GetDownloadStatusUseCase getDownloadStatusUseCase;
-    // DownloadApiMapper는 유틸리티 클래스 (static 메서드)
 
     /**
      * 생성자
      *
      * @param startExternalDownloadUseCase 외부 다운로드 시작 UseCase
      * @param getDownloadStatusUseCase 다운로드 상태 조회 UseCase
-     * @param mapper API Mapper
      */
     public DownloadController(
         StartExternalDownloadUseCase startExternalDownloadUseCase,
