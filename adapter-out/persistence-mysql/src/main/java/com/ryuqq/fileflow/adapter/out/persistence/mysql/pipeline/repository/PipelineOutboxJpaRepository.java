@@ -146,16 +146,16 @@ public interface PipelineOutboxJpaRepository extends JpaRepository<PipelineOutbo
      *
      * <p><strong>사용 시기:</strong></p>
      * <ul>
+     *   <li>PipelineOutboxEventListener - 이벤트 수신 시 Outbox 조회</li>
      *   <li>특정 FileAsset의 Pipeline 처리 상태 확인</li>
-     *   <li>디버깅 및 모니터링</li>
      * </ul>
      *
      * <p><strong>인덱스:</strong> IDX_file_id</p>
      *
      * @param fileId FileAsset ID
-     * @return Outbox 목록 (일반적으로 1개)
+     * @return Outbox (존재하지 않으면 empty)
      */
-    List<PipelineOutboxJpaEntity> findByFileId(Long fileId);
+    Optional<PipelineOutboxJpaEntity> findByFileId(Long fileId);
 
     /**
      * 특정 상태의 Outbox 개수 조회

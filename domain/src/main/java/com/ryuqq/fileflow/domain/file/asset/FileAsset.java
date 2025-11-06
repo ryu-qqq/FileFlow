@@ -443,13 +443,18 @@ public class FileAsset {
             throw new IllegalArgumentException("S3UploadMetadata는 필수입니다");
         }
 
+        // contentType이 null이면 기본 MIME 타입 사용
+        MimeType mimeType = (s3Metadata.contentType() != null)
+            ? MimeType.of(s3Metadata.contentType())
+            : MimeType.defaultType();
+
         return FileAsset.forNew(
             session.getTenantId(),
             null,  // organizationId
             null,  // ownerUserId
             session.getFileName(),
             FileSize.of(s3Metadata.contentLength()),
-            MimeType.of(s3Metadata.contentType()),
+            mimeType,
             StorageKey.of(s3Metadata.storageKey()),
             Checksum.of(s3Metadata.etag()),
             session.getId()

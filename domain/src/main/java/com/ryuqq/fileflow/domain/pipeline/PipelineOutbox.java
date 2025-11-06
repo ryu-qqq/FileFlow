@@ -6,6 +6,9 @@ import com.ryuqq.fileflow.domain.file.asset.FileId;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -22,6 +25,7 @@ import java.util.Objects;
  *   <li>✅ Tell, Don't Ask 패턴 적용</li>
  *   <li>✅ Value Object ID 래핑 (PipelineOutboxId, IdempotencyKey 등)</li>
  *   <li>✅ Aggregate 경계 내에서 일관성 보장</li>
+ *   <li>✅ Domain Event 발행 (수동 이벤트 관리)</li>
  * </ul>
  *
  * <h3>Outbox 패턴</h3>
@@ -53,11 +57,21 @@ public class PipelineOutbox {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // 수동 이벤트 관리
+    private final List<Object> domainEvents = new ArrayList<>();
+
     /**
-     * 신규 Outbox를 생성합니다 (Static Factory Method).
+     * 신규 Outbox를 생성하고 Domain Event를 등록합니다 (Static Factory Method).
      *
      * <p><strong>ID 없이 신규 도메인 객체를 생성</strong>합니다 (DB 저장 전 상태).</p>
      * <p>ID = null로 초기화됩니다.</p>
+     *
+     * <p><strong>Domain Event 발행:</strong></p>
+     * <ul>
+     *   <li>생성 시 PipelineOutboxCreatedEvent 등록</li>
+     *   <li>Event는 Repository.save() 호출 시 트랜잭션 커밋과 함께 발행됨</li>
+     *   <li>Spring Data의 AbstractAggregateRoot 메커니즘 사용</li>
+     * </ul>
      *
      * <p><strong>사용 시기</strong>: FileCommandManager에서 FileAsset 저장 시 Outbox 메시지 저장</p>
      * <p><strong>예시</strong>:</p>
@@ -69,7 +83,7 @@ public class PipelineOutbox {
      *     IdempotencyKey.generate(),
      *     FileId.of(savedFileAsset.getIdValue())
      * );
-     * pipelineOutboxPort.save(outbox);
+     * pipelineOutboxPort.save(outbox); // 이 시점에 Event 발행 (트랜잭션 커밋 시)
      * }</pre>
      *
      * <p><strong>초기 상태</strong>:</p>
@@ -81,19 +95,30 @@ public class PipelineOutbox {
      *
      * @param idempotencyKey 멱등성 키 (중복 방지)
      * @param fileId         FileAsset ID
-     * @return 생성된 PipelineOutbox (ID = null)
+     * @return 생성된 PipelineOutbox (ID = null, Event 등록됨)
      * @throws IllegalArgumentException 필수 필드가 null인 경우
      */
     public static PipelineOutbox forNew(
         IdempotencyKey idempotencyKey,
         FileId fileId
     ) {
-        return new PipelineOutbox(
+        PipelineOutbox outbox = new PipelineOutbox(
             null,
             idempotencyKey,
             fileId,
             Clock.systemDefaultZone()
         );
+
+        // Domain Event 등록 (수동 관리)
+        // Note: ID는 save() 후에 생성되므로, Event에는 임시로 null 전달
+        // EventListener에서는 fileId를 사용하여 처리
+        outbox.addDomainEvent(new PipelineOutboxCreatedEvent(
+            null, // ID는 save() 후 생성됨
+            fileId,
+            outbox.getCreatedAt()
+        ));
+
+        return outbox;
     }
 
     /**
@@ -461,5 +486,34 @@ public class PipelineOutbox {
             ", createdAt=" + createdAt +
             ", updatedAt=" + updatedAt +
             '}';
+    }
+
+    // ===== 수동 이벤트 관리 메서드 =====
+
+    /**
+     * Domain Event를 추가합니다.
+     *
+     * @param event Domain Event
+     */
+    protected void addDomainEvent(Object event) {
+        this.domainEvents.add(event);
+    }
+
+    /**
+     * 등록된 모든 Domain Event를 반환합니다.
+     *
+     * @return Domain Event 목록 (Unmodifiable)
+     */
+    public List<Object> getDomainEvents() {
+        return Collections.unmodifiableList(domainEvents);
+    }
+
+    /**
+     * 모든 Domain Event를 제거합니다.
+     *
+     * <p>Repository Adapter에서 Event 발행 후 호출해야 합니다.</p>
+     */
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
     }
 }

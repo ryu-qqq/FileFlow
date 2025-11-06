@@ -22,21 +22,18 @@ import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Pipeline Worker
  *
- * <p>FileAsset에 대한 Pipeline 처리를 비동기로 실행하는 Worker 컴포넌트입니다.</p>
+ * <p>FileAsset에 대한 Pipeline 처리를 실행하는 Worker 컴포넌트입니다.</p>
  *
  * <p><strong>책임:</strong></p>
  * <ul>
  *   <li>FileAsset의 Pipeline 처리 실행</li>
- *   <li>비동기 처리 (@Async)</li>
- *   <li>Pipeline 작업 위임</li>
+ *   <li>썸네일 생성 및 메타데이터 추출</li>
+ *   <li>처리 결과 저장</li>
  * </ul>
  *
  * <p><strong>Pipeline 처리 흐름:</strong></p>
@@ -62,9 +59,16 @@ import java.util.concurrent.CompletableFuture;
  *
  * <p><strong>트랜잭션 경계:</strong></p>
  * <ul>
- *   <li>✅ @Async로 비동기 실행 (호출자와 별도 스레드)</li>
+ *   <li>✅ 동기 실행 (호출자: EventListener(@Async) 또는 Scheduler(@Scheduled))</li>
  *   <li>✅ S3 작업은 트랜잭션 밖에서 (ThumbnailPort, MetadataPort)</li>
  *   <li>✅ 실패 시 Outbox Scheduler가 재시도 관리</li>
+ * </ul>
+ *
+ * <p><strong>비동기 처리 책임 분리:</strong></p>
+ * <ul>
+ *   <li>EventListener: @Async로 비동기 실행 (즉시 처리)</li>
+ *   <li>Scheduler: @Scheduled로 주기적 실행 (재시도 처리)</li>
+ *   <li>Worker: 동기 실행 (실제 Pipeline 로직)</li>
  * </ul>
  *
  * <p><strong>에러 처리 전략:</strong></p>
@@ -117,7 +121,7 @@ public class PipelineWorker {
     }
 
     /**
-     * Pipeline 처리 시작 (비동기)
+     * Pipeline 처리 시작 (동기)
      *
      * <p><strong>실행 흐름:</strong></p>
      * <ol>
@@ -127,11 +131,10 @@ public class PipelineWorker {
      *   <li>결과 저장</li>
      * </ol>
      *
-     * <p><strong>비동기 실행:</strong></p>
+     * <p><strong>호출 컨텍스트:</strong></p>
      * <ul>
-     *   <li>@Async로 별도 스레드에서 실행</li>
-     *   <li>CompletableFuture를 반환하여 호출자가 결과를 기다릴 수 있음</li>
-     *   <li>스레드 풀: AsyncConfig에서 설정</li>
+     *   <li>EventListener: @Async 스레드에서 호출 (즉시 처리)</li>
+     *   <li>Scheduler: @Scheduled 스레드에서 호출 (재시도 처리)</li>
      * </ul>
      *
      * <p><strong>예외 처리:</strong></p>
@@ -143,10 +146,9 @@ public class PipelineWorker {
      * </ul>
      *
      * @param fileAssetId FileAsset ID
-     * @return Pipeline 처리 결과 (CompletableFuture)
+     * @return Pipeline 처리 결과
      */
-    @Async
-    public CompletableFuture<PipelineResult> startPipeline(Long fileAssetId) {
+    public PipelineResult startPipeline(Long fileAssetId) {
         log.info("Starting pipeline processing: fileAssetId={}", fileAssetId);
 
         try {
@@ -174,17 +176,17 @@ public class PipelineWorker {
                 thumbnailInfo != null ? "saved to file_variants" : "skipped",
                 metadata.metadata().size() + " fields saved to extracted_data");
 
-            return CompletableFuture.completedFuture(PipelineResult.success());
+            return PipelineResult.success();
 
         } catch (IllegalArgumentException e) {
             // FileAsset 미존재
             log.error("FileAsset not found for pipeline: fileAssetId={}", fileAssetId, e);
-            return CompletableFuture.completedFuture(PipelineResult.failure(e));
+            return PipelineResult.failure(e);
 
         } catch (Exception e) {
             // Pipeline 처리 실패
             log.error("Pipeline processing failed: fileAssetId={}", fileAssetId, e);
-            return CompletableFuture.completedFuture(PipelineResult.failure(e));
+            return PipelineResult.failure(e);
         }
     }
 

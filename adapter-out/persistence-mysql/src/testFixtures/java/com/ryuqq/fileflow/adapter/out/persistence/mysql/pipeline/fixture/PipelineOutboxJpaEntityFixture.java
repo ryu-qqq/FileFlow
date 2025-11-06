@@ -34,9 +34,11 @@ public class PipelineOutboxJpaEntityFixture {
      * @return 새로운 PipelineOutboxJpaEntity
      */
     public static PipelineOutboxJpaEntity create() {
-        return PipelineOutboxJpaEntity.create(
+        return PipelineOutboxJpaEntity.forNew(
+            DEFAULT_IDEMPOTENCY_KEY,
             DEFAULT_FILE_ID,
-            DEFAULT_IDEMPOTENCY_KEY
+            DEFAULT_STATUS,
+            0
         );
     }
 
@@ -57,14 +59,12 @@ public class PipelineOutboxJpaEntityFixture {
         OutboxStatus status,
         int retryCount
     ) {
-        return PipelineOutboxJpaEntity.reconstitute(
+        return new PipelineOutboxJpaEntity(
             id,
-            fileId,
             idempotencyKey,
+            fileId,
             status,
-            retryCount,
-            DEFAULT_CREATED_AT,
-            DEFAULT_UPDATED_AT
+            retryCount
         );
     }
 

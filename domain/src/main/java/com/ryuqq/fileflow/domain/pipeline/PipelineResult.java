@@ -24,7 +24,7 @@ public record PipelineResult(
     /**
      * 처리 성공 여부
      */
-    boolean success,
+    boolean succeeded,
 
     /**
      * 에러 메시지 (실패 시)
@@ -66,7 +66,7 @@ public record PipelineResult(
      * @return 성공이면 true
      */
     public boolean isSuccess() {
-        return success;
+        return succeeded;
     }
 
     /**
@@ -75,7 +75,7 @@ public record PipelineResult(
      * @return 실패이면 true
      */
     public boolean isFailure() {
-        return !success;
+        return !succeeded;
     }
 }
 
