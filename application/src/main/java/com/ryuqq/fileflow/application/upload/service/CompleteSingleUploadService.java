@@ -100,7 +100,7 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
      * @throws IllegalStateException UploadSession이 완료 가능한 상태가 아닌 경우
      * @throws com.ryuqq.fileflow.adapter.out.aws.s3.exception.S3StorageException S3에 파일이 존재하지 않는 경우
      */
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public CompleteSingleUploadResponse execute(CompleteSingleUploadCommand command) {
         // 1. UploadSession 조회 및 검증 (트랜잭션 내)
