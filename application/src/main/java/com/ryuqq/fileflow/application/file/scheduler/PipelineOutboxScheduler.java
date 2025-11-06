@@ -107,12 +107,15 @@ public class PipelineOutboxScheduler {
 
         // 2. 재시도 가능한 FAILED 메시지 조회 (지수 백오프)
         LocalDateTime retryAfter = calculateRetryAfterTime(now);
-        List<PipelineOutbox> retryableMessages =
+        int retryCapacity = properties.getBatchSize() - pendingMessages.size();
+        // CRITICAL: 배치 크기 0 이하 전달 시 IllegalArgumentException 방지
+        List<PipelineOutbox> retryableMessages = retryCapacity > 0 ?
             outboxManager.findRetryableFailedMessages(
                 properties.getMaxRetryCount(),
                 retryAfter,
-                properties.getBatchSize() - pendingMessages.size()
-            );
+                retryCapacity
+            ) :
+            List.of();
 
         // 3. PROCESSING 상태이지만 오래된 메시지 재처리 (장애 복구)
         LocalDateTime staleThreshold = now.minusMinutes(properties.getStaleMinutes());

@@ -465,8 +465,10 @@ public class FileAsset {
      */
     public void markAsAvailable() {
         if (this.status != FileStatus.PROCESSING) {
-            throw new IllegalStateException(
-                "PROCESSING 상태에서만 AVAILABLE로 전이 가능합니다. 현재 상태: " + this.status
+            throw new InvalidFileAssetStateException(
+                this.id,
+                String.valueOf(this.status),
+                String.valueOf(FileStatus.AVAILABLE)
             );
         }
         this.status = FileStatus.AVAILABLE;
@@ -494,7 +496,7 @@ public class FileAsset {
      */
     public void softDelete() {
         if (this.deletedAt != null) {
-            throw new IllegalStateException("이미 삭제된 파일입니다: " + this.id);
+            throw new FileAssetAlreadyDeletedException(this.id);
         }
         this.deletedAt = LocalDateTime.now();
         this.status = FileStatus.DELETED;

@@ -91,7 +91,8 @@ class CompleteSingleUploadServiceTest {
             S3HeadObjectResponse s3HeadResult = S3HeadObjectResponse.of(
                 10485760L,
                 "etag-123",
-                "text/plain"
+                "text/plain",
+                session.getStorageKey().value()
             );
 
             // FileAsset은 Application Layer에서 S3UploadMetadata로 변환 후 생성되므로

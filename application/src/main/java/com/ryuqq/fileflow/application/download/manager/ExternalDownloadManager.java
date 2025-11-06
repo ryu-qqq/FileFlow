@@ -271,11 +271,15 @@ public class ExternalDownloadManager {
         session.updateFileSize(FileSize.of(fileSize));
         uploadSessionStateManager.save(session);
 
-        // FileAsset Aggregate 생성 ⭐ Factory Method 사용
-        FileAsset fileAsset = FileAsset.fromCompletedUpload(
+        // FileAsset Aggregate 생성 ⭐ S3 메타데이터 활용 (ETag, ContentType 포함)
+        // CRITICAL: fromCompletedUpload 대신 fromS3Upload 사용하여 실제 메타데이터 보존
+        // result.s3Metadata에는 실제 S3 ETag, ContentType, ContentLength가 포함됨
+        com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata s3UploadMetadata = 
+            result.s3Metadata().toDomain();
+        
+        FileAsset fileAsset = FileAsset.fromS3Upload(
             session,
-            result.storageKey(),
-            FileSize.of(fileSize)
+            s3UploadMetadata
         );
 
         FileAsset savedFileAsset = fileCommandManager.save(fileAsset);

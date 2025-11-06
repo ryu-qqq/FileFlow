@@ -357,6 +357,16 @@ public class PipelineWorker {
         }
 
         try {
+            // organizationId가 null인 경우 ExtractedData 생성 불가 (필수 필드)
+            // FileAsset.fromS3Upload()로 생성된 인스턴스는 organizationId가 null일 수 있음
+            Long organizationId = fileAsset.getOrganizationId();
+            if (organizationId == null) {
+                log.warn("Skipping ExtractedData creation: organizationId is null for fileAssetId={}. " +
+                        "FileAsset.fromS3Upload() may not have organizationId.",
+                    fileAsset.getIdValue());
+                return;
+            }
+
             // 1. metadata Map → JSON 문자열 변환
             String structuredData = objectMapper.writeValueAsString(metadata.metadata());
 
@@ -365,7 +375,7 @@ public class PipelineWorker {
             ExtractedData extractedData = ExtractedData.create(
                 new FileAssetId(fileAsset.getIdValue()),
                 fileAsset.getTenantId().value(), // tenantId (FileAsset에서 추출)
-                fileAsset.getOrganizationId(), // organizationId (FileAsset에서 추출)
+                organizationId, // organizationId (null 체크 완료)
                 ExtractionType.METADATA,
                 ExtractionMethod.TIKA,
                 1, // version
