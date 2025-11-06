@@ -100,7 +100,7 @@ public class CheckUploadRateLimitService implements CheckUploadRateLimitUseCase 
             tenantId, currentCount, maxConcurrentPerTenant, remaining, allowed);
 
         // 3. 응답 생성
-        return RateLimitResponse.of(
+        return new RateLimitResponse(
             tenantId,
             currentCount,
             maxConcurrentPerTenant,

@@ -42,7 +42,13 @@ public abstract class FileAssetException extends DomainException {
      * @param cause 원인 예외
      */
     protected FileAssetException(FileErrorCode errorCode, Map<String, Object> args, Throwable cause) {
-        super(errorCode.getCode(), errorCode.getDefaultMessage() + (cause != null ? ": " + cause.getMessage() : ""), args);
+        super(
+            errorCode.getCode(),
+            cause == null
+                ? errorCode.getDefaultMessage()
+                : errorCode.getDefaultMessage() + ": " + (cause.getMessage() != null ? cause.getMessage() : cause.toString()),
+            args
+        );
         this.errorCode = errorCode;
         initCause(cause);
     }

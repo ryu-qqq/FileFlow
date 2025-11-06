@@ -1,10 +1,12 @@
 package com.ryuqq.fileflow.application.upload.facade;
 
 import com.ryuqq.fileflow.application.upload.dto.command.UploadStreamResult;
+import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
 import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -35,9 +37,14 @@ public class StorageUploadFacade {
     private static final Logger log = LoggerFactory.getLogger(StorageUploadFacade.class);
 
     private final S3StoragePort storagePort;
+    private final String s3Bucket;
 
-    public StorageUploadFacade(S3StoragePort storagePort) {
+    public StorageUploadFacade(
+        S3StoragePort storagePort,
+        @Value("${aws.s3.bucket-name}") String s3Bucket
+    ) {
         this.storagePort = storagePort;
+        this.s3Bucket = s3Bucket;
     }
 
     /**
@@ -63,7 +70,7 @@ public class StorageUploadFacade {
 
             // S3StoragePort.uploadStream() 사용
             UploadStreamResult result = storagePort.uploadStream(
-                "fileflow-bucket", // TODO: Configuration에서 가져오기
+                s3Bucket,
                 storageKey.value(),
                 inputStream,
                 contentType
@@ -112,7 +119,7 @@ public class StorageUploadFacade {
             log.info("Deleting file from storage: key={}", storageKey.value());
 
             // S3StoragePort.deleteObject() 사용
-            storagePort.deleteObject("fileflow-bucket", storageKey.value());
+            storagePort.deleteObject(s3Bucket, storageKey.value());
 
             log.info("File deleted successfully: key={}", storageKey.value());
             return true;
@@ -125,17 +132,37 @@ public class StorageUploadFacade {
     /**
      * 파일의 체크섬 계산
      *
+     * <p>S3 HeadObject를 사용하여 ETag를 조회합니다.</p>
+     *
      * @param storageKey S3 키
-     * @return 체크섬 (MD5 또는 SHA256)
+     * @return 체크섬 (ETag)
      */
     public String calculateChecksum(StorageKey storageKey) {
         try {
-            // TODO: S3StoragePort에 calculateChecksum 메서드 추가 필요
-            log.warn("calculateChecksum not implemented yet: key={}", storageKey.value());
-            return "pending";
+            S3HeadObjectResponse headResult = storagePort.headObject(s3Bucket, storageKey.value());
+            String etag = headResult.etag();
+            log.debug("Checksum calculated from S3 ETag: key={}, etag={}", storageKey.value(), etag);
+            return etag;
         } catch (Exception e) {
             log.error("Error calculating checksum: key={}", storageKey.value(), e);
             return null;
+        }
+    }
+
+    /**
+     * S3 Object 메타데이터 조회
+     *
+     * <p>S3 HeadObject를 사용하여 메타데이터를 조회합니다.</p>
+     *
+     * @param storageKey S3 키
+     * @return S3 메타데이터
+     */
+    public S3HeadObjectResponse getS3Metadata(StorageKey storageKey) {
+        try {
+            return storagePort.headObject(s3Bucket, storageKey.value());
+        } catch (Exception e) {
+            log.error("Error getting S3 metadata: key={}", storageKey.value(), e);
+            throw new RuntimeException("Failed to get S3 metadata: key=" + storageKey.value(), e);
         }
     }
 }
