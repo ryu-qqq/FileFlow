@@ -1,8 +1,10 @@
 package com.ryuqq.fileflow.application.file.port.out;
 
 import com.ryuqq.fileflow.domain.file.variant.FileVariant;
+import com.ryuqq.fileflow.domain.file.variant.VariantType;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * FileVariant Query Port (CQRS Query)
@@ -23,6 +25,7 @@ import java.util.List;
  *   <li>파일 상세 조회 시 Variants 목록 조회</li>
  *   <li>특정 VariantType 조회 (THUMBNAIL, OPTIMIZED 등)</li>
  *   <li>썸네일 URL 응답 생성</li>
+ *   <li>중복 체크 (특정 VariantType 존재 여부)</li>
  * </ul>
  *
  * @author Sangwon Ryu
@@ -39,4 +42,40 @@ public interface FileVariantQueryPort {
      * @return FileVariant 목록 (빈 리스트 가능)
      */
     List<FileVariant> findAllByFileId(Long fileId);
+
+    /**
+     * fileId와 variantType으로 FileVariant 조회
+     *
+     * <p>특정 FileAsset에 속한 특정 타입의 Variant를 조회합니다.</p>
+     *
+     * <p><strong>사용 사례:</strong></p>
+     * <ul>
+     *   <li>썸네일 존재 여부 확인</li>
+     *   <li>특정 VariantType의 FileVariant 조회</li>
+     *   <li>중복 체크 (existsByFileIdAndVariantType 사용 권장)</li>
+     * </ul>
+     *
+     * @param fileId FileAsset의 ID (Long FK)
+     * @param variantType Variant Type
+     * @return FileVariant (있으면)
+     */
+    Optional<FileVariant> findByFileIdAndVariantType(Long fileId, VariantType variantType);
+
+    /**
+     * fileId와 variantType으로 존재 여부 확인
+     *
+     * <p>특정 FileAsset에 특정 타입의 Variant가 존재하는지 확인합니다.</p>
+     *
+     * <p><strong>사용 사례:</strong></p>
+     * <ul>
+     *   <li>중복 체크 (저장 전)</li>
+     *   <li>썸네일 생성 여부 확인</li>
+     *   <li>조건부 로직 (존재 여부만 확인할 때)</li>
+     * </ul>
+     *
+     * @param fileId FileAsset의 ID (Long FK)
+     * @param variantType Variant Type
+     * @return 존재 여부
+     */
+    boolean existsByFileIdAndVariantType(Long fileId, VariantType variantType);
 }

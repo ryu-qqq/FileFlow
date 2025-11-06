@@ -5,7 +5,9 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.mapper.FileVariantE
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.repository.FileVariantJpaRepository;
 import com.ryuqq.fileflow.application.file.port.out.SaveFileVariantPort;
 import com.ryuqq.fileflow.domain.file.variant.FileVariant;
+import com.ryuqq.fileflow.domain.file.variant.FileVariantCreatedEvent;
 import com.ryuqq.fileflow.domain.file.variant.FileVariantId;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,19 +42,29 @@ public class FileVariantCommandAdapter implements SaveFileVariantPort {
 
     private final FileVariantJpaRepository fileVariantJpaRepository;
     private final FileVariantEntityMapper fileVariantEntityMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public FileVariantCommandAdapter(
         FileVariantJpaRepository fileVariantJpaRepository,
-        FileVariantEntityMapper fileVariantEntityMapper
+        FileVariantEntityMapper fileVariantEntityMapper,
+        ApplicationEventPublisher eventPublisher
     ) {
         this.fileVariantJpaRepository = fileVariantJpaRepository;
         this.fileVariantEntityMapper = fileVariantEntityMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
      * FileVariant 저장
      *
      * <p>신규 Variant 생성 (ID 없음) → JPA가 ID 자동 할당</p>
+     *
+     * <p><strong>Domain Event 발행:</strong></p>
+     * <ul>
+     *   <li>FileVariant.create() 시점에는 ID가 null이므로 이벤트에 null 저장</li>
+     *   <li>Adapter에서 실제 ID로 이벤트를 재생성하여 발행</li>
+     *   <li>트랜잭션 커밋 시점에 이벤트 발행 (Spring 기본 동작)</li>
+     * </ul>
      *
      * @param fileVariant 저장할 FileVariant (Domain)
      * @return 저장된 FileVariant (ID 할당됨)
@@ -69,9 +81,22 @@ public class FileVariantCommandAdapter implements SaveFileVariantPort {
         // 3. Entity → Domain 변환 (ID 포함)
         FileVariant savedVariant = fileVariantEntityMapper.toDomain(savedEntity);
 
-        // 4. Domain Event 처리 (필요 시)
-        // ⭐ FileVariant는 도메인 이벤트를 가지고 있음
-        // Application Layer에서 이벤트 발행 처리
+        // 4. Domain Event 발행 (트랜잭션 커밋 시점에 발행)
+        savedVariant.getDomainEvents().forEach(event -> {
+            if (event instanceof FileVariantCreatedEvent createdEvent) {
+                // fileVariantId를 실제 ID로 업데이트하여 이벤트 재생성
+                FileVariantId fileVariantId = savedVariant.getId();
+                FileVariantCreatedEvent updatedEvent = new FileVariantCreatedEvent(
+                    fileVariantId, // ✅ 실제 ID
+                    createdEvent.fileAssetId(),
+                    createdEvent.variantType()
+                );
+                eventPublisher.publishEvent(updatedEvent);
+            }
+        });
+
+        // 5. Domain Event 초기화
+        savedVariant.clearDomainEvents();
 
         return savedVariant;
     }
