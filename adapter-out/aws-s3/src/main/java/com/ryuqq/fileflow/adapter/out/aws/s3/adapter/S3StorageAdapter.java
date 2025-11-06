@@ -393,7 +393,8 @@ public class S3StorageAdapter implements S3StoragePort {
             return com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse.of(
                 response.contentLength(),
                 response.eTag(),
-                response.contentType()
+                response.contentType(),
+                key  // storageKey 추가
             );
 
         } catch (NoSuchKeyException e) {
