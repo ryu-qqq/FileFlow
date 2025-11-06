@@ -36,12 +36,17 @@ public record FileVariantCreatedEvent(
      * Compact Constructor
      * Null 검증
      *
-     * @throws IllegalArgumentException 필수 필드가 null인 경우
+     * <p><strong>주의:</strong></p>
+     * <ul>
+     *   <li>fileVariantId는 생성 시점(null)과 발행 시점(실제 ID) 모두 허용</li>
+     *   <li>Adapter에서 실제 ID로 이벤트를 재생성하여 발행</li>
+     * </ul>
+     *
+     * @throws IllegalArgumentException 필수 필드가 null인 경우 (fileVariantId 제외)
      */
     public FileVariantCreatedEvent {
-        if (fileVariantId == null) {
-            throw new IllegalArgumentException("fileVariantId must not be null");
-        }
+        // fileVariantId는 null 허용 (생성 시점에는 아직 ID가 할당되지 않음)
+        // Adapter에서 실제 ID로 이벤트를 재생성하여 발행
         if (fileAssetId == null) {
             throw new IllegalArgumentException("fileAssetId must not be null");
         }

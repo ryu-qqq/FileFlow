@@ -5,10 +5,12 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.mapper.FileVariantE
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.repository.FileVariantJpaRepository;
 import com.ryuqq.fileflow.application.file.port.out.FileVariantQueryPort;
 import com.ryuqq.fileflow.domain.file.variant.FileVariant;
+import com.ryuqq.fileflow.domain.file.variant.VariantType;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * FileVariant Query Adapter (Persistence Layer)
@@ -68,5 +70,40 @@ public class FileVariantQueryAdapter implements FileVariantQueryPort {
         return entities.stream()
             .map(fileVariantEntityMapper::toDomain)
             .toList();
+    }
+
+    /**
+     * fileId와 variantType으로 FileVariant 조회
+     *
+     * <p>Entity → Domain 변환 후 Optional로 반환</p>
+     *
+     * @param fileId FileAsset의 ID (Long FK)
+     * @param variantType Variant Type
+     * @return FileVariant (있으면)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<FileVariant> findByFileIdAndVariantType(Long fileId, VariantType variantType) {
+        // 1. Entity 조회 (Repository 메서드명: findByParentFileAssetIdAndVariantType)
+        Optional<FileVariantJpaEntity> entity = fileVariantJpaRepository
+            .findByParentFileAssetIdAndVariantType(fileId, variantType);
+
+        // 2. Entity → Domain 변환
+        return entity.map(fileVariantEntityMapper::toDomain);
+    }
+
+    /**
+     * fileId와 variantType으로 존재 여부 확인
+     *
+     * <p>Repository의 existsByParentFileAssetIdAndVariantType 메서드 사용</p>
+     *
+     * @param fileId FileAsset의 ID (Long FK)
+     * @param variantType Variant Type
+     * @return 존재 여부
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByFileIdAndVariantType(Long fileId, VariantType variantType) {
+        return fileVariantJpaRepository.existsByParentFileAssetIdAndVariantType(fileId, variantType);
     }
 }
