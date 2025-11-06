@@ -7,6 +7,10 @@ import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
+import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetAlreadyDeletedException;
+import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetAccessDeniedException;
+import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetProcessingException;
+import com.ryuqq.fileflow.domain.file.asset.exception.InvalidFileAssetStateException;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -530,6 +534,51 @@ public class FileAsset {
             && !isExpired();
     }
 
+
+    /**
+     * 접근 권한 확인
+     *
+     * <p>FileAsset에 대한 접근 권한을 확인합니다.</p>
+     *
+     * @param requesterId 요청자 ID
+     * @throws FileAssetAccessDeniedException 접근 권한이 없는 경우
+     */
+    public void checkAccessPermission(Long requesterId) {
+        if (this.ownerUserId == null) {
+            return;  // 익명 업로드는 누구나 접근 가능
+        }
+
+        if (!this.ownerUserId.equals(requesterId)) {
+            throw new FileAssetAccessDeniedException(this.id, requesterId);
+        }
+    }
+
+    /**
+     * 사용 가능한 상태인지 확인
+     *
+     * <p>FileAsset이 사용 가능한 상태인지 확인합니다.</p>
+     *
+     * @throws FileAssetProcessingException 아직 처리 중인 경우
+     * @throws FileAssetAlreadyDeletedException 이미 삭제된 경우
+     * @throws InvalidFileAssetStateException 사용 불가능한 상태인 경우
+     */
+    public void ensureAvailable() {
+        if (this.status == FileStatus.PROCESSING) {
+            throw new FileAssetProcessingException(this.id);
+        }
+
+        if (this.status == FileStatus.DELETED) {
+            throw new FileAssetAlreadyDeletedException(this.id);
+        }
+
+        if (this.status != FileStatus.AVAILABLE) {
+            throw new InvalidFileAssetStateException(
+                this.id,
+                this.status.name(),
+                FileStatus.AVAILABLE.name()
+            );
+        }
+    }
     // ===== 편의 메서드 (Law of Demeter 준수) =====
 
     /**
