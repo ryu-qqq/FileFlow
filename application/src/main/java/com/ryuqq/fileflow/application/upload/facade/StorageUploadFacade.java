@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -156,13 +157,14 @@ public class StorageUploadFacade {
      *
      * @param storageKey S3 키
      * @return S3 메타데이터
+     * @throws IOException S3 메타데이터 조회 실패 시
      */
-    public S3HeadObjectResponse getS3Metadata(StorageKey storageKey) {
+    public S3HeadObjectResponse getS3Metadata(StorageKey storageKey) throws IOException {
         try {
             return storagePort.headObject(s3Bucket, storageKey.value());
         } catch (Exception e) {
             log.error("Error getting S3 metadata: key={}", storageKey.value(), e);
-            throw new RuntimeException("Failed to get S3 metadata: key=" + storageKey.value(), e);
+            throw new IOException("Failed to get S3 metadata: key=" + storageKey.value(), e);
         }
     }
 }

@@ -280,6 +280,12 @@ public class ExternalDownloadManager {
 
         // S3 메타데이터를 사용하여 FileAsset 생성 ⭐ fromS3Upload 사용 (Checksum, MimeType 포함)
         S3HeadObjectResponse s3Metadata = result.s3Metadata();
+        if (s3Metadata == null) {
+            log.warn("S3 metadata is null: downloadId={}, storageKey={}", download.getIdValue(), result.storageKey().value());
+            failWithRetry(download, ErrorCode.of("S3_METADATA_MISSING"), "S3 메타데이터 수집 실패");
+            return;
+        }
+
         com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata s3UploadMetadata =
             com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata.of(
                 s3Metadata.contentLength(),
