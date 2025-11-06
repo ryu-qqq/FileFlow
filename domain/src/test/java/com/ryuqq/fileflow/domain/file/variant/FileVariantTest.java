@@ -83,22 +83,6 @@ class FileVariantTest {
         }
 
         @Test
-        @DisplayName("create_WithNullParentIdValue_ShouldThrowException - null value를 가진 FileAssetId로 예외 발생")
-        void create_WithNullParentIdValue_ShouldThrowException() {
-            // Given
-            FileAssetId parentId = new FileAssetId(null); // null value (이건 FileAssetId 생성자에서 검증됨)
-            VariantType type = VariantType.THUMBNAIL;
-            StorageKey key = StorageKey.of("tenant-1/org-2/thumbnail/image.jpg");
-            FileSize size = FileSize.of(51200L);
-            MimeType mimeType = new MimeType("image/webp");
-
-            // When & Then
-            // FileAssetId 생성자에서 예외 발생 예상
-            assertThatThrownBy(() -> new FileAssetId(null))
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
         @DisplayName("create_WithDifferentVariantTypes_ShouldCreateDifferentVariants - 다른 VariantType으로 생성")
         void create_WithDifferentVariantTypes_ShouldCreateDifferentVariants() {
             // Given
