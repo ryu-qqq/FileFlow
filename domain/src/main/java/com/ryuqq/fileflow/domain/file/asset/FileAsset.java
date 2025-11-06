@@ -430,13 +430,13 @@ public class FileAsset {
      */
     public static FileAsset fromS3Upload(
         com.ryuqq.fileflow.domain.upload.UploadSession session,
-        S3ObjectMetadata s3Metadata
+        S3UploadMetadata s3Metadata
     ) {
         if (session == null) {
             throw new IllegalArgumentException("UploadSession은 필수입니다");
         }
         if (s3Metadata == null) {
-            throw new IllegalArgumentException("S3ObjectMetadata는 필수입니다");
+            throw new IllegalArgumentException("S3UploadMetadata는 필수입니다");
         }
 
         return FileAsset.forNew(
