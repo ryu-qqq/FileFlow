@@ -16,6 +16,7 @@ import com.ryuqq.fileflow.application.download.dto.response.HttpDownloadResult;
 import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
 import com.ryuqq.fileflow.application.download.port.out.HttpDownloadPort;
 import com.ryuqq.fileflow.application.upload.dto.command.UploadStreamResult;
+import com.ryuqq.fileflow.application.upload.dto.response.S3HeadObjectResponse;
 import com.ryuqq.fileflow.application.upload.facade.StorageUploadFacade;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.download.ErrorCode;
@@ -164,12 +165,16 @@ public class ExternalDownloadWorker {
                 throw new IOException("Failed to upload file to storage");
             }
 
-            // 체크섬 계산 및 결과 생성
-            String checksum = storageUploadFacade.calculateChecksum(storageKey);
-            long finalSize = httpResult.hasContentLength() ? httpResult.contentLength() : 0;
-            UploadStreamResult uploadResult = UploadStreamResult.of(checksum, finalSize);
+            // S3 메타데이터 조회 (ETag, ContentType, ContentLength 포함)
+            S3HeadObjectResponse s3Metadata = storageUploadFacade.getS3Metadata(storageKey);
+            log.debug("S3 metadata retrieved: key={}, etag={}, contentType={}, size={}",
+                storageKey.value(), s3Metadata.etag(), s3Metadata.contentType(), s3Metadata.contentLength());
 
-            return new DownloadResult(uploadResult, storageKey);
+            // 업로드 결과 생성 (ETag는 S3 메타데이터에서 가져옴)
+            long finalSize = httpResult.hasContentLength() ? httpResult.contentLength() : s3Metadata.contentLength();
+            UploadStreamResult uploadResult = UploadStreamResult.of(s3Metadata.etag(), finalSize);
+
+            return new DownloadResult(uploadResult, storageKey, s3Metadata);
         }
     }
 

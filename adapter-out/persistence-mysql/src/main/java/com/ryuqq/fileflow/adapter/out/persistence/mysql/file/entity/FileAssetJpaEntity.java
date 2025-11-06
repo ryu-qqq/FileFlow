@@ -97,8 +97,10 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
     /**
      * Owner User ID (Long FK Strategy)
      * ❌ ManyToOne 관계 어노테이션 사용 안함!
+     * 
+     * <p>익명 업로드 및 외부 다운로드 시 null 허용</p>
      */
-    @Column(name = "owner_user_id", nullable = false)
+    @Column(name = "owner_user_id", nullable = true)
     private Long ownerUserId;
 
     @Column(name = "file_name", nullable = false)
