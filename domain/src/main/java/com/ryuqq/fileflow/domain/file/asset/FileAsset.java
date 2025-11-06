@@ -7,10 +7,6 @@ import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
-import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetAlreadyDeletedException;
-import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetAccessDeniedException;
-import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetProcessingException;
-import com.ryuqq.fileflow.domain.file.asset.exception.InvalidFileAssetStateException;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -395,18 +391,13 @@ public class FileAsset {
     /**
      * S3 업로드 완료 후 FileAsset 생성 (Static Factory Method)
      *
-     * <p><strong>사용 시점:</strong></p>
-     * <ul>
-     *   <li>Single Upload 완료</li>
-     *   <li>Multipart Upload 완료</li>
-     * </ul>
+     * <p><strong>사용 시나리오:</strong> Single/Multipart Upload 완료 시 FileAsset 생성</p>
      *
-     * <p><strong>생성 규칙:</strong></p>
+     * <p><strong>특징:</strong></p>
      * <ul>
-     *   <li>organizationId: null (S3 직접 업로드는 조직 없음)</li>
-     *   <li>ownerUserId: null (익명 업로드 허용)</li>
-     *   <li>status: PROCESSING (초기 상태)</li>
-     *   <li>visibility: PRIVATE (기본 가시성)</li>
+     *   <li>S3 HEAD Object 결과에서 ETag, ContentType 활용</li>
+     *   <li>MimeType은 S3에서 반환된 실제 값 사용</li>
+     *   <li>Checksum은 S3 ETag 사용 (MD5 또는 멀티파트 ETag)</li>
      * </ul>
      *
      * <p><strong>S3 ETag 형식:</strong></p>
@@ -415,36 +406,46 @@ public class FileAsset {
      *   <li>Multipart Upload: "{MD5}-{parts}" (예: "abc123-5")</li>
      * </ul>
      *
-     * @param session UploadSession (업로드 메타데이터 포함)
-     * @param s3Metadata S3 업로드 결과 메타데이터
-     * @return 생성된 FileAsset (ID는 null, Persistence Layer에서 생성)
-     * @throws IllegalArgumentException session 또는 s3Metadata가 null인 경우
+     * <p><strong>예시:</strong></p>
+     * <pre>{@code
+     * // CompleteSingleUploadService에서 사용
+     * FileAsset fileAsset = FileAsset.fromS3Upload(
+     *     session,
+     *     s3HeadResult
+     * );
      *
+     * // CompleteMultipartUploadService에서 사용
+     * FileAsset fileAsset = FileAsset.fromS3Upload(
+     *     session,
+     *     s3HeadResult
+     * );
+     * }</pre>
+     *
+     * @param session 업로드 세션
+     * @param s3Result S3 HEAD Object 결과 (ETag, ContentType 포함)
+     * @return 새로운 FileAsset (ID = null, 초기 상태 = PROCESSING)
+     * @throws IllegalArgumentException 필수 파라미터가 null인 경우
      * @author Sangwon Ryu
      * @since 1.0.0
      */
     public static FileAsset fromS3Upload(
         com.ryuqq.fileflow.domain.upload.UploadSession session,
-        S3UploadMetadata s3Metadata
+        S3ObjectMetadata s3Metadata
     ) {
         if (session == null) {
             throw new IllegalArgumentException("UploadSession은 필수입니다");
         }
         if (s3Metadata == null) {
-            throw new IllegalArgumentException("S3UploadMetadata는 필수입니다");
+            throw new IllegalArgumentException("S3ObjectMetadata는 필수입니다");
         }
-
-        String contentType = s3Metadata.contentType() != null
-            ? s3Metadata.contentType()
-            : "application/octet-stream";
 
         return FileAsset.forNew(
             session.getTenantId(),
-            null,  // organizationId (S3 직접 업로드는 조직 없음)
-            null,  // ownerUserId (익명 업로드 허용)
+            null,  // organizationId
+            null,  // ownerUserId
             session.getFileName(),
             FileSize.of(s3Metadata.contentLength()),
-            MimeType.of(contentType),
+            MimeType.of(s3Metadata.contentType()),
             StorageKey.of(s3Metadata.storageKey()),
             Checksum.of(s3Metadata.etag()),
             session.getId()
@@ -456,14 +457,12 @@ public class FileAsset {
      *
      * <p>⭐ Tell, Don't Ask 패턴 적용</p>
      *
-     * @throws InvalidFileAssetStateException 상태가 PROCESSING이 아닌 경우
+     * @throws IllegalStateException 상태가 PROCESSING이 아닌 경우
      */
     public void markAsAvailable() {
         if (this.status != FileStatus.PROCESSING) {
-            throw new InvalidFileAssetStateException(
-                this.id,
-                this.status.name(),
-                FileStatus.AVAILABLE.name()
+            throw new IllegalStateException(
+                "PROCESSING 상태에서만 AVAILABLE로 전이 가능합니다. 현재 상태: " + this.status
             );
         }
         this.status = FileStatus.AVAILABLE;
@@ -487,11 +486,11 @@ public class FileAsset {
      *
      * <p>⭐ Tell, Don't Ask 패턴 적용</p>
      *
-     * @throws FileAssetAlreadyDeletedException 이미 삭제된 경우
+     * @throws IllegalStateException 이미 삭제된 경우
      */
     public void softDelete() {
         if (this.deletedAt != null) {
-            throw new FileAssetAlreadyDeletedException(this.id);
+            throw new IllegalStateException("이미 삭제된 파일입니다: " + this.id);
         }
         this.deletedAt = LocalDateTime.now();
         this.status = FileStatus.DELETED;
@@ -529,51 +528,6 @@ public class FileAsset {
         return this.status == FileStatus.AVAILABLE
             && this.deletedAt == null
             && !isExpired();
-    }
-
-    /**
-     * 접근 권한 확인
-     *
-     * <p>FileAsset에 대한 접근 권한을 확인합니다.</p>
-     *
-     * @param requesterId 요청자 ID
-     * @throws FileAssetAccessDeniedException 접근 권한이 없는 경우
-     */
-    public void checkAccessPermission(Long requesterId) {
-        if (this.ownerUserId == null) {
-            return;  // 익명 업로드는 누구나 접근 가능
-        }
-
-        if (!this.ownerUserId.equals(requesterId)) {
-            throw new FileAssetAccessDeniedException(this.id, requesterId);
-        }
-    }
-
-    /**
-     * 사용 가능한 상태인지 확인
-     *
-     * <p>FileAsset이 사용 가능한 상태인지 확인합니다.</p>
-     *
-     * @throws FileAssetProcessingException 아직 처리 중인 경우
-     * @throws FileAssetAlreadyDeletedException 이미 삭제된 경우
-     * @throws InvalidFileAssetStateException 사용 불가능한 상태인 경우
-     */
-    public void ensureAvailable() {
-        if (this.status == FileStatus.PROCESSING) {
-            throw new FileAssetProcessingException(this.id);
-        }
-
-        if (this.status == FileStatus.DELETED) {
-            throw new FileAssetAlreadyDeletedException(this.id);
-        }
-
-        if (this.status != FileStatus.AVAILABLE) {
-            throw new InvalidFileAssetStateException(
-                this.id,
-                this.status.name(),
-                FileStatus.AVAILABLE.name()
-            );
-        }
     }
 
     // ===== 편의 메서드 (Law of Demeter 준수) =====

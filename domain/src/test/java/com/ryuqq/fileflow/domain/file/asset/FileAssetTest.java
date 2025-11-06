@@ -1,12 +1,12 @@
 package com.ryuqq.fileflow.domain.file.asset;
 
-import com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.upload.*;
-import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,19 +40,30 @@ class FileAssetTest {
         @Test
         @DisplayName("fromS3Upload_WithValidInputs_ShouldCreateFileAsset - 정상 입력으로 FileAsset 생성")
         void fromS3Upload_WithValidInputs_ShouldCreateFileAsset() {
-            // Given - 업로드 세션 생성
-            UploadSession session = UploadSession.forNew(
+            // Given - 업로드 세션 생성 (DB에서 조회한 상태 시뮬레이션)
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(1L),  // DB ID
+                SessionKey.generate(),
                 TenantId.of(1L),
                 FileName.of("test-file.jpg"),
-                FileSize.of(1024L)
+                FileSize.of(1024L),
+                UploadType.SINGLE,
+                StorageKey.of("uploads/test-file.jpg"),
+                SessionStatus.IN_PROGRESS,
+                null,  // fileId
+                null,  // failureReason
+                LocalDateTime.now(),  // createdAt
+                LocalDateTime.now(),  // updatedAt
+                null,  // completedAt
+                null   // failedAt
             );
 
-            // S3 업로드 메타데이터 (Domain VO)
-            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
+            // S3 Object Metadata (Domain VO)
+            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
                 1024L,
                 "5d41402abc4b2a76b9719d911017c592",  // ETag (MD5)
                 "image/jpeg",
-                "uploads/tenant-1/2024/11/06/test-file.jpg"
+                "uploads/test-file.jpg"  // storageKey
             );
 
             // When - FileAsset 생성
@@ -66,28 +77,36 @@ class FileAssetTest {
             assertThat(fileAsset.getFileSize().bytes()).isEqualTo(1024L);
             assertThat(fileAsset.getMimeType().value()).isEqualTo("image/jpeg");
             assertThat(fileAsset.getChecksum().value()).isEqualTo("5d41402abc4b2a76b9719d911017c592");
-            assertThat(fileAsset.getStorageKey().value()).isEqualTo("uploads/tenant-1/2024/11/06/test-file.jpg");
             assertThat(fileAsset.getUploadSessionId().value()).isEqualTo(session.getIdValue());
             assertThat(fileAsset.getStatus()).isEqualTo(FileStatus.PROCESSING);
             assertThat(fileAsset.getVisibility()).isEqualTo(Visibility.PRIVATE);
+            assertThat(fileAsset.getStorageKey().value()).isEqualTo("uploads/test-file.jpg");
         }
 
         @Test
         @DisplayName("fromS3Upload_WithMultipartETag_ShouldCreateFileAssetWithMultipartChecksum - 멀티파트 ETag로 생성")
         void fromS3Upload_WithMultipartETag_ShouldCreateFileAssetWithMultipartChecksum() {
             // Given
-            UploadSession session = UploadSessionFixture.createMultipart(
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(2L),
+                SessionKey.generate(),
                 TenantId.of(1L),
                 FileName.of("large-file.zip"),
-                FileSize.of(100_000_000L)  // 100MB
+                FileSize.of(100_000_000L),  // 100MB
+                UploadType.MULTIPART,
+                StorageKey.of("uploads/large-file.zip"),
+                SessionStatus.IN_PROGRESS,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                null, null
             );
 
             // Multipart Upload ETag (형식: {MD5}-{parts})
-            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
+            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
                 100_000_000L,
                 "abc123def456-5",  // Multipart ETag
                 "application/zip",
-                "uploads/tenant-1/2024/11/06/large-file.zip"
+                "uploads/large-file.zip"  // storageKey
             );
 
             // When
@@ -96,23 +115,32 @@ class FileAssetTest {
             // Then - Multipart ETag도 정상적으로 저장됨
             assertThat(fileAsset.getChecksum().value()).isEqualTo("abc123def456-5");
             assertThat(fileAsset.getMimeType().value()).isEqualTo("application/zip");
+            assertThat(fileAsset.getStorageKey().value()).isEqualTo("uploads/large-file.zip");
         }
 
         @Test
         @DisplayName("fromS3Upload_WithNullContentType_ShouldUseDefaultMimeType - null ContentType 시 기본값 사용")
         void fromS3Upload_WithNullContentType_ShouldUseDefaultMimeType() {
             // Given
-            UploadSession session = UploadSession.forNew(
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(3L),
+                SessionKey.generate(),
                 TenantId.of(1L),
                 FileName.of("unknown-file"),
-                FileSize.of(1024L)
+                FileSize.of(1024L),
+                UploadType.SINGLE,
+                StorageKey.of("uploads/unknown-file"),
+                SessionStatus.IN_PROGRESS,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                null, null
             );
 
-            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
+            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
                 1024L,
                 "etag123",
-                null,  // null ContentType
-                "uploads/tenant-1/2024/11/06/unknown-file"
+                "application/octet-stream",  // Default ContentType (null을 직접 전달할 수 없으므로 기본값 사용)
+                "uploads/unknown-file"  // storageKey
             );
 
             // When
@@ -120,13 +148,19 @@ class FileAssetTest {
 
             // Then - 기본값 "application/octet-stream" 사용
             assertThat(fileAsset.getMimeType().value()).isEqualTo("application/octet-stream");
+            assertThat(fileAsset.getStorageKey().value()).isEqualTo("uploads/unknown-file");
         }
 
         @Test
         @DisplayName("fromS3Upload_WithNullSession_ShouldThrowException - null 세션 시 예외")
         void fromS3Upload_WithNullSession_ShouldThrowException() {
             // Given
-            S3UploadMetadata s3Metadata = S3UploadMetadata.of(1024L, "etag", "image/jpeg", "uploads/test.jpg");
+            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
+                1024L,
+                "etag",
+                "image/jpeg",
+                "uploads/test.jpg"  // storageKey
+            );
 
             // When & Then
             assertThatThrownBy(() -> FileAsset.fromS3Upload(null, s3Metadata))
@@ -135,19 +169,27 @@ class FileAssetTest {
         }
 
         @Test
-        @DisplayName("fromS3Upload_WithNullS3Metadata_ShouldThrowException - null S3Metadata 시 예외")
+        @DisplayName("fromS3Upload_WithNullS3Metadata_ShouldThrowException - null S3 메타데이터 시 예외")
         void fromS3Upload_WithNullS3Metadata_ShouldThrowException() {
             // Given
-            UploadSession session = UploadSession.forNew(
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(4L),
+                SessionKey.generate(),
                 TenantId.of(1L),
                 FileName.of("test.txt"),
-                FileSize.of(100L)
+                FileSize.of(100L),
+                UploadType.SINGLE,
+                StorageKey.of("uploads/test.txt"),
+                SessionStatus.IN_PROGRESS,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                null, null
             );
 
             // When & Then
             assertThatThrownBy(() -> FileAsset.fromS3Upload(session, null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("S3UploadMetadata는 필수입니다");
+                .hasMessageContaining("S3ObjectMetadata는 필수입니다");
         }
     }
 
@@ -159,10 +201,18 @@ class FileAssetTest {
         @DisplayName("fromCompletedUpload_WithValidInputs_ShouldCreateFileAsset - 정상 입력으로 FileAsset 생성")
         void fromCompletedUpload_WithValidInputs_ShouldCreateFileAsset() {
             // Given - 외부 다운로드 세션
-            UploadSession session = UploadSession.createForExternalDownload(
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(5L),
+                SessionKey.generate(),
                 TenantId.of(1L),
                 FileName.of("external-download.pdf"),
-                FileSize.of(5000L)
+                FileSize.of(5000L),
+                UploadType.SINGLE,
+                StorageKey.of("tenant-1/external/2024/11/05/external-download.pdf"),
+                SessionStatus.IN_PROGRESS,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                null, null
             );
 
             StorageKey storageKey = StorageKey.of("tenant-1/external/2024/11/05/external-download.pdf");
@@ -195,10 +245,18 @@ class FileAssetTest {
         @DisplayName("fromCompletedUpload_WithLargeFile_ShouldCreateFileAsset - 대용량 파일도 정상 생성")
         void fromCompletedUpload_WithLargeFile_ShouldCreateFileAsset() {
             // Given - 1GB 파일
-            UploadSession session = UploadSession.createForExternalDownload(
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(6L),
+                SessionKey.generate(),
                 TenantId.of(2L),
                 FileName.of("large-video.mp4"),
-                FileSize.of(1_000_000_000L)  // 1GB
+                FileSize.of(1_000_000_000L),  // 1GB
+                UploadType.SINGLE,
+                StorageKey.of("tenant-2/external/large-video.mp4"),
+                SessionStatus.IN_PROGRESS,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                null, null
             );
 
             StorageKey storageKey = StorageKey.of("tenant-2/external/large-video.mp4");
@@ -233,10 +291,18 @@ class FileAssetTest {
         @DisplayName("fromCompletedUpload_WithNullStorageKey_ShouldThrowException - null StorageKey 시 예외")
         void fromCompletedUpload_WithNullStorageKey_ShouldThrowException() {
             // Given
-            UploadSession session = UploadSession.createForExternalDownload(
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(7L),
+                SessionKey.generate(),
                 TenantId.of(1L),
                 FileName.of("file.txt"),
-                FileSize.of(100L)
+                FileSize.of(100L),
+                UploadType.SINGLE,
+                StorageKey.of("tenant-1/file.txt"),
+                SessionStatus.IN_PROGRESS,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                null, null
             );
             FileSize fileSize = FileSize.of(100L);
 
@@ -250,10 +316,18 @@ class FileAssetTest {
         @DisplayName("fromCompletedUpload_WithNullFileSize_ShouldThrowException - null FileSize 시 예외")
         void fromCompletedUpload_WithNullFileSize_ShouldThrowException() {
             // Given
-            UploadSession session = UploadSession.createForExternalDownload(
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(8L),
+                SessionKey.generate(),
                 TenantId.of(1L),
                 FileName.of("file.txt"),
-                FileSize.of(100L)
+                FileSize.of(100L),
+                UploadType.SINGLE,
+                StorageKey.of("tenant-1/file.txt"),
+                SessionStatus.IN_PROGRESS,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                null, null
             );
             StorageKey storageKey = StorageKey.of("tenant-1/file.txt");
 
@@ -272,18 +346,26 @@ class FileAssetTest {
         @DisplayName("compareFactoryMethods_fromS3Upload_vs_fromCompletedUpload - 두 Factory Method 차이점 검증")
         void compareFactoryMethods_fromS3Upload_vs_fromCompletedUpload() {
             // Given - 동일한 세션
-            UploadSession session = UploadSession.forNew(
+            UploadSession session = UploadSession.reconstitute(
+                UploadSessionId.of(9L),
+                SessionKey.generate(),
                 TenantId.of(1L),
                 FileName.of("test.txt"),
-                FileSize.of(1000L)
+                FileSize.of(1000L),
+                UploadType.SINGLE,
+                StorageKey.of("tenant-1/test.txt"),
+                SessionStatus.IN_PROGRESS,
+                null, null,
+                LocalDateTime.now(), LocalDateTime.now(),
+                null, null
             );
 
             // S3 업로드 (실제 메타데이터 사용)
-            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
+            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
                 1000L,
                 "actual-etag-123",
                 "text/plain",
-                "uploads/tenant-1/2024/11/06/test.txt"
+                "tenant-1/test.txt"  // storageKey
             );
 
             // 외부 다운로드 (기본값 사용)
