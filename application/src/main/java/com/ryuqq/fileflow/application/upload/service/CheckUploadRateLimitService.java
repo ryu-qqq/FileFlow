@@ -63,6 +63,11 @@ public class CheckUploadRateLimitService implements CheckUploadRateLimitUseCase 
         LoadUploadSessionPort loadUploadSessionPort,
         @Value("${upload.rate-limit.max-concurrent-per-tenant:10}") int maxConcurrentPerTenant
     ) {
+        if (maxConcurrentPerTenant <= 0) {
+            throw new IllegalArgumentException(
+                "maxConcurrentPerTenant는 0보다 커야 합니다: " + maxConcurrentPerTenant
+            );
+        }
         this.loadUploadSessionPort = loadUploadSessionPort;
         this.maxConcurrentPerTenant = maxConcurrentPerTenant;
     }
@@ -83,6 +88,9 @@ public class CheckUploadRateLimitService implements CheckUploadRateLimitUseCase 
     @Override
     @Transactional(readOnly = true)
     public RateLimitResponse execute(CheckRateLimitCommand command) {
+        if (command == null) {
+            throw new IllegalArgumentException("CheckRateLimitCommand는 null일 수 없습니다.");
+        }
         Long tenantId = command.tenantId();
 
         // 1. Tenant의 진행 중인 업로드 세션 개수 조회 (IN_PROGRESS 상태)

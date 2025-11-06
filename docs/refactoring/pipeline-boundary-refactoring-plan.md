@@ -6,28 +6,129 @@
 **바운더리 컨텍스트**: `Pipeline` (파일 처리 파이프라인)
 **패턴**: Transactional Outbox + Orchestrator Pattern (프로젝트 디폴트 컨벤션 준수)
 **아키텍처**: CQRS (Command/Query 분리), Hexagonal Architecture
+**최종 업데이트**: 2025-11-06 (현재 코드베이스 상태 반영)
+
+---
+
+## 🔍 현재 상태 분석 (2025-11-06)
+
+### ✅ 이미 구현된 부분 (강점)
+
+#### 1. Domain Layer - 거의 완벽 ⭐
+
+```java
+✅ Lombok 금지 - Pure Java 완벽 준수
+✅ Law of Demeter - 단일 Getter 호출 패턴 완벽
+✅ Tell, Don't Ask - startProcessing(), complete(), fail() 등 행위 메서드
+✅ Value Object 래핑 - PipelineOutboxId, IdempotencyKey, FileId
+✅ 상태 전이 로직 명확 - PENDING → PROCESSING → COMPLETED/FAILED
+✅ Javadoc 완벽 - @author, @since, 사용 예시 포함
+```
+
+**평가**: Domain Layer는 프로젝트 컨벤션을 **거의 완벽하게** 준수하고 있습니다.
+
+#### 2. Persistence Layer - 양호
+
+```java
+✅ Spring Data JPA Query Method 사용
+✅ @Query 어노테이션으로 명시적 쿼리
+✅ Long FK 전략 준수 (JPA 관계 어노테이션 없음)
+✅ Javadoc 충실
+```
+
+#### 3. 기본 Outbox 패턴 - 구현 완료
+
+```java
+✅ Transactional Outbox 패턴 구현
+✅ PipelineOutboxScheduler가 주기적으로 PENDING 메시지 폴링
+✅ 재시도 메커니즘 (FAILED → PENDING)
+✅ Stale 메시지 복구 (오래된 PROCESSING 메시지)
+```
+
+### 🚨 해결 필요한 Critical Issues
+
+#### Issue #1: Worker-Outbox 상태 불일치 (CRITICAL) 🔴
+
+**문제**: 비동기 Worker(`@Async`)가 완료되기 전에 Outbox를 `COMPLETED`로 마킹
+**영향**: Transactional Outbox 패턴의 "At-least-once 처리 보장" 무력화
+**현재 코드**:
+
+```java
+// PipelineOutboxScheduler.java:198-212
+outboxManager.markProcessing(outbox);         // PENDING → PROCESSING
+pipelineWorker.startPipeline(...);            // @Async 호출 (즉시 반환)
+outboxManager.markProcessed(outbox);          // ❌ Worker 완료 전에 COMPLETED!
+```
+
+**Javadoc에서도 인정**:
+
+```java
+// 주의: Worker는 비동기이므로 실제 Pipeline 완료와는 별개
+// Outbox의 역할은 "작업 시작 보장"이지 "작업 완료 보장"이 아님
+```
+
+**해결책**: Orchestrator Pattern (3-Phase Lifecycle with WAL) 적용 필요
+
+#### Issue #2: Repository 메모리 필터링 (성능 이슈) ⚠️
+
+**문제**: DB에서 모든 데이터 조회 후 메모리에서 `.limit()` 사용
+**영향**: PENDING 메시지가 많을 경우 메모리 낭비
+**현재 코드**:
+
+```java
+// PipelineOutboxPersistenceAdapter.java:150-156
+List<PipelineOutboxJpaEntity> entities =
+    repository.findByStatusOrderByCreatedAtAsc(status);  // ❌ 전체 조회
+
+return entities.stream()
+    .limit(batchSize)  // ❌ 메모리 필터링
+    .map(mapper::toDomain)
+    .collect(Collectors.toList());
+```
+
+**해결책**: Repository 메서드에 `batchSize` 파라미터 추가 및 DB 레벨 LIMIT 사용
+
+#### Issue #3: OutboxStatus 패키지 위치 (DDD 경계 위반) ⚠️
+
+**문제**: `OutboxStatus`가 `domain.download` 패키지에 위치
+**영향**: Pipeline이 Download 바운디드 컨텍스트에 의존 → DDD 경계 위반
+**현재 구조**:
+
+```
+domain/
+  ├── download/
+  │   └── OutboxStatus.java  ❌ 잘못된 위치
+  └── pipeline/
+      └── PipelineOutbox.java  → domain.download.OutboxStatus 의존
+```
+
+**해결책**: `OutboxStatus`를 `domain.common` 패키지로 이동
 
 ---
 
 ## 🎯 작업 범위
 
 ### 1. 명명 규칙 통일
+
 - 현재: `PipelineOutbox` (바운더리 불명확)
 - 변경: `PipelineOutbox` → 유지하되, 패키지 구조로 명확화
   - `domain.pipeline.PipelineOutbox`
   - `application.pipeline.orchestration.PipelineOrchestrator`
 
 ### 2. Orchestrator 패턴 선택
+
 **프로젝트 디폴트 컨벤션 사용** (`docs/coding_convention/09-orchestration-patterns/`)
 
 #### 선택한 패턴: **3-Phase Lifecycle with WAL**
+
 ```
 Phase 1: Persist (WAL 저장)
 Phase 2: Execute (비즈니스 로직 - @Async)
 Phase 3: Finalize (상태 업데이트)
 ```
 
-#### 이유:
+#### 이유
+
 1. **트랜잭션 경계 명확**: WAL 저장 → 비동기 실행 → 상태 업데이트 분리
 2. **크래시 복구**: Finalizer/Reaper 패턴으로 실패 복구
 3. **Idempotency 보장**: IdemKey + UNIQUE 제약
@@ -37,18 +138,48 @@ Phase 3: Finalize (상태 업데이트)
 
 ## 🚨 Critical Issues (우선순위 1)
 
-### Issue #1: OutboxStatus 패키지 위치 문제 (DDD 위반)
+### Issue #1: Worker-Outbox 상태 불일치 (CRITICAL 🔴 최우선)
 
 #### 현재 상태
+
+```java
+// PipelineOutboxScheduler.java:198-212 (실제 코드)
+private ProcessResult processOutboxMessage(PipelineOutbox outbox) {
+    try {
+        // 1. PENDING → PROCESSING
+        outboxManager.markProcessing(outbox);
+
+        // 2. Worker에 비동기 작업 위임 (@Async)
+        pipelineWorker.startPipeline(outbox.getFileIdValue());
+
+        // 3. ❌ 문제: Worker가 실제로 완료되기 전에 COMPLETED로 변경!
+        outboxManager.markProcessed(outbox);
+
+        return ProcessResult.SUCCESS;
+    } catch (Exception e) {
+        ...
+    }
+}
 ```
-domain/
-  ├── download/
-  │   └── OutboxStatus.java  ❌ 잘못된 위치
-  └── pipeline/
-      └── PipelineOutbox.java  → OutboxStatus 의존 (DDD 경계 위반)
+
+**문제점**:
+
+1. `pipelineWorker.startPipeline()`은 `@Async`로 비동기 실행
+2. 하지만 즉시 `markProcessed()` 호출 → **Worker 완료 전에 Outbox가 COMPLETED**
+3. Worker가 실패해도 Outbox는 이미 COMPLETED 상태 → **상태 불일치**
+4. **At-least-once 처리 보장 무력화**
+
+**현재 Javadoc에서도 인정**:
+
+```java
+// PipelineOutboxScheduler.java:190-193
+// 주의: Worker는 비동기이므로 실제 Pipeline 완료와는 별개
+// Outbox의 역할은 "작업 시작 보장"이지 "작업 완료 보장"이 아님
+// Pipeline 실패는 Worker 내부에서 로깅만 (Outbox 상태 무관)
 ```
 
 #### 변경 계획
+
 ```
 domain/
   ├── common/
@@ -59,6 +190,7 @@ domain/
 ```
 
 #### 작업 내용
+
 1. **파일 이동**: `domain.download.OutboxStatus` → `domain.common.OutboxStatus`
 2. **Import 수정**: 모든 참조 파일의 import 업데이트
    - `PipelineOutbox.java`
@@ -67,6 +199,7 @@ domain/
    - 기타 Download 바운더리 파일들
 
 #### 준수 컨벤션
+
 - **Domain Layer**: Pure Java (Lombok 금지)
 - **Law of Demeter**: Getter 체이닝 금지
 - **Javadoc 필수**: `@author Sangwon Ryu`, `@since 1.0.0`
@@ -76,6 +209,7 @@ domain/
 ### Issue #2: Worker-Outbox 상태 불일치 (설계 결함)
 
 #### 현재 문제
+
 ```java
 // PipelineOutboxScheduler.java (❌ 잘못된 설계)
 @Scheduled(...)
@@ -97,6 +231,7 @@ public void processOutboxMessages() {
 #### 변경 계획: Orchestrator Pattern 적용
 
 ##### 1. Orchestrator 구조 (컨벤션 준수)
+
 ```
 application/
   └── pipeline/
@@ -120,6 +255,7 @@ application/
 ```
 
 ##### 2. Command 설계 (Record 패턴)
+
 ```java
 package com.ryuqq.fileflow.application.pipeline.orchestration.command;
 
@@ -168,6 +304,7 @@ public record PipelineTriggerCommand(
 ```
 
 ##### 3. Orchestrator 설계
+
 ```java
 package com.ryuqq.fileflow.application.pipeline.orchestration.orchestrator;
 
@@ -268,6 +405,7 @@ public class PipelineTriggerOrchestrator {
 ```
 
 ##### 4. Outcome Modeling (Sealed interface)
+
 ```java
 package com.ryuqq.fileflow.application.pipeline.orchestration.outcome;
 
@@ -335,6 +473,7 @@ public sealed interface PipelineTriggerOutcome
 ```
 
 ##### 5. Finalizer 설계 (@Scheduled)
+
 ```java
 package com.ryuqq.fileflow.application.pipeline.orchestration.finalizer;
 
@@ -387,6 +526,7 @@ public class PipelineTriggerFinalizer {
 ```
 
 #### 준수 컨벤션
+
 - **Orchestration Pattern**: 디폴트 컨벤션 (`docs/coding_convention/09-orchestration-patterns/`)
 - **Command**: Record 패턴 (Lombok 금지)
 - **Orchestrator**: `@Async` 필수, `@Transactional` 금지 (executeInternal)
@@ -396,25 +536,44 @@ public class PipelineTriggerFinalizer {
 
 ---
 
-### Issue #3: Repository 메서드 누락 (컴파일 에러 위험)
+### Issue #2: Repository 메모리 필터링 (성능 이슈 ⚠️)
 
-#### 현재 문제
+#### 현재 문제 (실제 코드 확인됨)
+
 ```java
-// PipelineOutboxPersistenceAdapter.java
+// PipelineOutboxPersistenceAdapter.java:143-161 (실제 코드)
+@Transactional(readOnly = true)
 public List<PipelineOutbox> findByStatus(OutboxStatus status, int batchSize) {
-    List<PipelineOutboxJpaEntity> entities =
-        repository.findByStatusOrderByCreatedAtAsc(status);  // ❌ 메서드 없음!
+    log.debug("Finding PipelineOutbox by status: status={}, batchSize={}", status, batchSize);
 
-    return entities.stream()
-        .limit(batchSize)  // ⚠️ 메모리 필터링 (DB가 아님)
+    Pageable pageable = PageRequest.of(0, batchSize);  // ❌ 사용되지 않음!
+
+    List<PipelineOutboxJpaEntity> entities =
+        repository.findByStatusOrderByCreatedAtAsc(status);  // ❌ batchSize 없음, 전체 조회
+
+    List<PipelineOutbox> outboxes = entities.stream()
+        .limit(batchSize)  // ❌ 메모리 필터링 (DB가 아님)
         .map(mapper::toDomain)
         .collect(Collectors.toList());
+
+    log.debug("Found {} PipelineOutbox with status={}", outboxes.size(), status);
+
+    return outboxes;
 }
 ```
+
+**문제점**:
+
+1. `Pageable pageable = PageRequest.of(0, batchSize)` 생성하지만 **사용하지 않음**
+2. `repository.findByStatusOrderByCreatedAtAsc(status)` - **batchSize 파라미터 없음**
+3. DB에서 모든 PENDING 메시지 조회 (1만 개면 1만 개 모두)
+4. 메모리에서 `.limit(batchSize)`로 필터링 → **메모리 낭비**
+5. 프로젝트 컨벤션 위반 (DB 레벨 LIMIT 사용 필수)
 
 #### 변경 계획
 
 ##### 1. Repository 메서드 추가 (Spring Data JPA)
+
 ```java
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.repository;
 
@@ -499,6 +658,7 @@ public interface PipelineOutboxJpaRepository extends JpaRepository<PipelineOutbo
 ```
 
 ##### 2. Adapter 수정 (메서드 호출 변경)
+
 ```java
 // PipelineOutboxPersistenceAdapter.java (수정 전)
 public List<PipelineOutbox> findByStatus(OutboxStatus status, int batchSize) {
@@ -523,6 +683,7 @@ public List<PipelineOutbox> findByStatus(OutboxStatus status, int batchSize) {
 ```
 
 #### 준수 컨벤션
+
 - **Persistence Layer**: Spring Data JPA Query Method
 - **DB 레벨 제한**: `LIMIT` 사용 (메모리 필터링 금지)
 - **Long FK 전략**: JPA 관계 어노테이션 금지 (`@ManyToOne`, `@OneToMany` 등)
@@ -535,6 +696,7 @@ public List<PipelineOutbox> findByStatus(OutboxStatus status, int batchSize) {
 ### Issue #4: Domain Exception 미구현
 
 #### 현재 문제
+
 ```java
 // PipelineOutbox.java
 public void startProcessing() {
@@ -547,6 +709,7 @@ public void startProcessing() {
 #### 변경 계획
 
 ##### 1. Domain Exception 설계
+
 ```java
 package com.ryuqq.fileflow.domain.pipeline.exception;
 
@@ -605,6 +768,7 @@ public class InvalidOutboxStatusTransitionException extends PipelineDomainExcept
 ```
 
 ##### 2. Domain 수정 (Exception 적용)
+
 ```java
 // PipelineOutbox.java (수정 전)
 public void startProcessing() {
@@ -624,6 +788,7 @@ public void startProcessing() {
 ```
 
 #### 준수 컨벤션
+
 - **Domain Layer**: Pure Java (Lombok 금지)
 - **Exception Hierarchy**: Base Exception → Specific Exception
 - **ErrorCode**: 도메인별 고유 코드 (`PIPELINE_001`, `PIPELINE_002` 등)
@@ -634,6 +799,7 @@ public void startProcessing() {
 ### Issue #5: Multi-tenant 하드코딩
 
 #### 현재 문제
+
 ```java
 // PipelineWorker.java
 private void saveMetadataAsExtractedData(FileAsset fileAsset, FileMetadata metadata) {
@@ -650,6 +816,7 @@ private void saveMetadataAsExtractedData(FileAsset fileAsset, FileMetadata metad
 #### 변경 계획
 
 ##### 1. FileAsset에 tenantId/organizationId 추가
+
 ```java
 // FileAsset.java (Domain)
 public class FileAsset {
@@ -670,6 +837,7 @@ public class FileAsset {
 ```
 
 ##### 2. PipelineWorker 수정
+
 ```java
 // PipelineWorker.java (수정 후)
 private void saveMetadataAsExtractedData(FileAsset fileAsset, FileMetadata metadata) {
@@ -684,6 +852,7 @@ private void saveMetadataAsExtractedData(FileAsset fileAsset, FileMetadata metad
 ```
 
 #### 준수 컨벤션
+
 - **Domain Layer**: Pure Java getter 사용
 - **Law of Demeter**: `fileAsset.getTenantId()` (단일 Getter 호출)
 
@@ -692,12 +861,14 @@ private void saveMetadataAsExtractedData(FileAsset fileAsset, FileMetadata metad
 ### Issue #6: 테스트 커버리지 낮음 (~10%)
 
 #### 현재 상태
+
 - **기존 테스트**: `PipelineWorkerSimpleTest.java` (1개, FileAsset 없는 경우만 테스트)
 - **커버리지**: ~10%
 
 #### 변경 계획
 
 ##### 1. Domain Layer 테스트
+
 ```java
 package com.ryuqq.fileflow.domain.pipeline;
 
@@ -762,20 +933,24 @@ class PipelineOutboxTest {
 ```
 
 ##### 2. Application Layer 테스트 (예정)
+
 - `PipelineTriggerOrchestratorTest.java`
 - `PipelineTriggerFinalizerTest.java`
 - `PipelineTriggerReaperTest.java`
 - `PipelineWorkerTest.java` (확장)
 
 ##### 3. Persistence Layer 테스트 (예정)
+
 - `PipelineOutboxPersistenceAdapterTest.java`
 
 #### 목표 커버리지
+
 - **Domain Layer**: 90% 이상
 - **Application Layer**: 80% 이상
 - **Persistence Layer**: 70% 이상
 
 #### 준수 컨벤션
+
 - **Testing Layer**: `@DisplayName` 한글 사용
 - **AssertJ**: `assertThat()` 사용 (JUnit assert 금지)
 - **BDD Given-When-Then**: 명확한 구조
@@ -788,13 +963,16 @@ class PipelineOutboxTest {
 ### Issue #7: REST API 엔드포인트 부재
 
 #### 현재 상태
+
 - Pipeline 바운더리에 REST API 없음 (내부 시스템만 존재)
 
 #### 변경 계획 (선택사항)
+
 - **POST /api/v1/pipelines/trigger** - 수동 Pipeline 트리거
 - **GET /api/v1/pipelines/status/{fileId}** - Pipeline 상태 조회
 
 #### 준수 컨벤션
+
 - **REST API Layer**: `@RestController`, `@RequestMapping`
 - **DTO Pattern**: Request/Response DTO (Lombok 허용)
 - **Mapper Pattern**: DTO ↔ Domain 변환
@@ -805,6 +983,7 @@ class PipelineOutboxTest {
 ### Issue #8: 메트릭 및 모니터링 미구현
 
 #### 변경 계획 (선택사항)
+
 - **Micrometer**: Pipeline 처리 시간, 성공률, 실패율
 - **Logging**: Structured Logging (SLF4J + Logback)
 
@@ -813,38 +992,62 @@ class PipelineOutboxTest {
 ### Issue #9: 인덱스 최적화
 
 #### 현재 인덱스
+
 ```sql
 CREATE INDEX IDX_status_created_at ON pipeline_outbox (status, created_at);
 CREATE INDEX IDX_file_id ON pipeline_outbox (file_id);
 ```
 
 #### 추가 고려사항
+
 - `(status, updated_at)` - 재시도 쿼리 최적화
 - `(idempotency_key)` - UNIQUE 제약으로 이미 커버됨
 
 ---
 
-## 📊 작업 우선순위 요약
+## 📊 작업 우선순위 요약 (재조정됨)
 
-| 순위 | 작업 | 예상 시간 | 중요도 |
-|------|------|-----------|--------|
-| 1 | OutboxStatus 패키지 이동 | 30분 | 🔴 Critical |
-| 2 | Orchestrator Pattern 적용 | 4시간 | 🔴 Critical |
-| 3 | Repository 메서드 추가 | 1시간 | 🔴 Critical |
-| 4 | Domain Exception 추가 | 1시간 | 🟡 Important |
-| 5 | Multi-tenant 하드코딩 제거 | 1시간 | 🟡 Important |
-| 6 | 테스트 커버리지 향상 | 3시간 | 🟡 Important |
-| 7 | REST API 추가 | 2시간 | 🟢 Nice to Have |
-| 8 | 메트릭/모니터링 | 2시간 | 🟢 Nice to Have |
-| 9 | 인덱스 최적화 | 30분 | 🟢 Nice to Have |
+### 🔴 Critical Issues (최우선, 5.5시간)
 
-**총 예상 시간**: Critical (5.5시간) + Important (5시간) + Nice to Have (4.5시간) = **15시간**
+| 순위 | 작업 | 예상 시간 | 중요도 | 변경 이유 |
+|------|------|-----------|--------|----------|
+| **1** | **Orchestrator Pattern 적용** | **4시간** | 🔴 **CRITICAL** | **Worker-Outbox 상태 불일치 해결 (At-least-once 보장)** |
+| 2 | Repository 메서드 수정 (batchSize) | 1시간 | 🔴 Critical | 메모리 낭비 방지, DB 레벨 LIMIT 적용 |
+| 3 | OutboxStatus 패키지 이동 | 30분 | 🔴 Critical | DDD 경계 위반 해결 (domain.download → domain.common) |
+
+**우선순위 변경 사유**:
+
+- **Issue #1 (Orchestrator)을 최우선으로 상향 조정**: Worker-Outbox 상태 불일치는 Transactional Outbox 패턴의 핵심 목적인 "At-least-once 처리 보장"을 무력화시키는 **CRITICAL** 이슈
+- **Issue #2 (Repository)**: 현재 코드에서 `Pageable` 객체를 생성하지만 사용하지 않는 것 확인 → 빠른 수정 가능
+- **Issue #3 (OutboxStatus)**: DDD 경계 위반이지만 기능적으로는 동작하므로 상대적으로 낮은 우선순위
+
+### 🟡 Important Issues (단기, 5시간)
+
+| 순위 | 작업 | 예상 시간 | 중요도 | 비고 |
+|------|------|-----------|--------|------|
+| 4 | Domain Exception 추가 | 1시간 | 🟡 Important | 컨벤션 준수, 명확한 에러 코드 |
+| 5 | Multi-tenant 하드코딩 제거 | 1시간 | 🟡 Important | 실제 운영 환경 대비 |
+| 6 | 테스트 커버리지 향상 | 3시간 | 🟡 Important | 품질 보증 (목표: Domain 90%, Application 80%) |
+
+### 🟢 Nice to Have (장기, 선택사항)
+
+| 순위 | 작업 | 예상 시간 | 중요도 | 비고 |
+|------|------|-----------|--------|------|
+| 7 | REST API 엔드포인트 추가 | 2시간 | 🟢 Nice to Have | 수동 트리거, 모니터링 |
+| 8 | 메트릭/모니터링 추가 | 2시간 | 🟢 Nice to Have | 운영 가시성 |
+| 9 | 인덱스 최적화 | 30분 | 🟢 Nice to Have | 성능 미세 조정 |
+
+**총 예상 시간**:
+
+- **핵심 작업 (Critical + Important)**: 10.5시간
+- **전체 (Nice to Have 포함)**: 15시간
 
 ---
 
 ## 🔄 CQRS 패턴 준수
 
 ### Command Port (쓰기)
+
 ```java
 public interface PipelineOutboxPort {
     PipelineOutbox save(PipelineOutbox outbox);
@@ -852,6 +1055,7 @@ public interface PipelineOutboxPort {
 ```
 
 ### Query Port (읽기)
+
 ```java
 public interface PipelineOutboxQueryPort {
     List<PipelineOutbox> findByStatus(OutboxStatus status, int batchSize);
@@ -861,6 +1065,7 @@ public interface PipelineOutboxQueryPort {
 ```
 
 ### Adapter (통합)
+
 ```java
 @Component
 public class PipelineOutboxPersistenceAdapter
@@ -871,39 +1076,87 @@ public class PipelineOutboxPersistenceAdapter
 
 ---
 
-## 🏗️ 레이어별 컨벤션 체크리스트
+## 🏗️ 레이어별 컨벤션 체크리스트 (2025-11-06 현재 상태)
 
-### ✅ Domain Layer
-- [ ] Lombok 금지 (Pure Java)
-- [ ] Law of Demeter 준수 (Getter 체이닝 금지)
-- [ ] Tell, Don't Ask 원칙
-- [ ] Domain Exception 사용
-- [ ] Javadoc 필수 (`@author`, `@since`)
+### ✅ Domain Layer (`PipelineOutbox.java`)
 
-### ✅ Application Layer
-- [ ] `@Transactional` 경계 명확
-- [ ] `@Async` 외부 API 호출
-- [ ] Port Interface 의존
-- [ ] Command/Query 분리 (CQRS)
-- [ ] Orchestrator Pattern 준수
+- [x] **Lombok 금지 (Pure Java)** ✅ **완벽 준수**
+  - 모든 getter/setter Pure Java로 구현
+- [x] **Law of Demeter 준수** ✅ **완벽 준수**
+  - `getIdValue()`, `getFileIdValue()` 등 편의 메서드 제공
+  - Getter 체이닝 없음
+- [x] **Tell, Don't Ask 원칙** ✅ **완벽 준수**
+  - `startProcessing()`, `complete()`, `fail()`, `retryFromFailed()` 등 행위 메서드
+- [ ] **Domain Exception 사용** ❌ **미구현 (Issue #4)**
+  - 현재 `IllegalStateException` 사용 → `PipelineDomainException` 필요
+- [x] **Javadoc 필수** ✅ **완벽 준수**
+  - 모든 public 클래스/메서드에 `@author`, `@since`, 상세 설명 포함
 
-### ✅ Persistence Layer
-- [ ] Long FK 전략 (JPA 관계 금지)
-- [ ] Spring Data JPA Query Method
-- [ ] DB 레벨 LIMIT (메모리 필터링 금지)
-- [ ] Index 최적화
+### ⚠️ Application Layer
 
-### ✅ REST API Layer (예정)
+- [x] **Port Interface 의존** ✅ **완벽 준수**
+  - `PipelineOutboxPort`, `PipelineOutboxQueryPort` 분리
+- [x] **Command/Query 분리 (CQRS)** ✅ **완벽 준수**
+  - Command Port와 Query Port 명확히 분리
+- [ ] **`@Transactional` 경계 명확** ❌ **Worker에 문제 없음** (Issue #1 - Scheduler 문제)
+  - Scheduler는 트랜잭션 관리 없음 (Manager에 위임)
+  - Worker는 `@Transactional` 없음 (정상)
+- [ ] **`@Async` 외부 API 호출** ⚠️ **Worker는 `@Async` 없음** (Issue #1)
+  - Scheduler가 Worker를 `@Async` 없이 동기 호출
+  - 외부 API 호출 없어 현재는 문제 없음, but Orchestrator Pattern 필요
+- [ ] **Orchestrator Pattern 준수** ❌ **미구현 (Issue #1 - CRITICAL)**
+  - 현재: Scheduler → Worker (동기 호출)
+  - 필요: Scheduler → Orchestrator (`@Async`) → Finalizer
+
+### ⚠️ Persistence Layer
+
+- [x] **Long FK 전략** ✅ **완벽 준수**
+  - `PipelineOutboxJpaEntity`에서 JPA 관계 어노테이션 없음
+  - `private Long fileId;` 사용
+- [x] **Spring Data JPA Query Method** ✅ **구현됨**
+  - `findByStatusOrderByCreatedAtAsc()` 등 Query Method 사용
+- [ ] **DB 레벨 LIMIT (메모리 필터링 금지)** ❌ **미구현 (Issue #2)**
+  - 현재: `repository.findByStatusOrderByCreatedAtAsc(status).stream().limit(batchSize)`
+  - 필요: `repository.findByStatusOrderByCreatedAtAsc(status, PageRequest.of(0, batchSize))`
+- [ ] **Index 최적화** ⚠️ **미확인**
+  - `IDX_status_created_at` 존재 여부 확인 필요
+
+### ⚠️ Boundary Violation
+
+- [ ] **OutboxStatus 위치** ❌ **DDD 경계 위반 (Issue #3)**
+  - 현재: `domain.download.OutboxStatus`
+  - 필요: `domain.common.OutboxStatus` 또는 `domain.pipeline.OutboxStatus`
+
+### ⏳ REST API Layer (예정)
+
 - [ ] Controller/Service 분리
 - [ ] DTO Pattern (Request/Response)
 - [ ] Mapper Pattern (DTO ↔ Domain)
 - [ ] Exception Handling (`@RestControllerAdvice`)
 
-### ✅ Testing Layer
-- [ ] `@DisplayName` 한글
-- [ ] AssertJ 사용
-- [ ] BDD Given-When-Then
-- [ ] Object Mother Pattern
+### ⚠️ Testing Layer
+
+- [ ] **테스트 커버리지** ❌ **매우 낮음 (~10%, Issue #6)**
+  - `PipelineOutboxTest.java` 1개만 존재
+  - Domain 90%, Application 80%, Integration 70% 목표
+- [ ] **`@DisplayName` 한글** ⚠️ **일부만 사용**
+- [ ] **AssertJ 사용** ⚠️ **확인 필요**
+- [ ] **BDD Given-When-Then** ⚠️ **확인 필요**
+- [ ] **Object Mother Pattern** ❌ **미구현**
+
+---
+
+## 📊 컨벤션 준수율 요약 (2025-11-06)
+
+| Layer | 준수 항목 | 미준수/개선 필요 | 준수율 |
+|-------|---------|----------------|-------|
+| **Domain** | 4/5 | Domain Exception (Issue #4) | **80%** ✅ |
+| **Application** | 2/5 | Orchestrator Pattern (Issue #1) | **40%** ⚠️ |
+| **Persistence** | 2/4 | DB LIMIT (Issue #2), Index | **50%** ⚠️ |
+| **Boundary** | 0/1 | OutboxStatus 위치 (Issue #3) | **0%** ❌ |
+| **Testing** | 0/5 | 전반적 미구현 (Issue #6) | **0%** ❌ |
+
+**전체 평균**: **34%** (11/20) → **목표: 90%+**
 
 ---
 

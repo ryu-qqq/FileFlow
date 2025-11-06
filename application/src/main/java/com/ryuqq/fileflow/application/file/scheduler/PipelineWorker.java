@@ -16,6 +16,7 @@ import com.ryuqq.fileflow.domain.file.metadata.FileMetadata;
 import com.ryuqq.fileflow.domain.file.thumbnail.ThumbnailInfo;
 import com.ryuqq.fileflow.domain.file.variant.FileVariant;
 import com.ryuqq.fileflow.domain.file.variant.VariantType;
+import com.ryuqq.fileflow.domain.pipeline.PipelineResult;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
@@ -23,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Pipeline Worker
@@ -121,28 +124,29 @@ public class PipelineWorker {
      *   <li>FileAsset 조회</li>
      *   <li>썸네일 생성 (이미지만)</li>
      *   <li>메타데이터 추출 (모든 파일)</li>
-     *   <li>결과 저장 (TODO)</li>
+     *   <li>결과 저장</li>
      * </ol>
      *
      * <p><strong>비동기 실행:</strong></p>
      * <ul>
      *   <li>@Async로 별도 스레드에서 실행</li>
-     *   <li>호출자는 즉시 반환</li>
+     *   <li>CompletableFuture를 반환하여 호출자가 결과를 기다릴 수 있음</li>
      *   <li>스레드 풀: AsyncConfig에서 설정</li>
      * </ul>
      *
      * <p><strong>예외 처리:</strong></p>
      * <ul>
-     *   <li>FileAsset 미존재: 로깅 후 종료</li>
+     *   <li>FileAsset 미존재: PipelineResult.failure() 반환</li>
      *   <li>썸네일 실패: 로깅만 (필수 아님, 계속 진행)</li>
      *   <li>메타데이터 실패: 로깅만 (필수 아님, 계속 진행)</li>
-     *   <li>치명적 오류: 로깅 후 Scheduler가 FAILED 처리</li>
+     *   <li>치명적 오류: PipelineResult.failure() 반환</li>
      * </ul>
      *
      * @param fileAssetId FileAsset ID
+     * @return Pipeline 처리 결과 (CompletableFuture)
      */
     @Async
-    public void startPipeline(Long fileAssetId) {
+    public CompletableFuture<PipelineResult> startPipeline(Long fileAssetId) {
         log.info("Starting pipeline processing: fileAssetId={}", fileAssetId);
 
         try {
@@ -170,13 +174,17 @@ public class PipelineWorker {
                 thumbnailInfo != null ? "saved to file_variants" : "skipped",
                 metadata.metadata().size() + " fields saved to extracted_data");
 
+            return CompletableFuture.completedFuture(PipelineResult.success());
+
         } catch (IllegalArgumentException e) {
-            // FileAsset 미존재 - 로깅만 (Outbox는 Scheduler가 관리)
+            // FileAsset 미존재
             log.error("FileAsset not found for pipeline: fileAssetId={}", fileAssetId, e);
+            return CompletableFuture.completedFuture(PipelineResult.failure(e));
 
         } catch (Exception e) {
-            // Pipeline 처리 실패 - 로깅 (Outbox는 Scheduler가 FAILED로 표시)
+            // Pipeline 처리 실패
             log.error("Pipeline processing failed: fileAssetId={}", fileAssetId, e);
+            return CompletableFuture.completedFuture(PipelineResult.failure(e));
         }
     }
 
@@ -336,8 +344,7 @@ public class PipelineWorker {
      *
      * <p><strong>Multi-tenant 처리:</strong></p>
      * <ul>
-     *   <li>tenantId, organizationId는 FileAsset에서 추출해야 함 (현재는 1L 하드코딩)</li>
-     *   <li>TODO: FileAsset에 tenantId, organizationId 필드 추가 필요</li>
+     *   <li>tenantId, organizationId는 FileAsset에서 추출</li>
      * </ul>
      *
      * @param fileAsset FileAsset
@@ -350,15 +357,25 @@ public class PipelineWorker {
         }
 
         try {
+            // organizationId가 null인 경우 ExtractedData 생성 불가 (필수 필드)
+            // FileAsset.fromS3Upload()로 생성된 인스턴스는 organizationId가 null일 수 있음
+            Long organizationId = fileAsset.getOrganizationId();
+            if (organizationId == null) {
+                log.warn("Skipping ExtractedData creation: organizationId is null for fileAssetId={}. " +
+                        "FileAsset.fromS3Upload() may not have organizationId.",
+                    fileAsset.getIdValue());
+                return;
+            }
+
             // 1. metadata Map → JSON 문자열 변환
             String structuredData = objectMapper.writeValueAsString(metadata.metadata());
 
             // 2. ExtractedData Domain 생성
-            // TODO: tenantId, organizationId를 FileAsset에서 추출 (현재는 1L 하드코딩)
+            // tenantId, organizationId를 FileAsset에서 추출
             ExtractedData extractedData = ExtractedData.create(
                 new FileAssetId(fileAsset.getIdValue()),
-                1L, // tenantId (TODO: FileAsset에서 추출)
-                1L, // organizationId (TODO: FileAsset에서 추출)
+                fileAsset.getTenantId().value(), // tenantId (FileAsset에서 추출)
+                organizationId, // organizationId (null 체크 완료)
                 ExtractionType.METADATA,
                 ExtractionMethod.TIKA,
                 1, // version

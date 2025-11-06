@@ -125,7 +125,7 @@ public class CleanupExpiredSessionsJob {
      * @param threshold 이 시간 이전에 생성된 세션을 만료 처리
      * @return 정리된 세션 개수
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public int cleanupPendingSessions(LocalDateTime threshold) {
         // 1. 만료된 PENDING 세션 조회
         List<UploadSession> expiredSessions = loadUploadSessionPort.findByStatusAndCreatedBefore(
@@ -157,7 +157,7 @@ public class CleanupExpiredSessionsJob {
      * @param threshold 이 시간 이전에 생성된 세션을 만료 처리
      * @return 정리된 세션 개수
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public int cleanupInProgressSessions(LocalDateTime threshold) {
         // 1. 만료된 IN_PROGRESS 세션 조회
         List<UploadSession> expiredSessions = loadUploadSessionPort.findByStatusAndCreatedBefore(
@@ -214,7 +214,7 @@ public class CleanupExpiredSessionsJob {
      * @param threshold 이 시간 이전에 생성된 세션을 만료 처리
      * @return 정리된 세션 개수
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public int cleanupMultipleStatuses(LocalDateTime threshold) {
         List<SessionStatus> targetStatuses = Arrays.asList(
             SessionStatus.PENDING,

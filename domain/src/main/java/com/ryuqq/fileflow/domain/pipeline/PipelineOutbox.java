@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.domain.pipeline;
 
 import com.ryuqq.fileflow.domain.download.IdempotencyKey;
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 import com.ryuqq.fileflow.domain.file.asset.FileId;
 
 import java.time.Clock;

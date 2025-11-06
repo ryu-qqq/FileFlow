@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.file.port.out;
 
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
 
 import java.time.LocalDateTime;
