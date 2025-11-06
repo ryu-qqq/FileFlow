@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import org.mockito.ArgumentCaptor;
 
 /**
  * FileVariant Command Adapter 통합 테스트
@@ -113,8 +114,17 @@ class FileVariantCommandAdapterTest {
             // When
             FileVariant savedVariant = fileVariantCommandAdapter.save(variant);
 
-            // Then - Event 발행 확인
-            verify(eventPublisher).publishEvent(any(FileVariantCreatedEvent.class));
+            // Then - Event 발행 확인 (실제 ID 포함 검증)
+            ArgumentCaptor<FileVariantCreatedEvent> eventCaptor =
+                ArgumentCaptor.forClass(FileVariantCreatedEvent.class);
+            verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+            FileVariantCreatedEvent publishedEvent = eventCaptor.getValue();
+            assertThat(publishedEvent.fileVariantId()).isNotNull();
+            assertThat(publishedEvent.fileVariantId().value())
+                .isEqualTo(savedVariant.getIdValue());
+            assertThat(publishedEvent.fileAssetId()).isEqualTo(FileAssetId.of(1L));
+            assertThat(publishedEvent.variantType()).isEqualTo("THUMBNAIL");
 
             // Event 초기화 확인
             assertThat(savedVariant.getDomainEvents()).isEmpty();

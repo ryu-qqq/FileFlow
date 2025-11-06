@@ -30,6 +30,23 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("FileVariant 단위 테스트")
 class FileVariantTest {
 
+    // Test Fixtures
+    private static FileAssetId createDefaultParentId() {
+        return FileAssetId.of(1L);
+    }
+
+    private static StorageKey createDefaultStorageKey() {
+        return StorageKey.of("tenant-1/org-2/thumbnail/image.jpg");
+    }
+
+    private static FileSize createDefaultFileSize() {
+        return FileSize.of(51200L);
+    }
+
+    private static MimeType createDefaultMimeType() {
+        return new MimeType("image/webp");
+    }
+
     @Nested
     @DisplayName("create 메서드 테스트")
     class CreateTests {
@@ -38,11 +55,11 @@ class FileVariantTest {
         @DisplayName("create_WithValidInputs_ShouldCreateFileVariant - 정상 입력으로 FileVariant 생성")
         void create_WithValidInputs_ShouldCreateFileVariant() {
             // Given
-            FileAssetId parentId = FileAssetId.of(1L);
+            FileAssetId parentId = createDefaultParentId();
             VariantType type = VariantType.THUMBNAIL;
-            StorageKey key = StorageKey.of("tenant-1/org-2/thumbnail/image.jpg");
-            FileSize size = FileSize.of(51200L);
-            MimeType mimeType = new MimeType("image/webp");
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
 
             // When
             FileVariant variant = FileVariant.create(parentId, type, key, size, mimeType);
@@ -72,9 +89,9 @@ class FileVariantTest {
         void create_WithNullParentId_ShouldThrowException() {
             // Given
             VariantType type = VariantType.THUMBNAIL;
-            StorageKey key = StorageKey.of("tenant-1/org-2/thumbnail/image.jpg");
-            FileSize size = FileSize.of(51200L);
-            MimeType mimeType = new MimeType("image/webp");
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
 
             // When & Then
             assertThatThrownBy(() -> FileVariant.create(null, type, key, size, mimeType))
@@ -83,13 +100,69 @@ class FileVariantTest {
         }
 
         @Test
+        @DisplayName("create_WithNullVariantType_ShouldThrowException - null variantType으로 예외 발생")
+        void create_WithNullVariantType_ShouldThrowException() {
+            // Given
+            FileAssetId parentId = createDefaultParentId();
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
+
+            // When & Then
+            assertThatThrownBy(() -> FileVariant.create(parentId, null, key, size, mimeType))
+                .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @DisplayName("create_WithNullStorageKey_ShouldThrowException - null storageKey로 예외 발생")
+        void create_WithNullStorageKey_ShouldThrowException() {
+            // Given
+            FileAssetId parentId = createDefaultParentId();
+            VariantType type = VariantType.THUMBNAIL;
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
+
+            // When & Then
+            assertThatThrownBy(() -> FileVariant.create(parentId, type, null, size, mimeType))
+                .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @DisplayName("create_WithNullFileSize_ShouldThrowException - null fileSize로 예외 발생")
+        void create_WithNullFileSize_ShouldThrowException() {
+            // Given
+            FileAssetId parentId = createDefaultParentId();
+            VariantType type = VariantType.THUMBNAIL;
+            StorageKey key = createDefaultStorageKey();
+            MimeType mimeType = createDefaultMimeType();
+
+            // When & Then
+            assertThatThrownBy(() -> FileVariant.create(parentId, type, key, null, mimeType))
+                .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @DisplayName("create_WithNullMimeType_ShouldThrowException - null mimeType으로 예외 발생")
+        void create_WithNullMimeType_ShouldThrowException() {
+            // Given
+            FileAssetId parentId = createDefaultParentId();
+            VariantType type = VariantType.THUMBNAIL;
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+
+            // When & Then
+            assertThatThrownBy(() -> FileVariant.create(parentId, type, key, size, null))
+                .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
         @DisplayName("create_WithDifferentVariantTypes_ShouldCreateDifferentVariants - 다른 VariantType으로 생성")
         void create_WithDifferentVariantTypes_ShouldCreateDifferentVariants() {
             // Given
-            FileAssetId parentId = FileAssetId.of(1L);
-            StorageKey key = StorageKey.of("tenant-1/org-2/thumbnail/image.jpg");
-            FileSize size = FileSize.of(51200L);
-            MimeType mimeType = new MimeType("image/webp");
+            FileAssetId parentId = createDefaultParentId();
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
 
             // When
             FileVariant thumbnail = FileVariant.create(parentId, VariantType.THUMBNAIL, key, size, mimeType);
@@ -112,9 +185,9 @@ class FileVariantTest {
             FileVariantId id = FileVariantId.of(1L);
             Long parentFileAssetId = 100L;
             VariantType type = VariantType.THUMBNAIL;
-            StorageKey key = StorageKey.of("tenant-1/org-2/thumbnail/image.jpg");
-            FileSize size = FileSize.of(51200L);
-            MimeType mimeType = new MimeType("image/webp");
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
             LocalDateTime createdAt = LocalDateTime.now();
 
             // When
@@ -135,6 +208,57 @@ class FileVariantTest {
             // reconstitute는 Domain Event를 발행하지 않음
             assertThat(variant.getDomainEvents()).isEmpty();
         }
+
+        @Test
+        @DisplayName("reconstitute_WithNullId_ShouldThrowException - null ID로 예외 발생")
+        void reconstitute_WithNullId_ShouldThrowException() {
+            // Given
+            Long parentFileAssetId = 100L;
+            VariantType type = VariantType.THUMBNAIL;
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
+            LocalDateTime createdAt = LocalDateTime.now();
+
+            // When & Then
+            assertThatThrownBy(() -> FileVariant.reconstitute(
+                null, parentFileAssetId, type, key, size, mimeType, createdAt
+            )).isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @DisplayName("reconstitute_WithNullParentFileAssetId_ShouldThrowException - null parentFileAssetId로 예외 발생")
+        void reconstitute_WithNullParentFileAssetId_ShouldThrowException() {
+            // Given
+            FileVariantId id = FileVariantId.of(1L);
+            VariantType type = VariantType.THUMBNAIL;
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
+            LocalDateTime createdAt = LocalDateTime.now();
+
+            // When & Then
+            assertThatThrownBy(() -> FileVariant.reconstitute(
+                id, null, type, key, size, mimeType, createdAt
+            )).isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @DisplayName("reconstitute_WithNullCreatedAt_ShouldThrowException - null createdAt으로 예외 발생")
+        void reconstitute_WithNullCreatedAt_ShouldThrowException() {
+            // Given
+            FileVariantId id = FileVariantId.of(1L);
+            Long parentFileAssetId = 100L;
+            VariantType type = VariantType.THUMBNAIL;
+            StorageKey key = createDefaultStorageKey();
+            FileSize size = createDefaultFileSize();
+            MimeType mimeType = createDefaultMimeType();
+
+            // When & Then
+            assertThatThrownBy(() -> FileVariant.reconstitute(
+                id, parentFileAssetId, type, key, size, mimeType, null
+            )).isInstanceOf(NullPointerException.class);
+        }
     }
 
     @Nested
@@ -146,11 +270,11 @@ class FileVariantTest {
         void getDomainEvents_AfterCreate_ShouldReturnEvent() {
             // Given
             FileVariant variant = FileVariant.create(
-                FileAssetId.of(1L),
+                createDefaultParentId(),
                 VariantType.THUMBNAIL,
-                StorageKey.of("tenant-1/org-2/thumbnail/image.jpg"),
-                FileSize.of(51200L),
-                new MimeType("image/webp")
+                createDefaultStorageKey(),
+                createDefaultFileSize(),
+                createDefaultMimeType()
             );
 
             // When
@@ -166,11 +290,11 @@ class FileVariantTest {
         void clearDomainEvents_ShouldRemoveEvents() {
             // Given
             FileVariant variant = FileVariant.create(
-                FileAssetId.of(1L),
+                createDefaultParentId(),
                 VariantType.THUMBNAIL,
-                StorageKey.of("tenant-1/org-2/thumbnail/image.jpg"),
-                FileSize.of(51200L),
-                new MimeType("image/webp")
+                createDefaultStorageKey(),
+                createDefaultFileSize(),
+                createDefaultMimeType()
             );
 
             assertThat(variant.getDomainEvents()).hasSize(1);
@@ -192,11 +316,11 @@ class FileVariantTest {
         void getIdValue_WithNullId_ShouldReturnNull() {
             // Given
             FileVariant variant = FileVariant.create(
-                FileAssetId.of(1L),
+                createDefaultParentId(),
                 VariantType.THUMBNAIL,
-                StorageKey.of("tenant-1/org-2/thumbnail/image.jpg"),
-                FileSize.of(51200L),
-                new MimeType("image/webp")
+                createDefaultStorageKey(),
+                createDefaultFileSize(),
+                createDefaultMimeType()
             );
 
             // When
@@ -215,9 +339,9 @@ class FileVariantTest {
                 id,
                 100L,
                 VariantType.THUMBNAIL,
-                StorageKey.of("tenant-1/org-2/thumbnail/image.jpg"),
-                FileSize.of(51200L),
-                new MimeType("image/webp"),
+                createDefaultStorageKey(),
+                createDefaultFileSize(),
+                createDefaultMimeType(),
                 LocalDateTime.now()
             );
 
