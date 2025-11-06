@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Import;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
@@ -143,15 +144,10 @@ class FileVariantCommandAdapterTest {
             );
 
             // Unique Constraint 위반 예외 발생 (DataIntegrityViolationException)
-            org.springframework.dao.DataIntegrityViolationException exception = null;
-            try {
+            assertThatThrownBy(() -> {
                 fileVariantCommandAdapter.save(variant2);
                 entityManager.flush();
-            } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                exception = e;
-            }
-
-            assertThat(exception).isNotNull();
+            }).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
         }
 
         @Test

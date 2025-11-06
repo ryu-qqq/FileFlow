@@ -11,6 +11,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * FileVariant Command Adapter (Persistence Layer)
  *
@@ -75,14 +78,19 @@ public class FileVariantCommandAdapter implements SaveFileVariantPort {
         // 1. Domain → Entity 변환
         FileVariantJpaEntity entity = fileVariantEntityMapper.toEntity(fileVariant);
 
-        // 2. JPA 저장 (ID 자동 할당)
+        // 2. Domain Event 복사 (재구성 전에 원본에서 이벤트 보존)
+        // ⚠️ 중요: savedVariant는 reconstitute로 재구성되므로 이벤트가 비어있음
+        // 원본 fileVariant에서 이벤트를 먼저 복사해야 함
+        List<?> domainEvents = new ArrayList<>(fileVariant.getDomainEvents());
+
+        // 3. JPA 저장 (ID 자동 할당)
         FileVariantJpaEntity savedEntity = fileVariantJpaRepository.save(entity);
 
-        // 3. Entity → Domain 변환 (ID 포함)
+        // 4. Entity → Domain 변환 (ID 포함)
         FileVariant savedVariant = fileVariantEntityMapper.toDomain(savedEntity);
 
-        // 4. Domain Event 발행 (트랜잭션 커밋 시점에 발행)
-        savedVariant.getDomainEvents().forEach(event -> {
+        // 5. Domain Event 발행 (트랜잭션 커밋 시점에 발행)
+        domainEvents.forEach(event -> {
             if (event instanceof FileVariantCreatedEvent createdEvent) {
                 // fileVariantId를 실제 ID로 업데이트하여 이벤트 재생성
                 FileVariantId fileVariantId = savedVariant.getId();
@@ -95,8 +103,9 @@ public class FileVariantCommandAdapter implements SaveFileVariantPort {
             }
         });
 
-        // 5. Domain Event 초기화
+        // 6. Domain Event 초기화 (원본과 재구성된 객체 모두)
         savedVariant.clearDomainEvents();
+        fileVariant.clearDomainEvents();
 
         return savedVariant;
     }
