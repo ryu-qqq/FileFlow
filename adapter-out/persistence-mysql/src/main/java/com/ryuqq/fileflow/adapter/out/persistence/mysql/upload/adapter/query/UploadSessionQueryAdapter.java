@@ -3,7 +3,6 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.adapter.query;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.UploadSessionJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.mapper.UploadSessionEntityMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository.UploadSessionJpaRepository;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.SessionStatus;
@@ -56,20 +55,16 @@ import static com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.QUp
 public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
 
     private final JPAQueryFactory queryFactory;
-    private final UploadSessionJpaRepository repository;
 
     /**
      * 생성자
      *
-     * @param queryFactory QueryDSL JPAQueryFactory (복잡한 쿼리용)
-     * @param repository Upload Session JPA Repository (단순 조회용)
+     * @param queryFactory QueryDSL JPAQueryFactory (모든 조회 메서드에서 사용)
      */
     public UploadSessionQueryAdapter(
-        JPAQueryFactory queryFactory,
-        UploadSessionJpaRepository repository
+        JPAQueryFactory queryFactory
     ) {
         this.queryFactory = queryFactory;
-        this.repository = repository;
     }
 
     /**

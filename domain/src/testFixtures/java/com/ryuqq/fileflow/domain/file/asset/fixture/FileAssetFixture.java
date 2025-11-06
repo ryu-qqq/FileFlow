@@ -114,9 +114,8 @@ public class FileAssetFixture {
      * @return AVAILABLE 상태의 FileAsset
      */
     public static FileAsset createAvailable(Long id) {
-        FileAsset fileAsset = createWithId(id);
-        fileAsset.markAsAvailable();
-        return fileAsset;
+        // createWithId()는 이미 AVAILABLE 상태로 재구성하므로 markAsAvailable() 호출 불필요
+        return createWithId(id);
     }
 
     /**
