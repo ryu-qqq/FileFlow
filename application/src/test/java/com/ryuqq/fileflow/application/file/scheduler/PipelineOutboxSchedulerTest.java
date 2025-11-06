@@ -1,0 +1,277 @@
+package com.ryuqq.fileflow.application.file.scheduler;
+
+import com.ryuqq.fileflow.application.file.config.PipelineOutboxProperties;
+import com.ryuqq.fileflow.application.file.manager.PipelineOutboxManager;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
+import com.ryuqq.fileflow.domain.download.ProcessResult;
+import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
+import com.ryuqq.fileflow.domain.pipeline.PipelineResult;
+import com.ryuqq.fileflow.domain.pipeline.fixture.PipelineOutboxFixture;
+import com.ryuqq.fileflow.domain.pipeline.fixture.PipelineResultFixture;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+
+/**
+ * PipelineOutboxScheduler 테스트
+ *
+ * <p><strong>테스트 범위:</strong></p>
+ * <ul>
+ *   <li>PENDING 메시지 처리 성공</li>
+ *   <li>Worker 결과에 따른 상태 업데이트 (COMPLETED/FAILED)</li>
+ *   <li>재시도 가능한 FAILED 메시지 처리</li>
+ *   <li>오래된 PROCESSING 메시지 재처리</li>
+ *   <li>최대 재시도 횟수 초과 시 영구 실패</li>
+ * </ul>
+ *
+ * @author Sangwon Ryu
+ * @since 1.0.0
+ */
+@Tag("unit")
+@Tag("application")
+@ExtendWith(MockitoExtension.class)
+class PipelineOutboxSchedulerTest {
+
+    @InjectMocks
+    private PipelineOutboxScheduler scheduler;
+
+    @Mock
+    private PipelineOutboxManager outboxManager;
+
+    @Mock
+    private PipelineWorker pipelineWorker;
+
+    @Mock
+    private PipelineOutboxProperties properties;
+
+    @BeforeEach
+    void setUp() {
+        // 기본 설정값
+        given(properties.getBatchSize()).willReturn(10);
+        given(properties.getMaxRetryCount()).willReturn(3);
+        given(properties.getStaleMinutes()).willReturn(5);
+        given(properties.getRetryBaseDelaySeconds()).willReturn(60);
+    }
+
+    @Test
+    @DisplayName("PENDING 메시지 처리 성공 시 COMPLETED로 상태 변경")
+    void processPendingMessageSuccess() {
+        // Given
+        PipelineOutbox outbox = PipelineOutboxFixture.createPending(1L);
+        List<PipelineOutbox> pendingMessages = List.of(outbox);
+
+        given(outboxManager.findNewMessages(10))
+            .willReturn(pendingMessages);
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+            .willReturn(List.of());
+        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+            .willReturn(List.of());
+
+        given(outboxManager.markProcessing(outbox))
+            .willReturn(outbox);
+
+        CompletableFuture<PipelineResult> successFuture =
+            CompletableFuture.completedFuture(PipelineResultFixture.success());
+        given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
+            .willReturn(successFuture);
+
+        given(outboxManager.markProcessed(outbox))
+            .willReturn(outbox);
+
+        // When
+        scheduler.processOutboxMessages();
+
+        // Then
+        verify(outboxManager).markProcessing(outbox);
+        verify(pipelineWorker).startPipeline(outbox.getFileIdValue());
+        verify(outboxManager).markProcessed(outbox);
+        verify(outboxManager, never()).markFailed(any(), anyString());
+    }
+
+    @Test
+    @DisplayName("Worker 실패 시 FAILED로 상태 변경하고 재시도 가능")
+    void processPendingMessageFailure() {
+        // Given
+        PipelineOutbox outbox = PipelineOutboxFixture.createPending(1L);
+        List<PipelineOutbox> pendingMessages = List.of(outbox);
+
+        given(outboxManager.findNewMessages(10))
+            .willReturn(pendingMessages);
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+            .willReturn(List.of());
+        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+            .willReturn(List.of());
+
+        given(outboxManager.markProcessing(outbox))
+            .willReturn(outbox);
+
+        CompletableFuture<PipelineResult> failureFuture =
+            CompletableFuture.completedFuture(PipelineResultFixture.failure("Worker error"));
+        given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
+            .willReturn(failureFuture);
+
+        // 재시도 가능 (retryCount < maxRetryCount)
+        // getRetryCount()는 0이므로 maxRetryCount(3)보다 작음
+        given(properties.getMaxRetryCount()).willReturn(3);
+
+        given(outboxManager.markFailed(outbox, anyString()))
+            .willReturn(outbox);
+
+        // When
+        scheduler.processOutboxMessages();
+
+        // Then
+        verify(outboxManager).markFailed(outbox, anyString());
+        verify(outboxManager, never()).markProcessed(any());
+        verify(outboxManager, never()).markPermanentlyFailed(any(), anyString());
+    }
+
+    @Test
+    @DisplayName("최대 재시도 횟수 초과 시 영구 실패 처리")
+    void processPermanentFailure() {
+        // Given
+        // retryCount가 maxRetryCount 이상인 outbox 생성
+        PipelineOutbox outbox = PipelineOutboxFixture.reconstitute(
+            1L,
+            1L,
+            "test-key",
+            OutboxStatus.PROCESSING,
+            3  // retryCount = maxRetryCount
+        );
+        List<PipelineOutbox> pendingMessages = List.of(outbox);
+
+        given(outboxManager.findNewMessages(10))
+            .willReturn(pendingMessages);
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+            .willReturn(List.of());
+        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+            .willReturn(List.of());
+
+        given(outboxManager.markProcessing(outbox))
+            .willReturn(outbox);
+
+        CompletableFuture<PipelineResult> failureFuture =
+            CompletableFuture.completedFuture(PipelineResultFixture.failure("Worker error"));
+        given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
+            .willReturn(failureFuture);
+
+        // 최대 재시도 횟수 초과
+        given(properties.getMaxRetryCount()).willReturn(3);
+
+        given(outboxManager.markPermanentlyFailed(outbox, anyString()))
+            .willReturn(outbox);
+
+        // When
+        scheduler.processOutboxMessages();
+
+        // Then
+        verify(outboxManager).markPermanentlyFailed(outbox, anyString());
+        verify(outboxManager, never()).markFailed(any(), anyString());
+        verify(outboxManager, never()).markProcessed(any());
+    }
+
+    @Test
+    @DisplayName("재시도 가능한 FAILED 메시지를 처리한다")
+    void processRetryableFailedMessages() {
+        // Given
+        PipelineOutbox failedOutbox = PipelineOutboxFixture.createFailed(1L);
+        List<PipelineOutbox> retryableMessages = List.of(failedOutbox);
+
+        given(outboxManager.findNewMessages(10))
+            .willReturn(List.of());
+        given(outboxManager.findRetryableFailedMessages(eq(3), any(LocalDateTime.class), eq(10)))
+            .willReturn(retryableMessages);
+        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+            .willReturn(List.of());
+
+        given(outboxManager.prepareForRetry(failedOutbox))
+            .willReturn(failedOutbox);
+        given(outboxManager.markProcessing(failedOutbox))
+            .willReturn(failedOutbox);
+
+        CompletableFuture<PipelineResult> successFuture =
+            CompletableFuture.completedFuture(PipelineResultFixture.success());
+        given(pipelineWorker.startPipeline(failedOutbox.getFileIdValue()))
+            .willReturn(successFuture);
+
+        given(outboxManager.markProcessed(failedOutbox))
+            .willReturn(failedOutbox);
+
+        // When
+        scheduler.processOutboxMessages();
+
+        // Then
+        verify(outboxManager).prepareForRetry(failedOutbox);
+        verify(outboxManager).markProcessing(failedOutbox);
+        verify(pipelineWorker).startPipeline(failedOutbox.getFileIdValue());
+        verify(outboxManager).markProcessed(failedOutbox);
+    }
+
+    @Test
+    @DisplayName("오래된 PROCESSING 메시지를 재처리한다")
+    void processStaleProcessingMessages() {
+        // Given
+        PipelineOutbox staleOutbox = PipelineOutboxFixture.createProcessing(1L);
+        List<PipelineOutbox> staleMessages = List.of(staleOutbox);
+
+        given(outboxManager.findNewMessages(10))
+            .willReturn(List.of());
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+            .willReturn(List.of());
+        given(outboxManager.findStaleProcessingMessages(any(LocalDateTime.class), eq(10)))
+            .willReturn(staleMessages);
+
+        given(outboxManager.markProcessing(staleOutbox))
+            .willReturn(staleOutbox);
+
+        CompletableFuture<PipelineResult> successFuture =
+            CompletableFuture.completedFuture(PipelineResultFixture.success());
+        given(pipelineWorker.startPipeline(staleOutbox.getFileIdValue()))
+            .willReturn(successFuture);
+
+        given(outboxManager.markProcessed(staleOutbox))
+            .willReturn(staleOutbox);
+
+        // When
+        scheduler.processOutboxMessages();
+
+        // Then
+        verify(outboxManager).markProcessing(staleOutbox);
+        verify(pipelineWorker).startPipeline(staleOutbox.getFileIdValue());
+        verify(outboxManager).markProcessed(staleOutbox);
+    }
+
+    @Test
+    @DisplayName("처리할 메시지가 없으면 아무 작업도 수행하지 않는다")
+    void doNothingWhenNoMessages() {
+        // Given
+        given(outboxManager.findNewMessages(10))
+            .willReturn(List.of());
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+            .willReturn(List.of());
+        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+            .willReturn(List.of());
+
+        // When
+        scheduler.processOutboxMessages();
+
+        // Then
+        verify(outboxManager, never()).markProcessing(any());
+        verify(pipelineWorker, never()).startPipeline(anyLong());
+    }
+}
+

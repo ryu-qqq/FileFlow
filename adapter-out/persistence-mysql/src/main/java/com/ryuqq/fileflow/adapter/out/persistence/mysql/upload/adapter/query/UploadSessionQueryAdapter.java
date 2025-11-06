@@ -75,6 +75,7 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * @return Upload Session (Optional)
      */
     @Override
+    @Transactional(readOnly = true)
     public Optional<UploadSession> findById(Long id) {
         UploadSessionJpaEntity entity = queryFactory
             .selectFrom(uploadSessionJpaEntity)
@@ -95,6 +96,7 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * @return Upload Session (Optional)
      */
     @Override
+    @Transactional(readOnly = true)
     public Optional<UploadSession> findBySessionKey(SessionKey sessionKey) {
         UploadSessionJpaEntity entity = queryFactory
             .selectFrom(uploadSessionJpaEntity)
@@ -121,10 +123,16 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * @return Upload Session 목록
      */
     @Override
+    @Transactional(readOnly = true)
     public List<UploadSession> findByStatusAndCreatedBefore(
         SessionStatus status,
         LocalDateTime createdBefore
     ) {
+        // CRITICAL: Unbounded Query 방지 - 안전한 기본값 설정
+        // 대량 데이터 조회 시 OOM 방지를 위해 LIMIT 절 필수
+        // TODO: 향후 Pageable 파라미터로 전환 고려
+        int safeBatchSize = 1000;
+        
         List<UploadSessionJpaEntity> entities = queryFactory
             .selectFrom(uploadSessionJpaEntity)
             .where(
@@ -132,6 +140,7 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
                 uploadSessionJpaEntity.createdAt.before(createdBefore)
             )
             .orderBy(uploadSessionJpaEntity.createdAt.asc())
+            .limit(safeBatchSize)
             .fetch();
 
         return entities.stream()
@@ -156,6 +165,7 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * @throws IllegalArgumentException statuses가 null 또는 빈 리스트인 경우
      */
     @Override
+    @Transactional(readOnly = true)
     public List<UploadSession> findByStatusInAndCreatedBefore(
         List<SessionStatus> statuses,
         LocalDateTime createdBefore
@@ -164,6 +174,10 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
             throw new IllegalArgumentException("statuses must not be null or empty");
         }
 
+        // CRITICAL: Unbounded Query 방지 - 안전한 기본값 설정
+        // IN 절 사용 시 예상보다 많은 데이터 반환 가능
+        int safeBatchSize = 1000;
+        
         List<UploadSessionJpaEntity> entities = queryFactory
             .selectFrom(uploadSessionJpaEntity)
             .where(
@@ -171,6 +185,7 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
                 uploadSessionJpaEntity.createdAt.before(createdBefore)
             )
             .orderBy(uploadSessionJpaEntity.createdAt.asc())
+            .limit(safeBatchSize)
             .fetch();
 
         return entities.stream()
@@ -212,6 +227,7 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * @throws IllegalArgumentException tenantId 또는 status가 null인 경우
      */
     @Override
+    @Transactional(readOnly = true)
     public long countByTenantIdAndStatus(Long tenantId, SessionStatus status) {
         if (tenantId == null) {
             throw new IllegalArgumentException("tenantId must not be null");

@@ -241,7 +241,7 @@ class CleanupExpiredSessionsJobTest {
             job.failExpiredSession(session, reason);
 
             // Then
-            verify(session).fail(reason);
+            verify(session).fail(any(com.ryuqq.fileflow.domain.upload.FailureReason.class));
             verify(uploadSessionStateManager).save(session);
         }
     }
@@ -285,7 +285,7 @@ class CleanupExpiredSessionsJobTest {
         UploadSession session = mock(UploadSession.class);
         given(session.getIdValue()).willReturn(id);
         given(session.getStatus()).willReturn(status);
-        doNothing().when(session).fail(anyString());
+        doNothing().when(session).fail(any(com.ryuqq.fileflow.domain.upload.FailureReason.class));
         return session;
     }
 }

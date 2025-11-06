@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.download.entity;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.common.entity.BaseAuditEntity;
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
