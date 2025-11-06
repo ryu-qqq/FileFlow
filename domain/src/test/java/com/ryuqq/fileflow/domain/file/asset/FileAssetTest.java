@@ -59,7 +59,7 @@ class FileAssetTest {
             );
 
             // S3 Object Metadata (Domain VO)
-            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
+            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
                 1024L,
                 "5d41402abc4b2a76b9719d911017c592",  // ETag (MD5)
                 "image/jpeg",
@@ -102,7 +102,7 @@ class FileAssetTest {
             );
 
             // Multipart Upload ETag (형식: {MD5}-{parts})
-            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
+            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
                 100_000_000L,
                 "abc123def456-5",  // Multipart ETag
                 "application/zip",
@@ -136,7 +136,7 @@ class FileAssetTest {
                 null, null
             );
 
-            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
+            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
                 1024L,
                 "etag123",
                 "application/octet-stream",  // Default ContentType (null을 직접 전달할 수 없으므로 기본값 사용)
@@ -155,7 +155,7 @@ class FileAssetTest {
         @DisplayName("fromS3Upload_WithNullSession_ShouldThrowException - null 세션 시 예외")
         void fromS3Upload_WithNullSession_ShouldThrowException() {
             // Given
-            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
+            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
                 1024L,
                 "etag",
                 "image/jpeg",
@@ -189,7 +189,7 @@ class FileAssetTest {
             // When & Then
             assertThatThrownBy(() -> FileAsset.fromS3Upload(session, null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("S3ObjectMetadata는 필수입니다");
+                .hasMessageContaining("S3UploadMetadata는 필수입니다");
         }
     }
 
@@ -361,7 +361,7 @@ class FileAssetTest {
             );
 
             // S3 업로드 (실제 메타데이터 사용)
-            S3ObjectMetadata s3Metadata = S3ObjectMetadata.of(
+            S3UploadMetadata s3Metadata = S3UploadMetadata.of(
                 1000L,
                 "actual-etag-123",
                 "text/plain",
