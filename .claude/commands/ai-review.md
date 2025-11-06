@@ -45,51 +45,64 @@ model: claude-sonnet-4-5-20250929
 
 ## Behavioral Flow
 
-### Phase 1: Parallel Review Collection (Sub-agents)
+### Phase 1: State Management & Comment Collection
 ```
-PR #32
-  ├─ Task Agent 1: Fetch Gemini review     ┐
-  ├─ Task Agent 2: Fetch CodeRabbit review ├─ Parallel execution
-  └─ Task Agent 3: Fetch Codex review      ┘
-         ↓
-  3 Review JSONs collected
+1. ReviewStateManager 초기화
+   - 기존 처리된 댓글 확인
+   - 7일 TTL 자동 정리 (최대 100개 PR)
+
+2. fetch_reviews.py 실행
+   - GitHub API로 3개 봇 댓글 수집
+   - Gemini, CodeRabbit, Codex 동시 수집
+   - 카테고리 자동 분류 (security, performance, style 등)
+
+3. 중복 방지 필터링
+   - 이미 처리된 댓글 제외
+   - 새 댓글만 처리 (효율성)
 ```
 
-### Phase 2: Intelligent Merging (Sequential MCP)
+### Phase 2: Deduplication & Prioritization
 ```
-Sequential Thinking Analysis:
-  1. Parse all reviews → structured issues
-  2. Group by file:line location
-  3. Calculate similarity scores (0.0-1.0)
-  4. Merge duplicates (similarity > 0.8)
-  5. Apply voting system:
-     - 3 bots agree → Critical (Must-Fix)
-     - 2 bots agree → Important (Should-Fix)
-     - 1 bot only → Suggestion (Nice-to-Have)
-  6. Override with Zero-Tolerance rules:
-     - Lombok usage → Auto Critical
-     - Law of Demeter violation → Auto Critical
-     - Transaction boundary violation → Auto Critical
-     - Long FK violation → Auto Critical
+4. deduplicator.py 실행
+   - 파일:라인 위치 그룹화
+   - TF-IDF 코사인 유사도 계산
+   - Similarity > 0.8 시 병합
+   - 투표 수 계산 (1-3봇)
+
+5. prioritizer.py 실행
+   - Zero-Tolerance 체크 (최우선)
+     - Lombok 사용 감지 → Auto Critical
+     - Law of Demeter 위반 → Auto Critical
+     - Transaction 경계 위반 → Auto Critical
+     - Long FK 위반 → Auto Critical
+   - 투표 시스템 적용
+     - 3봇 합의 → Critical
+     - 2봇 합의 → Important
+     - 1봇만 → Suggestion
+   - 카테고리 기반 조정 (security → Critical)
 ```
 
-### Phase 3: TodoList Generation
+### Phase 3: TodoList Generation & State Update
 ```
-Unified TodoList with priorities:
-  ✅ Critical (3-bot consensus OR Zero-Tolerance)
-  ⚠️ Important (2-bot consensus OR architecture)
-  💡 Suggestion (1-bot only)
-  🚫 Skipped (conflicts with project standards)
+6. todo_generator.py 실행
+   - 우선순위별 마크다운 생성
+   - 예상 시간 추정 (S/M/L)
+   - claudedocs/ai-review-prN.md 저장
+
+7. State 업데이트
+   - 처리 완료 댓글 ID 저장
+   - 다음 실행 시 중복 방지
 ```
 
 ## Tool Coordination
-- **Task**: Parallel sub-agent execution for each bot
-- **Bash**: GitHub CLI operations for PR and review data
-- **Sequential**: Complex merging logic and priority calculation
-- **Grep**: Code location verification
-- **Read**: Source code inspection for context
-- **TodoWrite**: Unified TodoList generation
-- **Edit/MultiEdit**: Code modifications when executing
+- **Bash**: GitHub CLI (gh) 사용해 봇 댓글 수집
+- **Python Scripts**: 5개 모듈 체인 실행
+  - state_manager.py (상태 관리)
+  - fetch_reviews.py (댓글 수집)
+  - deduplicator.py (중복 제거)
+  - prioritizer.py (우선순위 계산)
+  - todo_generator.py (TodoList 생성)
+- **Read**: 생성된 TodoList 확인 및 출력
 
 ## Integration Strategy
 
@@ -521,26 +534,62 @@ Benefits:
 3. Configure repositories
 4. Codex will auto-review PRs
 
+## Implementation Details
+
+### Actual Execution (Python Scripts)
+
+이 명령어는 Python 스크립트로 구현되어 있습니다:
+
+```bash
+python3 .claude/scripts/ai-review/ai_review.py [pr-number] [options]
+```
+
+### Available Options
+
+```bash
+--bots gemini coderabbit codex   # 분석할 봇 선택
+--preview                         # 미리보기 (중복 제거 리포트만)
+--analyze-only                    # 분석만 (상태 저장 안 함)
+--force                           # 이미 처리된 댓글도 재처리
+--output FILE                     # 출력 파일 지정
+--clean                           # 모든 상태 초기화
+--clean-pr N                      # 특정 PR 상태 제거
+--stats                           # 상태 통계 출력
+```
+
+### State Management (자동 정리)
+
+- **TTL**: 7일 (오래된 PR 자동 삭제)
+- **크기 제한**: 최대 100개 PR
+- **수동 개입 불필요**: 매 실행 시 자동 정리
+
 ## Limitations
 - Only supports Gemini, CodeRabbit, and Codex (most common bots)
 - Requires GitHub CLI access and authentication
 - Analysis quality depends on bot review quality
 - Cannot modify bot reviews or trigger re-reviews
 - Deduplication may occasionally merge distinct issues (similarity > 0.8)
+- Python 3.7+ 필요 (dataclasses 사용)
 
 ## FAQ
 
 ### Q: What if only one bot is available?
-**A**: Command works with any combination. Use `--bots` flag to specify available bots.
+**A**: Use `--bots` flag. Example: `/ai-review 42 --bots gemini`
 
 ### Q: How accurate is deduplication?
-**A**: Similarity threshold is 0.8 (80% similar). Tested with 95%+ accuracy in practice.
+**A**: Similarity threshold 0.8 (80%). Tested with 95%+ accuracy.
 
 ### Q: What if bots disagree on priority?
-**A**: Voting system applies. 3-bot consensus → Critical, 2-bot → Important, 1-bot → Suggestion.
+**A**: Voting system: 3-bot → Critical, 2-bot → Important, 1-bot → Suggestion.
 
 ### Q: Can I customize Zero-Tolerance rules?
-**A**: Yes, edit Zero-Tolerance patterns in the command. Project-specific rules always take precedence.
+**A**: Yes, edit `prioritizer.py` ZERO_TOLERANCE_PATTERNS dict.
 
 ### Q: How do I add a new bot?
-**A**: Add a new parser function and update the `--bots` flag options. Follow existing bot parser patterns.
+**A**: Add to `fetch_reviews.py` BOT_USERS dict and update parsers.
+
+### Q: 같은 PR을 여러 번 실행하면?
+**A**: 이미 처리된 댓글은 자동 필터링됩니다. `--force`로 재처리 가능.
+
+### Q: 상태 파일이 계속 쌓이지 않나?
+**A**: 7일 TTL + 100개 제한으로 자동 정리됩니다.

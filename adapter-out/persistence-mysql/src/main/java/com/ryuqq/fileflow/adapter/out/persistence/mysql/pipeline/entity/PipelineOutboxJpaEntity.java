@@ -174,12 +174,14 @@ public class PipelineOutboxJpaEntity extends BaseAuditEntity {
     }
 
     // ===== Setter 메서드 (상태 변경용) =====
+    // CRITICAL: Entity Immutability 원칙 준수 - package-private으로 제한
+    // Domain Aggregate의 비즈니스 메서드를 통한 상태 변경만 허용
 
-    public void setStatus(OutboxStatus status) {
+    void setStatus(OutboxStatus status) {
         this.status = status;
     }
 
-    public void setRetryCount(Integer retryCount) {
+    void setRetryCount(Integer retryCount) {
         this.retryCount = retryCount;
     }
 }
