@@ -216,12 +216,7 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
         multipartUploadStateManager.complete(multipart);
 
         // 2. Application DTO → Domain VO 변환
-        S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-            s3HeadResult.contentLength(),
-            s3HeadResult.etag(),
-            s3HeadResult.contentType(),
-            session.getStorageKey().value()  // storageKey는 session에서 가져옴
-        );
+        com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata s3Metadata = s3HeadResult.toDomain();
 
         // 3. FileAsset Aggregate 생성 (Domain VO 사용)
         FileAsset fileAsset = FileAsset.fromS3Upload(session, s3Metadata);

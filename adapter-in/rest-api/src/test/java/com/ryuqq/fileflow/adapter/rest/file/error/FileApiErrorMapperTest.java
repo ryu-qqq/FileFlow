@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.rest.file.error;
 
+import com.ryuqq.fileflow.adapter.rest.common.mapper.ErrorMapper;
 import com.ryuqq.fileflow.adapter.rest.config.properties.ApiErrorProperties;
 import com.ryuqq.fileflow.domain.common.DomainException;
 import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetAccessDeniedException;
@@ -7,7 +8,7 @@ import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetAlreadyDeletedExc
 import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetNotFoundException;
 import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetProcessingException;
 import com.ryuqq.fileflow.domain.file.asset.exception.InvalidFileAssetStateException;
-import com.ryuqq.fileflow.domain.file.fixture.FileIdFixture;
+import com.ryuqq.fileflow.domain.file.asset.FileId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -91,7 +92,7 @@ class FileApiErrorMapperTest {
         void map_FileAssetNotFoundException_ShouldReturn404() {
             // Given
             FileAssetNotFoundException exception = new FileAssetNotFoundException(
-                FileIdFixture.create(123L)
+                FileId.of(123L)
             );
 
             // When
@@ -109,7 +110,7 @@ class FileApiErrorMapperTest {
         void map_FileAssetAlreadyDeletedException_ShouldReturn410() {
             // Given
             FileAssetAlreadyDeletedException exception = new FileAssetAlreadyDeletedException(
-                FileIdFixture.create(456L)
+                FileId.of(456L)
             );
 
             // When
@@ -127,7 +128,7 @@ class FileApiErrorMapperTest {
         void map_FileAssetAccessDeniedException_ShouldReturn403() {
             // Given
             FileAssetAccessDeniedException exception = new FileAssetAccessDeniedException(
-                FileIdFixture.create(789L),
+                FileId.of(789L),
                 999L
             );
 
@@ -146,7 +147,7 @@ class FileApiErrorMapperTest {
         void map_InvalidFileAssetStateException_ShouldReturn409() {
             // Given
             InvalidFileAssetStateException exception = new InvalidFileAssetStateException(
-                FileIdFixture.create(100L),
+                FileId.of(100L),
                 "PROCESSING",
                 "AVAILABLE"
             );
@@ -166,7 +167,7 @@ class FileApiErrorMapperTest {
         void map_FileAssetProcessingException_ShouldReturn425() {
             // Given
             FileAssetProcessingException exception = new FileAssetProcessingException(
-                FileIdFixture.create(200L)
+                FileId.of(200L)
             );
 
             // When
@@ -189,7 +190,7 @@ class FileApiErrorMapperTest {
         void map_WithKoreanLocale_ShouldReturnKoreanMessage() {
             // Given
             FileAssetNotFoundException exception = new FileAssetNotFoundException(
-                FileIdFixture.create(123L)
+                FileId.of(123L)
             );
 
             // When
@@ -204,7 +205,7 @@ class FileApiErrorMapperTest {
         void map_WithEnglishLocale_ShouldReturnEnglishMessage() {
             // Given
             FileAssetNotFoundException exception = new FileAssetNotFoundException(
-                FileIdFixture.create(123L)
+                FileId.of(123L)
             );
 
             // When

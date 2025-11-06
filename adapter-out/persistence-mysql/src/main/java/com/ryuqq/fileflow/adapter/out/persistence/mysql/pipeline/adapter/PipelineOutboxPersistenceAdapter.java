@@ -5,7 +5,7 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.mapper.Pipeline
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.repository.PipelineOutboxJpaRepository;
 import com.ryuqq.fileflow.application.file.port.out.PipelineOutboxPort;
 import com.ryuqq.fileflow.application.file.port.out.PipelineOutboxQueryPort;
-import com.ryuqq.fileflow.domain.download.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.OutboxStatus;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,10 +148,9 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
         Pageable pageable = PageRequest.of(0, batchSize);
 
         List<PipelineOutboxJpaEntity> entities =
-            repository.findByStatusOrderByCreatedAtAsc(status);
+            repository.findByStatusOrderByCreatedAtAsc(status, pageable);
 
         List<PipelineOutbox> outboxes = entities.stream()
-            .limit(batchSize)
             .map(mapper::toDomain)
             .collect(Collectors.toList());
 
@@ -192,11 +191,9 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
         Pageable pageable = PageRequest.of(0, batchSize);
 
         List<PipelineOutboxJpaEntity> entities =
-            repository.findByStatusOrderByCreatedAtAsc(OutboxStatus.PROCESSING);
+            repository.findStaleProcessingMessages(OutboxStatus.PROCESSING, staleThreshold, pageable);
 
         List<PipelineOutbox> staleOutboxes = entities.stream()
-            .filter(entity -> entity.getUpdatedAt().isBefore(staleThreshold))
-            .limit(batchSize)
             .map(mapper::toDomain)
             .collect(Collectors.toList());
 
@@ -242,11 +239,11 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
             repository.findRetryableFailedOutboxes(
                 OutboxStatus.FAILED,
                 maxRetryCount,
-                retryAfter
+                retryAfter,
+                pageable
             );
 
         List<PipelineOutbox> retryableOutboxes = entities.stream()
-            .limit(batchSize)
             .map(mapper::toDomain)
             .collect(Collectors.toList());
 

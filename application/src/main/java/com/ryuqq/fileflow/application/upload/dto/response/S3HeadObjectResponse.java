@@ -16,18 +16,21 @@ package com.ryuqq.fileflow.application.upload.dto.response;
  *   <li>✅ Record 패턴 사용 (Java 21)</li>
  *   <li>✅ Lombok 금지</li>
  *   <li>✅ Static Factory Method 제공</li>
+ *   <li>✅ Domain VO 변환 메서드 제공</li>
  * </ul>
  *
  * @param contentLength 파일 크기 (bytes)
  * @param etag ETag (파일 무결성 확인용)
  * @param contentType Content-Type
+ * @param storageKey S3 Storage Key
  * @author Sangwon Ryu
  * @since 1.0.0
  */
 public record S3HeadObjectResponse(
     Long contentLength,
     String etag,
-    String contentType
+    String contentType,
+    String storageKey
 ) {
     /**
      * Static Factory Method
@@ -35,9 +38,31 @@ public record S3HeadObjectResponse(
      * @param contentLength 파일 크기
      * @param etag ETag
      * @param contentType Content-Type
+     * @param storageKey Storage Key
      * @return S3HeadObjectResponse 인스턴스
      */
-    public static S3HeadObjectResponse of(Long contentLength, String etag, String contentType) {
-        return new S3HeadObjectResponse(contentLength, etag, contentType);
+    public static S3HeadObjectResponse of(
+        Long contentLength,
+        String etag,
+        String contentType,
+        String storageKey
+    ) {
+        return new S3HeadObjectResponse(contentLength, etag, contentType, storageKey);
+    }
+
+    /**
+     * Domain VO로 변환
+     *
+     * <p>Application DTO → Domain VO 변환 메서드</p>
+     *
+     * @return S3UploadMetadata Domain VO
+     */
+    public com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata toDomain() {
+        return com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata.of(
+            this.contentLength,
+            this.etag,
+            this.contentType,
+            this.storageKey
+        );
     }
 }

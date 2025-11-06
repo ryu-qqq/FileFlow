@@ -129,7 +129,8 @@ class CompleteMultipartUploadServiceTest {
             S3HeadObjectResponse s3HeadResult = S3HeadObjectResponse.of(
                 10485760L,
                 "etag-123",
-                "text/plain"
+                "text/plain",
+                session.getStorageKey().value()
             );
 
             FileAsset fileAsset = FileAsset.forNew(
@@ -237,7 +238,8 @@ class CompleteMultipartUploadServiceTest {
             S3HeadObjectResponse s3HeadResult = S3HeadObjectResponse.of(
                 15728640L,
                 "etag-456",
-                "application/pdf"
+                "application/pdf",
+                session.getStorageKey().value()
             );
 
             FileAsset savedFileAsset = FileAsset.reconstitute(
@@ -324,7 +326,8 @@ class CompleteMultipartUploadServiceTest {
             S3HeadObjectResponse s3HeadResult = S3HeadObjectResponse.of(
                 5242880L,
                 "etag-min",
-                "text/plain"
+                "text/plain",
+                session.getStorageKey().value()
             );
 
             FileAsset savedFileAsset = FileAsset.reconstitute(
@@ -411,7 +414,8 @@ class CompleteMultipartUploadServiceTest {
             S3HeadObjectResponse s3HeadResult = S3HeadObjectResponse.of(
                 53687091200L,
                 "etag-max",
-                "application/octet-stream"
+                "application/octet-stream",
+                session.getStorageKey().value()
             );
 
             FileAsset savedFileAsset = FileAsset.reconstitute(

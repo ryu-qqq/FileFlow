@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.application.file.config.PipelineOutboxProperties;
 import com.ryuqq.fileflow.application.file.manager.PipelineOutboxManager;
 import com.ryuqq.fileflow.domain.download.ProcessResult;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
+import com.ryuqq.fileflow.domain.pipeline.PipelineResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Pipeline Outbox Scheduler
@@ -105,12 +107,15 @@ public class PipelineOutboxScheduler {
 
         // 2. 재시도 가능한 FAILED 메시지 조회 (지수 백오프)
         LocalDateTime retryAfter = calculateRetryAfterTime(now);
-        List<PipelineOutbox> retryableMessages =
+        int retryCapacity = properties.getBatchSize() - pendingMessages.size();
+        // CRITICAL: 배치 크기 0 이하 전달 시 IllegalArgumentException 방지
+        List<PipelineOutbox> retryableMessages = retryCapacity > 0 ?
             outboxManager.findRetryableFailedMessages(
                 properties.getMaxRetryCount(),
                 retryAfter,
-                properties.getBatchSize() - pendingMessages.size()
-            );
+                retryCapacity
+            ) :
+            List.of();
 
         // 3. PROCESSING 상태이지만 오래된 메시지 재처리 (장애 복구)
         LocalDateTime staleThreshold = now.minusMinutes(properties.getStaleMinutes());
@@ -182,14 +187,15 @@ public class PipelineOutboxScheduler {
      * <ol>
      *   <li>Outbox 상태를 PROCESSING으로 변경 (Manager 사용)</li>
      *   <li>Worker에 비동기 작업 위임</li>
-     *   <li>Outbox 상태를 COMPLETED로 변경 (Manager 사용)</li>
+     *   <li>Worker 결과 대기 (CompletableFuture)</li>
+     *   <li>결과에 따라 Outbox 상태 업데이트 (COMPLETED/FAILED)</li>
      * </ol>
      *
-     * <p><strong>주의:</strong></p>
+     * <p><strong>Worker Callback 패턴:</strong></p>
      * <ul>
-     *   <li>Worker는 비동기이므로 실제 Pipeline 완료와는 별개</li>
-     *   <li>Outbox의 역할은 "작업 시작 보장"이지 "작업 완료 보장"이 아님</li>
-     *   <li>Pipeline 실패는 Worker 내부에서 로깅만 (Outbox 상태 무관)</li>
+     *   <li>Worker는 CompletableFuture&lt;PipelineResult&gt; 반환</li>
+     *   <li>Scheduler는 결과를 기다려서 상태를 업데이트</li>
+     *   <li>실제 Pipeline 완료 여부를 정확히 반영</li>
      * </ul>
      *
      * @param outbox PipelineOutbox 메시지
@@ -203,18 +209,38 @@ public class PipelineOutboxScheduler {
             // 1. Outbox 상태를 PROCESSING으로 변경 (Manager 사용)
             outboxManager.markProcessing(outbox);
 
-            // 2. Worker에 비동기 작업 위임
-            pipelineWorker.startPipeline(outbox.getFileIdValue());
+            // 2. Worker에 비동기 작업 위임 및 결과 대기
+            CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(outbox.getFileIdValue());
+            PipelineResult result = future.join(); // Worker 결과 대기
 
-            // 3. Outbox 상태를 COMPLETED로 변경 (Manager 사용)
-            // 주의: Worker는 비동기이므로 실제 Pipeline 완료와는 별개
-            // Outbox의 역할은 "작업 시작 보장"이지 "작업 완료 보장"이 아님
-            outboxManager.markProcessed(outbox);
+            // 3. 결과에 따라 Outbox 상태 업데이트
+            if (result.isSuccess()) {
+                outboxManager.markProcessed(outbox);
+                log.info("Successfully completed pipeline: fileId={}, outboxId={}",
+                    outbox.getFileIdValue(), outbox.getIdValue());
+                return ProcessResult.SUCCESS;
 
-            log.info("Successfully dispatched pipeline: fileId={}, outboxId={}",
-                outbox.getFileIdValue(), outbox.getIdValue());
+            } else {
+                // Pipeline 처리 실패
+                String errorMessage = result.errorMessage() != null ?
+                    result.errorMessage() : "Pipeline processing failed";
 
-            return ProcessResult.SUCCESS;
+                log.error("Pipeline processing failed: fileId={}, outboxId={}, error={}",
+                    outbox.getFileIdValue(), outbox.getIdValue(), errorMessage);
+
+                // 재시도 횟수 확인
+                if (outbox.getRetryCount() >= properties.getMaxRetryCount()) {
+                    // 최대 재시도 횟수 초과 - 영구 실패
+                    outboxManager.markPermanentlyFailed(outbox, errorMessage);
+                    log.error("Permanently failed after {} retries: outboxId={}",
+                        properties.getMaxRetryCount(), outbox.getIdValue());
+                    return ProcessResult.PERMANENT_FAILURE;
+                } else {
+                    // 재시도 가능 - 상태를 FAILED로 변경 (다음 스케줄링에서 PENDING으로 되돌림)
+                    outboxManager.markFailed(outbox, errorMessage);
+                    return ProcessResult.RETRY;
+                }
+            }
 
         } catch (Exception e) {
             log.error("Failed to process pipeline outbox message: outboxId={}", outbox.getIdValue(), e);
