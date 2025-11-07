@@ -81,12 +81,13 @@ public record PipelineOutboxCreatedEvent(
     /**
      * Record Compact Constructor - 필수 필드 검증
      *
+     * <p><strong>Note:</strong> {@code outboxId}는 검증하지 않습니다.
+     * {@link PipelineOutbox#forNew()} 메서드가 ID 없이 이벤트를 발행할 수 있기 때문입니다.
+     * Event Listener는 {@code fileId}를 사용하여 Outbox를 조회합니다.</p>
+     *
      * @throws IllegalArgumentException 필수 필드가 null인 경우
      */
     public PipelineOutboxCreatedEvent {
-        if (outboxId == null) {
-            throw new IllegalArgumentException("Outbox ID는 필수입니다");
-        }
         if (fileId == null) {
             throw new IllegalArgumentException("File ID는 필수입니다");
         }
