@@ -6,15 +6,6 @@
 # Environment: prod
 # ============================================================================
 
-# Data Sources
-data "aws_secretsmanager_secret" "db_password" {
-  name = "prod-shared-mysql-master-password-OvqFrT"
-}
-
-data "aws_secretsmanager_secret_version" "db_password" {
-  secret_id = data.aws_secretsmanager_secret.db_password.id
-}
-
 # CloudWatch Log Group
 module "fileflow_logs" {
   source = "../modules/cloudwatch-log-group"
@@ -250,7 +241,7 @@ module "fileflow_service" {
   container_secrets = [
     {
       name      = "DB_PASSWORD"
-      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
+      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
     }
   ]
 
@@ -384,7 +375,7 @@ module "download_scheduler_service" {
   container_secrets = [
     {
       name      = "DOWNLOAD_DB_PASSWORD"
-      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
+      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
     }
   ]
 
@@ -518,7 +509,7 @@ module "pipeline_scheduler_service" {
   container_secrets = [
     {
       name      = "PIPELINE_DB_PASSWORD"
-      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
+      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
     }
   ]
 
@@ -664,7 +655,7 @@ module "upload_scheduler_service" {
   container_secrets = [
     {
       name      = "UPLOAD_DB_PASSWORD"
-      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
+      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
     }
   ]
 
