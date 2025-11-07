@@ -217,7 +217,7 @@ module "fileflow_service" {
     },
     {
       name  = "DB_USER"
-      value = "admin"
+      value = local.db_user
     },
     {
       name  = "FLYWAY_ENABLED"
@@ -241,7 +241,7 @@ module "fileflow_service" {
   container_secrets = [
     {
       name      = "DB_PASSWORD"
-      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
+      valueFrom = "${data.aws_secretsmanager_secret_version.fileflow_user_password.arn}:password::"
     }
   ]
 
@@ -344,7 +344,7 @@ module "download_scheduler_service" {
     },
     {
       name  = "DOWNLOAD_DB_USERNAME"
-      value = "admin"
+      value = local.db_user
     },
     {
       name  = "REDIS_HOST"
@@ -375,7 +375,7 @@ module "download_scheduler_service" {
   container_secrets = [
     {
       name      = "DOWNLOAD_DB_PASSWORD"
-      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
+      valueFrom = "${data.aws_secretsmanager_secret_version.fileflow_user_password.arn}:password::"
     }
   ]
 
@@ -478,7 +478,7 @@ module "pipeline_scheduler_service" {
     },
     {
       name  = "PIPELINE_DB_USERNAME"
-      value = "admin"
+      value = local.db_user
     },
     {
       name  = "REDIS_HOST"
@@ -509,7 +509,7 @@ module "pipeline_scheduler_service" {
   container_secrets = [
     {
       name      = "PIPELINE_DB_PASSWORD"
-      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
+      valueFrom = "${data.aws_secretsmanager_secret_version.fileflow_user_password.arn}:password::"
     }
   ]
 
@@ -612,7 +612,7 @@ module "upload_scheduler_service" {
     },
     {
       name  = "UPLOAD_DB_USERNAME"
-      value = "admin"
+      value = local.db_user
     },
     {
       name  = "REDIS_HOST"
@@ -655,7 +655,7 @@ module "upload_scheduler_service" {
   container_secrets = [
     {
       name      = "UPLOAD_DB_PASSWORD"
-      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
+      valueFrom = "${data.aws_secretsmanager_secret_version.fileflow_user_password.arn}:password::"
     }
   ]
 
