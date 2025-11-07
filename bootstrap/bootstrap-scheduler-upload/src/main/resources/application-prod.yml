@@ -1,0 +1,86 @@
+# ========================================
+# Upload Scheduler - Production 환경 설정
+# ========================================
+# ECS 배포 환경
+# Terraform 환경변수 주입
+# NO Web Server (Scheduler Only)
+# ⚠️ IMPORTANT: ECS Desired Count MUST be 1
+# ========================================
+
+spring:
+  datasource:
+    # Terraform에서 주입하는 환경변수 사용
+    url: jdbc:mysql://${UPLOAD_DB_HOST:${DB_HOST}}:${UPLOAD_DB_PORT:${DB_PORT:3306}}/fileflow?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${UPLOAD_DB_USERNAME:${DB_USERNAME:admin}}
+    password: ${UPLOAD_DB_PASSWORD:${DB_PASSWORD}}
+    hikari:
+      maximum-pool-size: ${UPLOAD_DB_POOL_MAX_SIZE:15}
+      minimum-idle: ${UPLOAD_DB_POOL_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: UploadScheduler-Prod-HikariPool
+      leak-detection-threshold: 120000
+      register-mbeans: true
+
+  data:
+    redis:
+      # Terraform에서 주입하는 환경변수 사용
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 8
+          min-idle: 3
+          max-wait: -1ms
+        shutdown-timeout: 100ms
+
+  flyway:
+    enabled: false  # Scheduler는 Flyway 비활성화
+
+aws:
+  s3:
+    region: ${AWS_REGION:ap-northeast-2}
+    bucket-name: ${AWS_S3_BUCKET:fileflow-prod}
+    # IAM Role 사용 (ECS Task Role)
+
+  cloudwatch:
+    region: ${AWS_REGION:ap-northeast-2}
+    log-group: ${AWS_CLOUDWATCH_LOG_GROUP:/aws/ecs/fileflow-scheduler-upload}
+    log-stream: ${AWS_CLOUDWATCH_LOG_STREAM:upload-scheduler-${HOSTNAME}}
+
+# Batch Job (프로덕션 환경)
+batch:
+  cleanup:
+    cron: ${BATCH_CLEANUP_CRON:0 0 2 * * *}  # 기본값: 매일 02:00
+    pending-expiration-minutes: ${BATCH_PENDING_EXPIRATION_MINUTES:30}
+    in-progress-expiration-hours: ${BATCH_IN_PROGRESS_EXPIRATION_HOURS:24}
+
+management:
+  server:
+    port: ${ACTUATOR_PORT:9093}  # ECS Health Check Port
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus  # 최소한의 엔드포인트만 노출
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true  # Kubernetes/ECS Liveness/Readiness Probe 지원
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: ${LOG_LEVEL:DEBUG}
+    org.springframework.data.redis: WARN
+    org.springframework.scheduling: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

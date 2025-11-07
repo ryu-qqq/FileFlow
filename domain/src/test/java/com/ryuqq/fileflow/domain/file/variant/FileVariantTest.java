@@ -124,7 +124,7 @@ class FileVariantTest {
 
             // When & Then
             assertThatThrownBy(() -> FileVariant.create(parentId, type, null, size, mimeType))
-                .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -138,7 +138,7 @@ class FileVariantTest {
 
             // When & Then
             assertThatThrownBy(() -> FileVariant.create(parentId, type, key, null, mimeType))
-                .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -152,7 +152,7 @@ class FileVariantTest {
 
             // When & Then
             assertThatThrownBy(() -> FileVariant.create(parentId, type, key, size, null))
-                .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -223,7 +223,7 @@ class FileVariantTest {
             // When & Then
             assertThatThrownBy(() -> FileVariant.reconstitute(
                 null, parentFileAssetId, type, key, size, mimeType, createdAt
-            )).isInstanceOf(NullPointerException.class);
+            )).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -240,7 +240,7 @@ class FileVariantTest {
             // When & Then
             assertThatThrownBy(() -> FileVariant.reconstitute(
                 id, null, type, key, size, mimeType, createdAt
-            )).isInstanceOf(NullPointerException.class);
+            )).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -257,7 +257,7 @@ class FileVariantTest {
             // When & Then
             assertThatThrownBy(() -> FileVariant.reconstitute(
                 id, parentFileAssetId, type, key, size, mimeType, null
-            )).isInstanceOf(NullPointerException.class);
+            )).isInstanceOf(IllegalArgumentException.class);
         }
     }
 

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -119,6 +120,26 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
 
         // 3. Entity → Domain 변환 및 반환
         return mapper.toDomain(savedEntity);
+    }
+
+    /**
+     * FileId로 PipelineOutbox 조회
+     *
+     * <p><strong>사용 시기:</strong></p>
+     * <ul>
+     *   <li>PipelineOutboxEventListener - 이벤트 수신 시 Outbox 조회</li>
+     * </ul>
+     *
+     * @param fileId File ID
+     * @return PipelineOutbox (Optional)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<PipelineOutbox> findByFileId(Long fileId) {
+        log.debug("Finding PipelineOutbox by fileId: fileId={}", fileId);
+
+        return repository.findByFileId(fileId)
+            .map(mapper::toDomain);
     }
 
     /**

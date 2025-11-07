@@ -30,7 +30,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -104,8 +103,7 @@ class PipelineWorkerTest {
             .willAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(fileAssetId);
-        PipelineResult result = future.join();
+        PipelineResult result = pipelineWorker.startPipeline(fileAssetId);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -122,8 +120,7 @@ class PipelineWorkerTest {
             .willReturn(Optional.empty());
 
         // When
-        CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(fileAssetId);
-        PipelineResult result = future.join();
+        PipelineResult result = pipelineWorker.startPipeline(fileAssetId);
 
         // Then
         assertThat(result.isFailure()).isTrue();
@@ -143,28 +140,24 @@ class PipelineWorkerTest {
 
         ThumbnailInfo thumbnailInfo = new ThumbnailInfo(
             com.ryuqq.fileflow.domain.upload.StorageKey.of("thumbnails/test-thumb.jpg"),
-            1024L,
-            "image/jpeg"
+            200,        // width
+            200,        // height
+            1024L,      // size
+            "image/jpeg" // contentType
         );
 
         given(thumbnailPort.generateThumbnail(imageFile))
             .willReturn(thumbnailInfo);
 
+        // 빈 Map 반환 (메타데이터 저장 스킵 - 썸네일만 테스트)
         given(metadataPort.extractMetadata(imageFile))
             .willReturn(new FileMetadata(imageFile.getId(), Map.of()));
-
-        given(objectMapper.writeValueAsString(any()))
-            .willReturn("{}");
 
         given(saveFileVariantPort.save(any(FileVariant.class)))
             .willAnswer(invocation -> invocation.getArgument(0));
 
-        given(saveExtractedDataPort.save(any(ExtractedData.class)))
-            .willAnswer(invocation -> invocation.getArgument(0));
-
         // When
-        CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(fileAssetId);
-        PipelineResult result = future.join();
+        PipelineResult result = pipelineWorker.startPipeline(fileAssetId);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -184,18 +177,18 @@ class PipelineWorkerTest {
         given(thumbnailPort.generateThumbnail(imageFile))
             .willThrow(new RuntimeException("Thumbnail generation failed"));
 
+        // 빈 Map이 아닌 실제 메타데이터 반환 (saveExtractedDataPort 호출을 위해)
         given(metadataPort.extractMetadata(imageFile))
-            .willReturn(new FileMetadata(imageFile.getId(), Map.of()));
+            .willReturn(new FileMetadata(imageFile.getId(), Map.of("width", "1920", "height", "1080")));
 
         given(objectMapper.writeValueAsString(any()))
-            .willReturn("{}");
+            .willReturn("{\"width\":\"1920\",\"height\":\"1080\"}");
 
         given(saveExtractedDataPort.save(any(ExtractedData.class)))
             .willAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(fileAssetId);
-        PipelineResult result = future.join();
+        PipelineResult result = pipelineWorker.startPipeline(fileAssetId);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -215,8 +208,7 @@ class PipelineWorkerTest {
             .willThrow(new RuntimeException("Metadata extraction failed"));
 
         // When
-        CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(fileAssetId);
-        PipelineResult result = future.join();
+        PipelineResult result = pipelineWorker.startPipeline(fileAssetId);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -231,7 +223,9 @@ class PipelineWorkerTest {
         Long tenantId = 100L;
         Long organizationId = 200L;
 
-        FileAsset customFileAsset = FileAssetFixture.createCustom(
+        // createCustomWithId()를 사용하여 ID를 포함한 FileAsset 생성
+        FileAsset customFileAsset = FileAssetFixture.createCustomWithId(
+            fileAssetId,
             tenantId,
             organizationId,
             1L,
@@ -257,8 +251,7 @@ class PipelineWorkerTest {
         ArgumentCaptor<ExtractedData> extractedDataCaptor = ArgumentCaptor.forClass(ExtractedData.class);
 
         // When
-        CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(fileAssetId);
-        PipelineResult result = future.join();
+        PipelineResult result = pipelineWorker.startPipeline(fileAssetId);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -280,8 +273,7 @@ class PipelineWorkerTest {
             .willThrow(new RuntimeException("Unexpected error"));
 
         // When
-        CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(fileAssetId);
-        PipelineResult result = future.join();
+        PipelineResult result = pipelineWorker.startPipeline(fileAssetId);
 
         // Then
         assertThat(result.isFailure()).isTrue();
