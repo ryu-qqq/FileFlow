@@ -98,6 +98,15 @@ public class FileVariant {
         if (parentFileAssetId == null || parentFileAssetId.value() == null) {
             throw new IllegalArgumentException("Parent FileAsset ID는 필수입니다");
         }
+        if (storageKey == null) {
+            throw new IllegalArgumentException("StorageKey는 필수입니다");
+        }
+        if (fileSize == null) {
+            throw new IllegalArgumentException("FileSize는 필수입니다");
+        }
+        if (mimeType == null) {
+            throw new IllegalArgumentException("MimeType은 필수입니다");
+        }
 
         FileVariant variant = new FileVariant(
             null, // ID는 Persistence Layer에서 생성
@@ -140,6 +149,16 @@ public class FileVariant {
         MimeType mimeType,
         LocalDateTime createdAt
     ) {
+        if (id == null) {
+            throw new IllegalArgumentException("FileVariantId는 필수입니다");
+        }
+        if (parentFileAssetId == null) {
+            throw new IllegalArgumentException("Parent FileAsset ID는 필수입니다");
+        }
+        if (createdAt == null) {
+            throw new IllegalArgumentException("CreatedAt은 필수입니다");
+        }
+
         return new FileVariant(
             id,
             parentFileAssetId,

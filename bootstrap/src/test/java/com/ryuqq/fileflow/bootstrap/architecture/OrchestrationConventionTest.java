@@ -120,11 +120,10 @@ class OrchestrationConventionTest {
     @Test
     @DisplayName("Finalizer는 @Scheduled 어노테이션 필수")
     void finalizersShouldHaveScheduledAnnotation() {
-        ArchRule rule = classes()
-            .that().haveSimpleNameEndingWith("Finalizer")
-            .and().resideInAPackage("..scheduler..")
-            .should().containAnyMethodsThat()
-                .areAnnotatedWith(Scheduled.class)
+        ArchRule rule = methods()
+            .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Finalizer")
+            .and().areDeclaredInClassesThat().resideInAPackage("..scheduler..")
+            .should().beAnnotatedWith(Scheduled.class)
             .because("Finalizer는 PENDING WAL을 주기적으로 처리하기 위해 @Scheduled가 필수입니다");
 
         rule.check(classes);
@@ -133,11 +132,10 @@ class OrchestrationConventionTest {
     @Test
     @DisplayName("Reaper는 @Scheduled 어노테이션 필수")
     void reapersShouldHaveScheduledAnnotation() {
-        ArchRule rule = classes()
-            .that().haveSimpleNameEndingWith("Reaper")
-            .and().resideInAPackage("..scheduler..")
-            .should().containAnyMethodsThat()
-                .areAnnotatedWith(Scheduled.class)
+        ArchRule rule = methods()
+            .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Reaper")
+            .and().areDeclaredInClassesThat().resideInAPackage("..scheduler..")
+            .should().beAnnotatedWith(Scheduled.class)
             .because("Reaper는 TIMEOUT을 주기적으로 처리하기 위해 @Scheduled가 필수입니다");
 
         rule.check(classes);
@@ -146,11 +144,11 @@ class OrchestrationConventionTest {
     @Test
     @DisplayName("Operation Entity는 IdemKey를 가져야 함")
     void operationEntitiesShouldHaveIdemKey() {
-        ArchRule rule = classes()
-            .that().haveSimpleNameEndingWith("OperationEntity")
-            .and().resideInAPackage("..entity..")
-            .should().containAnyFieldsThat()
-                .haveName("idemKey")
+        ArchRule rule = fields()
+            .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("OperationEntity")
+            .and().areDeclaredInClassesThat().resideInAPackage("..entity..")
+            .and().haveName("idemKey")
+            .should().beDeclaredInClassesThat().haveSimpleNameEndingWith("OperationEntity")
             .because("Operation Entity는 멱등성 보장을 위해 IdemKey가 필수입니다");
 
         rule.check(classes);
@@ -166,7 +164,7 @@ class OrchestrationConventionTest {
             .layer("Port").definedBy("..port..*")
             .layer("Infrastructure").definedBy("..adapter.out..*")
 
-            .whereLayer("Orchestrator").mayOnlyAccessLayersIn("Domain", "Port")
+            .whereLayer("Orchestrator").mayOnlyAccessLayers("Domain", "Port")
             .because("Orchestrator는 Domain과 Port에만 의존해야 하며, Infrastructure에 직접 의존하면 안 됩니다");
 
         rule.check(classes);

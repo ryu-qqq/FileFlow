@@ -264,5 +264,51 @@ public class FileAssetFixture {
             UploadSessionId.of(DEFAULT_UPLOAD_SESSION_ID)
         );
     }
+
+    /**
+     * Custom FileAsset 생성 (ID 포함, PROCESSING 상태)
+     *
+     * @param id             FileAsset ID
+     * @param tenantId       Tenant ID
+     * @param organizationId Organization ID
+     * @param ownerUserId    Owner User ID
+     * @param fileName       파일명
+     * @param fileSize       파일 크기
+     * @param mimeType       MIME 타입
+     * @param storageKey     저장 키
+     * @param checksum       체크섬
+     * @return Custom FileAsset (ID 포함)
+     */
+    public static FileAsset createCustomWithId(
+        Long id,
+        Long tenantId,
+        Long organizationId,
+        Long ownerUserId,
+        String fileName,
+        Long fileSize,
+        String mimeType,
+        String storageKey,
+        String checksum
+    ) {
+        return FileAsset.reconstitute(
+            FileIdFixture.create(id),
+            TenantId.of(tenantId),
+            organizationId,
+            ownerUserId,
+            FileName.of(fileName),
+            FileSize.of(fileSize),
+            MimeType.of(mimeType),
+            StorageKey.of(storageKey),
+            Checksum.of(checksum),
+            UploadSessionId.of(DEFAULT_UPLOAD_SESSION_ID),
+            FileStatus.PROCESSING,
+            Visibility.PRIVATE,
+            LocalDateTime.now().minusHours(1),
+            null,
+            null,
+            null,
+            null
+        );
+    }
 }
 

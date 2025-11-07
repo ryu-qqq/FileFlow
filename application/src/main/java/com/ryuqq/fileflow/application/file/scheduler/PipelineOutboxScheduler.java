@@ -186,15 +186,14 @@ public class PipelineOutboxScheduler {
      * <p><strong>처리 단계:</strong></p>
      * <ol>
      *   <li>Outbox 상태를 PROCESSING으로 변경 (Manager 사용)</li>
-     *   <li>Worker에 비동기 작업 위임</li>
-     *   <li>Worker 결과 대기 (CompletableFuture)</li>
+     *   <li>Worker에 동기 작업 위임</li>
      *   <li>결과에 따라 Outbox 상태 업데이트 (COMPLETED/FAILED)</li>
      * </ol>
      *
-     * <p><strong>Worker Callback 패턴:</strong></p>
+     * <p><strong>동기 호출 패턴:</strong></p>
      * <ul>
-     *   <li>Worker는 CompletableFuture&lt;PipelineResult&gt; 반환</li>
-     *   <li>Scheduler는 결과를 기다려서 상태를 업데이트</li>
+     *   <li>Worker는 PipelineResult 직접 반환</li>
+     *   <li>Scheduler는 결과를 받아서 상태를 업데이트</li>
      *   <li>실제 Pipeline 완료 여부를 정확히 반영</li>
      * </ul>
      *
@@ -209,9 +208,8 @@ public class PipelineOutboxScheduler {
             // 1. Outbox 상태를 PROCESSING으로 변경 (Manager 사용)
             outboxManager.markProcessing(outbox);
 
-            // 2. Worker에 비동기 작업 위임 및 결과 대기
-            CompletableFuture<PipelineResult> future = pipelineWorker.startPipeline(outbox.getFileIdValue());
-            PipelineResult result = future.join(); // Worker 결과 대기
+            // 2. Worker에 동기 작업 위임
+            PipelineResult result = pipelineWorker.startPipeline(outbox.getFileIdValue());
 
             // 3. 결과에 따라 Outbox 상태 업데이트
             if (result.isSuccess()) {

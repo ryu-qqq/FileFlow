@@ -206,7 +206,7 @@ class FileAssetDomainLogicTest {
         @DisplayName("fromS3Upload_WithS3UploadMetadata_ShouldCreateFileAsset - S3UploadMetadata로 생성")
         void fromS3Upload_WithS3UploadMetadata_ShouldCreateFileAsset() {
             // Given
-            UploadSession session = UploadSessionFixture.createSingle();
+            UploadSession session = UploadSessionFixture.reconstituteDefault(1L);
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
                 1024L,
                 "etag-123",
@@ -236,7 +236,7 @@ class FileAssetDomainLogicTest {
         @DisplayName("fromS3Upload_WithNullContentType_ShouldUseDefaultMimeType - null ContentType 시 기본값 사용")
         void fromS3Upload_WithNullContentType_ShouldUseDefaultMimeType() {
             // Given
-            UploadSession session = UploadSessionFixture.createSingle();
+            UploadSession session = UploadSessionFixture.reconstituteDefault(1L);
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
                 1024L,
                 "etag-123",
