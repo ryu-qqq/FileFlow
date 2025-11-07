@@ -241,7 +241,7 @@ module "fileflow_service" {
   container_secrets = [
     {
       name      = "DB_PASSWORD"
-      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
+      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
     }
   ]
 
@@ -305,11 +305,11 @@ module "download_scheduler_service" {
   name               = "${local.service_name}-scheduler-download"
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = "fileflow-scheduler-download"
-  container_port     = 9091  # Actuator port
+  container_port     = 9091 # Actuator port
   container_image    = "${local.ecr_image_uri}-download-scheduler"
   cpu                = 512
   memory             = 1024
-  desired_count      = 1  # 스케줄러는 항상 1개만
+  desired_count      = 1 # 스케줄러는 항상 1개만
   execution_role_arn = aws_iam_role.fileflow_execution_role.arn
   task_role_arn      = aws_iam_role.fileflow_task_role.arn
   subnet_ids         = local.private_subnet_ids
@@ -375,7 +375,7 @@ module "download_scheduler_service" {
   container_secrets = [
     {
       name      = "DOWNLOAD_DB_PASSWORD"
-      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
+      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
     }
   ]
 
@@ -439,11 +439,11 @@ module "pipeline_scheduler_service" {
   name               = "${local.service_name}-scheduler-pipeline"
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = "fileflow-scheduler-pipeline"
-  container_port     = 9092  # Actuator port
+  container_port     = 9092 # Actuator port
   container_image    = "${local.ecr_image_uri}-pipeline-scheduler"
   cpu                = 512
   memory             = 1024
-  desired_count      = 1  # 스케줄러는 항상 1개만
+  desired_count      = 1 # 스케줄러는 항상 1개만
   execution_role_arn = aws_iam_role.fileflow_execution_role.arn
   task_role_arn      = aws_iam_role.fileflow_task_role.arn
   subnet_ids         = local.private_subnet_ids
@@ -509,7 +509,7 @@ module "pipeline_scheduler_service" {
   container_secrets = [
     {
       name      = "PIPELINE_DB_PASSWORD"
-      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
+      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
     }
   ]
 
@@ -573,11 +573,11 @@ module "upload_scheduler_service" {
   name               = "${local.service_name}-scheduler-upload"
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = "fileflow-scheduler-upload"
-  container_port     = 9093  # Actuator port
+  container_port     = 9093 # Actuator port
   container_image    = "${local.ecr_image_uri}-upload-scheduler"
   cpu                = 512
   memory             = 1024
-  desired_count      = 1  # 스케줄러는 항상 1개만
+  desired_count      = 1 # 스케줄러는 항상 1개만
   execution_role_arn = aws_iam_role.fileflow_execution_role.arn
   task_role_arn      = aws_iam_role.fileflow_task_role.arn
   subnet_ids         = local.private_subnet_ids
@@ -640,7 +640,7 @@ module "upload_scheduler_service" {
     },
     {
       name  = "BATCH_CLEANUP_CRON"
-      value = "0 0 2 * * *"  # 매일 새벽 2시
+      value = "0 0 2 * * *" # 매일 새벽 2시
     },
     {
       name  = "BATCH_PENDING_EXPIRATION_MINUTES"
@@ -655,7 +655,7 @@ module "upload_scheduler_service" {
   container_secrets = [
     {
       name      = "UPLOAD_DB_PASSWORD"
-      valueFrom = "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-OvqFrT:password::"
+      valueFrom = "${data.aws_secretsmanager_secret_version.db_password.arn}:password::"
     }
   ]
 
