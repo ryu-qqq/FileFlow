@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -75,27 +76,27 @@ class PipelineOutboxSchedulerTest {
 
         given(outboxManager.findNewMessages(10))
             .willReturn(pendingMessages);
-        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
-        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+        given(outboxManager.findStaleProcessingMessages(any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
 
-        given(outboxManager.markProcessing(outbox))
+        given(outboxManager.markProcessing(eq(outbox)))
             .willReturn(outbox);
 
         given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
             .willReturn(PipelineResultFixture.success());
 
-        given(outboxManager.markProcessed(outbox))
+        given(outboxManager.markProcessed(eq(outbox)))
             .willReturn(outbox);
 
         // When
         scheduler.processOutboxMessages();
 
         // Then
-        verify(outboxManager).markProcessing(outbox);
+        verify(outboxManager).markProcessing(eq(outbox));
         verify(pipelineWorker).startPipeline(outbox.getFileIdValue());
-        verify(outboxManager).markProcessed(outbox);
+        verify(outboxManager).markProcessed(eq(outbox));
         verify(outboxManager, never()).markFailed(any(), anyString());
     }
 
@@ -108,12 +109,12 @@ class PipelineOutboxSchedulerTest {
 
         given(outboxManager.findNewMessages(10))
             .willReturn(pendingMessages);
-        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
-        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+        given(outboxManager.findStaleProcessingMessages(any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
 
-        given(outboxManager.markProcessing(outbox))
+        given(outboxManager.markProcessing(eq(outbox)))
             .willReturn(outbox);
 
         given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
@@ -123,14 +124,14 @@ class PipelineOutboxSchedulerTest {
         // getRetryCount()는 0이므로 maxRetryCount(3)보다 작음
         given(properties.getMaxRetryCount()).willReturn(3);
 
-        given(outboxManager.markFailed(outbox, anyString()))
+        given(outboxManager.markFailed(eq(outbox), anyString()))
             .willReturn(outbox);
 
         // When
         scheduler.processOutboxMessages();
 
         // Then
-        verify(outboxManager).markFailed(outbox, anyString());
+        verify(outboxManager).markFailed(eq(outbox), anyString());
         verify(outboxManager, never()).markProcessed(any());
         verify(outboxManager, never()).markPermanentlyFailed(any(), anyString());
     }
@@ -151,12 +152,12 @@ class PipelineOutboxSchedulerTest {
 
         given(outboxManager.findNewMessages(10))
             .willReturn(pendingMessages);
-        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
-        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+        given(outboxManager.findStaleProcessingMessages(any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
 
-        given(outboxManager.markProcessing(outbox))
+        given(outboxManager.markProcessing(eq(outbox)))
             .willReturn(outbox);
 
         given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
@@ -165,14 +166,14 @@ class PipelineOutboxSchedulerTest {
         // 최대 재시도 횟수 초과
         given(properties.getMaxRetryCount()).willReturn(3);
 
-        given(outboxManager.markPermanentlyFailed(outbox, anyString()))
+        given(outboxManager.markPermanentlyFailed(eq(outbox), anyString()))
             .willReturn(outbox);
 
         // When
         scheduler.processOutboxMessages();
 
         // Then
-        verify(outboxManager).markPermanentlyFailed(outbox, anyString());
+        verify(outboxManager).markPermanentlyFailed(eq(outbox), anyString());
         verify(outboxManager, never()).markFailed(any(), anyString());
         verify(outboxManager, never()).markProcessed(any());
     }
@@ -188,28 +189,28 @@ class PipelineOutboxSchedulerTest {
             .willReturn(List.of());
         given(outboxManager.findRetryableFailedMessages(eq(3), any(LocalDateTime.class), eq(10)))
             .willReturn(retryableMessages);
-        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+        given(outboxManager.findStaleProcessingMessages(any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
 
-        given(outboxManager.prepareForRetry(failedOutbox))
+        given(outboxManager.prepareForRetry(eq(failedOutbox)))
             .willReturn(failedOutbox);
-        given(outboxManager.markProcessing(failedOutbox))
+        given(outboxManager.markProcessing(eq(failedOutbox)))
             .willReturn(failedOutbox);
 
         given(pipelineWorker.startPipeline(failedOutbox.getFileIdValue()))
             .willReturn(PipelineResultFixture.success());
 
-        given(outboxManager.markProcessed(failedOutbox))
+        given(outboxManager.markProcessed(eq(failedOutbox)))
             .willReturn(failedOutbox);
 
         // When
         scheduler.processOutboxMessages();
 
         // Then
-        verify(outboxManager).prepareForRetry(failedOutbox);
-        verify(outboxManager).markProcessing(failedOutbox);
+        verify(outboxManager).prepareForRetry(eq(failedOutbox));
+        verify(outboxManager).markProcessing(eq(failedOutbox));
         verify(pipelineWorker).startPipeline(failedOutbox.getFileIdValue());
-        verify(outboxManager).markProcessed(failedOutbox);
+        verify(outboxManager).markProcessed(eq(failedOutbox));
     }
 
     @Test
@@ -221,27 +222,27 @@ class PipelineOutboxSchedulerTest {
 
         given(outboxManager.findNewMessages(10))
             .willReturn(List.of());
-        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
         given(outboxManager.findStaleProcessingMessages(any(LocalDateTime.class), eq(10)))
             .willReturn(staleMessages);
 
-        given(outboxManager.markProcessing(staleOutbox))
+        given(outboxManager.markProcessing(eq(staleOutbox)))
             .willReturn(staleOutbox);
 
         given(pipelineWorker.startPipeline(staleOutbox.getFileIdValue()))
             .willReturn(PipelineResultFixture.success());
 
-        given(outboxManager.markProcessed(staleOutbox))
+        given(outboxManager.markProcessed(eq(staleOutbox)))
             .willReturn(staleOutbox);
 
         // When
         scheduler.processOutboxMessages();
 
         // Then
-        verify(outboxManager).markProcessing(staleOutbox);
+        verify(outboxManager).markProcessing(eq(staleOutbox));
         verify(pipelineWorker).startPipeline(staleOutbox.getFileIdValue());
-        verify(outboxManager).markProcessed(staleOutbox);
+        verify(outboxManager).markProcessed(eq(staleOutbox));
     }
 
     @Test
@@ -250,9 +251,9 @@ class PipelineOutboxSchedulerTest {
         // Given
         given(outboxManager.findNewMessages(10))
             .willReturn(List.of());
-        given(outboxManager.findRetryableFailedMessages(anyInt(), any(), anyInt()))
+        given(outboxManager.findRetryableFailedMessages(anyInt(), any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
-        given(outboxManager.findStaleProcessingMessages(any(), anyInt()))
+        given(outboxManager.findStaleProcessingMessages(any(LocalDateTime.class), anyInt()))
             .willReturn(List.of());
 
         // When
