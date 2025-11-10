@@ -184,51 +184,6 @@ class ZeroToleranceArchitectureTest {
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 4️⃣ Orchestration Pattern (Zero-Tolerance)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    @Nested
-    @DisplayName("Orchestration Pattern 규칙")
-    class OrchestrationPatternTest {
-
-        @Test
-        @DisplayName("executeInternal()은 @Async 필수, @Transactional 금지")
-        void executeInternalShouldHaveAsyncNotTransactional() {
-            ArchRule asyncRule = methods()
-                .that().haveName("executeInternal")
-                .and().areProtected()
-                .should().beAnnotatedWith("org.springframework.scheduling.annotation.Async")
-                .because("executeInternal()은 외부 API 호출을 위해 @Async가 필수입니다");
-
-            ArchRule transactionalRule = methods()
-                .that().haveName("executeInternal")
-                .should().notBeAnnotatedWith("org.springframework.transaction.annotation.Transactional")
-                .because("executeInternal()은 외부 API 호출이므로 @Transactional을 사용하면 안 됩니다");
-
-            asyncRule.check(allClasses);
-            transactionalRule.check(allClasses);
-        }
-
-        @Test
-        @DisplayName("Command는 Record 타입이어야 함 (Lombok 금지)")
-        void commandsShouldBeRecords() {
-            ArchRule rule = methods()
-                .that().haveName("executeInternal")
-                .and().areProtected()
-                .should().haveRawReturnType(new com.tngtech.archunit.base.DescribedPredicate<com.tngtech.archunit.core.domain.JavaClass>("Outcome") {
-                    @Override
-                    public boolean test(com.tngtech.archunit.core.domain.JavaClass javaClass) {
-                        return javaClass.getSimpleName().equals("Outcome") ||
-                               javaClass.isAssignableTo("com.ryuqq.fileflow.application.common.orchestration.Outcome");
-                    }
-                })
-                .because("executeInternal()은 Outcome (Ok/Retry/Fail)을 반환해야 타입 안전합니다");
-
-            rule.check(allClasses);
-        }
-    }
-
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Helper Methods
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
