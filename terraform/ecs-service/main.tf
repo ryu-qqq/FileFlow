@@ -151,6 +151,32 @@ resource "aws_iam_role" "fileflow_task_role" {
   tags = local.required_tags
 }
 
+# S3 Access Policy for Task Role
+resource "aws_iam_role_policy" "fileflow_s3_access" {
+  name = "${local.name_prefix}-s3-access"
+  role = aws_iam_role.fileflow_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket",
+          "s3:GetObjectVersion"
+        ]
+        Resource = [
+          "arn:aws:s3:::fileflow-prod",
+          "arn:aws:s3:::fileflow-prod/*"
+        ]
+      }
+    ]
+  })
+}
+
 # ECS Service
 module "fileflow_service" {
   source = "../modules/ecs-service"
