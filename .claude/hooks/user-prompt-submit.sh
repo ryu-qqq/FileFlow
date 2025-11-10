@@ -251,5 +251,67 @@ if [[ $CONTEXT_SCORE -ge 25 && -f "$QUEUE_MANAGER" ]]; then
     fi
 fi
 
+# ==================== Skills 감지 ====================
+
+DETECTED_SKILL=""
+
+# Skills 디렉토리 확인
+SKILLS_DIR=".claude/skills"
+AVAILABLE_SKILLS="application-expert domain-expert rest-api-expert test-expert convention-reviewer"
+
+# 명시적 Skill 호출 감지 (/skill-name 또는 "skill-name")
+for skill in $AVAILABLE_SKILLS; do
+    # / 접두사 패턴
+    if echo "$USER_INPUT" | grep -qiE "/$skill"; then
+        DETECTED_SKILL="$skill"
+        break
+    fi
+
+    # 명시적 skill 이름 언급
+    if echo "$USER_INPUT" | grep -qiE "(use|call|run|invoke|execute) $skill"; then
+        DETECTED_SKILL="$skill"
+        break
+    fi
+done
+
+# 암시적 Skill 감지 (키워드 기반)
+if [[ -z "$DETECTED_SKILL" ]]; then
+    # Application layer 관련
+    if echo "$USER_INPUT" | grep -qiE "(application|usecase|service|transaction|command|query) (review|analysis|check|expert)"; then
+        DETECTED_SKILL="application-expert"
+    fi
+
+    # Domain layer 관련
+    if echo "$USER_INPUT" | grep -qiE "(domain|aggregate|entity|value.object) (review|analysis|check|expert)"; then
+        DETECTED_SKILL="domain-expert"
+    fi
+
+    # REST API 관련
+    if echo "$USER_INPUT" | grep -qiE "(rest|api|controller|endpoint) (review|analysis|check|expert)"; then
+        DETECTED_SKILL="rest-api-expert"
+    fi
+
+    # Test 관련
+    if echo "$USER_INPUT" | grep -qiE "(test|testing|unit.test|integration) (review|write|create|expert)"; then
+        DETECTED_SKILL="test-expert"
+    fi
+
+    # Convention review 관련
+    if echo "$USER_INPUT" | grep -qiE "(convention|violation|compliance|standard) (review|check|verify)"; then
+        DETECTED_SKILL="convention-reviewer"
+    fi
+fi
+
+# Skills 감지 로그
+if [[ -n "$DETECTED_SKILL" ]]; then
+    log_event "skill_detected" "{\"skill\":\"$DETECTED_SKILL\",\"user_input\":\"$(echo "$USER_INPUT" | head -c 100 | sed 's/"/\\"/g')\"}"
+
+    # Skill 실행 시작 타임스탬프
+    SKILL_START_TIME=$(date +%s)
+
+    # Skill 시작 로그
+    log_event "skill_start" "{\"skill\":\"$DETECTED_SKILL\",\"start_time\":$SKILL_START_TIME}"
+fi
+
 # 원본 입력 반환
 echo "$USER_INPUT"

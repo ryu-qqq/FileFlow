@@ -1,383 +1,208 @@
 # Claude Code Slash Commands
 
-**Spring DDD Standards 프로젝트 전용 커맨드**
+**Spring DDD Standards 프로젝트 전용 커맨드 (v1.0)**
+
+---
+
+## 🎯 v1.0 시스템 워크플로우
+
+```
+/create-prd "Order Management"  (개발 예정)
+    ↓
+PRD 문서 생성 (docs/prd/*.md)
+    ↓
+/jira-from-prd  (개발 예정)
+    ↓
+Jira 티켓 (Layer 태그 포함)
+    ↓
+/jira-task  (기존 /jira-analyze 개선 예정)
+    ↓
+kentback plan.md + 브랜치 생성
+    ↓
+kentback TDD 개발 (RED → GREEN → REFACTOR)
+    ↓
+/langfuse-register-prompt  (개발 예정)
+    ↓
+LangFuse 프롬프트 등록
+    ↓
+/abcd-test  (개발 예정)
+    ↓
+A/B/C/D 테스트 실행 + 메트릭 수집
+    ↓
+/langfuse-analyze  (개발 예정)
+    ↓
+프롬프트 효과 분석 + v1.1 개선안
+```
 
 ---
 
 ## 📋 커맨드 목록
 
-### 🎯 Phase 2: 설계 & 검증
+### 🆕 Phase 1: PRD → Jira → Plan ✅ 개발 완료
 
-| 커맨드 | 설명 | 사용법 |
-|--------|------|--------|
-| `/design-analysis` | 설계 분석 및 작업지시서 생성 | `/design-analysis Order` |
-| `/generate-fixtures` | 테스트 픽스처 자동 생성 | `/generate-fixtures Order --all` |
-| `/validate-cursor-changes` | Cursor 코드 자동 검증 | `/validate-cursor-changes` |
+| 순위 | 커맨드 | 상태 | 설명 | 실제 시간 |
+|------|--------|------|------|----------|
+| 1 | `/create-prd` | ✅ 개발 완료 | 대화형 PRD 생성 | ~1시간 |
+| 2 | `/jira-from-prd` | ✅ 개발 완료 | PRD → 레이어별 Jira 티켓 | ~1시간 |
+| 3 | `/jira-task` | ✅ 개발 완료 | Jira → kentback plan + 브랜치 | ~1시간 |
 
-### 🌲 Phase 3: 작업 큐 시스템 (NEW)
+### 📊 Phase 2: LangFuse 통합 (개발 예정)
 
-| 커맨드 | 설명 | 사용법 |
-|--------|------|--------|
-| `/queue-add` | 작업 큐에 추가 | `/queue-add order order-aggregate.md` |
-| `/queue-start` | 작업 시작 및 Worktree 생성 | `/queue-start order` |
-| `/queue-complete` | 작업 완료 및 통계 표시 | `/queue-complete order` |
-| `/queue-list` | 큐 목록 확인 | `/queue-list` |
-| `/queue-status` | 큐 상태 요약 | `/queue-status` |
+| 순위 | 커맨드 | 상태 | 설명 | 예상 시간 |
+|------|--------|------|------|----------|
+| 4 | `/langfuse-register-prompt` | ❌ 미개발 | 프롬프트 LangFuse 등록 | 2-3시간 |
+| 5 | `/abcd-test` | ❌ 미개발 | A/B/C/D 테스트 실행 | 8-10시간 |
+| 6 | `/langfuse-analyze` | ❌ 미개발 | 결과 분석 및 v1.1 생성 | 5-7시간 |
 
-### 🔍 Jira 통합
+**총 예상 개발 시간**: 25-34시간 (5-7주, part-time)
 
-| 커맨드 | 설명 | 사용법 |
-|--------|------|--------|
-| `/jira-analyze` | Jira 태스크 분석 및 TodoList 생성 | `/jira-analyze PROJ-123` |
-| `/jira-create` | Jira 이슈 생성 | `/jira-create` |
-| `/jira-update` | Jira 이슈 업데이트 | `/jira-update PROJ-123` |
-| `/jira-transition` | Jira 이슈 상태 변경 | `/jira-transition PROJ-123 Done` |
-| `/jira-comment` | Jira 이슈에 코멘트 추가 | `/jira-comment PROJ-123` |
-| `/jira-link-pr` | GitHub PR과 Jira 연동 | `/jira-link-pr PROJ-123 123` |
+### 🔍 Jira 통합 (기존 커맨드)
 
-### 🤖 AI 리뷰
+| 커맨드 | 상태 | 설명 |
+|--------|------|------|
+| `/jira-analyze` | ✅ 사용 가능 | Jira 태스크 분석 및 TodoList 생성 (→ `/jira-task`로 개선 예정) |
+| `/jira-create` | ✅ 사용 가능 | Jira 이슈 생성 |
+| `/jira-update` | ✅ 사용 가능 | Jira 이슈 업데이트 |
+| `/jira-transition` | ✅ 사용 가능 | Jira 이슈 상태 변경 |
+| `/jira-comment` | ✅ 사용 가능 | Jira 이슈에 코멘트 추가 |
+| `/jira-link-pr` | ✅ 사용 가능 | GitHub PR과 Jira 연동 |
 
-| 커맨드 | 설명 | 사용법 |
-|--------|------|--------|
-| `/ai-review` | 통합 AI 리뷰 (Gemini + CodeRabbit + Codex) | `/ai-review 123` |
-| `/ai-review` | 특정 봇만 실행 | `/ai-review 123 --bots gemini` |
-| `/ai-review` | 분석만 (실행 안함) | `/ai-review 123 --analyze-only` |
+### 🤖 AI 리뷰 (기존 커맨드)
 
-### ✅ 검증
+| 커맨드 | 상태 | 설명 |
+|--------|------|------|
+| `/ai-review` | ✅ 사용 가능 | 통합 AI 리뷰 (Gemini + CodeRabbit + Codex) |
 
-| 커맨드 | 설명 | 사용법 |
-|--------|------|--------|
-| `/validate-architecture` | 전체 아키텍처 검증 | `/validate-architecture` |
-| `/validate-domain` | Domain 파일 검증 | `/validate-domain {file}` |
+**옵션**:
+- `--bots gemini,coderabbit`: 특정 봇만 실행
+- `--strategy merge`: 병합 전략 (기본)
+- `--analyze-only`: 분석만 (실행 안함)
+
+### ✅ 검증 (기존 커맨드)
+
+| 커맨드 | 상태 | 설명 |
+|--------|------|------|
+| `/validate-architecture` | ✅ 사용 가능 | 전체 아키텍처 검증 (ArchUnit) |
+| `/validate-domain` | ✅ 사용 가능 | Domain 파일 검증 |
 
 ---
 
-## 🚀 통합 워크플로우
+## 🚀 현재 사용 가능한 워크플로우
 
-### Workflow 1: 새로운 Aggregate 개발
+### Workflow 1: Jira Task 기반 개발 (현재)
 
 ```bash
-# 1. Jira Task 분석
-/jira-analyze PROJ-123
+# 1. Jira Task 분석 및 브랜치 생성
+/jira-task
 
-# 2. 설계 분석 및 작업지시서 생성
-/design-analysis Order
+# 2. Kent Beck TDD 개발 (kb/ 디렉토리)
+# 📁 .claude/commands/kb/ 파일을 직접 참조
+# ⚠️ 참고: /kb:* slash command는 현재 등록되지 않음
+# 아래 명령어들은 .claude/commands/kb/*.md 파일의 내용을 따릅니다
 
-# 3. Git Worktree 생성 (수동)
-git worktree add ../wt-order feature/order
+# kb/go.md: TDD 사이클 시작
+# kb/red.md: RED Phase (실패하는 테스트 작성)
+# kb/green.md: GREEN Phase (최소 코드로 테스트 통과)
+# kb/refactor.md: REFACTOR Phase (코드 개선)
+# kb/next-test.md: 다음 테스트로 이동
+# kb/check-tests.md: 테스트 실행
+# kb/commit-tdd.md: TDD Commit
+# kb/tidy.md: 정리
 
-# 4. Cursor AI로 Boilerplate 생성 (Worktree)
-# → .cursorrules 자동 로드
-# → 작업지시서 참조
-# → 코드 생성
-
-# 5. Git Commit (Cursor)
-git add .
-git commit -m "feat: Order Aggregate 생성"
-
-# 6. Claude Code로 검증 (Main)
-/validate-cursor-changes
-
-# 7. 통과 시 Fixture 생성
-/generate-fixtures Order --all
-
-# 8. 비즈니스 로직 구현 (Claude Code)
-# → Domain 메서드 구현
-# → UseCase Transaction 관리
-
-# 9. 최종 검증
+# 3. 최종 검증
 /validate-architecture
 
-# 10. PR 생성 및 AI 리뷰
+# 4. PR 생성 및 AI 리뷰
 gh pr create
 /ai-review {pr-number}
-```
 
-### Workflow 2: 큐 시스템 활용 (NEW)
-
-```bash
-# 1. Jira Task 분석
-/jira-analyze PROJ-123
-
-# 2. 작업 큐에 추가
-/queue-add order order-aggregate.md
-/queue-add payment payment-aggregate.md --priority high
-
-# 3. 큐 상태 확인
-/queue-status
-# 출력:
-#   ⏳ 대기 중: 2개
-#   📝 총 작업: 2개
-
-# 4. 작업 시작 (Worktree 자동 생성)
-/queue-start order
-# 자동 실행:
-#   - 작업 상태 → in_progress
-#   - git worktree add ../wt-order feature/order
-#   - 작업지시서 복사: order-aggregate.md
-#   - .cursorrules 복사
-
-# 5. Cursor AI로 코드 생성 (Worktree)
-cd ../wt-order
-# Cursor IDE에서 작업지시서 참조하여 코드 생성
-git commit -m "feat: Order Aggregate 생성"
-
-# 6. Claude Code로 검증 (Main)
-cd ~/claude-spring-standards
-/validate-cursor-changes
-
-# 7. 비즈니스 로직 구현
-
-# 8. 작업 완료
-/queue-complete order
-# 출력:
-#   ✅ 작업 완료됨: order
-#   📊 소요 시간: 25분
-#   📝 남은 작업: 1개
-
-# 9. 다음 작업 진행
-/queue-start payment
-
-# 10. 전체 진행 상황 확인
-/queue-list
-```
-
-### Workflow 3: 기존 코드 리뷰
-
-```bash
-# 1. PR 생성
-gh pr create
-
-# 2. AI 리뷰 실행
-/ai-review {pr-number}
-
-# 3. Jira 연동
+# 5. Jira 연동
 /jira-link-pr PROJ-123 {pr-number}
-
-# 4. 리뷰 반영 후 상태 변경
 /jira-transition PROJ-123 Done
+```
+
+### Workflow 2: v1.0 시스템 완성 후 (향후)
+
+```bash
+# 1. PRD 생성
+/create-prd "Order Management"
+
+# 2. Jira 티켓 생성
+/jira-from-prd docs/prd/order-management.md
+
+# 3. Kent Beck TDD plan 생성
+/jira-task
+
+# 4. Kent Beck TDD 개발
+# 📁 .claude/commands/kb/ 파일 참조하여 TDD 사이클 수행
+
+# 5. 프롬프트 등록
+/langfuse-register-prompt domain v1.0
+
+# 6. A/B/C/D 테스트
+/abcd-test PROJ-123 all
+
+# 7. 결과 분석
+/langfuse-analyze domain v1.0
 ```
 
 ---
 
 ## 📚 커맨드 상세 가이드
 
-### `/design-analysis`
+### `/jira-analyze` (기존)
 
-**목적**: Spring DDD 설계 분석 및 Cursor 작업지시서 생성
+**목적**: Jira Task 분석 및 TodoList 생성
 
-**옵션:**
-- `--prd {file}`: PRD 파일 참조
-- `--jira {ticket}`: Jira 티켓 참조
-
-**출력:**
-- `.claude/work-orders/{aggregate}-aggregate.md`
-- Domain/UseCase/Controller 스켈레톤 코드
-
-**예시:**
+**사용법**:
 ```bash
-/design-analysis Order --prd docs/prd/order.md
+/jira-analyze PROJ-123
+/jira-analyze https://your-domain.atlassian.net/browse/PROJ-123
 ```
+
+**기능**:
+- Jira 이슈 조회 (summary, description, status, Epic)
+- TodoList 자동 생성
+- Feature 브랜치 생성 안내
+
+**향후 개선** (`/jira-task`):
+- kentback plan.md 자동 생성 (RED → GREEN → REFACTOR 계획)
+- Layer 태그 활용 (domain, application, persistence, rest-api)
 
 ---
 
-### `/generate-fixtures`
-
-**목적**: Layer별 테스트 픽스처 자동 생성
-
-**옵션:**
-- `--without-id`: ID 없는 Fixture
-- `--with-states`: 상태별 Fixture
-- `--vip`: Object Mother 패턴
-- `--all`: 모든 패턴 조합
-
-**출력:**
-- `{Layer}TestFixtures.java`
-- `{Aggregate}ObjectMother.java`
-
-**예시:**
-```bash
-/generate-fixtures Order --all
-```
-
----
-
-### `/validate-cursor-changes`
-
-**목적**: Cursor AI 생성 코드 자동 검증
-
-**검증 항목:**
-- Lombok 금지
-- Law of Demeter
-- Transaction 경계
-- Long FK Strategy
-- Javadoc 필수
-
-**출력:**
-- `.claude/validation-report.md`
-- 위반 사항 + 수정 가이드
-
-**예시:**
-```bash
-/validate-cursor-changes
-/validate-cursor-changes --layer domain
-```
-
----
-
-### `/queue-add`
-
-**목적**: 작업을 큐에 추가하여 체계적으로 관리
-
-**옵션:**
-- `--priority high`: 높은 우선순위 설정
-
-**기능:**
-- 작업 ID 자동 생성
-- 작업지시서 연결
-- 우선순위 설정 (high/normal)
-- 중복 방지
-
-**예시:**
-```bash
-/queue-add order order-aggregate.md
-/queue-add payment payment-aggregate.md --priority high
-```
-
----
-
-### `/queue-start`
-
-**목적**: 작업 시작 및 Worktree 자동 생성
-
-**자동 실행:**
-- 작업 상태 → `in_progress`
-- 시작 시간 기록
-- Worktree 생성 안내
-- 다음 단계 가이드
-
-**Worktree 구조:**
-```
-../wt-{feature}/
-├── order-aggregate.md  # 작업지시서 (자동 복사)
-├── .cursorrules        # 컨벤션 (자동 복사)
-└── (프로젝트 전체)
-```
-
-**예시:**
-```bash
-/queue-start order
-# 출력:
-#   bash .claude/scripts/worktree-manager.sh create order order-aggregate.md
-```
-
----
-
-### `/queue-complete`
-
-**목적**: 작업 완료 및 통계 표시
-
-**자동 처리:**
-- 작업 상태 → `completed`
-- 완료 시간 기록
-- 소요 시간 계산
-- Completed 목록으로 이동
-- 통계 표시
-
-**출력 정보:**
-- 소요 시간 (started_at → completed_at)
-- 남은 작업 수
-- 완료된 작업 수
-
-**예시:**
-```bash
-/queue-complete order
-# 출력:
-#   ✅ 작업 완료됨: order
-#   📊 소요 시간: 25분
-#   📝 남은 작업: 2개
-```
-
----
-
-### `/queue-list`
-
-**목적**: 큐 목록 확인 (대기 중 + 진행 중)
-
-**표시 정보:**
-- 작업 ID
-- 상태 (pending/in_progress)
-- 우선순위 (high/normal)
-- 작업지시서
-- 시작 시간 (진행 중인 경우)
-
-**아이콘:**
-- ⏳ 대기 중 (pending)
-- 🔄 진행 중 (in_progress)
-- 🔥 높은 우선순위 (high)
-- 📌 일반 우선순위 (normal)
-
-**예시:**
-```bash
-/queue-list
-```
-
----
-
-### `/queue-status`
-
-**목적**: 큐 전체 상태 요약
-
-**표시 통계:**
-- ⏳ 대기 중: N개
-- 🔄 진행 중: N개
-- ✅ 완료됨: N개
-- 📝 총 작업: N개
-- 현재 진행 중인 작업 상세 (진행 시간)
-
-**예시:**
-```bash
-/queue-status
-```
-
----
-
-### `/ai-review`
+### `/ai-review` (기존)
 
 **목적**: 통합 AI 리뷰 (병렬 실행)
 
-**지원 봇:**
-- Gemini Code Assist
-- CodeRabbit
-- Amazon CodeWhisperer
-
-**전략:**
-- `--strategy merge`: 병합 (기본)
-- `--strategy vote`: 투표
-- `--strategy sequential`: 순차
-
-**예시:**
+**사용법**:
 ```bash
 /ai-review 123
 /ai-review 123 --bots gemini,coderabbit
 /ai-review 123 --analyze-only
 ```
 
+**지원 봇**:
+- Gemini Code Assist
+- CodeRabbit
+- Amazon CodeWhisperer
+
 ---
 
-### `/jira-analyze`
+### `/validate-architecture` (기존)
 
-**목적**: Jira Task 분석 및 브랜치 생성
+**목적**: ArchUnit 기반 아키텍처 규칙 검증
 
-**기능:**
-- Task 내용 분석
-- TodoList 자동 생성
-- Feature 브랜치 생성
-
-**예시:**
+**사용법**:
 ```bash
-/jira-analyze PROJ-123
+/validate-architecture
+/validate-architecture domain
 ```
+
+**검증 항목**:
+- Layer 의존성
+- Naming 규칙
+- Zero-Tolerance 규칙
 
 ---
 
@@ -397,15 +222,66 @@ export GITHUB_TOKEN="your-token"
 # AI Review (optional)
 export GEMINI_API_KEY="your-key"
 export CODERABBIT_API_KEY="your-key"
+
+# LangFuse (Phase 2에서 필요)
+export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+export LANGFUSE_SECRET_KEY="sk-lf-..."
+export LANGFUSE_HOST="https://us.cloud.langfuse.com"
 ```
 
 ---
 
 ## 📖 참고 문서
 
-- [DEVELOPMENT_GUIDE.md](../../DEVELOPMENT_GUIDE.md) - 전체 워크플로우
-- [.claude/skills/](../skills/) - Claude Skills 정의
-- [docs/coding_convention/](../../docs/coding_convention/) - 코딩 규칙 (98개)
+### 시스템 설계
+- [TDD_LANGFUSE_SYSTEM_DESIGN.md](../../langfuse/TDD_LANGFUSE_SYSTEM_DESIGN.md) - v1.0 시스템 전체 설계
+- [COMMAND_PRIORITY.md](../../langfuse/COMMAND_PRIORITY.md) - 6개 커맨드 우선순위
+
+### 코딩 규칙
+- [docs/coding_convention/](../../docs/coding_convention/) - 98개 규칙 (Layer별)
+
+### Cache 시스템
+- [.claude/cache/rules/](../cache/rules/) - JSON Cache (O(1) 검색, 90% 토큰 절감)
+
+### Kent Beck TDD
+- [kb/](kb/) - TDD 사이클 커맨드 (8개 파일)
+  - `go.md` - TDD 사이클 시작
+  - `red.md` - RED Phase (실패하는 테스트 작성)
+  - `green.md` - GREEN Phase (최소 코드로 테스트 통과)
+  - `refactor.md` - REFACTOR Phase (코드 개선)
+  - `next-test.md` - 다음 테스트로 이동
+  - `check-tests.md` - 테스트 실행
+  - `commit-tdd.md` - TDD Commit
+  - `tidy.md` - 정리
+
+⚠️ **참고**: `/kb:*` slash command는 현재 등록되지 않음. Claude에게 "kb/go.md를 따라서 TDD를 시작해줘" 형식으로 요청하세요.
+
+---
+
+## 📊 개발 진행 상황
+
+### Phase 0: 시스템 설계 (완료)
+- ✅ TDD + LangFuse 시스템 설계 완료
+- ✅ 6개 커맨드 우선순위 정의
+- ✅ 불필요한 커맨드 정리 (큐 시스템 6개, Cursor 통합 3개 삭제)
+
+### Phase 1: PRD → Jira → Plan (완료) ✅
+- ✅ `/create-prd` 구현 (~1시간)
+- ✅ `/jira-from-prd` 구현 (~1시간)
+- ✅ `/jira-task` 구현 (~1시간)
+
+**실제 기간**: 3시간 (예상: 10-14시간 → 78% 시간 단축)
+
+### Phase 2: LangFuse 통합 (예정)
+- ❌ `/langfuse-register-prompt` 구현 (2-3시간)
+- ❌ `/abcd-test` 구현 (8-10시간)
+
+**예상 기간**: 2주 (10-13시간, part-time)
+
+### Phase 3: 분석 및 개선 (예정)
+- ❌ `/langfuse-analyze` 구현 (5-7시간)
+
+**예상 기간**: 1주 (5-7시간, part-time)
 
 ---
 
@@ -413,16 +289,16 @@ export CODERABBIT_API_KEY="your-key"
 
 **위치**: `.claude/cache/rules/`
 
-**성능:**
-- O(1) 검색
-- 90% 토큰 절감
-- 73.6% 속도 향상
+**성능**:
+- O(1) 검색 (index.json 기반)
+- 90% 토큰 절감 (50,000 → 500-1,000)
+- 73.6% 속도 향상 (561ms → 148ms)
 
-**빌드:**
+**빌드**:
 ```bash
 python3 .claude/hooks/scripts/build-rule-cache.py
 ```
 
 ---
 
-**✅ 이 커맨드들은 Claude Code + Cursor AI 통합 워크플로우를 지원합니다!**
+**✅ v1.0 시스템: 기능 개발 + 컨벤션 자동 검증 + 프롬프트 효과 측정**

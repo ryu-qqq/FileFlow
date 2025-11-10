@@ -247,7 +247,7 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
         S3CompleteResultResponse s3Result
     ) {
         return CompleteMultipartResponse.of(
-            session.getIdValue(),
+            session.getFileId(),
             s3Result.etag(),
             s3Result.location()
         );

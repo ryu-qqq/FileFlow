@@ -53,5 +53,6 @@ claudedocs/
 # LangFuse telemetry files (contains sensitive API keys)
 .langfuse.telemetry
 .env
-langfuse/
+langfuse/__pycache__/
+langfuse/tests/__pycache__/
 langfuse-data.json

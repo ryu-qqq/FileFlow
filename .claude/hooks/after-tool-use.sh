@@ -13,18 +13,7 @@ LANGFUSE_LOGGER="langfuse/scripts/log-to-langfuse.py"
 # 프로젝트명 가져오기
 PROJECT_NAME=$(basename "$(pwd)")
 
-# 입력 읽기 (Claude Code가 전달하는 JSON)
-TOOL_DATA=$(cat)
-
-# 파일 경로 추출 (jq 사용으로 안전한 JSON 파싱)
-FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.file_path // empty')
-
-if [[ -z "$FILE_PATH" ]]; then
-    # 파일 경로가 없으면 스킵
-    exit 0
-fi
-
-# JSONL 로그 함수
+# JSONL 로그 함수 (먼저 정의)
 log_event() {
     local event_type="$1"
     local data="$2"
@@ -35,6 +24,57 @@ log_event() {
             --data "$data" 2>/dev/null
     fi
 }
+
+# 입력 읽기 (Claude Code가 전달하는 JSON)
+TOOL_DATA=$(cat)
+
+# 도구 이름 추출 (Serena/Skills 추적용)
+TOOL_NAME=$(echo "$TOOL_DATA" | jq -r '.tool_name // empty')
+
+# =====================================================
+# Serena Memory 상세 추적
+# =====================================================
+
+if [[ "$TOOL_NAME" =~ ^mcp__serena__ ]]; then
+    # Serena 도구 사용 감지
+    SERENA_TOOL=$(echo "$TOOL_NAME" | sed 's/mcp__serena__//')
+
+    # read_memory 도구인 경우 상세 추적
+    if [[ "$SERENA_TOOL" == "read_memory" ]]; then
+        MEMORY_FILE=$(echo "$TOOL_DATA" | jq -r '.memory_file_name // empty')
+
+        if [[ -n "$MEMORY_FILE" ]]; then
+            MEMORY_PATH=".serena/memories/$MEMORY_FILE"
+
+            if [[ -f "$MEMORY_PATH" ]]; then
+                # 파일 크기 및 라인 수 추출
+                FILE_SIZE=$(wc -c < "$MEMORY_PATH" | tr -d ' ')
+                FILE_LINES=$(wc -l < "$MEMORY_PATH" | tr -d ' ')
+                ESTIMATED_TOKENS=$((FILE_SIZE / 4))
+
+                # Serena memory 로드 로그
+                log_event "serena_memory_load_detail" "{\"memory_file\":\"$MEMORY_FILE\",\"file_path\":\"$MEMORY_PATH\",\"file_size\":$FILE_SIZE,\"file_lines\":$FILE_LINES,\"estimated_tokens\":$ESTIMATED_TOKENS}"
+            fi
+        fi
+    fi
+
+    # list_memories 도구인 경우
+    if [[ "$SERENA_TOOL" == "list_memories" ]]; then
+        MEMORY_COUNT=$(ls -1 .serena/memories/*.md 2>/dev/null | wc -l | tr -d ' ')
+        log_event "serena_memory_list" "{\"total_memories\":$MEMORY_COUNT}"
+    fi
+
+    # 모든 Serena 도구 사용 로그
+    log_event "serena_tool_usage" "{\"tool\":\"$SERENA_TOOL\",\"full_tool_name\":\"$TOOL_NAME\"}"
+fi
+
+# 파일 경로 추출 (jq 사용으로 안전한 JSON 파싱)
+FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.file_path // empty')
+
+if [[ -z "$FILE_PATH" && ! "$TOOL_NAME" =~ ^mcp__serena__ ]]; then
+    # 파일 경로가 없고 Serena 도구도 아니면 스킵
+    exit 0
+fi
 
 # 파일이 실제로 존재하는지 확인
 if [[ ! -f "$FILE_PATH" ]]; then

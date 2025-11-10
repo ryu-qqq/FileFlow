@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =====================================================
-# Claude Spring Standards Template Installer v2.5
+# Claude Spring Standards Template Installer v2.6
 # =====================================================
 #
 # 이 스크립트는 Claude Code Dynamic Hooks + Cache 시스템을
@@ -10,10 +10,11 @@
 # 사용법:
 #   bash install-template.sh /path/to/target-project
 #
-# v2.5 추가 항목 (NEW):
-# - .claude/queue/ (자동 Queue 관리 시스템 - 100% 자동화)
+# v2.6 추가 항목 (NEW):
+# - scripts/langfuse/ (LangFuse 통합 - upload-hook-logs.py 자동 삭제 기능)
+# - docs/prd/ (TDD Plan 위치 변경: kentback/ → docs/prd/)
 # - .claude/scripts/ai-review/ (AI Review 통합 - Gemini + CodeRabbit + Codex)
-# - .claude/scripts/context-monitor.py (Statusline Queue 상태 표시)
+# - .claude/scripts/context-monitor.py (Statusline 실시간 상태 표시)
 #
 # v2.4 항목:
 # - .serena/memories/ 복사 (Coding Convention Memory 자동 로드)
@@ -51,9 +52,9 @@ cat << 'EOF'
   ___) | || (_| | | | | (_| | (_| |  _ <  __/\__ \ |_ / /  /   ___) | || (_| | | | | (_| | (_| | | | (_| \__ \
  |____/ \__\__,_|_| |_|\__,_|\__,_|_| \_\___||___/\__/_/  /   |____/ \__\__,_|_| |_|\__,_|\__,_|_|  \__,_|___/
 
-  Template Installer v2.5
+  Template Installer v2.6
   Dynamic Hooks + Cache System (100% Zero-Tolerance)
-  + Queue System + AI Review + Serena Memories + Claude Skills + ArchUnit + Cursor IDE + LangFuse + Git Hooks
+  + AI Review + Serena Memories + Claude Skills + ArchUnit + Cursor IDE + LangFuse (Auto-Delete) + Git Hooks
 
 EOF
 
@@ -94,7 +95,7 @@ fi
 # 2. 의존성 확인
 # =====================================================
 
-echo -e "${BLUE}🔍 Step 1/16: 의존성 확인${NC}"
+echo -e "${BLUE}🔍 Step 1/15: 의존성 확인${NC}"
 echo "-----------------------------------"
 
 # Python 3 확인
@@ -126,7 +127,7 @@ echo ""
 # 3. .claude/ 디렉토리 복사
 # =====================================================
 
-echo -e "${BLUE}🔧 Step 2/16: .claude/ 디렉토리 복사${NC}"
+echo -e "${BLUE}🔧 Step 2/15: .claude/ 디렉토리 복사${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$TARGET_DIR/.claude" ]]; then
@@ -157,7 +158,7 @@ echo ""
 # 4. .cursorrules 복사 (Cursor IDE 통합) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}🎨 Step 3/16: .cursorrules 복사 (Cursor IDE 통합)${NC}"
+echo -e "${BLUE}🎨 Step 3/15: .cursorrules 복사 (Cursor IDE 통합)${NC}"
 echo "-----------------------------------"
 
 if [[ -f "$SOURCE_DIR/.cursorrules" ]]; then
@@ -173,7 +174,7 @@ echo ""
 # 5. .env.example 복사 (LangFuse 설정 템플릿) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}📝 Step 4/16: .env.example 복사 (LangFuse 설정 템플릿)${NC}"
+echo -e "${BLUE}📝 Step 4/15: .env.example 복사 (LangFuse 설정 템플릿)${NC}"
 echo "-----------------------------------"
 
 if [[ -f "$SOURCE_DIR/.env.example" ]]; then
@@ -190,7 +191,7 @@ echo ""
 # 6. Hook 스크립트 권한 설정
 # =====================================================
 
-echo -e "${BLUE}🔑 Step 5/16: Hook 스크립트 권한 설정${NC}"
+echo -e "${BLUE}🔑 Step 5/15: Hook 스크립트 권한 설정${NC}"
 echo "-----------------------------------"
 
 chmod +x "$TARGET_DIR/.claude/hooks"/*.sh
@@ -204,7 +205,7 @@ echo ""
 # 7. 환경 변수 설정 안내
 # =====================================================
 
-echo -e "${BLUE}🌍 Step 6/16: 환경 변수 설정${NC}"
+echo -e "${BLUE}🌍 Step 6/15: 환경 변수 설정${NC}"
 echo "-----------------------------------"
 
 if [[ ! -f "$TARGET_DIR/.env" ]]; then
@@ -259,7 +260,7 @@ echo ""
 # 8. docs/coding_convention/ 복사 (선택적)
 # =====================================================
 
-echo -e "${BLUE}📚 Step 7/16: 코딩 컨벤션 규칙 복사 (필수)${NC}"
+echo -e "${BLUE}📚 Step 7/15: 코딩 컨벤션 규칙 복사 (필수)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/docs/coding_convention" ]]; then
@@ -283,29 +284,35 @@ fi
 echo ""
 
 # =====================================================
-# 9. langfuse/ 디렉토리 복사 (선택적) ⭐ NEW
+# 9. scripts/langfuse/ 디렉토리 복사 (선택적) ⭐ NEW v2.6
 # =====================================================
 
-echo -e "${BLUE}📊 Step 8/16: LangFuse 통합 스크립트 복사 (선택적)${NC}"
+echo -e "${BLUE}📊 Step 8/15: LangFuse 통합 스크립트 복사 (선택적)${NC}"
 echo "-----------------------------------"
 
-if [[ -d "$SOURCE_DIR/langfuse" ]]; then
+if [[ -d "$SOURCE_DIR/scripts/langfuse" ]]; then
     echo -e "${YELLOW}LangFuse 통합 스크립트를 복사하시겠습니까?${NC}"
-    echo "   (Hook 로그 모니터링, A/B 테스트, 메트릭 추적)"
+    echo "   (Hook 로그 모니터링, A/B 테스트, 메트릭 추적, 자동 삭제)"
     echo "   (y/N)"
     read -r response
 
     if [[ "$response" =~ ^[Yy]$ ]]; then
-        cp -r "$SOURCE_DIR/langfuse" "$TARGET_DIR/"
+        mkdir -p "$TARGET_DIR/scripts"
+        cp -r "$SOURCE_DIR/scripts/langfuse" "$TARGET_DIR/scripts/"
+        chmod +x "$TARGET_DIR/scripts/langfuse"/*.py
         echo -e "${GREEN}✅ LangFuse 통합 스크립트 복사 완료${NC}"
-        echo "   - langfuse/scripts/aggregate-logs.py"
-        echo "   - langfuse/scripts/upload-to-langfuse.py"
-        echo "   - langfuse/scripts/monitor.sh"
+        echo "   - scripts/langfuse/upload-hook-logs.py (자동 삭제 기능 ⭐)"
+        echo "   - scripts/langfuse/aggregate-logs.py"
+        echo ""
+        echo -e "${BLUE}💡 자동 삭제 기능:${NC}"
+        echo "   • 기본: 업로드 성공 후 로그 자동 삭제"
+        echo "   • --keep-logs: 업로드 후 로그 보존"
+        echo "   • 안전장치: LangFuse 업로드 성공 확인 후에만 삭제"
     else
         echo -e "${YELLOW}⚠️  LangFuse 통합을 건너뜁니다.${NC}"
     fi
 else
-    echo -e "${YELLOW}⚠️  소스 프로젝트에 langfuse/ 폴더가 없습니다.${NC}"
+    echo -e "${YELLOW}⚠️  소스 프로젝트에 scripts/langfuse/ 폴더가 없습니다.${NC}"
 fi
 
 echo ""
@@ -314,7 +321,7 @@ echo ""
 # 10. config/ 디렉토리 복사 (선택적) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}🔧 Step 9/16: config/ 디렉토리 복사 (선택적)${NC}"
+echo -e "${BLUE}🔧 Step 9/15: config/ 디렉토리 복사 (선택적)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/config" ]]; then
@@ -348,7 +355,7 @@ echo ""
 # 11. ArchUnit 테스트 자동 생성 ⭐ NEW v2.2
 # =====================================================
 
-echo -e "${BLUE}🧪 Step 10/16: ArchUnit 테스트 자동 생성 (Zero-Tolerance 검증)${NC}"
+echo -e "${BLUE}🧪 Step 10/15: ArchUnit 테스트 자동 생성 (Zero-Tolerance 검증)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/.claude/templates/archunit" ]]; then
@@ -412,7 +419,7 @@ echo ""
 # 12. Claude Skills 복사 ⭐ NEW v2.3
 # =====================================================
 
-echo -e "${BLUE}🎓 Step 11/16: Claude Skills 복사 (컨벤션 전문가)${NC}"
+echo -e "${BLUE}🎓 Step 11/15: Claude Skills 복사 (컨벤션 전문가)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/.claude/skills" ]]; then
@@ -450,7 +457,7 @@ echo ""
 # 13. DEVELOPMENT_GUIDE.md 복사 (선택적) ⭐ NEW
 # =====================================================
 
-echo -e "${BLUE}📖 Step 12/16: DEVELOPMENT_GUIDE.md 복사 (선택적)${NC}"
+echo -e "${BLUE}📖 Step 12/15: DEVELOPMENT_GUIDE.md 복사 (선택적)${NC}"
 echo "-----------------------------------"
 
 if [[ -f "$SOURCE_DIR/DEVELOPMENT_GUIDE.md" ]]; then
@@ -473,10 +480,10 @@ fi
 echo ""
 
 # =====================================================
-# 13. Serena Memories 복사 (필수 - /cc:load 지원)
+# 14. Serena Memories 복사 (필수 - /cc:load 지원)
 # =====================================================
 
-echo -e "${BLUE}🧠 Step 13/16: Serena Memories 복사 (Coding Convention 로드)${NC}"
+echo -e "${BLUE}🧠 Step 13/15: Serena Memories 복사 (Coding Convention 로드)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/.serena/memories" ]]; then
@@ -507,67 +514,10 @@ fi
 echo ""
 
 # =====================================================
-# 14. Queue 시스템 복사 ⭐ NEW v2.5
-# =====================================================
-
-echo -e "${BLUE}📋 Step 14/16: Queue 시스템 복사 (자동 작업 추적 - 100% 자동화)${NC}"
-echo "-----------------------------------"
-
-if [[ -d "$SOURCE_DIR/.claude/queue" ]]; then
-    echo -e "${YELLOW}Queue 시스템을 복사하시겠습니까?${NC}"
-    echo "   (자동 작업 추가/완료, TodoWrite 통합, Statusline 표시)"
-    echo "   (y/N)"
-    read -r response
-
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-        # Queue 디렉토리가 이미 존재하면 경고
-        if [[ -d "$TARGET_DIR/.claude/queue" ]]; then
-            echo -e "${YELLOW}⚠️  타겟 프로젝트에 이미 .claude/queue/ 디렉토리가 존재합니다.${NC}"
-            echo -e "${YELLOW}   덮어쓰시겠습니까? (y/N)${NC}"
-            read -r overwrite_response
-            if [[ ! "$overwrite_response" =~ ^[Yy]$ ]]; then
-                echo -e "${YELLOW}⚠️  Queue 시스템 복사를 건너뜁니다.${NC}"
-                echo ""
-                continue
-            fi
-        fi
-
-        # Queue 시스템 복사
-        cp -r "$SOURCE_DIR/.claude/queue" "$TARGET_DIR/.claude/"
-
-        # 실행 권한 설정
-        chmod +x "$TARGET_DIR/.claude/queue"/*.sh
-        chmod +x "$TARGET_DIR/.claude/queue"/*.py
-
-        # active.json 초기화 (기존 작업 제거)
-        echo '{"tasks":[]}' > "$TARGET_DIR/.claude/queue/active.json"
-
-        echo -e "${GREEN}✅ Queue 시스템 복사 완료${NC}"
-        echo ""
-        echo -e "${BLUE}📋 Queue 시스템 특징:${NC}"
-        echo "   • Hook 기반 자동 작업 추가 (Context Score >= 25)"
-        echo "   • Write/Edit 완료 시 자동 작업 완료"
-        echo "   • TodoWrite와 양방향 동기화"
-        echo "   • Statusline 실시간 Queue 상태 표시 (📋 N)"
-        echo "   • LangFuse 메트릭 자동 수집"
-        echo ""
-        echo -e "${BLUE}💡 사용 방법:${NC}"
-        echo "   자동 모드: 프롬프트만 입력하면 Hook이 자동 관리"
-        echo "   수동 모드: bash .claude/queue/queue-manager.sh status"
-    else
-        echo -e "${YELLOW}⚠️  Queue 시스템 복사를 건너뜁니다.${NC}"
-    fi
-else
-    echo -e "${YELLOW}⚠️  소스 프로젝트에 .claude/queue/ 폴더가 없습니다.${NC}"
-fi
-
-echo ""
-
-# =====================================================
 # 15. AI Review 시스템 복사 ⭐ NEW v2.5
 # =====================================================
 
-echo -e "${BLUE}🤖 Step 15/16: AI Review 시스템 복사 (Gemini + CodeRabbit + Codex 통합)${NC}"
+echo -e "${BLUE}🤖 Step 14/15: AI Review 시스템 복사 (Gemini + CodeRabbit + Codex 통합)${NC}"
 echo "-----------------------------------"
 
 if [[ -d "$SOURCE_DIR/.claude/scripts/ai-review" ]]; then
@@ -631,7 +581,7 @@ echo ""
 # 16. Cache 빌드
 # =====================================================
 
-echo -e "${BLUE}🏗️  Step 16/16: Cache 빌드${NC}"
+echo -e "${BLUE}🏗️  Step 15/15: Cache 빌드${NC}"
 echo "-----------------------------------"
 
 cd "$TARGET_DIR"
@@ -663,21 +613,21 @@ echo ""
 
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}✅ 설치 완료! (v2.5)${NC}"
+echo -e "${GREEN}✅ 설치 완료! (v2.6)${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${BLUE}📦 복사된 항목:${NC}"
 echo "   ✅ .claude/ (Dynamic Hooks + Cache 시스템)"
-echo "   ✅ .claude/queue/ (자동 Queue 관리 시스템) ⭐ NEW v2.5"
 echo "   ✅ .claude/scripts/ai-review/ (AI Review 통합) ⭐ NEW v2.5"
 echo "   ✅ .claude/scripts/context-monitor.py (Statusline) ⭐ NEW v2.5"
+echo "   ✅ scripts/langfuse/ (메트릭 추적 + 자동 삭제) ⭐ NEW v2.6"
+echo "   ✅ docs/prd/ (TDD Plan 위치) ⭐ NEW v2.6"
 echo "   ✅ .cursorrules (Cursor IDE 통합)"
 echo "   ✅ .env.example (LangFuse 설정 템플릿)"
 echo "   ✅ .serena/memories/ (Coding Convention Memory)"
 echo "   ✅ docs/coding_convention/ (98개 규칙)"
 echo "   ✅ Claude Skills (5개 전문가 에이전트) - 선택 시"
 echo "   ✅ ArchUnit 테스트 (5개 핵심 규칙 자동 검증) - 선택 시"
-echo "   ✅ langfuse/ (메트릭 추적 스크립트) - 선택 시"
 echo "   ✅ config/ (Git Hooks, Checkstyle 등) - 선택 시"
 echo "   ✅ DEVELOPMENT_GUIDE.md - 선택 시"
 echo ""
@@ -708,7 +658,8 @@ echo -e "${BLUE}📚 참고 문서:${NC}"
 echo "   - 사용 가이드: $TARGET_DIR/.claude/README.md"
 echo "   - 개발 가이드: $TARGET_DIR/DEVELOPMENT_GUIDE.md"
 echo "   - Dynamic Hooks: $TARGET_DIR/docs/DYNAMIC_HOOKS_GUIDE.md (작성 권장)"
-echo "   - LangFuse 통합: $TARGET_DIR/langfuse/README.md (복사한 경우)"
+echo "   - LangFuse 통합: $TARGET_DIR/scripts/langfuse/ (복사한 경우) ⭐ NEW v2.6"
+echo "   - TDD Plan: $TARGET_DIR/docs/prd/ (Kent Beck TDD) ⭐ NEW v2.6"
 echo ""
 echo -e "${YELLOW}⚠️  중요:${NC}"
 echo "   - .env 파일은 절대 Git에 커밋하지 마세요!"
@@ -738,5 +689,11 @@ echo "     \"Order Domain을 생성해줘\" (domain-expert 자동 활성화)"
 echo "     \"PlaceOrderUseCase를 생성해줘\" (application-expert 자동 활성화)"
 echo "   • Skills는 자동으로 인식되며 별도 설정 불필요"
 echo ""
-echo -e "${GREEN}🎉 Happy coding with Claude Spring Standards v2.3!${NC}"
+echo -e "${BLUE}📊 LangFuse 자동 삭제 기능 (NEW v2.6):${NC}"
+echo "   • 기본: 업로드 성공 후 로그 자동 삭제"
+echo "   • 명령어: python3 scripts/langfuse/upload-hook-logs.py"
+echo "   • 옵션: --keep-logs (업로드 후 로그 보존)"
+echo "   • 안전장치: LangFuse 업로드 성공 확인 후에만 삭제"
+echo ""
+echo -e "${GREEN}🎉 Happy coding with Claude Spring Standards v2.6!${NC}"
 echo ""

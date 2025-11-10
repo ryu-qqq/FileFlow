@@ -151,7 +151,6 @@ class MapperConventionTest {
             classes()
                 .that().resideInAPackage("..persistence..mapper..")
                 .and().haveSimpleNameEndingWith("Mapper")
-                .and().haveSimpleNameNotEndingWith("GrantEntityMapper") // Query 전용 Mapper 예외
                 .should(new ArchCondition<JavaClass>("have toEntity() static method") {
                     @Override
                     public void check(JavaClass javaClass, ConditionEvents events) {
