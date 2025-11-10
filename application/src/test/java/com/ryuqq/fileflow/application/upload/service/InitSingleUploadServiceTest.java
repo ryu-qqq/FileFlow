@@ -29,6 +29,7 @@ import com.ryuqq.fileflow.application.upload.port.out.UploadSessionCachePort;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.iam.tenant.fixture.TenantFixture;
+import com.ryuqq.fileflow.domain.upload.StorageKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
 
@@ -80,14 +81,15 @@ class InitSingleUploadServiceTest {
             );
 
             UploadSession savedSession = UploadSessionFixture.createSingle();
+            StorageKey testStorageKey = StorageKey.of("test/upload/file.txt");
             savedSession = UploadSessionFixture.reconstitute(
-                savedSession.getIdValue(),
+                1L,
                 savedSession.getSessionKey(),
                 savedSession.getTenantId(),
                 savedSession.getFileName(),
                 savedSession.getFileSize(),
                 savedSession.getUploadType(),
-                savedSession.getStorageKey(),
+                testStorageKey,
                 savedSession.getStatus(),
                 null,
                 null,
