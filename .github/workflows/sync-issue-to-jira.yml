@@ -2,9 +2,7 @@ name: Sync GitHub Issue to Jira
 
 on:
   issues:
-    types: [opened, edited, closed, reopened]
-  issue_comment:
-    types: [created]
+    types: [opened]  # 이슈가 새로 생성될 때만 실행
   workflow_dispatch:
     inputs:
       issue_number:
