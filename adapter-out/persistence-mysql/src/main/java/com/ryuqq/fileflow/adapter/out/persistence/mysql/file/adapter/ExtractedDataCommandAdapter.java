@@ -38,14 +38,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ExtractedDataCommandAdapter implements SaveExtractedDataPort {
 
     private final ExtractedDataJpaRepository extractedDataJpaRepository;
-    private final ExtractedDataEntityMapper extractedDataEntityMapper;
 
     public ExtractedDataCommandAdapter(
-        ExtractedDataJpaRepository extractedDataJpaRepository,
-        ExtractedDataEntityMapper extractedDataEntityMapper
+        ExtractedDataJpaRepository extractedDataJpaRepository
     ) {
         this.extractedDataJpaRepository = extractedDataJpaRepository;
-        this.extractedDataEntityMapper = extractedDataEntityMapper;
     }
 
     /**
@@ -60,13 +57,13 @@ public class ExtractedDataCommandAdapter implements SaveExtractedDataPort {
     @Transactional
     public ExtractedData save(ExtractedData extractedData) {
         // 1. Domain → Entity 변환
-        ExtractedDataJpaEntity entity = extractedDataEntityMapper.toEntity(extractedData);
+        ExtractedDataJpaEntity entity = ExtractedDataEntityMapper.toEntity(extractedData);
 
         // 2. JPA 저장 (ID 자동 할당)
         ExtractedDataJpaEntity savedEntity = extractedDataJpaRepository.save(entity);
 
         // 3. Entity → Domain 변환 (ID 포함)
-        ExtractedData savedData = extractedDataEntityMapper.toDomain(savedEntity);
+        ExtractedData savedData = ExtractedDataEntityMapper.toDomain(savedEntity);
 
         // 4. Domain Event 처리 (필요 시)
         // ⭐ ExtractedData는 도메인 이벤트를 가지고 있음

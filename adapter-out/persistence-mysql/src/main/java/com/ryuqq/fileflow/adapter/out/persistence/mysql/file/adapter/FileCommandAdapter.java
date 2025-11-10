@@ -42,20 +42,16 @@ import org.springframework.stereotype.Component;
 public class FileCommandAdapter implements FileCommandPort {
 
     private final FileAssetJpaRepository fileAssetRepository;
-    private final FileAssetEntityMapper fileAssetMapper;
 
     /**
      * 생성자
      *
      * @param fileAssetRepository JPA Repository
-     * @param fileAssetMapper Entity Mapper
      */
     public FileCommandAdapter(
-        FileAssetJpaRepository fileAssetRepository,
-        FileAssetEntityMapper fileAssetMapper
+        FileAssetJpaRepository fileAssetRepository
     ) {
         this.fileAssetRepository = fileAssetRepository;
-        this.fileAssetMapper = fileAssetMapper;
     }
 
     /**
@@ -88,14 +84,14 @@ public class FileCommandAdapter implements FileCommandPort {
 
         if (fileAsset.getId() == null) {
             // 신규 저장
-            FileAssetJpaEntity entity = fileAssetMapper.toEntity(fileAsset);
+            FileAssetJpaEntity entity = FileAssetEntityMapper.toEntity(fileAsset);
             FileAssetJpaEntity savedEntity = fileAssetRepository.save(entity);
-            return fileAssetMapper.toDomain(savedEntity);
+            return FileAssetEntityMapper.toDomain(savedEntity);
         } else {
             // 업데이트 (reconstitute 패턴)
-            FileAssetJpaEntity entity = fileAssetMapper.toEntity(fileAsset);
+            FileAssetJpaEntity entity = FileAssetEntityMapper.toEntity(fileAsset);
             FileAssetJpaEntity savedEntity = fileAssetRepository.save(entity);
-            return fileAssetMapper.toDomain(savedEntity);
+            return FileAssetEntityMapper.toDomain(savedEntity);
         }
     }
 
