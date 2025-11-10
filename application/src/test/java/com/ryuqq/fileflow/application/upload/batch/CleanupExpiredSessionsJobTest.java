@@ -21,7 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.withSettings;
 
 /**
  * CleanupExpiredSessionsJob 단위 테스트
@@ -56,7 +58,6 @@ class CleanupExpiredSessionsJobTest {
     @Mock
     private UploadSessionStateManager uploadSessionStateManager;
 
-    @InjectMocks
     private CleanupExpiredSessionsJob job;
 
     private static final int PENDING_EXPIRATION_MINUTES = 30;
@@ -64,15 +65,11 @@ class CleanupExpiredSessionsJobTest {
 
     @BeforeEach
     void setUp() {
-        // ReflectionTestUtils를 사용하여 설정 값 주입
-        org.springframework.test.util.ReflectionTestUtils.setField(
-            job,
-            "pendingExpirationMinutes",
-            PENDING_EXPIRATION_MINUTES
-        );
-        org.springframework.test.util.ReflectionTestUtils.setField(
-            job,
-            "inProgressExpirationHours",
+        // 수동으로 인스턴스 생성 (생성자가 @Value 어노테이션을 사용하므로 @InjectMocks 사용 불가)
+        job = new CleanupExpiredSessionsJob(
+            loadUploadSessionPort,
+            uploadSessionStateManager,
+            PENDING_EXPIRATION_MINUTES,
             IN_PROGRESS_EXPIRATION_HOURS
         );
     }
@@ -167,7 +164,7 @@ class CleanupExpiredSessionsJobTest {
             UploadSession session1 = createMockSession(1L, SessionStatus.PENDING);
             UploadSession session2 = createMockSession(2L, SessionStatus.PENDING);
 
-            given(loadUploadSessionPort.findByStatusAndCreatedBefore(SessionStatus.PENDING, threshold))
+            given(loadUploadSessionPort.findByStatusAndCreatedBefore(eq(SessionStatus.PENDING), eq(threshold)))
                 .willReturn(Arrays.asList(session1, session2));
 
             // When
@@ -187,12 +184,17 @@ class CleanupExpiredSessionsJobTest {
             UploadSession session2 = createMockSession(2L, SessionStatus.PENDING);
             UploadSession session3 = createMockSession(3L, SessionStatus.PENDING);
 
-            given(loadUploadSessionPort.findByStatusAndCreatedBefore(SessionStatus.PENDING, threshold))
+            given(loadUploadSessionPort.findByStatusAndCreatedBefore(eq(SessionStatus.PENDING), eq(threshold)))
                 .willReturn(Arrays.asList(session1, session2, session3));
 
-            doNothing().when(uploadSessionStateManager).save(session1);
-            doThrow(new RuntimeException("Save failed")).when(uploadSessionStateManager).save(session2);
-            doNothing().when(uploadSessionStateManager).save(session3);
+            // willAnswer를 사용하여 세션별 다른 동작 정의
+            willAnswer(invocation -> {
+                UploadSession session = invocation.getArgument(0);
+                if (session.getIdValue().equals(2L)) {
+                    throw new RuntimeException("Save failed");
+                }
+                return null; // void method
+            }).given(uploadSessionStateManager).save(any(UploadSession.class));
 
             // When - 예외 발생해도 계속 진행
             int count = job.cleanupPendingSessions(threshold);
@@ -214,7 +216,7 @@ class CleanupExpiredSessionsJobTest {
             LocalDateTime threshold = LocalDateTime.now().minusHours(IN_PROGRESS_EXPIRATION_HOURS);
             UploadSession session = createMockSession(1L, SessionStatus.IN_PROGRESS);
 
-            given(loadUploadSessionPort.findByStatusAndCreatedBefore(SessionStatus.IN_PROGRESS, threshold))
+            given(loadUploadSessionPort.findByStatusAndCreatedBefore(eq(SessionStatus.IN_PROGRESS), eq(threshold)))
                 .willReturn(Collections.singletonList(session));
 
             // When
@@ -222,7 +224,7 @@ class CleanupExpiredSessionsJobTest {
 
             // Then
             assertThat(count).isEqualTo(1);
-            verify(uploadSessionStateManager).save(session);
+            verify(uploadSessionStateManager).save(eq(session));
         }
     }
 
@@ -242,7 +244,7 @@ class CleanupExpiredSessionsJobTest {
 
             // Then
             verify(session).fail(any(com.ryuqq.fileflow.domain.upload.FailureReason.class));
-            verify(uploadSessionStateManager).save(session);
+            verify(uploadSessionStateManager).save(eq(session));
         }
     }
 
@@ -260,7 +262,7 @@ class CleanupExpiredSessionsJobTest {
             UploadSession inProgressSession2 = createMockSession(3L, SessionStatus.IN_PROGRESS);
 
             List<SessionStatus> statuses = Arrays.asList(SessionStatus.PENDING, SessionStatus.IN_PROGRESS);
-            given(loadUploadSessionPort.findByStatusInAndCreatedBefore(statuses, threshold))
+            given(loadUploadSessionPort.findByStatusInAndCreatedBefore(eq(statuses), eq(threshold)))
                 .willReturn(Arrays.asList(pendingSession, inProgressSession1, inProgressSession2));
 
             // When
@@ -282,9 +284,9 @@ class CleanupExpiredSessionsJobTest {
      * @return Mock UploadSession
      */
     private UploadSession createMockSession(Long id, SessionStatus status) {
-        UploadSession session = mock(UploadSession.class);
-        given(session.getIdValue()).willReturn(id);
-        given(session.getStatus()).willReturn(status);
+        UploadSession session = mock(UploadSession.class, withSettings().lenient());
+        when(session.getIdValue()).thenReturn(id);
+        when(session.getStatus()).thenReturn(status);
         doNothing().when(session).fail(any(com.ryuqq.fileflow.domain.upload.FailureReason.class));
         return session;
     }

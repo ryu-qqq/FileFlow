@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -45,7 +46,6 @@ class CheckUploadRateLimitServiceTest {
     @Mock
     private LoadUploadSessionPort loadUploadSessionPort;
 
-    @InjectMocks
     private CheckUploadRateLimitService service;
 
     private static final int MAX_CONCURRENT_PER_TENANT = 10;
@@ -54,10 +54,9 @@ class CheckUploadRateLimitServiceTest {
     @BeforeEach
     void setUp() {
         tenantId = 1L;
-        // ReflectionTestUtils를 사용하여 maxConcurrentPerTenant 설정
-        org.springframework.test.util.ReflectionTestUtils.setField(
-            service,
-            "maxConcurrentPerTenant",
+        // 수동으로 인스턴스 생성 (생성자가 @Value 어노테이션을 사용하므로 @InjectMocks 사용 불가)
+        service = new CheckUploadRateLimitService(
+            loadUploadSessionPort,
             MAX_CONCURRENT_PER_TENANT
         );
     }
@@ -71,7 +70,7 @@ class CheckUploadRateLimitServiceTest {
         void execute_WithZeroCurrentCount_ShouldAllowUpload() {
             // Given - 진행 중인 세션 없음
             CheckRateLimitCommand command = CheckRateLimitCommand.of(tenantId);
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenantId, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenantId), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(0L);
 
             // When
@@ -85,7 +84,7 @@ class CheckUploadRateLimitServiceTest {
             assertThat(response.remaining()).isEqualTo(10L);
             assertThat(response.allowed()).isTrue();
 
-            verify(loadUploadSessionPort).countByTenantIdAndStatus(tenantId, SessionStatus.IN_PROGRESS);
+            verify(loadUploadSessionPort).countByTenantIdAndStatus(eq(tenantId), eq(SessionStatus.IN_PROGRESS));
         }
 
         @Test
@@ -93,7 +92,7 @@ class CheckUploadRateLimitServiceTest {
         void execute_WithCurrentCountBelowLimit_ShouldAllowUpload() {
             // Given - 진행 중인 세션 5개 (< 10)
             CheckRateLimitCommand command = CheckRateLimitCommand.of(tenantId);
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenantId, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenantId), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(5L);
 
             // When
@@ -110,7 +109,7 @@ class CheckUploadRateLimitServiceTest {
         void execute_WithOneBelowLimit_ShouldAllowUpload() {
             // Given - 진행 중인 세션 9개 (< 10)
             CheckRateLimitCommand command = CheckRateLimitCommand.of(tenantId);
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenantId, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenantId), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(9L);
 
             // When
@@ -132,7 +131,7 @@ class CheckUploadRateLimitServiceTest {
         void execute_WithCurrentCountAtLimit_ShouldDenyUpload() {
             // Given - 진행 중인 세션 10개 (== 10, 경계 조건)
             CheckRateLimitCommand command = CheckRateLimitCommand.of(tenantId);
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenantId, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenantId), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(10L);
 
             // When
@@ -149,7 +148,7 @@ class CheckUploadRateLimitServiceTest {
         void execute_WithCurrentCountExceedsLimit_ShouldDenyUpload() {
             // Given - 진행 중인 세션 15개 (> 10, 비정상 상태)
             CheckRateLimitCommand command = CheckRateLimitCommand.of(tenantId);
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenantId, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenantId), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(15L);
 
             // When
@@ -176,9 +175,9 @@ class CheckUploadRateLimitServiceTest {
             CheckRateLimitCommand command1 = CheckRateLimitCommand.of(tenant1);
             CheckRateLimitCommand command2 = CheckRateLimitCommand.of(tenant2);
 
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenant1, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenant1), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(5L);
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenant2, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenant2), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(10L);
 
             // When
@@ -222,7 +221,7 @@ class CheckUploadRateLimitServiceTest {
         void response_ShouldContainAllRequiredFields() {
             // Given
             CheckRateLimitCommand command = CheckRateLimitCommand.of(tenantId);
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenantId, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenantId), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(3L);
 
             // When
@@ -241,7 +240,7 @@ class CheckUploadRateLimitServiceTest {
         void response_WithNegativeRemaining_ShouldReturnZero() {
             // Given - 제한 초과 상태
             CheckRateLimitCommand command = CheckRateLimitCommand.of(tenantId);
-            given(loadUploadSessionPort.countByTenantIdAndStatus(tenantId, SessionStatus.IN_PROGRESS))
+            given(loadUploadSessionPort.countByTenantIdAndStatus(eq(tenantId), eq(SessionStatus.IN_PROGRESS)))
                 .willReturn(20L);  // 20 > 10
 
             // When

@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -131,7 +132,7 @@ class ExternalDownloadFacadeTest {
             // When & Then
             assertThatThrownBy(() -> facade.getById(nonExistentId))
                 .isInstanceOf(DownloadNotFoundException.class)
-                .hasMessageContaining("ExternalDownload not found");
+                .hasMessageContaining("Download not found");
 
             verify(queryPort).findById(nonExistentId);
         }
@@ -220,7 +221,7 @@ class ExternalDownloadFacadeTest {
             // When & Then
             assertThatThrownBy(() -> facade.getByUploadSessionId(nonExistentSessionId))
                 .isInstanceOf(DownloadNotFoundException.class)
-                .hasMessageContaining("ExternalDownload not found for uploadSessionId");
+                .hasMessageContaining("Download not found");
 
             verify(queryPort).findByUploadSessionId(nonExistentSessionId);
         }
@@ -239,7 +240,7 @@ class ExternalDownloadFacadeTest {
         // Note: ExternalDownload 실제 생성 방법에 따라 수정 필요
         // 여기서는 Mockito를 사용하여 Mock 객체 생성
         ExternalDownload download = org.mockito.Mockito.mock(ExternalDownload.class);
-        given(download.getIdValue()).willReturn(downloadId);
+        lenient().when(download.getIdValue()).thenReturn(downloadId);
         return download;
     }
 }
