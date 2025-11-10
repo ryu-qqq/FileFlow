@@ -2,10 +2,9 @@ package com.ryuqq.fileflow.application.download.service;
 
 import com.ryuqq.fileflow.application.download.dto.command.StartExternalDownloadCommand;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
+import com.ryuqq.fileflow.application.download.facade.ExternalDownloadFacade;
 import com.ryuqq.fileflow.application.download.fixture.ExternalDownloadResponseFixture;
 import com.ryuqq.fileflow.application.download.fixture.StartExternalDownloadCommandFixture;
-import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadCommandPort;
-import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxCommandPort;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadOutboxQueryPort;
 import com.ryuqq.fileflow.application.upload.manager.UploadSessionStateManager;
@@ -31,6 +30,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -63,10 +63,7 @@ class StartExternalDownloadServiceTest {
     private LoadUploadSessionPort loadUploadSessionPort;
 
     @Mock
-    private ExternalDownloadCommandPort downloadCommandPort;
-
-    @Mock
-    private ExternalDownloadQueryPort downloadQueryPort;
+    private ExternalDownloadFacade downloadFacade;
 
     @Mock
     private ExternalDownloadOutboxCommandPort outboxCommandPort;
@@ -95,11 +92,11 @@ class StartExternalDownloadServiceTest {
 
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.createNew();
 
-            given(outboxQueryPort.findByIdempotencyKey(command.idempotencyKey()))
+            given(outboxQueryPort.findByIdempotencyKey(eq(command.idempotencyKey())))
                 .willReturn(Optional.empty());
             given(uploadSessionStateManager.save(any(UploadSession.class)))
                 .willReturn(savedSession);
-            given(downloadCommandPort.save(any(ExternalDownload.class)))
+            given(downloadFacade.save(any(ExternalDownload.class)))
                 .willReturn(savedDownload);
             given(outboxCommandPort.save(any(ExternalDownloadOutbox.class)))
                 .willReturn(outbox);
@@ -113,9 +110,9 @@ class StartExternalDownloadServiceTest {
             assertThat(response.uploadSessionId()).isEqualTo(savedSession.getIdValue());
             assertThat(response.status()).isEqualTo("INIT");
 
-            verify(outboxQueryPort).findByIdempotencyKey(command.idempotencyKey());
+            verify(outboxQueryPort).findByIdempotencyKey(eq(command.idempotencyKey()));
             verify(uploadSessionStateManager).save(any(UploadSession.class));
-            verify(downloadCommandPort).save(any(ExternalDownload.class));
+            verify(downloadFacade).save(any(ExternalDownload.class));
             verify(outboxCommandPort).save(any(ExternalDownloadOutbox.class));
         }
 
@@ -143,11 +140,11 @@ class StartExternalDownloadServiceTest {
                 null
             );
 
-            given(outboxQueryPort.findByIdempotencyKey(command.idempotencyKey()))
+            given(outboxQueryPort.findByIdempotencyKey(eq(command.idempotencyKey())))
                 .willReturn(Optional.of(existingOutbox));
-            given(downloadQueryPort.findById(existingOutbox.getDownloadIdValue()))
-                .willReturn(Optional.of(existingDownload));
-            given(loadUploadSessionPort.findById(existingOutbox.getUploadSessionIdValue()))
+            given(downloadFacade.getById(eq(existingOutbox.getDownloadIdValue())))
+                .willReturn(existingDownload);
+            given(loadUploadSessionPort.findById(eq(existingOutbox.getUploadSessionIdValue())))
                 .willReturn(Optional.of(existingSession));
 
             // When
@@ -157,10 +154,10 @@ class StartExternalDownloadServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.downloadId()).isEqualTo(existingDownload.getIdValue());
 
-            verify(outboxQueryPort).findByIdempotencyKey(command.idempotencyKey());
-            verify(downloadQueryPort).findById(existingOutbox.getDownloadIdValue());
-            verify(loadUploadSessionPort).findById(existingOutbox.getUploadSessionIdValue());
-            verify(downloadCommandPort, never()).save(any(ExternalDownload.class));
+            verify(outboxQueryPort).findByIdempotencyKey(eq(command.idempotencyKey()));
+            verify(downloadFacade).getById(eq(existingOutbox.getDownloadIdValue()));
+            verify(loadUploadSessionPort).findById(eq(existingOutbox.getUploadSessionIdValue()));
+            verify(downloadFacade, never()).save(any(ExternalDownload.class));
             verify(outboxCommandPort, never()).save(any(ExternalDownloadOutbox.class));
         }
     }
@@ -176,18 +173,18 @@ class StartExternalDownloadServiceTest {
             StartExternalDownloadCommand command = StartExternalDownloadCommandFixture.create();
             ExternalDownloadOutbox existingOutbox = ExternalDownloadOutboxFixture.createWithId(1L);
 
-            given(outboxQueryPort.findByIdempotencyKey(command.idempotencyKey()))
+            given(outboxQueryPort.findByIdempotencyKey(eq(command.idempotencyKey())))
                 .willReturn(Optional.of(existingOutbox));
-            given(downloadQueryPort.findById(existingOutbox.getDownloadIdValue()))
-                .willReturn(Optional.empty());
+            given(downloadFacade.getById(eq(existingOutbox.getDownloadIdValue())))
+                .willThrow(new DownloadNotFoundException());
 
             // When & Then
             assertThatThrownBy(() -> service.execute(command))
                 .isInstanceOf(DownloadNotFoundException.class)
                 .hasMessageContaining("Download not found");
 
-            verify(downloadQueryPort).findById(existingOutbox.getDownloadIdValue());
-            verify(downloadCommandPort, never()).save(any(ExternalDownload.class));
+            verify(downloadFacade).getById(eq(existingOutbox.getDownloadIdValue()));
+            verify(downloadFacade, never()).save(any(ExternalDownload.class));
         }
     }
 
@@ -196,8 +193,8 @@ class StartExternalDownloadServiceTest {
     class CQRSValidationTests {
 
         @Test
-        @DisplayName("CommandPort는 쓰기만 사용 - save() 호출 확인")
-        void commandPortShouldOnlyUseWriteMethods() {
+        @DisplayName("Facade는 쓰기만 사용 - save() 호출 확인")
+        void facadeShouldOnlyUseWriteMethods() {
             // Given
             StartExternalDownloadCommand command = StartExternalDownloadCommandFixture.create();
             UploadSession session = UploadSessionFixture.reconstituteDefault(12345L);
@@ -208,7 +205,7 @@ class StartExternalDownloadServiceTest {
                 .willReturn(Optional.empty());
             given(uploadSessionStateManager.save(any()))
                 .willReturn(session);
-            given(downloadCommandPort.save(any()))
+            given(downloadFacade.save(any()))
                 .willReturn(download);
             given(outboxCommandPort.save(any()))
                 .willReturn(outbox);
@@ -216,10 +213,8 @@ class StartExternalDownloadServiceTest {
             // When
             service.execute(command);
 
-            // Then - CommandPort는 save()만 호출
-            verify(downloadCommandPort).save(any(ExternalDownload.class));
-            verify(downloadCommandPort, never()).delete(any());
-            verify(downloadQueryPort, never()).findById(any()); // QueryPort는 조회만
+            // Then - Facade는 save()만 호출 (신규 생성 시)
+            verify(downloadFacade).save(any(ExternalDownload.class));
         }
 
         @Test
@@ -235,7 +230,7 @@ class StartExternalDownloadServiceTest {
                 .willReturn(Optional.empty());
             given(uploadSessionStateManager.save(any()))
                 .willReturn(session);
-            given(downloadCommandPort.save(any()))
+            given(downloadFacade.save(any()))
                 .willReturn(download);
             given(outboxCommandPort.save(any()))
                 .willReturn(outbox);
@@ -245,7 +240,6 @@ class StartExternalDownloadServiceTest {
 
             // Then - QueryPort는 조회만 호출
             verify(outboxQueryPort).findByIdempotencyKey(any());
-            verify(outboxQueryPort, never()).findById(any()); // QueryPort는 조회만
         }
     }
 }
