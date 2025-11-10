@@ -23,22 +23,28 @@ import java.util.UUID;
 public record SessionKey(String value) {
 
     /**
-     * Compact 생성자 - 유효성 검증
+     * Canonical 생성자 - 유효성 검증 및 정규화
      *
+     * @param value 세션 키 (UUID 문자열)
      * @throws IllegalArgumentException 세션 키가 null이거나 UUID 형식이 아닌 경우
      */
-    public SessionKey {
+    public SessionKey(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("세션 키는 필수입니다");
         }
 
-        value = value.trim();
+        // 정규화 (trim)
+        String normalizedValue = value.trim();
 
-        if (!isValidUUID(value)) {
+        // UUID 형식 검증
+        if (!isValidUUID(normalizedValue)) {
             throw new IllegalArgumentException(
-                    "세션 키는 유효한 UUID 형식이어야 합니다: " + value
+                    "세션 키는 유효한 UUID 형식이어야 합니다: " + normalizedValue
             );
         }
+
+        // 정규화된 값을 필드에 할당
+        this.value = normalizedValue;
     }
 
     /**

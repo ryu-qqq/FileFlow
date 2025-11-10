@@ -36,12 +36,13 @@ data "aws_ssm_parameter" "db_instance_port" {
   name = "/shared/rds/db-instance-port"
 }
 
-data "aws_ssm_parameter" "master_password_secret_name" {
-  name = "/shared/rds/master-password-secret-name"
+# FileFlow 사용자 비밀번호 (애플리케이션 전용 계정)
+data "aws_ssm_parameter" "fileflow_user_password_secret_name" {
+  name = "/fileflow/prod/db-user-password-secret-name"
 }
 
-data "aws_secretsmanager_secret_version" "db_password" {
-  secret_id = data.aws_ssm_parameter.master_password_secret_name.value
+data "aws_secretsmanager_secret_version" "fileflow_user_password" {
+  secret_id = data.aws_ssm_parameter.fileflow_user_password_secret_name.value
 }
 
 # ECR Repository
@@ -69,10 +70,11 @@ locals {
   private_subnet_ids = split(",", data.aws_ssm_parameter.private_subnet_ids.value)
   public_subnet_ids  = split(",", data.aws_ssm_parameter.public_subnet_ids.value)
 
-  # Shared Database
+  # FileFlow Database (애플리케이션 전용 계정)
   db_address  = data.aws_ssm_parameter.db_instance_address.value
   db_port     = data.aws_ssm_parameter.db_instance_port.value
-  db_password = jsondecode(data.aws_secretsmanager_secret_version.db_password.secret_string)["password"]
+  db_user     = jsondecode(data.aws_secretsmanager_secret_version.fileflow_user_password.secret_string)["username"]
+  db_password = jsondecode(data.aws_secretsmanager_secret_version.fileflow_user_password.secret_string)["password"]
 
   # Redis Cache
   redis_endpoint = data.aws_ssm_parameter.redis_endpoint.value
