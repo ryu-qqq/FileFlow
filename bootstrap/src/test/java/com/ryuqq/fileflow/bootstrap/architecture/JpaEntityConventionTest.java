@@ -225,9 +225,11 @@ class JpaEntityConventionTest {
             ArchRule rule = fields()
                 .that().areDeclaredInClassesThat().resideInAPackage("..persistence..entity..")
                 .and().areDeclaredInClassesThat().areAnnotatedWith(Entity.class)
+                .and().areDeclaredInClassesThat().haveSimpleNameNotContaining("Permission")
+                .and().areDeclaredInClassesThat().haveSimpleNameNotContaining("Role")
                 .and().areAnnotatedWith(Id.class)
                 .should().haveRawType(Long.class)
-                .because("JPA 엔티티 ID는 Long 타입 (BIGINT)을 사용해야 합니다");
+                .because("JPA 엔티티 ID는 Long 타입 (BIGINT)을 사용해야 합니다 (Permission/Role 제외 - 자연 키 사용)");
 
             rule.check(persistenceClasses);
         }
@@ -238,9 +240,11 @@ class JpaEntityConventionTest {
             ArchRule rule = fields()
                 .that().areDeclaredInClassesThat().resideInAPackage("..persistence..entity..")
                 .and().areDeclaredInClassesThat().areAnnotatedWith(Entity.class)
+                .and().areDeclaredInClassesThat().haveSimpleNameNotContaining("Permission")
+                .and().areDeclaredInClassesThat().haveSimpleNameNotContaining("Role")
                 .and().areAnnotatedWith(Id.class)
                 .should().beAnnotatedWith(GeneratedValue.class)
-                .because("JPA 엔티티 ID는 자동 생성 전략을 사용해야 합니다 (@GeneratedValue 필수)");
+                .because("JPA 엔티티 ID는 자동 생성 전략을 사용해야 합니다 (@GeneratedValue 필수, Permission/Role 제외 - 자연 키 사용)");
 
             rule.check(persistenceClasses);
         }

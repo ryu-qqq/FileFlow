@@ -44,16 +44,13 @@ import java.util.List;
 public class FileVariantCommandAdapter implements SaveFileVariantPort {
 
     private final FileVariantJpaRepository fileVariantJpaRepository;
-    private final FileVariantEntityMapper fileVariantEntityMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     public FileVariantCommandAdapter(
         FileVariantJpaRepository fileVariantJpaRepository,
-        FileVariantEntityMapper fileVariantEntityMapper,
         ApplicationEventPublisher eventPublisher
     ) {
         this.fileVariantJpaRepository = fileVariantJpaRepository;
-        this.fileVariantEntityMapper = fileVariantEntityMapper;
         this.eventPublisher = eventPublisher;
     }
 
@@ -76,7 +73,7 @@ public class FileVariantCommandAdapter implements SaveFileVariantPort {
     @Transactional
     public FileVariant save(FileVariant fileVariant) {
         // 1. Domain → Entity 변환
-        FileVariantJpaEntity entity = fileVariantEntityMapper.toEntity(fileVariant);
+        FileVariantJpaEntity entity = FileVariantEntityMapper.toEntity(fileVariant);
 
         // 2. Domain Event 복사 (재구성 전에 원본에서 이벤트 보존)
         // ⚠️ 중요: savedVariant는 reconstitute로 재구성되므로 이벤트가 비어있음
@@ -87,7 +84,7 @@ public class FileVariantCommandAdapter implements SaveFileVariantPort {
         FileVariantJpaEntity savedEntity = fileVariantJpaRepository.save(entity);
 
         // 4. Entity → Domain 변환 (ID 포함)
-        FileVariant savedVariant = fileVariantEntityMapper.toDomain(savedEntity);
+        FileVariant savedVariant = FileVariantEntityMapper.toDomain(savedEntity);
 
         // 5. Domain Event 발행 (트랜잭션 커밋 시점에 발행)
         domainEvents.forEach(event -> {

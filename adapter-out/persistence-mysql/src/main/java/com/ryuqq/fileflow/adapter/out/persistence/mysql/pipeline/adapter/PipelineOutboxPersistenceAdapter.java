@@ -60,20 +60,16 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
     private static final Logger log = LoggerFactory.getLogger(PipelineOutboxPersistenceAdapter.class);
 
     private final PipelineOutboxJpaRepository repository;
-    private final PipelineOutboxEntityMapper mapper;
 
     /**
      * 생성자
      *
      * @param repository PipelineOutbox JPA Repository
-     * @param mapper     PipelineOutbox Entity Mapper
      */
     public PipelineOutboxPersistenceAdapter(
-        PipelineOutboxJpaRepository repository,
-        PipelineOutboxEntityMapper mapper
+        PipelineOutboxJpaRepository repository
     ) {
         this.repository = repository;
-        this.mapper = mapper;
     }
 
     /**
@@ -110,7 +106,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
             outbox.getIdempotencyKeyValue(), outbox.getFileIdValue());
 
         // 1. Domain → Entity 변환
-        PipelineOutboxJpaEntity entity = mapper.toEntity(outbox);
+        PipelineOutboxJpaEntity entity = PipelineOutboxEntityMapper.toEntity(outbox);
 
         // 2. DB 저장 (ID 자동 생성)
         PipelineOutboxJpaEntity savedEntity = repository.save(entity);
@@ -119,7 +115,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
             savedEntity.getId(), savedEntity.getIdempotencyKey(), savedEntity.getStatus());
 
         // 3. Entity → Domain 변환 및 반환
-        return mapper.toDomain(savedEntity);
+        return PipelineOutboxEntityMapper.toDomain(savedEntity);
     }
 
     /**
@@ -139,7 +135,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
         log.debug("Finding PipelineOutbox by fileId: fileId={}", fileId);
 
         return repository.findByFileId(fileId)
-            .map(mapper::toDomain);
+            .map(PipelineOutboxEntityMapper::toDomain);
     }
 
     /**
@@ -172,7 +168,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
             repository.findByStatusOrderByCreatedAtAsc(status, pageable);
 
         List<PipelineOutbox> outboxes = entities.stream()
-            .map(mapper::toDomain)
+            .map(PipelineOutboxEntityMapper::toDomain)
             .collect(Collectors.toList());
 
         log.debug("Found {} PipelineOutbox with status={}", outboxes.size(), status);
@@ -215,7 +211,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
             repository.findStaleProcessingMessages(OutboxStatus.PROCESSING, staleThreshold, pageable);
 
         List<PipelineOutbox> staleOutboxes = entities.stream()
-            .map(mapper::toDomain)
+            .map(PipelineOutboxEntityMapper::toDomain)
             .collect(Collectors.toList());
 
         log.warn("Found {} stale PROCESSING messages (threshold={})",
@@ -265,7 +261,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
             );
 
         List<PipelineOutbox> retryableOutboxes = entities.stream()
-            .map(mapper::toDomain)
+            .map(PipelineOutboxEntityMapper::toDomain)
             .collect(Collectors.toList());
 
         log.info("Found {} retryable FAILED messages (maxRetryCount={}, retryAfter={})",

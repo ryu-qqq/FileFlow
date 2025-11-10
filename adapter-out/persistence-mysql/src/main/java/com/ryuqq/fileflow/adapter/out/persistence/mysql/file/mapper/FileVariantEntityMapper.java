@@ -6,7 +6,6 @@ import com.ryuqq.fileflow.domain.file.variant.FileVariantId;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
-import org.springframework.stereotype.Component;
 
 /**
  * FileVariant Entity Mapper
@@ -19,6 +18,7 @@ import org.springframework.stereotype.Component;
  *   <li>✅ 변환 로직만 담당 (비즈니스 로직 없음)</li>
  *   <li>✅ Domain ↔ Entity 양방향 변환</li>
  *   <li>✅ Value Object 변환 처리</li>
+ *   <li>✅ Static Utility Class - 인스턴스 불필요</li>
  *   <li>❌ MapStruct 사용 안함 (Pure Java)</li>
  *   <li>❌ Lombok 금지</li>
  * </ul>
@@ -26,8 +26,14 @@ import org.springframework.stereotype.Component;
  * @author Sangwon Ryu
  * @since 1.0.0
  */
-@Component
-public class FileVariantEntityMapper {
+public final class FileVariantEntityMapper {
+
+    /**
+     * Private Constructor - Utility 클래스 인스턴스화 방지
+     */
+    private FileVariantEntityMapper() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
 
     /**
      * Domain → Entity 변환
@@ -37,7 +43,7 @@ public class FileVariantEntityMapper {
      * @param fileVariant Domain FileVariant
      * @return JPA Entity
      */
-    public FileVariantJpaEntity toEntity(FileVariant fileVariant) {
+    public static FileVariantJpaEntity toEntity(FileVariant fileVariant) {
         if (fileVariant == null) {
             return null;
         }
@@ -59,7 +65,7 @@ public class FileVariantEntityMapper {
      * @param entity JPA Entity
      * @return Domain FileVariant
      */
-    public FileVariant toDomain(FileVariantJpaEntity entity) {
+    public static FileVariant toDomain(FileVariantJpaEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -85,7 +91,7 @@ public class FileVariantEntityMapper {
      * @param existingEntity 기존 Entity
      * @return 업데이트된 Entity
      */
-    public FileVariantJpaEntity updateEntity(
+    public static FileVariantJpaEntity updateEntity(
         FileVariant fileVariant,
         FileVariantJpaEntity existingEntity
     ) {

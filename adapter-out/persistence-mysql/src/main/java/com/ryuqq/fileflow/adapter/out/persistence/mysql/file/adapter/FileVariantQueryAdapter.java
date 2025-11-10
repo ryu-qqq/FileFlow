@@ -42,14 +42,11 @@ import java.util.Optional;
 public class FileVariantQueryAdapter implements FileVariantQueryPort {
 
     private final FileVariantJpaRepository fileVariantJpaRepository;
-    private final FileVariantEntityMapper fileVariantEntityMapper;
 
     public FileVariantQueryAdapter(
-        FileVariantJpaRepository fileVariantJpaRepository,
-        FileVariantEntityMapper fileVariantEntityMapper
+        FileVariantJpaRepository fileVariantJpaRepository
     ) {
         this.fileVariantJpaRepository = fileVariantJpaRepository;
-        this.fileVariantEntityMapper = fileVariantEntityMapper;
     }
 
     /**
@@ -68,7 +65,7 @@ public class FileVariantQueryAdapter implements FileVariantQueryPort {
 
         // 2. Entity → Domain 변환
         return entities.stream()
-            .map(fileVariantEntityMapper::toDomain)
+            .map(FileVariantEntityMapper::toDomain)
             .toList();
     }
 
@@ -89,7 +86,7 @@ public class FileVariantQueryAdapter implements FileVariantQueryPort {
             .findByParentFileAssetIdAndVariantType(fileId, variantType);
 
         // 2. Entity → Domain 변환
-        return entity.map(fileVariantEntityMapper::toDomain);
+        return entity.map(FileVariantEntityMapper::toDomain);
     }
 
     /**

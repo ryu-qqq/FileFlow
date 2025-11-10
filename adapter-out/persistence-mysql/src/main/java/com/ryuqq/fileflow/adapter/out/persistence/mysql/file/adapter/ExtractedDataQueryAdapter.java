@@ -40,14 +40,11 @@ import java.util.List;
 public class ExtractedDataQueryAdapter implements ExtractedDataQueryPort {
 
     private final ExtractedDataJpaRepository extractedDataJpaRepository;
-    private final ExtractedDataEntityMapper extractedDataEntityMapper;
 
     public ExtractedDataQueryAdapter(
-        ExtractedDataJpaRepository extractedDataJpaRepository,
-        ExtractedDataEntityMapper extractedDataEntityMapper
+        ExtractedDataJpaRepository extractedDataJpaRepository
     ) {
         this.extractedDataJpaRepository = extractedDataJpaRepository;
-        this.extractedDataEntityMapper = extractedDataEntityMapper;
     }
 
     /**
@@ -66,7 +63,7 @@ public class ExtractedDataQueryAdapter implements ExtractedDataQueryPort {
 
         // 2. Entity → Domain 변환
         return entities.stream()
-            .map(extractedDataEntityMapper::toDomain)
+            .map(ExtractedDataEntityMapper::toDomain)
             .toList();
     }
 }

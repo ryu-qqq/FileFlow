@@ -10,7 +10,6 @@ import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
-import org.springframework.stereotype.Component;
 
 /**
  * FileAsset Entity Mapper
@@ -22,6 +21,7 @@ import org.springframework.stereotype.Component;
  *   <li>Domain → JPA Entity 변환 (toEntity)</li>
  *   <li>JPA Entity → Domain 변환 (toDomain)</li>
  *   <li>Value Object Wrapping/Unwrapping</li>
+ *   <li>Static Utility Class - 인스턴스 불필요</li>
  * </ul>
  *
  * <p><strong>변환 규칙</strong>:</p>
@@ -34,8 +34,14 @@ import org.springframework.stereotype.Component;
  * @author Sangwon Ryu
  * @since 1.0.0
  */
-@Component
-public class FileAssetEntityMapper {
+public final class FileAssetEntityMapper {
+
+    /**
+     * Private Constructor - Utility 클래스 인스턴스화 방지
+     */
+    private FileAssetEntityMapper() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
 
     /**
      * Domain → JPA Entity 변환
@@ -46,7 +52,7 @@ public class FileAssetEntityMapper {
      * @param fileAsset Domain FileAsset
      * @return JPA FileAssetJpaEntity
      */
-    public FileAssetJpaEntity toEntity(FileAsset fileAsset) {
+    public static FileAssetJpaEntity toEntity(FileAsset fileAsset) {
         if (fileAsset == null) {
             return null;
         }
@@ -99,7 +105,7 @@ public class FileAssetEntityMapper {
      * @param entity JPA FileAssetJpaEntity
      * @return Domain FileAsset
      */
-    public FileAsset toDomain(FileAssetJpaEntity entity) {
+    public static FileAsset toDomain(FileAssetJpaEntity entity) {
         if (entity == null) {
             return null;
         }
