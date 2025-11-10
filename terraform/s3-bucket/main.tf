@@ -187,7 +187,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "main" {
 }
 
 # Bucket Policy
-# Note: atlantis-ecs-task-prod has s3:GetBucketPolicy permission (added 2025-11-10)
+# Note: atlantis-ecs-task-prod has s3:GetBucketPolicy and s3:GetBucketAcl permissions (added 2025-11-10)
 resource "aws_s3_bucket_policy" "main" {
   bucket = aws_s3_bucket.main.id
 
