@@ -120,12 +120,6 @@ jobs:
                 echo "  → Importing $BUCKET_NAME..."
                 terraform import -input=false aws_s3_bucket.main "$BUCKET_NAME" || echo "  ⚠️  Import failed or already in state"
               fi
-
-              # KMS Alias Import
-              if aws kms describe-key --key-id "alias/fileflow-prod" --region ap-northeast-2 >/dev/null 2>&1; then
-                echo "  → Importing KMS alias fileflow-prod..."
-                terraform import -input=false aws_kms_alias.s3 "alias/fileflow-prod" || echo "  ⚠️  Import failed or already in state"
-              fi
             fi
 
             # ECR 모듈
