@@ -210,19 +210,22 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
      */
     @Transactional
     public Long completeUpload(UploadSession session, S3HeadObjectResponse s3HeadResult) {
-        // 1. Application DTO → Domain VO 변환
+        // 1. UploadSession 시작 (PENDING → IN_PROGRESS)
+        session.start();
+
+        // 2. Application DTO → Domain VO 변환
         com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata s3Metadata = s3HeadResult.toDomain();
 
-        // 2. FileAsset Aggregate 생성 (Domain VO 사용)
+        // 3. FileAsset Aggregate 생성 (Domain VO 사용)
         FileAsset fileAsset = FileAsset.fromS3Upload(session, s3Metadata);
 
-        // 3. FileAsset 저장
+        // 4. FileAsset 저장
         FileAsset savedFileAsset = fileCommandManager.save(fileAsset);
 
         log.debug("FileAsset created: fileAssetId={}, sessionId={}",
             savedFileAsset.getIdValue(), session.getIdValue());
 
-        // 4. UploadSession 완료 (Tell, Don't Ask 패턴)
+        // 5. UploadSession 완료 (Tell, Don't Ask 패턴)
         session.complete(savedFileAsset.getIdValue());
 
         // 5. UploadSession 저장 (Command Port 사용)

@@ -62,7 +62,7 @@ class MarkPartUploadedServiceTest {
         @DisplayName("execute_Success - 파트 업로드 완료 처리 성공")
         void execute_Success() {
             // Given
-            String sessionKey = "session-key-123";
+            String sessionKey = "a1b2c3d4-e5f6-4789-a012-345678901234";
             MarkPartUploadedCommand command = MarkPartUploadedCommand.of(
                 sessionKey,
                 1,
@@ -123,7 +123,7 @@ class MarkPartUploadedServiceTest {
         @DisplayName("execute_Success_MultipleParts - 여러 파트 순차 업로드")
         void execute_Success_MultipleParts() {
             // Given
-            String sessionKey = "session-key-456";
+            String sessionKey = "c3d4e5f6-a7b8-4901-c234-567890123456";
             UploadSession tempSession = UploadSessionFixture.createMultipart();
             UploadSession session = UploadSessionFixture.reconstitute(
                 1L,
@@ -174,7 +174,7 @@ class MarkPartUploadedServiceTest {
         @DisplayName("execute_ThrowsException_WhenSessionNotFound - 세션 조회 실패")
         void execute_ThrowsException_WhenSessionNotFound() {
             // Given
-            String sessionKey = "non-existent-session";
+            String sessionKey = "ffffffff-ffff-ffff-ffff-ffffffffffff";
             MarkPartUploadedCommand command = MarkPartUploadedCommand.of(
                 sessionKey,
                 1,
@@ -198,7 +198,7 @@ class MarkPartUploadedServiceTest {
         @DisplayName("execute_ThrowsException_WhenNotMultipartUpload - Multipart 업로드가 아님")
         void execute_ThrowsException_WhenNotMultipartUpload() {
             // Given
-            String sessionKey = "session-key-single";
+            String sessionKey = "d4e5f6a7-b8c9-4012-d345-678901234567";
             MarkPartUploadedCommand command = MarkPartUploadedCommand.of(
                 sessionKey,
                 1,
@@ -208,7 +208,7 @@ class MarkPartUploadedServiceTest {
 
             UploadSession session = UploadSessionFixture.createSingle();
             session = UploadSessionFixture.reconstitute(
-                session.getIdValue(),
+                1L,
                 SessionKey.of(sessionKey),
                 session.getTenantId(),
                 session.getFileName(),
@@ -241,7 +241,7 @@ class MarkPartUploadedServiceTest {
         @DisplayName("execute_ThrowsException_WhenDuplicatePart - 중복 파트 번호")
         void execute_ThrowsException_WhenDuplicatePart() {
             // Given
-            String sessionKey = "session-key-duplicate";
+            String sessionKey = "e5f6a7b8-c9d0-4123-e456-789012345678";
             MarkPartUploadedCommand command = MarkPartUploadedCommand.of(
                 sessionKey,
                 1,

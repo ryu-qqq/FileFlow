@@ -67,23 +67,24 @@ class CompleteSingleUploadServiceTest {
         @DisplayName("execute_Success - 정상 단일 업로드 완료")
         void execute_Success() {
             // Given
-            String sessionKey = "session-key-123";
+            String sessionKey = "a1b2c3d4-e5f6-4789-a012-345678901234";
             CompleteSingleUploadCommand command = CompleteSingleUploadCommand.of(sessionKey);
 
-            UploadSession session = UploadSessionFixture.createSingle();
-            session = UploadSessionFixture.reconstitute(
-                session.getIdValue(),
+            UploadSession tempSession = UploadSessionFixture.createSingle();
+            StorageKey testStorageKey = StorageKey.of("test/upload/file.txt");
+            UploadSession session = UploadSessionFixture.reconstitute(
+                1L,
                 SessionKey.of(sessionKey),
-                session.getTenantId(),
-                session.getFileName(),
-                session.getFileSize(),
+                tempSession.getTenantId(),
+                tempSession.getFileName(),
+                tempSession.getFileSize(),
                 UploadType.SINGLE,
-                session.getStorageKey(),
+                testStorageKey,
                 SessionStatus.PENDING,
                 null,
                 null,
-                session.getCreatedAt(),
-                session.getUpdatedAt(),
+                tempSession.getCreatedAt(),
+                tempSession.getUpdatedAt(),
                 null,
                 null
             );
@@ -92,7 +93,7 @@ class CompleteSingleUploadServiceTest {
                 10485760L,
                 "etag-123",
                 "text/plain",
-                session.getStorageKey().value()
+                testStorageKey.value()
             );
 
             // FileAsset은 Application Layer에서 S3UploadMetadata로 변환 후 생성되므로
@@ -101,7 +102,7 @@ class CompleteSingleUploadServiceTest {
 
             when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
                 .thenReturn(Optional.of(session));
-            when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
+            when(s3StoragePort.headObject(any(), anyString())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
             when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
 
@@ -115,7 +116,7 @@ class CompleteSingleUploadServiceTest {
             assertThat(response.fileSize()).isEqualTo(10485760L);
 
             verify(loadUploadSessionPort).findBySessionKey(SessionKey.of(sessionKey));
-            verify(s3StoragePort).headObject(anyString(), anyString());
+            verify(s3StoragePort).headObject(any(), anyString());
             verify(fileCommandManager).save(any(FileAsset.class));
             verify(saveUploadSessionPort).save(any(UploadSession.class));
         }
@@ -129,7 +130,7 @@ class CompleteSingleUploadServiceTest {
         @DisplayName("execute_ThrowsException_WhenSessionNotFound - 세션 조회 실패")
         void execute_ThrowsException_WhenSessionNotFound() {
             // Given
-            String sessionKey = "non-existent-session";
+            String sessionKey = "ffffffff-ffff-ffff-ffff-ffffffffffff";
             CompleteSingleUploadCommand command = CompleteSingleUploadCommand.of(sessionKey);
 
             when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
@@ -148,12 +149,12 @@ class CompleteSingleUploadServiceTest {
         @DisplayName("execute_ThrowsException_WhenInvalidSessionType - SINGLE 타입이 아님")
         void execute_ThrowsException_WhenInvalidSessionType() {
             // Given
-            String sessionKey = "session-key-multipart";
+            String sessionKey = "b2c3d4e5-f6a7-4890-b123-456789012345";
             CompleteSingleUploadCommand command = CompleteSingleUploadCommand.of(sessionKey);
 
             UploadSession session = UploadSessionFixture.createMultipart();
             session = UploadSessionFixture.reconstitute(
-                session.getIdValue(),
+                1L,
                 SessionKey.of(sessionKey),
                 session.getTenantId(),
                 session.getFileName(),
