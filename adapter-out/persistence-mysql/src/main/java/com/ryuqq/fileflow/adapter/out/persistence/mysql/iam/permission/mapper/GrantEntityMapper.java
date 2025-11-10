@@ -22,7 +22,7 @@ import com.ryuqq.fileflow.domain.iam.permission.Scope;
  * @author ryu-qqq
  * @since 2025-10-27
  */
-public class GrantEntityMapper {
+public final class GrantEntityMapper {
 
     /**
      * Private Constructor - Utility 클래스 인스턴스화 방지

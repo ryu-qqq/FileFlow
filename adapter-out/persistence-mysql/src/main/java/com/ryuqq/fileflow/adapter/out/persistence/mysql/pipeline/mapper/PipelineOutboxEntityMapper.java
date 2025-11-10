@@ -5,7 +5,6 @@ import com.ryuqq.fileflow.domain.download.IdempotencyKey;
 import com.ryuqq.fileflow.domain.file.asset.FileId;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutboxId;
-import org.springframework.stereotype.Component;
 
 /**
  * Pipeline Outbox Entity Mapper
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Component;
  *   <li>Domain → JPA Entity 변환 (toEntity)</li>
  *   <li>JPA Entity → Domain 변환 (toDomain)</li>
  *   <li>Value Object 래핑/언래핑</li>
+ *   <li>Static Utility Class - 인스턴스 불필요</li>
  * </ul>
  *
  * <p><strong>매핑 규칙:</strong></p>
@@ -35,8 +35,14 @@ import org.springframework.stereotype.Component;
  * @author Sangwon Ryu
  * @since 1.0.0
  */
-@Component
-public class PipelineOutboxEntityMapper {
+public final class PipelineOutboxEntityMapper {
+
+    /**
+     * Private Constructor - Utility 클래스 인스턴스화 방지
+     */
+    private PipelineOutboxEntityMapper() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
 
     /**
      * Domain Aggregate → JPA Entity 변환
@@ -58,7 +64,7 @@ public class PipelineOutboxEntityMapper {
      * @return PipelineOutboxJpaEntity
      * @throws IllegalArgumentException domain이 null인 경우
      */
-    public PipelineOutboxJpaEntity toEntity(PipelineOutbox domain) {
+    public static PipelineOutboxJpaEntity toEntity(PipelineOutbox domain) {
         if (domain == null) {
             throw new IllegalArgumentException("Domain Aggregate는 null일 수 없습니다");
         }
@@ -100,7 +106,7 @@ public class PipelineOutboxEntityMapper {
      * @throws IllegalArgumentException entity가 null인 경우
      * @throws IllegalArgumentException entity.id가 null인 경우 (reconstitute 제약)
      */
-    public PipelineOutbox toDomain(PipelineOutboxJpaEntity entity) {
+    public static PipelineOutbox toDomain(PipelineOutboxJpaEntity entity) {
         if (entity == null) {
             throw new IllegalArgumentException("JPA Entity는 null일 수 없습니다");
         }

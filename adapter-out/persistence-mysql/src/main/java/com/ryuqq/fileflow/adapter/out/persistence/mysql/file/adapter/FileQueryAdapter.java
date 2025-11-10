@@ -47,20 +47,16 @@ import java.util.stream.Collectors;
 public class FileQueryAdapter implements FileQueryPort {
 
     private final FileAssetJpaRepository fileAssetRepository;
-    private final FileAssetEntityMapper fileAssetMapper;
 
     /**
      * 생성자
      *
      * @param fileAssetRepository JPA Repository
-     * @param fileAssetMapper Entity Mapper
      */
     public FileQueryAdapter(
-        FileAssetJpaRepository fileAssetRepository,
-        FileAssetEntityMapper fileAssetMapper
+        FileAssetJpaRepository fileAssetRepository
     ) {
         this.fileAssetRepository = fileAssetRepository;
-        this.fileAssetMapper = fileAssetMapper;
     }
 
     /**
@@ -104,7 +100,7 @@ public class FileQueryAdapter implements FileQueryPort {
             );
         }
 
-        return entityOpt.map(fileAssetMapper::toDomain);
+        return entityOpt.map(FileAssetEntityMapper::toDomain);
     }
 
     /**
@@ -138,7 +134,7 @@ public class FileQueryAdapter implements FileQueryPort {
 
         // Entity → Domain 변환
         return entities.stream()
-            .map(fileAssetMapper::toDomain)
+            .map(FileAssetEntityMapper::toDomain)
             .collect(Collectors.toList());
     }
 
@@ -182,7 +178,7 @@ public class FileQueryAdapter implements FileQueryPort {
         }
 
         return fileAssetRepository.findById(id)
-            .map(fileAssetMapper::toDomain);
+            .map(FileAssetEntityMapper::toDomain);
     }
 
     /**
@@ -198,6 +194,6 @@ public class FileQueryAdapter implements FileQueryPort {
         }
 
         return fileAssetRepository.findByUploadSessionId(uploadSessionId)
-            .map(fileAssetMapper::toDomain);
+            .map(FileAssetEntityMapper::toDomain);
     }
 }

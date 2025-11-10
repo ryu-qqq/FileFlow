@@ -3,7 +3,6 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.file.mapper;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.entity.ExtractedDataJpaEntity;
 import com.ryuqq.fileflow.domain.file.extraction.ExtractedData;
 import com.ryuqq.fileflow.domain.file.extraction.ExtractedDataId;
-import org.springframework.stereotype.Component;
 
 /**
  * ExtractedData Entity Mapper
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Component;
  *   <li>✅ 변환 로직만 담당 (비즈니스 로직 없음)</li>
  *   <li>✅ Domain ↔ Entity 양방향 변환</li>
  *   <li>✅ Value Object 변환 처리</li>
+ *   <li>✅ Static Utility Class - 인스턴스 불필요</li>
  *   <li>❌ MapStruct 사용 안함 (Pure Java)</li>
  *   <li>❌ Lombok 금지</li>
  * </ul>
@@ -23,8 +23,14 @@ import org.springframework.stereotype.Component;
  * @author Sangwon Ryu
  * @since 1.0.0
  */
-@Component
-public class ExtractedDataEntityMapper {
+public final class ExtractedDataEntityMapper {
+
+    /**
+     * Private Constructor - Utility 클래스 인스턴스화 방지
+     */
+    private ExtractedDataEntityMapper() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
 
     /**
      * Domain → Entity 변환
@@ -34,7 +40,7 @@ public class ExtractedDataEntityMapper {
      * @param extractedData Domain ExtractedData
      * @return JPA Entity
      */
-    public ExtractedDataJpaEntity toEntity(ExtractedData extractedData) {
+    public static ExtractedDataJpaEntity toEntity(ExtractedData extractedData) {
         if (extractedData == null) {
             return null;
         }
@@ -67,7 +73,7 @@ public class ExtractedDataEntityMapper {
      * @param entity JPA Entity
      * @return Domain ExtractedData
      */
-    public ExtractedData toDomain(ExtractedDataJpaEntity entity) {
+    public static ExtractedData toDomain(ExtractedDataJpaEntity entity) {
         if (entity == null) {
             return null;
         }
