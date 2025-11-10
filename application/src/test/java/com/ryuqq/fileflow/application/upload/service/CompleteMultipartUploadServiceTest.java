@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
@@ -42,6 +41,7 @@ import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 import com.ryuqq.fileflow.domain.upload.fixture.MultipartUploadFixture;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
+import com.ryuqq.fileflow.domain.upload.SessionStatus;
 
 /**
  * CompleteMultipartUploadService 단위 테스트
@@ -91,7 +91,7 @@ class CompleteMultipartUploadServiceTest {
         @DisplayName("execute_Success - 모든 파트 업로드 완료")
         void execute_Success() {
             // Given
-            String sessionKey = "session-key-123";
+            String sessionKey = "07aa9310-02ac-4cef-96fb-2877b284e21f";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
             UploadSession tempSession = UploadSessionFixture.createMultipart();
@@ -103,7 +103,7 @@ class CompleteMultipartUploadServiceTest {
                 tempSession.getFileSize(),
                 tempSession.getUploadType(),
                 tempSession.getStorageKey(),
-                tempSession.getStatus(),
+                SessionStatus.IN_PROGRESS,
                 null,
                 null,
                 tempSession.getCreatedAt(),
@@ -119,6 +119,7 @@ class CompleteMultipartUploadServiceTest {
                 .initiate()
                 .addParts(2)
                 .build();
+            session.attachMultipart(multipart);
 
             S3CompleteResultResponse s3Result = new S3CompleteResultResponse(
                 "etag-123",
@@ -175,7 +176,7 @@ class CompleteMultipartUploadServiceTest {
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
+            when(s3StoragePort.headObject(any(), any())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
             when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
             when(multipartUploadStateManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
@@ -192,7 +193,7 @@ class CompleteMultipartUploadServiceTest {
             verify(loadUploadSessionPort).findBySessionKey(SessionKey.of(sessionKey));
             verify(loadMultipartUploadPort).findByUploadSessionId(session.getIdValue());
             verify(s3MultipartFacade).completeMultipart(any(), any(), any(), any(), any());
-            verify(s3StoragePort).headObject(anyString(), anyString());
+            verify(s3StoragePort).headObject(any(), any());
             verify(fileCommandManager).save(any(FileAsset.class));
             verify(saveUploadSessionPort).save(any(UploadSession.class));
             verify(multipartUploadStateManager).complete(any(MultipartUpload.class));
@@ -202,7 +203,7 @@ class CompleteMultipartUploadServiceTest {
         @DisplayName("execute_Success_WithMetadata - 메타데이터 포함")
         void execute_Success_WithMetadata() {
             // Given
-            String sessionKey = "session-key-456";
+            String sessionKey = "2f13c882-3d6a-4500-8b43-0d3f74605e15";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
             UploadSession tempSession = UploadSessionFixture.createMultipart();
@@ -214,7 +215,7 @@ class CompleteMultipartUploadServiceTest {
                 tempSession.getFileSize(),
                 tempSession.getUploadType(),
                 tempSession.getStorageKey(),
-                tempSession.getStatus(),
+                SessionStatus.IN_PROGRESS,
                 null,
                 null,
                 tempSession.getCreatedAt(),
@@ -228,6 +229,7 @@ class CompleteMultipartUploadServiceTest {
                 .initiate()
                 .addParts(3)
                 .build();
+            session.attachMultipart(multipart);
 
             S3CompleteResultResponse s3Result = new S3CompleteResultResponse(
                 "etag-456",
@@ -272,7 +274,7 @@ class CompleteMultipartUploadServiceTest {
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
+            when(s3StoragePort.headObject(any(), any())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
             when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
             when(multipartUploadStateManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
@@ -289,7 +291,7 @@ class CompleteMultipartUploadServiceTest {
         @DisplayName("execute_Success_MinParts - 최소 파트 (1개)")
         void execute_Success_MinParts() {
             // Given
-            String sessionKey = "session-key-min";
+            String sessionKey = "8a9d0ccb-9c31-4439-93af-799e91762803";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
             UploadSession tempSession = UploadSessionFixture.createMultipart();
@@ -301,7 +303,7 @@ class CompleteMultipartUploadServiceTest {
                 tempSession.getFileSize(),
                 tempSession.getUploadType(),
                 tempSession.getStorageKey(),
-                tempSession.getStatus(),
+                SessionStatus.IN_PROGRESS,
                 null,
                 null,
                 tempSession.getCreatedAt(),
@@ -316,6 +318,7 @@ class CompleteMultipartUploadServiceTest {
                 .initiate()
                 .addParts(1)
                 .build();
+            session.attachMultipart(multipart);
 
             S3CompleteResultResponse s3Result = new S3CompleteResultResponse(
                 "etag-min",
@@ -360,7 +363,7 @@ class CompleteMultipartUploadServiceTest {
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
+            when(s3StoragePort.headObject(any(), any())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
             when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
             when(multipartUploadStateManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
@@ -377,7 +380,7 @@ class CompleteMultipartUploadServiceTest {
         @DisplayName("execute_Success_MaxParts - 최대 파트 (10000개)")
         void execute_Success_MaxParts() {
             // Given
-            String sessionKey = "session-key-max";
+            String sessionKey = "6859dbc8-1784-4522-812c-4917e6404f52";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
             UploadSession tempSession = UploadSessionFixture.createMultipart();
@@ -389,7 +392,7 @@ class CompleteMultipartUploadServiceTest {
                 tempSession.getFileSize(),
                 tempSession.getUploadType(),
                 tempSession.getStorageKey(),
-                tempSession.getStatus(),
+                SessionStatus.IN_PROGRESS,
                 null,
                 null,
                 tempSession.getCreatedAt(),
@@ -404,6 +407,7 @@ class CompleteMultipartUploadServiceTest {
                 .initiate()
                 .addParts(10000)
                 .build();
+            session.attachMultipart(multipart);
 
             S3CompleteResultResponse s3Result = new S3CompleteResultResponse(
                 "etag-max",
@@ -448,7 +452,7 @@ class CompleteMultipartUploadServiceTest {
             when(iamContextFacade.loadContext(any(), any(), any())).thenReturn(iamContext);
             when(s3MultipartFacade.completeMultipart(any(), any(), any(), any(), any()))
                 .thenReturn(s3Result);
-            when(s3StoragePort.headObject(anyString(), anyString())).thenReturn(s3HeadResult);
+            when(s3StoragePort.headObject(any(), any())).thenReturn(s3HeadResult);
             when(fileCommandManager.save(any(FileAsset.class))).thenReturn(savedFileAsset);
             when(saveUploadSessionPort.save(any(UploadSession.class))).thenReturn(session);
             when(multipartUploadStateManager.complete(any(MultipartUpload.class))).thenReturn(multipart);
@@ -470,7 +474,7 @@ class CompleteMultipartUploadServiceTest {
         @DisplayName("execute_ThrowsException_WhenSessionNotFound - 세션 조회 실패")
         void execute_ThrowsException_WhenSessionNotFound() {
             // Given
-            String sessionKey = "non-existent-session";
+            String sessionKey = "99999999-9999-4999-9999-999999999999";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
             when(loadUploadSessionPort.findBySessionKey(SessionKey.of(sessionKey)))
@@ -489,7 +493,7 @@ class CompleteMultipartUploadServiceTest {
         @DisplayName("execute_ThrowsException_WhenNotAllPartsUploaded - 파트 누락")
         void execute_ThrowsException_WhenNotAllPartsUploaded() {
             // Given
-            String sessionKey = "session-key-incomplete";
+            String sessionKey = "19c81a7a-2a1d-4f16-b52b-4d7cb80c8c08";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
             UploadSession tempSession = UploadSessionFixture.createMultipart();
@@ -501,7 +505,7 @@ class CompleteMultipartUploadServiceTest {
                 tempSession.getFileSize(),
                 tempSession.getUploadType(),
                 tempSession.getStorageKey(),
-                tempSession.getStatus(),
+                SessionStatus.IN_PROGRESS,
                 null,
                 null,
                 tempSession.getCreatedAt(),
@@ -534,7 +538,7 @@ class CompleteMultipartUploadServiceTest {
         @DisplayName("execute_ThrowsException_WhenS3CompleteFails - S3 Complete API 실패")
         void execute_ThrowsException_WhenS3CompleteFails() {
             // Given
-            String sessionKey = "session-key-s3-fail";
+            String sessionKey = "0084c117-9490-4650-a5ad-003c63abd2f1";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
             UploadSession tempSession = UploadSessionFixture.createMultipart();
@@ -546,7 +550,7 @@ class CompleteMultipartUploadServiceTest {
                 tempSession.getFileSize(),
                 tempSession.getUploadType(),
                 tempSession.getStorageKey(),
-                tempSession.getStatus(),
+                SessionStatus.IN_PROGRESS,
                 null,
                 null,
                 tempSession.getCreatedAt(),
@@ -557,9 +561,11 @@ class CompleteMultipartUploadServiceTest {
 
             MultipartUpload multipart = MultipartUploadFixture.builder()
                 .uploadSessionId(UploadSessionId.of(session.getIdValue()))
+                .totalParts(TotalParts.of(2))
                 .initiate()
                 .addParts(2)
                 .build();
+            session.attachMultipart(multipart);
 
             Tenant tenant = TenantFixture.createWithId(session.getTenantId().value());
             IamContext iamContext = IamContext.of(tenant);
@@ -584,12 +590,12 @@ class CompleteMultipartUploadServiceTest {
         @DisplayName("execute_ThrowsException_WhenAlreadyCompleted - 이미 완료된 세션")
         void execute_ThrowsException_WhenAlreadyCompleted() {
             // Given
-            String sessionKey = "session-key-completed";
+            String sessionKey = "d333a674-d2c9-4f2e-b6e4-2a171ec5f510";
             CompleteMultipartCommand command = CompleteMultipartCommand.of(sessionKey);
 
             UploadSession session = UploadSessionFixture.createSingleCompleted(100L);
             session = UploadSessionFixture.reconstitute(
-                session.getIdValue(),
+                1L,
                 SessionKey.of(sessionKey),
                 session.getTenantId(),
                 session.getFileName(),

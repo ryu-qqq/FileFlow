@@ -187,8 +187,6 @@ class ZeroToleranceArchitectureTest {
     // 4️⃣ Orchestration Pattern (Zero-Tolerance)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // TODO: Orchestration Pattern이 구현되면 주석 해제
-    /*
     @Nested
     @DisplayName("Orchestration Pattern 규칙")
     class OrchestrationPatternTest {
@@ -229,7 +227,6 @@ class ZeroToleranceArchitectureTest {
             rule.check(allClasses);
         }
     }
-    */
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Helper Methods
