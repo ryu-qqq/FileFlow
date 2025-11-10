@@ -23,6 +23,7 @@ variable "bucket_purpose" {
 }
 
 # KMS Key for S3 encryption
+# Note: GitHubActionsRole has kms:UpdateKeyDescription permission (added 2025-11-10)
 resource "aws_kms_key" "s3" {
   description             = "KMS key for ${local.bucket_name} S3 bucket"
   enable_key_rotation     = true
