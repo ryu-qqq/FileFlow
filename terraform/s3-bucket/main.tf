@@ -23,6 +23,7 @@ variable "bucket_purpose" {
 }
 
 # KMS Key for S3 encryption
+# Note: GitHubActionsRole has kms:UpdateKeyDescription permission (added 2025-11-10)
 resource "aws_kms_key" "s3" {
   description             = "KMS key for ${local.bucket_name} S3 bucket"
   enable_key_rotation     = true
@@ -85,10 +86,9 @@ resource "aws_kms_key" "s3" {
   )
 }
 
-resource "aws_kms_alias" "s3" {
-  name          = "alias/${local.bucket_name}"
-  target_key_id = aws_kms_key.s3.key_id
-}
+# KMS Alias - Using existing alias (alias/fileflow-prod) created outside Terraform
+# Note: Removed resource block to avoid AlreadyExistsException
+# The existing KMS alias will continue to work with the imported KMS key
 
 # S3 Bucket
 resource "aws_s3_bucket" "main" {
@@ -186,6 +186,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "main" {
 }
 
 # Bucket Policy
+# Note: atlantis-ecs-task-prod has s3:GetBucketPolicy and s3:GetBucketAcl permissions (added 2025-11-10)
 resource "aws_s3_bucket_policy" "main" {
   bucket = aws_s3_bucket.main.id
 

@@ -32,12 +32,9 @@ jobs:
           - name: s3-bucket
             dir: terraform/s3-bucket
             order: 2
-          - name: sqs-queue
-            dir: terraform/sqs-queue
-            order: 3
           - name: ecs-service
             dir: terraform/ecs-service
-            order: 4
+            order: 3
 
     steps:
       - name: Checkout code
@@ -118,20 +115,10 @@ jobs:
             # S3 Bucket 모듈
             if [ "${{ matrix.module.name }}" == "s3-bucket" ]; then
               echo "📦 S3 Bucket 리소스 Import 중..."
-              BUCKET_NAME="fileflow--prod"
+              BUCKET_NAME="fileflow-prod"
               if aws s3api head-bucket --bucket "$BUCKET_NAME" --region ap-northeast-2 >/dev/null 2>&1; then
                 echo "  → Importing $BUCKET_NAME..."
                 terraform import -input=false aws_s3_bucket.main "$BUCKET_NAME" || echo "  ⚠️  Import failed or already in state"
-              fi
-            fi
-
-            # SQS Queue 모듈
-            if [ "${{ matrix.module.name }}" == "sqs-queue" ]; then
-              echo "📦 SQS Queue 리소스 Import 중..."
-              QUEUE_URL=$(aws sqs get-queue-url --queue-name fileflow-prod-queue --region ap-northeast-2 --query 'QueueUrl' --output text 2>/dev/null || echo "")
-              if [ -n "$QUEUE_URL" ] && [ "$QUEUE_URL" != "None" ]; then
-                echo "  → Importing fileflow-prod-queue..."
-                terraform import -input=false aws_sqs_queue.main "$QUEUE_URL" || echo "  ⚠️  Import failed or already in state"
               fi
             fi
 
@@ -194,7 +181,6 @@ jobs:
           echo "- ✅ ECR Repository" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ ElastiCache Redis" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ S3 Bucket" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ SQS Queue" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ ECS Service" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next Steps**:" >> $GITHUB_STEP_SUMMARY
