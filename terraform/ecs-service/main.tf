@@ -119,7 +119,8 @@ resource "aws_iam_role_policy" "fileflow_secrets_access" {
           "secretsmanager:GetSecretValue"
         ]
         Resource = [
-          "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-*"
+          "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-*",
+          "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-fileflow-user-password-*"
         ]
       },
       {
