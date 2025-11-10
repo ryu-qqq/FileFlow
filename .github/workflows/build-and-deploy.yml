@@ -49,30 +49,65 @@ jobs:
           echo "$CHANGED_FILES"
           echo ""
 
+          # 강제 빌드 플래그 체크 (Commit message에 [build-all] 또는 [rebuild] 포함 시)
+          FORCE_BUILD_ALL=false
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          if echo "$COMMIT_MSG" | grep -qE '\[build-all\]|\[rebuild\]'; then
+            FORCE_BUILD_ALL=true
+            echo "🔄 Force build all flag detected in commit message"
+          fi
+
+          # 공통 레이어 변경 체크 (domain, application 등)
+          COMMON_CHANGED=false
+          if echo "$CHANGED_FILES" | grep -qE '^(domain/|application/)'; then
+            COMMON_CHANGED=true
+            echo "🔄 Common layer (domain/application) changed - building all bootstraps"
+          fi
+
           # Bootstrap별 변경 여부 감지
           WEB_API=false
           DOWNLOAD=false
           PIPELINE=false
           UPLOAD=false
 
-          # Web API 변경 (REST API + ABAC)
-          if echo "$CHANGED_FILES" | grep -qE '^(domain/|application/|adapter-in/rest-api/|adapter-out/(persistence-mysql|persistence-redis|abac-cel|aws-s3)/|bootstrap/bootstrap-web-api/)'; then
+          # 강제 빌드 또는 공통 레이어 변경 시 모든 bootstrap 빌드
+          if [ "$FORCE_BUILD_ALL" = "true" ] || [ "$COMMON_CHANGED" = "true" ]; then
             WEB_API=true
-          fi
-
-          # Download Scheduler 변경 (HTTP Client 사용)
-          if echo "$CHANGED_FILES" | grep -qE '^(domain/|application/|adapter-out/(persistence-mysql|persistence-redis|aws-s3|http-client)/|bootstrap/bootstrap-scheduler-download/)'; then
             DOWNLOAD=true
-          fi
-
-          # Pipeline Scheduler 변경 (Image Processor, Metadata Extractor 사용)
-          if echo "$CHANGED_FILES" | grep -qE '^(domain/|application/|adapter-out/(persistence-mysql|persistence-redis|aws-s3|image-processor|metadata-extractor)/|bootstrap/bootstrap-scheduler-pipeline/)'; then
             PIPELINE=true
-          fi
-
-          # Upload Scheduler 변경 (Scheduler Adapter 사용)
-          if echo "$CHANGED_FILES" | grep -qE '^(domain/|application/|adapter-in/scheduler/|adapter-out/(persistence-mysql|persistence-redis|aws-s3)/|bootstrap/bootstrap-scheduler-upload/)'; then
             UPLOAD=true
+            echo "✅ Building all bootstraps (force_build=${FORCE_BUILD_ALL}, common_changed=${COMMON_CHANGED})"
+          else
+            # 개별 Bootstrap 변경 감지 (효율성 유지)
+
+            # Web API 변경 (REST API + ABAC)
+            if echo "$CHANGED_FILES" | grep -qE '^(adapter-in/rest-api/|adapter-out/(abac-cel)/|bootstrap/bootstrap-web-api/)'; then
+              WEB_API=true
+            fi
+
+            # Download Scheduler 변경 (HTTP Client 사용)
+            if echo "$CHANGED_FILES" | grep -qE '^(adapter-out/(http-client)/|bootstrap/bootstrap-scheduler-download/)'; then
+              DOWNLOAD=true
+            fi
+
+            # Pipeline Scheduler 변경 (Image Processor, Metadata Extractor 사용)
+            if echo "$CHANGED_FILES" | grep -qE '^(adapter-out/(image-processor|metadata-extractor)/|bootstrap/bootstrap-scheduler-pipeline/)'; then
+              PIPELINE=true
+            fi
+
+            # Upload Scheduler 변경 (Scheduler Adapter 사용)
+            if echo "$CHANGED_FILES" | grep -qE '^(adapter-in/scheduler/|bootstrap/bootstrap-scheduler-upload/)'; then
+              UPLOAD=true
+            fi
+
+            # 공통 Adapter 변경 (모든 bootstrap 사용)
+            if echo "$CHANGED_FILES" | grep -qE '^(adapter-out/(persistence-mysql|persistence-redis|aws-s3)/)'; then
+              WEB_API=true
+              DOWNLOAD=true
+              PIPELINE=true
+              UPLOAD=true
+              echo "✅ Common adapter changed - building all bootstraps"
+            fi
           fi
 
           # 출력
@@ -88,11 +123,15 @@ jobs:
           fi
           echo "any-changed=${ANY_CHANGED}" >> $GITHUB_OUTPUT
 
-          echo "🔍 Detection Results:"
+          echo ""
+          echo "🔍 Final Detection Results:"
+          echo "  - Force Build All: ${FORCE_BUILD_ALL}"
+          echo "  - Common Layer Changed: ${COMMON_CHANGED}"
           echo "  - Web API: ${WEB_API}"
           echo "  - Download Scheduler: ${DOWNLOAD}"
           echo "  - Pipeline Scheduler: ${PIPELINE}"
           echo "  - Upload Scheduler: ${UPLOAD}"
+          echo "  - Any Changed: ${ANY_CHANGED}"
 
   # ========================================
   # Step 2: 테스트 실행 (공통)
