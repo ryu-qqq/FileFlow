@@ -337,7 +337,7 @@ module "download_scheduler_service" {
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = "fileflow-scheduler-download"
   container_port     = 9091 # Actuator port
-  container_image    = "${local.ecr_image_uri}-download-scheduler"
+  container_image    = "${data.aws_ecr_repository.fileflow.repository_url}:scheduler-download-latest"
   cpu                = 512
   memory             = 1024
   desired_count      = 1 # 스케줄러는 항상 1개만
@@ -471,7 +471,7 @@ module "pipeline_scheduler_service" {
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = "fileflow-scheduler-pipeline"
   container_port     = 9092 # Actuator port
-  container_image    = "${local.ecr_image_uri}-pipeline-scheduler"
+  container_image    = "${data.aws_ecr_repository.fileflow.repository_url}:scheduler-pipeline-latest"
   cpu                = 512
   memory             = 1024
   desired_count      = 1 # 스케줄러는 항상 1개만
@@ -605,7 +605,7 @@ module "upload_scheduler_service" {
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = "fileflow-scheduler-upload"
   container_port     = 9093 # Actuator port
-  container_image    = "${local.ecr_image_uri}-upload-scheduler"
+  container_image    = "${data.aws_ecr_repository.fileflow.repository_url}:scheduler-upload-latest"
   cpu                = 512
   memory             = 1024
   desired_count      = 1 # 스케줄러는 항상 1개만
