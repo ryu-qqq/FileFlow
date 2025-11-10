@@ -152,6 +152,10 @@ resource "aws_iam_role" "fileflow_task_role" {
 }
 
 # S3 Access Policy for Task Role
+# Priority 1 Critical Fix: Grants ECS tasks permissions to access S3 bucket for file operations
+# Without this policy, file upload/download operations will fail with Access Denied errors
+# Permissions: GetObject (download), PutObject (upload), DeleteObject (delete),
+#              ListBucket (list files), GetObjectVersion (versioned objects)
 resource "aws_iam_role_policy" "fileflow_s3_access" {
   name = "${local.name_prefix}-s3-access"
   role = aws_iam_role.fileflow_task_role.id

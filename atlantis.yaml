@@ -44,15 +44,7 @@ projects:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
 
-  # 3. SQS Queue - Message queue
-  - name: fileflow-sqs-prod
-    dir: terraform/sqs-queue
-    workspace: default
-    autoplan:
-      when_modified: ["*.tf", "*.tfvars"]
-      enabled: true
-
-  # 4. ECS Service - Application service
+  # 3. ECS Service - Application service
   - name: fileflow-ecs-prod
     dir: terraform/ecs-service
     workspace: default
