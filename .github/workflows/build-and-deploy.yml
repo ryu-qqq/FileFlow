@@ -52,7 +52,7 @@ jobs:
           # 강제 빌드 플래그 체크 (Commit message에 [build-all] 또는 [rebuild] 포함 시)
           FORCE_BUILD_ALL=false
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-          if echo "$COMMIT_MSG" | grep -qE '\[build-all\]|\[rebuild\]'; then
+          if echo "$COMMIT_MSG" | grep -qE 'build-all|rebuild'; then
             FORCE_BUILD_ALL=true
             echo "🔄 Force build all flag detected in commit message"
           fi
