@@ -328,7 +328,7 @@ jobs:
       - name: Generate image tag
         id: image-tag
         run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut-c1-7)
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c 1-7)
           TAG="scheduler-pipeline-${{ github.run_number }}-${SHORT_SHA}"
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "📦 Image tag: ${TAG}"
@@ -394,7 +394,7 @@ jobs:
       - name: Generate image tag
         id: image-tag
         run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c 1-7)
           TAG="scheduler-upload-${{ github.run_number }}-${SHORT_SHA}"
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "📦 Image tag: ${TAG}"
