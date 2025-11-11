@@ -187,7 +187,7 @@ module "fileflow_service" {
   source = "../modules/ecs-service"
 
   # Required variables
-  name               = local.service_name
+  name               = "fileflow-api"  # Web API 서비스 (구 fileflow)
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = local.container_name
   container_port     = local.container_port
