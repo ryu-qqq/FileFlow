@@ -188,7 +188,7 @@ module "fileflow_service" {
   source = "../modules/ecs-service"
 
   # Required variables
-  name               = local.service_name  # TODO: 나중에 fileflow-api로 변경 (IAM 권한 필요)
+  name               = local.api_service_name  # ECS service name: fileflow-api
   cluster_id         = aws_ecs_cluster.fileflow.id
   container_name     = local.container_name
   container_port     = local.container_port
