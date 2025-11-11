@@ -11,7 +11,7 @@ spring:
   datasource:
     # Terraform에서 주입하는 환경변수 사용
     url: jdbc:mysql://${UPLOAD_DB_HOST:${DB_HOST}}:${UPLOAD_DB_PORT:${DB_PORT:3306}}/fileflow?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${UPLOAD_DB_USERNAME:${DB_USERNAME:admin}}
+    username: ${UPLOAD_DB_USERNAME:${DB_USER:fileflow-user}}
     password: ${UPLOAD_DB_PASSWORD:${DB_PASSWORD}}
     hikari:
       maximum-pool-size: ${UPLOAD_DB_POOL_MAX_SIZE:15}
