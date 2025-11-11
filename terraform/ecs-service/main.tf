@@ -120,7 +120,8 @@ resource "aws_iam_role_policy" "fileflow_secrets_access" {
         ]
         Resource = [
           "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-master-password-*",
-          "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-fileflow-user-password-*"
+          "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-fileflow-user-password-*",
+          "arn:aws:secretsmanager:ap-northeast-2:646886795421:secret:prod-shared-mysql-fileflow-*"
         ]
       },
       {
@@ -220,7 +221,7 @@ module "fileflow_service" {
     container_port   = local.container_port
   }
 
-  # Environment Variables
+  # Environment Variables (Spring Boot Standard)
   container_environment = [
     {
       name  = "ENVIRONMENT"
@@ -235,35 +236,31 @@ module "fileflow_service" {
       value = "prod"
     },
     {
-      name  = "DB_HOST"
-      value = local.db_address
+      name  = "SPRING_DATASOURCE_URL"
+      value = "jdbc:mysql://${local.db_address}:${local.db_port}/fileflow?useSSL=true&serverTimezone=UTC&characterEncoding=UTF-8"
     },
     {
-      name  = "DB_PORT"
-      value = tostring(local.db_port)
-    },
-    {
-      name  = "DB_NAME"
-      value = "fileflow"
-    },
-    {
-      name  = "DB_USER"
+      name  = "SPRING_DATASOURCE_USERNAME"
       value = local.db_user
     },
     {
-      name  = "FLYWAY_ENABLED"
+      name  = "SPRING_FLYWAY_ENABLED"
       value = "true"
     },
     {
-      name  = "FLYWAY_BASELINE_ON_MIGRATE"
+      name  = "SPRING_FLYWAY_BASELINE_ON_MIGRATE"
       value = "true"
     },
     {
-      name  = "REDIS_HOST"
+      name  = "SPRING_FLYWAY_VALIDATE_ON_MIGRATE"
+      value = "false"
+    },
+    {
+      name  = "SPRING_DATA_REDIS_HOST"
       value = local.redis_endpoint
     },
     {
-      name  = "REDIS_PORT"
+      name  = "SPRING_DATA_REDIS_PORT"
       value = tostring(local.redis_port)
     }
   ]
@@ -271,7 +268,7 @@ module "fileflow_service" {
   # Secrets (injected at runtime)
   container_secrets = [
     {
-      name      = "DB_PASSWORD"
+      name      = "SPRING_DATASOURCE_PASSWORD"
       valueFrom = "${data.aws_secretsmanager_secret_version.fileflow_user_password.arn}:password::"
     }
   ]
@@ -366,23 +363,27 @@ module "download_scheduler_service" {
       value = "prod"
     },
     {
-      name  = "DOWNLOAD_DB_HOST"
-      value = local.db_address
+      name  = "SPRING_DATASOURCE_URL"
+      value = "jdbc:mysql://${local.db_address}:${local.db_port}/fileflow?useSSL=true&serverTimezone=UTC&characterEncoding=UTF-8"
     },
     {
-      name  = "DOWNLOAD_DB_PORT"
-      value = tostring(local.db_port)
-    },
-    {
-      name  = "DOWNLOAD_DB_USERNAME"
+      name  = "SPRING_DATASOURCE_USERNAME"
       value = local.db_user
     },
     {
-      name  = "REDIS_HOST"
+      name  = "SPRING_FLYWAY_ENABLED"
+      value = "false"
+    },
+    {
+      name  = "SPRING_JPA_HIBERNATE_DDL_AUTO"
+      value = "none"
+    },
+    {
+      name  = "SPRING_DATA_REDIS_HOST"
       value = local.redis_endpoint
     },
     {
-      name  = "REDIS_PORT"
+      name  = "SPRING_DATA_REDIS_PORT"
       value = tostring(local.redis_port)
     },
     {
@@ -405,7 +406,7 @@ module "download_scheduler_service" {
 
   container_secrets = [
     {
-      name      = "DOWNLOAD_DB_PASSWORD"
+      name      = "SPRING_DATASOURCE_PASSWORD"
       valueFrom = "${data.aws_secretsmanager_secret_version.fileflow_user_password.arn}:password::"
     }
   ]
@@ -500,23 +501,27 @@ module "pipeline_scheduler_service" {
       value = "prod"
     },
     {
-      name  = "PIPELINE_DB_HOST"
-      value = local.db_address
+      name  = "SPRING_DATASOURCE_URL"
+      value = "jdbc:mysql://${local.db_address}:${local.db_port}/fileflow?useSSL=true&serverTimezone=UTC&characterEncoding=UTF-8"
     },
     {
-      name  = "PIPELINE_DB_PORT"
-      value = tostring(local.db_port)
-    },
-    {
-      name  = "PIPELINE_DB_USERNAME"
+      name  = "SPRING_DATASOURCE_USERNAME"
       value = local.db_user
     },
     {
-      name  = "REDIS_HOST"
+      name  = "SPRING_FLYWAY_ENABLED"
+      value = "false"
+    },
+    {
+      name  = "SPRING_JPA_HIBERNATE_DDL_AUTO"
+      value = "none"
+    },
+    {
+      name  = "SPRING_DATA_REDIS_HOST"
       value = local.redis_endpoint
     },
     {
-      name  = "REDIS_PORT"
+      name  = "SPRING_DATA_REDIS_PORT"
       value = tostring(local.redis_port)
     },
     {
@@ -539,7 +544,7 @@ module "pipeline_scheduler_service" {
 
   container_secrets = [
     {
-      name      = "PIPELINE_DB_PASSWORD"
+      name      = "SPRING_DATASOURCE_PASSWORD"
       valueFrom = "${data.aws_secretsmanager_secret_version.fileflow_user_password.arn}:password::"
     }
   ]
@@ -634,23 +639,27 @@ module "upload_scheduler_service" {
       value = "prod"
     },
     {
-      name  = "UPLOAD_DB_HOST"
-      value = local.db_address
+      name  = "SPRING_DATASOURCE_URL"
+      value = "jdbc:mysql://${local.db_address}:${local.db_port}/fileflow?useSSL=true&serverTimezone=UTC&characterEncoding=UTF-8"
     },
     {
-      name  = "UPLOAD_DB_PORT"
-      value = tostring(local.db_port)
-    },
-    {
-      name  = "UPLOAD_DB_USERNAME"
+      name  = "SPRING_DATASOURCE_USERNAME"
       value = local.db_user
     },
     {
-      name  = "REDIS_HOST"
+      name  = "SPRING_FLYWAY_ENABLED"
+      value = "false"
+    },
+    {
+      name  = "SPRING_JPA_HIBERNATE_DDL_AUTO"
+      value = "none"
+    },
+    {
+      name  = "SPRING_DATA_REDIS_HOST"
       value = local.redis_endpoint
     },
     {
-      name  = "REDIS_PORT"
+      name  = "SPRING_DATA_REDIS_PORT"
       value = tostring(local.redis_port)
     },
     {
@@ -685,7 +694,7 @@ module "upload_scheduler_service" {
 
   container_secrets = [
     {
-      name      = "UPLOAD_DB_PASSWORD"
+      name      = "SPRING_DATASOURCE_PASSWORD"
       valueFrom = "${data.aws_secretsmanager_secret_version.fileflow_user_password.arn}:password::"
     }
   ]

@@ -80,7 +80,7 @@ public class FileAssetQueryDslRepositoryImpl implements FileAssetQueryDslReposit
      * @return FileAssetJpaEntity 목록
      */
     @Override
-    public List<FileAssetJpaEntity> findAllByDynamicQuery(ListFilesQuery query) {
+    public List<FileAssetJpaEntity> searchWithFilters(ListFilesQuery query) {
         BooleanBuilder builder = buildWhereClause(query);
 
         int offset = query.page() * query.size();
@@ -98,13 +98,13 @@ public class FileAssetQueryDslRepositoryImpl implements FileAssetQueryDslReposit
     /**
      * 동적 쿼리를 사용한 파일 개수 조회
      *
-     * <p>findAllByDynamicQuery()와 동일한 WHERE 조건 사용</p>
+     * <p>searchWithFilters()와 동일한 WHERE 조건 사용</p>
      *
      * @param query 파일 목록 조회 Query
      * @return 전체 개수
      */
     @Override
-    public long countByDynamicQuery(ListFilesQuery query) {
+    public long countWithFilters(ListFilesQuery query) {
         BooleanBuilder builder = buildWhereClause(query);
 
         Long count = queryFactory
