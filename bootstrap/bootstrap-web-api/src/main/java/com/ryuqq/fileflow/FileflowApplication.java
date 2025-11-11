@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * @author FileFlow Team
  * @since 2025-10-04
+ * @version 1.0.1 (H2 compatibility fix + ArchUnit exceptions)
  */
 @SpringBootApplication
 @OpenAPIDefinition(
