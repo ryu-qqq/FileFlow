@@ -74,7 +74,7 @@ module "fileflow_alb" {
         unhealthy_threshold = 3
         timeout             = 5
         interval            = 30
-        path                = "/health"
+        path                = "/actuator/health"  # Spring Boot Actuator health endpoint
         matcher             = "200-299"
       }
     }
