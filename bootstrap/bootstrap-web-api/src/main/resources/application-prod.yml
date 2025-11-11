@@ -18,7 +18,7 @@ spring:
     # DB_PORT: ${ssm:/shared/rds/db-instance-port}
     # DB_PASSWORD: ${secrets:prod-shared-mysql-master-password}
     url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/fileflow?useSSL=true&serverTimezone=UTC&characterEncoding=UTF-8
-    username: ${DB_USERNAME:admin}
+    username: ${DB_USER:fileflow-user}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:

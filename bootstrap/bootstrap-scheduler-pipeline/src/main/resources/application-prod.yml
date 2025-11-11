@@ -18,7 +18,7 @@ spring:
     # PIPELINE_DB_PORT: ${ssm:/shared/rds/db-instance-port}
     # PIPELINE_DB_PASSWORD: ${secrets:prod-shared-mysql-master-password}
     url: jdbc:mysql://${PIPELINE_DB_HOST:${DB_HOST}}:${PIPELINE_DB_PORT:${DB_PORT:3306}}/fileflow?useSSL=true&serverTimezone=UTC&characterEncoding=UTF-8
-    username: ${PIPELINE_DB_USERNAME:admin}
+    username: ${PIPELINE_DB_USERNAME:${DB_USER:fileflow-user}}
     password: ${PIPELINE_DB_PASSWORD:${DB_PASSWORD}}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
