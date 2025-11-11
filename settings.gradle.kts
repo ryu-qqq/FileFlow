@@ -36,4 +36,5 @@ include("bootstrap")
 include("bootstrap:bootstrap-web-api")
 include("bootstrap:bootstrap-scheduler-download")
 include("bootstrap:bootstrap-scheduler-pipeline")
+include("bootstrap:bootstrap-scheduler-upload")
 
