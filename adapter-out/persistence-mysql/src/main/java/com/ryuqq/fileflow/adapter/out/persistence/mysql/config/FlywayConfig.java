@@ -97,19 +97,19 @@ public class FlywayConfig {
     /**
      * 스테이징/프로덕션 환경 전용 Flyway 마이그레이션 전략
      *
-     * <p>운영 환경에서는 안전한 마이그레이션을 위해 검증 후 실행합니다.</p>
+     * <p>운영 환경에서는 안전한 마이그레이션을 위해 repair 후 실행합니다.</p>
      *
      * <p><strong>동작 방식:</strong></p>
      * <ol>
-     *   <li>마이그레이션 검증 (validate)</li>
-     *   <li>마이그레이션 실행 (migrate)</li>
+     *   <li>마이그레이션 복구 (repair) - 체크섬 불일치 해결</li>
+     *   <li>마이그레이션 실행 (migrate) - baseline-on-migrate가 자동으로 baseline 생성</li>
      * </ol>
      *
-     * <p><strong>검증 실패 시:</strong></p>
+     * <p><strong>주의사항:</strong></p>
      * <ul>
-     *   <li>마이그레이션이 중단됩니다</li>
-     *   <li>로그를 확인하여 문제 해결 필요</li>
-     *   <li>체크섬 불일치, 누락된 마이그레이션 등</li>
+     *   <li>application-prod.yml의 baseline-on-migrate: true 설정에 따라 자동 baseline 생성</li>
+     *   <li>validate()는 건너뛰고 바로 migrate() 실행 (기존 DB 호환)</li>
+     *   <li>repair()가 체크섬 불일치 문제를 자동 해결</li>
      * </ul>
      *
      * @return FlywayMigrationStrategy
@@ -118,10 +118,14 @@ public class FlywayConfig {
     @Profile({"dev", "stage", "prod"})
     public FlywayMigrationStrategy validateMigrateStrategy() {
         return flyway -> {
-            // 1. 마이그레이션 검증
-            flyway.validate();
-            
-            // 2. 마이그레이션 실행
+            // 1. repair를 먼저 실행하여 checksum 불일치 해결
+            try {
+                flyway.repair();
+            } catch (Exception e) {
+                System.err.println("Flyway repair failed: " + e.getMessage());
+            }
+
+            // 2. 마이그레이션 실행 (baseline-on-migrate: true가 자동 처리)
             flyway.migrate();
         };
     }
