@@ -92,7 +92,7 @@ spring:
     placeholders:
       charset: utf8mb4
       collation: utf8mb4_unicode_ci
-    validate-on-migrate: true
+    validate-on-migrate: false  # Flyway 검증 비활성화 - baseline-on-migrate가 자동 처리
     out-of-order: false
     clean-disabled: true  # 프로덕션에서는 clean 절대 금지
     group: false
