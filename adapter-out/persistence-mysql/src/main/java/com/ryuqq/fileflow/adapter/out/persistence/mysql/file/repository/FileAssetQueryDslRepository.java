@@ -53,15 +53,15 @@ public interface FileAssetQueryDslRepository {
      * @param query 파일 목록 조회 Query
      * @return FileAssetJpaEntity 목록
      */
-    List<FileAssetJpaEntity> findAllByDynamicQuery(ListFilesQuery query);
+    List<FileAssetJpaEntity> searchWithFilters(ListFilesQuery query);
 
     /**
      * 동적 쿼리를 사용한 파일 개수 조회
      *
-     * <p>findAllByDynamicQuery()와 동일한 필터 조건 적용</p>
+     * <p>searchWithFilters()와 동일한 필터 조건 적용</p>
      *
      * @param query 파일 목록 조회 Query
      * @return 전체 개수
      */
-    long countByDynamicQuery(ListFilesQuery query);
+    long countWithFilters(ListFilesQuery query);
 }

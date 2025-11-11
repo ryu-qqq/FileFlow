@@ -4,13 +4,13 @@
 
 locals {
   # Service Configuration
-  service_name = "fileflow"
+  service_name = "fileflow-api"
   environment  = "prod"
 
   # Common Tags (Required by governance)
   required_tags = {
     Environment = "prod"
-    Service     = "fileflow"
+    Service     = "fileflow-api"
     Owner       = "platform-team@example.com"
     CostCenter  = "engineering"
     Lifecycle   = "production"

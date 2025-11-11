@@ -130,7 +130,7 @@ public class FileQueryAdapter implements FileQueryPort {
         }
 
         // QueryDSL 동적 쿼리 실행
-        List<FileAssetJpaEntity> entities = fileAssetRepository.findAllByDynamicQuery(query);
+        List<FileAssetJpaEntity> entities = fileAssetRepository.searchWithFilters(query);
 
         // Entity → Domain 변환
         return entities.stream()
@@ -155,7 +155,7 @@ public class FileQueryAdapter implements FileQueryPort {
         }
 
         // QueryDSL 동적 COUNT 쿼리 실행
-        return fileAssetRepository.countByDynamicQuery(query);
+        return fileAssetRepository.countWithFilters(query);
     }
 
     /**
