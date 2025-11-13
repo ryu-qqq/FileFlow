@@ -4,7 +4,7 @@ import com.ryuqq.fileflow.application.file.port.out.FileCommandPort;
 import com.ryuqq.fileflow.application.file.port.out.PipelineOutboxPort;
 import com.ryuqq.fileflow.domain.download.IdempotencyKey;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +106,7 @@ public class FileCommandManager {
         IdempotencyKey idempotencyKey = generateIdempotencyKey(savedFileAsset);
         PipelineOutbox outbox = PipelineOutbox.forNew(
             idempotencyKey,
-            FileId.of(savedFileAsset.getIdValue())
+            FileAssetId.of(savedFileAsset.getIdValue())
         );
 
         pipelineOutboxPort.save(outbox);

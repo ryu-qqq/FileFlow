@@ -42,7 +42,7 @@ public class StorageUploadFacade {
 
     public StorageUploadFacade(
         S3StoragePort storagePort,
-        @Value("${aws.s3.bucket-name}") String s3Bucket
+        @Value("${aws.s3.bucket}") String s3Bucket
     ) {
         this.storagePort = storagePort;
         this.s3Bucket = s3Bucket;

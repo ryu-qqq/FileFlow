@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.file.asset.exception;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 
 import java.util.Map;
 
@@ -21,11 +21,11 @@ import java.util.Map;
 public class FileAssetNotFoundException extends FileAssetException {
 
     /**
-     * FileAssetNotFoundException 생성자 (FileId 사용)
+     * FileAssetNotFoundException 생성자 (FileAssetId 사용)
      *
      * @param fileId FileAsset ID
      */
-    public FileAssetNotFoundException(FileId fileId) {
+    public FileAssetNotFoundException(FileAssetId fileId) {
         super(
             FileErrorCode.FILE_ASSET_NOT_FOUND,
             Map.of("fileId", fileId.value())

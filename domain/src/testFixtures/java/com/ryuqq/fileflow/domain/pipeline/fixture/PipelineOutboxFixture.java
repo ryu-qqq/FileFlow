@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.domain.pipeline.fixture;
 
 import com.ryuqq.fileflow.domain.common.OutboxStatus;
 import com.ryuqq.fileflow.domain.download.IdempotencyKey;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutboxId;
 
@@ -36,7 +36,7 @@ public class PipelineOutboxFixture {
     public static PipelineOutbox createPending() {
         return PipelineOutbox.forNew(
             IdempotencyKey.of(DEFAULT_IDEMPOTENCY_KEY),
-            FileId.of(DEFAULT_FILE_ID)
+            FileAssetId.of(DEFAULT_FILE_ID)
         );
     }
 
@@ -49,7 +49,7 @@ public class PipelineOutboxFixture {
     public static PipelineOutbox createPending(Long fileId) {
         return PipelineOutbox.forNew(
             IdempotencyKey.of(DEFAULT_IDEMPOTENCY_KEY + "-" + fileId),
-            FileId.of(fileId)
+            FileAssetId.of(fileId)
         );
     }
 
@@ -132,7 +132,7 @@ public class PipelineOutboxFixture {
         return PipelineOutbox.reconstitute(
             PipelineOutboxId.of(id),
             IdempotencyKey.of(idempotencyKey),
-            FileId.of(fileId),
+            FileAssetId.of(fileId),
             status,
             retryCount,
             LocalDateTime.now().minusHours(1),

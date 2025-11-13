@@ -2,82 +2,47 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.UploadPartJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
- * Upload Part JPA Repository
+ * Upload Part Spring Data JPA Repository
  *
- * <p>Spring Data JPA를 활용한 Upload Part 영속성 인터페이스</p>
+ * <p><strong>역할</strong>: Upload Part Entity에 대한 기본 CRUD 전용 (Command Side)</p>
+ * <p><strong>위치</strong>: adapter-out/persistence-mysql/upload/repository/</p>
  *
- * <h3>설계 원칙</h3>
+ * <h3>CQRS 설계 원칙</h3>
  * <ul>
- *   <li>✅ Spring Data JPA 메서드 네이밍 규칙 준수</li>
- *   <li>✅ 복잡한 쿼리는 @Query 사용</li>
- *   <li>✅ Long FK 전략 (엔티티 조인 없음)</li>
- *   <li>✅ Bulk 삭제는 @Modifying 사용</li>
+ *   <li>✅ <strong>Command Side 전용</strong>: save, delete 등 CUD 작업만 담당</li>
+ *   <li>✅ <strong>Query Side 분리</strong>: 조회 작업은 UploadPartQueryDslRepository로 위임</li>
+ *   <li>✅ Spring Data JPA 인터페이스 (구현체 자동 생성)</li>
+ *   <li>✅ Long FK 전략 (multipartUploadId는 Long - MultipartUpload PK 타입과 일치)</li>
+ *   <li>❌ {@code @Repository} 어노테이션 불필요 (JpaRepository 상속 시 자동)</li>
+ *   <li>❌ {@code @Query} 사용 금지 (복잡한 조회는 QueryAdapter로 위임)</li>
+ *   <li>❌ <strong>findBy* 메서드 금지</strong> (Query Side에서만 허용)</li>
  * </ul>
  *
- * @author Sangwon Ryu
+ * <h3>제공 메서드</h3>
+ * <ul>
+ *   <li>save(entity) - 엔티티 저장 (JpaRepository 기본 제공)</li>
+ *   <li>delete(entity) - 엔티티 삭제 (JpaRepository 기본 제공)</li>
+ *   <li>deleteByMultipartUploadId(id) - Multipart Upload ID로 일괄 삭제 (Command 작업)</li>
+ * </ul>
+ *
  * @since 1.0.0
  */
-@Repository
 public interface UploadPartJpaRepository
     extends JpaRepository<UploadPartJpaEntity, Long> {
 
     /**
-     * Multipart Upload ID로 조회
+     * Multipart Upload ID로 Upload Part 삭제
      *
-     * @param multipartUploadId Multipart Upload ID
-     * @return UploadPartJpaEntity 목록
-     */
-    List<UploadPartJpaEntity> findByMultipartUploadId(Long multipartUploadId);
-
-    /**
-     * Multipart Upload ID와 파트 번호로 조회
+     * <p>특정 Multipart Upload에 속한 모든 Upload Part를 삭제합니다.</p>
      *
-     * @param multipartUploadId Multipart Upload ID
-     * @param partNumber 파트 번호
-     * @return UploadPartJpaEntity (Optional)
-     */
-    Optional<UploadPartJpaEntity> findByMultipartUploadIdAndPartNumber(
-        Long multipartUploadId,
-        Integer partNumber
-    );
-
-    /**
-     * Multipart Upload ID로 삭제
+     * <p><strong>Spring Data JPA 메서드 네이밍 규칙</strong>:
+     * {@code deleteBy*} 메서드는 자동으로 bulk delete 쿼리를 생성합니다.</p>
      *
-     * @param multipartUploadId Multipart Upload ID
-     */
-    @Modifying
-    @Query("DELETE FROM UploadPartJpaEntity p " +
-           "WHERE p.multipartUploadId = :multipartUploadId")
-    void deleteByMultipartUploadId(@Param("multipartUploadId") Long multipartUploadId);
-
-    /**
-     * Multipart Upload ID로 파트 개수 조회
+     * <p><strong>Long FK 전략</strong>: MultipartUpload PK 타입(Long AUTO_INCREMENT)과 일치</p>
      *
-     * @param multipartUploadId Multipart Upload ID
-     * @return 파트 개수
+     * @param multipartUploadId Multipart Upload ID (Long - MultipartUpload PK 타입과 일치)
      */
-    long countByMultipartUploadId(Long multipartUploadId);
-
-    /**
-     * Multipart Upload ID 목록으로 조회
-     *
-     * @param multipartUploadIds Multipart Upload ID 목록
-     * @return UploadPartJpaEntity 목록
-     */
-    @Query("SELECT p FROM UploadPartJpaEntity p " +
-           "WHERE p.multipartUploadId IN :multipartUploadIds " +
-           "ORDER BY p.multipartUploadId, p.partNumber")
-    List<UploadPartJpaEntity> findByMultipartUploadIds(
-        @Param("multipartUploadIds") List<Long> multipartUploadIds
-    );
+    void deleteByMultipartUploadId(Long multipartUploadId);
 }

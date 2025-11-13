@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.application.iam.organization.dto.command.CreateOrganiz
 import com.ryuqq.fileflow.application.iam.organization.dto.response.OrganizationResponse;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.domain.iam.organization.OrgCode;
+import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 
 /**
  * OrganizationAssembler - Organization DTO ↔ Domain 변환 유틸리티
@@ -17,7 +18,7 @@ import com.ryuqq.fileflow.domain.iam.organization.OrgCode;
  *   <li>✅ Static 메서드만 제공 (유틸리티 클래스)</li>
  *   <li>✅ Law of Demeter 준수 (Getter 체이닝 금지)</li>
  *   <li>✅ 양방향 변환: Command → Domain, Domain → Response</li>
- *   <li>✅ Long FK 전략 - Tenant ID를 Long으로 사용</li>
+ *   <li>✅ Long FK 전략 + Value Object 래핑 (Tenant ID를 TenantId로 래핑)</li>
  * </ul>
  *
  * <p><strong>사용 예시:</strong></p>
@@ -54,6 +55,7 @@ public final class OrganizationAssembler {
      *
      * <p>Command 객체를 받아 Organization Aggregate를 생성합니다.</p>
      * <p>ID는 null로 설정되며, 저장 후 자동 생성됩니다.</p>
+     * <p>Command의 Long tenantId를 TenantId Value Object로 래핑합니다.</p>
      *
      * @param command Organization 생성 Command
      * @param orgCode OrgCode Value Object (이미 검증됨)
@@ -71,7 +73,7 @@ public final class OrganizationAssembler {
         }
 
         return Organization.forNew(
-            command.tenantId(),
+            TenantId.of(command.tenantId()),  // Long → TenantId 래핑
             orgCode,
             command.name()
         );
@@ -80,9 +82,9 @@ public final class OrganizationAssembler {
     /**
      * Organization Domain → OrganizationResponse 변환
      *
-     * <p>Law of Demeter 준수: organization.getIdValue(), organization.getOrgCodeValue() 사용</p>
-     * <p>❌ Bad: organization.getId().value(), organization.getOrgCode().getValue()</p>
-     * <p>✅ Good: organization.getIdValue(), organization.getOrgCodeValue()</p>
+     * <p>Law of Demeter 준수: organization.getIdValue(), organization.getOrgCodeValue(), organization.getTenantIdValue() 사용</p>
+     * <p>❌ Bad: organization.getId().value(), organization.getOrgCode().getValue(), organization.getTenantId().value()</p>
+     * <p>✅ Good: organization.getIdValue(), organization.getOrgCodeValue(), organization.getTenantIdValue()</p>
      *
      * @param organization 변환할 Organization Aggregate
      * @return OrganizationResponse DTO
@@ -97,7 +99,7 @@ public final class OrganizationAssembler {
 
         return new OrganizationResponse(
             organization.getIdValue(),
-            organization.getTenantId(),
+            organization.getTenantIdValue(),  // TenantId → Long 변환 (Law of Demeter)
             organization.getOrgCodeValue(),
             organization.getName(),
             organization.getStatus().name(),

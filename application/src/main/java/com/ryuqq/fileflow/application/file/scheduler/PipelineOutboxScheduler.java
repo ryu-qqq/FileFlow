@@ -203,19 +203,19 @@ public class PipelineOutboxScheduler {
     private ProcessResult processOutboxMessage(PipelineOutbox outbox) {
         try {
             log.debug("Processing pipeline outbox message: outboxId={}, fileId={}",
-                outbox.getIdValue(), outbox.getFileIdValue());
+                outbox.getIdValue(), outbox.getFileAssetIdValue());
 
             // 1. Outbox 상태를 PROCESSING으로 변경 (Manager 사용)
             outboxManager.markProcessing(outbox);
 
             // 2. Worker에 동기 작업 위임
-            PipelineResult result = pipelineWorker.startPipeline(outbox.getFileIdValue());
+            PipelineResult result = pipelineWorker.startPipeline(outbox.getFileAssetIdValue());
 
             // 3. 결과에 따라 Outbox 상태 업데이트
             if (result.isSuccess()) {
                 outboxManager.markProcessed(outbox);
                 log.info("Successfully completed pipeline: fileId={}, outboxId={}",
-                    outbox.getFileIdValue(), outbox.getIdValue());
+                    outbox.getFileAssetIdValue(), outbox.getIdValue());
                 return ProcessResult.SUCCESS;
 
             } else {
@@ -224,7 +224,7 @@ public class PipelineOutboxScheduler {
                     result.errorMessage() : "Pipeline processing failed";
 
                 log.error("Pipeline processing failed: fileId={}, outboxId={}, error={}",
-                    outbox.getFileIdValue(), outbox.getIdValue(), errorMessage);
+                    outbox.getFileAssetIdValue(), outbox.getIdValue(), errorMessage);
 
                 // 재시도 횟수 확인
                 if (outbox.getRetryCount() >= properties.getMaxRetryCount()) {

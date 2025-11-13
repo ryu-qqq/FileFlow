@@ -5,8 +5,8 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.mapper.ExtractedDat
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.repository.ExtractedDataJpaRepository;
 import com.ryuqq.fileflow.application.file.port.out.SaveExtractedDataPort;
 import com.ryuqq.fileflow.domain.file.extraction.ExtractedData;
+
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * ExtractedData Command Adapter (Persistence Layer)
@@ -38,11 +38,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class ExtractedDataCommandAdapter implements SaveExtractedDataPort {
 
     private final ExtractedDataJpaRepository extractedDataJpaRepository;
+    private final ExtractedDataEntityMapper extractedDataEntityMapper;
 
     public ExtractedDataCommandAdapter(
-        ExtractedDataJpaRepository extractedDataJpaRepository
+        ExtractedDataJpaRepository extractedDataJpaRepository,
+        ExtractedDataEntityMapper extractedDataEntityMapper
     ) {
         this.extractedDataJpaRepository = extractedDataJpaRepository;
+        this.extractedDataEntityMapper = extractedDataEntityMapper;
     }
 
     /**
@@ -54,21 +57,14 @@ public class ExtractedDataCommandAdapter implements SaveExtractedDataPort {
      * @return 저장된 ExtractedData (ID 할당됨)
      */
     @Override
-    @Transactional
     public ExtractedData save(ExtractedData extractedData) {
         // 1. Domain → Entity 변환
-        ExtractedDataJpaEntity entity = ExtractedDataEntityMapper.toEntity(extractedData);
+        ExtractedDataJpaEntity entity = extractedDataEntityMapper.toEntity(extractedData);
 
         // 2. JPA 저장 (ID 자동 할당)
         ExtractedDataJpaEntity savedEntity = extractedDataJpaRepository.save(entity);
 
         // 3. Entity → Domain 변환 (ID 포함)
-        ExtractedData savedData = ExtractedDataEntityMapper.toDomain(savedEntity);
-
-        // 4. Domain Event 처리 (필요 시)
-        // ⭐ ExtractedData는 도메인 이벤트를 가지고 있음
-        // Application Layer에서 이벤트 발행 처리
-
-        return savedData;
+        return extractedDataEntityMapper.toDomain(savedEntity);
     }
 }

@@ -14,7 +14,7 @@ import com.ryuqq.fileflow.application.file.dto.query.ListFilesQuery;
 import com.ryuqq.fileflow.application.file.dto.response.DownloadUrlResponse;
 import com.ryuqq.fileflow.application.file.dto.response.FileListResponse;
 import com.ryuqq.fileflow.application.file.dto.response.FileMetadataResponse;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.file.asset.FileStatus;
 import com.ryuqq.fileflow.domain.file.asset.Visibility;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
@@ -65,7 +65,7 @@ public final class FileApiMapper {
         Long organizationId
     ) {
         return GenerateDownloadUrlCommand.of(
-            FileId.of(request.getFileId()),
+            FileAssetId.of(request.getFileId()),
             TenantId.of(tenantId),
             organizationId,
             Duration.ofHours(request.getExpirationHours())
@@ -103,7 +103,7 @@ public final class FileApiMapper {
         Long requesterId
     ) {
         return DeleteFileCommand.of(
-            FileId.of(fileId),
+            FileAssetId.of(fileId),
             TenantId.of(tenantId),
             organizationId,
             requesterId
@@ -124,7 +124,7 @@ public final class FileApiMapper {
         Long organizationId
     ) {
         return FileMetadataQuery.of(
-            FileId.of(fileId),
+            FileAssetId.of(fileId),
             TenantId.of(tenantId),
             organizationId
         );

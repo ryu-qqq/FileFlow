@@ -171,7 +171,7 @@ public class OrganizationPersistenceAdapter implements OrganizationRepositoryPor
             throw new IllegalArgumentException("OrgCode must not be null");
         }
 
-        String orgCodeValue = orgCode.getValue();
+        String orgCodeValue = orgCode.value();
 
         return organizationJpaRepository.findByTenantIdAndOrgCodeAndDeletedIsFalse(tenantId, orgCodeValue)
             .map(OrganizationEntityMapper::toDomain);
@@ -204,7 +204,7 @@ public class OrganizationPersistenceAdapter implements OrganizationRepositoryPor
             throw new IllegalArgumentException("OrgCode must not be null");
         }
 
-        String orgCodeValue = orgCode.getValue();
+        String orgCodeValue = orgCode.value();
 
         return organizationJpaRepository.existsByTenantIdAndOrgCodeAndDeletedIsFalse(tenantId, orgCodeValue);
     }

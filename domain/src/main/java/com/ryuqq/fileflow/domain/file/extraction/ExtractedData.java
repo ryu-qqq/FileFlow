@@ -47,10 +47,9 @@ import java.util.UUID;
 public class ExtractedData {
 
     private final List<Object> domainEvents = new ArrayList<>();
-
     private final ExtractedDataId id;
     private final String extractedUuid; // Business UUID
-    private final Long fileId; // Long FK Strategy
+    private final Long fileAssetId; // Long FK Strategy
     private final Long tenantId; // Multi-tenant
     private final Long organizationId; // Multi-tenant
     private final ExtractionType extractionType;
@@ -73,7 +72,7 @@ public class ExtractedData {
     private ExtractedData(
         ExtractedDataId id,
         String extractedUuid,
-        Long fileId,
+        Long fileAssetId,
         Long tenantId,
         Long organizationId,
         ExtractionType extractionType,
@@ -92,7 +91,7 @@ public class ExtractedData {
     ) {
         this.id = id;
         this.extractedUuid = extractedUuid;
-        this.fileId = fileId;
+        this.fileAssetId = fileAssetId;
         this.tenantId = tenantId;
         this.organizationId = organizationId;
         this.extractionType = extractionType;
@@ -189,8 +188,8 @@ public class ExtractedData {
         extractedData.registerEvent(new ExtractedDataCreatedEvent(
             null, // ID는 아직 할당되지 않음
             fileAssetId,
-            extractionType.name(),
-            extractionMethod.name()
+            extractionType,
+            extractionMethod
         ));
 
         return extractedData;
@@ -275,8 +274,8 @@ public class ExtractedData {
         return extractedUuid;
     }
 
-    public Long getFileId() {
-        return fileId;
+    public Long getFileAssetId() {
+        return fileAssetId;
     }
 
     public Long getTenantId() {

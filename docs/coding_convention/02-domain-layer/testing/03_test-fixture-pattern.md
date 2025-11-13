@@ -422,6 +422,399 @@ Order order = OrderFixture.builder()
 
 ---
 
+## 🏷️ 테스트 조직화 패턴
+
+### 1. @Tag - 테스트 카테고리화
+
+**목적**: 테스트를 카테고리별로 분류하여 선택적 실행 가능
+
+**사용 가능한 태그**:
+```java
+@Tag("unit")           // 단위 테스트
+@Tag("domain")         // 도메인 테스트
+@Tag("integration")    // 통합 테스트
+@Tag("slow")           // 느린 테스트
+@Tag("fast")           // 빠른 테스트
+```
+
+**예시**:
+```java
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+@Tag("unit")
+@Tag("domain")
+class OrderTest {
+
+    @Test
+    @Tag("fast")
+    void create_WithValidData_ShouldCreateOrder() {
+        // Given
+        CustomerId customerId = CustomerId.of(1L);
+
+        // When
+        Order order = Order.forNew(customerId);
+
+        // Then
+        assertThat(order.getCustomerId()).isEqualTo(customerId);
+    }
+
+    @Test
+    @Tag("slow")
+    void validate_WithComplexRules_ShouldValidate() {
+        // ... 복잡한 검증 로직
+    }
+}
+```
+
+**Gradle 설정** (선택적 실행):
+```groovy
+// build.gradle
+test {
+    useJUnitPlatform {
+        includeTags 'unit'           // unit 태그만 실행
+        excludeTags 'slow'           // slow 태그 제외
+    }
+}
+```
+
+---
+
+### 2. @Nested - 관심사별 그룹핑
+
+**목적**: 관련된 테스트를 논리적으로 그룹화하여 가독성 향상
+
+**사용 시기**:
+- 생성 관련 테스트
+- 검증 관련 테스트
+- 비즈니스 로직별 테스트
+- 예외 케이스 테스트
+
+**예시**:
+```java
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+@Tag("unit")
+@Tag("domain")
+@DisplayName("Order 도메인 테스트")
+class OrderTest {
+
+    @Nested
+    @DisplayName("생성 테스트")
+    class CreateTests {
+
+        @Test
+        @DisplayName("유효한 데이터로 생성 시 성공")
+        void create_WithValidData_ShouldSucceed() {
+            // Given
+            CustomerId customerId = CustomerId.of(1L);
+
+            // When
+            Order order = Order.forNew(customerId);
+
+            // Then
+            assertThat(order.getCustomerId()).isEqualTo(customerId);
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
+        }
+
+        @Test
+        @DisplayName("null 고객 ID로 생성 시 예외 발생")
+        void create_WithNullCustomerId_ShouldThrowException() {
+            // When & Then
+            assertThatThrownBy(() -> Order.forNew(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("고객 ID는 필수입니다");
+        }
+    }
+
+    @Nested
+    @DisplayName("상태 변경 테스트")
+    class StatusTransitionTests {
+
+        @Test
+        @DisplayName("PENDING → APPROVED 전이 성공")
+        void approve_FromPending_ShouldTransitionToApproved() {
+            // Given
+            Order order = OrderFixture.createWithStatus(OrderStatus.PENDING);
+
+            // When
+            order.approve();
+
+            // Then
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.APPROVED);
+        }
+
+        @Test
+        @DisplayName("CANCELLED 상태에서 승인 시 예외 발생")
+        void approve_FromCancelled_ShouldThrowException() {
+            // Given
+            Order order = OrderFixture.createWithStatus(OrderStatus.CANCELLED);
+
+            // When & Then
+            assertThatThrownBy(() -> order.approve())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("취소된 주문은 승인할 수 없습니다");
+        }
+    }
+
+    @Nested
+    @DisplayName("비즈니스 규칙 검증 테스트")
+    class BusinessRuleTests {
+
+        @Test
+        @DisplayName("최소 주문 금액 미달 시 예외 발생")
+        void validate_BelowMinimumAmount_ShouldThrowException() {
+            // Given
+            Order order = OrderFixture.create();
+            Money minimumAmount = Money.of(5000);
+
+            // When & Then
+            assertThatThrownBy(() -> order.validateMinimumAmount(minimumAmount))
+                .isInstanceOf(IllegalStateException.class);
+        }
+    }
+}
+```
+
+**@Nested 구조 권장사항**:
+- ✅ 테스트 클래스당 2-5개의 Nested 클래스 (너무 많으면 분리 고려)
+- ✅ Nested 클래스명은 명확하게 (`CreateTests`, `ValidationTests`)
+- ✅ @DisplayName으로 한글 설명 추가 (가독성 향상)
+- ❌ Nested 안에 Nested는 지양 (깊이 1단계까지만)
+
+---
+
+### 3. @ParameterizedTest - 여러 케이스 테스트
+
+**목적**: 동일한 테스트 로직을 여러 입력값으로 반복 실행
+
+**사용 시기**:
+- 경계값 테스트 (Boundary Value Testing)
+- 동등 분할 테스트 (Equivalence Partitioning)
+- 여러 유효/무효 입력값 검증
+- 다양한 상태 조합 테스트
+
+#### 패턴 1: @ValueSource (단일 파라미터)
+
+```java
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+@ParameterizedTest
+@ValueSource(longs = {-1L, 0L, -100L})
+@DisplayName("음수 또는 0인 ID로 생성 시 예외 발생")
+void of_WithInvalidId_ShouldThrowException(Long invalidId) {
+    // When & Then
+    assertThatThrownBy(() -> OrderId.of(invalidId))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Order ID는 양수여야 합니다");
+}
+```
+
+#### 패턴 2: @CsvSource (여러 파라미터)
+
+```java
+import org.junit.jupiter.params.provider.CsvSource;
+
+@ParameterizedTest
+@CsvSource({
+    "PENDING,    true,   승인 가능",
+    "APPROVED,   false,  이미 승인됨",
+    "CANCELLED,  false,  취소된 주문",
+    "SHIPPED,    false,  배송 중"
+})
+@DisplayName("주문 상태별 승인 가능 여부 검증")
+void canApprove_WithVariousStatuses_ShouldReturnExpectedResult(
+    OrderStatus status,
+    boolean expectedResult,
+    String description
+) {
+    // Given
+    Order order = OrderFixture.createWithStatus(status);
+
+    // When
+    boolean result = order.canApprove();
+
+    // Then
+    assertThat(result).isEqualTo(expectedResult);
+}
+```
+
+#### 패턴 3: @MethodSource (복잡한 객체)
+
+```java
+import org.junit.jupiter.params.provider.MethodSource;
+import java.util.stream.Stream;
+
+@ParameterizedTest
+@MethodSource("provideInvalidOrders")
+@DisplayName("유효하지 않은 주문 데이터로 생성 시 예외 발생")
+void create_WithInvalidData_ShouldThrowException(
+    CustomerId customerId,
+    String expectedMessage
+) {
+    // When & Then
+    assertThatThrownBy(() -> Order.forNew(customerId))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(expectedMessage);
+}
+
+private static Stream<Arguments> provideInvalidOrders() {
+    return Stream.of(
+        Arguments.of(null, "고객 ID는 필수입니다"),
+        Arguments.of(CustomerId.of(-1L), "고객 ID는 양수여야 합니다")
+    );
+}
+```
+
+#### 패턴 4: @EnumSource (Enum 전체 테스트)
+
+```java
+import org.junit.jupiter.params.provider.EnumSource;
+
+@ParameterizedTest
+@EnumSource(OrderStatus.class)
+@DisplayName("모든 주문 상태에 대해 toString() 반환값 검증")
+void toString_WithAllStatuses_ShouldReturnNonEmpty(OrderStatus status) {
+    // When
+    String result = status.toString();
+
+    // Then
+    assertThat(result).isNotNull();
+    assertThat(result).isNotEmpty();
+}
+
+@ParameterizedTest
+@EnumSource(
+    value = OrderStatus.class,
+    names = {"APPROVED", "SHIPPED", "DELIVERED"}
+)
+@DisplayName("특정 상태만 테스트")
+void test_OnlySpecificStatuses(OrderStatus status) {
+    // ...
+}
+```
+
+---
+
+### 통합 예시: 모든 패턴 결합
+
+```java
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
+
+@Tag("unit")
+@Tag("domain")
+@DisplayName("Order 도메인 종합 테스트")
+class OrderComprehensiveTest {
+
+    @Nested
+    @DisplayName("ID 생성 테스트")
+    class OrderIdCreationTests {
+
+        @ParameterizedTest
+        @ValueSource(longs = {1L, 100L, 999999L})
+        @DisplayName("유효한 ID로 생성 성공")
+        void of_WithValidId_ShouldSucceed(Long validId) {
+            // When
+            OrderId orderId = OrderId.of(validId);
+
+            // Then
+            assertThat(orderId.value()).isEqualTo(validId);
+        }
+
+        @ParameterizedTest
+        @ValueSource(longs = {-1L, 0L, -100L})
+        @DisplayName("무효한 ID로 생성 시 예외 발생")
+        void of_WithInvalidId_ShouldThrowException(Long invalidId) {
+            // When & Then
+            assertThatThrownBy(() -> OrderId.of(invalidId))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("forNew()로 null ID 생성 성공")
+        void forNew_ShouldCreateWithNullId() {
+            // When
+            OrderId orderId = OrderId.forNew();
+
+            // Then
+            assertThat(orderId.value()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("상태 전이 테스트")
+    class StatusTransitionTests {
+
+        @ParameterizedTest
+        @CsvSource({
+            "PENDING,    APPROVED,   true",
+            "APPROVED,   SHIPPED,    true",
+            "SHIPPED,    DELIVERED,  true",
+            "CANCELLED,  APPROVED,   false",
+            "DELIVERED,  CANCELLED,  false"
+        })
+        @DisplayName("상태 전이 가능 여부 검증")
+        void canTransition_WithVariousStates_ShouldReturnExpected(
+            OrderStatus from,
+            OrderStatus to,
+            boolean expected
+        ) {
+            // Given
+            Order order = OrderFixture.createWithStatus(from);
+
+            // When
+            boolean result = order.canTransitionTo(to);
+
+            // Then
+            assertThat(result).isEqualTo(expected);
+        }
+    }
+
+    @Nested
+    @DisplayName("비즈니스 규칙 테스트")
+    class BusinessRuleTests {
+
+        @Test
+        @Tag("fast")
+        @DisplayName("기본 생성 테스트")
+        void create_WithDefaultValues_ShouldSucceed() {
+            // When
+            Order order = OrderFixture.create();
+
+            // Then
+            assertThat(order).isNotNull();
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
+        }
+
+        @Test
+        @Tag("slow")
+        @DisplayName("복잡한 비즈니스 규칙 검증")
+        void validate_WithComplexRules_ShouldPass() {
+            // ... 복잡한 로직
+        }
+    }
+}
+```
+
+---
+
+### 테스트 조직화 체크리스트
+
+- [ ] 클래스 레벨에 `@Tag("unit")`, `@Tag("domain")` 추가
+- [ ] 관련 테스트는 `@Nested` 클래스로 그룹핑
+- [ ] 각 Nested 클래스에 `@DisplayName` 추가 (한글 권장)
+- [ ] 동일 로직의 여러 케이스는 `@ParameterizedTest` 사용
+- [ ] @ValueSource, @CsvSource, @MethodSource, @EnumSource 적절히 선택
+- [ ] 느린 테스트는 `@Tag("slow")` 추가하여 선택적 실행 지원
+- [ ] 테스트 메서드명은 `메서드_조건_결과` 패턴 사용
+
+---
+
 ## 📚 관련 문서
 
 **다음 단계**:

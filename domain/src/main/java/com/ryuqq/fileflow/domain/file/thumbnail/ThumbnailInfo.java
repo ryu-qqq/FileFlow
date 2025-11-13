@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.file.thumbnail;
 
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
 
 /**
@@ -28,10 +30,10 @@ import com.ryuqq.fileflow.domain.upload.StorageKey;
  * <pre>
  * ThumbnailInfo thumbnail = new ThumbnailInfo(
  *     new StorageKey("thumbnails/2025/01/uuid_300x300.jpg"),
- *     300,
- *     300,
- *     51200L,
- *     "image/jpeg"
+ *     ImageWidth.of(300),
+ *     ImageHeight.of(300),
+ *     FileSize.of(51200L),
+ *     MimeType.of("image/jpeg")
  * );
  * </pre>
  *
@@ -44,26 +46,27 @@ import com.ryuqq.fileflow.domain.upload.StorageKey;
  *
  * <p><strong>검증 규칙:</strong></p>
  * <ul>
- *   <li>storageKey는 null 불가</li>
- *   <li>width, height는 1 이상</li>
- *   <li>size는 0 이상</li>
- *   <li>contentType은 null 또는 빈 문자열 불가</li>
+ *   <li>모든 필드는 null 불가 (VO가 자체 검증)</li>
+ *   <li>ImageWidth: 1 이상</li>
+ *   <li>ImageHeight: 1 이상</li>
+ *   <li>FileSize: 0 이상</li>
+ *   <li>MimeType: null 또는 빈 문자열 불가</li>
  * </ul>
  *
  * @param storageKey  썸네일 저장 위치 (S3 Key)
  * @param width       썸네일 너비 (픽셀)
  * @param height      썸네일 높이 (픽셀)
- * @param size        썸네일 파일 크기 (Bytes)
- * @param contentType 썸네일 Content Type (예: "image/jpeg")
+ * @param fileSize    썸네일 파일 크기 (Bytes)
+ * @param mimeType    썸네일 MIME Type
  * @author Sangwon Ryu
  * @since 1.0.0
  */
 public record ThumbnailInfo(
     StorageKey storageKey,
-    int width,
-    int height,
-    long size,
-    String contentType
+    ImageWidth width,
+    ImageHeight height,
+    FileSize fileSize,
+    MimeType mimeType
 ) {
 
     /**
@@ -71,11 +74,8 @@ public record ThumbnailInfo(
      *
      * <p><strong>검증 규칙:</strong></p>
      * <ul>
-     *   <li>storageKey는 null 불가</li>
-     *   <li>width는 1 이상 (최소 1픽셀)</li>
-     *   <li>height는 1 이상 (최소 1픽셀)</li>
-     *   <li>size는 0 이상 (빈 파일도 허용)</li>
-     *   <li>contentType은 null 또는 빈 문자열 불가</li>
+     *   <li>모든 VO는 null 불가</li>
+     *   <li>각 VO 내부에서 값 검증 수행</li>
      * </ul>
      *
      * @throws IllegalArgumentException 검증 실패 시
@@ -84,29 +84,17 @@ public record ThumbnailInfo(
         if (storageKey == null) {
             throw new IllegalArgumentException("StorageKey는 null일 수 없습니다");
         }
-
-        if (width < 1) {
-            throw new IllegalArgumentException(
-                "Width는 1 이상이어야 합니다: " + width
-            );
+        if (width == null) {
+            throw new IllegalArgumentException("ImageWidth는 null일 수 없습니다");
         }
-
-        if (height < 1) {
-            throw new IllegalArgumentException(
-                "Height는 1 이상이어야 합니다: " + height
-            );
+        if (height == null) {
+            throw new IllegalArgumentException("ImageHeight는 null일 수 없습니다");
         }
-
-        if (size < 0) {
-            throw new IllegalArgumentException(
-                "Size는 0 이상이어야 합니다: " + size
-            );
+        if (fileSize == null) {
+            throw new IllegalArgumentException("FileSize는 null일 수 없습니다");
         }
-
-        if (contentType == null || contentType.isBlank()) {
-            throw new IllegalArgumentException(
-                "ContentType은 null 또는 빈 문자열일 수 없습니다"
-            );
+        if (mimeType == null) {
+            throw new IllegalArgumentException("MimeType은 null일 수 없습니다");
         }
     }
 
@@ -120,12 +108,48 @@ public record ThumbnailInfo(
     }
 
     /**
+     * 썸네일 너비 (원시값)
+     *
+     * @return 너비 (픽셀)
+     */
+    public int getWidthValue() {
+        return width.value();
+    }
+
+    /**
+     * 썸네일 높이 (원시값)
+     *
+     * @return 높이 (픽셀)
+     */
+    public int getHeightValue() {
+        return height.value();
+    }
+
+    /**
+     * 썸네일 파일 크기 (원시값)
+     *
+     * @return 크기 (Bytes)
+     */
+    public long getFileSizeValue() {
+        return fileSize.bytes();
+    }
+
+    /**
+     * 썸네일 MIME Type (문자열)
+     *
+     * @return MIME Type 문자열
+     */
+    public String getMimeTypeValue() {
+        return mimeType.value();
+    }
+
+    /**
      * 썸네일이 이미지인지 확인
      *
      * @return 이미지 여부
      */
     public boolean isImage() {
-        return contentType.startsWith("image/");
+        return mimeType.value().startsWith("image/");
     }
 
     /**
@@ -134,7 +158,7 @@ public record ThumbnailInfo(
      * @return 크기 (KB)
      */
     public double getSizeInKB() {
-        return size / 1024.0;
+        return fileSize.bytes() / 1024.0;
     }
 
     /**
@@ -143,6 +167,6 @@ public record ThumbnailInfo(
      * @return 크기 (MB)
      */
     public double getSizeInMB() {
-        return size / (1024.0 * 1024.0);
+        return fileSize.bytes() / (1024.0 * 1024.0);
     }
 }

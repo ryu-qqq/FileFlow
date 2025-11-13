@@ -21,7 +21,7 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6379
+      port: 6380
       password: ""
       timeout: 3000ms
       lettuce:
@@ -37,9 +37,11 @@ spring:
 aws:
   s3:
     region: ap-northeast-2
-    bucket-name: fileflow-local
-    access-key: ${AWS_ACCESS_KEY_ID:}
-    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    bucket: fileflow-local
+    # MinIO 로컬 자격증명
+    access-key: minioadmin
+    secret-key: minioadmin
+    endpoint: http://localhost:9000
 
 # Batch Job (로컬 환경 - 빠른 주기로 테스트)
 batch:

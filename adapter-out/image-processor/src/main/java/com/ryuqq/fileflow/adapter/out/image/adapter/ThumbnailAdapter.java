@@ -4,7 +4,11 @@ import com.ryuqq.fileflow.adapter.out.aws.s3.config.S3ClientConfiguration;
 import com.ryuqq.fileflow.adapter.out.image.processor.ThumbnailatorImageProcessor;
 import com.ryuqq.fileflow.application.file.port.out.ThumbnailPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
+import com.ryuqq.fileflow.domain.file.thumbnail.ImageHeight;
+import com.ryuqq.fileflow.domain.file.thumbnail.ImageWidth;
 import com.ryuqq.fileflow.domain.file.thumbnail.ThumbnailInfo;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.MimeType;
 import com.ryuqq.fileflow.domain.upload.StorageKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,10 +154,10 @@ public class ThumbnailAdapter implements ThumbnailPort {
             // 6. ThumbnailInfo 생성 및 반환
             ThumbnailInfo thumbnailInfo = new ThumbnailInfo(
                 StorageKey.of(thumbnailKey),
-                THUMBNAIL_SIZE,
-                THUMBNAIL_SIZE,
-                thumbnailBytes.length,
-                THUMBNAIL_CONTENT_TYPE
+                ImageWidth.of(THUMBNAIL_SIZE),
+                ImageHeight.of(THUMBNAIL_SIZE),
+                FileSize.of((long) thumbnailBytes.length),
+                MimeType.of(THUMBNAIL_CONTENT_TYPE)
             );
 
             log.info("Thumbnail generation completed: fileId={}, thumbnailKey={}, size={}KB",

@@ -1,70 +1,73 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.file.adapter;
 
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.entity.FileVariantJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.mapper.FileVariantEntityMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.repository.FileVariantJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.repository.FileVariantQueryDslRepository;
 import com.ryuqq.fileflow.application.file.port.out.FileVariantQueryPort;
 import com.ryuqq.fileflow.domain.file.variant.FileVariant;
 import com.ryuqq.fileflow.domain.file.variant.VariantType;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * FileVariant Query Adapter (Persistence Layer)
+ * FileVariantQueryAdapter - FileVariant Query 전용 Persistence Adapter
  *
- * <p><strong>역할</strong>: FileVariant 조회 Command 구현</p>
- * <p><strong>위치</strong>: adapter-out/persistence-mysql/file/adapter/</p>
- * <p><strong>구현</strong>: {@code FileVariantQueryPort} 인터페이스 구현</p>
+ * <p>CQRS 패턴의 Query 전용 Adapter입니다.
+ * QueryDSL을 사용하여 성능 최적화된 조회 쿼리를 실행합니다.</p>
  *
- * <h3>헥사고날 아키텍처 패턴</h3>
+ * <p><strong>책임:</strong></p>
  * <ul>
- *   <li>✅ Application Layer의 Port 인터페이스 구현</li>
- *   <li>✅ 의존성 방향: Adapter → Application</li>
- *   <li>✅ Entity ↔ Domain 변환 (Mapper 사용)</li>
- *   <li>❌ 비즈니스 로직 없음 (단순 조회만)</li>
+ *   <li>FileVariant 조회 작업만 담당 (CUD 작업 없음)</li>
+ *   <li>QueryDSL Repository를 통한 조회</li>
+ *   <li>JPA Entity를 Domain Entity로 변환</li>
+ *   <li>Parent FileAsset ID 기반 조회 (Long FK 전략)</li>
  * </ul>
  *
- * <h3>Transaction 관리</h3>
+ * <p><strong>설계 원칙:</strong></p>
  * <ul>
- *   <li>✅ {@code @Transactional(readOnly = true)} - 읽기 전용 최적화</li>
- *   <li>✅ Dirty Checking 비활성화</li>
- *   <li>❌ 외부 API 호출 없음 (DB 조회만)</li>
+ *   <li>✅ {@code @Component} 사용 (Spring Bean 등록)</li>
+ *   <li>✅ {@code FileVariantQueryPort} 구현</li>
+ *   <li>✅ QueryDSL Repository 위임</li>
+ *   <li>✅ Pure Java (Lombok 금지)</li>
+ *   <li>❌ {@code @Transactional} 사용 금지 (Application Layer에서만)</li>
  * </ul>
  *
  * @author Sangwon Ryu
  * @since 1.0.0
  * @see FileVariantQueryPort
+ * @see FileVariantQueryDslRepository
  */
 @Component
 public class FileVariantQueryAdapter implements FileVariantQueryPort {
 
-    private final FileVariantJpaRepository fileVariantJpaRepository;
+    private final FileVariantQueryDslRepository repository;
 
-    public FileVariantQueryAdapter(
-        FileVariantJpaRepository fileVariantJpaRepository
-    ) {
-        this.fileVariantJpaRepository = fileVariantJpaRepository;
+    /**
+     * Constructor - 의존성 주입
+     *
+     * @param repository FileVariant QueryDSL Repository
+     * @author Sangwon Ryu
+     * @since 1.0.0
+     */
+    public FileVariantQueryAdapter(FileVariantQueryDslRepository repository) {
+        this.repository = repository;
     }
 
     /**
      * fileId로 모든 FileVariant 조회
      *
-     * <p>Entity → Domain 변환 후 반환</p>
+     * <p>QueryDSL을 사용하여 Parent FileAsset ID로 모든 Variant를 조회합니다.
+     * createdAt 내림차순으로 정렬하여 최신 순으로 반환합니다.</p>
      *
      * @param fileId FileAsset의 ID (Long FK)
      * @return FileVariant 목록 (빈 리스트 가능)
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     @Override
-    @Transactional(readOnly = true)
     public List<FileVariant> findAllByFileId(Long fileId) {
-        // 1. Entity 조회 (Repository 메서드명: findByParentFileAssetId)
-        List<FileVariantJpaEntity> entities = fileVariantJpaRepository.findByParentFileAssetId(fileId);
-
-        // 2. Entity → Domain 변환
-        return entities.stream()
+        return repository.findAllByFileId(fileId).stream()
             .map(FileVariantEntityMapper::toDomain)
             .toList();
     }
@@ -72,35 +75,33 @@ public class FileVariantQueryAdapter implements FileVariantQueryPort {
     /**
      * fileId와 variantType으로 FileVariant 조회
      *
-     * <p>Entity → Domain 변환 후 Optional로 반환</p>
+     * <p>QueryDSL을 사용하여 Parent FileAsset ID와 Variant Type으로 단건 조회합니다.</p>
      *
      * @param fileId FileAsset의 ID (Long FK)
      * @param variantType Variant Type
      * @return FileVariant (있으면)
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     @Override
-    @Transactional(readOnly = true)
     public Optional<FileVariant> findByFileIdAndVariantType(Long fileId, VariantType variantType) {
-        // 1. Entity 조회 (Repository 메서드명: findByParentFileAssetIdAndVariantType)
-        Optional<FileVariantJpaEntity> entity = fileVariantJpaRepository
-            .findByParentFileAssetIdAndVariantType(fileId, variantType);
-
-        // 2. Entity → Domain 변환
-        return entity.map(FileVariantEntityMapper::toDomain);
+        return repository.findByFileIdAndVariantType(fileId, variantType)
+            .map(FileVariantEntityMapper::toDomain);
     }
 
     /**
      * fileId와 variantType으로 존재 여부 확인
      *
-     * <p>Repository의 existsByParentFileAssetIdAndVariantType 메서드 사용</p>
+     * <p>QueryDSL을 사용하여 Parent FileAsset ID와 Variant Type으로 존재 여부를 확인합니다.</p>
      *
      * @param fileId FileAsset의 ID (Long FK)
      * @param variantType Variant Type
      * @return 존재 여부
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     @Override
-    @Transactional(readOnly = true)
     public boolean existsByFileIdAndVariantType(Long fileId, VariantType variantType) {
-        return fileVariantJpaRepository.existsByParentFileAssetIdAndVariantType(fileId, variantType);
+        return repository.existsByFileIdAndVariantType(fileId, variantType);
     }
 }

@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 /**
@@ -59,11 +60,11 @@ public final class ExternalDownloadEntityMapper {
 
         // 1. Value Object 생성
         UploadSessionId uploadSessionId = UploadSessionId.of(entity.getUploadSessionId());
-        
+
         URL sourceUrl;
         try {
-            sourceUrl = new URL(entity.getSourceUrl());
-        } catch (MalformedURLException e) {
+            sourceUrl = URI.create(entity.getSourceUrl()).toURL();
+        } catch (IllegalArgumentException | MalformedURLException e) {
             throw new IllegalArgumentException("Invalid source URL: " + entity.getSourceUrl(), e);
         }
 

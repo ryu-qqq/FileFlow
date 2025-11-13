@@ -105,7 +105,7 @@ class OrganizationQueryRepositoryAdapterTest {
             // Then
             assertThat(result).isPresent();
             assertThat(result.get().getId().value()).isEqualTo(1L);
-            assertThat(result.get().getOrgCode().getValue()).isEqualTo("ORG-001");
+            assertThat(result.get().getOrgCode().value()).isEqualTo("ORG-001");
             verify(queryFactory, times(1)).selectFrom(organizationJpaEntity);
         }
 
@@ -178,7 +178,7 @@ class OrganizationQueryRepositoryAdapterTest {
 
             // Then
             assertThat(result).hasSize(2);
-            assertThat(result).extracting(o -> o.getOrgCode().getValue())
+            assertThat(result).extracting(o -> o.getOrgCode().value())
                 .containsExactlyInAnyOrder("ORG-001", "ORG-001");  // Fixture 기본값
         }
 
@@ -225,7 +225,7 @@ class OrganizationQueryRepositoryAdapterTest {
 
             // Then
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).getOrgCode().getValue()).contains("ORG-001");
+            assertThat(result.get(0).getOrgCode().value()).contains("ORG-001");
         }
 
         @Test

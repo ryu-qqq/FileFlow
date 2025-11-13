@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.domain.pipeline;
 
 import com.ryuqq.fileflow.domain.download.IdempotencyKey;
 import com.ryuqq.fileflow.domain.common.OutboxStatus;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -50,7 +50,7 @@ public class PipelineOutbox {
 
     private final PipelineOutboxId id;
     private final IdempotencyKey idempotencyKey;
-    private final FileId fileId;
+    private final FileAssetId fileId;
     private final Clock clock;
     private OutboxStatus status;
     private Integer retryCount;
@@ -81,7 +81,7 @@ public class PipelineOutbox {
      *
      * PipelineOutbox outbox = PipelineOutbox.forNew(
      *     IdempotencyKey.generate(),
-     *     FileId.of(savedFileAsset.getIdValue())
+     *     FileAssetId.of(savedFileAsset.getIdValue())
      * );
      * pipelineOutboxPort.save(outbox); // 이 시점에 Event 발행 (트랜잭션 커밋 시)
      * }</pre>
@@ -100,7 +100,7 @@ public class PipelineOutbox {
      */
     public static PipelineOutbox forNew(
         IdempotencyKey idempotencyKey,
-        FileId fileId
+        FileAssetId fileId
     ) {
         PipelineOutbox outbox = new PipelineOutbox(
             null,
@@ -137,7 +137,7 @@ public class PipelineOutbox {
     public static PipelineOutbox of(
         PipelineOutboxId id,
         IdempotencyKey idempotencyKey,
-        FileId fileId
+        FileAssetId fileId
     ) {
         if (id == null) {
             throw new IllegalArgumentException("Outbox ID는 필수입니다");
@@ -162,7 +162,7 @@ public class PipelineOutbox {
     PipelineOutbox(
         PipelineOutboxId id,
         IdempotencyKey idempotencyKey,
-        FileId fileId,
+        FileAssetId fileId,
         Clock clock
     ) {
         validateRequiredFields(idempotencyKey, fileId);
@@ -192,7 +192,7 @@ public class PipelineOutbox {
     private PipelineOutbox(
         PipelineOutboxId id,
         IdempotencyKey idempotencyKey,
-        FileId fileId,
+        FileAssetId fileId,
         OutboxStatus status,
         Integer retryCount,
         Clock clock,
@@ -227,7 +227,7 @@ public class PipelineOutbox {
     public static PipelineOutbox reconstitute(
         PipelineOutboxId id,
         IdempotencyKey idempotencyKey,
-        FileId fileId,
+        FileAssetId fileId,
         OutboxStatus status,
         Integer retryCount,
         LocalDateTime createdAt,
@@ -257,7 +257,7 @@ public class PipelineOutbox {
      */
     private static void validateRequiredFields(
         IdempotencyKey idempotencyKey,
-        FileId fileId
+        FileAssetId fileId
     ) {
         if (idempotencyKey == null) {
             throw new IllegalArgumentException("Idempotency Key는 필수입니다");
@@ -394,14 +394,14 @@ public class PipelineOutbox {
     /**
      * 특정 File ID를 가지는지 확인합니다.
      *
-     * @param targetFileId 확인할 File ID
+     * @param targetFileAssetId 확인할 File ID
      * @return 동일한 File ID를 가지면 true
      */
-    public boolean hasFileId(FileId targetFileId) {
-        if (targetFileId == null) {
+    public boolean hasFileAssetId(FileAssetId targetFileAssetId) {
+        if (targetFileAssetId == null) {
             return false;
         }
-        return this.fileId.equals(targetFileId);
+        return this.fileId.equals(targetFileAssetId);
     }
 
     /**
@@ -432,11 +432,11 @@ public class PipelineOutbox {
         return idempotencyKey.value();
     }
 
-    public FileId getFileId() {
+    public FileAssetId getFileAssetId() {
         return fileId;
     }
 
-    public Long getFileIdValue() {
+    public Long getFileAssetIdValue() {
         return fileId.value();
     }
 

@@ -10,6 +10,8 @@ import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.UploadSessionId;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.time.LocalDateTime;
 
@@ -241,7 +243,7 @@ public class ExternalDownloadFixture {
             return ExternalDownload.reconstitute(
                 new ExternalDownloadId(id),
                 uploadSessionId,
-                new URL(DEFAULT_SOURCE_URL),
+                URI.create(DEFAULT_SOURCE_URL).toURL(),
                 FileSize.of(0L),
                 FileSize.of(0L),
                 ExternalDownloadStatus.INIT,

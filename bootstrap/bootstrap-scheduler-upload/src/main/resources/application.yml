@@ -74,6 +74,11 @@ batch:
     # IN_PROGRESS 세션 만료 시간 (시간)
     in-progress-expiration-hours: 24
 
+    # Pessimistic Lock 대상 세션 개수 (FOR UPDATE SKIP LOCKED)
+    # - 동시 실행되는 스케줄러 인스턴스 간 경합 방지
+    # - 권장값: 100~1000 (메모리 사용량 고려)
+    batch-size: 1000
+
 # ========================================
 # Logging Configuration
 # ========================================

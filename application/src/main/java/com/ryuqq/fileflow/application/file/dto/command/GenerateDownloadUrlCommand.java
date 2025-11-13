@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.file.dto.command;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 
 import java.time.Duration;
@@ -39,7 +39,7 @@ import java.time.Duration;
  * @since 1.0.0
  */
 public record GenerateDownloadUrlCommand(
-    FileId fileId,
+    FileAssetId fileId,
     TenantId tenantId,
     Long organizationId,
     Duration expirationDuration
@@ -72,7 +72,7 @@ public record GenerateDownloadUrlCommand(
      * @param tenantId 테넌트 ID
      * @return GenerateDownloadUrlCommand
      */
-    public static GenerateDownloadUrlCommand of(FileId fileId, TenantId tenantId) {
+    public static GenerateDownloadUrlCommand of(FileAssetId fileId, TenantId tenantId) {
         return new GenerateDownloadUrlCommand(fileId, tenantId, null, null);
     }
 
@@ -85,7 +85,7 @@ public record GenerateDownloadUrlCommand(
      * @return GenerateDownloadUrlCommand
      */
     public static GenerateDownloadUrlCommand of(
-        FileId fileId,
+        FileAssetId fileId,
         TenantId tenantId,
         Long organizationId
     ) {
@@ -102,7 +102,7 @@ public record GenerateDownloadUrlCommand(
      * @return GenerateDownloadUrlCommand
      */
     public static GenerateDownloadUrlCommand of(
-        FileId fileId,
+        FileAssetId fileId,
         TenantId tenantId,
         Long organizationId,
         Duration expirationDuration

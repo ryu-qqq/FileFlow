@@ -80,7 +80,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("${api.endpoints.base-v1}${api.endpoints.iam.organization.base}")
 public class OrganizationController {
-
+    //Todo facade 리팩토링
     private final OrganizationCommandFacade organizationCommandFacade;
     private final OrganizationQueryFacade organizationQueryFacade;
 

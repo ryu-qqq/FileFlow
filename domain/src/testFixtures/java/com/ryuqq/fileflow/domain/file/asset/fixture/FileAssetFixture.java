@@ -1,13 +1,14 @@
 package com.ryuqq.fileflow.domain.file.asset.fixture;
 
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
-import com.ryuqq.fileflow.domain.file.fixture.FileIdFixture;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
+import com.ryuqq.fileflow.domain.file.fixture.FileAssetIdFixture;
 import com.ryuqq.fileflow.domain.file.asset.FileStatus;
 import com.ryuqq.fileflow.domain.file.asset.Visibility;
 import com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.upload.Checksum;
+import com.ryuqq.fileflow.domain.upload.ETag;
 import com.ryuqq.fileflow.domain.upload.FileName;
 import com.ryuqq.fileflow.domain.upload.FileSize;
 import com.ryuqq.fileflow.domain.upload.MimeType;
@@ -87,7 +88,7 @@ public class FileAssetFixture {
      */
     public static FileAsset createWithId(Long id) {
         return FileAsset.reconstitute(
-            FileIdFixture.create(id),
+            FileAssetIdFixture.create(id),
             TenantId.of(DEFAULT_TENANT_ID),
             DEFAULT_ORGANIZATION_ID,
             DEFAULT_OWNER_USER_ID,
@@ -135,7 +136,7 @@ public class FileAssetFixture {
      */
     public static FileAsset createProcessing(Long id) {
         return FileAsset.reconstitute(
-            FileIdFixture.create(id),
+            FileAssetIdFixture.create(id),
             TenantId.of(DEFAULT_TENANT_ID),
             DEFAULT_ORGANIZATION_ID,
             DEFAULT_OWNER_USER_ID,
@@ -193,7 +194,7 @@ public class FileAssetFixture {
      */
     public static FileAsset createAnonymous(Long id) {
         return FileAsset.reconstitute(
-            FileIdFixture.create(id),
+            FileAssetIdFixture.create(id),
             TenantId.of(DEFAULT_TENANT_ID),
             null,
             null,
@@ -220,11 +221,11 @@ public class FileAssetFixture {
      * @return S3 업로드로 생성된 FileAsset
      */
     public static FileAsset createFromS3Upload(UploadSession session) {
-        S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-            DEFAULT_FILE_SIZE,
-            DEFAULT_CHECKSUM,
-            DEFAULT_MIME_TYPE,
-            DEFAULT_STORAGE_KEY
+        S3UploadMetadata s3Metadata = new S3UploadMetadata(
+            FileSize.of(DEFAULT_FILE_SIZE),
+            ETag.of(DEFAULT_CHECKSUM),
+            MimeType.of(DEFAULT_MIME_TYPE),
+            StorageKey.of(DEFAULT_STORAGE_KEY)
         );
         return FileAsset.fromS3Upload(session, s3Metadata);
     }
@@ -291,7 +292,7 @@ public class FileAssetFixture {
         String checksum
     ) {
         return FileAsset.reconstitute(
-            FileIdFixture.create(id),
+            FileAssetIdFixture.create(id),
             TenantId.of(tenantId),
             organizationId,
             ownerUserId,

@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.file.metadata;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -71,13 +71,13 @@ import java.util.Optional;
  *   <li>metadata Map은 불변 (Collections.unmodifiableMap)</li>
  * </ul>
  *
- * @param fileId   파일 ID (com.ryuqq.fileflow.domain.file.asset.FileId)
+ * @param fileId   파일 ID (com.ryuqq.fileflow.domain.file.asset.FileAssetId)
  * @param metadata 메타데이터 Map (Key: 메타데이터 이름, Value: 메타데이터 값)
  * @author Sangwon Ryu
  * @since 1.0.0
  */
 public record FileMetadata(
-    FileId fileId,
+    FileAssetId fileId,
     Map<String, Object> metadata
 ) {
 
@@ -95,7 +95,7 @@ public record FileMetadata(
      */
     public FileMetadata {
         if (fileId == null) {
-            throw new IllegalArgumentException("FileId는 null일 수 없습니다");
+            throw new IllegalArgumentException("FileAssetId는 null일 수 없습니다");
         }
 
         if (metadata == null) {
@@ -112,7 +112,7 @@ public record FileMetadata(
      * @param fileId 파일 ID
      * @return 빈 메타데이터
      */
-    public static FileMetadata empty(FileId fileId) {
+    public static FileMetadata empty(FileAssetId fileId) {
         return new FileMetadata(fileId, Map.of());
     }
 
@@ -269,11 +269,11 @@ public record FileMetadata(
     }
 
     /**
-     * FileId 값 조회
+     * FileAssetId 값 조회
      *
-     * @return FileId 값
+     * @return FileAssetId 값
      */
-    public Long getFileIdValue() {
+    public Long getFileAssetIdValue() {
         return fileId.value();
     }
 }

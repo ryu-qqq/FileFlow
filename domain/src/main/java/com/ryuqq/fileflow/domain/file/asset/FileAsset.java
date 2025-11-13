@@ -50,10 +50,9 @@ public class FileAsset {
 
     // ===== Aggregate 식별자 =====
 
-    private final FileId id;
+    private final FileAssetId id;
 
     // ===== 기본 정보 =====
-
     private final TenantId tenantId;
     private final Long organizationId;
     private final Long ownerUserId;
@@ -101,7 +100,7 @@ public class FileAsset {
      * @since 1.0.0
      */
     FileAsset(
-        FileId id,
+        FileAssetId id,
         TenantId tenantId,
         Long organizationId,
         Long ownerUserId,
@@ -170,7 +169,7 @@ public class FileAsset {
      * @since 1.0.0
      */
     private FileAsset(
-        FileId id,
+        FileAssetId id,
         TenantId tenantId,
         Long organizationId,
         Long ownerUserId,
@@ -291,7 +290,7 @@ public class FileAsset {
      * @since 1.0.0
      */
     public static FileAsset reconstitute(
-        FileId id,
+        FileAssetId id,
         TenantId tenantId,
         Long organizationId,
         Long ownerUserId,
@@ -426,7 +425,7 @@ public class FileAsset {
      * }</pre>
      *
      * @param session 업로드 세션
-     * @param s3Result S3 HEAD Object 결과 (ETag, ContentType 포함)
+     * @param s3Metadata S3 업로드 메타데이터 (FileSize, ETag, MimeType, StorageKey)
      * @return 새로운 FileAsset (ID = null, 초기 상태 = PROCESSING)
      * @throws IllegalArgumentException 필수 파라미터가 null인 경우
      * @author Sangwon Ryu
@@ -443,20 +442,15 @@ public class FileAsset {
             throw new IllegalArgumentException("S3UploadMetadata는 필수입니다");
         }
 
-        // contentType이 null이면 기본 MIME 타입 사용
-        MimeType mimeType = (s3Metadata.contentType() != null)
-            ? MimeType.of(s3Metadata.contentType())
-            : MimeType.defaultType();
-
         return FileAsset.forNew(
             session.getTenantId(),
             null,  // organizationId
             null,  // ownerUserId
             session.getFileName(),
-            FileSize.of(s3Metadata.contentLength()),
-            mimeType,
-            StorageKey.of(s3Metadata.storageKey()),
-            Checksum.of(s3Metadata.etag()),
+            s3Metadata.fileSize(),
+            s3Metadata.getMimeTypeOrDefault(),
+            s3Metadata.storageKey(),
+            Checksum.of(s3Metadata.etag().value()),
             session.getId()
         );
     }
@@ -623,7 +617,7 @@ public class FileAsset {
 
     // Getters (Law of Demeter 준수)
 
-    public FileId getId() {
+    public FileAssetId getId() {
         return id;
     }
 

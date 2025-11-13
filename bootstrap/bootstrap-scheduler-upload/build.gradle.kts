@@ -30,7 +30,11 @@ dependencies {
     // Outbound
     implementation(project(":adapter-out:persistence-mysql"))
     implementation(project(":adapter-out:persistence-redis"))
+    implementation(project(":adapter-out:abac-cel"))
     implementation(project(":adapter-out:aws-s3"))
+    implementation(project(":adapter-out:http-client"))
+    implementation(project(":adapter-out:image-processor"))
+    implementation(project(":adapter-out:metadata-extractor"))
 
     // ========================================
     // Spring Boot Starters
@@ -43,6 +47,12 @@ dependencies {
 
     // Configuration Processing
     annotationProcessor(libs.spring.boot.configuration.processor)
+
+    // ========================================
+    // Jackson (for ObjectMapper)
+    // ========================================
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // ========================================
     // Observability

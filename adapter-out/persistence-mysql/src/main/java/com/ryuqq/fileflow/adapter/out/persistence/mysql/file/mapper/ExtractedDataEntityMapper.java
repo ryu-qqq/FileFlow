@@ -4,6 +4,8 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.entity.ExtractedDat
 import com.ryuqq.fileflow.domain.file.extraction.ExtractedData;
 import com.ryuqq.fileflow.domain.file.extraction.ExtractedDataId;
 
+import org.springframework.stereotype.Component;
+
 /**
  * ExtractedData Entity Mapper
  *
@@ -23,7 +25,8 @@ import com.ryuqq.fileflow.domain.file.extraction.ExtractedDataId;
  * @author Sangwon Ryu
  * @since 1.0.0
  */
-public final class ExtractedDataEntityMapper {
+@Component
+public class ExtractedDataEntityMapper {
 
     /**
      * Private Constructor - Utility 클래스 인스턴스화 방지
@@ -40,14 +43,14 @@ public final class ExtractedDataEntityMapper {
      * @param extractedData Domain ExtractedData
      * @return JPA Entity
      */
-    public static ExtractedDataJpaEntity toEntity(ExtractedData extractedData) {
+    public ExtractedDataJpaEntity toEntity(ExtractedData extractedData) {
         if (extractedData == null) {
             return null;
         }
 
         return ExtractedDataJpaEntity.create(
             extractedData.getExtractedUuid(),
-            extractedData.getFileId(),
+            extractedData.getFileAssetId(),
             extractedData.getTenantId(),
             extractedData.getOrganizationId(),
             extractedData.getExtractionType(),
@@ -73,7 +76,7 @@ public final class ExtractedDataEntityMapper {
      * @param entity JPA Entity
      * @return Domain ExtractedData
      */
-    public static ExtractedData toDomain(ExtractedDataJpaEntity entity) {
+    public ExtractedData toDomain(ExtractedDataJpaEntity entity) {
         if (entity == null) {
             return null;
         }

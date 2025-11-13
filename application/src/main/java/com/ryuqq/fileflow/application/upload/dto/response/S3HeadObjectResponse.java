@@ -58,11 +58,11 @@ public record S3HeadObjectResponse(
      * @return S3UploadMetadata Domain VO
      */
     public com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata toDomain() {
-        return com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata.of(
-            this.contentLength,
-            this.etag,
-            this.contentType,
-            this.storageKey
+        return new com.ryuqq.fileflow.domain.file.asset.S3UploadMetadata(
+            com.ryuqq.fileflow.domain.upload.FileSize.of(this.contentLength),
+            com.ryuqq.fileflow.domain.upload.ETag.of(this.etag),
+            com.ryuqq.fileflow.domain.upload.MimeType.of(this.contentType),
+            com.ryuqq.fileflow.domain.upload.StorageKey.of(this.storageKey)
         );
     }
 }

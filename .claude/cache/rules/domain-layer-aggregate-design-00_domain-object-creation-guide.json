@@ -19,7 +19,7 @@
     },
     "layer": "domain",
     "priority": "critical",
-    "tokenEstimate": 1969
+    "tokenEstimate": 2024
   },
   "rules": {
     "prohibited": [],

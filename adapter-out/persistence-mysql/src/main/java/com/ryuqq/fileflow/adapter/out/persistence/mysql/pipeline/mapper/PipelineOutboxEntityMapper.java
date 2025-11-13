@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.entity.PipelineOutboxJpaEntity;
 import com.ryuqq.fileflow.domain.download.IdempotencyKey;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutbox;
 import com.ryuqq.fileflow.domain.pipeline.PipelineOutboxId;
 
@@ -28,7 +28,7 @@ import com.ryuqq.fileflow.domain.pipeline.PipelineOutboxId;
  *
  * <p><strong>의존성:</strong></p>
  * <ul>
- *   <li>Domain Layer: PipelineOutbox, PipelineOutboxId, IdempotencyKey, FileId</li>
+ *   <li>Domain Layer: PipelineOutbox, PipelineOutboxId, IdempotencyKey, FileAssetId</li>
  *   <li>Persistence Layer: PipelineOutboxJpaEntity</li>
  * </ul>
  *
@@ -72,7 +72,7 @@ public final class PipelineOutboxEntityMapper {
         return new PipelineOutboxJpaEntity(
             domain.getIdValue(),                    // Long id (null 가능 - 신규 생성 시)
             domain.getIdempotencyKeyValue(),        // String idempotencyKey
-            domain.getFileIdValue(),                // Long fileId
+            domain.getFileAssetIdValue(),           // Long fileId
             domain.getStatus(),                     // OutboxStatus
             domain.getRetryCount()                  // Integer retryCount
         );
@@ -114,7 +114,7 @@ public final class PipelineOutboxEntityMapper {
         return PipelineOutbox.reconstitute(
             PipelineOutboxId.of(entity.getId()),                // PipelineOutboxId (필수)
             IdempotencyKey.of(entity.getIdempotencyKey()),      // IdempotencyKey
-            FileId.of(entity.getFileId()),                      // FileId
+            FileAssetId.of(entity.getFileId()),                 // FileAssetId
             entity.getStatus(),                                 // OutboxStatus
             entity.getRetryCount(),                             // Integer retryCount
             entity.getCreatedAt(),                              // LocalDateTime createdAt

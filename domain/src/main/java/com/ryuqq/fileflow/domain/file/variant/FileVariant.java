@@ -32,7 +32,8 @@ import java.util.List;
  *
  * <p><strong>Long FK 전략:</strong></p>
  * <ul>
- *   <li>✅ Long parentFileAssetId 사용 (JPA 관계 금지)</li>
+ *   <li>✅ FileAssetId VO로 원본 파일 참조</li>
+ *   <li>✅ getParentFileAssetIdValue()로 Long 값 조회 가능</li>
  *   <li>❌ @ManyToOne FileAsset 금지</li>
  * </ul>
  *
@@ -50,7 +51,7 @@ public class FileVariant {
     private final List<Object> domainEvents = new ArrayList<>();
 
     private final FileVariantId id;
-    private final Long parentFileAssetId; // ⭐ Long FK Strategy
+    private final FileAssetId parentFileAssetId; // ⭐ FileAssetId VO
     private final VariantType variantType;
     private final StorageKey storageKey;
     private final FileSize fileSize;
@@ -62,7 +63,7 @@ public class FileVariant {
      */
     private FileVariant(
         FileVariantId id,
-        Long parentFileAssetId,
+        FileAssetId parentFileAssetId,
         VariantType variantType,
         StorageKey storageKey,
         FileSize fileSize,
@@ -110,7 +111,7 @@ public class FileVariant {
 
         FileVariant variant = new FileVariant(
             null, // ID는 Persistence Layer에서 생성
-            parentFileAssetId.value(), // ⭐ Long FK 사용
+            parentFileAssetId, // ⭐ FileAssetId VO 사용
             variantType,
             storageKey,
             fileSize,
@@ -122,7 +123,7 @@ public class FileVariant {
         variant.registerEvent(new FileVariantCreatedEvent(
             null, // ID는 아직 할당되지 않음
             parentFileAssetId,
-            variantType.name()
+            variantType
         ));
 
         return variant;
@@ -132,7 +133,7 @@ public class FileVariant {
      * DB에서 조회한 데이터로 FileVariant 재구성 (Static Factory Method)
      *
      * @param id FileVariant ID
-     * @param parentFileAssetId 원본 FileAsset ID
+     * @param parentFileAssetId 원본 FileAsset ID (Long)
      * @param variantType 변형 종류
      * @param storageKey S3 저장 키
      * @param fileSize 파일 크기
@@ -161,7 +162,7 @@ public class FileVariant {
 
         return new FileVariant(
             id,
-            parentFileAssetId,
+            FileAssetId.of(parentFileAssetId), // Long → FileAssetId 변환
             variantType,
             storageKey,
             fileSize,
@@ -180,8 +181,12 @@ public class FileVariant {
         return id != null ? id.value() : null;
     }
 
-    public Long getParentFileAssetId() {
+    public FileAssetId getParentFileAssetId() {
         return parentFileAssetId;
+    }
+
+    public Long getParentFileAssetIdValue() {
+        return parentFileAssetId != null ? parentFileAssetId.value() : null;
     }
 
     public VariantType getVariantType() {

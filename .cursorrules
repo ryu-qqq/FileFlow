@@ -75,3 +75,148 @@
 ---
 
 **✅ 이 규칙들을 준수하면 Claude Code 검증을 통과할 수 있습니다!**
+## 🎯 Kent Beck TDD 워크플로우 (Domain Layer 전용)
+
+### TDD 사이클: RED → GREEN → REFACTOR
+
+```
+1️⃣ RED Phase: 실패하는 테스트 작성
+   → TestFixture 먼저 생성 (FIRST STEP)
+   → Given-When-Then 구조
+   → 비즈니스 규칙을 테스트로 표현
+
+2️⃣ GREEN Phase: 최소 구현으로 통과
+   → 테스트 통과만 목표
+   → 하드코딩 허용 (빠르게!)
+   → Lombok 금지만 필수 준수
+
+3️⃣ REFACTOR Phase: 컨벤션 적용
+   → Law of Demeter 적용
+   → ValueObject 패턴 완성
+   → Tell, Don't Ask 원칙
+   → Javadoc 추가
+```
+
+### RED Phase 핵심
+
+**TestFixture Pattern (필수)**:
+```java
+public class OrderDomainFixture {
+    public static final Long DEFAULT_ORDER_ID = 1L;
+
+    public static Order create() { ... }
+    public static Order createWithStatus(OrderStatus status) { ... }
+    public static List<OrderLineItem> createDefaultLineItems() { ... }
+}
+```
+
+**테스트 구조**:
+```java
+@Test
+@DisplayName("주문 생성 - 유효한 라인 아이템으로 생성 성공")
+void createOrder_WithValidLineItems_ShouldSucceed() {
+    // Given
+    List<OrderLineItem> lineItems = OrderDomainFixture.createDefaultLineItems();
+
+    // When
+    Order order = Order.create(OrderId.of(1L), lineItems, Money.of(10000));
+
+    // Then
+    assertThat(order.getOrderId()).isEqualTo(OrderId.of(1L));
+}
+```
+
+### GREEN Phase 핵심
+
+**최소 구현 (하드코딩 OK)**:
+```java
+public class Order {
+    private Order(OrderId orderId, List<OrderLineItem> lineItems, Money totalPrice) {
+        this.orderId = orderId;
+        this.lineItems = lineItems;
+        this.totalPrice = totalPrice;
+        this.status = OrderStatus.PLACED;
+    }
+
+    public static Order create(...) {
+        if (lineItems.isEmpty()) {
+            throw new IllegalArgumentException("최소 1개 필요");
+        }
+        return new Order(...);
+    }
+
+    // GREEN Phase: 하드코딩 (REFACTOR에서 개선)
+    public Money calculateTotalPrice() {
+        return totalPrice; // 단순 리턴
+    }
+}
+```
+
+**주의**: Lombok은 GREEN Phase에서도 금지!
+
+### REFACTOR Phase 핵심
+
+**Law of Demeter 적용**:
+```java
+// ❌ Before (GREEN Phase)
+public Money calculateTotalPrice() {
+    return totalPrice; // 하드코딩
+}
+
+// ✅ After (REFACTOR Phase)
+public Money calculateTotalPrice() {
+    return lineItems.stream()
+        .map(OrderLineItem::calculatePrice)
+        .reduce(Money.ZERO, Money::add);
+}
+```
+
+**ValueObject 불변성**:
+```java
+public class Money {
+    public static final Money ZERO = new Money(BigDecimal.ZERO);
+
+    private final BigDecimal amount; // final 필수
+
+    private Money(BigDecimal amount) { ... }
+
+    public static Money of(BigDecimal amount) { ... }
+
+    // 새 객체 반환 (불변성)
+    public Money add(Money other) {
+        return new Money(this.amount.add(other.amount));
+    }
+}
+```
+
+### Cursor 실행 가이드
+
+```
+Claude Code에서 PRD 생성:
+  /cr/domain-prd "Order Management"
+  → docs/prd/domain/order-domain-prd.md
+
+Cursor Composer에서 TDD 실행:
+  "docs/prd/domain/order-domain-prd.md를 읽고:
+   1. /cr/red - TestFixture + Tests 생성
+   2. /cr/green - 최소 구현 (Lombok 금지)
+   3. /cr/refactor - 컨벤션 100% 적용"
+
+Claude Code에서 검증:
+  /cr/validate
+  → validation-helper.py + LangFuse 업로드
+```
+
+### TDD 적용 범위
+
+**✅ Domain Layer만 적용**:
+- Aggregate Root (e.g., Order)
+- Value Object (e.g., OrderId, Money)
+- Enum (e.g., OrderStatus)
+- Domain Event
+
+**❌ 다른 Layer는 기존 방식 사용**:
+- Application Layer → `/code-gen-usecase`
+- Persistence Layer → `/code-gen-repository`
+- REST API Layer → `/code-gen-controller`
+

@@ -1,19 +1,15 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.adapter;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.OrganizationJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.mapper.OrganizationEntityMapper;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.repository.OrganizationQueryDslRepository;
 import com.ryuqq.fileflow.application.iam.organization.port.out.OrganizationQueryRepositoryPort;
 import com.ryuqq.fileflow.domain.iam.organization.Organization;
 import com.ryuqq.fileflow.domain.iam.organization.OrganizationId;
 import org.springframework.stereotype.Component;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-
-import static com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.entity.QOrganizationJpaEntity.organizationJpaEntity;
 
 /**
  * OrganizationQueryRepositoryAdapter - Organization Query 전용 Persistence Adapter
@@ -32,7 +28,7 @@ import static com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.
  * <ul>
  *   <li>✅ {@code @Component} 사용 (Spring Bean 등록)</li>
  *   <li>✅ {@code OrganizationQueryRepositoryPort} 구현</li>
- *   <li>✅ QueryDSL JPAQueryFactory 사용</li>
+ *   <li>✅ QueryDSL Repository 사용</li>
  *   <li>✅ Pure Java (Lombok 금지)</li>
  *   <li>❌ {@code @Transactional} 사용 금지 (Application Layer에서만)</li>
  * </ul>
@@ -43,17 +39,17 @@ import static com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.organization.
 @Component
 public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepositoryPort {
 
-    private final JPAQueryFactory queryFactory;
+    private final OrganizationQueryDslRepository repository;
 
     /**
      * Constructor - 의존성 주입
      *
-     * @param queryFactory QueryDSL JPAQueryFactory
+     * @param repository OrganizationQueryDslRepository
      * @author ryu-qqq
      * @since 2025-10-23
      */
-    public OrganizationQueryRepositoryAdapter(JPAQueryFactory queryFactory) {
-        this.queryFactory = queryFactory;
+    public OrganizationQueryRepositoryAdapter(OrganizationQueryDslRepository repository) {
+        this.repository = repository;
     }
 
     /**
@@ -70,15 +66,7 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
             throw new IllegalArgumentException("OrganizationId는 필수입니다");
         }
 
-        OrganizationJpaEntity entity = queryFactory
-            .selectFrom(organizationJpaEntity)
-            .where(
-                organizationJpaEntity.id.eq(organizationId.value()),
-                organizationJpaEntity.deleted.isFalse()
-            )
-            .fetchOne();
-
-        return Optional.ofNullable(entity)
+        return repository.findById(organizationId.value())
             .map(OrganizationEntityMapper::toDomain);
     }
 
@@ -104,18 +92,14 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
         int offset,
         int limit
     ) {
-        List<OrganizationJpaEntity> entities = queryFactory
-            .selectFrom(organizationJpaEntity)
-            .where(
-                eqTenantId(tenantId),
-                containsOrgCode(orgCodeContains),
-                containsName(nameContains),
-                eqDeleted(deleted)
-            )
-            .orderBy(organizationJpaEntity.createdAt.asc())
-            .offset(offset)
-            .limit(limit)
-            .fetch();
+        List<OrganizationJpaEntity> entities = repository.findAllWithOffset(
+            tenantId,
+            orgCodeContains,
+            nameContains,
+            deleted,
+            offset,
+            limit
+        );
 
         return entities.stream()
             .map(OrganizationEntityMapper::toDomain)
@@ -140,18 +124,12 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
         String nameContains,
         Boolean deleted
     ) {
-        Long count = queryFactory
-            .select(organizationJpaEntity.count())
-            .from(organizationJpaEntity)
-            .where(
-                eqTenantId(tenantId),
-                containsOrgCode(orgCodeContains),
-                containsName(nameContains),
-                eqDeleted(deleted)
-            )
-            .fetchOne();
-
-        return count != null ? count : 0L;
+        return repository.countAll(
+            tenantId,
+            orgCodeContains,
+            nameContains,
+            deleted
+        );
     }
 
     /**
@@ -179,132 +157,17 @@ public class OrganizationQueryRepositoryAdapter implements OrganizationQueryRepo
         String cursor,
         int limit
     ) {
-        List<OrganizationJpaEntity> entities = queryFactory
-            .selectFrom(organizationJpaEntity)
-            .where(
-                eqTenantId(tenantId),
-                containsOrgCode(orgCodeContains),
-                containsName(nameContains),
-                eqDeleted(deleted),
-                gtCursor(cursor)
-            )
-            .orderBy(
-                organizationJpaEntity.createdAt.asc(),
-                organizationJpaEntity.id.asc()
-            )
-            .limit(limit)
-            .fetch();
+        List<OrganizationJpaEntity> entities = repository.findAllWithCursor(
+            tenantId,
+            orgCodeContains,
+            nameContains,
+            deleted,
+            cursor,
+            limit
+        );
 
         return entities.stream()
             .map(OrganizationEntityMapper::toDomain)
             .toList();
-    }
-
-    // ========================================
-    // Private Helper Methods (동적 쿼리 조건)
-    // ========================================
-
-    /**
-     * Tenant ID 일치 조건
-     *
-     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치, null이면 조건 제외)
-     * @return BooleanExpression
-     * @author ryu-qqq
-     * @since 2025-10-23
-     */
-    private BooleanExpression eqTenantId(Long tenantId) {
-        if (tenantId == null || tenantId <= 0) {
-            return null;
-        }
-        return organizationJpaEntity.tenantId.eq(tenantId);
-    }
-
-    /**
-     * 조직 코드 부분 일치 조건
-     *
-     * @param orgCodeContains 검색어 (null이면 조건 제외)
-     * @return BooleanExpression
-     * @author ryu-qqq
-     * @since 2025-10-23
-     */
-    private BooleanExpression containsOrgCode(String orgCodeContains) {
-        if (orgCodeContains == null || orgCodeContains.isBlank()) {
-            return null;
-        }
-        return organizationJpaEntity.orgCode.containsIgnoreCase(orgCodeContains);
-    }
-
-    /**
-     * 이름 부분 일치 조건
-     *
-     * @param nameContains 검색어 (null이면 조건 제외)
-     * @return BooleanExpression
-     * @author ryu-qqq
-     * @since 2025-10-23
-     */
-    private BooleanExpression containsName(String nameContains) {
-        if (nameContains == null || nameContains.isBlank()) {
-            return null;
-        }
-        return organizationJpaEntity.name.containsIgnoreCase(nameContains);
-    }
-
-    /**
-     * 삭제 여부 일치 조건
-     *
-     * @param deleted 삭제 여부 (null이면 조건 제외)
-     * @return BooleanExpression
-     * @author ryu-qqq
-     * @since 2025-10-23
-     */
-    private BooleanExpression eqDeleted(Boolean deleted) {
-        if (deleted == null) {
-            return null;
-        }
-        return organizationJpaEntity.deleted.eq(deleted);
-    }
-
-    /**
-     * Cursor보다 큰 (createdAt, id) 복합 조건 (Cursor-based Pagination)
-     *
-     * <p>일관된 페이지네이션을 위해 createdAt + id 복합 정렬을 사용합니다.
-     * Cursor 형식: Base64("createdAt|id")</p>
-     *
-     * <p>SQL WHERE 조건: {@code (createdAt, id) > (cursor_createdAt, cursor_id)}</p>
-     *
-     * @param cursor Base64 인코딩된 "createdAt|id" (null이면 조건 제외)
-     * @return BooleanExpression
-     * @author ryu-qqq
-     * @since 2025-10-23
-     */
-    private BooleanExpression gtCursor(String cursor) {
-        if (cursor == null || cursor.isBlank()) {
-            return null;
-        }
-
-        try {
-            String decodedCursor = new String(Base64.getUrlDecoder().decode(cursor));
-            String[] parts = decodedCursor.split("\\|");
-
-            if (parts.length != 2) {
-                // 잘못된 cursor 형식은 무시
-                return null;
-            }
-
-            String createdAtStr = parts[0];
-            String idStr = parts[1];
-            Long id = Long.parseLong(idStr);
-
-            // (createdAt, id) > (cursor_createdAt, cursor_id) 복합 비교
-            // createdAt이 더 크거나, 같으면서 id가 더 큰 경우
-            return organizationJpaEntity.createdAt.gt(java.time.LocalDateTime.parse(createdAtStr))
-                .or(
-                    organizationJpaEntity.createdAt.eq(java.time.LocalDateTime.parse(createdAtStr))
-                        .and(organizationJpaEntity.id.gt(id))
-                );
-        } catch (Exception e) {
-            // 잘못된 cursor는 무시하고 처음부터 조회
-            return null;
-        }
     }
 }

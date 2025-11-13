@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.pipeline;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * <ul>
  *   <li>✅ Java 21 Record 패턴 사용</li>
  *   <li>❌ Lombok 사용 안함 - Pure Java</li>
- *   <li>✅ Value Object ID 래핑 (PipelineOutboxId, FileId)</li>
+ *   <li>✅ Value Object ID 래핑 (PipelineOutboxId, FileAssetId)</li>
  *   <li>✅ Immutable Event (Record는 기본적으로 불변)</li>
  * </ul>
  *
@@ -41,14 +41,14 @@ import java.time.LocalDateTime;
  *
  *     PipelineOutbox outbox = PipelineOutbox.forNew(
  *         IdempotencyKey.generate(),
- *         FileId.of(savedFileAsset.getIdValue())
+ *         FileAssetId.of(savedFileAsset.getIdValue())
  *     );
  *     pipelineOutboxPort.save(outbox);
  *
  *     // 이벤트 발행
  *     PipelineOutboxCreatedEvent event = new PipelineOutboxCreatedEvent(
  *         outbox.getId(),
- *         outbox.getFileId(),
+ *         outbox.getFileAssetId(),
  *         outbox.getCreatedAt()
  *     );
  *     applicationEventPublisher.publishEvent(event);
@@ -75,7 +75,7 @@ import java.time.LocalDateTime;
  */
 public record PipelineOutboxCreatedEvent(
     PipelineOutboxId outboxId,
-    FileId fileId,
+    FileAssetId fileId,
     LocalDateTime occurredAt
 ) {
     /**

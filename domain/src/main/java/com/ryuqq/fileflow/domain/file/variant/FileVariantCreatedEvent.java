@@ -21,7 +21,7 @@ import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
  *
  * @param fileVariantId 생성된 File Variant ID
  * @param fileAssetId 부모 File Asset ID
- * @param variantType Variant 타입 (예: thumbnail, preview)
+ * @param variantType Variant 타입 (THUMBNAIL, PREVIEW, COMPRESSED 등)
  *
  * @author Sangwon Ryu
  * @since 1.0.0
@@ -29,7 +29,7 @@ import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 public record FileVariantCreatedEvent(
     FileVariantId fileVariantId,
     FileAssetId fileAssetId,
-    String variantType
+    VariantType variantType
 ) {
 
     /**
@@ -50,8 +50,8 @@ public record FileVariantCreatedEvent(
         if (fileAssetId == null) {
             throw new IllegalArgumentException("fileAssetId must not be null");
         }
-        if (variantType == null || variantType.isBlank()) {
-            throw new IllegalArgumentException("variantType must not be null or blank");
+        if (variantType == null) {
+            throw new IllegalArgumentException("variantType must not be null");
         }
     }
 

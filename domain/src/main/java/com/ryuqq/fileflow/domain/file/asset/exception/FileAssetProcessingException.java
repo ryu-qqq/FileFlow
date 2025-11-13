@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.file.asset.exception;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 
 import java.util.Map;
 
@@ -19,7 +19,7 @@ public class FileAssetProcessingException extends FileAssetException {
      *
      * @param fileId FileAsset ID
      */
-    public FileAssetProcessingException(FileId fileId) {
+    public FileAssetProcessingException(FileAssetId fileId) {
         super(
             FileErrorCode.FILE_ASSET_PROCESSING,
             Map.of("fileId", fileId.value())

@@ -1,5 +1,10 @@
 package com.ryuqq.fileflow.domain.file.asset;
 
+import com.ryuqq.fileflow.domain.upload.ETag;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.MimeType;
+import com.ryuqq.fileflow.domain.upload.StorageKey;
+
 /**
  * S3 업로드 메타데이터 (Domain Value Object)
  *
@@ -16,89 +21,86 @@ package com.ryuqq.fileflow.domain.file.asset;
  *   <li>Multipart Upload 완료 후 FileAsset 생성</li>
  * </ul>
  *
- * @param contentLength S3 객체 크기 (bytes)
- * @param etag S3 ETag (MD5 or Multipart ETag)
- * @param contentType MIME Type
- * @param storageKey S3 저장 경로 (예: "tenant-1/files/2024/11/06/uuid.jpg")
+ * <p><strong>설계 원칙:</strong></p>
+ * <ul>
+ *   <li>✅ Value Object 사용 (FileSize, ETag, MimeType, StorageKey)</li>
+ *   <li>✅ Type Safety 보장</li>
+ *   <li>✅ Pure Java Record 패턴</li>
+ * </ul>
+ *
+ * @param fileSize 파일 크기 (FileSize VO)
+ * @param etag S3 ETag (ETag VO)
+ * @param mimeType MIME Type (MimeType VO, nullable)
+ * @param storageKey S3 저장 경로 (StorageKey VO)
  *
  * @author Sangwon Ryu
  * @since 1.0.0
  */
 public record S3UploadMetadata(
-    Long contentLength,
-    String etag,
-    String contentType,
-    String storageKey
+    FileSize fileSize,
+    ETag etag,
+    MimeType mimeType,
+    StorageKey storageKey
 ) {
+    /**
+     * Compact Constructor - 유효성 검증
+     *
+     * @throws IllegalArgumentException 필수 파라미터가 null인 경우
+     */
+    public S3UploadMetadata {
+        if (fileSize == null) {
+            throw new IllegalArgumentException("FileSize는 필수입니다");
+        }
+        if (etag == null) {
+            throw new IllegalArgumentException("ETag는 필수입니다");
+        }
+        if (storageKey == null) {
+            throw new IllegalArgumentException("StorageKey는 필수입니다");
+        }
+        // mimeType은 null 허용 (기본값: application/octet-stream)
+    }
+
     /**
      * Static Factory Method
      *
-     * @param contentLength 파일 크기
+     * @param fileSize 파일 크기
      * @param etag ETag
-     * @param contentType MIME Type
+     * @param mimeType MIME Type (nullable)
      * @param storageKey 저장 경로
      * @return S3UploadMetadata
      * @throws IllegalArgumentException 검증 실패 시
      */
     public static S3UploadMetadata of(
-        Long contentLength,
-        String etag,
-        String contentType,
-        String storageKey
+        FileSize fileSize,
+        ETag etag,
+        MimeType mimeType,
+        StorageKey storageKey
     ) {
-        validateContentLength(contentLength);
-        validateEtag(etag);
-        validateContentType(contentType);
-        validateStorageKey(storageKey);
-
-        return new S3UploadMetadata(contentLength, etag, contentType, storageKey);
+        return new S3UploadMetadata(fileSize, etag, mimeType, storageKey);
     }
 
     /**
-     * ContentLength 검증
+     * MimeType이 없을 때 기본값으로 생성
      *
-     * @param contentLength 파일 크기
-     * @throws IllegalArgumentException contentLength가 null이거나 0 이하인 경우
-     */
-    private static void validateContentLength(Long contentLength) {
-        if (contentLength == null || contentLength <= 0) {
-            throw new IllegalArgumentException("contentLength는 양수여야 합니다");
-        }
-    }
-
-    /**
-     * ETag 검증
-     *
+     * @param fileSize 파일 크기
      * @param etag ETag
-     * @throws IllegalArgumentException etag가 null이거나 비어있는 경우
-     */
-    private static void validateEtag(String etag) {
-        if (etag == null || etag.isBlank()) {
-            throw new IllegalArgumentException("etag는 필수입니다");
-        }
-    }
-
-    /**
-     * ContentType 검증
-     *
-     * <p>null 허용 (기본값: application/octet-stream)</p>
-     *
-     * @param contentType MIME Type
-     */
-    private static void validateContentType(String contentType) {
-        // null 허용 (기본값: application/octet-stream)
-    }
-
-    /**
-     * StorageKey 검증
-     *
      * @param storageKey 저장 경로
-     * @throws IllegalArgumentException storageKey가 null이거나 비어있는 경우
+     * @return S3UploadMetadata (mimeType = null)
      */
-    private static void validateStorageKey(String storageKey) {
-        if (storageKey == null || storageKey.isBlank()) {
-            throw new IllegalArgumentException("storageKey는 필수입니다");
-        }
+    public static S3UploadMetadata withoutMimeType(
+        FileSize fileSize,
+        ETag etag,
+        StorageKey storageKey
+    ) {
+        return new S3UploadMetadata(fileSize, etag, null, storageKey);
+    }
+
+    /**
+     * MimeType 반환 (null이면 기본값)
+     *
+     * @return MimeType (null이면 application/octet-stream)
+     */
+    public MimeType getMimeTypeOrDefault() {
+        return mimeType != null ? mimeType : MimeType.defaultType();
     }
 }
-

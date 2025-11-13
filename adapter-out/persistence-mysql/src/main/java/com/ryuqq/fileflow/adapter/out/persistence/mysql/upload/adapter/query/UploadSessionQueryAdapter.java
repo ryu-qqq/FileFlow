@@ -1,22 +1,17 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.adapter.query;
 
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.UploadSessionJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.mapper.UploadSessionEntityMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository.UploadSessionJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository.UploadSessionQueryDslRepository;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.SessionStatus;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.QUploadSessionJpaEntity.uploadSessionJpaEntity;
 
 /**
  * Upload Session Query Adapter (CQRS - Query Side)
@@ -53,17 +48,15 @@ import static com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.QUp
 @Component
 public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
 
-    private final JPAQueryFactory queryFactory;
+    private final UploadSessionQueryDslRepository repository;
 
     /**
      * 생성자
      *
-     * @param queryFactory QueryDSL JPAQueryFactory (복잡한 쿼리용)
+     * @param repository Upload Session QueryDSL Repository
      */
-    public UploadSessionQueryAdapter(
-        JPAQueryFactory queryFactory
-    ) {
-        this.queryFactory = queryFactory;
+    public UploadSessionQueryAdapter(UploadSessionQueryDslRepository repository) {
+        this.repository = repository;
     }
 
     /**
@@ -75,14 +68,8 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * @return Upload Session (Optional)
      */
     @Override
-    @Transactional(readOnly = true)
     public Optional<UploadSession> findById(Long id) {
-        UploadSessionJpaEntity entity = queryFactory
-            .selectFrom(uploadSessionJpaEntity)
-            .where(uploadSessionJpaEntity.id.eq(id))
-            .fetchOne();
-
-        return Optional.ofNullable(entity)
+        return repository.findById(id)
             .map(UploadSessionEntityMapper::toDomain);
     }
 
@@ -96,101 +83,9 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * @return Upload Session (Optional)
      */
     @Override
-    @Transactional(readOnly = true)
     public Optional<UploadSession> findBySessionKey(SessionKey sessionKey) {
-        UploadSessionJpaEntity entity = queryFactory
-            .selectFrom(uploadSessionJpaEntity)
-            .where(uploadSessionJpaEntity.sessionKey.eq(sessionKey.value()))
-            .fetchOne();
-
-        return Optional.ofNullable(entity)
+        return repository.findBySessionKey(sessionKey.value())
             .map(UploadSessionEntityMapper::toDomain);
-    }
-
-    /**
-     * 상태와 생성 시간 기준으로 Upload Session 목록 조회
-     *
-     * <p><strong>사용 시나리오:</strong> 만료된 PENDING 세션 Batch 정리</p>
-     *
-     * <p><strong>성능:</strong></p>
-     * <ul>
-     *   <li>복합 Index 활용: idx_status_created_at (status, created_at)</li>
-     *   <li>⚠️ 대량 데이터 반환 가능 → Batch 처리 시 LIMIT 사용 권장</li>
-     * </ul>
-     *
-     * @param status 세션 상태
-     * @param createdBefore 이 시간 이전에 생성된 세션
-     * @return Upload Session 목록
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public List<UploadSession> findByStatusAndCreatedBefore(
-        SessionStatus status,
-        LocalDateTime createdBefore
-    ) {
-        // CRITICAL: Unbounded Query 방지 - 안전한 기본값 설정
-        // 대량 데이터 조회 시 OOM 방지를 위해 LIMIT 절 필수
-        // TODO: 향후 Pageable 파라미터로 전환 고려
-        int safeBatchSize = 1000;
-        
-        List<UploadSessionJpaEntity> entities = queryFactory
-            .selectFrom(uploadSessionJpaEntity)
-            .where(
-                uploadSessionJpaEntity.status.eq(status),
-                uploadSessionJpaEntity.createdAt.before(createdBefore)
-            )
-            .orderBy(uploadSessionJpaEntity.createdAt.asc())
-            .limit(safeBatchSize)
-            .fetch();
-
-        return entities.stream()
-            .map(UploadSessionEntityMapper::toDomain)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * 여러 상태 중 하나에 해당하고 생성 시간 기준으로 Upload Session 목록 조회
-     *
-     * <p><strong>사용 시나리오:</strong> PENDING 또는 IN_PROGRESS 세션 중 오래된 것 조회</p>
-     *
-     * <p><strong>성능:</strong></p>
-     * <ul>
-     *   <li>⚠️ IN 절 사용 → Index 활용 제한적</li>
-     *   <li>가능하면 {@link #findByStatusAndCreatedBefore} 사용 권장</li>
-     * </ul>
-     *
-     * @param statuses 세션 상태 목록 (Not Null, Not Empty)
-     * @param createdBefore 이 시간 이전에 생성된 세션
-     * @return Upload Session 목록
-     * @throws IllegalArgumentException statuses가 null 또는 빈 리스트인 경우
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public List<UploadSession> findByStatusInAndCreatedBefore(
-        List<SessionStatus> statuses,
-        LocalDateTime createdBefore
-    ) {
-        if (statuses == null || statuses.isEmpty()) {
-            throw new IllegalArgumentException("statuses must not be null or empty");
-        }
-
-        // CRITICAL: Unbounded Query 방지 - 안전한 기본값 설정
-        // IN 절 사용 시 예상보다 많은 데이터 반환 가능
-        int safeBatchSize = 1000;
-        
-        List<UploadSessionJpaEntity> entities = queryFactory
-            .selectFrom(uploadSessionJpaEntity)
-            .where(
-                uploadSessionJpaEntity.status.in(statuses),
-                uploadSessionJpaEntity.createdAt.before(createdBefore)
-            )
-            .orderBy(uploadSessionJpaEntity.createdAt.asc())
-            .limit(safeBatchSize)
-            .fetch();
-
-        return entities.stream()
-            .map(UploadSessionEntityMapper::toDomain)
-            .collect(Collectors.toList());
     }
 
     /**
@@ -227,24 +122,125 @@ public class UploadSessionQueryAdapter implements LoadUploadSessionPort {
      * @throws IllegalArgumentException tenantId 또는 status가 null인 경우
      */
     @Override
-    @Transactional(readOnly = true)
     public long countByTenantIdAndStatus(Long tenantId, SessionStatus status) {
-        if (tenantId == null) {
-            throw new IllegalArgumentException("tenantId must not be null");
-        }
-        if (status == null) {
-            throw new IllegalArgumentException("status must not be null");
-        }
+        return repository.countByTenantIdAndStatus(tenantId, status);
+    }
 
-        Long count = queryFactory
-            .select(uploadSessionJpaEntity.count())
-            .from(uploadSessionJpaEntity)
-            .where(
-                uploadSessionJpaEntity.tenantId.eq(tenantId),
-                uploadSessionJpaEntity.status.eq(status)
-            )
-            .fetchOne();
+    /**
+     * 상태와 생성시간 기준으로 만료된 세션 조회 (Pessimistic Lock + Limit)
+     *
+     * <p><strong>사용 시나리오:</strong></p>
+     * <ul>
+     *   <li>CleanupExpiredSessionsScheduler: 만료된 세션 정리</li>
+     *   <li>동시 실행되는 스케줄러 인스턴스 간 경합 방지</li>
+     * </ul>
+     *
+     * <p><strong>Pessimistic Lock (FOR UPDATE SKIP LOCKED):</strong></p>
+     * <ul>
+     *   <li>잠금 획득된 Row만 반환 (잠금 실패 시 Skip)</li>
+     *   <li>동시 실행 스케줄러가 같은 세션을 처리하지 않도록 보장</li>
+     *   <li>Deadlock 방지: SKIP LOCKED 사용</li>
+     * </ul>
+     *
+     * <p><strong>트랜잭션 요구사항:</strong></p>
+     * <ul>
+     *   <li>반드시 {@code @Transactional} 내에서 호출되어야 함</li>
+     *   <li>트랜잭션 종료 시 Lock 자동 해제</li>
+     *   <li>트랜잭션은 짧게 유지 (외부 API 호출 금지)</li>
+     * </ul>
+     *
+     * <p><strong>예시:</strong></p>
+     * <pre>{@code
+     * @Transactional
+     * public void cleanupExpiredSessions() {
+     *     LocalDateTime threshold = LocalDateTime.now().minusMinutes(30);
+     *     List<UploadSession> sessions = queryAdapter.findByStatusAndCreatedBeforeWithLock(
+     *         SessionStatus.PENDING,
+     *         threshold,
+     *         1000
+     *     );
+     *     // 각 세션 처리...
+     * }
+     * }</pre>
+     *
+     * @param status 세션 상태 (PENDING, IN_PROGRESS 등, Not Null)
+     * @param threshold 이 시간 이전에 생성된 세션만 조회 (Not Null)
+     * @param limit 최대 조회 건수 (1 이상, 권장: 100~1000)
+     * @return 만료된 세션 목록 (잠금 획득된 세션만, 최대 limit 건)
+     * @throws IllegalArgumentException status, threshold가 null이거나 limit < 1인 경우
+     */
+    @Override
+    public List<UploadSession> findByStatusAndCreatedBeforeWithLock(
+        SessionStatus status,
+        LocalDateTime threshold,
+        int limit
+    ) {
+        return repository.findByStatusAndCreatedBeforeWithLock(status, threshold, limit)
+            .stream()
+            .map(UploadSessionEntityMapper::toDomain)
+            .collect(Collectors.toList());
+    }
 
-        return count != null ? count : 0L;
+    /**
+     * 여러 상태와 생성시간 기준으로 만료된 세션 조회 (Pessimistic Lock + Limit)
+     *
+     * <p><strong>사용 시나리오:</strong></p>
+     * <ul>
+     *   <li>CleanupExpiredSessionsScheduler: 복수 상태 일괄 정리</li>
+     *   <li>PENDING과 IN_PROGRESS를 한 번에 조회하여 처리</li>
+     * </ul>
+     *
+     * <p><strong>Pessimistic Lock (FOR UPDATE SKIP LOCKED):</strong></p>
+     * <ul>
+     *   <li>{@link #findByStatusAndCreatedBeforeWithLock}와 동일한 Lock 전략</li>
+     *   <li>여러 상태에 대해 동일한 Lock 메커니즘 적용</li>
+     * </ul>
+     *
+     * <p><strong>성능:</strong></p>
+     * <ul>
+     *   <li>⚠️ IN 절 사용으로 Index 효율 저하 가능</li>
+     *   <li>가급적 단일 상태 조회 메서드 사용 권장</li>
+     * </ul>
+     *
+     * <p><strong>트랜잭션 요구사항:</strong></p>
+     * <ul>
+     *   <li>반드시 {@code @Transactional} 내에서 호출되어야 함</li>
+     *   <li>트랜잭션은 짧게 유지</li>
+     * </ul>
+     *
+     * <p><strong>예시:</strong></p>
+     * <pre>{@code
+     * @Transactional
+     * public void cleanupExpiredSessions() {
+     *     LocalDateTime threshold = LocalDateTime.now().minusMinutes(30);
+     *     List<SessionStatus> statuses = Arrays.asList(
+     *         SessionStatus.PENDING,
+     *         SessionStatus.IN_PROGRESS
+     *     );
+     *     List<UploadSession> sessions = queryAdapter.findByStatusInAndCreatedBeforeWithLock(
+     *         statuses,
+     *         threshold,
+     *         1000
+     *     );
+     *     // 각 세션 처리...
+     * }
+     * }</pre>
+     *
+     * @param statuses 세션 상태 목록 (Not Null, Not Empty)
+     * @param threshold 이 시간 이전에 생성된 세션만 조회 (Not Null)
+     * @param limit 최대 조회 건수 (1 이상, 권장: 100~1000)
+     * @return 만료된 세션 목록 (잠금 획득된 세션만, 최대 limit 건)
+     * @throws IllegalArgumentException statuses, threshold가 null이거나 limit < 1인 경우
+     */
+    @Override
+    public List<UploadSession> findByStatusInAndCreatedBeforeWithLock(
+        List<SessionStatus> statuses,
+        LocalDateTime threshold,
+        int limit
+    ) {
+        return repository.findByStatusInAndCreatedBeforeWithLock(statuses, threshold, limit)
+            .stream()
+            .map(UploadSessionEntityMapper::toDomain)
+            .collect(Collectors.toList());
     }
 }

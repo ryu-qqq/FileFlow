@@ -84,7 +84,7 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(eq(outbox)))
             .willReturn(outbox);
 
-        given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
+        given(pipelineWorker.startPipeline(outbox.getFileAssetIdValue()))
             .willReturn(PipelineResultFixture.success());
 
         given(outboxManager.markProcessed(eq(outbox)))
@@ -95,7 +95,7 @@ class PipelineOutboxSchedulerTest {
 
         // Then
         verify(outboxManager).markProcessing(eq(outbox));
-        verify(pipelineWorker).startPipeline(outbox.getFileIdValue());
+        verify(pipelineWorker).startPipeline(outbox.getFileAssetIdValue());
         verify(outboxManager).markProcessed(eq(outbox));
         verify(outboxManager, never()).markFailed(any(), anyString());
     }
@@ -117,7 +117,7 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(eq(outbox)))
             .willReturn(outbox);
 
-        given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
+        given(pipelineWorker.startPipeline(outbox.getFileAssetIdValue()))
             .willReturn(PipelineResultFixture.failure("Worker error"));
 
         // 재시도 가능 (retryCount < maxRetryCount)
@@ -160,7 +160,7 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(eq(outbox)))
             .willReturn(outbox);
 
-        given(pipelineWorker.startPipeline(outbox.getFileIdValue()))
+        given(pipelineWorker.startPipeline(outbox.getFileAssetIdValue()))
             .willReturn(PipelineResultFixture.failure("Worker error"));
 
         // 최대 재시도 횟수 초과
@@ -197,7 +197,7 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(eq(failedOutbox)))
             .willReturn(failedOutbox);
 
-        given(pipelineWorker.startPipeline(failedOutbox.getFileIdValue()))
+        given(pipelineWorker.startPipeline(failedOutbox.getFileAssetIdValue()))
             .willReturn(PipelineResultFixture.success());
 
         given(outboxManager.markProcessed(eq(failedOutbox)))
@@ -209,7 +209,7 @@ class PipelineOutboxSchedulerTest {
         // Then
         verify(outboxManager).prepareForRetry(eq(failedOutbox));
         verify(outboxManager).markProcessing(eq(failedOutbox));
-        verify(pipelineWorker).startPipeline(failedOutbox.getFileIdValue());
+        verify(pipelineWorker).startPipeline(failedOutbox.getFileAssetIdValue());
         verify(outboxManager).markProcessed(eq(failedOutbox));
     }
 
@@ -230,7 +230,7 @@ class PipelineOutboxSchedulerTest {
         given(outboxManager.markProcessing(eq(staleOutbox)))
             .willReturn(staleOutbox);
 
-        given(pipelineWorker.startPipeline(staleOutbox.getFileIdValue()))
+        given(pipelineWorker.startPipeline(staleOutbox.getFileAssetIdValue()))
             .willReturn(PipelineResultFixture.success());
 
         given(outboxManager.markProcessed(eq(staleOutbox)))
@@ -241,7 +241,7 @@ class PipelineOutboxSchedulerTest {
 
         // Then
         verify(outboxManager).markProcessing(eq(staleOutbox));
-        verify(pipelineWorker).startPipeline(staleOutbox.getFileIdValue());
+        verify(pipelineWorker).startPipeline(staleOutbox.getFileAssetIdValue());
         verify(outboxManager).markProcessed(eq(staleOutbox));
     }
 

@@ -91,74 +91,6 @@ public interface LoadUploadSessionPort {
     Optional<UploadSession> findBySessionKey(SessionKey sessionKey);
 
     /**
-     * 상태와 생성 시간 기준으로 Upload Session 목록 조회
-     *
-     * <p><strong>사용 시나리오:</strong></p>
-     * <ul>
-     *   <li>만료된 PENDING 세션 정리 (Batch Job)</li>
-     *   <li>특정 상태의 오래된 세션 모니터링</li>
-     *   <li>세션 생명주기 관리 (Expired, Abandoned)</li>
-     * </ul>
-     *
-     * <p><strong>성능 고려사항:</strong></p>
-     * <ul>
-     *   <li>⚠️ 대량 데이터 반환 가능 → <strong>Pagination 권장</strong></li>
-     *   <li>복합 Index 필수: {@code (status, created_at)}</li>
-     *   <li>Batch 처리 시 {@code LIMIT} 절 사용 권장 (예: 1000건씩)</li>
-     * </ul>
-     *
-     * <p><strong>주의:</strong></p>
-     * <ul>
-     *   <li>결과가 많을 경우 메모리 부족 위험</li>
-     *   <li>Adapter 구현체에서 적절한 Limit 설정 필요</li>
-     *   <li>향후 {@code Pageable} 파라미터 추가 고려</li>
-     * </ul>
-     *
-     * <p><strong>예시:</strong></p>
-     * <pre>{@code
-     * // 30분 이상 PENDING 상태인 세션 조회
-     * LocalDateTime threshold = LocalDateTime.now().minusMinutes(30);
-     * List<UploadSession> expiredSessions =
-     *     loadPort.findByStatusAndCreatedBefore(SessionStatus.PENDING, threshold);
-     * }</pre>
-     *
-     * @param status 세션 상태 (Not Null)
-     * @param createdBefore 이 시간 이전에 생성된 세션 (Not Null)
-     * @return Upload Session 목록 (결과 없으면 빈 List, null 아님)
-     * @throws IllegalArgumentException status 또는 createdBefore가 null인 경우
-     */
-    List<UploadSession> findByStatusAndCreatedBefore(
-        SessionStatus status,
-        LocalDateTime createdBefore
-    );
-
-    /**
-     * 여러 상태 중 하나에 해당하고 생성 시간 기준으로 Upload Session 목록 조회
-     *
-     * <p><strong>사용 시나리오:</strong></p>
-     * <ul>
-     *   <li>PENDING 또는 IN_PROGRESS 세션 중 오래된 것 조회</li>
-     *   <li>복수 상태 기반 Batch 정리 작업</li>
-     * </ul>
-     *
-     * <p><strong>성능 고려사항:</strong></p>
-     * <ul>
-     *   <li>⚠️ {@code IN} 절 사용 → Index 활용 제한적</li>
-     *   <li>가능하면 단일 상태 조회 메서드 사용 권장</li>
-     * </ul>
-     *
-     * @param statuses 세션 상태 목록 (Not Null, Not Empty)
-     * @param createdBefore 이 시간 이전에 생성된 세션 (Not Null)
-     * @return Upload Session 목록 (결과 없으면 빈 List, null 아님)
-     * @throws IllegalArgumentException statuses가 null 또는 빈 리스트인 경우
-     * @throws IllegalArgumentException createdBefore가 null인 경우
-     */
-    List<UploadSession> findByStatusInAndCreatedBefore(
-        List<SessionStatus> statuses,
-        LocalDateTime createdBefore
-    );
-
-    /**
      * Tenant ID와 상태로 Upload Session 개수 조회
      *
      * <p><strong>사용 시나리오:</strong></p>
@@ -180,4 +112,87 @@ public interface LoadUploadSessionPort {
      * @throws IllegalArgumentException tenantId 또는 status가 null인 경우
      */
     long countByTenantIdAndStatus(Long tenantId, SessionStatus status);
+
+    /**
+     * 상태와 생성시간 기준으로 만료된 세션 조회 (Pessimistic Lock + Limit)
+     *
+     * <p><strong>사용 시나리오:</strong></p>
+     * <ul>
+     *   <li>CleanupExpiredSessionsScheduler: 만료된 세션 정리</li>
+     *   <li>동시 실행되는 스케줄러 인스턴스 간 경합 방지</li>
+     * </ul>
+     *
+     * <p><strong>Pessimistic Lock (FOR UPDATE SKIP LOCKED):</strong></p>
+     * <ul>
+     *   <li>잠금 획득된 Row만 반환 (잠금 실패 시 Skip)</li>
+     *   <li>동시 실행 스케줄러가 같은 세션을 처리하지 않도록 보장</li>
+     *   <li>Deadlock 방지: SKIP LOCKED 사용</li>
+     * </ul>
+     *
+     * <p><strong>성능:</strong></p>
+     * <ul>
+     *   <li>Index 활용: {@code idx_status_created_at (status, created_at)}</li>
+     *   <li>Limit으로 대량 조회 방지 (권장: 100~1000)</li>
+     *   <li>트랜잭션 종료 시 Lock 자동 해제</li>
+     * </ul>
+     *
+     * <p><strong>주의사항:</strong></p>
+     * <ul>
+     *   <li>반드시 트랜잭션 내에서 호출되어야 함</li>
+     *   <li>Lock Timeout 설정 권장 (기본: SKIP LOCKED)</li>
+     *   <li>트랜잭션은 짧게 유지 (외부 API 호출 금지)</li>
+     * </ul>
+     *
+     * @param status 세션 상태 (PENDING, IN_PROGRESS 등, Not Null)
+     * @param threshold 이 시간 이전에 생성된 세션만 조회 (Not Null)
+     * @param limit 최대 조회 건수 (1 이상, 권장: 100~1000)
+     * @return 만료된 세션 목록 (잠금 획득된 세션만, 최대 limit 건)
+     * @throws IllegalArgumentException status, threshold가 null이거나 limit < 1인 경우
+     */
+    List<UploadSession> findByStatusAndCreatedBeforeWithLock(
+        SessionStatus status,
+        LocalDateTime threshold,
+        int limit
+    );
+
+    /**
+     * 여러 상태와 생성시간 기준으로 만료된 세션 조회 (Pessimistic Lock + Limit)
+     *
+     * <p><strong>사용 시나리오:</strong></p>
+     * <ul>
+     *   <li>CleanupExpiredSessionsScheduler: 복수 상태 일괄 정리</li>
+     *   <li>PENDING과 IN_PROGRESS를 한 번에 조회하여 처리</li>
+     * </ul>
+     *
+     * <p><strong>Pessimistic Lock (FOR UPDATE SKIP LOCKED):</strong></p>
+     * <ul>
+     *   <li>{@link #findByStatusAndCreatedBeforeWithLock}와 동일한 Lock 전략</li>
+     *   <li>여러 상태에 대해 동일한 Lock 메커니즘 적용</li>
+     * </ul>
+     *
+     * <p><strong>성능:</strong></p>
+     * <ul>
+     *   <li>⚠️ IN 절 사용으로 Index 효율 저하 가능</li>
+     *   <li>가급적 단일 상태 조회 메서드 사용 권장</li>
+     *   <li>Index: {@code idx_status_created_at (status, created_at)}</li>
+     * </ul>
+     *
+     * <p><strong>주의사항:</strong></p>
+     * <ul>
+     *   <li>statuses가 비어있으면 빈 리스트 반환</li>
+     *   <li>반드시 트랜잭션 내에서 호출</li>
+     *   <li>트랜잭션은 짧게 유지</li>
+     * </ul>
+     *
+     * @param statuses 세션 상태 목록 (Not Null, Not Empty)
+     * @param threshold 이 시간 이전에 생성된 세션만 조회 (Not Null)
+     * @param limit 최대 조회 건수 (1 이상, 권장: 100~1000)
+     * @return 만료된 세션 목록 (잠금 획득된 세션만, 최대 limit 건)
+     * @throws IllegalArgumentException statuses, threshold가 null이거나 limit < 1인 경우
+     */
+    List<UploadSession> findByStatusInAndCreatedBeforeWithLock(
+        List<SessionStatus> statuses,
+        LocalDateTime threshold,
+        int limit
+    );
 }

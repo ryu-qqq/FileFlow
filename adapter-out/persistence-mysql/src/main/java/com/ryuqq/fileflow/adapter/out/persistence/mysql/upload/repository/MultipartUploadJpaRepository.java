@@ -3,30 +3,33 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.MultipartUploadJpaEntity;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Multipart Upload JPA Repository
+ * Multipart Upload Spring Data JPA Repository (CQRS Command Side)
  *
- * <p>Spring Data JPA를 활용한 Multipart Upload 영속성 인터페이스</p>
+ * <p><strong>역할</strong>: Multipart Upload Entity에 대한 기본 CRUD 및 쿼리 메서드 제공</p>
+ * <p><strong>위치</strong>: adapter-out/persistence-mysql/upload/repository/</p>
+ *
+ * <h3>CQRS 분리 원칙</h3>
+ * <ul>
+ *   <li>✅ <strong>Command Side</strong>: 이 Repository는 CUD(Create/Update/Delete) 전용</li>
+ *   <li>✅ <strong>Query Side</strong>: 복잡한 조회는 QueryAdapter로 분리 (QueryDSL 사용)</li>
+ * </ul>
  *
  * <h3>설계 원칙</h3>
  * <ul>
- *   <li>✅ Spring Data JPA 메서드 네이밍 규칙 준수</li>
- *   <li>✅ 복잡한 쿼리는 @Query 사용</li>
- *   <li>✅ Long FK 전략 (엔티티 조인 없음)</li>
- *   <li>❌ N+1 문제 발생 가능한 패턴 금지</li>
+ *   <li>✅ Spring Data JPA 인터페이스 (구현체 자동 생성)</li>
+ *   <li>✅ 메서드 네이밍 규칙 준수 (Spring Data JPA Query Methods)</li>
+ *   <li>✅ Long FK 전략 (uploadSessionId는 Long)</li>
+ *   <li>❌ {@code @Query} 어노테이션 사용 금지 (복잡한 쿼리는 QueryAdapter로)</li>
+ *   <li>❌ {@code @Repository} 어노테이션 불필요 (JpaRepository 상속 시 자동)</li>
  * </ul>
  *
- * @author Sangwon Ryu
  * @since 1.0.0
  */
-@Repository
 public interface MultipartUploadJpaRepository
     extends JpaRepository<MultipartUploadJpaEntity, Long> {
 
@@ -49,14 +52,12 @@ public interface MultipartUploadJpaRepository
     /**
      * 세션 ID 목록으로 조회
      *
-     * @param sessionIds Upload Session ID 목록
-     * @return MultipartUploadJpaEntity 목록
+     * <p>여러 Upload Session에 속한 Multipart Upload를 한 번에 조회합니다.</p>
+     *
+     * @param uploadSessionIds Upload Session ID 목록
+     * @return MultipartUploadJpaEntity 목록 (빈 리스트 가능)
      */
-    @Query("SELECT m FROM MultipartUploadJpaEntity m " +
-           "WHERE m.uploadSessionId IN :sessionIds")
-    List<MultipartUploadJpaEntity> findByUploadSessionIds(
-        @Param("sessionIds") List<Long> sessionIds
-    );
+    List<MultipartUploadJpaEntity> findByUploadSessionIdIn(List<Long> uploadSessionIds);
 
     /**
      * Provider Upload ID로 조회
