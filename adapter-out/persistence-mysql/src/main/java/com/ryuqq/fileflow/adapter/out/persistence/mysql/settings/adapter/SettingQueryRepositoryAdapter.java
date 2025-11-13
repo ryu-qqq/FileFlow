@@ -158,7 +158,7 @@ public class SettingQueryRepositoryAdapter implements LoadSettingsPort {
             throw new IllegalArgumentException("Organization ID는 필수입니다");
         }
 
-        return jpaRepository.findAllByOrg(orgId)
+        return jpaRepository.findAllByLevelAndContextId(SettingLevel.ORG, orgId)
             .stream()
             .map(SettingEntityMapper::toDomain)
             .toList();
@@ -181,7 +181,7 @@ public class SettingQueryRepositoryAdapter implements LoadSettingsPort {
             throw new IllegalArgumentException("Tenant ID는 필수입니다");
         }
 
-        return jpaRepository.findAllByTenant(tenantId)
+        return jpaRepository.findAllByLevelAndContextId(SettingLevel.TENANT, tenantId)
             .stream()
             .map(SettingEntityMapper::toDomain)
             .toList();
@@ -198,7 +198,7 @@ public class SettingQueryRepositoryAdapter implements LoadSettingsPort {
      */
     @Override
     public List<Setting> findDefaults() {
-        return jpaRepository.findAllDefaults()
+        return jpaRepository.findAllByLevelAndContextId(SettingLevel.DEFAULT, null)
             .stream()
             .map(SettingEntityMapper::toDomain)
             .toList();

@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.iam.organization;
 
+import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
+
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -9,6 +11,7 @@ import java.util.Objects;
  *
  * <p>멀티테넌시 시스템에서 Tenant 하위의 논리적 조직 단위를 담당하는 집합 루트입니다.</p>
  * <p>각 Organization은 Tenant에 종속되며, Long FK 전략을 사용하여 관계를 표현합니다.</p>
+ * <p>Tenant 참조는 {@link TenantId} Value Object로 래핑되어 Type Safety를 보장합니다.</p>
  *
  * <p><strong>규칙 준수:</strong></p>
  * <ul>
@@ -16,6 +19,7 @@ import java.util.Objects;
  *   <li>✅ Law of Demeter - Getter 체이닝 방지</li>
  *   <li>✅ Tell, Don't Ask 패턴 적용</li>
  *   <li>✅ Long FK 전략 - JPA 관계 어노테이션 금지</li>
+ *   <li>✅ Value Object 패턴 - TenantId로 식별자 래핑</li>
  *   <li>✅ Aggregate 경계 내에서 일관성 보장</li>
  * </ul>
  *
@@ -25,7 +29,7 @@ import java.util.Objects;
 public class Organization {
 
     private final OrganizationId id;
-    private final Long tenantId;
+    private final TenantId tenantId;
     private final Clock clock;
     private OrgCode orgCode;
     private String name;
@@ -48,7 +52,7 @@ public class Organization {
      * // Persistence Layer에서 저장하면서 ID 자동 생성
      * }</pre>
      *
-     * @param tenantId Tenant 식별자 (Long - Tenant PK 타입과 일치)
+     * @param tenantId Tenant 식별자 (TenantId Value Object)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @return 생성된 Organization (ID = null)
@@ -56,7 +60,7 @@ public class Organization {
      * @author ryu-qqq
      * @since 2025-10-29
      */
-    public static Organization forNew(Long tenantId, OrgCode orgCode, String name) {
+    public static Organization forNew(TenantId tenantId, OrgCode orgCode, String name) {
         return new Organization(null, tenantId, orgCode, name, Clock.systemDefaultZone());
     }
 
@@ -70,7 +74,7 @@ public class Organization {
      * <p><strong>주의</strong>: 일반적인 신규 생성에는 {@code forNew()} 사용 권장</p>
      *
      * @param id Organization 식별자 (필수)
-     * @param tenantId Tenant 식별자 (Long - Tenant PK 타입과 일치)
+     * @param tenantId Tenant 식별자 (TenantId Value Object)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @return 생성된 Organization (ID 포함)
@@ -78,7 +82,7 @@ public class Organization {
      * @author ryu-qqq
      * @since 2025-10-29
      */
-    public static Organization of(OrganizationId id, Long tenantId, OrgCode orgCode, String name) {
+    public static Organization of(OrganizationId id, TenantId tenantId, OrgCode orgCode, String name) {
         if (id == null) {
             throw new IllegalArgumentException("Organization ID는 필수입니다");
         }
@@ -91,7 +95,7 @@ public class Organization {
      * <p>ID가 null이면 신규 생성, 아니면 저장 후 상태</p>
      *
      * @param id Organization 식별자 (null 가능 - 신규 생성 시)
-     * @param tenantId Tenant 식별자 (Long - Tenant PK 타입과 일치)
+     * @param tenantId Tenant 식별자 (TenantId Value Object)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @param clock 시간 제공자
@@ -99,9 +103,9 @@ public class Organization {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    Organization(OrganizationId id, Long tenantId, OrgCode orgCode, String name, Clock clock) {
-        if (tenantId == null || tenantId <= 0) {
-            throw new IllegalArgumentException("Tenant ID는 필수이며 양수여야 합니다");
+    Organization(OrganizationId id, TenantId tenantId, OrgCode orgCode, String name, Clock clock) {
+        if (tenantId == null) {
+            throw new IllegalArgumentException("Tenant ID는 필수입니다");
         }
         if (orgCode == null) {
             throw new IllegalArgumentException("조직 코드는 필수입니다");
@@ -123,7 +127,7 @@ public class Organization {
      * Private 전체 생성자 (reconstitute 전용)
      *
      * @param id Organization ID
-     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (TenantId Value Object)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @param status Organization 상태
@@ -136,7 +140,7 @@ public class Organization {
      */
     private Organization(
         OrganizationId id,
-        Long tenantId,
+        TenantId tenantId,
         OrgCode orgCode,
         String name,
         OrganizationStatus status,
@@ -169,7 +173,7 @@ public class Organization {
      * // OrganizationEntityMapper.java (Persistence Layer)
      * return Organization.reconstitute(
      *     OrganizationId.of(entity.getId()),
-     *     entity.getTenantId(),
+     *     TenantId.of(entity.getTenantId()),
      *     OrgCode.of(entity.getOrgCode()),
      *     entity.getName(),
      *     entity.getStatus(),
@@ -180,7 +184,7 @@ public class Organization {
      * }</pre>
      *
      * @param id Organization ID (필수 - DB에서 조회된 ID)
-     * @param tenantId Tenant ID (Long - Tenant PK 타입과 일치)
+     * @param tenantId Tenant ID (TenantId Value Object)
      * @param orgCode 조직 코드
      * @param name 조직 이름
      * @param status Organization 상태
@@ -194,7 +198,7 @@ public class Organization {
      */
     public static Organization reconstitute(
         OrganizationId id,
-        Long tenantId,
+        TenantId tenantId,
         OrgCode orgCode,
         String name,
         OrganizationStatus status,
@@ -291,16 +295,34 @@ public class Organization {
      * <p>❌ Bad: organization.getTenantId().equals(tenantId)</p>
      * <p>✅ Good: organization.belongsToTenant(tenantId)</p>
      *
-     * @param tenantId 확인할 Tenant ID (Long - Tenant PK 타입과 일치)
+     * @param tenantId 확인할 Tenant ID (TenantId Value Object)
      * @return 해당 Tenant에 속하면 true
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public boolean belongsToTenant(Long tenantId) {
-        if (tenantId == null || tenantId <= 0) {
+    public boolean belongsToTenant(TenantId tenantId) {
+        if (tenantId == null) {
             return false;
         }
         return this.tenantId.equals(tenantId);
+    }
+
+    /**
+     * Organization이 특정 Tenant에 속하는지 확인합니다 (Long 편의 메서드).
+     *
+     * <p>Law of Demeter 준수: 소속 관계를 묻는 메서드</p>
+     * <p>내부적으로 TenantId.of()를 사용하여 Value Object로 변환합니다.</p>
+     *
+     * @param tenantIdValue 확인할 Tenant ID 원시 값 (Long)
+     * @return 해당 Tenant에 속하면 true
+     * @author ryu-qqq
+     * @since 2025-11-11
+     */
+    public boolean belongsToTenant(Long tenantIdValue) {
+        if (tenantIdValue == null || tenantIdValue <= 0) {
+            return false;
+        }
+        return belongsToTenant(TenantId.of(tenantIdValue));
     }
 
     /**
@@ -334,14 +356,28 @@ public class Organization {
      * Tenant ID를 반환합니다.
      *
      * <p>Long FK 전략: Tenant Aggregate를 직접 참조하지 않고 ID만 반환합니다.</p>
-     * <p>Tenant PK 타입(Long AUTO_INCREMENT)과 일치하여 참조 무결성을 보장합니다.</p>
+     * <p>Value Object로 래핑되어 Type Safety를 보장합니다.</p>
      *
-     * @return Tenant ID (Long AUTO_INCREMENT)
+     * @return Tenant ID (TenantId Value Object)
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public Long getTenantId() {
+    public TenantId getTenantId() {
         return tenantId;
+    }
+
+    /**
+     * Tenant ID 원시 값을 반환합니다 (Law of Demeter 준수).
+     *
+     * <p>❌ Bad: organization.getTenantId().value()</p>
+     * <p>✅ Good: organization.getTenantIdValue()</p>
+     *
+     * @return Tenant ID 원시 값 (Long)
+     * @author ryu-qqq
+     * @since 2025-11-11
+     */
+    public Long getTenantIdValue() {
+        return tenantId.value();
     }
 
     /**
@@ -366,7 +402,7 @@ public class Organization {
      * @since 2025-10-22
      */
     public String getOrgCodeValue() {
-        return orgCode.getValue();
+        return orgCode.value();
     }
 
     /**

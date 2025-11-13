@@ -80,13 +80,15 @@ public class MultipartUploadCommandAdapter implements SaveMultipartUploadPort, D
         MultipartUploadJpaEntity saved = multipartRepository.save(entity);
 
         // 3. Upload Parts 저장 (있는 경우)
+        List<UploadPartJpaEntity> savedParts;
         if (multipart.getUploadedParts() != null && !multipart.getUploadedParts().isEmpty()) {
-            saveUploadParts(saved.getId(), multipart.getUploadedParts());
+            savedParts = saveUploadParts(saved.getId(), multipart.getUploadedParts());
+        } else {
+            savedParts = List.of();
         }
 
-        // 4. 저장된 데이터로 Domain 재구성
-        List<UploadPartJpaEntity> parts = partRepository.findByMultipartUploadId(saved.getId());
-        return MultipartUploadEntityMapper.toDomain(saved, parts);
+        // 4. 저장된 데이터로 Domain 재구성 (조회 없이 저장된 Entity 직접 사용)
+        return MultipartUploadEntityMapper.toDomain(saved, savedParts);
     }
 
     /**
@@ -114,14 +116,15 @@ public class MultipartUploadCommandAdapter implements SaveMultipartUploadPort, D
      *
      * @param multipartUploadId Multipart Upload ID
      * @param parts Upload Part 목록
+     * @return 저장된 Upload Part Entity 목록
      */
-    private void saveUploadParts(Long multipartUploadId, List<com.ryuqq.fileflow.domain.upload.UploadPart> parts) {
+    private List<UploadPartJpaEntity> saveUploadParts(Long multipartUploadId, List<com.ryuqq.fileflow.domain.upload.UploadPart> parts) {
         // 기존 Parts 삭제
         partRepository.deleteByMultipartUploadId(multipartUploadId);
 
         // 새로운 Parts 저장
         List<UploadPartJpaEntity> entities = MultipartUploadEntityMapper.partsToEntities(parts, multipartUploadId);
-        partRepository.saveAll(entities);
+        return partRepository.saveAll(entities);
     }
 }
 

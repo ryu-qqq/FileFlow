@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.net.URI;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,7 +89,7 @@ class GetDownloadStatusServiceTest {
             ExternalDownload download = ExternalDownloadFixture.reconstitute(
                 downloadId,
                 UploadSessionId.of(1L),
-                new java.net.URL("https://example.com/files/test-file.pdf"),
+                URI.create("https://example.com/files/test-file.pdf").toURL(),
                 FileSize.of(1024L),
                 FileSize.of(2048L),
                 ExternalDownloadStatus.DOWNLOADING,
@@ -122,7 +123,7 @@ class GetDownloadStatusServiceTest {
             ExternalDownload download = ExternalDownloadFixture.reconstitute(
                 downloadId,
                 UploadSessionId.of(1L),
-                new java.net.URL("https://example.com/files/test-file.pdf"),
+                URI.create("https://example.com/files/test-file.pdf").toURL(),
                 FileSize.of(2048L),
                 FileSize.of(2048L),
                 ExternalDownloadStatus.COMPLETED,

@@ -5,8 +5,8 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.download.mapper.External
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.download.repository.ExternalDownloadJpaRepository;
 import com.ryuqq.fileflow.application.download.port.out.ExternalDownloadCommandPort;
 import com.ryuqq.fileflow.domain.download.ExternalDownload;
+
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * External Download Command Adapter (CQRS - Command Side)
@@ -54,7 +54,6 @@ public class ExternalDownloadCommandAdapter implements ExternalDownloadCommandPo
      * @return 저장된 External Download (ID 포함)
      */
     @Override
-    @Transactional
     public ExternalDownload save(ExternalDownload download) {
         // 1. Domain → Entity 변환
         ExternalDownloadJpaEntity entity = ExternalDownloadEntityMapper.toEntity(download);
@@ -72,7 +71,6 @@ public class ExternalDownloadCommandAdapter implements ExternalDownloadCommandPo
      * @param id External Download ID
      */
     @Override
-    @Transactional
     public void delete(Long id) {
         repository.deleteById(id);
     }

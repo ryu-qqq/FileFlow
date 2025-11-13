@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.file.dto.command;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 
 /**
@@ -44,7 +44,7 @@ import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
  * @since 1.0.0
  */
 public record DeleteFileCommand(
-    FileId fileId,
+    FileAssetId fileId,
     TenantId tenantId,
     Long organizationId,
     Long requesterId
@@ -73,7 +73,7 @@ public record DeleteFileCommand(
      * @return DeleteFileCommand
      */
     public static DeleteFileCommand of(
-        FileId fileId,
+        FileAssetId fileId,
         TenantId tenantId,
         Long requesterId
     ) {
@@ -90,7 +90,7 @@ public record DeleteFileCommand(
      * @return DeleteFileCommand
      */
     public static DeleteFileCommand of(
-        FileId fileId,
+        FileAssetId fileId,
         TenantId tenantId,
         Long organizationId,
         Long requesterId

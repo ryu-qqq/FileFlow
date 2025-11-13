@@ -18,12 +18,10 @@ import java.util.Objects;
  * @author ryu-qqq
  * @since 2025-10-22
  */
-public class TenantName {
+public record TenantName(String value) {
 
     private static final int MIN_LENGTH = 2;
     private static final int MAX_LENGTH = 50;
-
-    private final String value;
 
     /**
      * TenantName을 생성합니다.
@@ -34,19 +32,23 @@ public class TenantName {
      * @since 2025-10-22
      */
     public TenantName(String value) {
-        if (value == null || value.isBlank()) {
+        if (value
+            == null
+            || value.isBlank()) {
             throw new IllegalArgumentException("Tenant 이름은 필수입니다");
         }
 
         String trimmedValue = value.trim();
 
-        if (trimmedValue.length() < MIN_LENGTH) {
+        if (trimmedValue.length()
+            < MIN_LENGTH) {
             throw new IllegalArgumentException(
                 String.format("Tenant 이름은 최소 %d자 이상이어야 합니다", MIN_LENGTH)
             );
         }
 
-        if (trimmedValue.length() > MAX_LENGTH) {
+        if (trimmedValue.length()
+            > MAX_LENGTH) {
             throw new IllegalArgumentException(
                 String.format("Tenant 이름은 최대 %d자를 초과할 수 없습니다", MAX_LENGTH)
             );
@@ -75,7 +77,8 @@ public class TenantName {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public String getValue() {
+    @Override
+    public String value() {
         return value;
     }
 
@@ -89,22 +92,14 @@ public class TenantName {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this
+            == o) return true;
+        if (o
+            == null
+            || getClass()
+            != o.getClass()) return false;
         TenantName that = (TenantName) o;
         return Objects.equals(value, that.value);
-    }
-
-    /**
-     * TenantName 해시코드 계산
-     *
-     * @return 해시코드
-     * @author ryu-qqq
-     * @since 2025-10-22
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     /**

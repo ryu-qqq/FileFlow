@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.iam.permission;
 
+import java.util.regex.Pattern;
+
 /**
  * Permission Code Value Object
  *
@@ -20,8 +22,7 @@ public final class PermissionCode {
 
     private static final int MIN_LENGTH = 3;
     private static final int MAX_LENGTH = 100;
-    private static final java.util.regex.Pattern CODE_PATTERN =
-        java.util.regex.Pattern.compile("^[a-zA-Z0-9._-]+$");
+    private static final Pattern CODE_PATTERN = Pattern.compile("^[a-zA-Z0-9._-]+$");
 
     private final String value;
 

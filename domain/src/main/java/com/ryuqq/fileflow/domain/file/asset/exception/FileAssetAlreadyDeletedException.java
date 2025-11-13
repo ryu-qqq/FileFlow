@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.file.asset.exception;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 
 import java.util.Map;
 
@@ -19,7 +19,7 @@ public class FileAssetAlreadyDeletedException extends FileAssetException {
      *
      * @param fileId FileAsset ID
      */
-    public FileAssetAlreadyDeletedException(FileId fileId) {
+    public FileAssetAlreadyDeletedException(FileAssetId fileId) {
         super(
             FileErrorCode.FILE_ASSET_ALREADY_DELETED,
             Map.of("fileId", fileId.value())

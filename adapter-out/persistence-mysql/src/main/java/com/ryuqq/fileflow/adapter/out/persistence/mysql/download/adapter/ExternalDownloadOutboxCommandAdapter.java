@@ -77,7 +77,6 @@ public class ExternalDownloadOutboxCommandAdapter implements ExternalDownloadOut
      * @return 저장된 Outbox 메시지 (ID 포함)
      */
     @Override
-    @Transactional
     public ExternalDownloadOutbox save(ExternalDownloadOutbox outbox) {
         if (outbox == null) {
             throw new IllegalArgumentException("Outbox는 null일 수 없습니다");
@@ -104,7 +103,6 @@ public class ExternalDownloadOutboxCommandAdapter implements ExternalDownloadOut
      * @throws IllegalArgumentException Outbox ID가 null이거나 존재하지 않는 경우
      */
     @Override
-    @Transactional
     public void deleteById(Long outboxId) {
         if (outboxId == null) {
             throw new IllegalArgumentException("Outbox ID는 null일 수 없습니다");

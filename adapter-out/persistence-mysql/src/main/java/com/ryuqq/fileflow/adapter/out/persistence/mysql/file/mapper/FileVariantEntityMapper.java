@@ -49,7 +49,7 @@ public final class FileVariantEntityMapper {
         }
 
         return FileVariantJpaEntity.create(
-            fileVariant.getParentFileAssetId(),
+            fileVariant.getParentFileAssetIdValue(),
             fileVariant.getVariantType(),
             fileVariant.getStorageKey().value(),
             fileVariant.getFileSize().bytes(),

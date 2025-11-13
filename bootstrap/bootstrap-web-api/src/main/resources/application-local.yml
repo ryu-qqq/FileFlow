@@ -27,7 +27,7 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6379
+      port: 6380
       password: ""
       timeout: 3000ms
 
@@ -39,15 +39,16 @@ spring:
     baseline-on-migrate: true
 
 # ===============================================
-# AWS S3 Configuration (Local)
+# AWS S3 Configuration (Local - MinIO)
 # ===============================================
 aws:
   s3:
     region: ap-northeast-2
-    bucket-name: fileflow-local
-    # 로컬 개발용 자격증명 (실제 환경에서는 IAM Role 사용)
-    access-key: ${AWS_ACCESS_KEY_ID:}
-    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    bucket: fileflow-local
+    # MinIO 로컬 자격증명
+    access-key: minioadmin
+    secret-key: minioadmin
+    endpoint: http://localhost:9000
 
   # CloudWatch Logs (Local - 비활성화)
   cloudwatch:

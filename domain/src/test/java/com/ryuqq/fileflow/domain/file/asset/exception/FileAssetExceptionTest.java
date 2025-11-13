@@ -1,8 +1,8 @@
 package com.ryuqq.fileflow.domain.file.asset.exception;
 
 import com.ryuqq.fileflow.domain.common.DomainException;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
-import com.ryuqq.fileflow.domain.file.fixture.FileIdFixture;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
+import com.ryuqq.fileflow.domain.file.fixture.FileAssetIdFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class FileAssetExceptionTest {
         @DisplayName("FileId로 예외 생성 성공")
         void constructor_WithFileId_Success() {
             // Given
-            FileId fileId = FileIdFixture.create(123L);
+            FileAssetId fileId = FileAssetIdFixture.create(123L);
 
             // When
             FileAssetNotFoundException exception = new FileAssetNotFoundException(fileId);
@@ -63,7 +63,7 @@ class FileAssetExceptionTest {
         @DisplayName("FileId로 예외 생성 성공")
         void constructor_WithFileId_Success() {
             // Given
-            FileId fileId = FileIdFixture.create(789L);
+            FileAssetId fileId = FileAssetIdFixture.create(789L);
 
             // When
             FileAssetAlreadyDeletedException exception = new FileAssetAlreadyDeletedException(fileId);
@@ -85,7 +85,7 @@ class FileAssetExceptionTest {
         @DisplayName("FileId와 requesterId로 예외 생성 성공")
         void constructor_WithFileIdAndRequesterId_Success() {
             // Given
-            FileId fileId = FileIdFixture.create(100L);
+            FileAssetId fileId = FileAssetIdFixture.create(100L);
             Long requesterId = 999L;
 
             // When
@@ -109,7 +109,7 @@ class FileAssetExceptionTest {
         @DisplayName("FileId, currentState, expectedState로 예외 생성 성공")
         void constructor_WithFileIdAndStates_Success() {
             // Given
-            FileId fileId = FileIdFixture.create(200L);
+            FileAssetId fileId = FileAssetIdFixture.create(200L);
             String currentState = "PROCESSING";
             String expectedState = "AVAILABLE";
 
@@ -139,7 +139,7 @@ class FileAssetExceptionTest {
         @DisplayName("FileId로 예외 생성 성공")
         void constructor_WithFileId_Success() {
             // Given
-            FileId fileId = FileIdFixture.create(300L);
+            FileAssetId fileId = FileAssetIdFixture.create(300L);
 
             // When
             FileAssetProcessingException exception = new FileAssetProcessingException(fileId);

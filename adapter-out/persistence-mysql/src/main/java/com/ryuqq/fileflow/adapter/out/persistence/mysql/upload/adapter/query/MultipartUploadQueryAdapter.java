@@ -2,11 +2,10 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.adapter.query;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.entity.UploadPartJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.mapper.MultipartUploadEntityMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository.MultipartUploadJpaRepository;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository.UploadPartJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository.MultipartUploadQueryDslRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.upload.repository.UploadPartQueryDslRepository;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadPort;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;
-import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,24 +13,28 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
 /**
- * Multipart Upload Query Adapter
+ * Multipart Upload Query Adapter (CQRS - Query Side)
  *
- * <p>Application Layer의 Query Port를 구현하는 Persistence Adapter입니다.</p>
+ * <p>Application Layer의 {@link LoadMultipartUploadPort}를 구현하는 Query Adapter입니다.</p>
  *
  * <p><strong>책임:</strong></p>
  * <ul>
- *   <li>MultipartUpload Domain Aggregate 조회 (Read 전담)</li>
- *   <li>CQRS Query Adapter 패턴 구현</li>
+ *   <li>MultipartUpload Domain Aggregate 조회 (읽기 전용)</li>
+ *   <li>QueryDslRepository로 조회 위임</li>
  *   <li>UploadPart 연관 데이터 함께 조회</li>
+ *   <li>Mapper를 통한 Entity → Domain 변환</li>
  * </ul>
  *
  * <p><strong>설계 원칙:</strong></p>
  * <ul>
- *   <li>✅ CQRS Query Adapter (Read 전담)</li>
- *   <li>❌ Persistence Adapter에서 @Transactional 사용 금지</li>
- *   <li>✅ Application Layer (UseCase)에서 트랜잭션 관리</li>
+ *   <li>✅ Port & Adapter 패턴 준수</li>
+ *   <li>✅ QueryDSL Repository 위임</li>
  *   <li>✅ Mapper를 통한 명시적 변환</li>
+ *   <li>✅ CQRS Query Side 전용 (읽기만)</li>
+ *   <li>❌ @Transactional 사용 금지 (Application Layer에서만)</li>
  *   <li>❌ 비즈니스 로직 포함 금지</li>
  * </ul>
  *
@@ -41,18 +44,18 @@ import java.util.stream.Collectors;
 @Component
 public class MultipartUploadQueryAdapter implements LoadMultipartUploadPort {
 
-    private final MultipartUploadJpaRepository multipartRepository;
-    private final UploadPartJpaRepository partRepository;
+    private final MultipartUploadQueryDslRepository multipartRepository;
+    private final UploadPartQueryDslRepository partRepository;
 
     /**
      * 생성자
      *
-     * @param multipartRepository Multipart Upload JPA Repository
-     * @param partRepository Upload Part JPA Repository
+     * @param multipartRepository Multipart Upload QueryDSL Repository
+     * @param partRepository Upload Part QueryDSL Repository
      */
     public MultipartUploadQueryAdapter(
-        MultipartUploadJpaRepository multipartRepository,
-        UploadPartJpaRepository partRepository
+        MultipartUploadQueryDslRepository multipartRepository,
+        UploadPartQueryDslRepository partRepository
     ) {
         this.multipartRepository = multipartRepository;
         this.partRepository = partRepository;

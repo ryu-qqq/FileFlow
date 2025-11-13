@@ -345,6 +345,16 @@ module "download_scheduler_service" {
 
   security_group_ids = [aws_security_group.download_scheduler.id]
 
+  # Health Check Configuration for Actuator
+  health_check_command = [
+    "CMD-SHELL",
+    "curl -f http://localhost:9091/actuator/health || exit 1"
+  ]
+  health_check_interval    = 30
+  health_check_timeout     = 5
+  health_check_retries     = 3
+  health_check_start_period = 60
+
   log_configuration = {
     log_driver = "awslogs"
     options = {
@@ -483,6 +493,16 @@ module "pipeline_scheduler_service" {
 
   security_group_ids = [aws_security_group.pipeline_scheduler.id]
 
+  # Health Check Configuration for Actuator
+  health_check_command = [
+    "CMD-SHELL",
+    "curl -f http://localhost:9092/actuator/health || exit 1"
+  ]
+  health_check_interval    = 30
+  health_check_timeout     = 5
+  health_check_retries     = 3
+  health_check_start_period = 60
+
   log_configuration = {
     log_driver = "awslogs"
     options = {
@@ -620,6 +640,16 @@ module "upload_scheduler_service" {
   common_tags        = local.required_tags
 
   security_group_ids = [aws_security_group.upload_scheduler.id]
+
+  # Health Check Configuration for Actuator
+  health_check_command = [
+    "CMD-SHELL",
+    "curl -f http://localhost:9093/actuator/health || exit 1"
+  ]
+  health_check_interval    = 30
+  health_check_timeout     = 5
+  health_check_retries     = 3
+  health_check_start_period = 60
 
   log_configuration = {
     log_driver = "awslogs"

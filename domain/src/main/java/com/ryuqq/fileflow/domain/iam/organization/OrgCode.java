@@ -26,13 +26,11 @@ import java.util.regex.Pattern;
  * @author ryu-qqq
  * @since 2025-10-22
  */
-public final class OrgCode {
+public record OrgCode(String value) {
 
     private static final int MIN_LENGTH = 2;
     private static final int MAX_LENGTH = 20;
     private static final Pattern VALID_PATTERN = Pattern.compile("^[A-Z0-9_-]+$");
-
-    private final String value;
 
     /**
      * OrgCode를 생성합니다.
@@ -45,19 +43,23 @@ public final class OrgCode {
      * @since 2025-10-22
      */
     public OrgCode(String value) {
-        if (value == null || value.isBlank()) {
+        if (value
+            == null
+            || value.isBlank()) {
             throw new IllegalArgumentException("조직 코드는 필수입니다");
         }
 
         String normalized = value.trim().toUpperCase();
 
-        if (normalized.length() < MIN_LENGTH) {
+        if (normalized.length()
+            < MIN_LENGTH) {
             throw new IllegalArgumentException(
                 String.format("조직 코드는 최소 %d자 이상이어야 합니다", MIN_LENGTH)
             );
         }
 
-        if (normalized.length() > MAX_LENGTH) {
+        if (normalized.length()
+            > MAX_LENGTH) {
             throw new IllegalArgumentException(
                 String.format("조직 코드는 최대 %d자까지 허용됩니다", MAX_LENGTH)
             );
@@ -92,7 +94,8 @@ public final class OrgCode {
      * @author ryu-qqq
      * @since 2025-10-22
      */
-    public String getValue() {
+    @Override
+    public String value() {
         return value;
     }
 
@@ -106,26 +109,18 @@ public final class OrgCode {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (this
+            == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o
+            == null
+            || getClass()
+            != o.getClass()) {
             return false;
         }
         OrgCode orgCode = (OrgCode) o;
         return Objects.equals(value, orgCode.value);
-    }
-
-    /**
-     * 해시코드를 반환합니다.
-     *
-     * @return 해시코드
-     * @author ryu-qqq
-     * @since 2025-10-22
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     /**

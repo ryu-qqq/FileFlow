@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.adapter;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.entity.PipelineOutboxJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.mapper.PipelineOutboxEntityMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.repository.PipelineOutboxJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.pipeline.repository.PipelineOutboxQueryDslRepository;
 import com.ryuqq.fileflow.application.file.port.out.PipelineOutboxPort;
 import com.ryuqq.fileflow.application.file.port.out.PipelineOutboxQueryPort;
 import com.ryuqq.fileflow.domain.common.OutboxStatus;
@@ -39,6 +40,12 @@ import java.util.stream.Collectors;
  *   <li>Application Layer ← PipelineOutboxPort/QueryPort → Persistence Adapter</li>
  * </ul>
  *
+ * <p><strong>CQRS 분리:</strong></p>
+ * <ul>
+ *   <li>✅ <strong>Command Side</strong>: PipelineOutboxJpaRepository (save, delete)</li>
+ *   <li>✅ <strong>Query Side</strong>: PipelineOutboxQueryDslRepository (find*, count*)</li>
+ * </ul>
+ *
  * <p><strong>트랜잭션:</strong></p>
  * <ul>
  *   <li>save(): readOnly=false (쓰기 작업)</li>
@@ -47,7 +54,8 @@ import java.util.stream.Collectors;
  *
  * <p><strong>의존성:</strong></p>
  * <ul>
- *   <li>PipelineOutboxJpaRepository - JPA 데이터 접근</li>
+ *   <li>PipelineOutboxJpaRepository - CRUD 작업 (Command Side)</li>
+ *   <li>PipelineOutboxQueryDslRepository - 조회 작업 (Query Side)</li>
  *   <li>PipelineOutboxEntityMapper - Domain ↔ Entity 매핑</li>
  * </ul>
  *
@@ -60,16 +68,20 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
     private static final Logger log = LoggerFactory.getLogger(PipelineOutboxPersistenceAdapter.class);
 
     private final PipelineOutboxJpaRepository repository;
+    private final PipelineOutboxQueryDslRepository queryRepository;
 
     /**
      * 생성자
      *
-     * @param repository PipelineOutbox JPA Repository
+     * @param repository PipelineOutbox JPA Repository (Command Side)
+     * @param queryRepository PipelineOutbox QueryDSL Repository (Query Side)
      */
     public PipelineOutboxPersistenceAdapter(
-        PipelineOutboxJpaRepository repository
+        PipelineOutboxJpaRepository repository,
+        PipelineOutboxQueryDslRepository queryRepository
     ) {
         this.repository = repository;
+        this.queryRepository = queryRepository;
     }
 
     /**
@@ -103,7 +115,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
     @Transactional
     public PipelineOutbox save(PipelineOutbox outbox) {
         log.debug("Saving PipelineOutbox: idempotencyKey={}, fileId={}",
-            outbox.getIdempotencyKeyValue(), outbox.getFileIdValue());
+            outbox.getIdempotencyKeyValue(), outbox.getFileAssetIdValue());
 
         // 1. Domain → Entity 변환
         PipelineOutboxJpaEntity entity = PipelineOutboxEntityMapper.toEntity(outbox);
@@ -134,7 +146,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
     public Optional<PipelineOutbox> findByFileId(Long fileId) {
         log.debug("Finding PipelineOutbox by fileId: fileId={}", fileId);
 
-        return repository.findByFileId(fileId)
+        return queryRepository.findByFileId(fileId)
             .map(PipelineOutboxEntityMapper::toDomain);
     }
 
@@ -165,7 +177,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
         Pageable pageable = PageRequest.of(0, batchSize);
 
         List<PipelineOutboxJpaEntity> entities =
-            repository.findByStatusOrderByCreatedAtAsc(status, pageable);
+            queryRepository.findByStatusOrderByCreatedAtAsc(status, pageable);
 
         List<PipelineOutbox> outboxes = entities.stream()
             .map(PipelineOutboxEntityMapper::toDomain)
@@ -208,7 +220,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
         Pageable pageable = PageRequest.of(0, batchSize);
 
         List<PipelineOutboxJpaEntity> entities =
-            repository.findStaleProcessingMessages(OutboxStatus.PROCESSING, staleThreshold, pageable);
+            queryRepository.findStaleProcessingMessages(OutboxStatus.PROCESSING, staleThreshold, pageable);
 
         List<PipelineOutbox> staleOutboxes = entities.stream()
             .map(PipelineOutboxEntityMapper::toDomain)
@@ -253,7 +265,7 @@ public class PipelineOutboxPersistenceAdapter implements PipelineOutboxPort, Pip
         Pageable pageable = PageRequest.of(0, batchSize);
 
         List<PipelineOutboxJpaEntity> entities =
-            repository.findRetryableFailedOutboxes(
+            queryRepository.findRetryableFailedOutboxes(
                 OutboxStatus.FAILED,
                 maxRetryCount,
                 retryAfter,

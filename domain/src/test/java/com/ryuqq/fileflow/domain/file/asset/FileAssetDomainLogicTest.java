@@ -6,6 +6,10 @@ import com.ryuqq.fileflow.domain.file.asset.exception.FileAssetProcessingExcepti
 import com.ryuqq.fileflow.domain.file.asset.exception.FileErrorCode;
 import com.ryuqq.fileflow.domain.file.asset.exception.InvalidFileAssetStateException;
 import com.ryuqq.fileflow.domain.file.asset.fixture.FileAssetFixture;
+import com.ryuqq.fileflow.domain.upload.ETag;
+import com.ryuqq.fileflow.domain.upload.FileSize;
+import com.ryuqq.fileflow.domain.upload.MimeType;
+import com.ryuqq.fileflow.domain.upload.StorageKey;
 import com.ryuqq.fileflow.domain.upload.UploadSession;
 import com.ryuqq.fileflow.domain.upload.fixture.UploadSessionFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -208,10 +212,10 @@ class FileAssetDomainLogicTest {
             // Given
             UploadSession session = UploadSessionFixture.reconstituteDefault(1L);
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-                1024L,
-                "etag-123",
-                "image/jpeg",
-                "uploads/tenant-1/2024/11/06/test.jpg"
+                FileSize.of(1024L),
+                ETag.of("etag-123"),
+                MimeType.of("image/jpeg"),
+                StorageKey.of("uploads/tenant-1/2024/11/06/test.jpg")
             );
 
             // When
@@ -238,10 +242,10 @@ class FileAssetDomainLogicTest {
             // Given
             UploadSession session = UploadSessionFixture.reconstituteDefault(1L);
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-                1024L,
-                "etag-123",
+                FileSize.of(1024L),
+                ETag.of("etag-123"),
                 null,
-                "uploads/test.jpg"
+                StorageKey.of("uploads/test.jpg")
             );
 
             // When
@@ -256,10 +260,10 @@ class FileAssetDomainLogicTest {
         void fromS3Upload_WithNullSession_ShouldThrowException() {
             // Given
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-                1024L,
-                "etag",
-                "image/jpeg",
-                "uploads/test.jpg"
+                FileSize.of(1024L),
+                ETag.of("etag"),
+                MimeType.of("image/jpeg"),
+                StorageKey.of("uploads/test.jpg")
             );
 
             // When & Then

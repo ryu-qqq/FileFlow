@@ -60,10 +60,10 @@ class FileAssetTest {
 
             // S3 Object Metadata (Domain VO)
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-                1024L,
-                "5d41402abc4b2a76b9719d911017c592",  // ETag (MD5)
-                "image/jpeg",
-                "uploads/test-file.jpg"  // storageKey
+                FileSize.of(1024L),
+                ETag.of("5d41402abc4b2a76b9719d911017c592"),  // ETag (MD5)
+                MimeType.of("image/jpeg"),
+                StorageKey.of("uploads/test-file.jpg")  // storageKey
             );
 
             // When - FileAsset 생성
@@ -103,10 +103,10 @@ class FileAssetTest {
 
             // Multipart Upload ETag (형식: {MD5}-{parts})
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-                100_000_000L,
-                "abc123def456-5",  // Multipart ETag
-                "application/zip",
-                "uploads/large-file.zip"  // storageKey
+                FileSize.of(100_000_000L),
+                ETag.of("abc123def456-5"),  // Multipart ETag
+                MimeType.of("application/zip"),
+                StorageKey.of("uploads/large-file.zip")  // storageKey
             );
 
             // When
@@ -137,10 +137,10 @@ class FileAssetTest {
             );
 
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-                1024L,
-                "etag123",
-                "application/octet-stream",  // Default ContentType (null을 직접 전달할 수 없으므로 기본값 사용)
-                "uploads/unknown-file"  // storageKey
+                FileSize.of(1024L),
+                ETag.of("etag123"),
+                MimeType.of("application/octet-stream"),  // Default ContentType (null을 직접 전달할 수 없으므로 기본값 사용)
+                StorageKey.of("uploads/unknown-file")  // storageKey
             );
 
             // When
@@ -156,10 +156,10 @@ class FileAssetTest {
         void fromS3Upload_WithNullSession_ShouldThrowException() {
             // Given
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-                1024L,
-                "etag",
-                "image/jpeg",
-                "uploads/test.jpg"  // storageKey
+                FileSize.of(1024L),
+                ETag.of("etag"),
+                MimeType.of("image/jpeg"),
+                StorageKey.of("uploads/test.jpg")  // storageKey
             );
 
             // When & Then
@@ -362,10 +362,10 @@ class FileAssetTest {
 
             // S3 업로드 (실제 메타데이터 사용)
             S3UploadMetadata s3Metadata = S3UploadMetadata.of(
-                1000L,
-                "actual-etag-123",
-                "text/plain",
-                "tenant-1/test.txt"  // storageKey
+                FileSize.of(1000L),
+                ETag.of("actual-etag-123"),
+                MimeType.of("text/plain"),
+                StorageKey.of("tenant-1/test.txt")  // storageKey
             );
 
             // 외부 다운로드 (기본값 사용)

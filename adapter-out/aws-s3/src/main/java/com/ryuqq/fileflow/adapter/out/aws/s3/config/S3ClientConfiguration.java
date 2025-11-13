@@ -66,9 +66,10 @@ public class S3ClientConfiguration {
                 )
             );
 
-        // LocalStack endpoint override (for testing)
+        // MinIO/LocalStack endpoint override (for testing)
         if (properties.getEndpoint() != null && !properties.getEndpoint().isBlank()) {
-            builder.endpointOverride(java.net.URI.create(properties.getEndpoint()));
+            builder.endpointOverride(java.net.URI.create(properties.getEndpoint()))
+                   .forcePathStyle(true);  // MinIO requires path-style access
         }
 
         return builder.build();
@@ -94,9 +95,11 @@ public class S3ClientConfiguration {
                 )
             );
 
-        // LocalStack endpoint override (for testing)
+        // MinIO/LocalStack endpoint override (for testing)
         if (properties.getEndpoint() != null && !properties.getEndpoint().isBlank()) {
             builder.endpointOverride(java.net.URI.create(properties.getEndpoint()));
+            // Note: S3Presigner does not have forcePathStyle() method
+            // Path style is handled through endpoint configuration
         }
 
         return builder.build();

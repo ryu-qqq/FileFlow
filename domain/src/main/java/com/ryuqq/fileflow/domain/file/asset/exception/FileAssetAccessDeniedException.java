@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.file.asset.exception;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 
 import java.util.Map;
 
@@ -20,7 +20,7 @@ public class FileAssetAccessDeniedException extends FileAssetException {
      * @param fileId FileAsset ID
      * @param requesterId 요청자 ID
      */
-    public FileAssetAccessDeniedException(FileId fileId, Long requesterId) {
+    public FileAssetAccessDeniedException(FileAssetId fileId, Long requesterId) {
         super(
             FileErrorCode.FILE_ASSET_ACCESS_DENIED,
             Map.of(

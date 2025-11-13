@@ -146,4 +146,22 @@ public record ListFilesQuery(
             size
         );
     }
+
+    /**
+     * Offset 계산 (페이징용)
+     *
+     * @return Offset (page * size)
+     */
+    public int offset() {
+        return page * size;
+    }
+
+    /**
+     * Limit 반환 (페이징용)
+     *
+     * @return Limit (size)
+     */
+    public int limit() {
+        return size;
+    }
 }

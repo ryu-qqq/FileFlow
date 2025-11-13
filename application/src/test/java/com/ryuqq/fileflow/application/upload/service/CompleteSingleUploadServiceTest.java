@@ -25,7 +25,7 @@ import com.ryuqq.fileflow.application.upload.port.out.S3StoragePort;
 import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionPort;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.file.asset.fixture.FileAssetFixture;
 import com.ryuqq.fileflow.domain.upload.SessionKey;
 import com.ryuqq.fileflow.domain.upload.SessionStatus;

@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.iam.organization.fixture;
 
 import com.ryuqq.fileflow.domain.iam.organization.*;
+import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -68,7 +69,7 @@ public class OrganizationFixture {
      */
     public static Organization createNew() {
         return Organization.forNew(
-            DEFAULT_TENANT_ID,
+            TenantId.of(DEFAULT_TENANT_ID),
             OrgCode.of(DEFAULT_ORG_CODE),
             DEFAULT_NAME
         );
@@ -86,7 +87,7 @@ public class OrganizationFixture {
      */
     public static Organization createNew(Long tenantId, String orgCode, String name) {
         return Organization.forNew(
-            tenantId,
+            TenantId.of(tenantId),
             OrgCode.of(orgCode),
             name
         );
@@ -112,7 +113,7 @@ public class OrganizationFixture {
     public static Organization createWithId(Long id) {
         return Organization.of(
             OrganizationId.of(id),
-            DEFAULT_TENANT_ID,
+            TenantId.of(DEFAULT_TENANT_ID),
             OrgCode.of(DEFAULT_ORG_CODE),
             DEFAULT_NAME
         );
@@ -132,7 +133,7 @@ public class OrganizationFixture {
     public static Organization createWithId(Long id, Long tenantId, String orgCode, String name) {
         return Organization.of(
             OrganizationId.of(id),
-            tenantId,
+            TenantId.of(tenantId),
             OrgCode.of(orgCode),
             name
         );
@@ -159,7 +160,7 @@ public class OrganizationFixture {
         return java.util.stream.IntStream.rangeClosed(1, count)
             .mapToObj(i -> Organization.of(
                 OrganizationId.of((long) i),
-                DEFAULT_TENANT_ID,
+                TenantId.of(DEFAULT_TENANT_ID),
                 OrgCode.of("ORG-" + String.format("%03d", i)),
                 "Test Organization " + i
             ))
@@ -184,7 +185,7 @@ public class OrganizationFixture {
         return java.util.stream.IntStream.rangeClosed(1, count)
             .mapToObj(i -> Organization.of(
                 OrganizationId.of((long) i),
-                tenantId,
+                TenantId.of(tenantId),
                 OrgCode.of("ORG-" + String.format("%03d", i)),
                 "Test Organization " + i
             ))
@@ -220,7 +221,7 @@ public class OrganizationFixture {
     ) {
         return Organization.reconstitute(
             OrganizationId.of(id),
-            tenantId,
+            TenantId.of(tenantId),
             OrgCode.of(orgCode),
             name,
             status,
@@ -242,7 +243,7 @@ public class OrganizationFixture {
         LocalDateTime now = LocalDateTime.now();
         return Organization.reconstitute(
             OrganizationId.of(id),
-            DEFAULT_TENANT_ID,
+            TenantId.of(DEFAULT_TENANT_ID),
             OrgCode.of(DEFAULT_ORG_CODE),
             DEFAULT_NAME,
             OrganizationStatus.INACTIVE,
@@ -264,7 +265,7 @@ public class OrganizationFixture {
         LocalDateTime now = LocalDateTime.now();
         return Organization.reconstitute(
             OrganizationId.of(id),
-            DEFAULT_TENANT_ID,
+            TenantId.of(DEFAULT_TENANT_ID),
             OrgCode.of(DEFAULT_ORG_CODE),
             DEFAULT_NAME,
             OrganizationStatus.INACTIVE,
@@ -447,7 +448,7 @@ public class OrganizationFixture {
             if (id == null) {
                 // ID 없이 신규 생성
                 return Organization.forNew(
-                    tenantId,
+                    TenantId.of(tenantId),
                     OrgCode.of(orgCode),
                     name
                 );
@@ -457,7 +458,7 @@ public class OrganizationFixture {
             LocalDateTime now = LocalDateTime.now(clock);
             return Organization.reconstitute(
                 OrganizationId.of(id),
-                tenantId,
+                TenantId.of(tenantId),
                 OrgCode.of(orgCode),
                 name,
                 status,

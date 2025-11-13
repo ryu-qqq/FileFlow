@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.file.dto.query;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 
 /**
@@ -22,7 +22,7 @@ import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
  * @since 1.0.0
  */
 public record FileMetadataQuery(
-    FileId fileId,
+    FileAssetId fileId,
     TenantId tenantId,
     Long organizationId
 ) {
@@ -34,7 +34,7 @@ public record FileMetadataQuery(
      * @param tenantId 테넌트 ID
      * @return FileMetadataQuery
      */
-    public static FileMetadataQuery of(FileId fileId, TenantId tenantId) {
+    public static FileMetadataQuery of(FileAssetId fileId, TenantId tenantId) {
         return new FileMetadataQuery(fileId, tenantId, null);
     }
 
@@ -47,7 +47,7 @@ public record FileMetadataQuery(
      * @return FileMetadataQuery
      */
     public static FileMetadataQuery of(
-        FileId fileId,
+        FileAssetId fileId,
         TenantId tenantId,
         Long organizationId
     ) {

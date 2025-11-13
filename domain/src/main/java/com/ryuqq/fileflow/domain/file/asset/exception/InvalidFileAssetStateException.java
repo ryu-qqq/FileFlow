@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.file.asset.exception;
 
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 
 import java.util.Map;
 
@@ -21,7 +21,7 @@ public class InvalidFileAssetStateException extends FileAssetException {
      * @param currentState 현재 상태
      * @param expectedState 기대 상태
      */
-    public InvalidFileAssetStateException(FileId fileId, String currentState, String expectedState) {
+    public InvalidFileAssetStateException(FileAssetId fileId, String currentState, String expectedState) {
         super(
             FileErrorCode.INVALID_FILE_ASSET_STATE,
             Map.of(

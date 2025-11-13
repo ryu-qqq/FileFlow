@@ -1,101 +1,42 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.download.repository;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.download.entity.ExternalDownloadJpaEntity;
-import com.ryuqq.fileflow.domain.download.ExternalDownloadStatus;
-
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 /**
- * External Download JPA Repository
+ * External Download Spring Data JPA Repository
  *
- * <p>Spring Data JPA를 활용한 External Download 영속성 인터페이스</p>
+ * <p><strong>역할</strong>: External Download Entity에 대한 기본 CRUD 및 Command 메서드 제공</p>
+ * <p><strong>위치</strong>: adapter-out/persistence-mysql/download/repository/</p>
+ * <p><strong>CQRS</strong>: Command Side (생성, 수정, 삭제) - Query는 {@link com.ryuqq.fileflow.adapter.out.persistence.mysql.download.adapter.ExternalDownloadQueryAdapter} 사용</p>
  *
  * <h3>설계 원칙</h3>
  * <ul>
- *   <li>✅ Spring Data JPA 메서드 네이밍 규칙 준수</li>
- *   <li>✅ 복잡한 쿼리는 @Query 사용</li>
- *   <li>✅ Long FK 전략 (엔티티 조인 없음)</li>
- *   <li>❌ N+1 문제 발생 가능한 패턴 금지</li>
+ *   <li>✅ Spring Data JPA 인터페이스 (구현체 자동 생성)</li>
+ *   <li>✅ Long FK 전략 (uploadSessionId는 Long - UploadSession PK 타입과 일치)</li>
+ *   <li>✅ 메서드 네이밍 규칙 준수 (Spring Data JPA Query Methods)</li>
+ *   <li>✅ CQRS Command Side (조회는 QueryAdapter + QueryDSL 사용)</li>
+ *   <li>❌ {@code @Repository} 어노테이션 불필요 (JpaRepository 상속 시 자동)</li>
+ *   <li>❌ {@code @Query} 어노테이션 사용 금지 (복잡한 조회는 QueryDSL 사용)</li>
  * </ul>
  *
- * @author Sangwon Ryu
  * @since 1.0.0
  */
-@Repository
 public interface ExternalDownloadJpaRepository
     extends JpaRepository<ExternalDownloadJpaEntity, Long> {
 
     /**
      * Upload Session ID로 조회
      *
-     * @param uploadSessionId Upload Session ID
-     * @return ExternalDownloadJpaEntity (Optional)
+     * <p>특정 Upload Session에 연관된 External Download를 조회합니다.</p>
+     *
+     * <p><strong>Long FK 전략</strong>: UploadSession PK 타입(Long AUTO_INCREMENT)과 일치</p>
+     *
+     * @param uploadSessionId Upload Session ID (Long - UploadSession PK 타입과 일치)
+     * @return External Download Entity (존재하지 않으면 {@code Optional.empty()})
      */
     Optional<ExternalDownloadJpaEntity> findByUploadSessionId(Long uploadSessionId);
 
-    /**
-     * 상태별 조회
-     *
-     * @param status External Download 상태
-     * @return ExternalDownloadJpaEntity 목록
-     */
-    List<ExternalDownloadJpaEntity> findByStatus(
-        ExternalDownloadStatus status
-    );
-
-    /**
-     * 재시도 가능한 실패 건 조회
-     * (DOWNLOADING 상태이면서 재시도 횟수가 최대값 미만)
-     *
-     * @param maxRetry 최대 재시도 횟수
-     * @param retryAfter 재시도 가능 시간
-     * @return ExternalDownloadJpaEntity 목록
-     */
-    @Query("SELECT e FROM ExternalDownloadJpaEntity e " +
-           "WHERE e.status = 'DOWNLOADING' " +
-           "AND e.retryCount < :maxRetry " +
-           "AND (e.lastRetryAt IS NULL OR e.lastRetryAt < :retryAfter)")
-    List<ExternalDownloadJpaEntity> findRetryableDownloads(
-        @Param("maxRetry") Integer maxRetry,
-        @Param("retryAfter") LocalDateTime retryAfter
-    );
-
-    /**
-     * 상태별 개수 조회
-     *
-     * @param status External Download 상태
-     * @return 개수
-     */
-    long countByStatus(ExternalDownloadStatus status);
-
-    /**
-     * Upload Session ID 목록으로 조회
-     *
-     * @param uploadSessionIds Upload Session ID 목록
-     * @return ExternalDownloadJpaEntity 목록
-     */
-    @Query("SELECT e FROM ExternalDownloadJpaEntity e " +
-           "WHERE e.uploadSessionId IN :uploadSessionIds")
-    List<ExternalDownloadJpaEntity> findByUploadSessionIds(
-        @Param("uploadSessionIds") List<Long> uploadSessionIds
-    );
-
-    /**
-     * 특정 시간 이전에 생성된 특정 상태의 다운로드 조회
-     *
-     * @param status 상태
-     * @param createdBefore 생성 시간 기준
-     * @return ExternalDownloadJpaEntity 목록
-     */
-    List<ExternalDownloadJpaEntity> findByStatusAndCreatedAtBefore(
-        ExternalDownloadStatus status,
-        LocalDateTime createdBefore
-    );
 }

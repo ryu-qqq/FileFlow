@@ -34,21 +34,6 @@ public class Tenant {
     private boolean deleted;
 
     /**
-     * Tenant를 생성합니다 (Package-private 생성자).
-     *
-     * <p>외부 패키지에서 직접 생성할 수 없습니다. 정적 팩토리 메서드 또는 같은 패키지 내 테스트에서 사용하세요.</p>
-     *
-     * @param id Tenant 식별자
-     * @param name Tenant 이름
-     * @throws IllegalArgumentException id 또는 name이 null인 경우
-     * @author ryu-qqq
-     * @since 2025-10-22
-     */
-    Tenant(TenantId id, TenantName name) {
-        this(id, name, Clock.systemDefaultZone());
-    }
-
-    /**
      * 신규 Tenant를 생성합니다 (Static Factory Method).
      *
      * <p><strong>ID 없이 신규 도메인 객체를 생성</strong>합니다 (DB 저장 전 상태).</p>
@@ -340,7 +325,7 @@ public class Tenant {
      * @since 2025-10-22
      */
     public String getNameValue() {
-        return name.getValue();
+        return name.value();
     }
 
     /**

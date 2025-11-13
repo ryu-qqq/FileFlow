@@ -3,30 +3,31 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.repository;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.settings.entity.SettingJpaEntity;
 import com.ryuqq.fileflow.domain.settings.SettingLevel;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Setting JPA Repository Interface
+ * Setting Spring Data JPA Repository
  *
- * <p>Spring Data JPA Repository로 기본 CRUD 및 커스텀 쿼리를 제공합니다.</p>
+ * <p><strong>역할</strong>: Setting Entity에 대한 기본 CRUD 및 쿼리 메서드 제공</p>
+ * <p><strong>위치</strong>: adapter-out/persistence-mysql/settings/repository/</p>
+ * <p><strong>CQRS</strong>: Command Side (CUD 작업 전용)</p>
  *
- * <p><strong>책임:</strong></p>
+ * <h3>설계 원칙</h3>
  * <ul>
- *   <li>기본 CRUD 작업 (save, findById, findAll, delete 등)</li>
- *   <li>커스텀 쿼리 메서드 정의 (Spring Data JPA 메서드 네이밍 규칙)</li>
- *   <li>3레벨 병합을 위한 대량 조회 메서드</li>
+ *   <li>✅ Spring Data JPA 인터페이스 (구현체 자동 생성)</li>
+ *   <li>✅ 메서드 네이밍 규칙 준수 (Spring Data JPA Query Methods)</li>
+ *   <li>✅ Command Side 전용 (복잡한 조회는 Query Adapter)</li>
+ *   <li>❌ {@code @Query} 어노테이션 금지 (Query Adapter로 이동)</li>
+ *   <li>❌ {@code @Repository} 어노테이션 불필요 (JpaRepository 상속 시 자동)</li>
  * </ul>
  *
- * <p><strong>설계 원칙:</strong></p>
+ * <h3>Query Adapter로 이동 필요</h3>
  * <ul>
- *   <li>✅ Spring Data JPA 인터페이스</li>
- *   <li>✅ 메서드 네이밍 규칙 따르기 (findBy, existsBy 등)</li>
- *   <li>✅ {@code @Query} 어노테이션으로 복잡한 쿼리 정의</li>
- *   <li>✅ JPQL 사용 (Native Query 지양)</li>
+ *   <li>비밀 키 조회 (보안 감사)</li>
+ *   <li>우선순위 정렬 조회 (복잡한 정렬 로직)</li>
+ *   <li>통계 및 집계 쿼리</li>
  * </ul>
  *
  * @author ryu-qqq
@@ -59,42 +60,21 @@ public interface SettingJpaRepository extends JpaRepository<SettingJpaEntity, Lo
     );
 
     /**
-     * 조직(ORG) 레벨의 모든 Setting을 조회합니다.
+     * 특정 레벨의 모든 Setting을 조회합니다.
      *
-     * <p>특정 조직의 설정을 모두 가져올 때 사용합니다.</p>
+     * <p>Spring Data JPA 메서드 네이밍 규칙으로 레벨별 조회를 처리합니다.</p>
      *
-     * @param orgId Organization ID
-     * @return ORG 레벨 Setting 목록
+     * <p><strong>사용 예시:</strong></p>
+     * <ul>
+     *   <li>DEFAULT 레벨: {@code findAllByLevel(SettingLevel.DEFAULT)}</li>
+     * </ul>
+     *
+     * @param level Setting 레벨
+     * @return Setting 목록
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    @Query("SELECT s FROM SettingJpaEntity s WHERE s.level = 'ORG' AND s.contextId = :orgId")
-    List<SettingJpaEntity> findAllByOrg(@Param("orgId") Long orgId);
-
-    /**
-     * 테넌트(TENANT) 레벨의 모든 Setting을 조회합니다.
-     *
-     * <p>특정 테넌트의 설정을 모두 가져올 때 사용합니다.</p>
-     *
-     * @param tenantId Tenant ID (Long FK)
-     * @return TENANT 레벨 Setting 목록
-     * @author ryu-qqq
-     * @since 2025-10-25
-     */
-    @Query("SELECT s FROM SettingJpaEntity s WHERE s.level = 'TENANT' AND s.contextId = :tenantId")
-    List<SettingJpaEntity> findAllByTenant(@Param("tenantId") Long tenantId);
-
-    /**
-     * 기본(DEFAULT) 레벨의 모든 Setting을 조회합니다.
-     *
-     * <p>전역 기본 설정을 모두 가져올 때 사용합니다.</p>
-     *
-     * @return DEFAULT 레벨 Setting 목록
-     * @author ryu-qqq
-     * @since 2025-10-25
-     */
-    @Query("SELECT s FROM SettingJpaEntity s WHERE s.level = 'DEFAULT'")
-    List<SettingJpaEntity> findAllDefaults();
+    List<SettingJpaEntity> findAllByLevel(SettingLevel level);
 
     /**
      * 특정 Level과 ContextId로 모든 Setting을 조회합니다.
@@ -128,63 +108,21 @@ public interface SettingJpaRepository extends JpaRepository<SettingJpaEntity, Lo
     );
 
     /**
-     * 특정 조직의 Setting 개수를 조회합니다.
+     * 특정 레벨과 Context ID의 Setting 개수를 조회합니다.
      *
-     * <p>조직별 설정 개수 통계에 사용합니다.</p>
+     * <p>Spring Data JPA 메서드 네이밍 규칙으로 레벨별 개수를 처리합니다.</p>
      *
-     * @param orgId Organization ID
-     * @return ORG 레벨 Setting 개수
+     * <p><strong>사용 예시:</strong></p>
+     * <ul>
+     *   <li>ORG 레벨: {@code countByLevelAndContextId(SettingLevel.ORG, orgId)}</li>
+     *   <li>TENANT 레벨: {@code countByLevelAndContextId(SettingLevel.TENANT, tenantId)}</li>
+     * </ul>
+     *
+     * @param level Setting 레벨
+     * @param contextId Context ID
+     * @return Setting 개수
      * @author ryu-qqq
      * @since 2025-10-25
      */
-    @Query("SELECT COUNT(s) FROM SettingJpaEntity s WHERE s.level = 'ORG' AND s.contextId = :orgId")
-    long countByOrg(@Param("orgId") Long orgId);
-
-    /**
-     * 특정 테넌트의 Setting 개수를 조회합니다.
-     *
-     * <p>테넌트별 설정 개수 통계에 사용합니다.</p>
-     *
-     * @param tenantId Tenant ID
-     * @return TENANT 레벨 Setting 개수
-     * @author ryu-qqq
-     * @since 2025-10-25
-     */
-    @Query("SELECT COUNT(s) FROM SettingJpaEntity s WHERE s.level = 'TENANT' AND s.contextId = :tenantId")
-    long countByTenant(@Param("tenantId") Long tenantId);
-
-    /**
-     * 비밀 키 Setting 목록을 조회합니다.
-     *
-     * <p>보안 감사 및 비밀 키 관리에 사용합니다.</p>
-     *
-     * @return 비밀 키 Setting 목록
-     * @author ryu-qqq
-     * @since 2025-10-25
-     */
-    @Query("SELECT s FROM SettingJpaEntity s WHERE s.isSecret = true")
-    List<SettingJpaEntity> findAllSecretSettings();
-
-    /**
-     * 특정 Setting Key로 모든 레벨의 Setting을 조회합니다.
-     *
-     * <p>동일 키의 레벨별 설정을 비교하거나 오버라이드 상황을 확인할 때 사용합니다.</p>
-     *
-     * <p><strong>반환 순서</strong>: ORG → TENANT → DEFAULT (우선순위 높은 순)</p>
-     *
-     * @param settingKey Setting 키
-     * @return 모든 레벨의 Setting 목록 (우선순위 순)
-     * @author ryu-qqq
-     * @since 2025-10-25
-     */
-    @Query("""
-        SELECT s FROM SettingJpaEntity s
-        WHERE s.settingKey = :settingKey
-        ORDER BY CASE s.level
-            WHEN com.ryuqq.fileflow.domain.settings.SettingLevel.ORG THEN 1
-            WHEN com.ryuqq.fileflow.domain.settings.SettingLevel.TENANT THEN 2
-            WHEN com.ryuqq.fileflow.domain.settings.SettingLevel.DEFAULT THEN 3
-        END
-        """)
-    List<SettingJpaEntity> findAllBySettingKeyOrderByPriority(@Param("settingKey") String settingKey);
+    long countByLevelAndContextId(SettingLevel level, Long contextId);
 }

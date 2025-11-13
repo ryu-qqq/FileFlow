@@ -30,7 +30,7 @@ import com.ryuqq.fileflow.application.upload.port.out.command.SaveUploadSessionP
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadMultipartUploadPort;
 import com.ryuqq.fileflow.application.upload.port.out.query.LoadUploadSessionPort;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
 import com.ryuqq.fileflow.domain.iam.tenant.fixture.TenantFixture;
 import com.ryuqq.fileflow.domain.upload.MultipartUpload;

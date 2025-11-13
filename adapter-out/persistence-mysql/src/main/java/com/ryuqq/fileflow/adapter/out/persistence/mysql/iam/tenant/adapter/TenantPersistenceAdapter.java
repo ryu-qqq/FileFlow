@@ -144,7 +144,7 @@ public class TenantPersistenceAdapter implements TenantRepositoryPort {
             throw new IllegalArgumentException("TenantName must not be null");
         }
 
-        String nameValue = name.getValue();
+        String nameValue = name.value();
 
         return tenantJpaRepository.existsByNameAndDeletedIsFalse(nameValue);
     }

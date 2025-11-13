@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.iam.organization;
 
 import com.ryuqq.fileflow.domain.iam.organization.fixture.OrganizationFixture;
+import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ class OrganizationTest {
 
             // Then
             assertThat(organization.getIdValue()).isNull(); // 신규 생성은 ID 없음
-            assertThat(organization.getTenantId()).isEqualTo(tenantId);
+            assertThat(organization.getTenantIdValue()).isEqualTo(tenantId);
             assertThat(organization.getOrgCodeValue()).isEqualTo(orgCodeValue);
             assertThat(organization.getName()).isEqualTo(name);
             assertThat(organization.getStatus()).isEqualTo(OrganizationStatus.ACTIVE);
@@ -65,7 +66,7 @@ class OrganizationTest {
 
             // Then
             assertThat(organization.getIdValue()).isEqualTo(id);
-            assertThat(organization.getTenantId()).isEqualTo(1L); // Fixture 기본값
+            assertThat(organization.getTenantIdValue()).isEqualTo(1L); // Fixture 기본값
             assertThat(organization.getOrgCodeValue()).isEqualTo("ORG-001"); // Fixture 기본값
             assertThat(organization.isActive()).isTrue();
         }
@@ -212,7 +213,7 @@ class OrganizationTest {
             Organization organization = OrganizationFixture.createNew(1L, "ORG-001", "Test");
 
             // Then
-            assertThat(organization.getTenantId()).isEqualTo(1L);
+            assertThat(organization.getTenantIdValue()).isEqualTo(1L);
         }
 
         @Test
@@ -225,7 +226,7 @@ class OrganizationTest {
             Organization organization = OrganizationFixture.createNew(maxTenantId, "ORG-001", "Test");
 
             // Then
-            assertThat(organization.getTenantId()).isEqualTo(maxTenantId);
+            assertThat(organization.getTenantIdValue()).isEqualTo(maxTenantId);
         }
 
         @Test
@@ -271,11 +272,11 @@ class OrganizationTest {
         @DisplayName("Tenant ID가 0 이하이면 IllegalArgumentException 발생")
         void shouldThrowExceptionWhenTenantIdIsZeroOrNegative() {
             // When & Then
-            assertThatThrownBy(() -> Organization.forNew(0L, OrgCode.of("ORG-001"), "Test"))
+            assertThatThrownBy(() -> Organization.forNew(TenantId.of(0L), OrgCode.of("ORG-001"), "Test"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("양수");
 
-            assertThatThrownBy(() -> Organization.forNew(-1L, OrgCode.of("ORG-001"), "Test"))
+            assertThatThrownBy(() -> Organization.forNew(TenantId.of(-1L), OrgCode.of("ORG-001"), "Test"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("양수");
         }
@@ -284,7 +285,7 @@ class OrganizationTest {
         @DisplayName("OrgCode가 null이면 IllegalArgumentException 발생")
         void shouldThrowExceptionWhenOrgCodeIsNull() {
             // When & Then
-            assertThatThrownBy(() -> Organization.forNew(1L, null, "Test"))
+            assertThatThrownBy(() -> Organization.forNew(TenantId.of(1L), null, "Test"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("조직 코드는 필수");
         }
@@ -293,7 +294,7 @@ class OrganizationTest {
         @DisplayName("Organization 이름이 null이면 IllegalArgumentException 발생")
         void shouldThrowExceptionWhenNameIsNull() {
             // When & Then
-            assertThatThrownBy(() -> Organization.forNew(1L, OrgCode.of("ORG-001"), null))
+            assertThatThrownBy(() -> Organization.forNew(TenantId.of(1L), OrgCode.of("ORG-001"), null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("조직 이름은 필수");
         }
@@ -302,7 +303,7 @@ class OrganizationTest {
         @DisplayName("Organization 이름이 빈 문자열이면 IllegalArgumentException 발생")
         void shouldThrowExceptionWhenNameIsBlank() {
             // When & Then
-            assertThatThrownBy(() -> Organization.forNew(1L, OrgCode.of("ORG-001"), "   "))
+            assertThatThrownBy(() -> Organization.forNew(TenantId.of(1L), OrgCode.of("ORG-001"), "   "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("조직 이름은 필수");
         }
@@ -347,7 +348,7 @@ class OrganizationTest {
         @DisplayName("of() 메서드에서 ID가 null이면 IllegalArgumentException 발생")
         void shouldThrowExceptionWhenCreatingWithNullId() {
             // When & Then
-            assertThatThrownBy(() -> Organization.of(null, 1L, OrgCode.of("ORG-001"), "Test"))
+            assertThatThrownBy(() -> Organization.of(null, TenantId.of(1L), OrgCode.of("ORG-001"), "Test"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Organization ID는 필수");
         }
@@ -357,7 +358,7 @@ class OrganizationTest {
         void shouldThrowExceptionWhenReconstituteWithNullId() {
             // When & Then
             assertThatThrownBy(() -> Organization.reconstitute(
-                null, 1L, OrgCode.of("ORG-001"), "Test",
+                null, TenantId.of(1L), OrgCode.of("ORG-001"), "Test",
                 OrganizationStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now(), false
             ))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -379,7 +380,7 @@ class OrganizationTest {
 
             // Then
             assertThat(organization.getIdValue()).isNotNull();
-            assertThat(organization.getTenantId()).isNotNull().isPositive();
+            assertThat(organization.getTenantIdValue()).isNotNull().isPositive();
             assertThat(organization.getOrgCodeValue()).isNotBlank();
             assertThat(organization.getName()).isNotBlank();
             assertThat(organization.getStatus()).isIn(OrganizationStatus.ACTIVE, OrganizationStatus.INACTIVE);
@@ -398,7 +399,7 @@ class OrganizationTest {
 
             // Then
             assertThat(organization.getIdValue()).isNotNull();
-            assertThat(organization.getTenantId()).isNotNull().isPositive();
+            assertThat(organization.getTenantIdValue()).isNotNull().isPositive();
             assertThat(organization.getStatus()).isEqualTo(OrganizationStatus.INACTIVE);
             assertThat(organization.isActive()).isFalse();
         }
@@ -451,7 +452,7 @@ class OrganizationTest {
 
             // Then
             assertThat(organization.getIdValue()).isEqualTo(999L);
-            assertThat(organization.getTenantId()).isEqualTo(100L);
+            assertThat(organization.getTenantIdValue()).isEqualTo(100L);
             assertThat(organization.getOrgCodeValue()).isEqualTo("CUSTOM-ORG");
             assertThat(organization.getName()).isEqualTo("Custom Organization");
             assertThat(organization.getStatus()).isEqualTo(OrganizationStatus.INACTIVE);
@@ -470,7 +471,7 @@ class OrganizationTest {
 
             // Then
             assertThat(organization.getIdValue()).isNull();
-            assertThat(organization.getTenantId()).isEqualTo(100L);
+            assertThat(organization.getTenantIdValue()).isEqualTo(100L);
             assertThat(organization.isActive()).isTrue();
         }
     }

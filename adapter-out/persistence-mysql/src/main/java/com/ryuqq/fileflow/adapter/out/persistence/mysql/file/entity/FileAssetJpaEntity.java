@@ -36,14 +36,14 @@ import java.time.LocalDateTime;
  * <pre>
  * CREATE TABLE file_assets (
  *   id BIGINT PRIMARY KEY AUTO_INCREMENT,
- *   tenant_id VARCHAR(50) NOT NULL,
+ *   tenant_id BIGINT NOT NULL,
  *   organization_id BIGINT NULL,
- *   owner_user_id BIGINT NOT NULL,
- *   file_name VARCHAR(255) NOT NULL,
+ *   owner_user_id BIGINT NULL,
+ *   file_name VARCHAR(500) NOT NULL,
  *   file_size BIGINT NOT NULL,
  *   mime_type VARCHAR(150) NOT NULL,
  *   storage_key VARCHAR(512) NOT NULL,
- *   checksum_sha256 CHAR(64) NULL,
+ *   checksum_sha256 VARCHAR(64) NULL,
  *   upload_session_id BIGINT NOT NULL,
  *   status VARCHAR(20) NOT NULL DEFAULT 'PROCESSING',
  *   visibility VARCHAR(20) NOT NULL DEFAULT 'PRIVATE',
@@ -85,7 +85,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
     /**
      * Tenant ID (보안 스코프 필수)
      */
-    @Column(name = "tenant_id", nullable = false, length = 50)
+    @Column(name = "tenant_id", nullable = false)
     private Long tenantId;
 
     /**

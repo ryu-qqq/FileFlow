@@ -2,66 +2,79 @@ package com.ryuqq.fileflow.adapter.out.persistence.mysql.file.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.entity.ExtractedDataJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.mapper.ExtractedDataEntityMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.repository.ExtractedDataJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.repository.ExtractedDataQueryDslRepository;
 import com.ryuqq.fileflow.application.file.port.out.ExtractedDataQueryPort;
 import com.ryuqq.fileflow.domain.file.extraction.ExtractedData;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 /**
- * ExtractedData Query Adapter (Persistence Layer)
+ * ExtractedDataQueryAdapter - ExtractedData Query 전용 Persistence Adapter
  *
- * <p><strong>역할</strong>: ExtractedData 조회 Command 구현</p>
- * <p><strong>위치</strong>: adapter-out/persistence-mysql/file/adapter/</p>
- * <p><strong>구현</strong>: {@code ExtractedDataQueryPort} 인터페이스 구현</p>
+ * <p>CQRS 패턴의 Query 전용 Adapter입니다.
+ * QueryDSL Repository를 위임하여 성능 최적화된 조회 쿼리를 실행합니다.</p>
  *
- * <h3>헥사고날 아키텍처 패턴</h3>
+ * <p><strong>책임:</strong></p>
  * <ul>
- *   <li>✅ Application Layer의 Port 인터페이스 구현</li>
- *   <li>✅ 의존성 방향: Adapter → Application</li>
- *   <li>✅ Entity ↔ Domain 변환 (Mapper 사용)</li>
- *   <li>❌ 비즈니스 로직 없음 (단순 조회만)</li>
+ *   <li>ExtractedData 조회 작업만 담당 (CUD 작업 없음)</li>
+ *   <li>QueryDSL Repository로 쿼리 위임</li>
+ *   <li>JpaEntity를 Domain Entity로 변환</li>
  * </ul>
  *
- * <h3>Transaction 관리</h3>
+ * <p><strong>설계 원칙:</strong></p>
  * <ul>
- *   <li>✅ {@code @Transactional(readOnly = true)} - 읽기 전용 최적화</li>
- *   <li>✅ Dirty Checking 비활성화</li>
- *   <li>❌ 외부 API 호출 없음 (DB 조회만)</li>
+ *   <li>✅ {@code @Component} 사용 (Spring Bean 등록)</li>
+ *   <li>✅ {@code ExtractedDataQueryPort} 구현</li>
+ *   <li>✅ QueryDSL Repository 위임</li>
+ *   <li>✅ Pure Java (Lombok 금지)</li>
+ *   <li>❌ {@code @Transactional} 사용 금지 (Application Layer에서만)</li>
  * </ul>
  *
  * @author Sangwon Ryu
  * @since 1.0.0
- * @see ExtractedDataQueryPort
  */
 @Component
 public class ExtractedDataQueryAdapter implements ExtractedDataQueryPort {
 
-    private final ExtractedDataJpaRepository extractedDataJpaRepository;
+    private final ExtractedDataQueryDslRepository repository;
 
-    public ExtractedDataQueryAdapter(
-        ExtractedDataJpaRepository extractedDataJpaRepository
-    ) {
-        this.extractedDataJpaRepository = extractedDataJpaRepository;
+    /**
+     * Constructor - 의존성 주입
+     *
+     * @param repository QueryDSL Repository
+     * @author Sangwon Ryu
+     * @since 1.0.0
+     */
+    public ExtractedDataQueryAdapter(ExtractedDataQueryDslRepository repository) {
+        this.repository = repository;
     }
 
     /**
      * fileId로 모든 ExtractedData 조회
      *
-     * <p>Entity → Domain 변환 후 반환</p>
+     * <p>특정 FileAsset에서 추출된 모든 메타데이터를 조회합니다.
+     * Soft Delete된 데이터는 자동으로 필터링됩니다.</p>
+     *
+     * <p>QueryDSL 쿼리 예시:</p>
+     * <pre>{@code
+     * SELECT *
+     * FROM extracted_data
+     * WHERE file_id = ?
+     *   AND deleted_at IS NULL
+     * ORDER BY extracted_at ASC
+     * }</pre>
      *
      * @param fileId FileAsset의 ID (Long FK)
      * @return ExtractedData 목록 (빈 리스트 가능)
+     * @throws IllegalArgumentException fileId가 null이거나 0 이하인 경우
+     * @author Sangwon Ryu
+     * @since 1.0.0
      */
     @Override
-    @Transactional(readOnly = true)
     public List<ExtractedData> findAllByFileId(Long fileId) {
-        // 1. Entity 조회 (Soft Delete 필터링 포함)
-        List<ExtractedDataJpaEntity> entities = extractedDataJpaRepository.findByFileId(fileId);
+        List<ExtractedDataJpaEntity> entities = repository.findAllByFileId(fileId);
 
-        // 2. Entity → Domain 변환
         return entities.stream()
             .map(ExtractedDataEntityMapper::toDomain)
             .toList();

@@ -31,8 +31,8 @@ import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 public record ExtractedDataCreatedEvent(
     ExtractedDataId extractedDataId,
     FileAssetId fileAssetId,
-    String extractionType,
-    String extractionMethod
+    ExtractionType extractionType,
+    ExtractionMethod extractionMethod
 ) {
 
     /**
@@ -46,11 +46,11 @@ public record ExtractedDataCreatedEvent(
         if (fileAssetId == null) {
             throw new IllegalArgumentException("fileAssetId must not be null");
         }
-        if (extractionType == null || extractionType.isBlank()) {
-            throw new IllegalArgumentException("extractionType must not be null or blank");
+        if (extractionType == null) {
+            throw new IllegalArgumentException("extractionType must not be null");
         }
-        if (extractionMethod == null || extractionMethod.isBlank()) {
-            throw new IllegalArgumentException("extractionMethod must not be null or blank");
+        if (extractionMethod == null) {
+            throw new IllegalArgumentException("extractionMethod must not be null");
         }
     }
 

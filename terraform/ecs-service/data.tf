@@ -37,12 +37,9 @@ data "aws_ssm_parameter" "db_instance_port" {
 }
 
 # FileFlow 사용자 비밀번호 (애플리케이션 전용 계정)
-data "aws_ssm_parameter" "fileflow_user_password_secret_name" {
-  name = "/fileflow/prod/db-user-password-secret-name"
-}
-
+# 실제 MySQL 계정: fileflow_user (언더스코어)
 data "aws_secretsmanager_secret_version" "fileflow_user_password" {
-  secret_id = data.aws_ssm_parameter.fileflow_user_password_secret_name.value
+  secret_id = "prod-shared-mysql-fileflow"
 }
 
 # ECR Repository

@@ -9,7 +9,7 @@ import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.fixture.Tenan
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.iam.tenant.entity.TenantJpaEntity;
 import com.ryuqq.fileflow.domain.iam.tenant.Tenant;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
-import com.ryuqq.fileflow.domain.iam.tenant.TenantStatus;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -105,7 +105,7 @@ class TenantQueryRepositoryAdapterTest {
             // Then
             assertThat(result).isPresent();
             assertThat(result.get().getId().value()).isEqualTo(1L);
-            assertThat(result.get().getName().getValue()).isEqualTo("Active Tenant");
+            assertThat(result.get().getName().value()).isEqualTo("Active Tenant");
             verify(queryFactory, times(1)).selectFrom(tenantJpaEntity);
         }
 
@@ -202,7 +202,7 @@ class TenantQueryRepositoryAdapterTest {
 
             // Then
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).getName().getValue()).contains("Active");
+            assertThat(result.get(0).getName().value()).contains("Active");
         }
 
         @Test

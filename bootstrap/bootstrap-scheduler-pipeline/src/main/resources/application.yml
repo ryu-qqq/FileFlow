@@ -15,10 +15,6 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
-  # NO Web Server (Scheduler만 실행)
-  main:
-    web-application-type: none
-
   # JPA Configuration (공통)
   jpa:
     hibernate:

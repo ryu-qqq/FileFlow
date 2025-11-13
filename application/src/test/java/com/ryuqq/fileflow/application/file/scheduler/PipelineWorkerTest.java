@@ -140,10 +140,10 @@ class PipelineWorkerTest {
 
         ThumbnailInfo thumbnailInfo = new ThumbnailInfo(
             com.ryuqq.fileflow.domain.upload.StorageKey.of("thumbnails/test-thumb.jpg"),
-            200,        // width
-            200,        // height
-            1024L,      // size
-            "image/jpeg" // contentType
+            com.ryuqq.fileflow.domain.file.thumbnail.ImageWidth.of(200),
+            com.ryuqq.fileflow.domain.file.thumbnail.ImageHeight.of(200),
+            com.ryuqq.fileflow.domain.upload.FileSize.of(1024L),
+            com.ryuqq.fileflow.domain.upload.MimeType.of("image/jpeg")
         );
 
         given(thumbnailPort.generateThumbnail(imageFile))

@@ -319,8 +319,22 @@ public record {AggregateRoot}Id(Long value) {
         // null 허용: 새로운 엔티티를 의미 (save 전)
     }
 
-    // Static Factory Method
+    // Static Factory Methods
+
+    /**
+     * 새로운 엔티티를 위한 ID 생성 (아직 저장되지 않음)
+     */
+    public static {AggregateRoot}Id forNew() {
+        return new {AggregateRoot}Id(null);
+    }
+
+    /**
+     * 기존 엔티티를 위한 ID 생성 (DB에서 로드됨)
+     */
     public static {AggregateRoot}Id of(Long value) {
+        if (value == null) {
+            throw new IllegalArgumentException("저장된 엔티티 ID는 필수입니다");
+        }
         return new {AggregateRoot}Id(value);
     }
 }

@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.mysql.file.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.mysql.file.entity.FileAssetJpaEntity;
-import com.ryuqq.fileflow.domain.file.asset.FileId;
+import com.ryuqq.fileflow.domain.file.asset.FileAssetId;
 import com.ryuqq.fileflow.domain.file.asset.FileAsset;
 import com.ryuqq.fileflow.domain.iam.tenant.TenantId;
 import com.ryuqq.fileflow.domain.upload.Checksum;
@@ -111,7 +111,7 @@ public final class FileAssetEntityMapper {
         }
 
         return FileAsset.reconstitute(
-            FileId.of(entity.getId()),
+            FileAssetId.of(entity.getId()),
             TenantId.of(entity.getTenantId()),
             entity.getOrganizationId(),
             entity.getOwnerUserId(),

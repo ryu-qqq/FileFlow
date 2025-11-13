@@ -80,7 +80,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("${api.endpoints.base-v1}${api.endpoints.iam.tenant.base}")
 public class TenantController {
-
+    //Todo facade 리팩토링
     private final TenantCommandFacade tenantCommandFacade;
     private final TenantQueryFacade tenantQueryFacade;
 

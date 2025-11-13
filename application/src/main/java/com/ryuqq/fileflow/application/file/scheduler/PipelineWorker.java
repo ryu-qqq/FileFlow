@@ -266,8 +266,8 @@ public class PipelineWorker {
                 new FileAssetId(fileAsset.getIdValue()),
                 VariantType.THUMBNAIL,
                 thumbnailInfo.storageKey(),
-                new FileSize(thumbnailInfo.size()),
-                new MimeType(thumbnailInfo.contentType())
+                thumbnailInfo.fileSize(),
+                thumbnailInfo.mimeType()
             );
 
             // FileVariant 저장
