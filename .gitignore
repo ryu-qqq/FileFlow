@@ -36,23 +36,27 @@ bin/
 ### VS Code ###
 .vscode/
 
-### Terraform ###
-.terraform/
-.terraform.lock.hcl
-*.tfstate
-*.tfstate.backup
-*.tfvars
-.terraformrc
-terraform.rc
+### Cursor IDE ###
+.cursor/
 
-# Claude Code working files
-claudedocs/
-*.log
+# Claude Code settings (local overrides)
+.claude/settings.local.json
 .claude/hooks/logs/
+.serena/
 
-# LangFuse telemetry files (contains sensitive API keys)
+# Claude Code documentation and specs (auto-generated)
+claudedocs/
+spec-stories/
+
+# LangFuse telemetry (contains credentials)
 .langfuse.telemetry
-.env
 langfuse/__pycache__/
 langfuse/tests/__pycache__/
-langfuse-data.json
+
+# Windsurf IDE settings (personal configuration)
+.windsurfrules
+
+# Pipeline metrics and reports (auto-generated)
+.pipeline-metrics/metrics.jsonl
+.pipeline-metrics/report.md
+.env
