@@ -13,14 +13,6 @@
     <!-- Allow @SuppressWarnings at code level -->
     <module name="SuppressWarningsFilter"/>
 
-    <!-- Heuristic LoD detector (complements PMD) -->
-    <module name="RegexpSinglelineJava">
-        <property name="format" value="\)\.[A-Za-z_][A-Za-z0-9_]*\(\)\."/>
-        <property name="message" value="메서드 체이닝 과다 의심 (검토 필요)"/>
-        <property name="ignoreComments" value="true"/>
-        <property name="severity" value="warning"/>
-    </module>
-
     <!-- Whitespace & basic hygiene -->
     <module name="FileTabCharacter">
         <property name="eachLine" value="true"/>

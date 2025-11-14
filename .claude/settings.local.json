@@ -1,34 +1,22 @@
 {
   "hooks": {
-    "PreToolUse": [
+    "UserPromptSubmit": [
       {
-        "matcher": "SlashCommand",
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/user-prompt-submit.sh"
+            "command": ".claude/hooks/user-prompt-submit.sh '{{prompt}}'"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/after-tool-use.sh {{toolName}} {{filePath}}"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/user-prompt-submit.sh"
+            "command": ".claude/hooks/track-tdd-cycle.sh '{{output}}'"
           }
         ]
       }
