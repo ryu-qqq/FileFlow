@@ -473,43 +473,45 @@
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/FileProcessingJobTest.java`
 - `domain/src/testFixtures/java/com/ryuqq/fileflow/domain/fixture/FileProcessingJobFixture.java`
 
-**🔴 Red Phase**:
-- [ ] FileProcessingJobTest.java에 Clock 관련 테스트 추가
-  - [ ] `shouldUseClockForCreatedAt()` - forNew() Clock 검증
-  - [ ] `shouldUseClockForProcessedAt()` - markAsCompleted() Clock 검증
-  - [ ] `shouldCreateJobWithFixedClock()` - 고정 시간 테스트
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: FileProcessingJob Clock 의존성 테스트 추가`
+**🔴 Red Phase**: [x] Complete
+- [x] FileProcessingJobTest.java에 Clock 관련 테스트 추가
+  - [x] `shouldUseClockForCreatedAt()` - forNew() Clock 검증
+  - [x] `shouldUseClockForProcessedAt()` - markAsCompleted() Clock 검증
+  - [x] `shouldCreateJobWithFixedClock()` - 고정 시간 테스트
+- [x] 컴파일 에러 확인
+- [x] **커밋**: `test: FileProcessingJob Clock 의존성 테스트 추가`
 
-**🟢 Green Phase**:
-- [ ] FileProcessingJob.java 수정
-  - [ ] `private final Clock clock;` 필드 추가
-  - [ ] 생성자에 Clock 파라미터 추가
-  - [ ] 모든 `LocalDateTime.now()` → `LocalDateTime.now(clock)` 변경
-  - [ ] forNew(), of(), reconstitute() 메서드에 Clock 추가
-- [ ] 기존 테스트 수정 (Clock.systemUTC())
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: FileProcessingJob Clock 의존성 주입`
+**🟢 Green Phase**: [x] Complete
+- [x] FileProcessingJob.java 수정
+  - [x] `private final Clock clock;` 필드 추가
+  - [x] 생성자에 Clock 파라미터 추가
+  - [x] 모든 `LocalDateTime.now()` → `LocalDateTime.now(clock)` 변경
+  - [x] forNew(), of(), reconstitute() 메서드에 Clock 추가
+  - [x] markAsCompleted(), markAsFailed() 메서드에 Clock 추가
+  - [x] incrementRetryCount()에 clock 전달
+- [x] 기존 테스트 수정 (Clock.systemUTC())
+- [x] FileProcessingJobFixture 수정 완료
+- [x] 모든 테스트 통과 확인
+- [x] **커밋**: `feat: FileProcessingJob Clock 의존성 주입`
 
-**♻️ Refactor Phase**:
-- [ ] Clock 관련 중복 코드 제거
-- [ ] **커밋**: `struct: Clock 사용 로직 정리` (필요 시)
+**♻️ Refactor Phase**: [x] Complete (중복 코드 없음)
+- [x] Clock 관련 중복 코드 확인 → 중복 없음
+- [x] 각 LocalDateTime.now(clock) 용도 명확함
 
-**🧹 Tidy Phase**:
-- [ ] FileProcessingJobFixture 수정 (Clock 사용)
-- [ ] **커밋**: `test: FileProcessingJob Clock Fixture 추가`
+**🧹 Tidy Phase**: [x] Complete (Green Phase에 포함됨)
+- [x] FileProcessingJobFixture 수정 완료 (Green Phase에서 처리)
 
 **✅ 완료 체크**:
-- [ ] 3개 신규 테스트 모두 통과
-- [ ] Clock 필드 존재 확인
-- [ ] LocalDateTime.now() 직접 호출 0개 확인
-- [ ] **총 커밋 수**: 3-4개
+- [x] 3개 신규 테스트 모두 통과
+- [x] Clock 필드 존재 확인
+- [x] LocalDateTime.now() 직접 호출 0개 확인
+- [x] **총 커밋 수**: 2개 (Red + Green)
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `8980161`
+- Green: `5d5f45e`
+- Refactor: N/A (중복 없음)
+- Tidy: N/A (Green에 포함)
 
 ---
 
