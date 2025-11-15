@@ -191,51 +191,49 @@
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/MessageOutboxTest.java`
 
 **🔴 Red Phase**:
-- [ ] MessageOutboxTest.java 수정 (가변 패턴 검증)
-  - [ ] `shouldMutateStatusWhenMarkAsSent()` - markAsSent() 가변 검증
-  - [ ] `shouldMutateStatusWhenMarkAsFailed()` - markAsFailed() 가변 검증
-  - [ ] `shouldMutateRetryCountWhenIncrement()` - incrementRetryCount() 가변 검증
-  - [ ] `shouldNotReturnNewInstanceWhenMarkAsSent()` - 동일 객체 검증
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: MessageOutbox 가변 패턴 테스트 추가`
+- [x] MessageOutboxTest.java 수정 (가변 패턴 검증)
+  - [x] `shouldMutateStatusWhenMarkAsSent()` - markAsSent() 가변 검증
+  - [x] `shouldMutateStatusWhenMarkAsFailed()` - markAsFailed() 가변 검증
+  - [x] `shouldMutateRetryCountWhenIncrement()` - incrementRetryCount() 가변 검증
+  - [x] `shouldNotReturnNewInstanceWhenMarkAsSent()` - 동일 객체 검증
+- [x] 컴파일 에러 없음 확인 (현재 불변 패턴이므로 정상)
+- [x] **커밋**: `test: MessageOutbox 가변 패턴 테스트 추가 (Red)`
 
 **🟢 Green Phase**:
-- [ ] MessageOutbox.java 수정
-  - [ ] `status`, `retryCount`, `processedAt` final 제거
-  - [ ] `markAsSent()` 반환 타입 `MessageOutbox` → `void`
-    - [ ] `this.status = OutboxStatus.SENT;` (this 변경)
-    - [ ] `this.processedAt = LocalDateTime.now(clock);`
-  - [ ] `markAsFailed()` 반환 타입 `MessageOutbox` → `void`
-  - [ ] `incrementRetryCount()` 반환 타입 `MessageOutbox` → `void`
-    - [ ] `this.retryCount++;`
-  - [ ] `withStatus()` private 헬퍼 메서드 제거
-- [ ] 기존 테스트 수정 (void 반환 대응)
-- [ ] Fixture 수정 (aSentOutbox, aFailedOutbox 패턴 변경)
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: MessageOutbox 불변→가변 패턴 전환`
+- [x] MessageOutbox.java 수정
+  - [x] `status`, `retryCount`, `processedAt` final 제거
+  - [x] `markAsSent()` 반환 타입 `MessageOutbox` → `void`
+    - [x] `this.status = OutboxStatus.SENT;` (this 변경)
+    - [x] `this.processedAt = LocalDateTime.now(clock);`
+  - [x] `markAsFailed()` 반환 타입 `MessageOutbox` → `void`
+  - [x] `incrementRetryCount()` 반환 타입 `MessageOutbox` → `void`
+    - [x] `this.retryCount++;`
+  - [x] `withStatus()` private 헬퍼 메서드 제거
+- [x] 기존 테스트 수정 (void 반환 대응)
+- [x] Fixture 수정 (aSentOutbox, aFailedOutbox 패턴 변경)
+- [x] 모든 테스트 통과 확인
+- [x] **커밋**: `feat: MessageOutbox 불변→가변 패턴 전환 (Green)`
 
 **♻️ Refactor Phase**:
-- [ ] 비즈니스 메서드 순서 정리
-- [ ] 상태 전환 로직 명확화
-- [ ] **커밋**: `struct: MessageOutbox 비즈니스 메서드 정리`
+- [x] 구조 이미 명확 (생략)
+- [x] **커밋**: 생략
 
 **🧹 Tidy Phase**:
-- [ ] MessageOutboxFixture 수정
-  - [ ] aSentOutbox(): 생성 후 markAsSent() 호출로 변경
-  - [ ] aFailedOutbox(): 생성 후 markAsFailed() 호출로 변경
-- [ ] **커밋**: `test: MessageOutboxFixture 가변 패턴 적용`
+- [x] MessageOutboxFixture 수정 (Green Phase에서 완료)
+- [x] Plan 파일 업데이트
+- [ ] **커밋**: `docs: FILE-001-domain-plan.md Cycle 4 완료 표시`
 
 **✅ 완료 체크**:
-- [ ] 기존 테스트 + 4개 신규 테스트 모두 통과
-- [ ] status, retryCount, processedAt final 제거 확인
-- [ ] 비즈니스 메서드 void 반환 확인
-- [ ] **총 커밋 수**: 3-4개
+- [x] 기존 테스트 + 4개 신규 테스트 모두 통과 (총 24개)
+- [x] status, retryCount, processedAt final 제거 확인
+- [x] 비즈니스 메서드 void 반환 확인
+- [x] **총 커밋 수**: 2개 (Red + Green)
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `e2f9bb0`
+- Green: `4924820`
+- Refactor: 생략
+- Tidy: `5e93fcf`
 
 ---
 
