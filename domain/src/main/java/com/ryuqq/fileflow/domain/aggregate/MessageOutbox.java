@@ -13,6 +13,16 @@ import java.time.LocalDateTime;
  */
 public class MessageOutbox {
 
+    /**
+     * SENT 상태 메시지 TTL (일 단위)
+     */
+    private static final int SENT_TTL_DAYS = 7;
+
+    /**
+     * FAILED 상태 메시지 TTL (일 단위)
+     */
+    private static final int FAILED_TTL_DAYS = 30;
+
     private final String id;
     private final String eventType;
     private final String aggregateId;
@@ -248,12 +258,10 @@ public class MessageOutbox {
         LocalDateTime now = LocalDateTime.now();
 
         if (this.status == OutboxStatus.SENT) {
-            // SENT: 7일 TTL
-            LocalDateTime expiryDate = this.processedAt.plusDays(7);
+            LocalDateTime expiryDate = this.processedAt.plusDays(SENT_TTL_DAYS);
             return now.isAfter(expiryDate);
         } else if (this.status == OutboxStatus.FAILED) {
-            // FAILED: 30일 TTL
-            LocalDateTime expiryDate = this.processedAt.plusDays(30);
+            LocalDateTime expiryDate = this.processedAt.plusDays(FAILED_TTL_DAYS);
             return now.isAfter(expiryDate);
         }
 
