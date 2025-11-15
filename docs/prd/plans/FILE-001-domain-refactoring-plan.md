@@ -685,46 +685,44 @@
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/FileTest.java`
 - `domain/src/testFixtures/java/com/ryuqq/fileflow/domain/fixture/FileFixture.java`
 
-**🔴 Red Phase**:
-- [ ] FileTest.java에 3종 팩토리 테스트 추가
-  - [ ] `shouldCreateNewFileWithForNew()` - forNew() 테스트
-  - [ ] `shouldCreateFileWithOf()` - of() 테스트
-  - [ ] `shouldThrowExceptionWhenOfWithNullId()` - of() null 검증
-  - [ ] `shouldReconstituteFile()` - reconstitute() 테스트
-  - [ ] `shouldThrowExceptionWhenReconstituteWithNullId()` - reconstitute() null 검증
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: File 3종 팩토리 메서드 테스트 추가`
+**🔴 Red Phase**: [x] Complete
+- [x] FileTest.java에 3종 팩토리 테스트 추가
+  - [x] `shouldCreateNewFileWithForNew()` - forNew() 테스트
+  - [x] `shouldCreateFileWithOf()` - of() 테스트
+  - [x] `shouldThrowExceptionWhenOfWithNullId()` - of() null 검증
+  - [x] `shouldReconstituteFile()` - reconstitute() 테스트
+  - [x] `shouldThrowExceptionWhenReconstituteWithNullId()` - reconstitute() null 검증
+- [x] 컴파일 에러 확인 (6개 에러)
+- [x] **커밋**: `test: File 3종 팩토리 메서드 테스트 추가`
 
-**🟢 Green Phase**:
-- [ ] File.java 수정
-  - [ ] 생성자 `public` → `private`
-  - [ ] `fileId` 타입 `String` → `FileId`
-  - [ ] `uploaderId` 타입 `Long` → `UploaderId`
-  - [ ] `forNew()`, `of()`, `reconstitute()` 메서드 구현
-  - [ ] 기존 `create()` 메서드 `@Deprecated`
-- [ ] 기존 테스트 수정
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: File 3종 팩토리 메서드 구현`
+**🟢 Green Phase**: [x] Complete
+- [x] File.java 수정
+  - [x] 생성자 `public` → `private`
+  - [x] `fileId` 타입 `String` → `FileId`
+  - [x] `uploaderId` 타입 `Long` → `UploaderId`
+  - [x] `forNew()`, `of()`, `reconstitute()` 메서드 구현
+  - [x] validateIdNotNullOrNew() 헬퍼 메서드 추가
+  - [x] 기존 `create()` 메서드 `@Deprecated`
+- [x] FileFixture 수정 (reconstitute() 사용, 타입 변경)
+- [x] 기존 테스트 수정 (getFileId() 반환 타입 변경)
+- [x] 모든 테스트 통과 확인 (22개)
+- [x] **커밋**: `feat: File 3종 팩토리 메서드 구현`
 
-**♻️ Refactor Phase**:
-- [ ] 생성자 검증 로직 개선
-- [ ] **커밋**: `struct: File 생성자 검증 로직 개선`
+**♻️ Refactor Phase**: [x] Complete (정리 불필요)
 
-**🧹 Tidy Phase**:
-- [ ] FileFixture 수정 (3종 팩토리 패턴)
-- [ ] **커밋**: `test: FileFixture 3종 팩토리 패턴 적용`
+**🧹 Tidy Phase**: [x] Complete (Green Phase에 포함됨)
 
 **✅ 완료 체크**:
-- [ ] 5개 신규 테스트 모두 통과
-- [ ] 생성자 private 확인
-- [ ] FileId, UploaderId 사용 확인
-- [ ] **총 커밋 수**: 3-4개
+- [x] 5개 신규 테스트 모두 통과
+- [x] 생성자 private 확인
+- [x] FileId, UploaderId 사용 확인
+- [x] **총 커밋 수**: 2개 (Red + Green)
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `c5c4062`
+- Green: `3185397`
+- Refactor: N/A (이미 정리됨)
+- Tidy: N/A (Green에 포함)
 
 ---
 

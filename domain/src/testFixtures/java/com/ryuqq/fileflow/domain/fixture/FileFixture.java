@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
 import com.ryuqq.fileflow.domain.vo.UploaderId;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 /**
@@ -220,6 +221,7 @@ public class FileFixture {
          */
         public File build() {
             return File.reconstitute(
+                    Clock.systemUTC(),
                     fileId,
                     fileName,
                     fileSize,

@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
 import com.ryuqq.fileflow.domain.vo.UploaderId;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -50,6 +51,7 @@ public class File {
             "text/csv"
     );
 
+    private final Clock clock;
     private final FileId fileId;
     private final String fileName;
     private final long fileSize;
@@ -73,6 +75,7 @@ public class File {
      * Private 생성자: 외부에서 직접 생성 불가, 팩토리 메서드 사용 필수
      * </p>
      *
+     * @param clock      시간 의존성 (테스트 가능한 시간 제어)
      * @param fileId     파일 고유 ID (FileId VO)
      * @param fileName   파일명
      * @param fileSize   파일 크기 (바이트)
@@ -91,6 +94,7 @@ public class File {
      * @param updatedAt  수정 시각
      */
     private File(
+            Clock clock,
             FileId fileId,
             String fileName,
             long fileSize,
@@ -108,6 +112,7 @@ public class File {
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
+        this.clock = clock;
         this.fileId = fileId;
         this.fileName = fileName;
         this.fileSize = fileSize;
@@ -252,6 +257,7 @@ public class File {
      * @param uploaderId  업로더 사용자 ID (UploaderId VO)
      * @param category    파일 카테고리
      * @param tags        태그 (콤마 구분, nullable)
+     * @param clock       시간 의존성 (테스트 가능한 시간 제어)
      * @return 생성된 File Aggregate (ID가 null)
      * @throws InvalidFileSizeException 파일 크기가 유효하지 않을 때
      * @throws InvalidMimeTypeException MIME 타입이 허용되지 않을 때
@@ -264,7 +270,8 @@ public class File {
             String s3Bucket,
             UploaderId uploaderId,
             String category,
-            String tags
+            String tags,
+            Clock clock
     ) {
         // 파일 크기 검증
         validateFileSize(fileSize);
@@ -272,13 +279,14 @@ public class File {
         // MIME 타입 검증
         validateMimeType(mimeType);
 
-        // 현재 시각
-        LocalDateTime now = LocalDateTime.now();
+        // 현재 시각 (Clock 사용)
+        LocalDateTime now = LocalDateTime.now(clock);
 
         // CDN URL 생성 (S3 키 기반)
         String cdnUrl = CDN_BASE_URL + s3Key;
 
         return new File(
+                clock, // Clock 주입
                 FileId.forNew(), // ID는 영속화 시점에 생성
                 fileName,
                 fileSize,
@@ -304,6 +312,7 @@ public class File {
      * ID가 필수인 파일을 생성합니다. 비즈니스 로직에서 사용합니다.
      * </p>
      *
+     * @param clock       시간 의존성 (테스트 가능한 시간 제어)
      * @param fileId      파일 고유 ID (필수, null 불가)
      * @param fileName    파일명
      * @param fileSize    파일 크기 (바이트)
@@ -324,6 +333,7 @@ public class File {
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID일 때
      */
     public static File of(
+            Clock clock,
             FileId fileId,
             String fileName,
             long fileSize,
@@ -344,6 +354,7 @@ public class File {
         validateIdNotNullOrNew(fileId, "ID는 null이거나 새로운 ID일 수 없습니다");
 
         return new File(
+                clock,
                 fileId,
                 fileName,
                 fileSize,
@@ -369,6 +380,7 @@ public class File {
      * 영속성 계층에서 조회한 데이터로 Aggregate를 재구성합니다.
      * </p>
      *
+     * @param clock       시간 의존성 (테스트 가능한 시간 제어)
      * @param fileId      파일 고유 ID (필수, null 불가)
      * @param fileName    파일명
      * @param fileSize    파일 크기 (바이트)
@@ -389,6 +401,7 @@ public class File {
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID일 때
      */
     public static File reconstitute(
+            Clock clock,
             FileId fileId,
             String fileName,
             long fileSize,
@@ -409,6 +422,7 @@ public class File {
         validateIdNotNullOrNew(fileId, "재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
 
         return new File(
+                clock,
                 fileId,
                 fileName,
                 fileSize,
@@ -450,7 +464,7 @@ public class File {
      * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
      * </p>
      *
-     * @deprecated {@link #forNew(String, long, String, String, String, UploaderId, String, String)} 사용을 권장합니다.
+     * @deprecated {@link #forNew(String, long, String, String, String, UploaderId, String, String, Clock)} 사용을 권장합니다.
      *
      * @param fileName    파일명
      * @param fileSize    파일 크기 (바이트)
@@ -475,7 +489,7 @@ public class File {
             String category,
             String tags
     ) {
-        // UploaderId VO로 변환하여 forNew() 호출
+        // UploaderId VO로 변환하여 forNew() 호출 (Clock.systemUTC() 사용)
         return forNew(
                 fileName,
                 fileSize,
@@ -484,7 +498,8 @@ public class File {
                 s3Bucket,
                 UploaderId.of(uploaderId),
                 category,
-                tags
+                tags,
+                Clock.systemUTC()
         );
     }
 
@@ -530,6 +545,7 @@ public class File {
      */
     private File withStatus(FileStatus newStatus) {
         return new File(
+                this.clock,
                 this.fileId,
                 this.fileName,
                 this.fileSize,
@@ -545,7 +561,7 @@ public class File {
                 this.version,
                 this.deletedAt,
                 this.createdAt,
-                LocalDateTime.now() // updatedAt 갱신
+                LocalDateTime.now(clock) // updatedAt 갱신 (Clock 사용)
         );
     }
 
@@ -606,6 +622,7 @@ public class File {
      */
     public File incrementRetryCount() {
         return new File(
+                this.clock,
                 this.fileId,
                 this.fileName,
                 this.fileSize,
@@ -621,7 +638,7 @@ public class File {
                 this.version,
                 this.deletedAt,
                 this.createdAt,
-                LocalDateTime.now() // updatedAt 갱신
+                LocalDateTime.now(clock) // updatedAt 갱신 (Clock 사용)
         );
     }
 
@@ -639,8 +656,9 @@ public class File {
             throw new IllegalStateException("이미 삭제된 파일입니다. 삭제 시각: " + this.deletedAt);
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock); // Clock 사용
         return new File(
+                this.clock,
                 this.fileId,
                 this.fileName,
                 this.fileSize,

@@ -106,7 +106,8 @@ class FileTest {
                 s3Bucket,
                 uploaderId,
                 category,
-                tags
+                tags,
+                java.time.Clock.systemUTC()
         );
 
         // Then
@@ -144,6 +145,7 @@ class FileTest {
         // When
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         File file = File.of(
+                java.time.Clock.systemUTC(),
                 fileId,
                 fileName,
                 fileSize,
@@ -180,6 +182,7 @@ class FileTest {
         // When & Then
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         assertThatThrownBy(() -> File.of(
+                java.time.Clock.systemUTC(),
                 nullFileId,
                 "test.jpg",
                 1024000L,
@@ -214,6 +217,7 @@ class FileTest {
         // When
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         File file = File.reconstitute(
+                java.time.Clock.systemUTC(),
                 fileId,
                 fileName,
                 fileSize,
@@ -252,6 +256,7 @@ class FileTest {
         // When & Then
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         assertThatThrownBy(() -> File.reconstitute(
+                java.time.Clock.systemUTC(),
                 nullFileId,
                 "test.jpg",
                 1024000L,
