@@ -22,6 +22,11 @@ public class File {
     private static final long MAX_FILE_SIZE = 1024L * 1024L * 1024L; // 1GB
 
     /**
+     * CDN URL 베이스 경로
+     */
+    private static final String CDN_BASE_URL = "https://cdn.fileflow.com/";
+
+    /**
      * 허용되는 MIME 타입 목록
      */
     private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
@@ -259,7 +264,7 @@ public class File {
         LocalDateTime now = LocalDateTime.now();
 
         // CDN URL 생성 (S3 키 기반)
-        String cdnUrl = "https://cdn.fileflow.com/" + s3Key;
+        String cdnUrl = CDN_BASE_URL + s3Key;
 
         return new File(
                 fileId,
