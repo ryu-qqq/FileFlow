@@ -347,37 +347,37 @@
 
 ---
 
-### 1️⃣2️⃣ MessageOutbox Aggregate Root - create() 및 비즈니스 메서드 (Cycle 12)
+### 1️⃣2️⃣ MessageOutbox Aggregate Root - create() 및 비즈니스 메서드 (Cycle 12) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldCreateOutboxWithPendingStatus()` 테스트
-- [ ] `shouldMarkAsSent()` 테스트
-- [ ] `shouldMarkAsSentWithProcessedAt()` 테스트
-- [ ] `shouldMarkAsFailed()` 테스트
-- [ ] `shouldIncrementRetryCount()` 테스트
-- [ ] `shouldReturnTrueWhenCanRetry()` 테스트
-- [ ] `shouldReturnFalseWhenCannotRetry()` 테스트
-- [ ] 테스트 실행 → 실패 확인
-- [ ] 커밋: `test: MessageOutbox 비즈니스 메서드 테스트 추가 (Red)`
+- [x] `shouldCreateOutboxWithPendingStatus()` 테스트
+- [x] `shouldMarkAsSent()` 테스트
+- [x] `shouldMarkAsSentWithProcessedAt()` 테스트
+- [x] `shouldMarkAsFailed()` 테스트
+- [x] `shouldIncrementRetryCount()` 테스트
+- [x] `shouldReturnTrueWhenCanRetry()` 테스트
+- [x] `shouldReturnFalseWhenCannotRetry()` 테스트
+- [x] 테스트 실행 → 실패 확인
+- [x] 커밋: `test: MessageOutbox 비즈니스 메서드 테스트 추가 (Red)` (a8cff50)
 
 #### 🟢 Green: 최소 구현
-- [ ] `MessageOutbox.create()` 정적 메서드 구현
-- [ ] `markAsSent()` 메서드 구현 (processedAt 설정)
-- [ ] `markAsFailed()` 메서드 구현
-- [ ] `incrementRetryCount()` 메서드 구현
-- [ ] `canRetry()` 메서드 구현
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `impl: MessageOutbox 비즈니스 메서드 구현 (Green)`
+- [x] `MessageOutbox.create()` 정적 메서드 구현
+- [x] `markAsSent()` 메서드 구현 (processedAt 설정)
+- [x] `markAsFailed()` 메서드 구현
+- [x] `incrementRetryCount()` 메서드 구현
+- [x] `canRetry()` 메서드 구현
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `impl: MessageOutbox 비즈니스 메서드 구현 (Green)` (8bafbff)
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Tell Don't Ask 원칙 준수
-- [ ] 커밋: `refactor: MessageOutbox 비즈니스 메서드 개선 (Refactor)`
+- [x] Tell Don't Ask 원칙 준수
+- [x] 커밋: `refactor: MessageOutbox 비즈니스 메서드 개선 (Refactor)` (d98cf99)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `MessageOutboxFixture.aSentOutbox()` 메서드 추가
-- [ ] `MessageOutboxFixture.aFailedOutbox()` 메서드 추가
-- [ ] 테스트 → Fixture 사용
-- [ ] 커밋: `test: MessageOutboxFixture 상태별 메서드 추가 (Tidy)`
+- [x] `MessageOutboxFixture.aSentOutbox()` 메서드 추가
+- [x] `MessageOutboxFixture.aFailedOutbox()` 메서드 추가
+- [x] 테스트 → Fixture 사용
+- [x] 커밋: `test: MessageOutboxFixture 상태별 메서드 추가 (Tidy)` (9c854f9)
 
 ---
 
