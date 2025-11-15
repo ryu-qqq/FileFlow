@@ -62,6 +62,8 @@ public class MessageOutbox {
             LocalDateTime createdAt,
             LocalDateTime processedAt
     ) {
+        validateConstructorArguments(eventType, aggregateId, payload, status, retryCount, maxRetryCount, createdAt);
+
         this.id = id;
         this.eventType = eventType;
         this.aggregateId = aggregateId;
@@ -71,6 +73,43 @@ public class MessageOutbox {
         this.maxRetryCount = maxRetryCount;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
+    }
+
+    /**
+     * 생성자 인수 검증
+     *
+     * @throws IllegalArgumentException 필수 인수가 null이거나 유효하지 않을 때
+     */
+    private void validateConstructorArguments(
+            String eventType,
+            String aggregateId,
+            String payload,
+            OutboxStatus status,
+            int retryCount,
+            int maxRetryCount,
+            LocalDateTime createdAt
+    ) {
+        if (eventType == null || eventType.isBlank()) {
+            throw new IllegalArgumentException("eventType은 null이거나 빈 값일 수 없습니다");
+        }
+        if (aggregateId == null || aggregateId.isBlank()) {
+            throw new IllegalArgumentException("aggregateId는 null이거나 빈 값일 수 없습니다");
+        }
+        if (payload == null || payload.isBlank()) {
+            throw new IllegalArgumentException("payload는 null이거나 빈 값일 수 없습니다");
+        }
+        if (status == null) {
+            throw new IllegalArgumentException("status는 null일 수 없습니다");
+        }
+        if (retryCount < 0) {
+            throw new IllegalArgumentException("retryCount는 0 이상이어야 합니다");
+        }
+        if (maxRetryCount <= 0) {
+            throw new IllegalArgumentException("maxRetryCount는 1 이상이어야 합니다");
+        }
+        if (createdAt == null) {
+            throw new IllegalArgumentException("createdAt은 null일 수 없습니다");
+        }
     }
 
     /**
