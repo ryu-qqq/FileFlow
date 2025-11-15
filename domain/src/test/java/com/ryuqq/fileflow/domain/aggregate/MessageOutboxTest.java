@@ -104,7 +104,7 @@ class MessageOutboxTest {
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
 
         // When
-        MessageOutbox sentOutbox = outbox.markAsSent();
+        MessageOutbox sentOutbox = outbox.markAsSent(Clock.systemUTC());
 
         // Then
         assertThat(sentOutbox.getStatus()).isEqualTo(OutboxStatusFixture.sent());
@@ -123,7 +123,7 @@ class MessageOutboxTest {
         );
 
         // When
-        MessageOutbox sentOutbox = outbox.markAsSent();
+        MessageOutbox sentOutbox = outbox.markAsSent(Clock.systemUTC());
 
         // Then
         assertThat(sentOutbox.getProcessedAt()).isNotNull();
@@ -142,7 +142,7 @@ class MessageOutboxTest {
         );
 
         // When
-        MessageOutbox failedOutbox = outbox.markAsFailed();
+        MessageOutbox failedOutbox = outbox.markAsFailed(Clock.systemUTC());
 
         // Then
         assertThat(failedOutbox.getStatus()).isEqualTo(OutboxStatusFixture.failed());
@@ -278,7 +278,8 @@ class MessageOutboxTest {
                 eventType,
                 aggregateId,
                 payload,
-                maxRetryCount
+                maxRetryCount,
+                Clock.systemUTC()
         );
 
         // Then
@@ -316,6 +317,7 @@ class MessageOutboxTest {
                 status,
                 retryCount,
                 maxRetryCount,
+                Clock.systemUTC(),
                 createdAt,
                 null
         );
@@ -343,6 +345,7 @@ class MessageOutboxTest {
                 OutboxStatusFixture.pending(),
                 0,
                 3,
+                Clock.systemUTC(),
                 LocalDateTime.now(),
                 null
         ))
@@ -373,6 +376,7 @@ class MessageOutboxTest {
                 status,
                 retryCount,
                 maxRetryCount,
+                Clock.systemUTC(),
                 createdAt,
                 processedAt
         );
@@ -401,6 +405,7 @@ class MessageOutboxTest {
                 OutboxStatusFixture.pending(),
                 0,
                 3,
+                Clock.systemUTC(),
                 LocalDateTime.now(),
                 null
         ))

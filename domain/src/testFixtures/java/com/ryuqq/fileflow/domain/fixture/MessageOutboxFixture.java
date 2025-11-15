@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 /**
@@ -28,7 +29,7 @@ public class MessageOutboxFixture {
      * @return 신규 MessageOutbox Aggregate (ID null)
      */
     public static MessageOutbox createOutbox(String eventType, String aggregateId, String payload, int maxRetryCount) {
-        return MessageOutbox.forNew(eventType, aggregateId, payload, maxRetryCount);
+        return MessageOutbox.forNew(eventType, aggregateId, payload, maxRetryCount, Clock.systemUTC());
     }
 
     /**
@@ -56,7 +57,7 @@ public class MessageOutboxFixture {
                 "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}",
                 3
         );
-        return outbox.markAsSent();
+        return outbox.markAsSent(Clock.systemUTC());
     }
 
     /**
@@ -69,7 +70,7 @@ public class MessageOutboxFixture {
                 "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}",
                 3
         );
-        return outbox.markAsFailed();
+        return outbox.markAsFailed(Clock.systemUTC());
     }
 
     /**
@@ -94,6 +95,7 @@ public class MessageOutboxFixture {
         private OutboxStatus status = OutboxStatusFixture.pending();
         private int retryCount = 0;
         private int maxRetryCount = 3;
+        private Clock clock = Clock.systemUTC();
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime processedAt = null;
 
@@ -132,6 +134,11 @@ public class MessageOutboxFixture {
             return this;
         }
 
+        public MessageOutboxBuilder clock(Clock clock) {
+            this.clock = clock;
+            return this;
+        }
+
         public MessageOutboxBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -154,6 +161,7 @@ public class MessageOutboxFixture {
                     status,
                     retryCount,
                     maxRetryCount,
+                    clock,
                     createdAt,
                     processedAt
             );

@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.domain.util.UuidV7Generator;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 /**
@@ -31,6 +32,7 @@ public class MessageOutbox {
     private final OutboxStatus status;
     private final int retryCount;
     private final int maxRetryCount;
+    private final Clock clock;
     private final LocalDateTime createdAt;
     private final LocalDateTime processedAt;
 
@@ -48,6 +50,7 @@ public class MessageOutbox {
      * @param status        메시지 상태
      * @param retryCount    재시도 횟수
      * @param maxRetryCount 최대 재시도 횟수
+     * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
      */
@@ -59,10 +62,11 @@ public class MessageOutbox {
             OutboxStatus status,
             int retryCount,
             int maxRetryCount,
+            Clock clock,
             LocalDateTime createdAt,
             LocalDateTime processedAt
     ) {
-        validateConstructorArguments(eventType, aggregateId, payload, status, retryCount, maxRetryCount, createdAt);
+        validateConstructorArguments(eventType, aggregateId, payload, status, retryCount, maxRetryCount, clock, createdAt);
 
         this.id = id;
         this.eventType = eventType;
@@ -71,6 +75,7 @@ public class MessageOutbox {
         this.status = status;
         this.retryCount = retryCount;
         this.maxRetryCount = maxRetryCount;
+        this.clock = clock;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
     }
@@ -87,6 +92,7 @@ public class MessageOutbox {
             OutboxStatus status,
             int retryCount,
             int maxRetryCount,
+            Clock clock,
             LocalDateTime createdAt
     ) {
         if (eventType == null || eventType.isBlank()) {
@@ -106,6 +112,9 @@ public class MessageOutbox {
         }
         if (maxRetryCount <= 0) {
             throw new IllegalArgumentException("maxRetryCount는 1 이상이어야 합니다");
+        }
+        if (clock == null) {
+            throw new IllegalArgumentException("clock은 null일 수 없습니다");
         }
         if (createdAt == null) {
             throw new IllegalArgumentException("createdAt은 null일 수 없습니다");
@@ -186,13 +195,15 @@ public class MessageOutbox {
      * @param aggregateId   이벤트 발생 Aggregate ID
      * @param payload       이벤트 페이로드 (JSON)
      * @param maxRetryCount 최대 재시도 횟수
+     * @param clock         시간 생성용 Clock
      * @return 신규 MessageOutbox Aggregate (ID null)
      */
     public static MessageOutbox forNew(
             String eventType,
             String aggregateId,
             String payload,
-            int maxRetryCount
+            int maxRetryCount,
+            Clock clock
     ) {
         return new MessageOutbox(
                 null, // ID는 영속화 시점에 생성
@@ -202,7 +213,8 @@ public class MessageOutbox {
                 OutboxStatus.PENDING,
                 0, // 초기 재시도 횟수
                 maxRetryCount,
-                LocalDateTime.now(),
+                clock,
+                LocalDateTime.now(clock),
                 null
         );
     }
@@ -221,6 +233,7 @@ public class MessageOutbox {
      * @param status        메시지 상태
      * @param retryCount    재시도 횟수
      * @param maxRetryCount 최대 재시도 횟수
+     * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
      * @return MessageOutbox Aggregate
@@ -234,6 +247,7 @@ public class MessageOutbox {
             OutboxStatus status,
             int retryCount,
             int maxRetryCount,
+            Clock clock,
             LocalDateTime createdAt,
             LocalDateTime processedAt
     ) {
@@ -249,6 +263,7 @@ public class MessageOutbox {
                 status,
                 retryCount,
                 maxRetryCount,
+                clock,
                 createdAt,
                 processedAt
         );
@@ -268,6 +283,7 @@ public class MessageOutbox {
      * @param status        메시지 상태
      * @param retryCount    재시도 횟수
      * @param maxRetryCount 최대 재시도 횟수
+     * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
      * @return 복원된 MessageOutbox Aggregate
@@ -281,6 +297,7 @@ public class MessageOutbox {
             OutboxStatus status,
             int retryCount,
             int maxRetryCount,
+            Clock clock,
             LocalDateTime createdAt,
             LocalDateTime processedAt
     ) {
@@ -296,6 +313,7 @@ public class MessageOutbox {
                 status,
                 retryCount,
                 maxRetryCount,
+                clock,
                 createdAt,
                 processedAt
         );
@@ -307,7 +325,7 @@ public class MessageOutbox {
      * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
      * </p>
      *
-     * @deprecated 대신 {@link #forNew(String, String, String, int)}를 사용하세요.
+     * @deprecated 대신 {@link #forNew(String, String, String, int, Clock)}를 사용하세요.
      * @param eventType     이벤트 유형
      * @param aggregateId   이벤트 발생 Aggregate ID
      * @param payload       이벤트 페이로드 (JSON)
@@ -324,8 +342,9 @@ public class MessageOutbox {
         // UUID v7 자동 생성
         String id = UuidV7Generator.generate();
 
-        // 현재 시각
-        LocalDateTime now = LocalDateTime.now();
+        // 기본 Clock 사용
+        Clock systemClock = Clock.systemUTC();
+        LocalDateTime now = LocalDateTime.now(systemClock);
 
         return new MessageOutbox(
                 MessageOutboxId.of(id),
@@ -335,6 +354,7 @@ public class MessageOutbox {
                 OutboxStatus.PENDING, // 초기 상태는 PENDING
                 0, // 초기 재시도 횟수 0
                 maxRetryCount,
+                systemClock,
                 now, // createdAt
                 null  // processedAt는 null
         );
@@ -362,6 +382,7 @@ public class MessageOutbox {
                 newStatus,
                 this.retryCount,
                 this.maxRetryCount,
+                this.clock,
                 this.createdAt,
                 processedAt
         );
@@ -370,19 +391,21 @@ public class MessageOutbox {
     /**
      * 메시지를 발송 완료 상태로 변경
      *
+     * @param clock 시간 생성용 Clock
      * @return 새로운 MessageOutbox 객체 (SENT 상태)
      */
-    public MessageOutbox markAsSent() {
-        return withStatus(OutboxStatus.SENT, LocalDateTime.now());
+    public MessageOutbox markAsSent(Clock clock) {
+        return withStatus(OutboxStatus.SENT, LocalDateTime.now(clock));
     }
 
     /**
      * 메시지를 실패 상태로 변경
      *
+     * @param clock 시간 생성용 Clock
      * @return 새로운 MessageOutbox 객체 (FAILED 상태)
      */
-    public MessageOutbox markAsFailed() {
-        return withStatus(OutboxStatus.FAILED, LocalDateTime.now());
+    public MessageOutbox markAsFailed(Clock clock) {
+        return withStatus(OutboxStatus.FAILED, LocalDateTime.now(clock));
     }
 
     /**
@@ -399,6 +422,7 @@ public class MessageOutbox {
                 this.status,
                 this.retryCount + 1,
                 this.maxRetryCount,
+                this.clock,
                 this.createdAt,
                 this.processedAt
         );
@@ -427,7 +451,7 @@ public class MessageOutbox {
             return false;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(this.clock);
 
         if (this.status == OutboxStatus.SENT) {
             LocalDateTime expiryDate = this.processedAt.plusDays(SENT_TTL_DAYS);
