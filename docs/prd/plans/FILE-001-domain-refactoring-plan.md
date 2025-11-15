@@ -735,43 +735,40 @@
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/FileTest.java`
 - `domain/src/testFixtures/java/com/ryuqq/fileflow/domain/fixture/FileFixture.java`
 
-**🔴 Red Phase**:
-- [ ] FileTest.java에 Clock 관련 테스트 추가
-  - [ ] `shouldUseClockForCreatedAt()` - forNew() Clock 검증
-  - [ ] `shouldUseClockForUpdatedAt()` - markAsCompleted() Clock 검증
-  - [ ] `shouldCreateFileWithFixedClock()` - 고정 시간 테스트
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: File Clock 의존성 테스트 추가`
+**🔴 Red Phase**: [x] Complete
+- [x] FileTest.java에 Clock 관련 테스트 추가
+  - [x] `shouldUseClockForCreatedAt()` - forNew() Clock 검증
+  - [x] `shouldUseClockForUpdatedAt()` - markAsCompleted() Clock 검증
+  - [x] `shouldCreateFileWithFixedClock()` - 고정 시간 테스트
+- [x] 컴파일 에러 확인 (3개 에러)
+- [x] **커밋**: `test: File Clock 의존성 테스트 추가`
 
-**🟢 Green Phase**:
-- [ ] File.java 수정
-  - [ ] `private final Clock clock;` 필드 추가
-  - [ ] 생성자에 Clock 파라미터 추가
-  - [ ] 모든 `LocalDateTime.now()` → `LocalDateTime.now(clock)` 변경 (6곳)
-  - [ ] forNew(), of(), reconstitute() 메서드에 Clock 추가
-- [ ] 기존 테스트 수정 (Clock.systemUTC())
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: File Clock 의존성 주입`
+**🟢 Green Phase**: [x] Complete
+- [x] File.java 수정
+  - [x] `private final Clock clock;` 필드 추가
+  - [x] 생성자에 Clock 파라미터 추가
+  - [x] 모든 `LocalDateTime.now()` → `LocalDateTime.now(clock)` 변경 (4곳: forNew, withStatus, incrementRetryCount, softDelete)
+  - [x] forNew(), of(), reconstitute(), create() 메서드에 Clock 추가
+- [x] FileFixture 수정 (Clock.systemUTC())
+- [x] 기존 테스트 5개 수정 (Clock.systemUTC())
+- [x] 모든 테스트 통과 확인 (25개: 22 기존 + 3 신규)
+- [x] **커밋**: `feat: File Clock 의존성 주입`
 
-**♻️ Refactor Phase**:
-- [ ] Clock 관련 중복 코드 제거
-- [ ] **커밋**: `struct: Clock 사용 로직 정리` (필요 시)
+**♻️ Refactor Phase**: [x] Complete (정리 불필요)
 
-**🧹 Tidy Phase**:
-- [ ] FileFixture 수정 (Clock 사용)
-- [ ] **커밋**: `test: File Clock Fixture 추가`
+**🧹 Tidy Phase**: [x] Complete (Green Phase에 포함됨)
 
 **✅ 완료 체크**:
-- [ ] 3개 신규 테스트 모두 통과
-- [ ] Clock 필드 존재 확인
-- [ ] LocalDateTime.now() 직접 호출 0개 확인
-- [ ] **총 커밋 수**: 3-4개
+- [x] 3개 신규 테스트 모두 통과
+- [x] Clock 필드 존재 확인
+- [x] LocalDateTime.now() 직접 호출 0개 확인
+- [x] **총 커밋 수**: 2개 (Red + Green)
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `ded9e60`
+- Green: `14ec9e3`
+- Refactor: N/A (이미 정리됨)
+- Tidy: N/A (Green에 포함)
 
 ---
 
