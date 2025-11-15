@@ -355,49 +355,6 @@ public class FileProcessingJob {
         }
     }
 
-    /**
-     * 파일 처리 작업 생성 팩토리 메서드
-     * <p>
-     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
-     * </p>
-     *
-     * @param fileId        파일 고유 ID (String)
-     * @param jobType       작업 유형
-     * @param inputS3Key    입력 파일 S3 키
-     * @param maxRetryCount 최대 재시도 횟수
-     * @return 생성된 FileProcessingJob Aggregate
-     * @deprecated forNew() 사용을 권장합니다 (VO 타입 + Clock 사용)
-     */
-    @Deprecated
-    public static FileProcessingJob create(
-            String fileId,
-            JobType jobType,
-            String inputS3Key,
-            int maxRetryCount
-    ) {
-        // UUID v7 자동 생성
-        String jobIdValue = UuidV7Generator.generate();
-
-        // Clock은 기본 systemUTC() 사용
-        java.time.Clock clock = java.time.Clock.systemUTC();
-        LocalDateTime now = LocalDateTime.now(clock);
-
-        return new FileProcessingJob(
-                FileProcessingJobId.of(jobIdValue),
-                FileId.of(fileId),
-                jobType,
-                JobStatus.PENDING, // 초기 상태는 PENDING
-                0, // 초기 재시도 횟수 0
-                maxRetryCount,
-                inputS3Key,
-                null, // outputS3Key는 null
-                null, // errorMessage는 null
-                now, // createdAt
-                null, // processedAt는 null
-                now, // updatedAt = createdAt (초기 생성 시)
-                clock
-        );
-    }
 
     /**
      * 작업 상태를 PROCESSING으로 변경

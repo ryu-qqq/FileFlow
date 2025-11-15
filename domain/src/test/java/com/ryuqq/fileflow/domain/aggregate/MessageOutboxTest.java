@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
+import com.ryuqq.fileflow.domain.fixture.AggregateIdFixture;
 import com.ryuqq.fileflow.domain.fixture.MessageOutboxFixture;
 import com.ryuqq.fileflow.domain.fixture.MessageOutboxIdFixture;
 import com.ryuqq.fileflow.domain.fixture.OutboxStatusFixture;
@@ -62,26 +63,25 @@ class MessageOutboxTest {
         assertThat(outbox.getCreatedAt()).isNotNull();
     }
 
-    // ===== create() 팩토리 메서드 테스트 =====
+    // ===== forNew() 팩토리 메서드 테스트 =====
 
     @Test
-    @DisplayName("create() 팩토리 메서드로 UUID v7과 PENDING 상태로 메시지를 생성해야 한다")
-    void shouldCreateOutboxWithPendingStatus() {
+    @DisplayName("forNew() 팩토리 메서드로 신규 메시지를 PENDING 상태로 생성해야 한다")
+    void shouldCreateOutboxWithForNewAndPendingStatus() {
         // Given
         String eventType = "FileCreated";
-        String aggregateId = "file-uuid-v7-123";
+        AggregateId aggregateId = AggregateIdFixture.anAggregateId();
         String payload = "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}";
         int maxRetryCount = 3;
+        Clock clock = Clock.systemUTC();
 
         // When
-        MessageOutbox outbox = MessageOutbox.create(eventType, aggregateId, payload, maxRetryCount);
+        MessageOutbox outbox = MessageOutbox.forNew(eventType, aggregateId, payload, maxRetryCount, clock);
 
         // Then
-        assertThat(outbox.getId()).isNotNull(); // UUID v7 자동 생성
-        assertThat(outbox.getId().getValue()).isNotBlank();
-        assertThat(outbox.getId().getValue()).hasSize(36); // UUID 표준 길이
+        assertThat(outbox.getId()).isNull(); // ID는 영속화 전 (null)
         assertThat(outbox.getEventType()).isEqualTo(eventType);
-        assertThat(outbox.getAggregateId()).isEqualTo(AggregateId.of(aggregateId));
+        assertThat(outbox.getAggregateId()).isEqualTo(aggregateId);
         assertThat(outbox.getPayload()).isEqualTo(payload);
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending()); // PENDING 상태
         assertThat(outbox.getRetryCount()).isEqualTo(0); // 초기 재시도 횟수 0

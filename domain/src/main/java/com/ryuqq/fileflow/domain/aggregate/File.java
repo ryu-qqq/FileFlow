@@ -541,10 +541,8 @@ public class File {
      * <p>
      * 가변 패턴: 동일한 객체를 변경합니다.
      * </p>
-     *
-     * @param errorMessage 실패 사유
      */
-    public void markAsFailed(String errorMessage) {
+    public void markAsFailed() {
         this.status = FileStatus.FAILED;
         this.updatedAt = LocalDateTime.now(clock);
     }

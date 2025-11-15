@@ -297,22 +297,22 @@ class FileProcessingJobTest {
     // ===== create() 팩토리 메서드 테스트 =====
 
     @Test
-    @DisplayName("create() 팩토리 메서드로 UUID v7과 PENDING 상태로 작업을 생성해야 한다")
-    void shouldCreateJobWithUuidV7AndPendingStatus() {
+    @DisplayName("forNew() 팩토리 메서드로 신규 작업을 PENDING 상태로 생성해야 한다")
+    void shouldCreateJobWithForNewAndPendingStatus() {
         // Given
-        String fileIdValue = "file-uuid-v7-123";
+        FileId fileId = FileIdFixture.aFileId();
         JobType jobType = JobTypeFixture.thumbnailGeneration();
         String inputS3Key = "uploads/2024/01/image.jpg";
         int maxRetryCount = 3;
+        java.time.Clock clock = java.time.Clock.systemUTC();
 
         // When
-        @SuppressWarnings("deprecation")
-        FileProcessingJob job = FileProcessingJob.create(fileIdValue, jobType, inputS3Key, maxRetryCount);
+        FileProcessingJob job = FileProcessingJob.forNew(fileId, jobType, inputS3Key, maxRetryCount, clock);
 
         // Then
-        assertThat(job.getJobId()).isNotNull(); // UUID v7 자동 생성
-        assertThat(job.getJobId().getValue()).hasSize(36); // UUID 표준 길이
-        assertThat(job.getFileId()).isEqualTo(FileId.of(fileIdValue));
+        assertThat(job.getJobId()).isNotNull();
+        assertThat(job.getJobId().isNew()).isTrue(); // ID는 영속화 전 (null)
+        assertThat(job.getFileId()).isEqualTo(fileId);
         assertThat(job.getJobType()).isEqualTo(jobType);
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending()); // PENDING 상태
         assertThat(job.getInputS3Key()).isEqualTo(inputS3Key);

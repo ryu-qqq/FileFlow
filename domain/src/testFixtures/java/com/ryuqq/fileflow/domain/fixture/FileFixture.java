@@ -105,7 +105,7 @@ public class FileFixture {
      */
     public static File aFailedFile() {
         File file = createFile("failed.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        file.markAsFailed("Upload error");
+        file.markAsFailed();
         return file;
     }
 

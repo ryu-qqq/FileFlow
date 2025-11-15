@@ -363,47 +363,6 @@ public class MessageOutbox {
         );
     }
 
-    /**
-     * 메시지 아웃박스 생성 팩토리 메서드 (레거시)
-     * <p>
-     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
-     * </p>
-     *
-     * @deprecated 대신 {@link #forNew(String, AggregateId, String, int, Clock)}를 사용하세요.
-     * @param eventType     이벤트 유형
-     * @param aggregateId   이벤트 발생 Aggregate ID
-     * @param payload       이벤트 페이로드 (JSON)
-     * @param maxRetryCount 최대 재시도 횟수
-     * @return 생성된 MessageOutbox Aggregate
-     */
-    @Deprecated
-    public static MessageOutbox create(
-            String eventType,
-            String aggregateId,
-            String payload,
-            int maxRetryCount
-    ) {
-        // UUID v7 자동 생성
-        String id = UuidV7Generator.generate();
-
-        // 기본 Clock 사용
-        Clock systemClock = Clock.systemUTC();
-        LocalDateTime now = LocalDateTime.now(systemClock);
-
-        return new MessageOutbox(
-                MessageOutboxId.of(id),
-                eventType,
-                AggregateId.of(aggregateId),
-                payload,
-                OutboxStatus.PENDING, // 초기 상태는 PENDING
-                0, // 초기 재시도 횟수 0
-                maxRetryCount,
-                systemClock,
-                now, // createdAt
-                null, // processedAt는 null
-                now   // updatedAt = createdAt (초기 생성 시)
-        );
-    }
 
     /**
      * 메시지를 발송 완료 상태로 변경

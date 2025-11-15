@@ -35,20 +35,6 @@ public class MessageOutboxFixture {
         return MessageOutbox.forNew(eventType, AggregateId.of(aggregateId), payload, maxRetryCount, Clock.systemUTC());
     }
 
-    /**
-     * MessageOutbox.create() 팩토리 메서드 사용 (레거시)
-     *
-     * @deprecated 대신 {@link #createOutbox(String, String, String, int)}를 사용하세요 (내부적으로 forNew() 사용)
-     * @param eventType     이벤트 유형
-     * @param aggregateId   이벤트 발생 Aggregate ID
-     * @param payload       이벤트 페이로드 (JSON)
-     * @param maxRetryCount 최대 재시도 횟수
-     * @return 생성된 MessageOutbox Aggregate
-     */
-    @Deprecated
-    public static MessageOutbox createOutboxLegacy(String eventType, String aggregateId, String payload, int maxRetryCount) {
-        return MessageOutbox.create(eventType, aggregateId, payload, maxRetryCount);
-    }
 
     /**
      * SENT 상태 메시지

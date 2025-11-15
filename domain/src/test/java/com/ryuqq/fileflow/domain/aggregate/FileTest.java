@@ -407,7 +407,7 @@ class FileTest {
         File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
 
         // When
-        file.markAsFailed("Upload error");
+        file.markAsFailed();
 
         // Then
         assertThat(file.getStatus()).isEqualTo(FileStatusFixture.failed());
@@ -615,10 +615,9 @@ class FileTest {
         File file = com.ryuqq.fileflow.domain.fixture.FileFixture.aFile()
                 .status(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.uploading())
                 .build();
-        String errorMessage = "Upload failed";
 
         // When
-        file.markAsFailed(errorMessage);
+        file.markAsFailed();
 
         // Then - 동일한 객체가 변경됨
         assertThat(file.getStatus()).isEqualTo(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.failed());
