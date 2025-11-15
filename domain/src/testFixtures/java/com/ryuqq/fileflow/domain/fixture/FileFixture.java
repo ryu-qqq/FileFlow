@@ -103,6 +103,14 @@ public class FileFixture {
     }
 
     /**
+     * 삭제된 파일 (softDelete)
+     */
+    public static File aDeletedFile() {
+        File file = createFile("deleted.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
+        return file.softDelete();
+    }
+
+    /**
      * File Builder (Plain Java, Lombok 금지)
      */
     public static class FileBuilder {
