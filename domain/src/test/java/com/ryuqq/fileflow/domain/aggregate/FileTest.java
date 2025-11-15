@@ -635,4 +635,34 @@ class FileTest {
         // Then - 반환값이 void이므로 상태만 검증
         assertThat(file.getStatus()).isEqualTo(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.completed());
     }
+
+    // ===== Law of Demeter 테스트 =====
+
+    @Test
+    @DisplayName("getFileIdValue()는 체이닝 없이 FileId 값을 반환해야 한다")
+    void shouldReturnFileIdValueWithoutChaining() {
+        // Given
+        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+
+        // When
+        Long fileIdValue = file.getFileIdValue();
+
+        // Then
+        assertThat(fileIdValue).isNotNull();
+        assertThat(fileIdValue).isEqualTo(file.getFileId().getValue());
+    }
+
+    @Test
+    @DisplayName("getUploaderIdValue()는 체이닝 없이 UploaderId 값을 반환해야 한다")
+    void shouldReturnUploaderIdValueWithoutChaining() {
+        // Given
+        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+
+        // When
+        Long uploaderIdValue = file.getUploaderIdValue();
+
+        // Then
+        assertThat(uploaderIdValue).isNotNull();
+        assertThat(uploaderIdValue).isEqualTo(file.getUploaderId().getValue());
+    }
 }
