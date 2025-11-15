@@ -117,6 +117,7 @@ public class FileFixture {
         private Long uploaderId = 12345L;
         private String category = "OTHER";
         private String tags = null;
+        private int retryCount = 0;
         private int version = 1;
         private LocalDateTime deletedAt = null;
         private LocalDateTime createdAt = LocalDateTime.now();
@@ -179,6 +180,11 @@ public class FileFixture {
             return this;
         }
 
+        public FileBuilder retryCount(int retryCount) {
+            this.retryCount = retryCount;
+            return this;
+        }
+
         public FileBuilder version(int version) {
             this.version = version;
             return this;
@@ -215,6 +221,7 @@ public class FileFixture {
                     uploaderId,
                     category,
                     tags,
+                    retryCount,
                     version,
                     deletedAt,
                     createdAt,

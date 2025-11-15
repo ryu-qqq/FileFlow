@@ -60,6 +60,7 @@ public class File {
     private final Long uploaderId;
     private final String category;
     private final String tags;
+    private final int retryCount;
     private final int version;
     private final LocalDateTime deletedAt;
     private final LocalDateTime createdAt;
@@ -79,6 +80,7 @@ public class File {
      * @param uploaderId 업로더 사용자 ID (Long FK 전략)
      * @param category   파일 카테고리
      * @param tags       태그 (콤마 구분)
+     * @param retryCount 재시도 횟수
      * @param version    낙관적 락 버전
      * @param deletedAt  소프트 삭제 시각
      * @param createdAt  생성 시각
@@ -96,6 +98,7 @@ public class File {
             Long uploaderId,
             String category,
             String tags,
+            int retryCount,
             int version,
             LocalDateTime deletedAt,
             LocalDateTime createdAt,
@@ -112,6 +115,7 @@ public class File {
         this.uploaderId = uploaderId;
         this.category = category;
         this.tags = tags;
+        this.retryCount = retryCount;
         this.version = version;
         this.deletedAt = deletedAt;
         this.createdAt = createdAt;
@@ -193,6 +197,13 @@ public class File {
      */
     public String getTags() {
         return tags;
+    }
+
+    /**
+     * 재시도 횟수 조회
+     */
+    public int getRetryCount() {
+        return retryCount;
     }
 
     /**
@@ -278,6 +289,7 @@ public class File {
                 uploaderId,
                 category,
                 tags,
+                0, // 초기 재시도 횟수 0
                 1, // 초기 버전 1
                 null, // deletedAt은 null
                 now, // createdAt
@@ -338,6 +350,7 @@ public class File {
                 this.uploaderId,
                 this.category,
                 this.tags,
+                this.retryCount,
                 this.version,
                 this.deletedAt,
                 this.createdAt,
