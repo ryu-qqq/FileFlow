@@ -281,39 +281,40 @@
 
 ---
 
-### 🔟 FileProcessingJob Aggregate Root - create() 및 비즈니스 메서드 (Cycle 10)
+### ✅ 🔟 FileProcessingJob Aggregate Root - create() 및 비즈니스 메서드 (Cycle 10) - 완료
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldCreateJobWithUuidV7AndPendingStatus()` 테스트
-- [ ] `shouldMarkAsProcessing()` 테스트
-- [ ] `shouldMarkAsCompleted()` 테스트
-- [ ] `shouldMarkAsFailed()` 테스트
-- [ ] `shouldIncrementRetryCount()` 테스트
-- [ ] `shouldReturnTrueWhenCanRetry()` 테스트
-- [ ] `shouldReturnFalseWhenCannotRetry()` 테스트
-- [ ] 테스트 실행 → 실패 확인
-- [ ] 커밋: `test: FileProcessingJob 비즈니스 메서드 테스트 추가 (Red)`
+- [x] `shouldCreateJobWithUuidV7AndPendingStatus()` 테스트
+- [x] `shouldMarkAsProcessing()` 테스트
+- [x] `shouldMarkAsCompleted()` 테스트
+- [x] `shouldMarkAsFailed()` 테스트
+- [x] `shouldIncrementRetryCount()` 테스트
+- [x] `shouldReturnTrueWhenCanRetry()` 테스트
+- [x] `shouldReturnFalseWhenCannotRetry()` 테스트
+- [x] 테스트 실행 → 실패 확인
+- [x] 커밋: `test: FileProcessingJob 비즈니스 메서드 테스트 추가 (Red)` (aa2b24b)
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileProcessingJob.create()` 정적 메서드 구현
-- [ ] `markAsProcessing()` 메서드 구현
-- [ ] `markAsCompleted(String outputS3Key)` 메서드 구현
-- [ ] `markAsFailed(String errorMessage)` 메서드 구현
-- [ ] `incrementRetryCount()` 메서드 구현
-- [ ] `canRetry()` 메서드 구현 (retryCount < maxRetryCount)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `impl: FileProcessingJob 비즈니스 메서드 구현 (Green)`
+- [x] `FileProcessingJob.create()` 정적 메서드 구현
+- [x] `markAsProcessing()` 메서드 구현
+- [x] `markAsCompleted(String outputS3Key)` 메서드 구현
+- [x] `markAsFailed(String errorMessage)` 메서드 구현
+- [x] `incrementRetryCount()` 메서드 구현
+- [x] `canRetry()` 메서드 구현 (retryCount < maxRetryCount)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: FileProcessingJob 비즈니스 메서드 구현 (Green)` (c35eadb)
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 상태 전환 시 processedAt 자동 설정
-- [ ] Tell Don't Ask 원칙 준수
-- [ ] 커밋: `refactor: FileProcessingJob 비즈니스 메서드 개선 (Refactor)`
+- [x] withStatus() 헬퍼 메서드 추출 (중복 제거)
+- [x] 상태 전환 시 processedAt 자동 설정
+- [x] Tell Don't Ask 원칙 준수
+- [x] 커밋: `struct: FileProcessingJob 상태 전환 로직 공통화 (Refactor)` (4d21796)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileProcessingJobFixture.aCompletedJob()` 메서드 추가
-- [ ] `FileProcessingJobFixture.aFailedJob()` 메서드 추가
-- [ ] 테스트 → Fixture 사용
-- [ ] 커밋: `test: FileProcessingJobFixture 상태별 메서드 추가 (Tidy)`
+- [x] `FileProcessingJobFixture.aCompletedJob()` 메서드 추가
+- [x] `FileProcessingJobFixture.aFailedJob()` 메서드 추가
+- [x] 테스트 → Fixture 사용
+- [x] 커밋: `test: FileProcessingJobFixture 상태별 메서드 추가 (Tidy)` (6a2fe25)
 
 ---
 
