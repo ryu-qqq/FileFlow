@@ -82,50 +82,51 @@
 - `domain/src/testFixtures/java/com/ryuqq/fileflow/domain/fixture/MessageOutboxFixture.java`
 
 **🔴 Red Phase**:
-- [ ] MessageOutboxTest.java에 3종 팩토리 테스트 추가
-  - [ ] `shouldCreateNewOutboxWithForNew()` - forNew() 테스트 (ID null)
-  - [ ] `shouldCreateOutboxWithOf()` - of() 테스트 (ID 필수)
-  - [ ] `shouldThrowExceptionWhenOfWithNullId()` - of() null 검증
-  - [ ] `shouldReconstituteOutbox()` - reconstitute() 테스트
-  - [ ] `shouldThrowExceptionWhenReconstituteWithNullId()` - reconstitute() null 검증
-- [ ] 컴파일 에러 확인 (메서드 없음)
-- [ ] **커밋**: `test: MessageOutbox 3종 팩토리 메서드 테스트 추가`
+- [x] MessageOutboxTest.java에 3종 팩토리 테스트 추가
+  - [x] `shouldCreateNewOutboxWithForNew()` - forNew() 테스트 (ID null)
+  - [x] `shouldCreateOutboxWithOf()` - of() 테스트 (ID 필수)
+  - [x] `shouldThrowExceptionWhenOfWithNullId()` - of() null 검증
+  - [x] `shouldReconstituteOutbox()` - reconstitute() 테스트
+  - [x] `shouldThrowExceptionWhenReconstituteWithNullId()` - reconstitute() null 검증
+- [x] 컴파일 에러 확인 (메서드 없음)
+- [x] **커밋**: `test: MessageOutbox 3종 팩토리 메서드 테스트 추가`
 
 **🟢 Green Phase**:
-- [ ] MessageOutbox.java 수정
-  - [ ] 생성자를 `public` → `private`으로 변경
-  - [ ] `id` 타입을 `String` → `MessageOutboxId`로 변경
-  - [ ] `forNew()` 정적 팩토리 메서드 구현 (ID null)
-  - [ ] `of()` 정적 팩토리 메서드 구현 (ID 필수, 검증)
-  - [ ] `reconstitute()` 정적 팩토리 메서드 구현 (ID 필수, 검증)
-  - [ ] 기존 `create()` 메서드를 `forNew()` 호출로 변경 (하위 호환)
-- [ ] 기존 테스트 수정 (MessageOutboxId 사용)
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: MessageOutbox 3종 팩토리 메서드 구현`
+- [x] MessageOutbox.java 수정
+  - [x] 생성자를 `public` → `private`으로 변경
+  - [x] `id` 타입을 `String` → `MessageOutboxId`로 변경
+  - [x] `forNew()` 정적 팩토리 메서드 구현 (ID null)
+  - [x] `of()` 정적 팩토리 메서드 구현 (ID 필수, 검증)
+  - [x] `reconstitute()` 정적 팩토리 메서드 구현 (ID 필수, 검증)
+  - [x] 기존 `create()` 메서드 `@Deprecated` 처리 (하위 호환)
+- [x] 기존 테스트 수정 (MessageOutboxId 사용)
+- [x] 모든 테스트 통과 확인 (17개 테스트)
+- [x] **커밋**: `feat: MessageOutbox 3종 팩토리 메서드 구현`
 
 **♻️ Refactor Phase**:
-- [ ] 생성자 파라미터 순서 최적화
-- [ ] 검증 로직 중복 제거
-- [ ] **커밋**: `struct: MessageOutbox 생성자 검증 로직 개선`
+- [x] 생성자 검증 로직 메서드 추출 (`validateConstructorArguments()`)
+- [x] null/blank 검증 추가
+- [x] retryCount, maxRetryCount 범위 검증 추가
+- [x] **커밋**: `struct: MessageOutbox 생성자 검증 로직 메서드 추출`
 
 **🧹 Tidy Phase**:
-- [ ] MessageOutboxFixture 수정
-  - [ ] `aMessageOutboxId()` 사용하도록 변경
-  - [ ] `forNew()`, `of()`, `reconstitute()` 사용 예시 추가
-- [ ] 기존 `create()` 메서드 `@Deprecated` 표시
-- [ ] **커밋**: `test: MessageOutboxFixture 3종 팩토리 패턴 적용`
+- [x] MessageOutboxFixture 수정
+  - [x] `createOutbox()`가 `forNew()` 사용하도록 변경
+  - [x] `createOutboxLegacy()` 추가 (`@Deprecated`)
+- [x] Builder가 `reconstitute()` 사용 확인
+- [x] **커밋**: `test: MessageOutboxFixture forNew() 사용으로 변경`
 
 **✅ 완료 체크**:
-- [ ] 기존 테스트 + 5개 신규 테스트 모두 통과
-- [ ] 생성자 private 확인
-- [ ] MessageOutboxId 사용 확인
-- [ ] **총 커밋 수**: 3-4개
+- [x] 기존 테스트 + 5개 신규 테스트 모두 통과 (총 17개)
+- [x] 생성자 private 확인
+- [x] MessageOutboxId 사용 확인
+- [x] **총 커밋 수**: 4개
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `3691e4e`
+- Green: `2b43035`
+- Refactor: `5a75dcf`
+- Tidy: `72327ee`
 
 ---
 
