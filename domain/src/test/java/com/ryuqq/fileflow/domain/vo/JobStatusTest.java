@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.fixture.JobStatusFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,11 +18,11 @@ class JobStatusTest {
         // Then
         assertThat(statuses).hasSize(5);
         assertThat(statuses).contains(
-                JobStatus.PENDING,
-                JobStatus.PROCESSING,
-                JobStatus.COMPLETED,
-                JobStatus.FAILED,
-                JobStatus.RETRY_PENDING
+                JobStatusFixture.pending(),
+                JobStatusFixture.processing(),
+                JobStatusFixture.completed(),
+                JobStatusFixture.failed(),
+                JobStatusFixture.retryPending()
         );
     }
 
@@ -29,11 +30,11 @@ class JobStatusTest {
     @DisplayName("PENDING에서 PROCESSING으로 전환 가능해야 한다")
     void shouldTransitionFromPendingToProcessing() {
         // Given
-        JobStatus pending = JobStatus.PENDING;
+        JobStatus pending = JobStatusFixture.pending();
 
         // When & Then
         assertThat(pending).isNotNull();
-        assertThat(JobStatus.PROCESSING).isNotNull();
-        assertThat(pending).isNotEqualTo(JobStatus.PROCESSING);
+        assertThat(JobStatusFixture.processing()).isNotNull();
+        assertThat(pending).isNotEqualTo(JobStatusFixture.processing());
     }
 }

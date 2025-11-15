@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.fixture.OutboxStatusFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,9 +18,9 @@ class OutboxStatusTest {
         // Then
         assertThat(statuses).hasSize(3);
         assertThat(statuses).contains(
-                OutboxStatus.PENDING,
-                OutboxStatus.SENT,
-                OutboxStatus.FAILED
+                OutboxStatusFixture.pending(),
+                OutboxStatusFixture.sent(),
+                OutboxStatusFixture.failed()
         );
     }
 
@@ -27,11 +28,11 @@ class OutboxStatusTest {
     @DisplayName("PENDING에서 SENT로 전환 가능해야 한다")
     void shouldTransitionFromPendingToSent() {
         // Given
-        OutboxStatus pending = OutboxStatus.PENDING;
+        OutboxStatus pending = OutboxStatusFixture.pending();
 
         // When & Then
         assertThat(pending).isNotNull();
-        assertThat(OutboxStatus.SENT).isNotNull();
-        assertThat(pending).isNotEqualTo(OutboxStatus.SENT);
+        assertThat(OutboxStatusFixture.sent()).isNotNull();
+        assertThat(pending).isNotEqualTo(OutboxStatusFixture.sent());
     }
 }
