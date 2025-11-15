@@ -18,6 +18,19 @@ public class MessageOutboxFixture {
     }
 
     /**
+     * MessageOutbox.create() 팩토리 메서드 사용 (PENDING 상태, UUID v7 자동 생성)
+     *
+     * @param eventType     이벤트 유형
+     * @param aggregateId   이벤트 발생 Aggregate ID
+     * @param payload       이벤트 페이로드 (JSON)
+     * @param maxRetryCount 최대 재시도 횟수
+     * @return 생성된 MessageOutbox Aggregate
+     */
+    public static MessageOutbox createOutbox(String eventType, String aggregateId, String payload, int maxRetryCount) {
+        return MessageOutbox.create(eventType, aggregateId, payload, maxRetryCount);
+    }
+
+    /**
      * MessageOutbox Builder (Plain Java, Lombok 금지)
      */
     public static class MessageOutboxBuilder {

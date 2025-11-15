@@ -120,4 +120,107 @@ public class MessageOutbox {
     public LocalDateTime getProcessedAt() {
         return processedAt;
     }
+
+    /**
+     * 메시지 아웃박스 생성 팩토리 메서드
+     * <p>
+     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
+     * </p>
+     *
+     * @param eventType     이벤트 유형
+     * @param aggregateId   이벤트 발생 Aggregate ID
+     * @param payload       이벤트 페이로드 (JSON)
+     * @param maxRetryCount 최대 재시도 횟수
+     * @return 생성된 MessageOutbox Aggregate
+     */
+    public static MessageOutbox create(
+            String eventType,
+            String aggregateId,
+            String payload,
+            int maxRetryCount
+    ) {
+        // UUID v7 자동 생성
+        String id = UuidV7Generator.generate();
+
+        // 현재 시각
+        LocalDateTime now = LocalDateTime.now();
+
+        return new MessageOutbox(
+                id,
+                eventType,
+                aggregateId,
+                payload,
+                OutboxStatus.PENDING, // 초기 상태는 PENDING
+                0, // 초기 재시도 횟수 0
+                maxRetryCount,
+                now, // createdAt
+                null  // processedAt는 null
+        );
+    }
+
+    /**
+     * 메시지를 발송 완료 상태로 변경
+     *
+     * @return 새로운 MessageOutbox 객체 (SENT 상태)
+     */
+    public MessageOutbox markAsSent() {
+        return new MessageOutbox(
+                this.id,
+                this.eventType,
+                this.aggregateId,
+                this.payload,
+                OutboxStatus.SENT,
+                this.retryCount,
+                this.maxRetryCount,
+                this.createdAt,
+                LocalDateTime.now()
+        );
+    }
+
+    /**
+     * 메시지를 실패 상태로 변경
+     *
+     * @return 새로운 MessageOutbox 객체 (FAILED 상태)
+     */
+    public MessageOutbox markAsFailed() {
+        return new MessageOutbox(
+                this.id,
+                this.eventType,
+                this.aggregateId,
+                this.payload,
+                OutboxStatus.FAILED,
+                this.retryCount,
+                this.maxRetryCount,
+                this.createdAt,
+                LocalDateTime.now()
+        );
+    }
+
+    /**
+     * 재시도 횟수 증가
+     *
+     * @return 새로운 MessageOutbox 객체 (retryCount + 1)
+     */
+    public MessageOutbox incrementRetryCount() {
+        return new MessageOutbox(
+                this.id,
+                this.eventType,
+                this.aggregateId,
+                this.payload,
+                this.status,
+                this.retryCount + 1,
+                this.maxRetryCount,
+                this.createdAt,
+                this.processedAt
+        );
+    }
+
+    /**
+     * 재시도 가능 여부 확인
+     *
+     * @return 재시도 가능하면 true, 불가능하면 false
+     */
+    public boolean canRetry() {
+        return this.retryCount < this.maxRetryCount;
+    }
 }
