@@ -407,4 +407,65 @@ public class File {
 
         return withStatus(FileStatus.PROCESSING);
     }
+
+    /**
+     * 재시도 횟수 증가
+     *
+     * @return 새로운 File 객체 (retryCount + 1)
+     */
+    public File incrementRetryCount() {
+        return new File(
+                this.fileId,
+                this.fileName,
+                this.fileSize,
+                this.mimeType,
+                this.status,
+                this.s3Key,
+                this.s3Bucket,
+                this.cdnUrl,
+                this.uploaderId,
+                this.category,
+                this.tags,
+                this.retryCount + 1,
+                this.version,
+                this.deletedAt,
+                this.createdAt,
+                LocalDateTime.now() // updatedAt 갱신
+        );
+    }
+
+    /**
+     * 파일 소프트 삭제
+     * <p>
+     * deletedAt을 현재 시각으로 설정합니다.
+     * </p>
+     *
+     * @return 새로운 File 객체 (deletedAt 설정)
+     * @throws IllegalStateException 이미 삭제된 파일일 때
+     */
+    public File softDelete() {
+        if (this.deletedAt != null) {
+            throw new IllegalStateException("이미 삭제된 파일입니다. 삭제 시각: " + this.deletedAt);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        return new File(
+                this.fileId,
+                this.fileName,
+                this.fileSize,
+                this.mimeType,
+                this.status,
+                this.s3Key,
+                this.s3Bucket,
+                this.cdnUrl,
+                this.uploaderId,
+                this.category,
+                this.tags,
+                this.retryCount,
+                this.version,
+                now, // deletedAt 설정
+                this.createdAt,
+                now  // updatedAt 갱신
+        );
+    }
 }
