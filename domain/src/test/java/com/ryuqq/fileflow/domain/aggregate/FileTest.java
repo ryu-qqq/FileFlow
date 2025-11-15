@@ -158,4 +158,90 @@ class FileTest {
                 .isInstanceOf(InvalidMimeTypeException.class)
                 .hasMessageContaining("허용되지 않는 MIME 타입입니다");
     }
+
+    // ===== 상태 전환 메서드 테스트 =====
+
+    @Test
+    @DisplayName("PENDING 상태에서 UPLOADING 상태로 전환할 수 있어야 한다")
+    void shouldMarkAsUploading() {
+        // Given
+        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        assertThat(file.getStatus()).isEqualTo(FileStatusFixture.pending());
+
+        // When
+        File uploadingFile = file.markAsUploading();
+
+        // Then
+        assertThat(uploadingFile.getStatus()).isEqualTo(FileStatusFixture.uploading());
+        assertThat(uploadingFile.getUpdatedAt()).isAfter(file.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("PENDING 또는 UPLOADING 상태에서 COMPLETED 상태로 전환할 수 있어야 한다")
+    void shouldMarkAsCompleted() {
+        // Given - PENDING에서 COMPLETED
+        File pendingFile = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+
+        // When
+        File completedFile = pendingFile.markAsCompleted();
+
+        // Then
+        assertThat(completedFile.getStatus()).isEqualTo(FileStatusFixture.completed());
+        assertThat(completedFile.getUpdatedAt()).isAfter(pendingFile.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("COMPLETED가 아닌 상태에서 markAsCompleted 호출 시 예외가 발생해야 한다")
+    void shouldMarkAsCompletedOnlyWhenPendingOrUploading() {
+        // Given - PENDING 파일을 UPLOADING으로 변경
+        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File uploadingFile = file.markAsUploading();
+
+        // When - UPLOADING에서 COMPLETED로 전환
+        File completedFile = uploadingFile.markAsCompleted();
+
+        // Then
+        assertThat(completedFile.getStatus()).isEqualTo(FileStatusFixture.completed());
+    }
+
+    @Test
+    @DisplayName("임의의 상태에서 FAILED 상태로 전환할 수 있어야 한다")
+    void shouldMarkAsFailed() {
+        // Given
+        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+
+        // When
+        File failedFile = file.markAsFailed("Upload error");
+
+        // Then
+        assertThat(failedFile.getStatus()).isEqualTo(FileStatusFixture.failed());
+        assertThat(failedFile.getUpdatedAt()).isAfter(file.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("COMPLETED 상태에서만 PROCESSING 상태로 전환할 수 있어야 한다")
+    void shouldMarkAsProcessing() {
+        // Given - COMPLETED 파일
+        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File completedFile = file.markAsCompleted();
+
+        // When
+        File processingFile = completedFile.markAsProcessing();
+
+        // Then
+        assertThat(processingFile.getStatus()).isEqualTo(FileStatusFixture.processing());
+        assertThat(processingFile.getUpdatedAt()).isAfter(completedFile.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("COMPLETED가 아닌 상태에서 markAsProcessing 호출 시 예외가 발생해야 한다")
+    void shouldMarkAsProcessingOnlyWhenCompleted() {
+        // Given - PENDING 파일
+        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+
+        // When & Then
+        assertThatThrownBy(() -> file.markAsProcessing())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("COMPLETED 상태에서만 PROCESSING으로 전환할 수 있습니다");
+    }
 }
