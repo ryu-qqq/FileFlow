@@ -1,0 +1,1011 @@
+# FILE-002 TDD Plan
+
+**Task**: Application Layer 구현
+**Layer**: Application Layer
+**브랜치**: feature/FILE-002-application
+**예상 소요 시간**: 600분 (40 사이클 × 15분)
+
+---
+
+## 📝 TDD 사이클 체크리스트
+
+### Phase 1: Port 정의 (6 사이클)
+
+---
+
+### 1️⃣ FileCommandPort 정의 (Cycle 1)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `application/src/test/java/.../port/out/command/FileCommandPortTest.java` 생성
+- [ ] Port 인터페이스 메서드 테스트 작성
+  - `save()`, `saveAll()`, `updateStatus()`, `softDelete()`
+- [ ] 컴파일 에러 확인 (인터페이스 없음)
+- [ ] 커밋: `test: FileCommandPort 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `application/src/main/java/.../port/out/command/FileCommandPort.java` 생성
+- [ ] 4개 메서드 시그니처 정의
+- [ ] 테스트 실행 → 통과 확인
+- [ ] 커밋: `feat: FileCommandPort 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Javadoc 추가 (메서드 설명, 파라미터, 반환값)
+- [ ] ArchUnit 테스트 추가 (application/port/out/command 패키지 검증)
+- [ ] 테스트 여전히 통과 확인
+- [ ] 커밋: `struct: FileCommandPort 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] TestFixture는 Port에 불필요 (생략 가능)
+- [ ] 커밋: `test: FileCommandPort 테스트 정리 (Tidy)`
+
+---
+
+### 2️⃣ FileQueryPort 정의 (Cycle 2)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `FileQueryPortTest.java` 생성
+- [ ] Port 인터페이스 메서드 테스트 작성
+  - `findById()`, `findByIdWithLock()`, `findByUploaderIdAndStatusWithCursor()`, `existsByFileId()`
+- [ ] 커밋: `test: FileQueryPort 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `port/out/query/FileQueryPort.java` 생성
+- [ ] 4개 메서드 시그니처 정의
+- [ ] 커밋: `feat: FileQueryPort 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Javadoc 추가
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: FileQueryPort 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: FileQueryPort 테스트 정리 (Tidy)`
+
+---
+
+### 3️⃣ FileProcessingJobPort 정의 (Cycle 3)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `FileProcessingJobCommandPortTest.java` 생성
+- [ ] `FileProcessingJobQueryPortTest.java` 생성
+- [ ] Command Port 메서드: `save()`, `saveAll()`, `updateStatus()`
+- [ ] Query Port 메서드: `findByFileId()`, `findById()`
+- [ ] 커밋: `test: FileProcessingJobPort 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `port/out/command/FileProcessingJobCommandPort.java` 생성
+- [ ] `port/out/query/FileProcessingJobQueryPort.java` 생성
+- [ ] 커밋: `feat: FileProcessingJobPort 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Javadoc 추가
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: FileProcessingJobPort 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: FileProcessingJobPort 테스트 정리 (Tidy)`
+
+---
+
+### 4️⃣ MessageOutboxPort 정의 (Cycle 4)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `MessageOutboxCommandPortTest.java` 생성
+- [ ] `MessageOutboxQueryPortTest.java` 생성
+- [ ] Command: `save()`, `updateStatus()`
+- [ ] Query: `findPendingMessages()`
+- [ ] 커밋: `test: MessageOutboxPort 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `port/out/command/MessageOutboxCommandPort.java` 생성
+- [ ] `port/out/query/MessageOutboxQueryPort.java` 생성
+- [ ] 커밋: `feat: MessageOutboxPort 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Javadoc 추가
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: MessageOutboxPort 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: MessageOutboxPort 테스트 정리 (Tidy)`
+
+---
+
+### 5️⃣ S3ClientPort 정의 (Cycle 5)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `S3ClientPortTest.java` 생성
+- [ ] 외부 API Port 메서드 테스트:
+  - `generatePresignedUrl()`, `initiateMultipartUpload()`, `headObject()`, `uploadFromUrl()`
+- [ ] 커밋: `test: S3ClientPort 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `port/out/external/S3ClientPort.java` 생성
+- [ ] 4개 메서드 시그니처 정의
+- [ ] 커밋: `feat: S3ClientPort 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Javadoc 추가 (Timeout, Retry 정책 명시)
+- [ ] ArchUnit 테스트 추가 (외부 API Port 규칙)
+- [ ] 커밋: `struct: S3ClientPort 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: S3ClientPort 테스트 정리 (Tidy)`
+
+---
+
+### 6️⃣ SqsClientPort, WebhookClientPort 정의 (Cycle 6)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `SqsClientPortTest.java` 생성
+- [ ] `WebhookClientPortTest.java` 생성
+- [ ] SQS: `sendMessage()`, `sendMessageBatch()`
+- [ ] Webhook: `send()`
+- [ ] 커밋: `test: SqsClientPort, WebhookClientPort 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `port/out/external/SqsClientPort.java` 생성
+- [ ] `port/out/external/WebhookClientPort.java` 생성
+- [ ] 커밋: `feat: SqsClientPort, WebhookClientPort 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Javadoc 추가
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: 외부 API Port 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: 외부 API Port 테스트 정리 (Tidy)`
+
+---
+
+### Phase 2: Command DTO 정의 (4 사이클)
+
+---
+
+### 7️⃣ GeneratePresignedUrlCommand 정의 (Cycle 7)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `dto/command/GeneratePresignedUrlCommandTest.java` 생성
+- [ ] Record 필드 검증 테스트:
+  - fileName, fileSize, mimeType, uploaderId, category, tags
+- [ ] 커밋: `test: GeneratePresignedUrlCommand 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `dto/command/GeneratePresignedUrlCommand.java` 생성 (Record)
+- [ ] 6개 필드 정의
+- [ ] 커밋: `feat: GeneratePresignedUrlCommand 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가 (Command DTO는 Record, Lombok 금지)
+- [ ] Javadoc 추가
+- [ ] 커밋: `struct: GeneratePresignedUrlCommand 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `GeneratePresignedUrlCommandFixture.java` 생성 (Object Mother 패턴)
+- [ ] `aCommand()` 메서드 작성
+- [ ] 테스트 → Fixture 사용으로 리팩토링
+- [ ] 커밋: `test: GeneratePresignedUrlCommandFixture 정리 (Tidy)`
+
+---
+
+### 8️⃣ CompleteUploadCommand 정의 (Cycle 8)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `CompleteUploadCommandTest.java` 생성
+- [ ] fileId 검증 테스트
+- [ ] 커밋: `test: CompleteUploadCommand 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `CompleteUploadCommand.java` 생성 (Record)
+- [ ] fileId 필드 정의
+- [ ] 커밋: `feat: CompleteUploadCommand 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: CompleteUploadCommand 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `CompleteUploadCommandFixture.java` 생성
+- [ ] 커밋: `test: CompleteUploadCommandFixture 정리 (Tidy)`
+
+---
+
+### 9️⃣ UploadFromExternalUrlCommand 정의 (Cycle 9)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `UploadFromExternalUrlCommandTest.java` 생성
+- [ ] externalUrl, uploaderId, category, tags, webhookUrl 검증
+- [ ] 커밋: `test: UploadFromExternalUrlCommand 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `UploadFromExternalUrlCommand.java` 생성 (Record)
+- [ ] 5개 필드 정의
+- [ ] 커밋: `feat: UploadFromExternalUrlCommand 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: UploadFromExternalUrlCommand 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `UploadFromExternalUrlCommandFixture.java` 생성
+- [ ] 커밋: `test: UploadFromExternalUrlCommandFixture 정리 (Tidy)`
+
+---
+
+### 🔟 ProcessFileCommand 정의 (Cycle 10)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `ProcessFileCommandTest.java` 생성
+- [ ] fileId, jobTypes 검증
+- [ ] 커밋: `test: ProcessFileCommand 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `ProcessFileCommand.java` 생성 (Record)
+- [ ] fileId, jobTypes 필드 정의
+- [ ] 커밋: `feat: ProcessFileCommand 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: ProcessFileCommand 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `ProcessFileCommandFixture.java` 생성
+- [ ] 커밋: `test: ProcessFileCommandFixture 정리 (Tidy)`
+
+---
+
+### Phase 3: Query DTO 정의 (2 사이클)
+
+---
+
+### 1️⃣1️⃣ GetFileQuery 정의 (Cycle 11)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `dto/query/GetFileQueryTest.java` 생성
+- [ ] fileId 검증
+- [ ] 커밋: `test: GetFileQuery 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `GetFileQuery.java` 생성 (Record)
+- [ ] fileId 필드 정의
+- [ ] 커밋: `feat: GetFileQuery 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가 (Query DTO 규칙)
+- [ ] 커밋: `struct: GetFileQuery 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `GetFileQueryFixture.java` 생성
+- [ ] 커밋: `test: GetFileQueryFixture 정리 (Tidy)`
+
+---
+
+### 1️⃣2️⃣ ListFilesQuery 정의 (Cycle 12)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `ListFilesQueryTest.java` 생성
+- [ ] uploaderId, status, category, cursor, size 검증
+- [ ] 커밋: `test: ListFilesQuery 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `ListFilesQuery.java` 생성 (Record)
+- [ ] 5개 필드 정의
+- [ ] 커밋: `feat: ListFilesQuery 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: ListFilesQuery 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `ListFilesQueryFixture.java` 생성
+- [ ] 커밋: `test: ListFilesQueryFixture 정리 (Tidy)`
+
+---
+
+### Phase 4: Response DTO 정의 (4 사이클)
+
+---
+
+### 1️⃣3️⃣ PresignedUrlResponse 정의 (Cycle 13)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `dto/response/PresignedUrlResponseTest.java` 생성
+- [ ] fileId, presignedUrl, expiresIn, s3Key 검증
+- [ ] 커밋: `test: PresignedUrlResponse 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `PresignedUrlResponse.java` 생성 (Record)
+- [ ] 4개 필드 정의
+- [ ] 커밋: `feat: PresignedUrlResponse 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: PresignedUrlResponse 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `PresignedUrlResponseFixture.java` 생성
+- [ ] 커밋: `test: PresignedUrlResponseFixture 정리 (Tidy)`
+
+---
+
+### 1️⃣4️⃣ FileResponse 정의 (Cycle 14)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `FileResponseTest.java` 생성
+- [ ] fileId, status, s3Url, cdnUrl 검증
+- [ ] 커밋: `test: FileResponse 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `FileResponse.java` 생성 (Record)
+- [ ] 4개 필드 정의
+- [ ] 커밋: `feat: FileResponse 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: FileResponse 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `FileResponseFixture.java` 생성
+- [ ] 커밋: `test: FileResponseFixture 정리 (Tidy)`
+
+---
+
+### 1️⃣5️⃣ FileDetailResponse 정의 (Cycle 15)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `FileDetailResponseTest.java` 생성
+- [ ] File 정보 + FileProcessingJob 목록 검증
+- [ ] 커밋: `test: FileDetailResponse 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `FileDetailResponse.java` 생성 (Record)
+- [ ] File 필드 + List<FileProcessingJob> 필드 정의
+- [ ] 커밋: `feat: FileDetailResponse 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: FileDetailResponse 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `FileDetailResponseFixture.java` 생성
+- [ ] 커밋: `test: FileDetailResponseFixture 정리 (Tidy)`
+
+---
+
+### 1️⃣6️⃣ FileSummaryResponse 정의 (Cycle 16)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `FileSummaryResponseTest.java` 생성
+- [ ] fileId, fileName, status, uploaderId, createdAt 검증
+- [ ] 커밋: `test: FileSummaryResponse 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `FileSummaryResponse.java` 생성 (Record)
+- [ ] 5개 필드 정의
+- [ ] 커밋: `feat: FileSummaryResponse 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: FileSummaryResponse 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `FileSummaryResponseFixture.java` 생성
+- [ ] 커밋: `test: FileSummaryResponseFixture 정리 (Tidy)`
+
+---
+
+### Phase 5: Command UseCase 구현 (16 사이클)
+
+---
+
+### 1️⃣7️⃣ GeneratePresignedUrlUseCase - 메타데이터 저장 (Cycle 17)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `GeneratePresignedUrlServiceTest.java` 생성
+- [ ] Mock Port 준비 (FileCommandPort, FileQueryPort)
+- [ ] `shouldCreateFileMetadata()` 테스트 작성
+- [ ] 커밋: `test: GeneratePresignedUrl 메타데이터 저장 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `service/GeneratePresignedUrlService.java` 생성
+- [ ] `@Transactional` 추가
+- [ ] File 메타데이터 생성 + 저장 로직
+- [ ] 커밋: `feat: GeneratePresignedUrl 메타데이터 저장 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가 (@Transactional 내 외부 API 호출 금지 검증)
+- [ ] 커밋: `struct: GeneratePresignedUrlService 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `GeneratePresignedUrlServiceFixture.java` 생성
+- [ ] 커밋: `test: GeneratePresignedUrlService Fixture 정리 (Tidy)`
+
+---
+
+### 1️⃣8️⃣ GeneratePresignedUrlUseCase - 파일 크기 검증 (Cycle 18)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldThrowExceptionWhenFileSizeExceeds1GB()` 테스트 작성
+- [ ] 커밋: `test: 파일 크기 검증 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] 파일 크기 검증 로직 추가 (최대 1GB)
+- [ ] FileSizeExceededException 예외 발생
+- [ ] 커밋: `feat: 파일 크기 검증 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 상수 추출 (MAX_FILE_SIZE = 1GB)
+- [ ] 커밋: `struct: 파일 크기 검증 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: 파일 크기 검증 테스트 정리 (Tidy)`
+
+---
+
+### 1️⃣9️⃣ GeneratePresignedUrlUseCase - MIME 타입 검증 (Cycle 19)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldThrowExceptionWhenInvalidMimeType()` 테스트 작성
+- [ ] 커밋: `test: MIME 타입 검증 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] MIME 타입 허용 목록 검증 로직 추가
+- [ ] InvalidMimeTypeException 예외 발생
+- [ ] 커밋: `feat: MIME 타입 검증 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 허용 목록 상수 추출 (ALLOWED_MIME_TYPES)
+- [ ] 커밋: `struct: MIME 타입 검증 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: MIME 타입 검증 테스트 정리 (Tidy)`
+
+---
+
+### 2️⃣0️⃣ GeneratePresignedUrlUseCase - 업로드 전략 결정 (Cycle 20)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldUseSingleUploadForSmallFile()` 테스트 작성
+- [ ] `shouldUseMultipartUploadForLargeFile()` 테스트 작성
+- [ ] 커밋: `test: 업로드 전략 결정 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] 파일 크기별 업로드 전략 결정 로직 추가
+  - < 100MB: 단일 업로드
+  - ≥ 100MB: Multipart Upload
+- [ ] 커밋: `feat: 업로드 전략 결정 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 상수 추출 (MULTIPART_THRESHOLD = 100MB)
+- [ ] 전략 패턴 적용 고려
+- [ ] 커밋: `struct: 업로드 전략 결정 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: 업로드 전략 결정 테스트 정리 (Tidy)`
+
+---
+
+### 2️⃣1️⃣ CompleteUploadUseCase - 상태 검증 (Cycle 21)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `CompleteUploadServiceTest.java` 생성
+- [ ] `shouldThrowExceptionWhenInvalidStatus()` 테스트 작성
+- [ ] 커밋: `test: 상태 검증 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `service/CompleteUploadService.java` 생성
+- [ ] File 조회 + 상태 검증 로직 (PENDING/UPLOADING만 허용)
+- [ ] InvalidFileStatusException 예외 발생
+- [ ] 커밋: `feat: 상태 검증 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: CompleteUploadService 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `CompleteUploadServiceFixture.java` 생성
+- [ ] 커밋: `test: CompleteUploadService Fixture 정리 (Tidy)`
+
+---
+
+### 2️⃣2️⃣ CompleteUploadUseCase - S3 Object 존재 확인 (Cycle 22)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldThrowExceptionWhenS3ObjectNotExists()` 테스트 작성
+- [ ] Mock S3ClientPort 준비
+- [ ] 커밋: `test: S3 Object 존재 확인 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] S3 Object HEAD 요청 로직 추가 (트랜잭션 밖)
+- [ ] S3ObjectNotFoundException 예외 발생
+- [ ] 커밋: `feat: S3 Object 존재 확인 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트: @Transactional 내 S3 호출 금지 검증
+- [ ] Timeout 3초, 재시도 3회 설정
+- [ ] 커밋: `struct: S3 Object 존재 확인 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: S3 Object 존재 확인 테스트 정리 (Tidy)`
+
+---
+
+### 2️⃣3️⃣ CompleteUploadUseCase - MessageOutbox 생성 (Cycle 23)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldCreateMessageOutboxWhenUploadCompleted()` 테스트 작성
+- [ ] Mock MessageOutboxCommandPort 준비
+- [ ] 커밋: `test: MessageOutbox 생성 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] File 상태 업데이트 (COMPLETED) + MessageOutbox 생성 로직
+- [ ] FILE_UPLOADED 이벤트 Outbox에 저장
+- [ ] 커밋: `feat: MessageOutbox 생성 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Transaction 경계 검증 (S3 호출 → 트랜잭션 시작 → Outbox 생성 → 커밋)
+- [ ] 커밋: `struct: MessageOutbox 생성 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: MessageOutbox 생성 테스트 정리 (Tidy)`
+
+---
+
+### 2️⃣4️⃣ UploadFromExternalUrlUseCase - URL 검증 (Cycle 24)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `UploadFromExternalUrlServiceTest.java` 생성
+- [ ] `shouldThrowExceptionWhenInvalidUrl()` 테스트 작성 (HTTPS만 허용)
+- [ ] 커밋: `test: 외부 URL 검증 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `service/UploadFromExternalUrlService.java` 생성
+- [ ] HTTPS URL 검증 로직 추가
+- [ ] InvalidUrlException 예외 발생
+- [ ] 커밋: `feat: 외부 URL 검증 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: UploadFromExternalUrlService 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `UploadFromExternalUrlServiceFixture.java` 생성
+- [ ] 커밋: `test: UploadFromExternalUrlService Fixture 정리 (Tidy)`
+
+---
+
+### 2️⃣5️⃣ UploadFromExternalUrlUseCase - MessageOutbox 생성 (Cycle 25)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldCreateMessageOutboxForExternalDownload()` 테스트 작성
+- [ ] 커밋: `test: 외부 다운로드 Outbox 생성 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] File 메타데이터 생성 + MessageOutbox 생성 로직
+- [ ] FILE_DOWNLOAD_REQUESTED 이벤트 Outbox에 저장
+- [ ] 커밋: `feat: 외부 다운로드 Outbox 생성 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Transaction 경계 검증
+- [ ] 커밋: `struct: 외부 다운로드 Outbox 생성 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: 외부 다운로드 Outbox 생성 테스트 정리 (Tidy)`
+
+---
+
+### 2️⃣6️⃣ ProcessFileUseCase - 상태 검증 (Cycle 26)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `ProcessFileServiceTest.java` 생성
+- [ ] `shouldThrowExceptionWhenFileNotCompleted()` 테스트 작성
+- [ ] 커밋: `test: 파일 가공 상태 검증 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `service/ProcessFileService.java` 생성
+- [ ] File 조회 + 상태 검증 로직 (COMPLETED만 허용)
+- [ ] FileNotCompletedException 예외 발생
+- [ ] 커밋: `feat: 파일 가공 상태 검증 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: ProcessFileService 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `ProcessFileServiceFixture.java` 생성
+- [ ] 커밋: `test: ProcessFileService Fixture 정리 (Tidy)`
+
+---
+
+### 2️⃣7️⃣ ProcessFileUseCase - FileProcessingJob 생성 (Cycle 27)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldCreateFileProcessingJobs()` 테스트 작성
+- [ ] Mock FileProcessingJobCommandPort 준비
+- [ ] 커밋: `test: FileProcessingJob 생성 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] FileProcessingJob Entity 생성 로직 (각 jobType마다)
+- [ ] MessageOutbox 생성 (FILE_PROCESSING_REQUESTED 이벤트)
+- [ ] 커밋: `feat: FileProcessingJob 생성 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Transaction 경계 검증
+- [ ] 커밋: `struct: FileProcessingJob 생성 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: FileProcessingJob 생성 테스트 정리 (Tidy)`
+
+---
+
+### 2️⃣8️⃣ Port In Command 인터페이스 정의 (Cycle 28)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `port/in/command/GeneratePresignedUrlUseCaseTest.java` 생성
+- [ ] 나머지 3개 UseCase Port In 테스트 작성
+- [ ] 커밋: `test: Command UseCase Port In 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `port/in/command/GeneratePresignedUrlUseCase.java` 인터페이스 생성
+- [ ] `CompleteUploadUseCase`, `UploadFromExternalUrlUseCase`, `ProcessFileUseCase` 인터페이스 생성
+- [ ] Service 클래스가 인터페이스 구현하도록 수정
+- [ ] 커밋: `feat: Command UseCase Port In 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가 (Port In Command 규칙)
+- [ ] 커밋: `struct: Command UseCase Port In 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: Command UseCase Port In 테스트 정리 (Tidy)`
+
+---
+
+### Phase 6: Query UseCase 구현 (8 사이클)
+
+---
+
+### 2️⃣9️⃣ GetFileUseCase 구현 (Cycle 29)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `GetFileServiceTest.java` 생성
+- [ ] `shouldGetFileDetail()` 테스트 작성
+- [ ] Mock FileQueryPort, FileProcessingJobQueryPort 준비
+- [ ] 커밋: `test: GetFileUseCase 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `service/GetFileService.java` 생성
+- [ ] `@Transactional(readOnly = true)` 추가
+- [ ] File 조회 + FileProcessingJob 조회 로직
+- [ ] FileDetailResponse 조합
+- [ ] 커밋: `feat: GetFileUseCase 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가 (Query UseCase 규칙)
+- [ ] 커밋: `struct: GetFileService 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `GetFileServiceFixture.java` 생성
+- [ ] 커밋: `test: GetFileService Fixture 정리 (Tidy)`
+
+---
+
+### 3️⃣0️⃣ ListFilesUseCase - Cursor 기반 Pagination (Cycle 30)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `ListFilesServiceTest.java` 생성
+- [ ] `shouldListFilesWithCursorPagination()` 테스트 작성
+- [ ] 커밋: `test: ListFilesUseCase Pagination 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `service/ListFilesService.java` 생성
+- [ ] `@Transactional(readOnly = true)` 추가
+- [ ] Cursor 기반 Pagination 로직 (createdAt 기준)
+- [ ] 커밋: `feat: ListFilesUseCase Pagination 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가
+- [ ] 커밋: `struct: ListFilesService 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `ListFilesServiceFixture.java` 생성
+- [ ] 커밋: `test: ListFilesService Fixture 정리 (Tidy)`
+
+---
+
+### 3️⃣1️⃣ ListFilesUseCase - 필터링 (Cycle 31)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldFilterFilesByUploaderIdAndStatus()` 테스트 작성
+- [ ] 커밋: `test: ListFilesUseCase 필터링 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] uploaderId, status, category 필터링 로직 추가
+- [ ] 커밋: `feat: ListFilesUseCase 필터링 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 필터 조건 분리 (Filter 객체 생성 고려)
+- [ ] 커밋: `struct: ListFilesUseCase 필터링 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: ListFilesUseCase 필터링 테스트 정리 (Tidy)`
+
+---
+
+### 3️⃣2️⃣ Port In Query 인터페이스 정의 (Cycle 32)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `port/in/query/GetFileUseCaseTest.java` 생성
+- [ ] `ListFilesUseCaseTest.java` 생성
+- [ ] 커밋: `test: Query UseCase Port In 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `port/in/query/GetFileUseCase.java` 인터페이스 생성
+- [ ] `ListFilesUseCase.java` 인터페이스 생성
+- [ ] Service 클래스가 인터페이스 구현하도록 수정
+- [ ] 커밋: `feat: Query UseCase Port In 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가 (Port In Query 규칙)
+- [ ] 커밋: `struct: Query UseCase Port In 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: Query UseCase Port In 테스트 정리 (Tidy)`
+
+---
+
+### Phase 7: 아웃박스 패턴 구현 (8 사이클)
+
+---
+
+### 3️⃣3️⃣ TransactionalEventListener 구현 (Cycle 33)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `listener/MessageOutboxEventListenerTest.java` 생성
+- [ ] `shouldSendMessageToSqsAfterCommit()` 테스트 작성
+- [ ] Mock SqsClientPort, MessageOutboxCommandPort 준비
+- [ ] 커밋: `test: TransactionalEventListener 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `listener/MessageOutboxEventListener.java` 생성
+- [ ] `@TransactionalEventListener(phase = AFTER_COMMIT)` 추가
+- [ ] MessageOutbox PENDING 메시지를 SQS로 전송
+- [ ] 성공 시: MessageOutbox 상태를 SENT로 업데이트
+- [ ] 커밋: `feat: TransactionalEventListener 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가 (Listener 규칙)
+- [ ] 예외 처리 개선 (로그 기록)
+- [ ] 커밋: `struct: TransactionalEventListener 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `MessageOutboxEventListenerFixture.java` 생성
+- [ ] 커밋: `test: TransactionalEventListener Fixture 정리 (Tidy)`
+
+---
+
+### 3️⃣4️⃣ 폴백 스케줄러 구현 (Cycle 34)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `scheduler/OutboxRetrySchedulerTest.java` 생성
+- [ ] `shouldRetryPendingMessages()` 테스트 작성
+- [ ] 커밋: `test: 폴백 스케줄러 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] `scheduler/OutboxRetryScheduler.java` 생성
+- [ ] `@Scheduled(fixedDelay = 60000)` 추가 (1분마다)
+- [ ] PENDING 상태의 MessageOutbox 조회 (createdAt < 1분 전)
+- [ ] SQS로 전송 시도
+- [ ] 커밋: `feat: 폴백 스케줄러 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] ArchUnit 테스트 추가 (Scheduler 규칙)
+- [ ] 커밋: `struct: 폴백 스케줄러 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] `OutboxRetrySchedulerFixture.java` 생성
+- [ ] 커밋: `test: 폴백 스케줄러 Fixture 정리 (Tidy)`
+
+---
+
+### 3️⃣5️⃣ 재시도 전략 구현 (Cycle 35)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `shouldIncrementRetryCountOnFailure()` 테스트 작성
+- [ ] `shouldMarkAsFailedWhenMaxRetryExceeded()` 테스트 작성
+- [ ] 커밋: `test: 재시도 전략 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] 재시도 전략 로직 추가 (최대 3회, Exponential Backoff)
+- [ ] retryCount 증가
+- [ ] maxRetryCount 초과 시 FAILED로 변경
+- [ ] 커밋: `feat: 재시도 전략 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 상수 추출 (MAX_RETRY_COUNT = 3)
+- [ ] Exponential Backoff 계산 로직 분리
+- [ ] 커밋: `struct: 재시도 전략 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: 재시도 전략 테스트 정리 (Tidy)`
+
+---
+
+### 3️⃣6️⃣ 아웃박스 패턴 Integration Test (Cycle 36)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `OutboxPatternIntegrationTest.java` 생성 (@SpringBootTest)
+- [ ] `shouldSendMessageAfterCommit()` 테스트 작성
+- [ ] `shouldRetryFailedMessages()` 테스트 작성
+- [ ] 커밋: `test: 아웃박스 패턴 Integration 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] TestContainer 설정 (MySQL, SQS LocalStack)
+- [ ] 애프터 커밋 리스너 검증
+- [ ] 폴백 스케줄러 검증
+- [ ] 커밋: `feat: 아웃박스 패턴 Integration 테스트 통과 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 테스트 격리 확인 (@DirtiesContext)
+- [ ] 커밋: `struct: 아웃박스 패턴 Integration 테스트 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: 아웃박스 패턴 Integration 테스트 정리 (Tidy)`
+
+---
+
+### Phase 8: ArchUnit 전체 검증 (4 사이클)
+
+---
+
+### 3️⃣7️⃣ Application Layer 의존성 규칙 (Cycle 37)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `architecture/ApplicationLayerArchitectureTest.java` 생성
+- [ ] Application Layer는 Domain에만 의존 검증
+- [ ] Application Layer는 Persistence/REST API에 의존 금지 검증
+- [ ] 커밋: `test: Application Layer 의존성 규칙 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] ArchUnit 규칙 작성 (LayeredArchitecture)
+- [ ] 테스트 통과 확인
+- [ ] 커밋: `feat: Application Layer 의존성 규칙 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 규칙 설명 추가 (ArchRule description)
+- [ ] 커밋: `struct: Application Layer 의존성 규칙 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: Application Layer 의존성 규칙 테스트 정리 (Tidy)`
+
+---
+
+### 3️⃣8️⃣ Transaction 경계 규칙 (Cycle 38)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `TransactionBoundaryArchitectureTest.java` 생성
+- [ ] @Transactional 내 S3ClientPort 호출 금지 검증
+- [ ] @Transactional 내 SqsClientPort 호출 금지 검증
+- [ ] @Transactional 내 WebhookClientPort 호출 금지 검증
+- [ ] 커밋: `test: Transaction 경계 규칙 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] ArchUnit 규칙 작성 (noClasses()...should()...callMethod())
+- [ ] 테스트 통과 확인
+- [ ] 커밋: `feat: Transaction 경계 규칙 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 규칙 설명 추가
+- [ ] 커밋: `struct: Transaction 경계 규칙 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: Transaction 경계 규칙 테스트 정리 (Tidy)`
+
+---
+
+### 3️⃣9️⃣ CQRS 분리 규칙 (Cycle 39)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `CqrsArchitectureTest.java` 생성
+- [ ] Command UseCase는 Port In Command만 구현 검증
+- [ ] Query UseCase는 Port In Query만 구현 검증
+- [ ] Command DTO와 Query DTO 패키지 분리 검증
+- [ ] 커밋: `test: CQRS 분리 규칙 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] ArchUnit 규칙 작성 (classes()...should()...implement())
+- [ ] 테스트 통과 확인
+- [ ] 커밋: `feat: CQRS 분리 규칙 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 규칙 설명 추가
+- [ ] 커밋: `struct: CQRS 분리 규칙 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: CQRS 분리 규칙 테스트 정리 (Tidy)`
+
+---
+
+### 4️⃣0️⃣ Lombok 금지 규칙 (Cycle 40)
+
+#### 🔴 Red: 테스트 작성
+- [ ] `LombokProhibitionArchitectureTest.java` 생성
+- [ ] Command DTO는 Record 사용 검증 (Lombok 금지)
+- [ ] Query DTO는 Record 사용 검증 (Lombok 금지)
+- [ ] Response DTO는 Record 사용 검증 (Lombok 금지)
+- [ ] 커밋: `test: Lombok 금지 규칙 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [ ] ArchUnit 규칙 작성 (classes()...should()...beRecords())
+- [ ] 테스트 통과 확인
+- [ ] 커밋: `feat: Lombok 금지 규칙 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [ ] 규칙 설명 추가
+- [ ] 커밋: `struct: Lombok 금지 규칙 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] 커밋: `test: Lombok 금지 규칙 테스트 정리 (Tidy)`
+
+---
+
+## ✅ 완료 조건
+
+- [ ] 모든 TDD 사이클 완료 (40 사이클, 체크박스 모두 ✅)
+- [ ] 모든 Unit Test 통과 (커버리지 > 80%)
+- [ ] ArchUnit 테스트 통과 (의존성, Transaction 경계, CQRS, Lombok 금지)
+- [ ] Zero-Tolerance 규칙 준수
+- [ ] TestFixture 모두 정리 (Object Mother 패턴)
+- [ ] Integration Test 통과 (아웃박스 패턴)
+- [ ] 코드 리뷰 승인
+- [ ] PR 머지 완료
+
+---
+
+## 🔗 관련 문서
+
+- **Task**: docs/prd/tasks/FILE-002.md
+- **PRD**: docs/prd/file-management-system.md
+- **컨벤션**: docs/coding_convention/03-application-layer/
+
+---
+
+## 📊 사이클 요약
+
+| Phase | 사이클 수 | 예상 소요 시간 |
+|-------|----------|---------------|
+| Phase 1: Port 정의 | 6 | 90분 |
+| Phase 2: Command DTO 정의 | 4 | 60분 |
+| Phase 3: Query DTO 정의 | 2 | 30분 |
+| Phase 4: Response DTO 정의 | 4 | 60분 |
+| Phase 5: Command UseCase 구현 | 12 | 180분 |
+| Phase 6: Query UseCase 구현 | 4 | 60분 |
+| Phase 7: 아웃박스 패턴 구현 | 4 | 60분 |
+| Phase 8: ArchUnit 전체 검증 | 4 | 60분 |
+| **합계** | **40** | **600분 (10시간)** |
+
+---
+
+## 🎯 핵심 원칙
+
+1. **작은 단위**: 각 사이클은 5-15분 내 완료
+2. **4단계 필수**: Red → Green → Refactor → Tidy 모두 수행
+3. **TestFixture 필수**: Tidy 단계에서 Object Mother 패턴 적용
+4. **Zero-Tolerance**: Transaction 경계, CQRS 분리, Lombok 금지 엄격 준수
+5. **체크박스 추적**: `/kb/application/go` 명령이 Plan 파일을 읽고 진행 상황 추적
+6. **Transaction 경계**: @Transactional 내 외부 API 호출 절대 금지
+7. **아웃박스 패턴**: 메시지 전송은 MessageOutbox 통해서만
+8. **ArchUnit 검증**: 각 Refactor 단계에서 ArchUnit 규칙 검증 필수
+
+---
+
+## 🚀 다음 단계
+
+```bash
+# Plan 파일 생성 완료
+/kb/application/go
+
+# 또는 개별 Phase 실행
+/kb/application/red    # Red Phase만
+/kb/application/green  # Green Phase만
+/kb/application/refactor  # Refactor Phase만
+```

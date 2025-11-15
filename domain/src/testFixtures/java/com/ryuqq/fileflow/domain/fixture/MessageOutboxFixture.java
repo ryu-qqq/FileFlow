@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.fixture;
 
 import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
+import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 
 import java.time.LocalDateTime;
@@ -71,7 +72,7 @@ public class MessageOutboxFixture {
      * MessageOutbox Builder (Plain Java, Lombok 금지)
      */
     public static class MessageOutboxBuilder {
-        private String id = UuidV7GeneratorFixture.aUuidV7();
+        private MessageOutboxId id = MessageOutboxIdFixture.aMessageOutboxId();
         private String eventType = "FileCreated";
         private String aggregateId = UuidV7GeneratorFixture.aUuidV7();
         private String payload = "{\"fileName\":\"default.jpg\",\"fileSize\":1024}";
@@ -81,7 +82,7 @@ public class MessageOutboxFixture {
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime processedAt = null;
 
-        public MessageOutboxBuilder id(String id) {
+        public MessageOutboxBuilder id(MessageOutboxId id) {
             this.id = id;
             return this;
         }
@@ -130,7 +131,7 @@ public class MessageOutboxFixture {
          * MessageOutbox 객체 생성
          */
         public MessageOutbox build() {
-            return new MessageOutbox(
+            return MessageOutbox.reconstitute(
                     id,
                     eventType,
                     aggregateId,

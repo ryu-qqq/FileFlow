@@ -29,7 +29,8 @@ class MessageOutboxTest {
 
         // Then
         assertThat(outbox).isNotNull();
-        assertThat(outbox.getId()).isNotBlank();
+        assertThat(outbox.getId()).isNotNull();
+        assertThat(outbox.getId().getValue()).isNotBlank();
         assertThat(outbox.getEventType()).isEqualTo("FileCreated");
         assertThat(outbox.getAggregateId()).isEqualTo("file-uuid-v7-123");
         assertThat(outbox.getPayload()).contains("fileName");
@@ -47,7 +48,8 @@ class MessageOutboxTest {
         MessageOutbox outbox = MessageOutboxFixture.anOutbox().build();
 
         // Then - 필수 필드 검증
-        assertThat(outbox.getId()).isNotBlank();
+        assertThat(outbox.getId()).isNotNull();
+        assertThat(outbox.getId().getValue()).isNotBlank();
         assertThat(outbox.getEventType()).isNotBlank();
         assertThat(outbox.getAggregateId()).isNotBlank();
         assertThat(outbox.getPayload()).isNotBlank();
@@ -71,8 +73,9 @@ class MessageOutboxTest {
         MessageOutbox outbox = MessageOutbox.create(eventType, aggregateId, payload, maxRetryCount);
 
         // Then
-        assertThat(outbox.getId()).isNotBlank(); // UUID v7 자동 생성
-        assertThat(outbox.getId()).hasSize(36); // UUID 표준 길이
+        assertThat(outbox.getId()).isNotNull(); // UUID v7 자동 생성
+        assertThat(outbox.getId().getValue()).isNotBlank();
+        assertThat(outbox.getId().getValue()).hasSize(36); // UUID 표준 길이
         assertThat(outbox.getEventType()).isEqualTo(eventType);
         assertThat(outbox.getAggregateId()).isEqualTo(aggregateId);
         assertThat(outbox.getPayload()).isEqualTo(payload);

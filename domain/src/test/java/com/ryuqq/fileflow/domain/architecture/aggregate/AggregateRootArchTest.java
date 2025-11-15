@@ -44,7 +44,7 @@ class AggregateRootArchTest {
     @BeforeAll
     static void setUp() {
         classes = new ClassFileImporter()
-            .importPackages("com.ryuqq.domain");
+            .importPackages("com.ryuqq.fileflow.domain");
     }
 
     /**
