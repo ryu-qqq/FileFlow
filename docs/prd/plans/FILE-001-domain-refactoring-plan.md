@@ -248,47 +248,51 @@
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/MessageOutboxTest.java`
 
 **🔴 Red Phase**:
-- [ ] AggregateIdTest.java 생성 (MessageOutboxId 패턴 참조)
-  - [ ] `shouldCreateValidAggregateId()` - 유효한 ID 생성
-  - [ ] `shouldThrowExceptionWhenValueIsNull()` - null 검증
-  - [ ] `shouldThrowExceptionWhenValueIsBlank()` - blank 검증
-  - [ ] equals(), hashCode() 테스트
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: AggregateId VO 테스트 추가`
+- [x] AggregateIdTest.java 생성 (MessageOutboxId 패턴 참조)
+  - [x] `shouldCreateValidAggregateId()` - 유효한 ID 생성
+  - [x] `shouldThrowExceptionWhenValueIsNull()` - null 검증
+  - [x] `shouldThrowExceptionWhenValueIsBlank()` - blank 검증
+  - [x] equals(), hashCode() 테스트
+- [x] 컴파일 에러 확인
+- [x] **커밋**: `test: AggregateId VO 테스트 추가`
 
 **🟢 Green Phase**:
-- [ ] AggregateId.java 구현 (MessageOutboxId 패턴 참조)
-  - [ ] private final String value
-  - [ ] private 생성자
-  - [ ] of(String value) 정적 팩토리
-  - [ ] getValue(), equals(), hashCode()
-- [ ] MessageOutbox.java 수정
-  - [ ] `String aggregateId` → `AggregateId aggregateId`
-  - [ ] 생성자 파라미터 타입 변경
-  - [ ] Getter 타입 변경
-- [ ] 테스트 수정 (AggregateId.of() 사용)
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: MessageOutbox AggregateId VO 적용`
+- [x] AggregateId.java 구현 (MessageOutboxId 패턴 참조)
+  - [x] private final String value
+  - [x] private 생성자
+  - [x] of(String value) 정적 팩토리
+  - [x] getValue(), equals(), hashCode()
+- [x] MessageOutbox.java 수정
+  - [x] `String aggregateId` → `AggregateId aggregateId`
+  - [x] 생성자 파라미터 타입 변경
+  - [x] Getter 타입 변경
+- [x] 테스트 수정 (AggregateId.of() 사용)
+- [x] 모든 테스트 통과 확인
+- [x] **커밋**: `feat: MessageOutbox AggregateId VO 적용`
 
 **♻️ Refactor Phase**:
-- [ ] 중복 코드 제거
-- [ ] **커밋**: `struct: AggregateId 검증 로직 개선` (필요 시)
+- [x] 중복 코드 제거 (없음 - 생략)
+- [x] **커밋**: 생략
 
 **🧹 Tidy Phase**:
-- [ ] AggregateIdFixture.java 생성
-- [ ] MessageOutboxFixture 수정 (AggregateId 사용)
-- [ ] **커밋**: `test: AggregateId Fixture 추가`
+- [x] AggregateIdFixture.java 생성
+- [x] MessageOutboxFixture 수정 (AggregateId 사용)
+- [x] **커밋**: `test: AggregateId Fixture 추가`
 
 **✅ 완료 체크**:
-- [ ] AggregateId 테스트 4개 통과
-- [ ] MessageOutbox aggregateId VO 사용 확인
-- [ ] **총 커밋 수**: 3-4개
+- [x] AggregateId 테스트 6개 통과
+- [x] MessageOutbox aggregateId VO 사용 확인
+- [x] **총 커밋 수**: 3개
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `e77e800`
+- Green: `7891252`
+- Refactor: 생략
+- Tidy: `8c7eb97`
+
+**⚠️ ArchUnit 위반 (Cycle 6+에서 해결 예정)**:
+- AggregateId는 Record 미구현 (class로 구현)
+- AggregateId는 forNew()/isNew() 미구현 (Foreign Key용이므로 불필요)
 
 ---
 
