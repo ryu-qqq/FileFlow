@@ -184,24 +184,45 @@ public class FileProcessingJob {
     }
 
     /**
+     * 상태 전환 헬퍼 메서드
+     * <p>
+     * 새로운 상태로 FileProcessingJob 객체를 생성합니다.
+     * </p>
+     *
+     * @param newStatus    새로운 작업 상태
+     * @param outputS3Key  출력 S3 키 (nullable)
+     * @param errorMessage 에러 메시지 (nullable)
+     * @param processedAt  처리 완료 시각 (nullable)
+     * @return 새로운 FileProcessingJob 객체
+     */
+    private FileProcessingJob withStatus(
+            JobStatus newStatus,
+            String outputS3Key,
+            String errorMessage,
+            LocalDateTime processedAt
+    ) {
+        return new FileProcessingJob(
+                this.jobId,
+                this.fileId,
+                this.jobType,
+                newStatus,
+                this.retryCount,
+                this.maxRetryCount,
+                this.inputS3Key,
+                outputS3Key,
+                errorMessage,
+                this.createdAt,
+                processedAt
+        );
+    }
+
+    /**
      * 작업 상태를 PROCESSING으로 변경
      *
      * @return 새로운 FileProcessingJob 객체 (PROCESSING 상태)
      */
     public FileProcessingJob markAsProcessing() {
-        return new FileProcessingJob(
-                this.jobId,
-                this.fileId,
-                this.jobType,
-                JobStatus.PROCESSING,
-                this.retryCount,
-                this.maxRetryCount,
-                this.inputS3Key,
-                this.outputS3Key,
-                this.errorMessage,
-                this.createdAt,
-                null // 완료 전이므로 processedAt는 null
-        );
+        return withStatus(JobStatus.PROCESSING, this.outputS3Key, this.errorMessage, null);
     }
 
     /**
@@ -211,20 +232,7 @@ public class FileProcessingJob {
      * @return 새로운 FileProcessingJob 객체 (COMPLETED 상태)
      */
     public FileProcessingJob markAsCompleted(String outputS3Key) {
-        LocalDateTime now = LocalDateTime.now();
-        return new FileProcessingJob(
-                this.jobId,
-                this.fileId,
-                this.jobType,
-                JobStatus.COMPLETED,
-                this.retryCount,
-                this.maxRetryCount,
-                this.inputS3Key,
-                outputS3Key, // 출력 S3 키 설정
-                this.errorMessage,
-                this.createdAt,
-                now // processedAt 설정
-        );
+        return withStatus(JobStatus.COMPLETED, outputS3Key, this.errorMessage, LocalDateTime.now());
     }
 
     /**
@@ -234,20 +242,7 @@ public class FileProcessingJob {
      * @return 새로운 FileProcessingJob 객체 (FAILED 상태)
      */
     public FileProcessingJob markAsFailed(String errorMessage) {
-        LocalDateTime now = LocalDateTime.now();
-        return new FileProcessingJob(
-                this.jobId,
-                this.fileId,
-                this.jobType,
-                JobStatus.FAILED,
-                this.retryCount,
-                this.maxRetryCount,
-                this.inputS3Key,
-                this.outputS3Key,
-                errorMessage, // 에러 메시지 설정
-                this.createdAt,
-                now // processedAt 설정
-        );
+        return withStatus(JobStatus.FAILED, this.outputS3Key, errorMessage, LocalDateTime.now());
     }
 
     /**
