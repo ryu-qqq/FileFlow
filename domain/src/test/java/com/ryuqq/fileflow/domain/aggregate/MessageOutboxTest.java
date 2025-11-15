@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.domain.fixture.OutboxStatusFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("MessageOutbox Aggregate Root 테스트")
@@ -188,5 +190,63 @@ class MessageOutboxTest {
 
         // Then
         assertThat(canRetry).isFalse();
+    }
+
+    // ===== TTL 만료 검증 테스트 =====
+
+    @Test
+    @DisplayName("SENT 상태 메시지는 7일 후 만료되어야 한다")
+    void shouldExpireAfter7DaysWhenSent() {
+        // Given - 8일 전에 발송된 메시지
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox()
+                .status(OutboxStatusFixture.sent())
+                .createdAt(LocalDateTime.now().minusDays(8))
+                .processedAt(LocalDateTime.now().minusDays(8))
+                .build();
+
+        // When
+        boolean isExpired = outbox.isExpired();
+
+        // Then
+        assertThat(isExpired).isTrue();
+    }
+
+    @Test
+    @DisplayName("FAILED 상태 메시지는 30일 후 만료되어야 한다")
+    void shouldExpireAfter30DaysWhenFailed() {
+        // Given - 31일 전에 실패한 메시지
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox()
+                .status(OutboxStatusFixture.failed())
+                .createdAt(LocalDateTime.now().minusDays(31))
+                .processedAt(LocalDateTime.now().minusDays(31))
+                .build();
+
+        // When
+        boolean isExpired = outbox.isExpired();
+
+        // Then
+        assertThat(isExpired).isTrue();
+    }
+
+    @Test
+    @DisplayName("TTL 이내 메시지는 만료되지 않아야 한다")
+    void shouldNotExpireWhenWithinTTL() {
+        // Given - SENT 상태, 6일 전 메시지 (7일 이내)
+        MessageOutbox sentOutbox = MessageOutboxFixture.anOutbox()
+                .status(OutboxStatusFixture.sent())
+                .createdAt(LocalDateTime.now().minusDays(6))
+                .processedAt(LocalDateTime.now().minusDays(6))
+                .build();
+
+        // Given - FAILED 상태, 29일 전 메시지 (30일 이내)
+        MessageOutbox failedOutbox = MessageOutboxFixture.anOutbox()
+                .status(OutboxStatusFixture.failed())
+                .createdAt(LocalDateTime.now().minusDays(29))
+                .processedAt(LocalDateTime.now().minusDays(29))
+                .build();
+
+        // When & Then
+        assertThat(sentOutbox.isExpired()).isFalse();
+        assertThat(failedOutbox.isExpired()).isFalse();
     }
 }
