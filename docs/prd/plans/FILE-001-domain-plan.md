@@ -381,29 +381,29 @@
 
 ---
 
-### 1️⃣3️⃣ MessageOutbox Aggregate Root - isExpired() TTL 검증 (Cycle 13)
+### 1️⃣3️⃣ MessageOutbox Aggregate Root - isExpired() TTL 검증 (Cycle 13) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldExpireAfter7DaysWhenSent()` 테스트
-- [ ] `shouldExpireAfter30DaysWhenFailed()` 테스트
-- [ ] `shouldNotExpireWhenWithinTTL()` 테스트
-- [ ] 테스트 실행 → 실패 확인
-- [ ] 커밋: `test: MessageOutbox.isExpired() 테스트 추가 (Red)`
+- [x] `shouldExpireAfter7DaysWhenSent()` 테스트
+- [x] `shouldExpireAfter30DaysWhenFailed()` 테스트
+- [x] `shouldNotExpireWhenWithinTTL()` 테스트
+- [x] 테스트 실행 → 실패 확인
+- [x] 커밋: `test: MessageOutbox.isExpired() 테스트 추가 (Red)` (fb3742d)
 
 #### 🟢 Green: 최소 구현
-- [ ] `isExpired()` 메서드 구현
-- [ ] SENT: 7일, FAILED: 30일 TTL 로직
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `impl: MessageOutbox.isExpired() 구현 (Green)`
+- [x] `isExpired()` 메서드 구현
+- [x] SENT: 7일, FAILED: 30일 TTL 로직
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `impl: MessageOutbox.isExpired() 구현 (Green)` (5af65dc)
 
 #### ♻️ Refactor: 리팩토링
-- [ ] TTL 상수 정의 (SENT_TTL_DAYS, FAILED_TTL_DAYS)
-- [ ] 커밋: `refactor: MessageOutbox.isExpired() 개선 (Refactor)`
+- [x] TTL 상수 정의 (SENT_TTL_DAYS, FAILED_TTL_DAYS)
+- [x] 커밋: `refactor: MessageOutbox.isExpired() 개선 (Refactor)` (09a64f9)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `MessageOutboxFixture.anExpiredOutbox()` 메서드 추가
-- [ ] 테스트 → Fixture 사용
-- [ ] 커밋: `test: MessageOutboxFixture 만료 메서드 추가 (Tidy)`
+- [x] `MessageOutboxFixture.anExpiredOutbox()` 메서드 추가
+- [x] 테스트 → Fixture 사용
+- [x] 커밋: `test: MessageOutboxFixture 만료 메서드 추가 (Tidy)` (5117f55)
 
 ---
 
