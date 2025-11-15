@@ -640,40 +640,39 @@
 - `domain/src/main/java/com/ryuqq/fileflow/domain/vo/UploaderId.java` (신규)
 - `domain/src/test/java/com/ryuqq/fileflow/domain/vo/UploaderIdTest.java` (신규)
 
-**🔴 Red Phase**:
-- [ ] UploaderIdTest.java 생성 (MessageOutboxId 패턴 참조)
-  - [ ] 6개 테스트 (유효성, null, blank, getValue, equals, hashCode)
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: UploaderId VO 테스트 추가`
+**🔴 Red Phase**: [x] Complete
+- [x] UploaderIdTest.java 생성 (MessageOutboxId 패턴 참조)
+  - [x] 8개 테스트 (유효성, null, getValue, equals, hashCode, forNew, isNew)
+- [x] 컴파일 에러 확인
+- [x] **커밋**: `test: UploaderId VO 테스트 추가`
 
-**🟢 Green Phase**:
-- [ ] UploaderId.java 구현 (MessageOutboxId 패턴)
-  - [ ] private final Long value (Long 타입 주의!)
-  - [ ] private 생성자
-  - [ ] of(Long value) 정적 팩토리
-  - [ ] getValue(), equals(), hashCode()
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: UploaderId VO 구현`
+**🟢 Green Phase**: [x] Complete
+- [x] UploaderId.java 구현 (Record 패턴)
+  - [x] Long value (Record component)
+  - [x] Compact constructor
+  - [x] of(Long value) 정적 팩토리
+  - [x] forNew() 정적 팩토리
+  - [x] getValue(), isNew(), equals(), hashCode()
+- [x] 모든 테스트 통과 확인 (8개)
+- [x] **커밋**: `feat: UploaderId VO 구현`
 
-**♻️ Refactor Phase**:
-- [ ] 중복 코드 제거
-- [ ] **커밋**: `struct: UploaderId 검증 로직 개선` (필요 시)
+**♻️ Refactor Phase**: [x] Complete (정리 불필요)
 
-**🧹 Tidy Phase**:
-- [ ] UploaderIdFixture.java 생성
-- [ ] **커밋**: `test: UploaderId Fixture 추가`
+**🧹 Tidy Phase**: [x] Complete
+- [x] UploaderIdFixture.java 생성
+- [x] **커밋**: `test: UploaderIdFixture 추가 (Tidy)`
 
 **✅ 완료 체크**:
-- [ ] 6개 테스트 모두 통과
-- [ ] FileId는 Cycle 7에서 이미 생성 완료 확인
-- [ ] Fixture 생성 완료
-- [ ] **총 커밋 수**: 3-4개
+- [x] 8개 테스트 모두 통과
+- [x] FileId는 Cycle 7에서 이미 생성 완료 확인
+- [x] Fixture 생성 완료
+- [x] **총 커밋 수**: 3개 (Red + Green + Tidy)
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `445dcfa`
+- Green: `72b1739`
+- Refactor: N/A (이미 정리됨)
+- Tidy: `5bfa2a4`
 
 ---
 
