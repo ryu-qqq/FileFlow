@@ -82,6 +82,197 @@ class FileTest {
         assertThat(file.getCategory()).isEqualTo("EXCEL");
     }
 
+    // ===== 3종 팩토리 메서드 테스트 (forNew, of, reconstitute) =====
+
+    @Test
+    @DisplayName("forNew()는 ID가 null인 새 파일을 생성해야 한다")
+    void shouldCreateNewFileWithForNew() {
+        // Given
+        String fileName = "test-image.jpg";
+        long fileSize = 2048000L; // 2MB
+        String mimeType = "image/jpeg";
+        String s3Key = "uploads/2024/01/test-image.jpg";
+        String s3Bucket = "fileflow-storage";
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        String category = "IMAGE";
+        String tags = "product,thumbnail";
+
+        // When
+        File file = File.forNew(
+                fileName,
+                fileSize,
+                mimeType,
+                s3Key,
+                s3Bucket,
+                uploaderId,
+                category,
+                tags
+        );
+
+        // Then
+        assertThat(file).isNotNull();
+        assertThat(file.getFileId()).isNotNull();
+        assertThat(file.getFileId().isNew()).isTrue(); // ID가 null이어야 함
+        assertThat(file.getFileName()).isEqualTo(fileName);
+        assertThat(file.getFileSize()).isEqualTo(fileSize);
+        assertThat(file.getMimeType()).isEqualTo(mimeType);
+        assertThat(file.getStatus()).isEqualTo(FileStatusFixture.pending());
+        assertThat(file.getS3Key()).isEqualTo(s3Key);
+        assertThat(file.getS3Bucket()).isEqualTo(s3Bucket);
+        assertThat(file.getUploaderId()).isEqualTo(uploaderId);
+        assertThat(file.getCategory()).isEqualTo(category);
+        assertThat(file.getTags()).isEqualTo(tags);
+        assertThat(file.getRetryCount()).isEqualTo(0);
+        assertThat(file.getVersion()).isEqualTo(1);
+        assertThat(file.getDeletedAt()).isNull();
+        assertThat(file.getCreatedAt()).isNotNull();
+        assertThat(file.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("of()는 유효한 ID로 파일을 생성해야 한다")
+    void shouldCreateFileWithOf() {
+        // Given
+        com.ryuqq.fileflow.domain.vo.FileId fileId = com.ryuqq.fileflow.domain.fixture.FileIdFixture.aFileId();
+        String fileName = "test-document.pdf";
+        long fileSize = 5120000L; // 5MB
+        String mimeType = "application/pdf";
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        String s3Key = "uploads/2024/01/test-document.pdf";
+        String s3Bucket = "fileflow-storage";
+
+        // When
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        File file = File.of(
+                fileId,
+                fileName,
+                fileSize,
+                mimeType,
+                FileStatusFixture.pending(),
+                s3Key,
+                s3Bucket,
+                "https://cdn.fileflow.com/" + s3Key,
+                uploaderId,
+                "DOCUMENT",
+                "important,contract",
+                0,
+                1,
+                null, // deletedAt
+                now, // createdAt
+                now  // updatedAt
+        );
+
+        // Then
+        assertThat(file).isNotNull();
+        assertThat(file.getFileId()).isEqualTo(fileId);
+        assertThat(file.getFileName()).isEqualTo(fileName);
+        assertThat(file.getFileSize()).isEqualTo(fileSize);
+        assertThat(file.getMimeType()).isEqualTo(mimeType);
+    }
+
+    @Test
+    @DisplayName("of()는 null ID로 생성 시 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenOfWithNullId() {
+        // Given
+        com.ryuqq.fileflow.domain.vo.FileId nullFileId = null;
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+
+        // When & Then
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        assertThatThrownBy(() -> File.of(
+                nullFileId,
+                "test.jpg",
+                1024000L,
+                "image/jpeg",
+                FileStatusFixture.pending(),
+                "uploads/test.jpg",
+                "fileflow-storage",
+                "https://cdn.fileflow.com/uploads/test.jpg",
+                uploaderId,
+                "IMAGE",
+                null,
+                0,
+                1,
+                null,
+                now,
+                now
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute()는 영속성 계층에서 파일을 재구성해야 한다")
+    void shouldReconstituteFile() {
+        // Given
+        com.ryuqq.fileflow.domain.vo.FileId fileId = com.ryuqq.fileflow.domain.fixture.FileIdFixture.aFileId();
+        String fileName = "reconstructed.jpg";
+        long fileSize = 3072000L; // 3MB
+        String mimeType = "image/jpeg";
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+
+        // When
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        File file = File.reconstitute(
+                fileId,
+                fileName,
+                fileSize,
+                mimeType,
+                FileStatusFixture.completed(),
+                "uploads/2024/01/reconstructed.jpg",
+                "fileflow-storage",
+                "https://cdn.fileflow.com/uploads/2024/01/reconstructed.jpg",
+                uploaderId,
+                "IMAGE",
+                "archived",
+                2,
+                5,
+                null,
+                now.minusDays(7), // createdAt
+                now               // updatedAt
+        );
+
+        // Then
+        assertThat(file).isNotNull();
+        assertThat(file.getFileId()).isEqualTo(fileId);
+        assertThat(file.getFileName()).isEqualTo(fileName);
+        assertThat(file.getFileSize()).isEqualTo(fileSize);
+        assertThat(file.getMimeType()).isEqualTo(mimeType);
+        assertThat(file.getRetryCount()).isEqualTo(2);
+        assertThat(file.getVersion()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("reconstitute()는 null ID로 재구성 시 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNullId() {
+        // Given
+        com.ryuqq.fileflow.domain.vo.FileId nullFileId = null;
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+
+        // When & Then
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        assertThatThrownBy(() -> File.reconstitute(
+                nullFileId,
+                "test.jpg",
+                1024000L,
+                "image/jpeg",
+                FileStatusFixture.pending(),
+                "uploads/test.jpg",
+                "fileflow-storage",
+                "https://cdn.fileflow.com/uploads/test.jpg",
+                uploaderId,
+                "IMAGE",
+                null,
+                0,
+                1,
+                null,
+                now,
+                now
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
     // ===== create() 팩토리 메서드 테스트 =====
 
     @Test
