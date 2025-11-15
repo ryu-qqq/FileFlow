@@ -77,7 +77,8 @@ public class FileFixture {
      */
     public static File aUploadingFile() {
         File file = createFile("uploading.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        return file.markAsUploading();
+        file.markAsUploading();
+        return file;
     }
 
     /**
@@ -85,7 +86,8 @@ public class FileFixture {
      */
     public static File aCompletedFile() {
         File file = createFile("completed.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        return file.markAsCompleted();
+        file.markAsCompleted();
+        return file;
     }
 
     /**
@@ -93,8 +95,9 @@ public class FileFixture {
      */
     public static File aProcessingFile() {
         File file = createFile("processing.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        File completedFile = file.markAsCompleted();
-        return completedFile.markAsProcessing();
+        file.markAsCompleted();
+        file.markAsProcessing();
+        return file;
     }
 
     /**
@@ -102,7 +105,8 @@ public class FileFixture {
      */
     public static File aFailedFile() {
         File file = createFile("failed.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        return file.markAsFailed("Upload error");
+        file.markAsFailed("Upload error");
+        return file;
     }
 
     /**
@@ -110,7 +114,8 @@ public class FileFixture {
      */
     public static File aDeletedFile() {
         File file = createFile("deleted.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        return file.softDelete();
+        file.softDelete();
+        return file;
     }
 
     /**

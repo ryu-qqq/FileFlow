@@ -56,18 +56,18 @@ public class File {
     private final String fileName;
     private final long fileSize;
     private final String mimeType;
-    private final FileStatus status;
+    private FileStatus status;
     private final String s3Key;
     private final String s3Bucket;
     private final String cdnUrl;
     private final UploaderId uploaderId;
     private final String category;
     private final String tags;
-    private final int retryCount;
+    private int retryCount;
     private final int version;
-    private final LocalDateTime deletedAt;
+    private LocalDateTime deletedAt;
     private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     /**
      * File Aggregate 생성자
@@ -535,146 +535,88 @@ public class File {
     }
 
     /**
-     * 상태 전환 헬퍼 메서드
-     * <p>
-     * 새로운 상태로 File 객체를 생성하며 updatedAt을 자동으로 갱신합니다.
-     * </p>
-     *
-     * @param newStatus 새로운 파일 상태
-     * @return 새로운 File 객체
-     */
-    private File withStatus(FileStatus newStatus) {
-        return new File(
-                this.clock,
-                this.fileId,
-                this.fileName,
-                this.fileSize,
-                this.mimeType,
-                newStatus,
-                this.s3Key,
-                this.s3Bucket,
-                this.cdnUrl,
-                this.uploaderId,
-                this.category,
-                this.tags,
-                this.retryCount,
-                this.version,
-                this.deletedAt,
-                this.createdAt,
-                LocalDateTime.now(clock) // updatedAt 갱신 (Clock 사용)
-        );
-    }
-
-    /**
      * 파일 상태를 UPLOADING으로 변경
-     *
-     * @return 새로운 File 객체 (UPLOADING 상태)
+     * <p>
+     * 가변 패턴: 동일한 객체를 변경합니다.
+     * </p>
      */
-    public File markAsUploading() {
-        return withStatus(FileStatus.UPLOADING);
+    public void markAsUploading() {
+        this.status = FileStatus.UPLOADING;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 파일 상태를 COMPLETED로 변경
      * <p>
      * PENDING 또는 UPLOADING 상태에서만 전환 가능합니다.
+     * 가변 패턴: 동일한 객체를 변경합니다.
      * </p>
-     *
-     * @return 새로운 File 객체 (COMPLETED 상태)
      */
-    public File markAsCompleted() {
-        return withStatus(FileStatus.COMPLETED);
+    public void markAsCompleted() {
+        this.status = FileStatus.COMPLETED;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 파일 상태를 FAILED로 변경
+     * <p>
+     * 가변 패턴: 동일한 객체를 변경합니다.
+     * </p>
      *
      * @param errorMessage 실패 사유
-     * @return 새로운 File 객체 (FAILED 상태)
      */
-    public File markAsFailed(String errorMessage) {
-        return withStatus(FileStatus.FAILED);
+    public void markAsFailed(String errorMessage) {
+        this.status = FileStatus.FAILED;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 파일 상태를 PROCESSING으로 변경
      * <p>
      * COMPLETED 상태에서만 전환 가능합니다.
+     * 가변 패턴: 동일한 객체를 변경합니다.
      * </p>
      *
-     * @return 새로운 File 객체 (PROCESSING 상태)
      * @throws IllegalStateException COMPLETED 상태가 아닐 때
      */
-    public File markAsProcessing() {
+    public void markAsProcessing() {
         if (this.status != FileStatus.COMPLETED) {
             throw new IllegalStateException(
                     "COMPLETED 상태에서만 PROCESSING으로 전환할 수 있습니다. 현재 상태: " + this.status
             );
         }
 
-        return withStatus(FileStatus.PROCESSING);
+        this.status = FileStatus.PROCESSING;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 재시도 횟수 증가
-     *
-     * @return 새로운 File 객체 (retryCount + 1)
+     * <p>
+     * 가변 패턴: 동일한 객체를 변경합니다.
+     * </p>
      */
-    public File incrementRetryCount() {
-        return new File(
-                this.clock,
-                this.fileId,
-                this.fileName,
-                this.fileSize,
-                this.mimeType,
-                this.status,
-                this.s3Key,
-                this.s3Bucket,
-                this.cdnUrl,
-                this.uploaderId,
-                this.category,
-                this.tags,
-                this.retryCount + 1,
-                this.version,
-                this.deletedAt,
-                this.createdAt,
-                LocalDateTime.now(clock) // updatedAt 갱신 (Clock 사용)
-        );
+    public void incrementRetryCount() {
+        this.retryCount++;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 파일 소프트 삭제
      * <p>
      * deletedAt을 현재 시각으로 설정합니다.
+     * 가변 패턴: 동일한 객체를 변경합니다.
      * </p>
      *
-     * @return 새로운 File 객체 (deletedAt 설정)
      * @throws IllegalStateException 이미 삭제된 파일일 때
      */
-    public File softDelete() {
+    public void softDelete() {
         if (this.deletedAt != null) {
             throw new IllegalStateException("이미 삭제된 파일입니다. 삭제 시각: " + this.deletedAt);
         }
 
-        LocalDateTime now = LocalDateTime.now(clock); // Clock 사용
-        return new File(
-                this.clock,
-                this.fileId,
-                this.fileName,
-                this.fileSize,
-                this.mimeType,
-                this.status,
-                this.s3Key,
-                this.s3Bucket,
-                this.cdnUrl,
-                this.uploaderId,
-                this.category,
-                this.tags,
-                this.retryCount,
-                this.version,
-                now, // deletedAt 설정
-                this.createdAt,
-                now  // updatedAt 갱신
-        );
+        LocalDateTime now = LocalDateTime.now(clock);
+        this.deletedAt = now;
+        this.updatedAt = now;
     }
 }

@@ -364,11 +364,10 @@ class FileTest {
         assertThat(file.getStatus()).isEqualTo(FileStatusFixture.pending());
 
         // When
-        File uploadingFile = file.markAsUploading();
+        file.markAsUploading();
 
         // Then
-        assertThat(uploadingFile.getStatus()).isEqualTo(FileStatusFixture.uploading());
-        assertThat(uploadingFile.getUpdatedAt()).isAfter(file.getUpdatedAt());
+        assertThat(file.getStatus()).isEqualTo(FileStatusFixture.uploading());
     }
 
     @Test
@@ -378,11 +377,10 @@ class FileTest {
         File pendingFile = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
 
         // When
-        File completedFile = pendingFile.markAsCompleted();
+        pendingFile.markAsCompleted();
 
         // Then
-        assertThat(completedFile.getStatus()).isEqualTo(FileStatusFixture.completed());
-        assertThat(completedFile.getUpdatedAt()).isAfter(pendingFile.getUpdatedAt());
+        assertThat(pendingFile.getStatus()).isEqualTo(FileStatusFixture.completed());
     }
 
     @Test
@@ -390,13 +388,13 @@ class FileTest {
     void shouldMarkAsCompletedOnlyWhenPendingOrUploading() {
         // Given - PENDING 파일을 UPLOADING으로 변경
         File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
-        File uploadingFile = file.markAsUploading();
+        file.markAsUploading();
 
         // When - UPLOADING에서 COMPLETED로 전환
-        File completedFile = uploadingFile.markAsCompleted();
+        file.markAsCompleted();
 
         // Then
-        assertThat(completedFile.getStatus()).isEqualTo(FileStatusFixture.completed());
+        assertThat(file.getStatus()).isEqualTo(FileStatusFixture.completed());
     }
 
     @Test
@@ -406,11 +404,10 @@ class FileTest {
         File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
 
         // When
-        File failedFile = file.markAsFailed("Upload error");
+        file.markAsFailed("Upload error");
 
         // Then
-        assertThat(failedFile.getStatus()).isEqualTo(FileStatusFixture.failed());
-        assertThat(failedFile.getUpdatedAt()).isAfter(file.getUpdatedAt());
+        assertThat(file.getStatus()).isEqualTo(FileStatusFixture.failed());
     }
 
     @Test
@@ -418,14 +415,13 @@ class FileTest {
     void shouldMarkAsProcessing() {
         // Given - COMPLETED 파일
         File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
-        File completedFile = file.markAsCompleted();
+        file.markAsCompleted();
 
         // When
-        File processingFile = completedFile.markAsProcessing();
+        file.markAsProcessing();
 
         // Then
-        assertThat(processingFile.getStatus()).isEqualTo(FileStatusFixture.processing());
-        assertThat(processingFile.getUpdatedAt()).isAfter(completedFile.getUpdatedAt());
+        assertThat(file.getStatus()).isEqualTo(FileStatusFixture.processing());
     }
 
     @Test
@@ -450,11 +446,10 @@ class FileTest {
         assertThat(file.getRetryCount()).isEqualTo(0);
 
         // When
-        File retriedFile = file.incrementRetryCount();
+        file.incrementRetryCount();
 
         // Then
-        assertThat(retriedFile.getRetryCount()).isEqualTo(1);
-        assertThat(retriedFile.getUpdatedAt()).isAfter(file.getUpdatedAt());
+        assertThat(file.getRetryCount()).isEqualTo(1);
     }
 
     @Test
@@ -465,11 +460,10 @@ class FileTest {
         assertThat(file.getDeletedAt()).isNull();
 
         // When
-        File deletedFile = file.softDelete();
+        file.softDelete();
 
         // Then
-        assertThat(deletedFile.getDeletedAt()).isNotNull();
-        assertThat(deletedFile.getUpdatedAt()).isAfter(file.getUpdatedAt());
+        assertThat(file.getDeletedAt()).isNotNull();
     }
 
     @Test
@@ -477,10 +471,10 @@ class FileTest {
     void shouldNotSoftDeleteTwice() {
         // Given
         File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
-        File deletedFile = file.softDelete();
+        file.softDelete();
 
         // When & Then
-        assertThatThrownBy(() -> deletedFile.softDelete())
+        assertThatThrownBy(() -> file.softDelete())
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("이미 삭제된 파일입니다");
     }
@@ -542,10 +536,10 @@ class FileTest {
         );
 
         // When
-        File completedFile = file.markAsCompleted();
+        file.markAsCompleted();
 
         // Then
-        assertThat(completedFile.getUpdatedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 12, 0, 0));
+        assertThat(file.getUpdatedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 12, 0, 0));
     }
 
     @Test
