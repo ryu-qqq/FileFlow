@@ -195,7 +195,7 @@ public class MessageOutbox {
      * @param aggregateId   이벤트 발생 Aggregate ID
      * @param payload       이벤트 페이로드 (JSON)
      * @param maxRetryCount 최대 재시도 횟수
-     * @param clock         시간 생성용 Clock
+     * @param clock         시간 생성용 Clock (테스트에서 고정 시간 사용 가능)
      * @return 신규 MessageOutbox Aggregate (ID null)
      */
     public static MessageOutbox forNew(
@@ -391,7 +391,7 @@ public class MessageOutbox {
     /**
      * 메시지를 발송 완료 상태로 변경
      *
-     * @param clock 시간 생성용 Clock
+     * @param clock 시간 생성용 Clock (processedAt 생성에 사용)
      * @return 새로운 MessageOutbox 객체 (SENT 상태)
      */
     public MessageOutbox markAsSent(Clock clock) {
@@ -401,7 +401,7 @@ public class MessageOutbox {
     /**
      * 메시지를 실패 상태로 변경
      *
-     * @param clock 시간 생성용 Clock
+     * @param clock 시간 생성용 Clock (processedAt 생성에 사용)
      * @return 새로운 MessageOutbox 객체 (FAILED 상태)
      */
     public MessageOutbox markAsFailed(Clock clock) {
