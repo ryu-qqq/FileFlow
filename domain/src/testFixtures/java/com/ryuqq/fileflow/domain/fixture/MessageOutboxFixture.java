@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.domain.vo.AggregateId;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 
+import static com.ryuqq.fileflow.domain.fixture.AggregateIdFixture.aDefaultAggregateId;
+
 import java.time.Clock;
 import java.time.LocalDateTime;
 
@@ -99,7 +101,7 @@ public class MessageOutboxFixture {
     public static class MessageOutboxBuilder {
         private MessageOutboxId id = MessageOutboxIdFixture.aMessageOutboxId();
         private String eventType = "FileCreated";
-        private AggregateId aggregateId = AggregateId.of(UuidV7GeneratorFixture.aUuidV7());
+        private AggregateId aggregateId = aDefaultAggregateId();
         private String payload = "{\"fileName\":\"default.jpg\",\"fileSize\":1024}";
         private OutboxStatus status = OutboxStatusFixture.pending();
         private int retryCount = 0;
