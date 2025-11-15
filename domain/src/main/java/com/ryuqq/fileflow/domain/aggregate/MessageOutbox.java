@@ -159,22 +159,39 @@ public class MessageOutbox {
     }
 
     /**
-     * 메시지를 발송 완료 상태로 변경
+     * 상태 전환 헬퍼 메서드
+     * <p>
+     * 새로운 상태로 MessageOutbox 객체를 생성합니다.
+     * </p>
      *
-     * @return 새로운 MessageOutbox 객체 (SENT 상태)
+     * @param newStatus   새로운 메시지 상태
+     * @param processedAt 처리 완료 시각 (nullable)
+     * @return 새로운 MessageOutbox 객체
      */
-    public MessageOutbox markAsSent() {
+    private MessageOutbox withStatus(
+            OutboxStatus newStatus,
+            LocalDateTime processedAt
+    ) {
         return new MessageOutbox(
                 this.id,
                 this.eventType,
                 this.aggregateId,
                 this.payload,
-                OutboxStatus.SENT,
+                newStatus,
                 this.retryCount,
                 this.maxRetryCount,
                 this.createdAt,
-                LocalDateTime.now()
+                processedAt
         );
+    }
+
+    /**
+     * 메시지를 발송 완료 상태로 변경
+     *
+     * @return 새로운 MessageOutbox 객체 (SENT 상태)
+     */
+    public MessageOutbox markAsSent() {
+        return withStatus(OutboxStatus.SENT, LocalDateTime.now());
     }
 
     /**
@@ -183,17 +200,7 @@ public class MessageOutbox {
      * @return 새로운 MessageOutbox 객체 (FAILED 상태)
      */
     public MessageOutbox markAsFailed() {
-        return new MessageOutbox(
-                this.id,
-                this.eventType,
-                this.aggregateId,
-                this.payload,
-                OutboxStatus.FAILED,
-                this.retryCount,
-                this.maxRetryCount,
-                this.createdAt,
-                LocalDateTime.now()
-        );
+        return withStatus(OutboxStatus.FAILED, LocalDateTime.now());
     }
 
     /**
