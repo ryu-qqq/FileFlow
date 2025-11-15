@@ -27,6 +27,7 @@ public class FileProcessingJob {
     private final String errorMessage;
     private final LocalDateTime createdAt;
     private final LocalDateTime processedAt;
+    private final java.time.Clock clock;
 
     /**
      * FileProcessingJob Aggregate 생성자
@@ -45,6 +46,7 @@ public class FileProcessingJob {
      * @param errorMessage  에러 메시지 (실패 시)
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param clock         시간 처리 Clock (테스트 가능한 시간 처리)
      */
     private FileProcessingJob(
             FileProcessingJobId jobId,
@@ -57,7 +59,8 @@ public class FileProcessingJob {
             String outputS3Key,
             String errorMessage,
             LocalDateTime createdAt,
-            LocalDateTime processedAt
+            LocalDateTime processedAt,
+            java.time.Clock clock
     ) {
         this.jobId = jobId;
         this.fileId = fileId;
@@ -70,6 +73,7 @@ public class FileProcessingJob {
         this.errorMessage = errorMessage;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
+        this.clock = clock;
     }
 
     /**
@@ -159,15 +163,17 @@ public class FileProcessingJob {
      * @param jobType       작업 유형
      * @param inputS3Key    입력 파일 S3 키
      * @param maxRetryCount 최대 재시도 횟수
+     * @param clock         시간 처리 Clock
      * @return 생성된 FileProcessingJob Aggregate (ID null)
      */
     public static FileProcessingJob forNew(
             FileId fileId,
             JobType jobType,
             String inputS3Key,
-            int maxRetryCount
+            int maxRetryCount,
+            java.time.Clock clock
     ) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
 
         return new FileProcessingJob(
                 FileProcessingJobId.forNew(), // ID는 영속화 시점에 생성
@@ -180,7 +186,8 @@ public class FileProcessingJob {
                 null, // outputS3Key는 null
                 null, // errorMessage는 null
                 now, // createdAt
-                null  // processedAt는 null
+                null, // processedAt는 null
+                clock
         );
     }
 
@@ -201,6 +208,7 @@ public class FileProcessingJob {
      * @param errorMessage  에러 메시지
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param clock         시간 처리 Clock
      * @return 생성된 FileProcessingJob Aggregate
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
      */
@@ -215,7 +223,8 @@ public class FileProcessingJob {
             String outputS3Key,
             String errorMessage,
             LocalDateTime createdAt,
-            LocalDateTime processedAt
+            LocalDateTime processedAt,
+            java.time.Clock clock
     ) {
         validateIdNotNullOrNew(jobId, "ID는 null이거나 새로운 ID일 수 없습니다");
 
@@ -230,7 +239,8 @@ public class FileProcessingJob {
                 outputS3Key,
                 errorMessage,
                 createdAt,
-                processedAt
+                processedAt,
+                clock
         );
     }
 
@@ -251,6 +261,7 @@ public class FileProcessingJob {
      * @param errorMessage  에러 메시지
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param clock         시간 처리 Clock
      * @return 재구성된 FileProcessingJob Aggregate
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
      */
@@ -265,7 +276,8 @@ public class FileProcessingJob {
             String outputS3Key,
             String errorMessage,
             LocalDateTime createdAt,
-            LocalDateTime processedAt
+            LocalDateTime processedAt,
+            java.time.Clock clock
     ) {
         validateIdNotNullOrNew(jobId, "재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
 
@@ -280,7 +292,8 @@ public class FileProcessingJob {
                 outputS3Key,
                 errorMessage,
                 createdAt,
-                processedAt
+                processedAt,
+                clock
         );
     }
 
@@ -311,7 +324,7 @@ public class FileProcessingJob {
      * @param inputS3Key    입력 파일 S3 키
      * @param maxRetryCount 최대 재시도 횟수
      * @return 생성된 FileProcessingJob Aggregate
-     * @deprecated forNew() 사용을 권장합니다 (VO 타입 사용)
+     * @deprecated forNew() 사용을 권장합니다 (VO 타입 + Clock 사용)
      */
     @Deprecated
     public static FileProcessingJob create(
@@ -323,8 +336,9 @@ public class FileProcessingJob {
         // UUID v7 자동 생성
         String jobIdValue = UuidV7Generator.generate();
 
-        // 현재 시각
-        LocalDateTime now = LocalDateTime.now();
+        // Clock은 기본 systemUTC() 사용
+        java.time.Clock clock = java.time.Clock.systemUTC();
+        LocalDateTime now = LocalDateTime.now(clock);
 
         return new FileProcessingJob(
                 FileProcessingJobId.of(jobIdValue),
@@ -337,7 +351,8 @@ public class FileProcessingJob {
                 null, // outputS3Key는 null
                 null, // errorMessage는 null
                 now, // createdAt
-                null  // processedAt는 null
+                null, // processedAt는 null
+                clock
         );
     }
 
@@ -370,7 +385,8 @@ public class FileProcessingJob {
                 outputS3Key,
                 errorMessage,
                 this.createdAt,
-                processedAt
+                processedAt,
+                this.clock
         );
     }
 
@@ -387,20 +403,22 @@ public class FileProcessingJob {
      * 작업 상태를 COMPLETED로 변경
      *
      * @param outputS3Key 출력 파일 S3 키
+     * @param clock       시간 처리 Clock
      * @return 새로운 FileProcessingJob 객체 (COMPLETED 상태)
      */
-    public FileProcessingJob markAsCompleted(String outputS3Key) {
-        return withStatus(JobStatus.COMPLETED, outputS3Key, this.errorMessage, LocalDateTime.now());
+    public FileProcessingJob markAsCompleted(String outputS3Key, java.time.Clock clock) {
+        return withStatus(JobStatus.COMPLETED, outputS3Key, this.errorMessage, LocalDateTime.now(clock));
     }
 
     /**
      * 작업 상태를 FAILED로 변경
      *
      * @param errorMessage 에러 메시지
+     * @param clock        시간 처리 Clock
      * @return 새로운 FileProcessingJob 객체 (FAILED 상태)
      */
-    public FileProcessingJob markAsFailed(String errorMessage) {
-        return withStatus(JobStatus.FAILED, this.outputS3Key, errorMessage, LocalDateTime.now());
+    public FileProcessingJob markAsFailed(String errorMessage, java.time.Clock clock) {
+        return withStatus(JobStatus.FAILED, this.outputS3Key, errorMessage, LocalDateTime.now(clock));
     }
 
     /**
@@ -420,7 +438,8 @@ public class FileProcessingJob {
                 this.outputS3Key,
                 this.errorMessage,
                 this.createdAt,
-                this.processedAt
+                this.processedAt,
+                this.clock
         );
     }
 

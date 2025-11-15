@@ -37,7 +37,8 @@ public class FileProcessingJobFixture {
                 FileId.of(fileId),
                 jobType,
                 inputS3Key,
-                maxRetryCount
+                maxRetryCount,
+                java.time.Clock.systemUTC()
         );
     }
 
@@ -51,7 +52,7 @@ public class FileProcessingJobFixture {
                 "uploads/2024/01/image.jpg",
                 3
         );
-        return job.markAsCompleted("processed/2024/01/thumbnail.jpg");
+        return job.markAsCompleted("processed/2024/01/thumbnail.jpg", java.time.Clock.systemUTC());
     }
 
     /**
@@ -64,7 +65,7 @@ public class FileProcessingJobFixture {
                 "uploads/2024/01/image.jpg",
                 3
         );
-        return job.markAsFailed("Processing error: Invalid image format");
+        return job.markAsFailed("Processing error: Invalid image format", java.time.Clock.systemUTC());
     }
 
     /**
@@ -156,7 +157,8 @@ public class FileProcessingJobFixture {
                     outputS3Key,
                     errorMessage,
                     createdAt,
-                    processedAt
+                    processedAt,
+                    java.time.Clock.systemUTC()
             );
         }
     }

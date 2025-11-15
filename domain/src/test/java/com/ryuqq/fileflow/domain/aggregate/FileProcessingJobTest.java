@@ -76,7 +76,8 @@ class FileProcessingJobTest {
                 fileId,
                 jobType,
                 inputS3Key,
-                maxRetryCount
+                maxRetryCount,
+                java.time.Clock.systemUTC()
         );
 
         // Then
@@ -116,7 +117,8 @@ class FileProcessingJobTest {
                 null,
                 null,
                 java.time.LocalDateTime.now(),
-                null
+                null,
+                java.time.Clock.systemUTC()
         );
 
         // Then
@@ -145,7 +147,8 @@ class FileProcessingJobTest {
                 null,
                 null,
                 java.time.LocalDateTime.now(),
-                null
+                null,
+                java.time.Clock.systemUTC()
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
@@ -172,7 +175,8 @@ class FileProcessingJobTest {
                 null,
                 null,
                 java.time.LocalDateTime.now(),
-                null
+                null,
+                java.time.Clock.systemUTC()
         );
 
         // Then
@@ -201,7 +205,8 @@ class FileProcessingJobTest {
                 null,
                 null,
                 java.time.LocalDateTime.now(),
-                null
+                null,
+                java.time.Clock.systemUTC()
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
@@ -346,7 +351,7 @@ class FileProcessingJobTest {
         String outputS3Key = "processed/2024/01/thumbnail.jpg";
 
         // When
-        FileProcessingJob completedJob = job.markAsCompleted(outputS3Key);
+        FileProcessingJob completedJob = job.markAsCompleted(outputS3Key, java.time.Clock.systemUTC());
 
         // Then
         assertThat(completedJob.getStatus()).isEqualTo(JobStatusFixture.completed());
@@ -367,7 +372,7 @@ class FileProcessingJobTest {
         String errorMessage = "Image processing failed: Invalid format";
 
         // When
-        FileProcessingJob failedJob = job.markAsFailed(errorMessage);
+        FileProcessingJob failedJob = job.markAsFailed(errorMessage, java.time.Clock.systemUTC());
 
         // Then
         assertThat(failedJob.getStatus()).isEqualTo(JobStatusFixture.failed());
