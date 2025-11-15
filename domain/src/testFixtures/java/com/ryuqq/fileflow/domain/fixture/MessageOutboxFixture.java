@@ -57,6 +57,17 @@ public class MessageOutboxFixture {
     }
 
     /**
+     * 만료된 메시지 (SENT 상태, 8일 전)
+     */
+    public static MessageOutbox anExpiredOutbox() {
+        return anOutbox()
+                .status(OutboxStatusFixture.sent())
+                .createdAt(LocalDateTime.now().minusDays(8))
+                .processedAt(LocalDateTime.now().minusDays(8))
+                .build();
+    }
+
+    /**
      * MessageOutbox Builder (Plain Java, Lombok 금지)
      */
     public static class MessageOutboxBuilder {
