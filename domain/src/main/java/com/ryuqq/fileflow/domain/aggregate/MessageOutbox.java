@@ -415,9 +415,10 @@ public class MessageOutbox {
      * @param clock 시간 생성용 Clock (processedAt 생성에 사용)
      */
     public void markAsSent(Clock clock) {
+        LocalDateTime now = LocalDateTime.now(clock);
         this.status = OutboxStatus.SENT;
-        this.processedAt = LocalDateTime.now(clock);
-        this.updatedAt = LocalDateTime.now(clock);
+        this.processedAt = now;
+        this.updatedAt = now;
     }
 
     /**
@@ -430,9 +431,10 @@ public class MessageOutbox {
      * @param clock 시간 생성용 Clock (processedAt 생성에 사용)
      */
     public void markAsFailed(Clock clock) {
+        LocalDateTime now = LocalDateTime.now(clock);
         this.status = OutboxStatus.FAILED;
-        this.processedAt = LocalDateTime.now(clock);
-        this.updatedAt = LocalDateTime.now(clock);
+        this.processedAt = now;
+        this.updatedAt = now;
     }
 
     /**
