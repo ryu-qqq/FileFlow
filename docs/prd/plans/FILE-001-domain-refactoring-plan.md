@@ -844,41 +844,37 @@
 - `domain/src/main/java/com/ryuqq/fileflow/domain/aggregate/File.java`
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/FileTest.java`
 
-**🔴 Red Phase**:
-- [ ] FileTest.java에 테스트 추가
-  - [ ] `shouldUpdateUpdatedAtWhenMarkAsCompleted()` - updatedAt 갱신 검증 (이미 있음, 확인만)
-  - [ ] `shouldReturnFileIdValueWithoutChaining()` - getFileIdValue() 테스트
-  - [ ] `shouldReturnUploaderIdValueWithoutChaining()` - getUploaderIdValue() 테스트
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: File getIdValue() 테스트 추가`
+**🔴 Red Phase**: [x] Complete
+- [x] FileTest.java에 테스트 추가
+  - [x] `shouldUpdateUpdatedAtWhenMarkAsCompleted()` - updatedAt 갱신 검증 (이미 있음, 확인만)
+  - [x] `shouldReturnFileIdValueWithoutChaining()` - getFileIdValue() 테스트
+  - [x] `shouldReturnUploaderIdValueWithoutChaining()` - getUploaderIdValue() 테스트
+- [x] 컴파일 에러 확인 (FileId.getValue()는 String 반환, UploaderId.getValue()는 Long 반환)
+- [x] **커밋**: `test: File getIdValue() 테스트 추가`
 
-**🟢 Green Phase**:
-- [ ] File.java 수정
-  - [ ] `updatedAt` final 제거 (Cycle 16에서 이미 완료, 확인만)
-  - [ ] `getFileIdValue()` 메서드 추가: `return fileId.getValue();`
-  - [ ] `getUploaderIdValue()` 메서드 추가: `return uploaderId.getValue();`
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: File getIdValue() 추가`
+**🟢 Green Phase**: [x] Complete
+- [x] File.java 수정
+  - [x] `updatedAt` final 제거 (Cycle 16에서 이미 완료, 확인만)
+  - [x] `getFileIdValue()` 메서드 추가: `return fileId.getValue();` (String 반환)
+  - [x] `getUploaderIdValue()` 메서드 추가: `return uploaderId.getValue();` (Long 반환)
+- [x] 모든 테스트 통과 확인 (31개 테스트, 100% 성공)
+- [x] **커밋**: `feat: File getIdValue() 추가`
 
-**♻️ Refactor Phase**:
-- [ ] getIdValue() 메서드 순서 정리
-- [ ] **커밋**: `struct: File getter 메서드 정리` (필요 시)
+**♻️ Refactor Phase**: [x] Complete (정리 불필요)
 
-**🧹 Tidy Phase**:
-- [ ] FileFixture 최종 검토
-- [ ] **커밋**: `test: FileFixture 최종 정리`
+**🧹 Tidy Phase**: [x] Complete (FileFixture 이미 정리됨)
 
 **✅ 완료 체크**:
-- [ ] 2개 신규 테스트 모두 통과
-- [ ] getFileIdValue(), getUploaderIdValue() 메서드 존재 확인
-- [ ] **총 커밋 수**: 2-3개
-- [ ] **File 리팩토링 완료** 🎉
+- [x] 2개 신규 테스트 모두 통과
+- [x] getFileIdValue(), getUploaderIdValue() 메서드 존재 확인
+- [x] **총 커밋 수**: 2개 (Red + Green)
+- [x] **File 리팩토링 완료** 🎉
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `8dc4bb0`
+- Green: `dedf0d0`
+- Refactor: N/A (이미 정리됨)
+- Tidy: N/A (Green에 포함)
 
 ---
 
