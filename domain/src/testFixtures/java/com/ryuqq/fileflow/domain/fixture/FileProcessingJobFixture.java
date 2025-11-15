@@ -21,16 +21,24 @@ public class FileProcessingJobFixture {
     }
 
     /**
-     * FileProcessingJob.create() 팩토리 메서드 사용 (PENDING 상태, UUID v7 자동 생성)
+     * FileProcessingJob.forNew() 팩토리 메서드 사용 (PENDING 상태, ID null)
+     * <p>
+     * 새 작업 생성 시 사용하는 헬퍼 메서드입니다.
+     * </p>
      *
-     * @param fileId        파일 ID
+     * @param fileId        파일 ID (String)
      * @param jobType       작업 유형
      * @param inputS3Key    입력 S3 키
      * @param maxRetryCount 최대 재시도 횟수
      * @return 생성된 FileProcessingJob Aggregate
      */
     public static FileProcessingJob createJob(String fileId, JobType jobType, String inputS3Key, int maxRetryCount) {
-        return FileProcessingJob.create(fileId, jobType, inputS3Key, maxRetryCount);
+        return FileProcessingJob.forNew(
+                FileId.of(fileId),
+                jobType,
+                inputS3Key,
+                maxRetryCount
+        );
     }
 
     /**
