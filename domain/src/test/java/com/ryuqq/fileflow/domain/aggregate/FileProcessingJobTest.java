@@ -1,13 +1,18 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
+import com.ryuqq.fileflow.domain.fixture.FileIdFixture;
 import com.ryuqq.fileflow.domain.fixture.FileProcessingJobFixture;
+import com.ryuqq.fileflow.domain.fixture.FileProcessingJobIdFixture;
 import com.ryuqq.fileflow.domain.fixture.JobStatusFixture;
 import com.ryuqq.fileflow.domain.fixture.JobTypeFixture;
+import com.ryuqq.fileflow.domain.vo.FileId;
+import com.ryuqq.fileflow.domain.vo.FileProcessingJobId;
 import com.ryuqq.fileflow.domain.vo.JobType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("FileProcessingJob Aggregate Root 테스트")
 class FileProcessingJobTest {
@@ -52,6 +57,153 @@ class FileProcessingJobTest {
         assertThat(job.getInputS3Key()).isNotBlank();
         assertThat(job.getMaxRetryCount()).isPositive();
         assertThat(job.getCreatedAt()).isNotNull();
+    }
+
+    // ===== 3종 팩토리 메서드 테스트 =====
+
+    @Test
+    @DisplayName("forNew()는 ID가 null인 새 작업을 생성해야 한다")
+    void shouldCreateNewJobWithForNew() {
+        // Given
+        FileId fileId = FileIdFixture.aFileId();
+        JobType jobType = JobTypeFixture.thumbnailGeneration();
+        String inputS3Key = "uploads/2024/01/image.jpg";
+        int maxRetryCount = 3;
+
+        // When
+        FileProcessingJob job = FileProcessingJob.forNew(
+                fileId,
+                jobType,
+                inputS3Key,
+                maxRetryCount
+        );
+
+        // Then
+        assertThat(job).isNotNull();
+        assertThat(job.getJobId()).isNotNull();
+        assertThat(job.getJobId().isNew()).isTrue(); // ID가 null이어야 함
+        assertThat(job.getFileId()).isEqualTo(fileId);
+        assertThat(job.getJobType()).isEqualTo(jobType);
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending());
+        assertThat(job.getInputS3Key()).isEqualTo(inputS3Key);
+        assertThat(job.getMaxRetryCount()).isEqualTo(maxRetryCount);
+        assertThat(job.getRetryCount()).isEqualTo(0);
+        assertThat(job.getOutputS3Key()).isNull();
+        assertThat(job.getErrorMessage()).isNull();
+        assertThat(job.getCreatedAt()).isNotNull();
+        assertThat(job.getProcessedAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("of()는 유효한 ID로 작업을 생성해야 한다")
+    void shouldCreateJobWithOf() {
+        // Given
+        FileProcessingJobId jobId = FileProcessingJobIdFixture.aFileProcessingJobId();
+        FileId fileId = FileIdFixture.aFileId();
+        JobType jobType = JobTypeFixture.thumbnailGeneration();
+        String inputS3Key = "uploads/2024/01/image.jpg";
+
+        // When
+        FileProcessingJob job = FileProcessingJob.of(
+                jobId,
+                fileId,
+                jobType,
+                JobStatusFixture.pending(),
+                0,
+                3,
+                inputS3Key,
+                null,
+                null,
+                java.time.LocalDateTime.now(),
+                null
+        );
+
+        // Then
+        assertThat(job).isNotNull();
+        assertThat(job.getJobId()).isEqualTo(jobId);
+        assertThat(job.getFileId()).isEqualTo(fileId);
+        assertThat(job.getJobType()).isEqualTo(jobType);
+    }
+
+    @Test
+    @DisplayName("of()는 null ID로 생성 시 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenOfWithNullId() {
+        // Given
+        FileProcessingJobId nullJobId = null;
+        FileId fileId = FileIdFixture.aFileId();
+
+        // When & Then
+        assertThatThrownBy(() -> FileProcessingJob.of(
+                nullJobId,
+                fileId,
+                JobTypeFixture.thumbnailGeneration(),
+                JobStatusFixture.pending(),
+                0,
+                3,
+                "uploads/image.jpg",
+                null,
+                null,
+                java.time.LocalDateTime.now(),
+                null
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute()는 영속성 계층에서 작업을 재구성해야 한다")
+    void shouldReconstituteJob() {
+        // Given
+        FileProcessingJobId jobId = FileProcessingJobIdFixture.aFileProcessingJobId();
+        FileId fileId = FileIdFixture.aFileId();
+        JobType jobType = JobTypeFixture.thumbnailGeneration();
+        String inputS3Key = "uploads/2024/01/image.jpg";
+
+        // When
+        FileProcessingJob job = FileProcessingJob.reconstitute(
+                jobId,
+                fileId,
+                jobType,
+                JobStatusFixture.pending(),
+                0,
+                3,
+                inputS3Key,
+                null,
+                null,
+                java.time.LocalDateTime.now(),
+                null
+        );
+
+        // Then
+        assertThat(job).isNotNull();
+        assertThat(job.getJobId()).isEqualTo(jobId);
+        assertThat(job.getFileId()).isEqualTo(fileId);
+        assertThat(job.getJobType()).isEqualTo(jobType);
+    }
+
+    @Test
+    @DisplayName("reconstitute()는 null ID로 재구성 시 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNullId() {
+        // Given
+        FileProcessingJobId nullJobId = null;
+        FileId fileId = FileIdFixture.aFileId();
+
+        // When & Then
+        assertThatThrownBy(() -> FileProcessingJob.reconstitute(
+                nullJobId,
+                fileId,
+                JobTypeFixture.thumbnailGeneration(),
+                JobStatusFixture.pending(),
+                0,
+                3,
+                "uploads/image.jpg",
+                null,
+                null,
+                java.time.LocalDateTime.now(),
+                null
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
     }
 
     // ===== create() 팩토리 메서드 테스트 =====
