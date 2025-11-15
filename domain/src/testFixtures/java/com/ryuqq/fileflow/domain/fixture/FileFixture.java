@@ -70,6 +70,39 @@ public class FileFixture {
     }
 
     /**
+     * UPLOADING 상태 파일
+     */
+    public static File aUploadingFile() {
+        File file = createFile("uploading.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
+        return file.markAsUploading();
+    }
+
+    /**
+     * COMPLETED 상태 파일
+     */
+    public static File aCompletedFile() {
+        File file = createFile("completed.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
+        return file.markAsCompleted();
+    }
+
+    /**
+     * PROCESSING 상태 파일
+     */
+    public static File aProcessingFile() {
+        File file = createFile("processing.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
+        File completedFile = file.markAsCompleted();
+        return completedFile.markAsProcessing();
+    }
+
+    /**
+     * FAILED 상태 파일
+     */
+    public static File aFailedFile() {
+        File file = createFile("failed.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
+        return file.markAsFailed("Upload error");
+    }
+
+    /**
      * File Builder (Plain Java, Lombok 금지)
      */
     public static class FileBuilder {
