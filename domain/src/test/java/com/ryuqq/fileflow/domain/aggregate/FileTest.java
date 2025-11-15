@@ -578,4 +578,67 @@ class FileTest {
         assertThat(file.getFileId()).isNotNull();
         assertThat(file.getFileId().isNew()).isTrue();
     }
+
+    // ===== 가변 패턴 테스트 =====
+
+    @Test
+    @DisplayName("markAsUploading()는 동일한 객체를 변경해야 한다 (가변 패턴)")
+    void shouldMutateStatusWhenMarkAsUploading() {
+        // Given
+        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.aFile()
+                .status(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.pending())
+                .build();
+
+        // When
+        file.markAsUploading();
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(file.getStatus()).isEqualTo(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.uploading());
+    }
+
+    @Test
+    @DisplayName("markAsCompleted()는 동일한 객체를 변경해야 한다 (가변 패턴)")
+    void shouldMutateStatusWhenMarkAsCompleted() {
+        // Given
+        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.aFile()
+                .status(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.uploading())
+                .build();
+
+        // When
+        file.markAsCompleted();
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(file.getStatus()).isEqualTo(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.completed());
+    }
+
+    @Test
+    @DisplayName("markAsFailed()는 동일한 객체를 변경해야 한다 (가변 패턴)")
+    void shouldMutateStatusWhenMarkAsFailed() {
+        // Given
+        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.aFile()
+                .status(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.uploading())
+                .build();
+        String errorMessage = "Upload failed";
+
+        // When
+        file.markAsFailed(errorMessage);
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(file.getStatus()).isEqualTo(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.failed());
+    }
+
+    @Test
+    @DisplayName("markAsCompleted()는 새 객체를 반환하지 않아야 한다 (동일 객체 변경)")
+    void shouldNotReturnNewInstanceWhenMarkAsCompleted() {
+        // Given
+        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.aFile()
+                .status(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.uploading())
+                .build();
+
+        // When
+        file.markAsCompleted();
+
+        // Then - 반환값이 void이므로 상태만 검증
+        assertThat(file.getStatus()).isEqualTo(com.ryuqq.fileflow.domain.fixture.FileStatusFixture.completed());
+    }
 }
