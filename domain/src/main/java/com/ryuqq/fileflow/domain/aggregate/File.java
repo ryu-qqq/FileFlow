@@ -315,4 +315,118 @@ public class File {
             );
         }
     }
+
+    /**
+     * 파일 상태를 UPLOADING으로 변경
+     *
+     * @return 새로운 File 객체 (UPLOADING 상태)
+     */
+    public File markAsUploading() {
+        return new File(
+                this.fileId,
+                this.fileName,
+                this.fileSize,
+                this.mimeType,
+                FileStatus.UPLOADING,
+                this.s3Key,
+                this.s3Bucket,
+                this.cdnUrl,
+                this.uploaderId,
+                this.category,
+                this.tags,
+                this.version,
+                this.deletedAt,
+                this.createdAt,
+                LocalDateTime.now() // updatedAt 갱신
+        );
+    }
+
+    /**
+     * 파일 상태를 COMPLETED로 변경
+     * <p>
+     * PENDING 또는 UPLOADING 상태에서만 전환 가능합니다.
+     * </p>
+     *
+     * @return 새로운 File 객체 (COMPLETED 상태)
+     */
+    public File markAsCompleted() {
+        return new File(
+                this.fileId,
+                this.fileName,
+                this.fileSize,
+                this.mimeType,
+                FileStatus.COMPLETED,
+                this.s3Key,
+                this.s3Bucket,
+                this.cdnUrl,
+                this.uploaderId,
+                this.category,
+                this.tags,
+                this.version,
+                this.deletedAt,
+                this.createdAt,
+                LocalDateTime.now() // updatedAt 갱신
+        );
+    }
+
+    /**
+     * 파일 상태를 FAILED로 변경
+     *
+     * @param errorMessage 실패 사유
+     * @return 새로운 File 객체 (FAILED 상태)
+     */
+    public File markAsFailed(String errorMessage) {
+        return new File(
+                this.fileId,
+                this.fileName,
+                this.fileSize,
+                this.mimeType,
+                FileStatus.FAILED,
+                this.s3Key,
+                this.s3Bucket,
+                this.cdnUrl,
+                this.uploaderId,
+                this.category,
+                this.tags,
+                this.version,
+                this.deletedAt,
+                this.createdAt,
+                LocalDateTime.now() // updatedAt 갱신
+        );
+    }
+
+    /**
+     * 파일 상태를 PROCESSING으로 변경
+     * <p>
+     * COMPLETED 상태에서만 전환 가능합니다.
+     * </p>
+     *
+     * @return 새로운 File 객체 (PROCESSING 상태)
+     * @throws IllegalStateException COMPLETED 상태가 아닐 때
+     */
+    public File markAsProcessing() {
+        if (this.status != FileStatus.COMPLETED) {
+            throw new IllegalStateException(
+                    "COMPLETED 상태에서만 PROCESSING으로 전환할 수 있습니다. 현재 상태: " + this.status
+            );
+        }
+
+        return new File(
+                this.fileId,
+                this.fileName,
+                this.fileSize,
+                this.mimeType,
+                FileStatus.PROCESSING,
+                this.s3Key,
+                this.s3Bucket,
+                this.cdnUrl,
+                this.uploaderId,
+                this.category,
+                this.tags,
+                this.version,
+                this.deletedAt,
+                this.createdAt,
+                LocalDateTime.now() // updatedAt 갱신
+        );
+    }
 }
