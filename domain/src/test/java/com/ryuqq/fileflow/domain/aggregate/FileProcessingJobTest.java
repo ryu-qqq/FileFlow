@@ -207,6 +207,80 @@ class FileProcessingJobTest {
                 .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
     }
 
+    // ===== Clock 의존성 테스트 =====
+
+    @Test
+    @DisplayName("forNew()는 Clock을 사용하여 createdAt을 설정해야 한다")
+    void shouldUseClockForCreatedAt() {
+        // Given
+        java.time.Clock fixedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T10:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        FileId fileId = FileIdFixture.aFileId();
+        JobType jobType = JobTypeFixture.thumbnailGeneration();
+
+        // When
+        FileProcessingJob job = FileProcessingJob.forNew(
+                fileId,
+                jobType,
+                "uploads/image.jpg",
+                3,
+                fixedClock
+        );
+
+        // Then
+        assertThat(job.getCreatedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 10, 0, 0));
+    }
+
+    @Test
+    @DisplayName("markAsCompleted()는 Clock을 사용하여 processedAt을 설정해야 한다")
+    void shouldUseClockForProcessedAt() {
+        // Given
+        java.time.Clock fixedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T12:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        FileId fileId = FileIdFixture.aFileId();
+        FileProcessingJob job = FileProcessingJob.forNew(
+                fileId,
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3,
+                fixedClock
+        );
+
+        // When
+        FileProcessingJob completedJob = job.markAsCompleted("output.jpg", fixedClock);
+
+        // Then
+        assertThat(completedJob.getProcessedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 12, 0, 0));
+    }
+
+    @Test
+    @DisplayName("고정된 Clock으로 작업을 생성하면 예측 가능한 시간이 설정되어야 한다")
+    void shouldCreateJobWithFixedClock() {
+        // Given
+        java.time.Clock fixedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T14:30:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        FileId fileId = FileIdFixture.aFileId();
+
+        // When
+        FileProcessingJob job = FileProcessingJob.forNew(
+                fileId,
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3,
+                fixedClock
+        );
+
+        // Then
+        assertThat(job.getCreatedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 14, 30, 0));
+        assertThat(job.getProcessedAt()).isNull();
+    }
+
     // ===== create() 팩토리 메서드 테스트 =====
 
     @Test
