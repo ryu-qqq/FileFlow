@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.fixture.JobTypeFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,10 +17,10 @@ class JobTypeTest {
 
         // Then
         assertThat(types).contains(
-                JobType.THUMBNAIL_GENERATION,
-                JobType.IMAGE_RESIZE,
-                JobType.IMAGE_FORMAT_CONVERSION,
-                JobType.IMAGE_COMPRESSION
+                JobTypeFixture.thumbnailGeneration(),
+                JobTypeFixture.imageResize(),
+                JobTypeFixture.imageFormatConversion(),
+                JobTypeFixture.imageCompression()
         );
     }
 
@@ -31,9 +32,9 @@ class JobTypeTest {
 
         // Then
         assertThat(types).contains(
-                JobType.HTML_PARSING,
-                JobType.HTML_TO_PDF,
-                JobType.HTML_SCREENSHOT
+                JobTypeFixture.htmlParsing(),
+                JobTypeFixture.htmlToPdf(),
+                JobTypeFixture.htmlScreenshot()
         );
     }
 
@@ -45,8 +46,8 @@ class JobTypeTest {
 
         // Then
         assertThat(types).contains(
-                JobType.PDF_TEXT_EXTRACTION,
-                JobType.DOCUMENT_CONVERSION
+                JobTypeFixture.pdfTextExtraction(),
+                JobTypeFixture.documentConversion()
         );
     }
 
@@ -58,8 +59,8 @@ class JobTypeTest {
 
         // Then
         assertThat(types).contains(
-                JobType.EXCEL_TO_CSV,
-                JobType.EXCEL_DATA_EXTRACTION
+                JobTypeFixture.excelToCsv(),
+                JobTypeFixture.excelDataExtraction()
         );
     }
 }
