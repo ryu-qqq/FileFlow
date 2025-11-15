@@ -21,7 +21,7 @@ public class FileFixture {
     }
 
     /**
-     * File.create() 팩토리 메서드 사용 (PENDING 상태, UUID v7 자동 생성)
+     * File.forNew() 팩토리 메서드 사용 (PENDING 상태, UUID v7 자동 생성)
      *
      * @param fileName   파일명
      * @param fileSize   파일 크기 (바이트)
@@ -33,7 +33,7 @@ public class FileFixture {
     public static File createFile(String fileName, long fileSize, String mimeType, Long uploaderId, String category) {
         String s3Key = "uploads/2024/01/" + fileName;
         String s3Bucket = "fileflow-storage";
-        return File.create(fileName, fileSize, mimeType, s3Key, s3Bucket, uploaderId, category, null);
+        return File.forNew(fileName, fileSize, mimeType, s3Key, s3Bucket, UploaderId.of(uploaderId), category, null, java.time.Clock.systemUTC());
     }
 
     /**

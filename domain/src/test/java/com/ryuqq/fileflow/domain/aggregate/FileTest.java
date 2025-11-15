@@ -4,8 +4,11 @@ import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
 import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
 import com.ryuqq.fileflow.domain.fixture.FileStatusFixture;
+import com.ryuqq.fileflow.domain.vo.UploaderId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.time.Clock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -293,7 +296,7 @@ class FileTest {
         String category = "IMAGE";
 
         // When
-        File file = File.create(fileName, fileSize, mimeType, s3Key, s3Bucket, uploaderId, category, null);
+        File file = File.forNew(fileName, fileSize, mimeType, s3Key, s3Bucket, UploaderId.of(uploaderId), category, null, Clock.systemUTC());
 
         // Then
         assertThat(file.getFileId()).isNotNull(); // FileId VO 자동 생성
@@ -316,7 +319,7 @@ class FileTest {
 
         // When & Then
         assertThatThrownBy(() ->
-                File.create(fileName, fileSize, mimeType, "s3key", "bucket", 1L, "IMAGE", null)
+                File.forNew(fileName, fileSize, mimeType, "s3key", "bucket", UploaderId.of(1L), "IMAGE", null, Clock.systemUTC())
         )
                 .isInstanceOf(InvalidFileSizeException.class)
                 .hasMessageContaining("파일 크기는 0보다 커야 합니다");
@@ -332,7 +335,7 @@ class FileTest {
 
         // When & Then
         assertThatThrownBy(() ->
-                File.create(fileName, fileSize, mimeType, "s3key", "bucket", 1L, "IMAGE", null)
+                File.forNew(fileName, fileSize, mimeType, "s3key", "bucket", UploaderId.of(1L), "IMAGE", null, Clock.systemUTC())
         )
                 .isInstanceOf(InvalidFileSizeException.class)
                 .hasMessageContaining("파일 크기는 1GB를 초과할 수 없습니다");
@@ -348,7 +351,7 @@ class FileTest {
 
         // When & Then
         assertThatThrownBy(() ->
-                File.create(fileName, fileSize, mimeType, "s3key", "bucket", 1L, "OTHER", null)
+                File.forNew(fileName, fileSize, mimeType, "s3key", "bucket", UploaderId.of(1L), "OTHER", null, Clock.systemUTC())
         )
                 .isInstanceOf(InvalidMimeTypeException.class)
                 .hasMessageContaining("허용되지 않는 MIME 타입입니다");

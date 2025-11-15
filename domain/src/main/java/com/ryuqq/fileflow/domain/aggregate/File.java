@@ -483,51 +483,6 @@ public class File {
     }
 
     /**
-     * 파일 생성 팩토리 메서드
-     * <p>
-     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
-     * </p>
-     *
-     * @deprecated {@link #forNew(String, long, String, String, String, UploaderId, String, String, Clock)} 사용을 권장합니다.
-     *
-     * @param fileName    파일명
-     * @param fileSize    파일 크기 (바이트)
-     * @param mimeType    MIME 타입
-     * @param s3Key       S3 객체 키
-     * @param s3Bucket    S3 버킷명
-     * @param uploaderId  업로더 사용자 ID
-     * @param category    파일 카테고리
-     * @param tags        태그 (콤마 구분, nullable)
-     * @return 생성된 File Aggregate
-     * @throws InvalidFileSizeException 파일 크기가 유효하지 않을 때
-     * @throws InvalidMimeTypeException MIME 타입이 허용되지 않을 때
-     */
-    @Deprecated
-    public static File create(
-            String fileName,
-            long fileSize,
-            String mimeType,
-            String s3Key,
-            String s3Bucket,
-            Long uploaderId,
-            String category,
-            String tags
-    ) {
-        // UploaderId VO로 변환하여 forNew() 호출 (Clock.systemUTC() 사용)
-        return forNew(
-                fileName,
-                fileSize,
-                mimeType,
-                s3Key,
-                s3Bucket,
-                UploaderId.of(uploaderId),
-                category,
-                tags,
-                Clock.systemUTC()
-        );
-    }
-
-    /**
      * 파일 크기 검증
      *
      * @param fileSize 파일 크기 (바이트)
