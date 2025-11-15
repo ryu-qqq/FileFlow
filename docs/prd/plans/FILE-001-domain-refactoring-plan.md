@@ -585,48 +585,48 @@
 - `domain/src/main/java/com/ryuqq/fileflow/domain/aggregate/FileProcessingJob.java`
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/FileProcessingJobTest.java`
 
-**🔴 Red Phase**:
-- [ ] FileProcessingJobTest.java에 테스트 추가
-  - [ ] `shouldHaveUpdatedAtWhenCreated()` - forNew() updatedAt 검증
-  - [ ] `shouldUpdateUpdatedAtWhenMarkAsCompleted()` - updatedAt 갱신 검증
-  - [ ] `shouldUpdateUpdatedAtWhenMarkAsFailed()` - updatedAt 갱신 검증
-  - [ ] `shouldReturnJobIdValueWithoutChaining()` - getJobIdValue() 테스트
-  - [ ] `shouldReturnFileIdValueWithoutChaining()` - getFileIdValue() 테스트
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: FileProcessingJob updatedAt 및 getIdValue() 테스트 추가`
+**🔴 Red Phase**: [x] Complete
+- [x] FileProcessingJobTest.java에 테스트 추가
+  - [x] `shouldHaveUpdatedAtWhenCreated()` - forNew() updatedAt 검증
+  - [x] `shouldUpdateUpdatedAtWhenMarkAsCompleted()` - updatedAt 갱신 검증
+  - [x] `shouldUpdateUpdatedAtWhenMarkAsFailed()` - updatedAt 갱신 검증
+  - [x] `shouldReturnJobIdValueWithoutChaining()` - getJobIdValue() 테스트
+  - [x] `shouldReturnFileIdValueWithoutChaining()` - getFileIdValue() 테스트
+- [x] 컴파일 에러 확인 (12개 에러)
+- [x] **커밋**: `test: FileProcessingJob updatedAt 및 getIdValue() 테스트 추가`
 
-**🟢 Green Phase**:
-- [ ] FileProcessingJob.java 수정
-  - [ ] `private LocalDateTime updatedAt;` 필드 추가
-  - [ ] 생성자에 updatedAt 파라미터 추가
-  - [ ] forNew()에서 updatedAt 설정
-  - [ ] 모든 비즈니스 메서드에서 updatedAt 갱신
-  - [ ] `getUpdatedAt()` 메서드 추가
-  - [ ] `getJobIdValue()` 메서드 추가
-  - [ ] `getFileIdValue()` 메서드 추가
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: FileProcessingJob updatedAt 및 getIdValue() 추가`
+**🟢 Green Phase**: [x] Complete
+- [x] FileProcessingJob.java 수정
+  - [x] `private LocalDateTime updatedAt;` 필드 추가
+  - [x] 생성자에 updatedAt 파라미터 추가
+  - [x] forNew()에서 updatedAt = createdAt 설정
+  - [x] 모든 비즈니스 메서드에서 updatedAt 갱신
+  - [x] `getUpdatedAt()` 메서드 추가
+  - [x] `getJobIdValue()` 메서드 추가
+  - [x] `getFileIdValue()` 메서드 추가
+- [x] 기존 팩토리 메서드 테스트 updatedAt 파라미터 추가
+- [x] FileProcessingJobFixture.build() updatedAt 파라미터 추가
+- [x] 모든 테스트 통과 확인 (26개)
+- [x] **커밋**: `feat: FileProcessingJob updatedAt 및 getIdValue() 구현`
 
-**♻️ Refactor Phase**:
-- [ ] updatedAt 갱신 로직 중복 제거
-- [ ] **커밋**: `struct: FileProcessingJob updatedAt 갱신 로직 정리` (필요 시)
+**♻️ Refactor Phase**: [x] Complete (정리 불필요)
+- [x] updatedAt 갱신 로직 이미 깔끔함
 
-**🧹 Tidy Phase**:
-- [ ] FileProcessingJobFixture 수정 (updatedAt 설정)
-- [ ] **커밋**: `test: FileProcessingJobFixture updatedAt 추가`
+**🧹 Tidy Phase**: [x] Complete (Green Phase에 포함됨)
+- [x] FileProcessingJobFixture 수정 완료 (Green Phase에서 처리)
 
 **✅ 완료 체크**:
-- [ ] 5개 신규 테스트 모두 통과
-- [ ] updatedAt 필드 존재 및 갱신 확인
-- [ ] getJobIdValue(), getFileIdValue() 메서드 존재 확인
-- [ ] **총 커밋 수**: 3-4개
-- [ ] **FileProcessingJob 리팩토링 완료** 🎉
+- [x] 5개 신규 테스트 모두 통과
+- [x] updatedAt 필드 존재 및 갱신 확인
+- [x] getJobIdValue(), getFileIdValue() 메서드 존재 확인
+- [x] **총 커밋 수**: 2개 (Red + Green)
+- [x] **FileProcessingJob 리팩토링 완료** 🎉
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `0762dd1`
+- Green: `7aebf4c`
+- Refactor: N/A (이미 정리됨)
+- Tidy: N/A (Green에 포함)
 
 ---
 
