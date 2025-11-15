@@ -1,13 +1,17 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
 import com.ryuqq.fileflow.domain.fixture.MessageOutboxFixture;
+import com.ryuqq.fileflow.domain.fixture.MessageOutboxIdFixture;
 import com.ryuqq.fileflow.domain.fixture.OutboxStatusFixture;
+import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
+import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("MessageOutbox Aggregate Root 테스트")
 class MessageOutboxTest {
@@ -248,5 +252,153 @@ class MessageOutboxTest {
         // When & Then
         assertThat(sentOutbox.isExpired()).isFalse();
         assertThat(failedOutbox.isExpired()).isFalse();
+    }
+
+    // ========================================
+    // 3종 팩토리 메서드 테스트 (Cycle 2)
+    // ========================================
+
+    @Test
+    @DisplayName("forNew() 팩토리 메서드로 ID null인 신규 메시지를 생성해야 한다")
+    void shouldCreateNewOutboxWithForNew() {
+        // Given
+        String eventType = "FileCreated";
+        String aggregateId = "file-uuid-v7-123";
+        String payload = "{\"fileName\":\"test.jpg\"}";
+        int maxRetryCount = 3;
+
+        // When
+        MessageOutbox outbox = MessageOutbox.forNew(
+                eventType,
+                aggregateId,
+                payload,
+                maxRetryCount
+        );
+
+        // Then
+        assertThat(outbox).isNotNull();
+        assertThat(outbox.getId()).isNull(); // forNew()는 ID가 null
+        assertThat(outbox.getEventType()).isEqualTo(eventType);
+        assertThat(outbox.getAggregateId()).isEqualTo(aggregateId);
+        assertThat(outbox.getPayload()).isEqualTo(payload);
+        assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
+        assertThat(outbox.getRetryCount()).isEqualTo(0);
+        assertThat(outbox.getMaxRetryCount()).isEqualTo(maxRetryCount);
+        assertThat(outbox.getCreatedAt()).isNotNull();
+        assertThat(outbox.getProcessedAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("of() 팩토리 메서드로 ID 필수인 메시지를 생성해야 한다")
+    void shouldCreateOutboxWithOf() {
+        // Given
+        MessageOutboxId id = MessageOutboxIdFixture.aMessageOutboxId();
+        String eventType = "FileCreated";
+        String aggregateId = "file-uuid-v7-123";
+        String payload = "{\"fileName\":\"test.jpg\"}";
+        OutboxStatus status = OutboxStatusFixture.pending();
+        int retryCount = 0;
+        int maxRetryCount = 3;
+        LocalDateTime createdAt = LocalDateTime.now();
+
+        // When
+        MessageOutbox outbox = MessageOutbox.of(
+                id,
+                eventType,
+                aggregateId,
+                payload,
+                status,
+                retryCount,
+                maxRetryCount,
+                createdAt,
+                null
+        );
+
+        // Then
+        assertThat(outbox).isNotNull();
+        assertThat(outbox.getId()).isEqualTo(id);
+        assertThat(outbox.getEventType()).isEqualTo(eventType);
+        assertThat(outbox.getAggregateId()).isEqualTo(aggregateId);
+        assertThat(outbox.getStatus()).isEqualTo(status);
+    }
+
+    @Test
+    @DisplayName("of() 팩토리 메서드에 null ID를 전달하면 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenOfWithNullId() {
+        // Given
+        MessageOutboxId nullId = null;
+
+        // When & Then
+        assertThatThrownBy(() -> MessageOutbox.of(
+                nullId,
+                "FileCreated",
+                "file-uuid-v7-123",
+                "{}",
+                OutboxStatusFixture.pending(),
+                0,
+                3,
+                LocalDateTime.now(),
+                null
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute() 팩토리 메서드로 영속성 복원용 메시지를 생성해야 한다")
+    void shouldReconstituteOutbox() {
+        // Given
+        MessageOutboxId id = MessageOutboxIdFixture.aMessageOutboxId();
+        String eventType = "FileCreated";
+        String aggregateId = "file-uuid-v7-123";
+        String payload = "{\"fileName\":\"test.jpg\"}";
+        OutboxStatus status = OutboxStatusFixture.sent();
+        int retryCount = 2;
+        int maxRetryCount = 3;
+        LocalDateTime createdAt = LocalDateTime.now().minusDays(1);
+        LocalDateTime processedAt = LocalDateTime.now();
+
+        // When
+        MessageOutbox outbox = MessageOutbox.reconstitute(
+                id,
+                eventType,
+                aggregateId,
+                payload,
+                status,
+                retryCount,
+                maxRetryCount,
+                createdAt,
+                processedAt
+        );
+
+        // Then
+        assertThat(outbox).isNotNull();
+        assertThat(outbox.getId()).isEqualTo(id);
+        assertThat(outbox.getEventType()).isEqualTo(eventType);
+        assertThat(outbox.getStatus()).isEqualTo(status);
+        assertThat(outbox.getRetryCount()).isEqualTo(retryCount);
+        assertThat(outbox.getProcessedAt()).isEqualTo(processedAt);
+    }
+
+    @Test
+    @DisplayName("reconstitute() 팩토리 메서드에 null ID를 전달하면 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNullId() {
+        // Given
+        MessageOutboxId nullId = null;
+
+        // When & Then
+        assertThatThrownBy(() -> MessageOutbox.reconstitute(
+                nullId,
+                "FileCreated",
+                "file-uuid-v7-123",
+                "{}",
+                OutboxStatusFixture.pending(),
+                0,
+                3,
+                LocalDateTime.now(),
+                null
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null일 수 없습니다");
     }
 }
