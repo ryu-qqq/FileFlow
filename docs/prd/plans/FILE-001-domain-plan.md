@@ -225,29 +225,30 @@
 
 ---
 
-### 8️⃣ File Aggregate Root - 부가 메서드 (Cycle 8)
+### ✅ 8️⃣ File Aggregate Root - 부가 메서드 (Cycle 8) - 완료
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldIncrementRetryCount()` 테스트
-- [ ] `shouldSoftDelete()` 테스트
-- [ ] `shouldNotSoftDeleteTwice()` 테스트
-- [ ] 테스트 실행 → 실패 확인
-- [ ] 커밋: `test: File 부가 메서드 테스트 추가 (Red)`
+- [x] retryCount 필드 추가 (Structural Change - Tidy First)
+- [x] `shouldIncrementRetryCount()` 테스트
+- [x] `shouldSoftDelete()` 테스트
+- [x] `shouldNotSoftDeleteTwice()` 테스트
+- [x] 테스트 실행 → 실패 확인
+- [x] 커밋: `test: File 부가 메서드 테스트 추가 (Red)` (033e6bb)
 
 #### 🟢 Green: 최소 구현
-- [ ] `incrementRetryCount()` 메서드 구현
-- [ ] `softDelete()` 메서드 구현 (deletedAt 설정)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `impl: File 부가 메서드 구현 (Green)`
+- [x] `incrementRetryCount()` 메서드 구현
+- [x] `softDelete()` 메서드 구현 (deletedAt 설정)
+- [x] Soft Delete 중복 방지 로직 (deletedAt != null 체크)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: File 부가 메서드 구현 (Green)` (abe68a3)
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Soft Delete 중복 방지 로직 추가
-- [ ] 커밋: `refactor: File 부가 메서드 개선 (Refactor)`
+- [x] 코드 구조 충분히 깔끔함 (Refactor 불필요)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileFixture.aDeletedFile()` 메서드 추가
-- [ ] 테스트 → Fixture 사용
-- [ ] 커밋: `test: FileFixture 삭제된 파일 메서드 추가 (Tidy)`
+- [x] `FileFixture.aDeletedFile()` 메서드 추가
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `test: FileFixture 삭제된 파일 메서드 추가 (Tidy)` (a2dcf52)
 
 ---
 
