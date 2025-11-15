@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.domain.aggregate;
 import com.ryuqq.fileflow.domain.fixture.FileProcessingJobFixture;
 import com.ryuqq.fileflow.domain.fixture.JobStatusFixture;
 import com.ryuqq.fileflow.domain.fixture.JobTypeFixture;
+import com.ryuqq.fileflow.domain.vo.JobType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,5 +52,151 @@ class FileProcessingJobTest {
         assertThat(job.getInputS3Key()).isNotBlank();
         assertThat(job.getMaxRetryCount()).isPositive();
         assertThat(job.getCreatedAt()).isNotNull();
+    }
+
+    // ===== create() 팩토리 메서드 테스트 =====
+
+    @Test
+    @DisplayName("create() 팩토리 메서드로 UUID v7과 PENDING 상태로 작업을 생성해야 한다")
+    void shouldCreateJobWithUuidV7AndPendingStatus() {
+        // Given
+        String fileId = "file-uuid-v7-123";
+        JobType jobType = JobTypeFixture.thumbnailGeneration();
+        String inputS3Key = "uploads/2024/01/image.jpg";
+        int maxRetryCount = 3;
+
+        // When
+        FileProcessingJob job = FileProcessingJob.create(fileId, jobType, inputS3Key, maxRetryCount);
+
+        // Then
+        assertThat(job.getJobId()).isNotBlank(); // UUID v7 자동 생성
+        assertThat(job.getJobId()).hasSize(36); // UUID 표준 길이
+        assertThat(job.getFileId()).isEqualTo(fileId);
+        assertThat(job.getJobType()).isEqualTo(jobType);
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending()); // PENDING 상태
+        assertThat(job.getInputS3Key()).isEqualTo(inputS3Key);
+        assertThat(job.getMaxRetryCount()).isEqualTo(maxRetryCount);
+        assertThat(job.getRetryCount()).isEqualTo(0); // 초기 재시도 횟수 0
+        assertThat(job.getOutputS3Key()).isNull();
+        assertThat(job.getErrorMessage()).isNull();
+        assertThat(job.getCreatedAt()).isNotNull();
+        assertThat(job.getProcessedAt()).isNull();
+    }
+
+    // ===== 상태 전환 메서드 테스트 =====
+
+    @Test
+    @DisplayName("PENDING 상태에서 PROCESSING 상태로 전환할 수 있어야 한다")
+    void shouldMarkAsProcessing() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.createJob(
+                "file-uuid-v7-123",
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3
+        );
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending());
+
+        // When
+        FileProcessingJob processingJob = job.markAsProcessing();
+
+        // Then
+        assertThat(processingJob.getStatus()).isEqualTo(JobStatusFixture.processing());
+        assertThat(processingJob.getProcessedAt()).isNull(); // 완료 전이므로 null
+    }
+
+    @Test
+    @DisplayName("작업을 완료 처리하고 outputS3Key를 설정할 수 있어야 한다")
+    void shouldMarkAsCompleted() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.createJob(
+                "file-uuid-v7-123",
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3
+        );
+        String outputS3Key = "processed/2024/01/thumbnail.jpg";
+
+        // When
+        FileProcessingJob completedJob = job.markAsCompleted(outputS3Key);
+
+        // Then
+        assertThat(completedJob.getStatus()).isEqualTo(JobStatusFixture.completed());
+        assertThat(completedJob.getOutputS3Key()).isEqualTo(outputS3Key);
+        assertThat(completedJob.getProcessedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("작업을 실패 처리하고 errorMessage를 설정할 수 있어야 한다")
+    void shouldMarkAsFailed() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.createJob(
+                "file-uuid-v7-123",
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3
+        );
+        String errorMessage = "Image processing failed: Invalid format";
+
+        // When
+        FileProcessingJob failedJob = job.markAsFailed(errorMessage);
+
+        // Then
+        assertThat(failedJob.getStatus()).isEqualTo(JobStatusFixture.failed());
+        assertThat(failedJob.getErrorMessage()).isEqualTo(errorMessage);
+        assertThat(failedJob.getProcessedAt()).isNotNull();
+    }
+
+    // ===== 부가 메서드 테스트 =====
+
+    @Test
+    @DisplayName("재시도 횟수를 증가시킬 수 있어야 한다")
+    void shouldIncrementRetryCount() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.createJob(
+                "file-uuid-v7-123",
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3
+        );
+        assertThat(job.getRetryCount()).isEqualTo(0);
+
+        // When
+        FileProcessingJob retriedJob = job.incrementRetryCount();
+
+        // Then
+        assertThat(retriedJob.getRetryCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("재시도 가능 여부를 확인할 수 있어야 한다 - 가능한 경우")
+    void shouldReturnTrueWhenCanRetry() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.aJob()
+                .retryCount(2)
+                .maxRetryCount(3)
+                .build();
+
+        // When
+        boolean canRetry = job.canRetry();
+
+        // Then
+        assertThat(canRetry).isTrue();
+    }
+
+    @Test
+    @DisplayName("재시도 가능 여부를 확인할 수 있어야 한다 - 불가능한 경우")
+    void shouldReturnFalseWhenCannotRetry() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.aJob()
+                .retryCount(3)
+                .maxRetryCount(3)
+                .build();
+
+        // When
+        boolean canRetry = job.canRetry();
+
+        // Then
+        assertThat(canRetry).isFalse();
     }
 }
