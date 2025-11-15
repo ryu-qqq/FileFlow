@@ -46,7 +46,7 @@ class MessageOutboxIdTest {
         // when & then
         assertThatThrownBy(() -> MessageOutboxId.of(blankId))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("MessageOutbox ID는 null이거나 빈 값일 수 없습니다");
+                .hasMessageContaining("MessageOutbox ID는 빈 값일 수 없습니다");
     }
 
     @Test
@@ -85,5 +85,37 @@ class MessageOutboxIdTest {
 
         // when & then
         assertThat(messageOutboxId1.hashCode()).isEqualTo(messageOutboxId2.hashCode());
+    }
+
+    @Test
+    @DisplayName("forNew()는 null 값을 가진 MessageOutboxId를 생성해야 한다")
+    void shouldCreateNullMessageOutboxIdWithForNew() {
+        // when
+        MessageOutboxId messageOutboxId = MessageOutboxId.forNew();
+
+        // then
+        assertThat(messageOutboxId).isNotNull();
+        assertThat(messageOutboxId.getValue()).isNull();
+        assertThat(messageOutboxId.isNew()).isTrue();
+    }
+
+    @Test
+    @DisplayName("isNew()는 값이 null인 경우 true를 반환해야 한다")
+    void shouldReturnTrueWhenIsNewForNullValue() {
+        // given
+        MessageOutboxId messageOutboxId = MessageOutboxId.forNew();
+
+        // when & then
+        assertThat(messageOutboxId.isNew()).isTrue();
+    }
+
+    @Test
+    @DisplayName("isNew()는 값이 있는 경우 false를 반환해야 한다")
+    void shouldReturnFalseWhenIsNewForNonNullValue() {
+        // given
+        MessageOutboxId messageOutboxId = MessageOutboxId.of("01JCQM5K3P9XYZ123456ABCD");
+
+        // when & then
+        assertThat(messageOutboxId.isNew()).isFalse();
     }
 }

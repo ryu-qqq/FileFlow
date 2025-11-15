@@ -46,7 +46,7 @@ class AggregateIdTest {
         // when & then
         assertThatThrownBy(() -> AggregateId.of(blankId))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Aggregate ID는 null이거나 빈 값일 수 없습니다");
+                .hasMessageContaining("Aggregate ID는 빈 값일 수 없습니다");
     }
 
     @Test
@@ -85,5 +85,37 @@ class AggregateIdTest {
 
         // when & then
         assertThat(aggregateId1.hashCode()).isEqualTo(aggregateId2.hashCode());
+    }
+
+    @Test
+    @DisplayName("forNew()는 null 값을 가진 AggregateId를 생성해야 한다")
+    void shouldCreateNullAggregateIdWithForNew() {
+        // when
+        AggregateId aggregateId = AggregateId.forNew();
+
+        // then
+        assertThat(aggregateId).isNotNull();
+        assertThat(aggregateId.getValue()).isNull();
+        assertThat(aggregateId.isNew()).isTrue();
+    }
+
+    @Test
+    @DisplayName("isNew()는 값이 null인 경우 true를 반환해야 한다")
+    void shouldReturnTrueWhenIsNewForNullValue() {
+        // given
+        AggregateId aggregateId = AggregateId.forNew();
+
+        // when & then
+        assertThat(aggregateId.isNew()).isTrue();
+    }
+
+    @Test
+    @DisplayName("isNew()는 값이 있는 경우 false를 반환해야 한다")
+    void shouldReturnFalseWhenIsNewForNonNullValue() {
+        // given
+        AggregateId aggregateId = AggregateId.of("file-uuid-v7-123");
+
+        // when & then
+        assertThat(aggregateId.isNew()).isFalse();
     }
 }
