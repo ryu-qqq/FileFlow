@@ -160,6 +160,7 @@ public class FileProcessingJobFixture {
                     errorMessage,
                     createdAt,
                     processedAt,
+                    createdAt, // updatedAt = createdAt (기본값)
                     java.time.Clock.systemUTC()
             );
         }

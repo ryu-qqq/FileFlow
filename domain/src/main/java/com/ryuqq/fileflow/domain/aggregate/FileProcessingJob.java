@@ -27,6 +27,7 @@ public class FileProcessingJob {
     private String errorMessage;
     private final LocalDateTime createdAt;
     private LocalDateTime processedAt;
+    private LocalDateTime updatedAt;  // 가변: 모든 비즈니스 메서드에서 자동 갱신
     private final java.time.Clock clock;
 
     /**
@@ -46,6 +47,7 @@ public class FileProcessingJob {
      * @param errorMessage  에러 메시지 (실패 시)
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param updatedAt     최종 수정 시각
      * @param clock         시간 처리 Clock (테스트 가능한 시간 처리)
      */
     private FileProcessingJob(
@@ -60,6 +62,7 @@ public class FileProcessingJob {
             String errorMessage,
             LocalDateTime createdAt,
             LocalDateTime processedAt,
+            LocalDateTime updatedAt,
             java.time.Clock clock
     ) {
         this.jobId = jobId;
@@ -73,6 +76,7 @@ public class FileProcessingJob {
         this.errorMessage = errorMessage;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
+        this.updatedAt = updatedAt;
         this.clock = clock;
     }
 
@@ -154,6 +158,37 @@ public class FileProcessingJob {
     }
 
     /**
+     * 최종 수정 시각 조회
+     */
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    /**
+     * 작업 ID의 원시 값 조회
+     * <p>
+     * Law of Demeter 준수: getJobId().getValue() 체이닝 방지
+     * </p>
+     *
+     * @return 작업 ID 원시 값 (String)
+     */
+    public String getJobIdValue() {
+        return jobId.getValue();
+    }
+
+    /**
+     * 파일 ID의 원시 값 조회
+     * <p>
+     * Law of Demeter 준수: getFileId().getValue() 체이닝 방지
+     * </p>
+     *
+     * @return 파일 ID 원시 값 (String)
+     */
+    public String getFileIdValue() {
+        return fileId.getValue();
+    }
+
+    /**
      * 새 파일 처리 작업 생성 팩토리 메서드
      * <p>
      * ID가 null인 새로운 작업을 생성합니다. 영속화 전 상태입니다.
@@ -187,6 +222,7 @@ public class FileProcessingJob {
                 null, // errorMessage는 null
                 now, // createdAt
                 null, // processedAt는 null
+                now, // updatedAt = createdAt (초기 생성 시)
                 clock
         );
     }
@@ -208,6 +244,7 @@ public class FileProcessingJob {
      * @param errorMessage  에러 메시지
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param updatedAt     최종 수정 시각
      * @param clock         시간 처리 Clock
      * @return 생성된 FileProcessingJob Aggregate
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
@@ -224,6 +261,7 @@ public class FileProcessingJob {
             String errorMessage,
             LocalDateTime createdAt,
             LocalDateTime processedAt,
+            LocalDateTime updatedAt,
             java.time.Clock clock
     ) {
         validateIdNotNullOrNew(jobId, "ID는 null이거나 새로운 ID일 수 없습니다");
@@ -240,6 +278,7 @@ public class FileProcessingJob {
                 errorMessage,
                 createdAt,
                 processedAt,
+                updatedAt,
                 clock
         );
     }
@@ -261,6 +300,7 @@ public class FileProcessingJob {
      * @param errorMessage  에러 메시지
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param updatedAt     최종 수정 시각
      * @param clock         시간 처리 Clock
      * @return 재구성된 FileProcessingJob Aggregate
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
@@ -277,6 +317,7 @@ public class FileProcessingJob {
             String errorMessage,
             LocalDateTime createdAt,
             LocalDateTime processedAt,
+            LocalDateTime updatedAt,
             java.time.Clock clock
     ) {
         validateIdNotNullOrNew(jobId, "재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
@@ -293,6 +334,7 @@ public class FileProcessingJob {
                 errorMessage,
                 createdAt,
                 processedAt,
+                updatedAt,
                 clock
         );
     }
@@ -352,6 +394,7 @@ public class FileProcessingJob {
                 null, // errorMessage는 null
                 now, // createdAt
                 null, // processedAt는 null
+                now, // updatedAt = createdAt (초기 생성 시)
                 clock
         );
     }
@@ -361,6 +404,7 @@ public class FileProcessingJob {
      */
     public void markAsProcessing() {
         this.status = JobStatus.PROCESSING;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -370,9 +414,11 @@ public class FileProcessingJob {
      * @param clock       시간 처리 Clock
      */
     public void markAsCompleted(String outputS3Key, java.time.Clock clock) {
+        LocalDateTime now = LocalDateTime.now(clock);
         this.status = JobStatus.COMPLETED;
         this.outputS3Key = outputS3Key;
-        this.processedAt = LocalDateTime.now(clock);
+        this.processedAt = now;
+        this.updatedAt = now;
     }
 
     /**
@@ -382,9 +428,11 @@ public class FileProcessingJob {
      * @param clock        시간 처리 Clock
      */
     public void markAsFailed(String errorMessage, java.time.Clock clock) {
+        LocalDateTime now = LocalDateTime.now(clock);
         this.status = JobStatus.FAILED;
         this.errorMessage = errorMessage;
-        this.processedAt = LocalDateTime.now(clock);
+        this.processedAt = now;
+        this.updatedAt = now;
     }
 
     /**
@@ -392,6 +440,7 @@ public class FileProcessingJob {
      */
     public void incrementRetryCount() {
         this.retryCount++;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**

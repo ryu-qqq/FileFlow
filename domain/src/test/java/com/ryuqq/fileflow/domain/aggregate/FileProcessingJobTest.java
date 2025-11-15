@@ -106,6 +106,7 @@ class FileProcessingJobTest {
         String inputS3Key = "uploads/2024/01/image.jpg";
 
         // When
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
         FileProcessingJob job = FileProcessingJob.of(
                 jobId,
                 fileId,
@@ -116,8 +117,9 @@ class FileProcessingJobTest {
                 inputS3Key,
                 null,
                 null,
-                java.time.LocalDateTime.now(),
-                null,
+                now, // createdAt
+                null, // processedAt
+                now, // updatedAt
                 java.time.Clock.systemUTC()
         );
 
@@ -136,6 +138,7 @@ class FileProcessingJobTest {
         FileId fileId = FileIdFixture.aFileId();
 
         // When & Then
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
         assertThatThrownBy(() -> FileProcessingJob.of(
                 nullJobId,
                 fileId,
@@ -146,8 +149,9 @@ class FileProcessingJobTest {
                 "uploads/image.jpg",
                 null,
                 null,
-                java.time.LocalDateTime.now(),
-                null,
+                now, // createdAt
+                null, // processedAt
+                now, // updatedAt
                 java.time.Clock.systemUTC()
         ))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -164,6 +168,7 @@ class FileProcessingJobTest {
         String inputS3Key = "uploads/2024/01/image.jpg";
 
         // When
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
         FileProcessingJob job = FileProcessingJob.reconstitute(
                 jobId,
                 fileId,
@@ -174,8 +179,9 @@ class FileProcessingJobTest {
                 inputS3Key,
                 null,
                 null,
-                java.time.LocalDateTime.now(),
-                null,
+                now, // createdAt
+                null, // processedAt
+                now, // updatedAt
                 java.time.Clock.systemUTC()
         );
 
@@ -194,6 +200,7 @@ class FileProcessingJobTest {
         FileId fileId = FileIdFixture.aFileId();
 
         // When & Then
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
         assertThatThrownBy(() -> FileProcessingJob.reconstitute(
                 nullJobId,
                 fileId,
@@ -204,8 +211,9 @@ class FileProcessingJobTest {
                 "uploads/image.jpg",
                 null,
                 null,
-                java.time.LocalDateTime.now(),
-                null,
+                now, // createdAt
+                null, // processedAt
+                now, // updatedAt
                 java.time.Clock.systemUTC()
         ))
                 .isInstanceOf(IllegalArgumentException.class)
