@@ -374,38 +374,41 @@
 - `domain/src/test/java/com/ryuqq/fileflow/domain/vo/FileIdTest.java` (신규)
 
 **🔴 Red Phase**:
-- [ ] FileProcessingJobIdTest.java 생성 (MessageOutboxId 패턴 참조)
-  - [ ] 6개 테스트 (유효성, null, blank, getValue, equals, hashCode)
-- [ ] FileIdTest.java 생성 (MessageOutboxId 패턴 참조)
-  - [ ] 6개 테스트 (유효성, null, blank, getValue, equals, hashCode)
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: FileProcessingJobId, FileId VO 테스트 추가`
+- [x] FileProcessingJobIdTest.java 생성 (MessageOutboxId 패턴 참조)
+  - [x] 9개 테스트 (유효성, null, blank, getValue, equals, hashCode, forNew, isNew)
+- [x] FileIdTest.java 생성 (MessageOutboxId 패턴 참조)
+  - [x] 9개 테스트 (동일 패턴)
+- [x] 컴파일 에러 확인 ✅
+- [x] **커밋**: `test: FileProcessingJobId, FileId VO 테스트 추가`
 
 **🟢 Green Phase**:
-- [ ] FileProcessingJobId.java 구현 (MessageOutboxId 패턴)
-- [ ] FileId.java 구현 (MessageOutboxId 패턴)
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: FileProcessingJobId, FileId VO 구현`
+- [x] FileProcessingJobId.java 구현 (MessageOutboxId 패턴)
+  - [x] Record 패턴, Compact Constructor
+  - [x] of(), forNew(), isNew(), getValue() 메서드
+- [x] FileId.java 구현 (동일 패턴)
+- [x] 모든 테스트 통과 확인 (18개)
+- [x] **커밋**: `feat: FileProcessingJobId, FileId VO 구현`
 
 **♻️ Refactor Phase**:
-- [ ] 중복 코드 제거
-- [ ] **커밋**: `struct: ID VO 검증 로직 개선` (필요 시)
+- [x] 중복 검토 완료 (Record 패턴 특성상 공유 불가)
+- [x] 구조 이미 최적 (생략)
 
 **🧹 Tidy Phase**:
-- [ ] FileProcessingJobIdFixture.java 생성
-- [ ] FileIdFixture.java 생성
-- [ ] **커밋**: `test: FileProcessingJobId, FileId Fixture 추가`
+- [x] FileProcessingJobIdFixture.java 생성
+- [x] FileIdFixture.java 생성
+- [x] Plan 파일 업데이트
+- [ ] **커밋**: `test: FileProcessingJobId, FileId Fixture 추가 (Tidy)`
 
 **✅ 완료 체크**:
-- [ ] 12개 테스트 모두 통과 (각 VO당 6개)
-- [ ] Fixture 생성 완료
-- [ ] **총 커밋 수**: 3-4개
+- [x] 18개 테스트 모두 통과 ✅ (각 VO당 9개)
+- [x] Fixture 생성 완료
+- [x] **총 커밋 수**: 3개 (Red + Green + Tidy)
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `e8726d2`
+- Green: `1c257c4`
+- Refactor: 생략 (최적 구조)
+- Tidy: (Plan 업데이트 커밋 예정)
 
 ---
 
