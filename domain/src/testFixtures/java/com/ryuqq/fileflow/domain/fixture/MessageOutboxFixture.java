@@ -31,6 +31,32 @@ public class MessageOutboxFixture {
     }
 
     /**
+     * SENT 상태 메시지
+     */
+    public static MessageOutbox aSentOutbox() {
+        MessageOutbox outbox = createOutbox(
+                "FileCreated",
+                "file-uuid-v7-123",
+                "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}",
+                3
+        );
+        return outbox.markAsSent();
+    }
+
+    /**
+     * FAILED 상태 메시지
+     */
+    public static MessageOutbox aFailedOutbox() {
+        MessageOutbox outbox = createOutbox(
+                "FileCreated",
+                "file-uuid-v7-123",
+                "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}",
+                3
+        );
+        return outbox.markAsFailed();
+    }
+
+    /**
      * MessageOutbox Builder (Plain Java, Lombok 금지)
      */
     public static class MessageOutboxBuilder {
