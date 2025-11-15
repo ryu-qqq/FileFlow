@@ -52,7 +52,8 @@ public class FileProcessingJobFixture {
                 "uploads/2024/01/image.jpg",
                 3
         );
-        return job.markAsCompleted("processed/2024/01/thumbnail.jpg", java.time.Clock.systemUTC());
+        job.markAsCompleted("processed/2024/01/thumbnail.jpg", java.time.Clock.systemUTC());
+        return job;
     }
 
     /**
@@ -65,7 +66,8 @@ public class FileProcessingJobFixture {
                 "uploads/2024/01/image.jpg",
                 3
         );
-        return job.markAsFailed("Processing error: Invalid image format", java.time.Clock.systemUTC());
+        job.markAsFailed("Processing error: Invalid image format", java.time.Clock.systemUTC());
+        return job;
     }
 
     /**

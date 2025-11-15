@@ -256,10 +256,10 @@ class FileProcessingJobTest {
         );
 
         // When
-        FileProcessingJob completedJob = job.markAsCompleted("output.jpg", fixedClock);
+        job.markAsCompleted("output.jpg", fixedClock);
 
         // Then
-        assertThat(completedJob.getProcessedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 12, 0, 0));
+        assertThat(job.getProcessedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 12, 0, 0));
     }
 
     @Test
@@ -331,11 +331,11 @@ class FileProcessingJobTest {
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending());
 
         // When
-        FileProcessingJob processingJob = job.markAsProcessing();
+        job.markAsProcessing();
 
         // Then
-        assertThat(processingJob.getStatus()).isEqualTo(JobStatusFixture.processing());
-        assertThat(processingJob.getProcessedAt()).isNull(); // 완료 전이므로 null
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.processing());
+        assertThat(job.getProcessedAt()).isNull(); // 완료 전이므로 null
     }
 
     @Test
@@ -351,12 +351,12 @@ class FileProcessingJobTest {
         String outputS3Key = "processed/2024/01/thumbnail.jpg";
 
         // When
-        FileProcessingJob completedJob = job.markAsCompleted(outputS3Key, java.time.Clock.systemUTC());
+        job.markAsCompleted(outputS3Key, java.time.Clock.systemUTC());
 
         // Then
-        assertThat(completedJob.getStatus()).isEqualTo(JobStatusFixture.completed());
-        assertThat(completedJob.getOutputS3Key()).isEqualTo(outputS3Key);
-        assertThat(completedJob.getProcessedAt()).isNotNull();
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.completed());
+        assertThat(job.getOutputS3Key()).isEqualTo(outputS3Key);
+        assertThat(job.getProcessedAt()).isNotNull();
     }
 
     @Test
@@ -372,12 +372,12 @@ class FileProcessingJobTest {
         String errorMessage = "Image processing failed: Invalid format";
 
         // When
-        FileProcessingJob failedJob = job.markAsFailed(errorMessage, java.time.Clock.systemUTC());
+        job.markAsFailed(errorMessage, java.time.Clock.systemUTC());
 
         // Then
-        assertThat(failedJob.getStatus()).isEqualTo(JobStatusFixture.failed());
-        assertThat(failedJob.getErrorMessage()).isEqualTo(errorMessage);
-        assertThat(failedJob.getProcessedAt()).isNotNull();
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.failed());
+        assertThat(job.getErrorMessage()).isEqualTo(errorMessage);
+        assertThat(job.getProcessedAt()).isNotNull();
     }
 
     // ===== 부가 메서드 테스트 =====
@@ -395,10 +395,10 @@ class FileProcessingJobTest {
         assertThat(job.getRetryCount()).isEqualTo(0);
 
         // When
-        FileProcessingJob retriedJob = job.incrementRetryCount();
+        job.incrementRetryCount();
 
         // Then
-        assertThat(retriedJob.getRetryCount()).isEqualTo(1);
+        assertThat(job.getRetryCount()).isEqualTo(1);
     }
 
     @Test

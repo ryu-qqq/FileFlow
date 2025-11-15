@@ -19,14 +19,14 @@ public class FileProcessingJob {
     private final FileProcessingJobId jobId;
     private final FileId fileId;
     private final JobType jobType;
-    private final JobStatus status;
-    private final int retryCount;
+    private JobStatus status;
+    private int retryCount;
     private final int maxRetryCount;
     private final String inputS3Key;
-    private final String outputS3Key;
-    private final String errorMessage;
+    private String outputS3Key;
+    private String errorMessage;
     private final LocalDateTime createdAt;
-    private final LocalDateTime processedAt;
+    private LocalDateTime processedAt;
     private final java.time.Clock clock;
 
     /**
@@ -357,46 +357,10 @@ public class FileProcessingJob {
     }
 
     /**
-     * 상태 전환 헬퍼 메서드
-     * <p>
-     * 새로운 상태로 FileProcessingJob 객체를 생성합니다.
-     * </p>
-     *
-     * @param newStatus    새로운 작업 상태
-     * @param outputS3Key  출력 S3 키 (nullable)
-     * @param errorMessage 에러 메시지 (nullable)
-     * @param processedAt  처리 완료 시각 (nullable)
-     * @return 새로운 FileProcessingJob 객체
-     */
-    private FileProcessingJob withStatus(
-            JobStatus newStatus,
-            String outputS3Key,
-            String errorMessage,
-            LocalDateTime processedAt
-    ) {
-        return new FileProcessingJob(
-                this.jobId,
-                this.fileId,
-                this.jobType,
-                newStatus,
-                this.retryCount,
-                this.maxRetryCount,
-                this.inputS3Key,
-                outputS3Key,
-                errorMessage,
-                this.createdAt,
-                processedAt,
-                this.clock
-        );
-    }
-
-    /**
      * 작업 상태를 PROCESSING으로 변경
-     *
-     * @return 새로운 FileProcessingJob 객체 (PROCESSING 상태)
      */
-    public FileProcessingJob markAsProcessing() {
-        return withStatus(JobStatus.PROCESSING, this.outputS3Key, this.errorMessage, null);
+    public void markAsProcessing() {
+        this.status = JobStatus.PROCESSING;
     }
 
     /**
@@ -404,10 +368,11 @@ public class FileProcessingJob {
      *
      * @param outputS3Key 출력 파일 S3 키
      * @param clock       시간 처리 Clock
-     * @return 새로운 FileProcessingJob 객체 (COMPLETED 상태)
      */
-    public FileProcessingJob markAsCompleted(String outputS3Key, java.time.Clock clock) {
-        return withStatus(JobStatus.COMPLETED, outputS3Key, this.errorMessage, LocalDateTime.now(clock));
+    public void markAsCompleted(String outputS3Key, java.time.Clock clock) {
+        this.status = JobStatus.COMPLETED;
+        this.outputS3Key = outputS3Key;
+        this.processedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -415,32 +380,18 @@ public class FileProcessingJob {
      *
      * @param errorMessage 에러 메시지
      * @param clock        시간 처리 Clock
-     * @return 새로운 FileProcessingJob 객체 (FAILED 상태)
      */
-    public FileProcessingJob markAsFailed(String errorMessage, java.time.Clock clock) {
-        return withStatus(JobStatus.FAILED, this.outputS3Key, errorMessage, LocalDateTime.now(clock));
+    public void markAsFailed(String errorMessage, java.time.Clock clock) {
+        this.status = JobStatus.FAILED;
+        this.errorMessage = errorMessage;
+        this.processedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 재시도 횟수 증가
-     *
-     * @return 새로운 FileProcessingJob 객체 (retryCount + 1)
      */
-    public FileProcessingJob incrementRetryCount() {
-        return new FileProcessingJob(
-                this.jobId,
-                this.fileId,
-                this.jobType,
-                this.status,
-                this.retryCount + 1,
-                this.maxRetryCount,
-                this.inputS3Key,
-                this.outputS3Key,
-                this.errorMessage,
-                this.createdAt,
-                this.processedAt,
-                this.clock
-        );
+    public void incrementRetryCount() {
+        this.retryCount++;
     }
 
     /**
