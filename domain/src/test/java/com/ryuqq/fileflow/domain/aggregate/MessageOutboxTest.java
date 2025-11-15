@@ -487,4 +487,70 @@ class MessageOutboxTest {
         assertThat(outbox2.getCreatedAt()).isEqualTo(expectedTime);
         assertThat(outbox1.getCreatedAt()).isEqualTo(outbox2.getCreatedAt());
     }
+
+    // ===== Cycle 4: 가변 패턴 테스트 =====
+
+    @Test
+    @DisplayName("markAsSent()는 동일한 객체를 변경해야 한다 (가변 패턴)")
+    void shouldMutateStatusWhenMarkAsSent() {
+        // Given
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox()
+                .status(OutboxStatusFixture.pending())
+                .build();
+
+        // When
+        outbox.markAsSent(Clock.systemUTC());
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.sent());
+        assertThat(outbox.getProcessedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("markAsFailed()는 동일한 객체를 변경해야 한다 (가변 패턴)")
+    void shouldMutateStatusWhenMarkAsFailed() {
+        // Given
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox()
+                .status(OutboxStatusFixture.pending())
+                .build();
+
+        // When
+        outbox.markAsFailed(Clock.systemUTC());
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.failed());
+        assertThat(outbox.getProcessedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("incrementRetryCount()는 동일한 객체의 재시도 횟수를 증가시켜야 한다 (가변 패턴)")
+    void shouldMutateRetryCountWhenIncrement() {
+        // Given
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox()
+                .retryCount(0)
+                .maxRetryCount(3)
+                .build();
+
+        // When
+        outbox.incrementRetryCount();
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(outbox.getRetryCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("markAsSent()는 새 객체를 반환하지 않아야 한다 (동일 객체 변경)")
+    void shouldNotReturnNewInstanceWhenMarkAsSent() {
+        // Given
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox()
+                .status(OutboxStatusFixture.pending())
+                .build();
+
+        // When
+        outbox.markAsSent(Clock.systemUTC());
+
+        // Then - 객체 참조 동일성 확인 (같은 객체)
+        // 반환값이 void이므로 상태만 검증
+        assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.sent());
+    }
 }
