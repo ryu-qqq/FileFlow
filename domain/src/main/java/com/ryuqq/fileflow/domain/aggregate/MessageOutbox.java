@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
 import com.ryuqq.fileflow.domain.util.UuidV7Generator;
+import com.ryuqq.fileflow.domain.vo.AggregateId;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 
@@ -27,7 +28,7 @@ public class MessageOutbox {
 
     private final MessageOutboxId id;
     private final String eventType;
-    private final String aggregateId;
+    private final AggregateId aggregateId;
     private final String payload;
     private OutboxStatus status;  // 가변: markAsSent(), markAsFailed()에서 변경
     private int retryCount;  // 가변: incrementRetryCount()에서 변경
@@ -45,7 +46,7 @@ public class MessageOutbox {
      *
      * @param id            메시지 고유 ID
      * @param eventType     이벤트 유형 (FileCreated, FileDeleted 등)
-     * @param aggregateId   이벤트 발생 Aggregate ID
+     * @param aggregateId   이벤트 발생 Aggregate ID (VO)
      * @param payload       이벤트 페이로드 (JSON)
      * @param status        메시지 상태
      * @param retryCount    재시도 횟수
@@ -57,7 +58,7 @@ public class MessageOutbox {
     private MessageOutbox(
             MessageOutboxId id,
             String eventType,
-            String aggregateId,
+            AggregateId aggregateId,
             String payload,
             OutboxStatus status,
             int retryCount,
@@ -87,7 +88,7 @@ public class MessageOutbox {
      */
     private void validateConstructorArguments(
             String eventType,
-            String aggregateId,
+            AggregateId aggregateId,
             String payload,
             OutboxStatus status,
             int retryCount,
@@ -98,8 +99,8 @@ public class MessageOutbox {
         if (eventType == null || eventType.isBlank()) {
             throw new IllegalArgumentException("eventType은 null이거나 빈 값일 수 없습니다");
         }
-        if (aggregateId == null || aggregateId.isBlank()) {
-            throw new IllegalArgumentException("aggregateId는 null이거나 빈 값일 수 없습니다");
+        if (aggregateId == null) {
+            throw new IllegalArgumentException("aggregateId는 null일 수 없습니다");
         }
         if (payload == null || payload.isBlank()) {
             throw new IllegalArgumentException("payload는 null이거나 빈 값일 수 없습니다");
@@ -138,7 +139,7 @@ public class MessageOutbox {
     /**
      * 이벤트 발생 Aggregate ID 조회
      */
-    public String getAggregateId() {
+    public AggregateId getAggregateId() {
         return aggregateId;
     }
 
@@ -192,7 +193,7 @@ public class MessageOutbox {
      * </p>
      *
      * @param eventType     이벤트 유형
-     * @param aggregateId   이벤트 발생 Aggregate ID
+     * @param aggregateId   이벤트 발생 Aggregate ID (VO)
      * @param payload       이벤트 페이로드 (JSON)
      * @param maxRetryCount 최대 재시도 횟수
      * @param clock         시간 생성용 Clock (테스트에서 고정 시간 사용 가능)
@@ -200,7 +201,7 @@ public class MessageOutbox {
      */
     public static MessageOutbox forNew(
             String eventType,
-            String aggregateId,
+            AggregateId aggregateId,
             String payload,
             int maxRetryCount,
             Clock clock
@@ -228,7 +229,7 @@ public class MessageOutbox {
      *
      * @param id            메시지 고유 ID (필수)
      * @param eventType     이벤트 유형
-     * @param aggregateId   이벤트 발생 Aggregate ID
+     * @param aggregateId   이벤트 발생 Aggregate ID (VO)
      * @param payload       이벤트 페이로드 (JSON)
      * @param status        메시지 상태
      * @param retryCount    재시도 횟수
@@ -242,7 +243,7 @@ public class MessageOutbox {
     public static MessageOutbox of(
             MessageOutboxId id,
             String eventType,
-            String aggregateId,
+            AggregateId aggregateId,
             String payload,
             OutboxStatus status,
             int retryCount,
@@ -278,7 +279,7 @@ public class MessageOutbox {
      *
      * @param id            메시지 고유 ID (필수)
      * @param eventType     이벤트 유형
-     * @param aggregateId   이벤트 발생 Aggregate ID
+     * @param aggregateId   이벤트 발생 Aggregate ID (VO)
      * @param payload       이벤트 페이로드 (JSON)
      * @param status        메시지 상태
      * @param retryCount    재시도 횟수
@@ -292,7 +293,7 @@ public class MessageOutbox {
     public static MessageOutbox reconstitute(
             MessageOutboxId id,
             String eventType,
-            String aggregateId,
+            AggregateId aggregateId,
             String payload,
             OutboxStatus status,
             int retryCount,
@@ -325,7 +326,7 @@ public class MessageOutbox {
      * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
      * </p>
      *
-     * @deprecated 대신 {@link #forNew(String, String, String, int, Clock)}를 사용하세요.
+     * @deprecated 대신 {@link #forNew(String, AggregateId, String, int, Clock)}를 사용하세요.
      * @param eventType     이벤트 유형
      * @param aggregateId   이벤트 발생 Aggregate ID
      * @param payload       이벤트 페이로드 (JSON)
@@ -349,7 +350,7 @@ public class MessageOutbox {
         return new MessageOutbox(
                 MessageOutboxId.of(id),
                 eventType,
-                aggregateId,
+                AggregateId.of(aggregateId),
                 payload,
                 OutboxStatus.PENDING, // 초기 상태는 PENDING
                 0, // 초기 재시도 횟수 0

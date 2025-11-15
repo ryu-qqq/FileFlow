@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.fixture;
 
 import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
+import com.ryuqq.fileflow.domain.vo.AggregateId;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 
@@ -29,7 +30,7 @@ public class MessageOutboxFixture {
      * @return 신규 MessageOutbox Aggregate (ID null)
      */
     public static MessageOutbox createOutbox(String eventType, String aggregateId, String payload, int maxRetryCount) {
-        return MessageOutbox.forNew(eventType, aggregateId, payload, maxRetryCount, Clock.systemUTC());
+        return MessageOutbox.forNew(eventType, AggregateId.of(aggregateId), payload, maxRetryCount, Clock.systemUTC());
     }
 
     /**
@@ -98,7 +99,7 @@ public class MessageOutboxFixture {
     public static class MessageOutboxBuilder {
         private MessageOutboxId id = MessageOutboxIdFixture.aMessageOutboxId();
         private String eventType = "FileCreated";
-        private String aggregateId = UuidV7GeneratorFixture.aUuidV7();
+        private AggregateId aggregateId = AggregateId.of(UuidV7GeneratorFixture.aUuidV7());
         private String payload = "{\"fileName\":\"default.jpg\",\"fileSize\":1024}";
         private OutboxStatus status = OutboxStatusFixture.pending();
         private int retryCount = 0;
@@ -118,7 +119,7 @@ public class MessageOutboxFixture {
         }
 
         public MessageOutboxBuilder aggregateId(String aggregateId) {
-            this.aggregateId = aggregateId;
+            this.aggregateId = AggregateId.of(aggregateId);
             return this;
         }
 

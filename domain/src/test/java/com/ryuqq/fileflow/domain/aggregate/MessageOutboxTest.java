@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.domain.aggregate;
 import com.ryuqq.fileflow.domain.fixture.MessageOutboxFixture;
 import com.ryuqq.fileflow.domain.fixture.MessageOutboxIdFixture;
 import com.ryuqq.fileflow.domain.fixture.OutboxStatusFixture;
+import com.ryuqq.fileflow.domain.vo.AggregateId;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +36,7 @@ class MessageOutboxTest {
         assertThat(outbox.getId()).isNotNull();
         assertThat(outbox.getId().getValue()).isNotBlank();
         assertThat(outbox.getEventType()).isEqualTo("FileCreated");
-        assertThat(outbox.getAggregateId()).isEqualTo("file-uuid-v7-123");
+        assertThat(outbox.getAggregateId()).isEqualTo(AggregateId.of("file-uuid-v7-123"));
         assertThat(outbox.getPayload()).contains("fileName");
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
         assertThat(outbox.getRetryCount()).isEqualTo(0);
@@ -54,7 +55,7 @@ class MessageOutboxTest {
         assertThat(outbox.getId()).isNotNull();
         assertThat(outbox.getId().getValue()).isNotBlank();
         assertThat(outbox.getEventType()).isNotBlank();
-        assertThat(outbox.getAggregateId()).isNotBlank();
+        assertThat(outbox.getAggregateId()).isNotNull();
         assertThat(outbox.getPayload()).isNotBlank();
         assertThat(outbox.getStatus()).isNotNull();
         assertThat(outbox.getMaxRetryCount()).isPositive();
@@ -80,7 +81,7 @@ class MessageOutboxTest {
         assertThat(outbox.getId().getValue()).isNotBlank();
         assertThat(outbox.getId().getValue()).hasSize(36); // UUID 표준 길이
         assertThat(outbox.getEventType()).isEqualTo(eventType);
-        assertThat(outbox.getAggregateId()).isEqualTo(aggregateId);
+        assertThat(outbox.getAggregateId()).isEqualTo(AggregateId.of(aggregateId));
         assertThat(outbox.getPayload()).isEqualTo(payload);
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending()); // PENDING 상태
         assertThat(outbox.getRetryCount()).isEqualTo(0); // 초기 재시도 횟수 0
@@ -276,7 +277,7 @@ class MessageOutboxTest {
         // When
         MessageOutbox outbox = MessageOutbox.forNew(
                 eventType,
-                aggregateId,
+                AggregateId.of(aggregateId),
                 payload,
                 maxRetryCount,
                 Clock.systemUTC()
@@ -286,7 +287,7 @@ class MessageOutboxTest {
         assertThat(outbox).isNotNull();
         assertThat(outbox.getId()).isNull(); // forNew()는 ID가 null
         assertThat(outbox.getEventType()).isEqualTo(eventType);
-        assertThat(outbox.getAggregateId()).isEqualTo(aggregateId);
+        assertThat(outbox.getAggregateId()).isEqualTo(AggregateId.of(aggregateId));
         assertThat(outbox.getPayload()).isEqualTo(payload);
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
         assertThat(outbox.getRetryCount()).isEqualTo(0);
@@ -312,7 +313,7 @@ class MessageOutboxTest {
         MessageOutbox outbox = MessageOutbox.of(
                 id,
                 eventType,
-                aggregateId,
+                AggregateId.of(aggregateId),
                 payload,
                 status,
                 retryCount,
@@ -326,7 +327,7 @@ class MessageOutboxTest {
         assertThat(outbox).isNotNull();
         assertThat(outbox.getId()).isEqualTo(id);
         assertThat(outbox.getEventType()).isEqualTo(eventType);
-        assertThat(outbox.getAggregateId()).isEqualTo(aggregateId);
+        assertThat(outbox.getAggregateId()).isEqualTo(AggregateId.of(aggregateId));
         assertThat(outbox.getStatus()).isEqualTo(status);
     }
 
@@ -340,7 +341,7 @@ class MessageOutboxTest {
         assertThatThrownBy(() -> MessageOutbox.of(
                 nullId,
                 "FileCreated",
-                "file-uuid-v7-123",
+                AggregateId.of("file-uuid-v7-123"),
                 "{}",
                 OutboxStatusFixture.pending(),
                 0,
@@ -371,7 +372,7 @@ class MessageOutboxTest {
         MessageOutbox outbox = MessageOutbox.reconstitute(
                 id,
                 eventType,
-                aggregateId,
+                AggregateId.of(aggregateId),
                 payload,
                 status,
                 retryCount,
@@ -400,7 +401,7 @@ class MessageOutboxTest {
         assertThatThrownBy(() -> MessageOutbox.reconstitute(
                 nullId,
                 "FileCreated",
-                "file-uuid-v7-123",
+                AggregateId.of("file-uuid-v7-123"),
                 "{}",
                 OutboxStatusFixture.pending(),
                 0,
@@ -428,7 +429,7 @@ class MessageOutboxTest {
         // When
         MessageOutbox outbox = MessageOutbox.forNew(
                 "FileCreated",
-                "file-uuid-v7-123",
+                AggregateId.of("file-uuid-v7-123"),
                 "{\"fileName\":\"test.jpg\"}",
                 3,
                 fixedClock
@@ -468,7 +469,7 @@ class MessageOutboxTest {
         // When
         MessageOutbox outbox1 = MessageOutbox.forNew(
                 "FileCreated",
-                "file-1",
+                AggregateId.of("file-1"),
                 "{}",
                 3,
                 fixedClock
@@ -476,7 +477,7 @@ class MessageOutboxTest {
 
         MessageOutbox outbox2 = MessageOutbox.forNew(
                 "FileDeleted",
-                "file-2",
+                AggregateId.of("file-2"),
                 "{}",
                 3,
                 fixedClock
