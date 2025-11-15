@@ -8,7 +8,10 @@ import com.ryuqq.fileflow.domain.vo.OutboxStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -403,5 +406,80 @@ class MessageOutboxTest {
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ID는 null일 수 없습니다");
+    }
+
+    // ========================================
+    // Clock 의존성 테스트 (Cycle 3)
+    // ========================================
+
+    @Test
+    @DisplayName("forNew()는 주입된 Clock을 사용하여 createdAt을 생성해야 한다")
+    void shouldUseClockForCreatedAtInForNew() {
+        // Given - 고정된 시간으로 Clock 생성
+        Instant fixedInstant = Instant.parse("2025-11-15T10:00:00Z");
+        Clock fixedClock = Clock.fixed(fixedInstant, ZoneId.of("UTC"));
+        LocalDateTime expectedTime = LocalDateTime.ofInstant(fixedInstant, ZoneId.of("UTC"));
+
+        // When
+        MessageOutbox outbox = MessageOutbox.forNew(
+                "FileCreated",
+                "file-uuid-v7-123",
+                "{\"fileName\":\"test.jpg\"}",
+                3,
+                fixedClock
+        );
+
+        // Then
+        assertThat(outbox.getCreatedAt()).isEqualTo(expectedTime);
+    }
+
+    @Test
+    @DisplayName("markAsSent()는 주입된 Clock을 사용하여 processedAt을 생성해야 한다")
+    void shouldUseClockForProcessedAtInMarkAsSent() {
+        // Given - 고정된 시간으로 Clock 생성
+        Instant fixedInstant = Instant.parse("2025-11-15T10:30:00Z");
+        Clock fixedClock = Clock.fixed(fixedInstant, ZoneId.of("UTC"));
+        LocalDateTime expectedTime = LocalDateTime.ofInstant(fixedInstant, ZoneId.of("UTC"));
+
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox()
+                .status(OutboxStatusFixture.pending())
+                .build();
+
+        // When
+        MessageOutbox sentOutbox = outbox.markAsSent(fixedClock);
+
+        // Then
+        assertThat(sentOutbox.getProcessedAt()).isEqualTo(expectedTime);
+    }
+
+    @Test
+    @DisplayName("고정된 Clock을 사용하면 시간을 예측 가능하게 테스트할 수 있어야 한다")
+    void shouldCreateOutboxWithFixedClock() {
+        // Given - 2025-11-15 12:00:00 UTC로 고정
+        Instant fixedInstant = Instant.parse("2025-11-15T12:00:00Z");
+        Clock fixedClock = Clock.fixed(fixedInstant, ZoneId.of("UTC"));
+        LocalDateTime expectedTime = LocalDateTime.ofInstant(fixedInstant, ZoneId.of("UTC"));
+
+        // When
+        MessageOutbox outbox1 = MessageOutbox.forNew(
+                "FileCreated",
+                "file-1",
+                "{}",
+                3,
+                fixedClock
+        );
+
+        MessageOutbox outbox2 = MessageOutbox.forNew(
+                "FileDeleted",
+                "file-2",
+                "{}",
+                3,
+                fixedClock
+        );
+
+        // Then - 두 객체 모두 동일한 시간
+        assertThat(outbox1.getCreatedAt()).isEqualTo(expectedTime);
+        assertThat(outbox2.getCreatedAt()).isEqualTo(expectedTime);
+        assertThat(outbox1.getCreatedAt()).isEqualTo(outbox2.getCreatedAt());
     }
 }
