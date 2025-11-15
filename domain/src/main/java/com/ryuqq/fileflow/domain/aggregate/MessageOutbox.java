@@ -36,6 +36,7 @@ public class MessageOutbox {
     private final Clock clock;
     private final LocalDateTime createdAt;
     private LocalDateTime processedAt;  // 가변: markAsSent(), markAsFailed()에서 변경
+    private LocalDateTime updatedAt;  // 가변: 모든 비즈니스 메서드에서 자동 갱신
 
     /**
      * MessageOutbox Aggregate 생성자
@@ -54,6 +55,7 @@ public class MessageOutbox {
      * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param updatedAt     최종 수정 시각
      */
     private MessageOutbox(
             MessageOutboxId id,
@@ -65,7 +67,8 @@ public class MessageOutbox {
             int maxRetryCount,
             Clock clock,
             LocalDateTime createdAt,
-            LocalDateTime processedAt
+            LocalDateTime processedAt,
+            LocalDateTime updatedAt
     ) {
         validateConstructorArguments(eventType, aggregateId, payload, status, retryCount, maxRetryCount, clock, createdAt);
 
@@ -79,6 +82,7 @@ public class MessageOutbox {
         this.clock = clock;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
+        this.updatedAt = updatedAt;
     }
 
     /**
@@ -186,6 +190,37 @@ public class MessageOutbox {
     }
 
     /**
+     * 최종 수정 시각 조회
+     */
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    /**
+     * 메시지 ID의 원시 값 조회
+     * <p>
+     * Law of Demeter 준수: getId().getValue() 체이닝 방지
+     * </p>
+     *
+     * @return 메시지 ID 원시 값 (String)
+     */
+    public String getIdValue() {
+        return id.getValue();
+    }
+
+    /**
+     * Aggregate ID의 원시 값 조회
+     * <p>
+     * Law of Demeter 준수: getAggregateId().getValue() 체이닝 방지
+     * </p>
+     *
+     * @return Aggregate ID 원시 값 (String)
+     */
+    public String getAggregateIdValue() {
+        return aggregateId.getValue();
+    }
+
+    /**
      * 신규 메시지 생성 팩토리 메서드
      * <p>
      * ID는 null로 설정되며, 영속화 시점에 생성됩니다.
@@ -206,6 +241,7 @@ public class MessageOutbox {
             int maxRetryCount,
             Clock clock
     ) {
+        LocalDateTime now = LocalDateTime.now(clock);
         return new MessageOutbox(
                 null, // ID는 영속화 시점에 생성
                 eventType,
@@ -215,8 +251,9 @@ public class MessageOutbox {
                 0, // 초기 재시도 횟수
                 maxRetryCount,
                 clock,
-                LocalDateTime.now(clock),
-                null
+                now, // createdAt
+                null, // processedAt
+                now  // updatedAt = createdAt (초기 생성 시)
         );
     }
 
@@ -237,6 +274,7 @@ public class MessageOutbox {
      * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param updatedAt     최종 수정 시각
      * @return MessageOutbox Aggregate
      * @throws IllegalArgumentException ID가 null일 때
      */
@@ -250,7 +288,8 @@ public class MessageOutbox {
             int maxRetryCount,
             Clock clock,
             LocalDateTime createdAt,
-            LocalDateTime processedAt
+            LocalDateTime processedAt,
+            LocalDateTime updatedAt
     ) {
         if (id == null) {
             throw new IllegalArgumentException("ID는 null일 수 없습니다");
@@ -266,7 +305,8 @@ public class MessageOutbox {
                 maxRetryCount,
                 clock,
                 createdAt,
-                processedAt
+                processedAt,
+                updatedAt
         );
     }
 
@@ -287,6 +327,7 @@ public class MessageOutbox {
      * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
+     * @param updatedAt     최종 수정 시각
      * @return 복원된 MessageOutbox Aggregate
      * @throws IllegalArgumentException ID가 null일 때
      */
@@ -300,7 +341,8 @@ public class MessageOutbox {
             int maxRetryCount,
             Clock clock,
             LocalDateTime createdAt,
-            LocalDateTime processedAt
+            LocalDateTime processedAt,
+            LocalDateTime updatedAt
     ) {
         if (id == null) {
             throw new IllegalArgumentException("ID는 null일 수 없습니다");
@@ -316,7 +358,8 @@ public class MessageOutbox {
                 maxRetryCount,
                 clock,
                 createdAt,
-                processedAt
+                processedAt,
+                updatedAt
         );
     }
 
@@ -357,7 +400,8 @@ public class MessageOutbox {
                 maxRetryCount,
                 systemClock,
                 now, // createdAt
-                null  // processedAt는 null
+                null, // processedAt는 null
+                now   // updatedAt = createdAt (초기 생성 시)
         );
     }
 
@@ -373,6 +417,7 @@ public class MessageOutbox {
     public void markAsSent(Clock clock) {
         this.status = OutboxStatus.SENT;
         this.processedAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -387,6 +432,7 @@ public class MessageOutbox {
     public void markAsFailed(Clock clock) {
         this.status = OutboxStatus.FAILED;
         this.processedAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**

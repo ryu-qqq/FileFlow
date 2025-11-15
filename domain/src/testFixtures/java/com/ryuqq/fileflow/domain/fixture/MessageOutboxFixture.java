@@ -88,10 +88,12 @@ public class MessageOutboxFixture {
      * 만료된 메시지 (SENT 상태, 8일 전)
      */
     public static MessageOutbox anExpiredOutbox() {
+        LocalDateTime eightDaysAgo = LocalDateTime.now().minusDays(8);
         return anOutbox()
                 .status(OutboxStatusFixture.sent())
-                .createdAt(LocalDateTime.now().minusDays(8))
-                .processedAt(LocalDateTime.now().minusDays(8))
+                .createdAt(eightDaysAgo)
+                .processedAt(eightDaysAgo)
+                .updatedAt(eightDaysAgo)
                 .build();
     }
 
@@ -109,6 +111,7 @@ public class MessageOutboxFixture {
         private Clock clock = Clock.systemUTC();
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime processedAt = null;
+        private LocalDateTime updatedAt = LocalDateTime.now();
 
         public MessageOutboxBuilder id(MessageOutboxId id) {
             this.id = id;
@@ -160,6 +163,11 @@ public class MessageOutboxFixture {
             return this;
         }
 
+        public MessageOutboxBuilder updatedAt(LocalDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
         /**
          * MessageOutbox 객체 생성
          */
@@ -174,7 +182,8 @@ public class MessageOutboxFixture {
                     maxRetryCount,
                     clock,
                     createdAt,
-                    processedAt
+                    processedAt,
+                    updatedAt
             );
         }
     }

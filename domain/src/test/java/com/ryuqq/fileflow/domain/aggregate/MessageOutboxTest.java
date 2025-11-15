@@ -320,7 +320,8 @@ class MessageOutboxTest {
                 maxRetryCount,
                 Clock.systemUTC(),
                 createdAt,
-                null
+                null,  // processedAt
+                createdAt  // updatedAt = createdAt
         );
 
         // Then
@@ -348,7 +349,8 @@ class MessageOutboxTest {
                 3,
                 Clock.systemUTC(),
                 LocalDateTime.now(),
-                null
+                null,  // processedAt
+                LocalDateTime.now()  // updatedAt
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ID는 null일 수 없습니다");
@@ -379,7 +381,8 @@ class MessageOutboxTest {
                 maxRetryCount,
                 Clock.systemUTC(),
                 createdAt,
-                processedAt
+                processedAt,
+                processedAt  // updatedAt = processedAt (영속성 복원)
         );
 
         // Then
@@ -408,7 +411,8 @@ class MessageOutboxTest {
                 3,
                 Clock.systemUTC(),
                 LocalDateTime.now(),
-                null
+                null,  // processedAt
+                LocalDateTime.now()  // updatedAt
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ID는 null일 수 없습니다");
