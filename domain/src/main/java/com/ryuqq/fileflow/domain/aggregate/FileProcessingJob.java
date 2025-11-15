@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
+import com.ryuqq.fileflow.domain.util.UuidV7Generator;
 import com.ryuqq.fileflow.domain.vo.JobStatus;
 import com.ryuqq.fileflow.domain.vo.JobType;
 
@@ -141,5 +142,141 @@ public class FileProcessingJob {
      */
     public LocalDateTime getProcessedAt() {
         return processedAt;
+    }
+
+    /**
+     * 파일 처리 작업 생성 팩토리 메서드
+     * <p>
+     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
+     * </p>
+     *
+     * @param fileId        파일 고유 ID
+     * @param jobType       작업 유형
+     * @param inputS3Key    입력 파일 S3 키
+     * @param maxRetryCount 최대 재시도 횟수
+     * @return 생성된 FileProcessingJob Aggregate
+     */
+    public static FileProcessingJob create(
+            String fileId,
+            JobType jobType,
+            String inputS3Key,
+            int maxRetryCount
+    ) {
+        // UUID v7 자동 생성
+        String jobId = UuidV7Generator.generate();
+
+        // 현재 시각
+        LocalDateTime now = LocalDateTime.now();
+
+        return new FileProcessingJob(
+                jobId,
+                fileId,
+                jobType,
+                JobStatus.PENDING, // 초기 상태는 PENDING
+                0, // 초기 재시도 횟수 0
+                maxRetryCount,
+                inputS3Key,
+                null, // outputS3Key는 null
+                null, // errorMessage는 null
+                now, // createdAt
+                null  // processedAt는 null
+        );
+    }
+
+    /**
+     * 작업 상태를 PROCESSING으로 변경
+     *
+     * @return 새로운 FileProcessingJob 객체 (PROCESSING 상태)
+     */
+    public FileProcessingJob markAsProcessing() {
+        return new FileProcessingJob(
+                this.jobId,
+                this.fileId,
+                this.jobType,
+                JobStatus.PROCESSING,
+                this.retryCount,
+                this.maxRetryCount,
+                this.inputS3Key,
+                this.outputS3Key,
+                this.errorMessage,
+                this.createdAt,
+                null // 완료 전이므로 processedAt는 null
+        );
+    }
+
+    /**
+     * 작업 상태를 COMPLETED로 변경
+     *
+     * @param outputS3Key 출력 파일 S3 키
+     * @return 새로운 FileProcessingJob 객체 (COMPLETED 상태)
+     */
+    public FileProcessingJob markAsCompleted(String outputS3Key) {
+        LocalDateTime now = LocalDateTime.now();
+        return new FileProcessingJob(
+                this.jobId,
+                this.fileId,
+                this.jobType,
+                JobStatus.COMPLETED,
+                this.retryCount,
+                this.maxRetryCount,
+                this.inputS3Key,
+                outputS3Key, // 출력 S3 키 설정
+                this.errorMessage,
+                this.createdAt,
+                now // processedAt 설정
+        );
+    }
+
+    /**
+     * 작업 상태를 FAILED로 변경
+     *
+     * @param errorMessage 에러 메시지
+     * @return 새로운 FileProcessingJob 객체 (FAILED 상태)
+     */
+    public FileProcessingJob markAsFailed(String errorMessage) {
+        LocalDateTime now = LocalDateTime.now();
+        return new FileProcessingJob(
+                this.jobId,
+                this.fileId,
+                this.jobType,
+                JobStatus.FAILED,
+                this.retryCount,
+                this.maxRetryCount,
+                this.inputS3Key,
+                this.outputS3Key,
+                errorMessage, // 에러 메시지 설정
+                this.createdAt,
+                now // processedAt 설정
+        );
+    }
+
+    /**
+     * 재시도 횟수 증가
+     *
+     * @return 새로운 FileProcessingJob 객체 (retryCount + 1)
+     */
+    public FileProcessingJob incrementRetryCount() {
+        return new FileProcessingJob(
+                this.jobId,
+                this.fileId,
+                this.jobType,
+                this.status,
+                this.retryCount + 1,
+                this.maxRetryCount,
+                this.inputS3Key,
+                this.outputS3Key,
+                this.errorMessage,
+                this.createdAt,
+                this.processedAt
+        );
+    }
+
+    /**
+     * 재시도 가능 여부 확인
+     *
+     * @return 재시도 가능하면 true, 불가능하면 false
+     */
+    public boolean canRetry() {
+        return this.retryCount < this.maxRetryCount;
     }
 }
