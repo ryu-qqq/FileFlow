@@ -188,39 +188,40 @@
 
 ---
 
-### 7️⃣ File Aggregate Root - 상태 전환 메서드 (Cycle 7)
+### ✅ 7️⃣ File Aggregate Root - 상태 전환 메서드 (Cycle 7) - 완료
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldMarkAsUploading()` 테스트
-- [ ] `shouldMarkAsCompleted()` 테스트
-- [ ] `shouldMarkAsCompletedOnlyWhenPendingOrUploading()` 테스트
-- [ ] `shouldMarkAsFailed()` 테스트
-- [ ] `shouldMarkAsProcessing()` 테스트
-- [ ] `shouldMarkAsProcessingOnlyWhenCompleted()` 테스트
-- [ ] 테스트 실행 → 실패 확인
-- [ ] 커밋: `test: File 상태 전환 메서드 테스트 추가 (Red)`
+- [x] `shouldMarkAsUploading()` 테스트
+- [x] `shouldMarkAsCompleted()` 테스트
+- [x] `shouldMarkAsCompletedOnlyWhenPendingOrUploading()` 테스트
+- [x] `shouldMarkAsFailed()` 테스트
+- [x] `shouldMarkAsProcessing()` 테스트
+- [x] `shouldMarkAsProcessingOnlyWhenCompleted()` 테스트
+- [x] 테스트 실행 → 실패 확인
+- [x] 커밋: `test: File 상태 전환 메서드 테스트 추가 (Red)` (a4b0d5d)
 
 #### 🟢 Green: 최소 구현
-- [ ] `markAsUploading()` 메서드 구현
-- [ ] `markAsCompleted()` 메서드 구현
-- [ ] `canUploadComplete()` private 메서드 구현 (PENDING/UPLOADING 체크)
-- [ ] `markAsFailed()` 메서드 구현
-- [ ] `markAsProcessing()` 메서드 구현
-- [ ] 상태 전환 시 updatedAt 자동 갱신
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `impl: File 상태 전환 메서드 구현 (Green)`
+- [x] `markAsUploading()` 메서드 구현
+- [x] `markAsCompleted()` 메서드 구현
+- [x] `markAsFailed()` 메서드 구현
+- [x] `markAsProcessing()` 메서드 구현 (COMPLETED 체크 포함)
+- [x] 상태 전환 시 updatedAt 자동 갱신
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: File 상태 전환 메서드 구현 (Green)` (7abf61d)
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Tell Don't Ask 원칙 준수 확인
-- [ ] 예외 메시지 개선
-- [ ] 상태 전환 규칙 검증 강화
-- [ ] 커밋: `refactor: File 상태 전환 메서드 개선 (Refactor)`
+- [x] withStatus() 헬퍼 메서드 추출 (중복 제거)
+- [x] Tell Don't Ask 원칙 준수 확인
+- [x] 상태 전환 규칙 검증 (IllegalStateException)
+- [x] 커밋: `struct: File 상태 전환 로직 공통화 (Refactor)` (ba8fecc)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileFixture.aUploadingFile()` 메서드 추가
-- [ ] `FileFixture.aCompletedFile()` 메서드 추가
-- [ ] 테스트 → Fixture 사용
-- [ ] 커밋: `test: FileFixture 상태별 메서드 추가 (Tidy)`
+- [x] `FileFixture.aUploadingFile()` 메서드 추가
+- [x] `FileFixture.aCompletedFile()` 메서드 추가
+- [x] `FileFixture.aProcessingFile()` 메서드 추가
+- [x] `FileFixture.aFailedFile()` 메서드 추가
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `test: FileFixture 상태별 메서드 추가 (Tidy)` (5fc5455)
 
 ---
 
