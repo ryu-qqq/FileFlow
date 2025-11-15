@@ -554,4 +554,126 @@ class MessageOutboxTest {
         // 반환값이 void이므로 상태만 검증
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.sent());
     }
+
+    // ========================================
+    // Cycle 6: updatedAt + getIdValue() Tests
+    // ========================================
+
+    @Test
+    @DisplayName("forNew()로 생성 시 updatedAt이 설정되어야 한다")
+    void shouldHaveUpdatedAtWhenCreated() {
+        // Given
+        Clock fixedClock = Clock.fixed(
+                java.time.Instant.parse("2025-01-15T10:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+
+        // When
+        MessageOutbox outbox = MessageOutbox.forNew(
+                "FileCreated",
+                AggregateId.of("file-uuid-v7-123"),
+                "{\"fileName\":\"test.jpg\"}",
+                3,
+                fixedClock
+        );
+
+        // Then
+        assertThat(outbox.getUpdatedAt()).isNotNull();
+        assertThat(outbox.getUpdatedAt()).isEqualTo(outbox.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("markAsSent() 호출 시 updatedAt이 갱신되어야 한다")
+    void shouldUpdateUpdatedAtWhenMarkAsSent() {
+        // Given
+        Clock initialClock = Clock.fixed(
+                java.time.Instant.parse("2025-01-15T10:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        Clock updatedClock = Clock.fixed(
+                java.time.Instant.parse("2025-01-15T11:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+
+        MessageOutbox outbox = MessageOutbox.forNew(
+                "FileCreated",
+                AggregateId.of("file-uuid-v7-123"),
+                "{\"fileName\":\"test.jpg\"}",
+                3,
+                initialClock
+        );
+
+        LocalDateTime initialUpdatedAt = outbox.getUpdatedAt();
+
+        // When
+        outbox.markAsSent(updatedClock);
+
+        // Then
+        assertThat(outbox.getUpdatedAt()).isNotNull();
+        assertThat(outbox.getUpdatedAt()).isNotEqualTo(initialUpdatedAt);
+        assertThat(outbox.getUpdatedAt()).isEqualTo(LocalDateTime.now(updatedClock));
+    }
+
+    @Test
+    @DisplayName("markAsFailed() 호출 시 updatedAt이 갱신되어야 한다")
+    void shouldUpdateUpdatedAtWhenMarkAsFailed() {
+        // Given
+        Clock initialClock = Clock.fixed(
+                java.time.Instant.parse("2025-01-15T10:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        Clock updatedClock = Clock.fixed(
+                java.time.Instant.parse("2025-01-15T11:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+
+        MessageOutbox outbox = MessageOutbox.forNew(
+                "FileCreated",
+                AggregateId.of("file-uuid-v7-123"),
+                "{\"fileName\":\"test.jpg\"}",
+                3,
+                initialClock
+        );
+
+        LocalDateTime initialUpdatedAt = outbox.getUpdatedAt();
+
+        // When
+        outbox.markAsFailed(updatedClock);
+
+        // Then
+        assertThat(outbox.getUpdatedAt()).isNotNull();
+        assertThat(outbox.getUpdatedAt()).isNotEqualTo(initialUpdatedAt);
+        assertThat(outbox.getUpdatedAt()).isEqualTo(LocalDateTime.now(updatedClock));
+    }
+
+    @Test
+    @DisplayName("getIdValue()는 ID의 원시 값을 반환해야 한다 (Law of Demeter)")
+    void shouldReturnIdValueWithoutChaining() {
+        // Given
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox().build();
+
+        // When
+        String idValue = outbox.getIdValue();
+
+        // Then
+        assertThat(idValue).isNotNull();
+        assertThat(idValue).isEqualTo(outbox.getId().getValue());
+    }
+
+    @Test
+    @DisplayName("getAggregateIdValue()는 AggregateId의 원시 값을 반환해야 한다 (Law of Demeter)")
+    void shouldReturnAggregateIdValueWithoutChaining() {
+        // Given
+        String expectedAggregateId = "file-uuid-v7-123";
+        MessageOutbox outbox = MessageOutboxFixture.anOutbox()
+                .aggregateId(expectedAggregateId)
+                .build();
+
+        // When
+        String aggregateIdValue = outbox.getAggregateIdValue();
+
+        // Then
+        assertThat(aggregateIdValue).isNotNull();
+        assertThat(aggregateIdValue).isEqualTo(expectedAggregateId);
+    }
 }
