@@ -1,8 +1,12 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
+import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
+import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
+import com.ryuqq.fileflow.domain.util.UuidV7Generator;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * 파일 Aggregate Root
@@ -11,6 +15,34 @@ import java.time.LocalDateTime;
  * </p>
  */
 public class File {
+
+    /**
+     * 최대 파일 크기: 1GB
+     */
+    private static final long MAX_FILE_SIZE = 1024L * 1024L * 1024L; // 1GB
+
+    /**
+     * 허용되는 MIME 타입 목록
+     */
+    private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
+            // 이미지
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "image/svg+xml",
+            // 문서
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            // 엑셀
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            // HTML
+            "text/html",
+            "text/plain",
+            "text/csv"
+    );
 
     private final String fileId;
     private final String fileName;
@@ -184,5 +216,98 @@ public class File {
      */
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    /**
+     * 파일 생성 팩토리 메서드
+     * <p>
+     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
+     * </p>
+     *
+     * @param fileName    파일명
+     * @param fileSize    파일 크기 (바이트)
+     * @param mimeType    MIME 타입
+     * @param s3Key       S3 객체 키
+     * @param s3Bucket    S3 버킷명
+     * @param uploaderId  업로더 사용자 ID
+     * @param category    파일 카테고리
+     * @param tags        태그 (콤마 구분, nullable)
+     * @return 생성된 File Aggregate
+     * @throws InvalidFileSizeException 파일 크기가 유효하지 않을 때
+     * @throws InvalidMimeTypeException MIME 타입이 허용되지 않을 때
+     */
+    public static File create(
+            String fileName,
+            long fileSize,
+            String mimeType,
+            String s3Key,
+            String s3Bucket,
+            Long uploaderId,
+            String category,
+            String tags
+    ) {
+        // 파일 크기 검증
+        validateFileSize(fileSize);
+
+        // MIME 타입 검증
+        validateMimeType(mimeType);
+
+        // UUID v7 자동 생성
+        String fileId = UuidV7Generator.generate();
+
+        // 현재 시각
+        LocalDateTime now = LocalDateTime.now();
+
+        // CDN URL 생성 (S3 키 기반)
+        String cdnUrl = "https://cdn.fileflow.com/" + s3Key;
+
+        return new File(
+                fileId,
+                fileName,
+                fileSize,
+                mimeType,
+                FileStatus.PENDING, // 초기 상태는 PENDING
+                s3Key,
+                s3Bucket,
+                cdnUrl,
+                uploaderId,
+                category,
+                tags,
+                1, // 초기 버전 1
+                null, // deletedAt은 null
+                now, // createdAt
+                now  // updatedAt
+        );
+    }
+
+    /**
+     * 파일 크기 검증
+     *
+     * @param fileSize 파일 크기 (바이트)
+     * @throws InvalidFileSizeException 파일 크기가 0 이하이거나 1GB 초과일 때
+     */
+    private static void validateFileSize(long fileSize) {
+        if (fileSize <= 0) {
+            throw new InvalidFileSizeException("파일 크기는 0보다 커야 합니다. 현재 크기: " + fileSize + " bytes");
+        }
+        if (fileSize > MAX_FILE_SIZE) {
+            throw new InvalidFileSizeException(
+                    "파일 크기는 1GB를 초과할 수 없습니다. 현재 크기: " + fileSize + " bytes, 최대 크기: " + MAX_FILE_SIZE + " bytes"
+            );
+        }
+    }
+
+    /**
+     * MIME 타입 검증
+     *
+     * @param mimeType MIME 타입
+     * @throws InvalidMimeTypeException MIME 타입이 허용 목록에 없을 때
+     */
+    private static void validateMimeType(String mimeType) {
+        if (!ALLOWED_MIME_TYPES.contains(mimeType)) {
+            throw new InvalidMimeTypeException(
+                    "허용되지 않는 MIME 타입입니다. 제공된 타입: " + mimeType
+            );
+        }
     }
 }
