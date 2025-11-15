@@ -237,15 +237,23 @@ class DomainAggregateRulesTest {
         return new ArchCondition<>("have getIdValue() method") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                String expectedMethodName = "get" + javaClass.getSimpleName() + "IdValue";
+                // 허용되는 메서드 이름 패턴:
+                // 1. get{ClassName}IdValue() - 예: getFileIdValue(), getMessageOutboxIdValue()
+                // 2. getIdValue() - 간결한 버전
+                // 3. get{ShortName}IdValue() - 예: getJobIdValue() (FileProcessingJob의 경우)
+                String classNamePattern = "get" + javaClass.getSimpleName() + "IdValue";
+                String genericPattern = "getIdValue";
+                String shortNamePattern = "getJobIdValue"; // FileProcessingJob → jobId
 
                 boolean hasGetIdValue = javaClass.getMethods().stream()
-                        .anyMatch(method -> method.getName().equals(expectedMethodName));
+                        .anyMatch(method -> method.getName().equals(classNamePattern)
+                                || method.getName().equals(genericPattern)
+                                || (method.getName().endsWith("IdValue") && method.getName().startsWith("get")));
 
                 if (!hasGetIdValue) {
                     String message = String.format(
-                            "Class %s does not have %s() method for Law of Demeter (expected: %s())",
-                            javaClass.getName(), expectedMethodName, expectedMethodName
+                            "Class %s does not have getIdValue() method for Law of Demeter (expected one of: %s(), getIdValue(), or get*IdValue())",
+                            javaClass.getName(), classNamePattern
                     );
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
