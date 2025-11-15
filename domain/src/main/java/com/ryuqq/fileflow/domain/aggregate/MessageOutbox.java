@@ -230,4 +230,33 @@ public class MessageOutbox {
     public boolean canRetry() {
         return this.retryCount < this.maxRetryCount;
     }
+
+    /**
+     * TTL(Time To Live) 만료 여부 확인
+     * <p>
+     * SENT 상태: 7일 후 만료
+     * FAILED 상태: 30일 후 만료
+     * </p>
+     *
+     * @return 만료되었으면 true, 아니면 false
+     */
+    public boolean isExpired() {
+        if (this.processedAt == null) {
+            return false;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (this.status == OutboxStatus.SENT) {
+            // SENT: 7일 TTL
+            LocalDateTime expiryDate = this.processedAt.plusDays(7);
+            return now.isAfter(expiryDate);
+        } else if (this.status == OutboxStatus.FAILED) {
+            // FAILED: 30일 TTL
+            LocalDateTime expiryDate = this.processedAt.plusDays(30);
+            return now.isAfter(expiryDate);
+        }
+
+        return false;
+    }
 }
