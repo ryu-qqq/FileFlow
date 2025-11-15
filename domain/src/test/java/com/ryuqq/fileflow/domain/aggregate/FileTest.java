@@ -27,7 +27,7 @@ class FileTest {
 
         // Then
         assertThat(file).isNotNull();
-        assertThat(file.getFileId()).isNotBlank();
+        assertThat(file.getFileId()).isNotNull();
         assertThat(file.getFileName()).isEqualTo("test-image.jpg");
         assertThat(file.getFileSize()).isEqualTo(1024000L);
         assertThat(file.getMimeType()).isEqualTo("image/jpeg");
@@ -51,7 +51,7 @@ class FileTest {
         File file = FileFixture.aPdfDocument();
 
         // Then - 필수 필드 검증
-        assertThat(file.getFileId()).isNotBlank();
+        assertThat(file.getFileId()).isNotNull();
         assertThat(file.getFileName()).isNotBlank();
         assertThat(file.getFileSize()).isPositive();
         assertThat(file.getMimeType()).isNotBlank();
@@ -291,8 +291,7 @@ class FileTest {
         File file = File.create(fileName, fileSize, mimeType, s3Key, s3Bucket, uploaderId, category, null);
 
         // Then
-        assertThat(file.getFileId()).isNotBlank(); // UUID v7 자동 생성
-        assertThat(file.getFileId()).hasSize(36); // UUID 표준 길이
+        assertThat(file.getFileId()).isNotNull(); // FileId VO 자동 생성
         assertThat(file.getStatus()).isEqualTo(FileStatusFixture.pending()); // PENDING 상태
         assertThat(file.getFileName()).isEqualTo(fileName);
         assertThat(file.getFileSize()).isEqualTo(fileSize);

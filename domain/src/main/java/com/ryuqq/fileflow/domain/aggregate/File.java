@@ -2,8 +2,9 @@ package com.ryuqq.fileflow.domain.aggregate;
 
 import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
 import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
-import com.ryuqq.fileflow.domain.util.UuidV7Generator;
+import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
+import com.ryuqq.fileflow.domain.vo.UploaderId;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -49,7 +50,7 @@ public class File {
             "text/csv"
     );
 
-    private final String fileId;
+    private final FileId fileId;
     private final String fileName;
     private final long fileSize;
     private final String mimeType;
@@ -57,7 +58,7 @@ public class File {
     private final String s3Key;
     private final String s3Bucket;
     private final String cdnUrl;
-    private final Long uploaderId;
+    private final UploaderId uploaderId;
     private final String category;
     private final String tags;
     private final int retryCount;
@@ -68,8 +69,11 @@ public class File {
 
     /**
      * File Aggregate 생성자
+     * <p>
+     * Private 생성자: 외부에서 직접 생성 불가, 팩토리 메서드 사용 필수
+     * </p>
      *
-     * @param fileId     파일 고유 ID (UUID v7)
+     * @param fileId     파일 고유 ID (FileId VO)
      * @param fileName   파일명
      * @param fileSize   파일 크기 (바이트)
      * @param mimeType   MIME 타입
@@ -77,7 +81,7 @@ public class File {
      * @param s3Key      S3 객체 키
      * @param s3Bucket   S3 버킷명
      * @param cdnUrl     CDN URL
-     * @param uploaderId 업로더 사용자 ID (Long FK 전략)
+     * @param uploaderId 업로더 사용자 ID (UploaderId VO, Long FK 전략)
      * @param category   파일 카테고리
      * @param tags       태그 (콤마 구분)
      * @param retryCount 재시도 횟수
@@ -86,8 +90,8 @@ public class File {
      * @param createdAt  생성 시각
      * @param updatedAt  수정 시각
      */
-    public File(
-            String fileId,
+    private File(
+            FileId fileId,
             String fileName,
             long fileSize,
             String mimeType,
@@ -95,7 +99,7 @@ public class File {
             String s3Key,
             String s3Bucket,
             String cdnUrl,
-            Long uploaderId,
+            UploaderId uploaderId,
             String category,
             String tags,
             int retryCount,
@@ -125,7 +129,7 @@ public class File {
     /**
      * 파일 고유 ID 조회
      */
-    public String getFileId() {
+    public FileId getFileId() {
         return fileId;
     }
 
@@ -179,9 +183,9 @@ public class File {
     }
 
     /**
-     * 업로더 사용자 ID 조회 (Long FK 전략)
+     * 업로더 사용자 ID 조회 (UploaderId VO)
      */
-    public Long getUploaderId() {
+    public UploaderId getUploaderId() {
         return uploaderId;
     }
 
@@ -235,9 +239,9 @@ public class File {
     }
 
     /**
-     * 파일 생성 팩토리 메서드
+     * 신규 파일 생성 팩토리 메서드 (애플리케이션 레이어용)
      * <p>
-     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
+     * ID가 null인 새로운 파일을 생성합니다. 영속화 시점에 ID가 생성됩니다.
      * </p>
      *
      * @param fileName    파일명
@@ -245,20 +249,20 @@ public class File {
      * @param mimeType    MIME 타입
      * @param s3Key       S3 객체 키
      * @param s3Bucket    S3 버킷명
-     * @param uploaderId  업로더 사용자 ID
+     * @param uploaderId  업로더 사용자 ID (UploaderId VO)
      * @param category    파일 카테고리
      * @param tags        태그 (콤마 구분, nullable)
-     * @return 생성된 File Aggregate
+     * @return 생성된 File Aggregate (ID가 null)
      * @throws InvalidFileSizeException 파일 크기가 유효하지 않을 때
      * @throws InvalidMimeTypeException MIME 타입이 허용되지 않을 때
      */
-    public static File create(
+    public static File forNew(
             String fileName,
             long fileSize,
             String mimeType,
             String s3Key,
             String s3Bucket,
-            Long uploaderId,
+            UploaderId uploaderId,
             String category,
             String tags
     ) {
@@ -268,9 +272,6 @@ public class File {
         // MIME 타입 검증
         validateMimeType(mimeType);
 
-        // UUID v7 자동 생성
-        String fileId = UuidV7Generator.generate();
-
         // 현재 시각
         LocalDateTime now = LocalDateTime.now();
 
@@ -278,7 +279,7 @@ public class File {
         String cdnUrl = CDN_BASE_URL + s3Key;
 
         return new File(
-                fileId,
+                FileId.forNew(), // ID는 영속화 시점에 생성
                 fileName,
                 fileSize,
                 mimeType,
@@ -294,6 +295,196 @@ public class File {
                 null, // deletedAt은 null
                 now, // createdAt
                 now  // updatedAt
+        );
+    }
+
+    /**
+     * 파일 생성 팩토리 메서드 (비즈니스 로직용)
+     * <p>
+     * ID가 필수인 파일을 생성합니다. 비즈니스 로직에서 사용합니다.
+     * </p>
+     *
+     * @param fileId      파일 고유 ID (필수, null 불가)
+     * @param fileName    파일명
+     * @param fileSize    파일 크기 (바이트)
+     * @param mimeType    MIME 타입
+     * @param status      파일 상태
+     * @param s3Key       S3 객체 키
+     * @param s3Bucket    S3 버킷명
+     * @param cdnUrl      CDN URL
+     * @param uploaderId  업로더 사용자 ID (UploaderId VO)
+     * @param category    파일 카테고리
+     * @param tags        태그 (콤마 구분, nullable)
+     * @param retryCount  재시도 횟수
+     * @param version     낙관적 락 버전
+     * @param deletedAt   소프트 삭제 시각
+     * @param createdAt   생성 시각
+     * @param updatedAt   수정 시각
+     * @return 생성된 File Aggregate
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID일 때
+     */
+    public static File of(
+            FileId fileId,
+            String fileName,
+            long fileSize,
+            String mimeType,
+            FileStatus status,
+            String s3Key,
+            String s3Bucket,
+            String cdnUrl,
+            UploaderId uploaderId,
+            String category,
+            String tags,
+            int retryCount,
+            int version,
+            LocalDateTime deletedAt,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        validateIdNotNullOrNew(fileId, "ID는 null이거나 새로운 ID일 수 없습니다");
+
+        return new File(
+                fileId,
+                fileName,
+                fileSize,
+                mimeType,
+                status,
+                s3Key,
+                s3Bucket,
+                cdnUrl,
+                uploaderId,
+                category,
+                tags,
+                retryCount,
+                version,
+                deletedAt,
+                createdAt,
+                updatedAt
+        );
+    }
+
+    /**
+     * 파일 재구성 팩토리 메서드 (영속성 계층용)
+     * <p>
+     * 영속성 계층에서 조회한 데이터로 Aggregate를 재구성합니다.
+     * </p>
+     *
+     * @param fileId      파일 고유 ID (필수, null 불가)
+     * @param fileName    파일명
+     * @param fileSize    파일 크기 (바이트)
+     * @param mimeType    MIME 타입
+     * @param status      파일 상태
+     * @param s3Key       S3 객체 키
+     * @param s3Bucket    S3 버킷명
+     * @param cdnUrl      CDN URL
+     * @param uploaderId  업로더 사용자 ID (UploaderId VO)
+     * @param category    파일 카테고리
+     * @param tags        태그 (콤마 구분, nullable)
+     * @param retryCount  재시도 횟수
+     * @param version     낙관적 락 버전
+     * @param deletedAt   소프트 삭제 시각
+     * @param createdAt   생성 시각
+     * @param updatedAt   수정 시각
+     * @return 재구성된 File Aggregate
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID일 때
+     */
+    public static File reconstitute(
+            FileId fileId,
+            String fileName,
+            long fileSize,
+            String mimeType,
+            FileStatus status,
+            String s3Key,
+            String s3Bucket,
+            String cdnUrl,
+            UploaderId uploaderId,
+            String category,
+            String tags,
+            int retryCount,
+            int version,
+            LocalDateTime deletedAt,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        validateIdNotNullOrNew(fileId, "재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+
+        return new File(
+                fileId,
+                fileName,
+                fileSize,
+                mimeType,
+                status,
+                s3Key,
+                s3Bucket,
+                cdnUrl,
+                uploaderId,
+                category,
+                tags,
+                retryCount,
+                version,
+                deletedAt,
+                createdAt,
+                updatedAt
+        );
+    }
+
+    /**
+     * ID 검증 헬퍼 메서드
+     * <p>
+     * ID가 null이거나 새로운 ID(값이 null)인 경우 예외를 발생시킵니다.
+     * </p>
+     *
+     * @param fileId       검증할 ID
+     * @param errorMessage 에러 메시지
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID일 때
+     */
+    private static void validateIdNotNullOrNew(FileId fileId, String errorMessage) {
+        if (fileId == null || fileId.isNew()) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+    }
+
+    /**
+     * 파일 생성 팩토리 메서드
+     * <p>
+     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
+     * </p>
+     *
+     * @deprecated {@link #forNew(String, long, String, String, String, UploaderId, String, String)} 사용을 권장합니다.
+     *
+     * @param fileName    파일명
+     * @param fileSize    파일 크기 (바이트)
+     * @param mimeType    MIME 타입
+     * @param s3Key       S3 객체 키
+     * @param s3Bucket    S3 버킷명
+     * @param uploaderId  업로더 사용자 ID
+     * @param category    파일 카테고리
+     * @param tags        태그 (콤마 구분, nullable)
+     * @return 생성된 File Aggregate
+     * @throws InvalidFileSizeException 파일 크기가 유효하지 않을 때
+     * @throws InvalidMimeTypeException MIME 타입이 허용되지 않을 때
+     */
+    @Deprecated
+    public static File create(
+            String fileName,
+            long fileSize,
+            String mimeType,
+            String s3Key,
+            String s3Bucket,
+            Long uploaderId,
+            String category,
+            String tags
+    ) {
+        // UploaderId VO로 변환하여 forNew() 호출
+        return forNew(
+                fileName,
+                fileSize,
+                mimeType,
+                s3Key,
+                s3Bucket,
+                UploaderId.of(uploaderId),
+                category,
+                tags
         );
     }
 

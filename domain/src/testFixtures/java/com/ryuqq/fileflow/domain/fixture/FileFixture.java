@@ -1,7 +1,9 @@
 package com.ryuqq.fileflow.domain.fixture;
 
 import com.ryuqq.fileflow.domain.aggregate.File;
+import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
+import com.ryuqq.fileflow.domain.vo.UploaderId;
 
 import java.time.LocalDateTime;
 
@@ -114,7 +116,7 @@ public class FileFixture {
      * File Builder (Plain Java, Lombok 금지)
      */
     public static class FileBuilder {
-        private String fileId = UuidV7GeneratorFixture.aUuidV7();
+        private FileId fileId = FileIdFixture.aFileId();
         private String fileName = "test-file.dat";
         private long fileSize = 1024L; // 1KB
         private String mimeType = "application/octet-stream";
@@ -122,7 +124,7 @@ public class FileFixture {
         private String s3Key = "uploads/2024/01/test-file.dat";
         private String s3Bucket = "fileflow-storage";
         private String cdnUrl = "https://cdn.example.com/uploads/2024/01/test-file.dat";
-        private Long uploaderId = 12345L;
+        private UploaderId uploaderId = UploaderIdFixture.anUploaderId();
         private String category = "OTHER";
         private String tags = null;
         private int retryCount = 0;
@@ -131,7 +133,7 @@ public class FileFixture {
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime updatedAt = LocalDateTime.now();
 
-        public FileBuilder fileId(String fileId) {
+        public FileBuilder fileId(FileId fileId) {
             this.fileId = fileId;
             return this;
         }
@@ -173,7 +175,7 @@ public class FileFixture {
             return this;
         }
 
-        public FileBuilder uploaderId(Long uploaderId) {
+        public FileBuilder uploaderId(UploaderId uploaderId) {
             this.uploaderId = uploaderId;
             return this;
         }
@@ -217,7 +219,7 @@ public class FileFixture {
          * File 객체 생성
          */
         public File build() {
-            return new File(
+            return File.reconstitute(
                     fileId,
                     fileName,
                     fileSize,
