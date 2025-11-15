@@ -139,6 +139,18 @@ public class File {
     }
 
     /**
+     * FileId 값 조회 (Law of Demeter)
+     * <p>
+     * 체이닝을 피하기 위한 편의 메서드입니다.
+     * </p>
+     *
+     * @return FileId의 String 값 (UUID)
+     */
+    public String getFileIdValue() {
+        return fileId.getValue();
+    }
+
+    /**
      * 파일명 조회
      */
     public String getFileName() {
@@ -192,6 +204,18 @@ public class File {
      */
     public UploaderId getUploaderId() {
         return uploaderId;
+    }
+
+    /**
+     * UploaderId 값 조회 (Law of Demeter)
+     * <p>
+     * 체이닝을 피하기 위한 편의 메서드입니다.
+     * </p>
+     *
+     * @return UploaderId의 Long 값
+     */
+    public Long getUploaderIdValue() {
+        return uploaderId.getValue();
     }
 
     /**

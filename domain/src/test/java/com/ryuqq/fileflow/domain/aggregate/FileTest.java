@@ -641,11 +641,11 @@ class FileTest {
     @Test
     @DisplayName("getFileIdValue()는 체이닝 없이 FileId 값을 반환해야 한다")
     void shouldReturnFileIdValueWithoutChaining() {
-        // Given
-        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        // Given - reconstitute로 실제 FileId 값이 있는 파일 생성
+        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.aFile().build();
 
         // When
-        Long fileIdValue = file.getFileIdValue();
+        String fileIdValue = file.getFileIdValue();
 
         // Then
         assertThat(fileIdValue).isNotNull();
@@ -655,8 +655,8 @@ class FileTest {
     @Test
     @DisplayName("getUploaderIdValue()는 체이닝 없이 UploaderId 값을 반환해야 한다")
     void shouldReturnUploaderIdValueWithoutChaining() {
-        // Given
-        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        // Given - reconstitute로 실제 UploaderId 값이 있는 파일 생성
+        File file = com.ryuqq.fileflow.domain.fixture.FileFixture.aFile().build();
 
         // When
         Long uploaderIdValue = file.getUploaderIdValue();
