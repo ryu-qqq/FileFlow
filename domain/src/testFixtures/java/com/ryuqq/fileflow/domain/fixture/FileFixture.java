@@ -18,6 +18,22 @@ public class FileFixture {
     }
 
     /**
+     * File.create() 팩토리 메서드 사용 (PENDING 상태, UUID v7 자동 생성)
+     *
+     * @param fileName   파일명
+     * @param fileSize   파일 크기 (바이트)
+     * @param mimeType   MIME 타입
+     * @param uploaderId 업로더 ID
+     * @param category   파일 카테고리
+     * @return 생성된 File Aggregate
+     */
+    public static File createFile(String fileName, long fileSize, String mimeType, Long uploaderId, String category) {
+        String s3Key = "uploads/2024/01/" + fileName;
+        String s3Bucket = "fileflow-storage";
+        return File.create(fileName, fileSize, mimeType, s3Key, s3Bucket, uploaderId, category, null);
+    }
+
+    /**
      * 이미지 파일 (JPG)
      */
     public static File aJpgImage() {
