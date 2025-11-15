@@ -318,32 +318,32 @@
 
 ---
 
-### 1️⃣1️⃣ MessageOutbox Aggregate Root - 기본 구조 (Cycle 11)
+### 1️⃣1️⃣ MessageOutbox Aggregate Root - 기본 구조 (Cycle 11) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `MessageOutboxTest.java` 생성
-- [ ] `shouldCreateOutboxWithValidData()` 테스트
-- [ ] 필수 필드 검증 테스트
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: MessageOutbox Aggregate 기본 구조 테스트 추가 (Red)`
+- [x] `MessageOutboxTest.java` 생성
+- [x] `shouldCreateOutboxWithValidData()` 테스트
+- [x] 필수 필드 검증 테스트
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: MessageOutbox Aggregate 기본 구조 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `MessageOutbox.java` 생성 (Plain Java)
-- [ ] 8개 필드 정의 (id, eventType, aggregateId, payload, status, retryCount, maxRetryCount, createdAt, processedAt)
-- [ ] 생성자 + Getter 작성
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `impl: MessageOutbox Aggregate 기본 구조 구현 (Green)`
+- [x] `MessageOutbox.java` 생성 (Plain Java)
+- [x] 8개 필드 정의 (id, eventType, aggregateId, payload, status, retryCount, maxRetryCount, createdAt, processedAt)
+- [x] 생성자 + Getter 작성
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `impl: MessageOutbox Aggregate 기본 구조 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 불변성 보장
-- [ ] Aggregate ArchUnit 테스트 통과
-- [ ] 커밋: `refactor: MessageOutbox Aggregate 기본 구조 개선 (Refactor)`
+- [x] 불변성 보장
+- [x] Aggregate ArchUnit 테스트 통과
+- [x] 커밋: `refactor: MessageOutbox Aggregate 기본 구조 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `MessageOutboxFixture.java` 생성
-- [ ] `anOutbox()` 메서드 작성
-- [ ] `MessageOutboxTest` → Fixture 사용
-- [ ] 커밋: `test: MessageOutboxFixture 정리 (Tidy)`
+- [x] `MessageOutboxFixture.java` 생성
+- [x] `anOutbox()` 메서드 작성
+- [x] `MessageOutboxTest` → Fixture 사용
+- [x] 커밋: `test: MessageOutboxFixture 정리 (Tidy)`
 
 ---
 
