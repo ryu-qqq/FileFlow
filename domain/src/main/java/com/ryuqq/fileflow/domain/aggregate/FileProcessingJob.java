@@ -217,9 +217,7 @@ public class FileProcessingJob {
             LocalDateTime createdAt,
             LocalDateTime processedAt
     ) {
-        if (jobId == null || jobId.isNew()) {
-            throw new IllegalArgumentException("ID는 null이거나 새로운 ID일 수 없습니다");
-        }
+        validateIdNotNullOrNew(jobId, "ID는 null이거나 새로운 ID일 수 없습니다");
 
         return new FileProcessingJob(
                 jobId,
@@ -269,9 +267,7 @@ public class FileProcessingJob {
             LocalDateTime createdAt,
             LocalDateTime processedAt
     ) {
-        if (jobId == null || jobId.isNew()) {
-            throw new IllegalArgumentException("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
-        }
+        validateIdNotNullOrNew(jobId, "재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
 
         return new FileProcessingJob(
                 jobId,
@@ -286,6 +282,22 @@ public class FileProcessingJob {
                 createdAt,
                 processedAt
         );
+    }
+
+    /**
+     * ID 검증 헬퍼 메서드
+     * <p>
+     * ID가 null이거나 새로운 ID(값이 null)인 경우 예외를 발생시킵니다.
+     * </p>
+     *
+     * @param jobId        검증할 ID
+     * @param errorMessage 예외 메시지
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
+     */
+    private static void validateIdNotNullOrNew(FileProcessingJobId jobId, String errorMessage) {
+        if (jobId == null || jobId.isNew()) {
+            throw new IllegalArgumentException(errorMessage);
+        }
     }
 
     /**
