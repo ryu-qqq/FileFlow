@@ -422,45 +422,45 @@
 - `domain/src/testFixtures/java/com/ryuqq/fileflow/domain/fixture/FileProcessingJobFixture.java`
 
 **🔴 Red Phase**:
-- [ ] FileProcessingJobTest.java에 3종 팩토리 테스트 추가
-  - [ ] `shouldCreateNewJobWithForNew()` - forNew() 테스트
-  - [ ] `shouldCreateJobWithOf()` - of() 테스트
-  - [ ] `shouldThrowExceptionWhenOfWithNullId()` - of() null 검증
-  - [ ] `shouldReconstituteJob()` - reconstitute() 테스트
-  - [ ] `shouldThrowExceptionWhenReconstituteWithNullId()` - reconstitute() null 검증
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: FileProcessingJob 3종 팩토리 메서드 테스트 추가`
+- [x] FileProcessingJobTest.java에 3종 팩토리 테스트 추가
+  - [x] `shouldCreateNewJobWithForNew()` - forNew() 테스트
+  - [x] `shouldCreateJobWithOf()` - of() 테스트
+  - [x] `shouldThrowExceptionWhenOfWithNullId()` - of() null 검증
+  - [x] `shouldReconstituteJob()` - reconstitute() 테스트
+  - [x] `shouldThrowExceptionWhenReconstituteWithNullId()` - reconstitute() null 검증
+- [x] 컴파일 에러 확인
+- [x] **커밋**: `test: FileProcessingJob 3종 팩토리 메서드 테스트 추가`
 
 **🟢 Green Phase**:
-- [ ] FileProcessingJob.java 수정
-  - [ ] 생성자 `public` → `private`
-  - [ ] `jobId` 타입 `String` → `FileProcessingJobId`
-  - [ ] `fileId` 타입 `String` → `FileId`
-  - [ ] `forNew()`, `of()`, `reconstitute()` 메서드 구현
-  - [ ] 기존 `create()` 메서드 `@Deprecated`
-- [ ] 기존 테스트 수정
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: FileProcessingJob 3종 팩토리 메서드 구현`
+- [x] FileProcessingJob.java 수정
+  - [x] 생성자 `public` → `private`
+  - [x] `jobId` 타입 `String` → `FileProcessingJobId`
+  - [x] `fileId` 타입 `String` → `FileId`
+  - [x] `forNew()`, `of()`, `reconstitute()` 메서드 구현
+  - [x] 기존 `create()` 메서드 `@Deprecated`
+- [x] 기존 테스트 수정
+- [x] 모든 테스트 통과 확인
+- [x] **커밋**: `feat: FileProcessingJob 3종 팩토리 메서드 구현`
 
 **♻️ Refactor Phase**:
-- [ ] 생성자 검증 로직 개선
-- [ ] **커밋**: `struct: FileProcessingJob 생성자 검증 로직 개선`
+- [x] ID 검증 로직 메서드 추출 (validateIdNotNullOrNew)
+- [x] **커밋**: `struct: FileProcessingJob ID 검증 로직 메서드 추출`
 
 **🧹 Tidy Phase**:
-- [ ] FileProcessingJobFixture 수정 (3종 팩토리 패턴)
-- [ ] **커밋**: `test: FileProcessingJobFixture 3종 팩토리 패턴 적용`
+- [x] FileProcessingJobFixture createJob() forNew() 사용
+- [x] **커밋**: `test: FileProcessingJobFixture forNew() 팩토리 사용`
 
 **✅ 완료 체크**:
-- [ ] 5개 신규 테스트 모두 통과
-- [ ] 생성자 private 확인
-- [ ] FileProcessingJobId, FileId 사용 확인
-- [ ] **총 커밋 수**: 3-4개
+- [x] 5개 신규 테스트 모두 통과
+- [x] 생성자 private 확인
+- [x] FileProcessingJobId, FileId 사용 확인
+- [x] **총 커밋 수**: 4개
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `459b8f2`
+- Green: `d51d7a2`
+- Refactor: `70ae90c`
+- Tidy: `db09597`
 
 ---
 
