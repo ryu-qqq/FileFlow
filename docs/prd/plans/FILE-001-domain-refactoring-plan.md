@@ -290,9 +290,12 @@
 - Refactor: 생략
 - Tidy: `8c7eb97`
 
-**⚠️ ArchUnit 위반 (Cycle 6+에서 해결 예정)**:
-- AggregateId는 Record 미구현 (class로 구현)
-- AggregateId는 forNew()/isNew() 미구현 (Foreign Key용이므로 불필요)
+**✅ ArchUnit 위반 해결 완료** (a21543f):
+- AggregateId Record 변환 완료 (class → record)
+- AggregateId forNew()/isNew() 메서드 추가 완료
+- MessageOutboxId Record 변환 완료 (class → record)
+- MessageOutboxId forNew()/isNew() 메서드 추가 완료
+- ID VO ArchUnit 규칙 모두 통과 ✅
 
 ---
 
@@ -305,49 +308,56 @@
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/MessageOutboxTest.java`
 
 **🔴 Red Phase**:
-- [ ] MessageOutboxTest.java에 테스트 추가
-  - [ ] `shouldHaveUpdatedAtWhenCreated()` - forNew() updatedAt 검증
-  - [ ] `shouldUpdateUpdatedAtWhenMarkAsSent()` - markAsSent() updatedAt 갱신 검증
-  - [ ] `shouldUpdateUpdatedAtWhenMarkAsFailed()` - markAsFailed() updatedAt 갱신 검증
-  - [ ] `shouldReturnIdValueWithoutChaining()` - getIdValue() 테스트
-  - [ ] `shouldReturnAggregateIdValueWithoutChaining()` - getAggregateIdValue() 테스트
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: MessageOutbox updatedAt 및 getIdValue() 테스트 추가`
+- [x] MessageOutboxTest.java에 테스트 추가
+  - [x] `shouldHaveUpdatedAtWhenCreated()` - forNew() updatedAt 검증
+  - [x] `shouldUpdateUpdatedAtWhenMarkAsSent()` - markAsSent() updatedAt 갱신 검증
+  - [x] `shouldUpdateUpdatedAtWhenMarkAsFailed()` - markAsFailed() updatedAt 갱신 검증
+  - [x] `shouldReturnIdValueWithoutChaining()` - getIdValue() 테스트
+  - [x] `shouldReturnAggregateIdValueWithoutChaining()` - getAggregateIdValue() 테스트
+- [x] 컴파일 에러 확인 (12개 에러 예상대로 발생)
+- [x] **커밋**: `test: MessageOutbox updatedAt 및 getIdValue() 테스트 추가`
 
 **🟢 Green Phase**:
-- [ ] MessageOutbox.java 수정
-  - [ ] `private LocalDateTime updatedAt;` 필드 추가
-  - [ ] 생성자에 updatedAt 파라미터 추가
-  - [ ] forNew()에서 `updatedAt = now` 설정
-  - [ ] markAsSent()에서 `this.updatedAt = LocalDateTime.now(clock)` 추가
-  - [ ] markAsFailed()에서 `this.updatedAt = LocalDateTime.now(clock)` 추가
-  - [ ] incrementRetryCount()에서 updatedAt 갱신 (필요 시)
-  - [ ] `getUpdatedAt()` 메서드 추가
-  - [ ] `getIdValue()` 메서드 추가: `return id.getValue();`
-  - [ ] `getAggregateIdValue()` 메서드 추가: `return aggregateId.getValue();`
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: MessageOutbox updatedAt 및 getIdValue() 추가`
+- [x] MessageOutbox.java 수정
+  - [x] `private LocalDateTime updatedAt;` 필드 추가
+  - [x] 생성자에 updatedAt 파라미터 추가
+  - [x] forNew()에서 `updatedAt = now` 설정
+  - [x] of()에 updatedAt 파라미터 추가
+  - [x] reconstitute()에 updatedAt 파라미터 추가
+  - [x] create() (deprecated)에 updatedAt 파라미터 추가
+  - [x] markAsSent()에서 `this.updatedAt = LocalDateTime.now(clock)` 추가
+  - [x] markAsFailed()에서 `this.updatedAt = LocalDateTime.now(clock)` 추가
+  - [x] `getUpdatedAt()` 메서드 추가
+  - [x] `getIdValue()` 메서드 추가: `return id.getValue();`
+  - [x] `getAggregateIdValue()` 메서드 추가: `return aggregateId.getValue();`
+- [x] MessageOutboxFixture.java 수정 (Builder에 updatedAt 지원)
+- [x] MessageOutboxTest.java 기존 테스트 4개 수정 (of, reconstitute 호출부)
+- [x] 모든 테스트 통과 확인 (29개)
+- [x] **커밋**: `feat: MessageOutbox updatedAt 및 getIdValue() 추가`
 
 **♻️ Refactor Phase**:
-- [ ] updatedAt 갱신 로직 중복 제거 (필요 시)
-- [ ] **커밋**: `struct: MessageOutbox updatedAt 갱신 로직 정리` (필요 시)
+- [x] updatedAt 갱신 로직 중복 제거
+  - [x] markAsSent(): LocalDateTime.now(clock) 변수 추출
+  - [x] markAsFailed(): LocalDateTime.now(clock) 변수 추출
+- [x] **커밋**: `struct: markAsSent/markAsFailed 시간 변수 추출`
 
 **🧹 Tidy Phase**:
-- [ ] MessageOutboxFixture 수정 (updatedAt 설정)
-- [ ] **커밋**: `test: MessageOutboxFixture updatedAt 추가`
+- [x] MessageOutboxFixture 수정 (Green Phase에서 완료)
+- [x] Plan 파일 업데이트
+- [ ] **커밋**: `docs: FILE-001-domain-plan.md Cycle 6 완료 표시`
 
 **✅ 완료 체크**:
-- [ ] 5개 신규 테스트 모두 통과
-- [ ] updatedAt 필드 존재 및 갱신 확인
-- [ ] getIdValue(), getAggregateIdValue() 메서드 존재 확인
-- [ ] **총 커밋 수**: 3-4개
-- [ ] **MessageOutbox 리팩토링 완료** 🎉
+- [x] 5개 신규 테스트 모두 통과 (총 29개 테스트)
+- [x] updatedAt 필드 존재 및 갱신 확인
+- [x] getIdValue(), getAggregateIdValue() 메서드 존재 확인
+- [x] **총 커밋 수**: 3개 (Red + Green + Refactor)
+- [x] **MessageOutbox 리팩토링 완료** 🎉
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `1eecab4`
+- Green: `1da1a53`
+- Refactor: `95c3bc3`
+- Tidy: (Plan 업데이트 커밋 예정)
 
 ---
 
