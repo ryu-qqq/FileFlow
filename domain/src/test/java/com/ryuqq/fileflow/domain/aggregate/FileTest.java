@@ -479,4 +479,98 @@ class FileTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("이미 삭제된 파일입니다");
     }
+
+    // ===== Clock 의존성 테스트 =====
+
+    @Test
+    @DisplayName("forNew()는 Clock을 사용하여 createdAt을 설정해야 한다")
+    void shouldUseClockForCreatedAt() {
+        // Given
+        java.time.Clock fixedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T10:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        String fileName = "test-image.jpg";
+        long fileSize = 2048000L; // 2MB
+        String mimeType = "image/jpeg";
+        String s3Key = "uploads/2024/01/test-image.jpg";
+        String s3Bucket = "fileflow-storage";
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+
+        // When
+        File file = File.forNew(
+                fileName,
+                fileSize,
+                mimeType,
+                s3Key,
+                s3Bucket,
+                uploaderId,
+                "IMAGE",
+                null,
+                fixedClock
+        );
+
+        // Then
+        assertThat(file.getCreatedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 10, 0, 0));
+        assertThat(file.getUpdatedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 10, 0, 0));
+    }
+
+    @Test
+    @DisplayName("markAsCompleted()는 Clock을 사용하여 updatedAt을 설정해야 한다")
+    void shouldUseClockForUpdatedAt() {
+        // Given
+        java.time.Clock fixedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T12:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        File file = File.forNew(
+                "test.jpg",
+                1024000L,
+                "image/jpeg",
+                "uploads/test.jpg",
+                "fileflow-storage",
+                uploaderId,
+                "IMAGE",
+                null,
+                fixedClock
+        );
+
+        // When
+        File completedFile = file.markAsCompleted();
+
+        // Then
+        assertThat(completedFile.getUpdatedAt()).isEqualTo(java.time.LocalDateTime.of(2025, 1, 15, 12, 0, 0));
+    }
+
+    @Test
+    @DisplayName("고정된 Clock으로 파일을 생성할 수 있어야 한다")
+    void shouldCreateFileWithFixedClock() {
+        // Given
+        java.time.Clock fixedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-20T15:30:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+
+        // When
+        File file = File.forNew(
+                "fixed-clock-test.jpg",
+                1024000L,
+                "image/jpeg",
+                "uploads/fixed-clock-test.jpg",
+                "fileflow-storage",
+                uploaderId,
+                "IMAGE",
+                null,
+                fixedClock
+        );
+
+        // Then
+        java.time.LocalDateTime expectedTime = java.time.LocalDateTime.of(2025, 1, 20, 15, 30, 0);
+        assertThat(file.getCreatedAt()).isEqualTo(expectedTime);
+        assertThat(file.getUpdatedAt()).isEqualTo(expectedTime);
+        assertThat(file.getFileId()).isNotNull();
+        assertThat(file.getFileId().isNew()).isTrue();
+    }
 }
