@@ -523,47 +523,45 @@
 - `domain/src/main/java/com/ryuqq/fileflow/domain/aggregate/FileProcessingJob.java`
 - `domain/src/test/java/com/ryuqq/fileflow/domain/aggregate/FileProcessingJobTest.java`
 
-**🔴 Red Phase**:
-- [ ] FileProcessingJobTest.java 수정 (가변 패턴 검증)
-  - [ ] `shouldMutateStatusWhenMarkAsProcessing()` - 가변 검증
-  - [ ] `shouldMutateStatusWhenMarkAsCompleted()` - 가변 검증
-  - [ ] `shouldMutateStatusWhenMarkAsFailed()` - 가변 검증
-  - [ ] `shouldNotReturnNewInstanceWhenMarkAsCompleted()` - 동일 객체 검증
-- [ ] 컴파일 에러 확인
-- [ ] **커밋**: `test: FileProcessingJob 가변 패턴 테스트 추가`
+**🔴 Red Phase**: [x] Complete
+- [x] FileProcessingJobTest.java 수정 (가변 패턴 검증)
+  - [x] `shouldMutateStatusWhenMarkAsProcessing()` - 가변 검증
+  - [x] `shouldMutateStatusWhenMarkAsCompleted()` - 가변 검증
+  - [x] `shouldMutateStatusWhenMarkAsFailed()` - 가변 검증
+  - [x] `shouldNotReturnNewInstanceWhenMarkAsCompleted()` - 동일 객체 검증
+- [x] 컴파일 에러 확인
+- [x] **커밋**: `test: FileProcessingJob 가변 패턴 테스트 추가`
 
-**🟢 Green Phase**:
-- [ ] FileProcessingJob.java 수정
-  - [ ] `status`, `retryCount`, `processedAt`, `outputS3Key`, `errorMessage` final 제거
-  - [ ] `markAsProcessing()` void 반환 (this 변경)
-  - [ ] `markAsCompleted()` void 반환 (this 변경)
-  - [ ] `markAsFailed()` void 반환 (this 변경)
-  - [ ] `incrementRetryCount()` void 반환 (this 변경)
-  - [ ] `withStatus()` private 헬퍼 메서드 제거
-- [ ] 기존 테스트 수정 (void 반환 대응)
-- [ ] Fixture 수정 (aCompletedJob, aFailedJob 패턴 변경)
-- [ ] 모든 테스트 통과 확인
-- [ ] **커밋**: `feat: FileProcessingJob 불변→가변 패턴 전환`
+**🟢 Green Phase**: [x] Complete
+- [x] FileProcessingJob.java 수정
+  - [x] `status`, `retryCount`, `processedAt`, `outputS3Key`, `errorMessage` final 제거
+  - [x] `markAsProcessing()` void 반환 (this 변경)
+  - [x] `markAsCompleted()` void 반환 (this 변경)
+  - [x] `markAsFailed()` void 반환 (this 변경)
+  - [x] `incrementRetryCount()` void 반환 (this 변경)
+  - [x] `withStatus()` private 헬퍼 메서드 제거
+- [x] 기존 테스트 수정 (void 반환 대응)
+- [x] Fixture 수정 (aCompletedJob, aFailedJob 패턴 변경)
+- [x] 모든 테스트 통과 확인
+- [x] **커밋**: `feat: FileProcessingJob 불변→가변 패턴 전환`
 
-**♻️ Refactor Phase**:
-- [ ] 비즈니스 메서드 순서 정리
-- [ ] **커밋**: `struct: FileProcessingJob 비즈니스 메서드 정리`
+**♻️ Refactor Phase**: [x] Complete (정리 불필요)
+- [x] 비즈니스 메서드 순서 확인 → 이미 정리됨
 
-**🧹 Tidy Phase**:
-- [ ] FileProcessingJobFixture 수정 (가변 패턴)
-- [ ] **커밋**: `test: FileProcessingJobFixture 가변 패턴 적용`
+**🧹 Tidy Phase**: [x] Complete (Green Phase에 포함됨)
+- [x] FileProcessingJobFixture 수정 완료 (Green Phase에서 처리)
 
 **✅ 완료 체크**:
-- [ ] 4개 신규 테스트 모두 통과
-- [ ] final 제거 확인
-- [ ] 비즈니스 메서드 void 반환 확인
-- [ ] **총 커밋 수**: 3-4개
+- [x] 4개 신규 테스트 모두 통과
+- [x] final 제거 확인
+- [x] 비즈니스 메서드 void 반환 확인
+- [x] **총 커밋 수**: 2개 (Red + Green)
 
 **📝 커밋 해시**:
-- Red: `________`
-- Green: `________`
-- Refactor: `________`
-- Tidy: `________`
+- Red: `c616645`
+- Green: `b25b282`
+- Refactor: N/A (이미 정리됨)
+- Tidy: N/A (Green에 포함)
 
 ---
 
