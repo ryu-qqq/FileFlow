@@ -29,12 +29,12 @@ public class MessageOutbox {
     private final String eventType;
     private final String aggregateId;
     private final String payload;
-    private final OutboxStatus status;
-    private final int retryCount;
+    private OutboxStatus status;  // 가변: markAsSent(), markAsFailed()에서 변경
+    private int retryCount;  // 가변: incrementRetryCount()에서 변경
     private final int maxRetryCount;
     private final Clock clock;
     private final LocalDateTime createdAt;
-    private final LocalDateTime processedAt;
+    private LocalDateTime processedAt;  // 가변: markAsSent(), markAsFailed()에서 변경
 
     /**
      * MessageOutbox Aggregate 생성자
@@ -361,71 +361,42 @@ public class MessageOutbox {
     }
 
     /**
-     * 상태 전환 헬퍼 메서드
+     * 메시지를 발송 완료 상태로 변경
      * <p>
-     * 새로운 상태로 MessageOutbox 객체를 생성합니다.
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * Spring @Transactional 내에서 안전하게 동작합니다.
      * </p>
      *
-     * @param newStatus   새로운 메시지 상태
-     * @param processedAt 처리 완료 시각 (nullable)
-     * @return 새로운 MessageOutbox 객체
-     */
-    private MessageOutbox withStatus(
-            OutboxStatus newStatus,
-            LocalDateTime processedAt
-    ) {
-        return new MessageOutbox(
-                this.id,
-                this.eventType,
-                this.aggregateId,
-                this.payload,
-                newStatus,
-                this.retryCount,
-                this.maxRetryCount,
-                this.clock,
-                this.createdAt,
-                processedAt
-        );
-    }
-
-    /**
-     * 메시지를 발송 완료 상태로 변경
-     *
      * @param clock 시간 생성용 Clock (processedAt 생성에 사용)
-     * @return 새로운 MessageOutbox 객체 (SENT 상태)
      */
-    public MessageOutbox markAsSent(Clock clock) {
-        return withStatus(OutboxStatus.SENT, LocalDateTime.now(clock));
+    public void markAsSent(Clock clock) {
+        this.status = OutboxStatus.SENT;
+        this.processedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 메시지를 실패 상태로 변경
+     * <p>
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * Spring @Transactional 내에서 안전하게 동작합니다.
+     * </p>
      *
      * @param clock 시간 생성용 Clock (processedAt 생성에 사용)
-     * @return 새로운 MessageOutbox 객체 (FAILED 상태)
      */
-    public MessageOutbox markAsFailed(Clock clock) {
-        return withStatus(OutboxStatus.FAILED, LocalDateTime.now(clock));
+    public void markAsFailed(Clock clock) {
+        this.status = OutboxStatus.FAILED;
+        this.processedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 재시도 횟수 증가
-     *
-     * @return 새로운 MessageOutbox 객체 (retryCount + 1)
+     * <p>
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * Spring @Transactional 내에서 안전하게 동작합니다.
+     * </p>
      */
-    public MessageOutbox incrementRetryCount() {
-        return new MessageOutbox(
-                this.id,
-                this.eventType,
-                this.aggregateId,
-                this.payload,
-                this.status,
-                this.retryCount + 1,
-                this.maxRetryCount,
-                this.clock,
-                this.createdAt,
-                this.processedAt
-        );
+    public void incrementRetryCount() {
+        this.retryCount++;
     }
 
     /**

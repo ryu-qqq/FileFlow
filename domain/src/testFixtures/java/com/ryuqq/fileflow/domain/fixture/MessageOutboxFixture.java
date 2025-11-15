@@ -49,6 +49,9 @@ public class MessageOutboxFixture {
 
     /**
      * SENT 상태 메시지
+     * <p>
+     * 가변 패턴: 생성 후 markAsSent() 호출하여 상태 변경
+     * </p>
      */
     public static MessageOutbox aSentOutbox() {
         MessageOutbox outbox = createOutbox(
@@ -57,11 +60,15 @@ public class MessageOutboxFixture {
                 "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}",
                 3
         );
-        return outbox.markAsSent(Clock.systemUTC());
+        outbox.markAsSent(Clock.systemUTC());
+        return outbox;
     }
 
     /**
      * FAILED 상태 메시지
+     * <p>
+     * 가변 패턴: 생성 후 markAsFailed() 호출하여 상태 변경
+     * </p>
      */
     public static MessageOutbox aFailedOutbox() {
         MessageOutbox outbox = createOutbox(
@@ -70,7 +77,8 @@ public class MessageOutboxFixture {
                 "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}",
                 3
         );
-        return outbox.markAsFailed(Clock.systemUTC());
+        outbox.markAsFailed(Clock.systemUTC());
+        return outbox;
     }
 
     /**

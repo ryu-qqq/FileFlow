@@ -104,11 +104,11 @@ class MessageOutboxTest {
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
 
         // When
-        MessageOutbox sentOutbox = outbox.markAsSent(Clock.systemUTC());
+        outbox.markAsSent(Clock.systemUTC());
 
         // Then
-        assertThat(sentOutbox.getStatus()).isEqualTo(OutboxStatusFixture.sent());
-        assertThat(sentOutbox.getProcessedAt()).isNotNull();
+        assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.sent());
+        assertThat(outbox.getProcessedAt()).isNotNull();
     }
 
     @Test
@@ -123,11 +123,11 @@ class MessageOutboxTest {
         );
 
         // When
-        MessageOutbox sentOutbox = outbox.markAsSent(Clock.systemUTC());
+        outbox.markAsSent(Clock.systemUTC());
 
         // Then
-        assertThat(sentOutbox.getProcessedAt()).isNotNull();
-        assertThat(sentOutbox.getProcessedAt()).isAfterOrEqualTo(outbox.getCreatedAt());
+        assertThat(outbox.getProcessedAt()).isNotNull();
+        assertThat(outbox.getProcessedAt()).isAfterOrEqualTo(outbox.getCreatedAt());
     }
 
     @Test
@@ -142,11 +142,11 @@ class MessageOutboxTest {
         );
 
         // When
-        MessageOutbox failedOutbox = outbox.markAsFailed(Clock.systemUTC());
+        outbox.markAsFailed(Clock.systemUTC());
 
         // Then
-        assertThat(failedOutbox.getStatus()).isEqualTo(OutboxStatusFixture.failed());
-        assertThat(failedOutbox.getProcessedAt()).isNotNull();
+        assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.failed());
+        assertThat(outbox.getProcessedAt()).isNotNull();
     }
 
     // ===== 부가 메서드 테스트 =====
@@ -164,10 +164,10 @@ class MessageOutboxTest {
         assertThat(outbox.getRetryCount()).isEqualTo(0);
 
         // When
-        MessageOutbox retriedOutbox = outbox.incrementRetryCount();
+        outbox.incrementRetryCount();
 
         // Then
-        assertThat(retriedOutbox.getRetryCount()).isEqualTo(1);
+        assertThat(outbox.getRetryCount()).isEqualTo(1);
     }
 
     @Test
@@ -451,10 +451,10 @@ class MessageOutboxTest {
                 .build();
 
         // When
-        MessageOutbox sentOutbox = outbox.markAsSent(fixedClock);
+        outbox.markAsSent(fixedClock);
 
         // Then
-        assertThat(sentOutbox.getProcessedAt()).isEqualTo(expectedTime);
+        assertThat(outbox.getProcessedAt()).isEqualTo(expectedTime);
     }
 
     @Test
