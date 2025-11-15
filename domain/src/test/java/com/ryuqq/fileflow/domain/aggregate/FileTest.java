@@ -244,4 +244,49 @@ class FileTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("COMPLETED 상태에서만 PROCESSING으로 전환할 수 있습니다");
     }
+
+    // ===== 부가 메서드 테스트 =====
+
+    @Test
+    @DisplayName("재시도 횟수를 증가시킬 수 있어야 한다")
+    void shouldIncrementRetryCount() {
+        // Given
+        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        assertThat(file.getRetryCount()).isEqualTo(0);
+
+        // When
+        File retriedFile = file.incrementRetryCount();
+
+        // Then
+        assertThat(retriedFile.getRetryCount()).isEqualTo(1);
+        assertThat(retriedFile.getUpdatedAt()).isAfter(file.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("파일을 소프트 삭제할 수 있어야 한다")
+    void shouldSoftDelete() {
+        // Given
+        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        assertThat(file.getDeletedAt()).isNull();
+
+        // When
+        File deletedFile = file.softDelete();
+
+        // Then
+        assertThat(deletedFile.getDeletedAt()).isNotNull();
+        assertThat(deletedFile.getUpdatedAt()).isAfter(file.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("이미 삭제된 파일은 다시 삭제할 수 없어야 한다")
+    void shouldNotSoftDeleteTwice() {
+        // Given
+        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File deletedFile = file.softDelete();
+
+        // When & Then
+        assertThatThrownBy(() -> deletedFile.softDelete())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("이미 삭제된 파일입니다");
+    }
 }
