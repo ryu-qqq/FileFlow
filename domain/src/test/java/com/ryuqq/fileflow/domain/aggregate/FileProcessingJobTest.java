@@ -500,4 +500,126 @@ class FileProcessingJobTest {
         // Then - 반환값이 void이므로 상태만 검증
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.completed());
     }
+
+    // ========================================
+    // Cycle 12: updatedAt + getIdValue() Tests
+    // ========================================
+
+    @Test
+    @DisplayName("forNew()로 생성 시 updatedAt이 설정되어야 한다")
+    void shouldHaveUpdatedAtWhenCreated() {
+        // Given
+        java.time.Clock fixedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T10:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+
+        // When
+        FileProcessingJob job = FileProcessingJob.forNew(
+                FileIdFixture.aFileId(),
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3,
+                fixedClock
+        );
+
+        // Then
+        assertThat(job.getUpdatedAt()).isNotNull();
+        assertThat(job.getUpdatedAt()).isEqualTo(job.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("markAsCompleted() 호출 시 updatedAt이 갱신되어야 한다")
+    void shouldUpdateUpdatedAtWhenMarkAsCompleted() {
+        // Given
+        java.time.Clock initialClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T10:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        java.time.Clock updatedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T11:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+
+        FileProcessingJob job = FileProcessingJob.forNew(
+                FileIdFixture.aFileId(),
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3,
+                initialClock
+        );
+
+        java.time.LocalDateTime initialUpdatedAt = job.getUpdatedAt();
+
+        // When
+        job.markAsCompleted("output.jpg", updatedClock);
+
+        // Then
+        assertThat(job.getUpdatedAt()).isNotNull();
+        assertThat(job.getUpdatedAt()).isNotEqualTo(initialUpdatedAt);
+        assertThat(job.getUpdatedAt()).isEqualTo(java.time.LocalDateTime.now(updatedClock));
+    }
+
+    @Test
+    @DisplayName("markAsFailed() 호출 시 updatedAt이 갱신되어야 한다")
+    void shouldUpdateUpdatedAtWhenMarkAsFailed() {
+        // Given
+        java.time.Clock initialClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T10:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+        java.time.Clock updatedClock = java.time.Clock.fixed(
+                java.time.Instant.parse("2025-01-15T11:00:00Z"),
+                java.time.ZoneId.of("UTC")
+        );
+
+        FileProcessingJob job = FileProcessingJob.forNew(
+                FileIdFixture.aFileId(),
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/image.jpg",
+                3,
+                initialClock
+        );
+
+        java.time.LocalDateTime initialUpdatedAt = job.getUpdatedAt();
+
+        // When
+        job.markAsFailed("Processing error", updatedClock);
+
+        // Then
+        assertThat(job.getUpdatedAt()).isNotNull();
+        assertThat(job.getUpdatedAt()).isNotEqualTo(initialUpdatedAt);
+        assertThat(job.getUpdatedAt()).isEqualTo(java.time.LocalDateTime.now(updatedClock));
+    }
+
+    @Test
+    @DisplayName("getJobIdValue()는 JobId의 원시 값을 반환해야 한다 (Law of Demeter)")
+    void shouldReturnJobIdValueWithoutChaining() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.aJob().build();
+
+        // When
+        String jobIdValue = job.getJobIdValue();
+
+        // Then
+        assertThat(jobIdValue).isNotNull();
+        assertThat(jobIdValue).isEqualTo(job.getJobId().getValue());
+    }
+
+    @Test
+    @DisplayName("getFileIdValue()는 FileId의 원시 값을 반환해야 한다 (Law of Demeter)")
+    void shouldReturnFileIdValueWithoutChaining() {
+        // Given
+        String expectedFileId = "file-uuid-v7-123";
+        FileProcessingJob job = FileProcessingJobFixture.aJob()
+                .fileId(FileId.of(expectedFileId))
+                .build();
+
+        // When
+        String fileIdValue = job.getFileIdValue();
+
+        // Then
+        assertThat(fileIdValue).isNotNull();
+        assertThat(fileIdValue).isEqualTo(expectedFileId);
+    }
 }
