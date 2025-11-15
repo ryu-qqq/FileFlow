@@ -317,17 +317,21 @@ public class File {
     }
 
     /**
-     * 파일 상태를 UPLOADING으로 변경
+     * 상태 전환 헬퍼 메서드
+     * <p>
+     * 새로운 상태로 File 객체를 생성하며 updatedAt을 자동으로 갱신합니다.
+     * </p>
      *
-     * @return 새로운 File 객체 (UPLOADING 상태)
+     * @param newStatus 새로운 파일 상태
+     * @return 새로운 File 객체
      */
-    public File markAsUploading() {
+    private File withStatus(FileStatus newStatus) {
         return new File(
                 this.fileId,
                 this.fileName,
                 this.fileSize,
                 this.mimeType,
-                FileStatus.UPLOADING,
+                newStatus,
                 this.s3Key,
                 this.s3Bucket,
                 this.cdnUrl,
@@ -339,6 +343,15 @@ public class File {
                 this.createdAt,
                 LocalDateTime.now() // updatedAt 갱신
         );
+    }
+
+    /**
+     * 파일 상태를 UPLOADING으로 변경
+     *
+     * @return 새로운 File 객체 (UPLOADING 상태)
+     */
+    public File markAsUploading() {
+        return withStatus(FileStatus.UPLOADING);
     }
 
     /**
@@ -350,23 +363,7 @@ public class File {
      * @return 새로운 File 객체 (COMPLETED 상태)
      */
     public File markAsCompleted() {
-        return new File(
-                this.fileId,
-                this.fileName,
-                this.fileSize,
-                this.mimeType,
-                FileStatus.COMPLETED,
-                this.s3Key,
-                this.s3Bucket,
-                this.cdnUrl,
-                this.uploaderId,
-                this.category,
-                this.tags,
-                this.version,
-                this.deletedAt,
-                this.createdAt,
-                LocalDateTime.now() // updatedAt 갱신
-        );
+        return withStatus(FileStatus.COMPLETED);
     }
 
     /**
@@ -376,23 +373,7 @@ public class File {
      * @return 새로운 File 객체 (FAILED 상태)
      */
     public File markAsFailed(String errorMessage) {
-        return new File(
-                this.fileId,
-                this.fileName,
-                this.fileSize,
-                this.mimeType,
-                FileStatus.FAILED,
-                this.s3Key,
-                this.s3Bucket,
-                this.cdnUrl,
-                this.uploaderId,
-                this.category,
-                this.tags,
-                this.version,
-                this.deletedAt,
-                this.createdAt,
-                LocalDateTime.now() // updatedAt 갱신
-        );
+        return withStatus(FileStatus.FAILED);
     }
 
     /**
@@ -411,22 +392,6 @@ public class File {
             );
         }
 
-        return new File(
-                this.fileId,
-                this.fileName,
-                this.fileSize,
-                this.mimeType,
-                FileStatus.PROCESSING,
-                this.s3Key,
-                this.s3Bucket,
-                this.cdnUrl,
-                this.uploaderId,
-                this.category,
-                this.tags,
-                this.version,
-                this.deletedAt,
-                this.createdAt,
-                LocalDateTime.now() // updatedAt 갱신
-        );
+        return withStatus(FileStatus.PROCESSING);
     }
 }
