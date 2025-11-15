@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.fixture.FileStatusFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,12 +18,12 @@ class FileStatusTest {
         // Then
         assertThat(statuses).hasSize(6);
         assertThat(statuses).contains(
-                FileStatus.PENDING,
-                FileStatus.UPLOADING,
-                FileStatus.COMPLETED,
-                FileStatus.FAILED,
-                FileStatus.RETRY_PENDING,
-                FileStatus.PROCESSING
+                FileStatusFixture.pending(),
+                FileStatusFixture.uploading(),
+                FileStatusFixture.completed(),
+                FileStatusFixture.failed(),
+                FileStatusFixture.retryPending(),
+                FileStatusFixture.processing()
         );
     }
 
@@ -30,11 +31,11 @@ class FileStatusTest {
     @DisplayName("PENDING에서 UPLOADING으로 전환 가능해야 한다")
     void shouldTransitionFromPendingToUploading() {
         // Given
-        FileStatus pending = FileStatus.PENDING;
+        FileStatus pending = FileStatusFixture.pending();
 
         // When & Then
         assertThat(pending).isNotNull();
-        assertThat(FileStatus.UPLOADING).isNotNull();
-        assertThat(pending).isNotEqualTo(FileStatus.UPLOADING);
+        assertThat(FileStatusFixture.uploading()).isNotNull();
+        assertThat(pending).isNotEqualTo(FileStatusFixture.uploading());
     }
 }
