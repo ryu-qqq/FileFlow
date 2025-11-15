@@ -32,6 +32,32 @@ public class FileProcessingJobFixture {
     }
 
     /**
+     * COMPLETED 상태 작업
+     */
+    public static FileProcessingJob aCompletedJob() {
+        FileProcessingJob job = createJob(
+                "file-uuid-v7-123",
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/2024/01/image.jpg",
+                3
+        );
+        return job.markAsCompleted("processed/2024/01/thumbnail.jpg");
+    }
+
+    /**
+     * FAILED 상태 작업
+     */
+    public static FileProcessingJob aFailedJob() {
+        FileProcessingJob job = createJob(
+                "file-uuid-v7-123",
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/2024/01/image.jpg",
+                3
+        );
+        return job.markAsFailed("Processing error: Invalid image format");
+    }
+
+    /**
      * FileProcessingJob Builder (Plain Java, Lombok 금지)
      */
     public static class FileProcessingJobBuilder {
