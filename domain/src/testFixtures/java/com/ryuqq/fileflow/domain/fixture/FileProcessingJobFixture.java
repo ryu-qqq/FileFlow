@@ -1,6 +1,8 @@
 package com.ryuqq.fileflow.domain.fixture;
 
 import com.ryuqq.fileflow.domain.aggregate.FileProcessingJob;
+import com.ryuqq.fileflow.domain.vo.FileId;
+import com.ryuqq.fileflow.domain.vo.FileProcessingJobId;
 import com.ryuqq.fileflow.domain.vo.JobStatus;
 import com.ryuqq.fileflow.domain.vo.JobType;
 
@@ -61,8 +63,8 @@ public class FileProcessingJobFixture {
      * FileProcessingJob Builder (Plain Java, Lombok 금지)
      */
     public static class FileProcessingJobBuilder {
-        private String jobId = UuidV7GeneratorFixture.aUuidV7();
-        private String fileId = UuidV7GeneratorFixture.aUuidV7();
+        private FileProcessingJobId jobId = FileProcessingJobId.of(UuidV7GeneratorFixture.aUuidV7());
+        private FileId fileId = FileId.of(UuidV7GeneratorFixture.aUuidV7());
         private JobType jobType = JobTypeFixture.thumbnailGeneration();
         private JobStatus status = JobStatusFixture.pending();
         private int retryCount = 0;
@@ -73,12 +75,12 @@ public class FileProcessingJobFixture {
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime processedAt = null;
 
-        public FileProcessingJobBuilder jobId(String jobId) {
+        public FileProcessingJobBuilder jobId(FileProcessingJobId jobId) {
             this.jobId = jobId;
             return this;
         }
 
-        public FileProcessingJobBuilder fileId(String fileId) {
+        public FileProcessingJobBuilder fileId(FileId fileId) {
             this.fileId = fileId;
             return this;
         }
@@ -130,9 +132,12 @@ public class FileProcessingJobFixture {
 
         /**
          * FileProcessingJob 객체 생성
+         * <p>
+         * reconstitute() 팩토리 메서드를 사용하여 테스트용 객체 생성
+         * </p>
          */
         public FileProcessingJob build() {
-            return new FileProcessingJob(
+            return FileProcessingJob.reconstitute(
                     jobId,
                     fileId,
                     jobType,

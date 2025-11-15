@@ -1,6 +1,8 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
 import com.ryuqq.fileflow.domain.util.UuidV7Generator;
+import com.ryuqq.fileflow.domain.vo.FileId;
+import com.ryuqq.fileflow.domain.vo.FileProcessingJobId;
 import com.ryuqq.fileflow.domain.vo.JobStatus;
 import com.ryuqq.fileflow.domain.vo.JobType;
 
@@ -14,8 +16,8 @@ import java.time.LocalDateTime;
  */
 public class FileProcessingJob {
 
-    private final String jobId;
-    private final String fileId;
+    private final FileProcessingJobId jobId;
+    private final FileId fileId;
     private final JobType jobType;
     private final JobStatus status;
     private final int retryCount;
@@ -28,9 +30,12 @@ public class FileProcessingJob {
 
     /**
      * FileProcessingJob Aggregate 생성자
+     * <p>
+     * Private 생성자: 외부에서 직접 생성 불가, 팩토리 메서드 사용 필수
+     * </p>
      *
-     * @param jobId         작업 고유 ID (UUID v7)
-     * @param fileId        파일 고유 ID (UUID v7)
+     * @param jobId         작업 고유 ID (FileProcessingJobId VO)
+     * @param fileId        파일 고유 ID (FileId VO)
      * @param jobType       작업 유형 (THUMBNAIL_GENERATION, HTML_PARSING 등)
      * @param status        작업 상태
      * @param retryCount    재시도 횟수
@@ -41,9 +46,9 @@ public class FileProcessingJob {
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
      */
-    public FileProcessingJob(
-            String jobId,
-            String fileId,
+    private FileProcessingJob(
+            FileProcessingJobId jobId,
+            FileId fileId,
             JobType jobType,
             JobStatus status,
             int retryCount,
@@ -70,14 +75,14 @@ public class FileProcessingJob {
     /**
      * 작업 고유 ID 조회
      */
-    public String getJobId() {
+    public FileProcessingJobId getJobId() {
         return jobId;
     }
 
     /**
      * 파일 고유 ID 조회
      */
-    public String getFileId() {
+    public FileId getFileId() {
         return fileId;
     }
 
@@ -145,17 +150,158 @@ public class FileProcessingJob {
     }
 
     /**
-     * 파일 처리 작업 생성 팩토리 메서드
+     * 새 파일 처리 작업 생성 팩토리 메서드
      * <p>
-     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
+     * ID가 null인 새로운 작업을 생성합니다. 영속화 전 상태입니다.
      * </p>
      *
      * @param fileId        파일 고유 ID
      * @param jobType       작업 유형
      * @param inputS3Key    입력 파일 S3 키
      * @param maxRetryCount 최대 재시도 횟수
-     * @return 생성된 FileProcessingJob Aggregate
+     * @return 생성된 FileProcessingJob Aggregate (ID null)
      */
+    public static FileProcessingJob forNew(
+            FileId fileId,
+            JobType jobType,
+            String inputS3Key,
+            int maxRetryCount
+    ) {
+        LocalDateTime now = LocalDateTime.now();
+
+        return new FileProcessingJob(
+                FileProcessingJobId.forNew(), // ID는 영속화 시점에 생성
+                fileId,
+                jobType,
+                JobStatus.PENDING, // 초기 상태는 PENDING
+                0, // 초기 재시도 횟수 0
+                maxRetryCount,
+                inputS3Key,
+                null, // outputS3Key는 null
+                null, // errorMessage는 null
+                now, // createdAt
+                null  // processedAt는 null
+        );
+    }
+
+    /**
+     * 파일 처리 작업 생성 팩토리 메서드 (비즈니스 로직용)
+     * <p>
+     * ID가 필수인 작업을 생성합니다. 비즈니스 로직에서 사용합니다.
+     * </p>
+     *
+     * @param jobId         작업 고유 ID (필수, null 불가)
+     * @param fileId        파일 고유 ID
+     * @param jobType       작업 유형
+     * @param status        작업 상태
+     * @param retryCount    재시도 횟수
+     * @param maxRetryCount 최대 재시도 횟수
+     * @param inputS3Key    입력 파일 S3 키
+     * @param outputS3Key   출력 파일 S3 키
+     * @param errorMessage  에러 메시지
+     * @param createdAt     생성 시각
+     * @param processedAt   처리 완료 시각
+     * @return 생성된 FileProcessingJob Aggregate
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
+     */
+    public static FileProcessingJob of(
+            FileProcessingJobId jobId,
+            FileId fileId,
+            JobType jobType,
+            JobStatus status,
+            int retryCount,
+            int maxRetryCount,
+            String inputS3Key,
+            String outputS3Key,
+            String errorMessage,
+            LocalDateTime createdAt,
+            LocalDateTime processedAt
+    ) {
+        if (jobId == null || jobId.isNew()) {
+            throw new IllegalArgumentException("ID는 null이거나 새로운 ID일 수 없습니다");
+        }
+
+        return new FileProcessingJob(
+                jobId,
+                fileId,
+                jobType,
+                status,
+                retryCount,
+                maxRetryCount,
+                inputS3Key,
+                outputS3Key,
+                errorMessage,
+                createdAt,
+                processedAt
+        );
+    }
+
+    /**
+     * 파일 처리 작업 재구성 팩토리 메서드 (영속성 계층용)
+     * <p>
+     * 영속성 계층에서 조회한 데이터로 Aggregate를 재구성합니다.
+     * </p>
+     *
+     * @param jobId         작업 고유 ID (필수, null 불가)
+     * @param fileId        파일 고유 ID
+     * @param jobType       작업 유형
+     * @param status        작업 상태
+     * @param retryCount    재시도 횟수
+     * @param maxRetryCount 최대 재시도 횟수
+     * @param inputS3Key    입력 파일 S3 키
+     * @param outputS3Key   출력 파일 S3 키
+     * @param errorMessage  에러 메시지
+     * @param createdAt     생성 시각
+     * @param processedAt   처리 완료 시각
+     * @return 재구성된 FileProcessingJob Aggregate
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
+     */
+    public static FileProcessingJob reconstitute(
+            FileProcessingJobId jobId,
+            FileId fileId,
+            JobType jobType,
+            JobStatus status,
+            int retryCount,
+            int maxRetryCount,
+            String inputS3Key,
+            String outputS3Key,
+            String errorMessage,
+            LocalDateTime createdAt,
+            LocalDateTime processedAt
+    ) {
+        if (jobId == null || jobId.isNew()) {
+            throw new IllegalArgumentException("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+        }
+
+        return new FileProcessingJob(
+                jobId,
+                fileId,
+                jobType,
+                status,
+                retryCount,
+                maxRetryCount,
+                inputS3Key,
+                outputS3Key,
+                errorMessage,
+                createdAt,
+                processedAt
+        );
+    }
+
+    /**
+     * 파일 처리 작업 생성 팩토리 메서드
+     * <p>
+     * UUID v7을 자동 생성하고 초기 상태를 PENDING으로 설정합니다.
+     * </p>
+     *
+     * @param fileId        파일 고유 ID (String)
+     * @param jobType       작업 유형
+     * @param inputS3Key    입력 파일 S3 키
+     * @param maxRetryCount 최대 재시도 횟수
+     * @return 생성된 FileProcessingJob Aggregate
+     * @deprecated forNew() 사용을 권장합니다 (VO 타입 사용)
+     */
+    @Deprecated
     public static FileProcessingJob create(
             String fileId,
             JobType jobType,
@@ -163,14 +309,14 @@ public class FileProcessingJob {
             int maxRetryCount
     ) {
         // UUID v7 자동 생성
-        String jobId = UuidV7Generator.generate();
+        String jobIdValue = UuidV7Generator.generate();
 
         // 현재 시각
         LocalDateTime now = LocalDateTime.now();
 
         return new FileProcessingJob(
-                jobId,
-                fileId,
+                FileProcessingJobId.of(jobIdValue),
+                FileId.of(fileId),
                 jobType,
                 JobStatus.PENDING, // 초기 상태는 PENDING
                 0, // 초기 재시도 횟수 0

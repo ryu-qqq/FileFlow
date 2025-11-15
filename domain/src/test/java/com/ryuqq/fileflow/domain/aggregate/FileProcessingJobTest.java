@@ -21,17 +21,18 @@ class FileProcessingJobTest {
     @DisplayName("유효한 데이터로 FileProcessingJob을 생성할 수 있어야 한다")
     void shouldCreateJobWithValidData() {
         // Given & When
+        FileId fileId = FileId.of("file-uuid-v7-123");
         FileProcessingJob job = FileProcessingJobFixture.aJob()
                 .jobType(JobTypeFixture.thumbnailGeneration())
-                .fileId("file-uuid-v7-123")
+                .fileId(fileId)
                 .inputS3Key("uploads/2024/01/image.jpg")
                 .maxRetryCount(3)
                 .build();
 
         // Then
         assertThat(job).isNotNull();
-        assertThat(job.getJobId()).isNotBlank();
-        assertThat(job.getFileId()).isEqualTo("file-uuid-v7-123");
+        assertThat(job.getJobId()).isNotNull();
+        assertThat(job.getFileId()).isEqualTo(fileId);
         assertThat(job.getJobType()).isEqualTo(JobTypeFixture.thumbnailGeneration());
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending());
         assertThat(job.getInputS3Key()).isEqualTo("uploads/2024/01/image.jpg");
@@ -50,8 +51,8 @@ class FileProcessingJobTest {
         FileProcessingJob job = FileProcessingJobFixture.aJob().build();
 
         // Then - 필수 필드 검증
-        assertThat(job.getJobId()).isNotBlank();
-        assertThat(job.getFileId()).isNotBlank();
+        assertThat(job.getJobId()).isNotNull();
+        assertThat(job.getFileId()).isNotNull();
         assertThat(job.getJobType()).isNotNull();
         assertThat(job.getStatus()).isNotNull();
         assertThat(job.getInputS3Key()).isNotBlank();
@@ -212,18 +213,19 @@ class FileProcessingJobTest {
     @DisplayName("create() 팩토리 메서드로 UUID v7과 PENDING 상태로 작업을 생성해야 한다")
     void shouldCreateJobWithUuidV7AndPendingStatus() {
         // Given
-        String fileId = "file-uuid-v7-123";
+        String fileIdValue = "file-uuid-v7-123";
         JobType jobType = JobTypeFixture.thumbnailGeneration();
         String inputS3Key = "uploads/2024/01/image.jpg";
         int maxRetryCount = 3;
 
         // When
-        FileProcessingJob job = FileProcessingJob.create(fileId, jobType, inputS3Key, maxRetryCount);
+        @SuppressWarnings("deprecation")
+        FileProcessingJob job = FileProcessingJob.create(fileIdValue, jobType, inputS3Key, maxRetryCount);
 
         // Then
-        assertThat(job.getJobId()).isNotBlank(); // UUID v7 자동 생성
-        assertThat(job.getJobId()).hasSize(36); // UUID 표준 길이
-        assertThat(job.getFileId()).isEqualTo(fileId);
+        assertThat(job.getJobId()).isNotNull(); // UUID v7 자동 생성
+        assertThat(job.getJobId().getValue()).hasSize(36); // UUID 표준 길이
+        assertThat(job.getFileId()).isEqualTo(FileId.of(fileIdValue));
         assertThat(job.getJobType()).isEqualTo(jobType);
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending()); // PENDING 상태
         assertThat(job.getInputS3Key()).isEqualTo(inputS3Key);
