@@ -432,4 +432,72 @@ class FileProcessingJobTest {
         // Then
         assertThat(canRetry).isFalse();
     }
+
+    // ===== Cycle 10: 불변→가변 패턴 전환 테스트 =====
+
+    @Test
+    @DisplayName("markAsProcessing()는 동일한 객체를 변경해야 한다 (가변 패턴)")
+    void shouldMutateStatusWhenMarkAsProcessing() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.aJob()
+                .status(JobStatusFixture.pending())
+                .build();
+
+        // When
+        job.markAsProcessing();
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.processing());
+    }
+
+    @Test
+    @DisplayName("markAsCompleted()는 동일한 객체를 변경해야 한다 (가변 패턴)")
+    void shouldMutateStatusWhenMarkAsCompleted() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.aJob()
+                .status(JobStatusFixture.processing())
+                .build();
+        String outputS3Key = "processed/output.jpg";
+
+        // When
+        job.markAsCompleted(outputS3Key, java.time.Clock.systemUTC());
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.completed());
+        assertThat(job.getOutputS3Key()).isEqualTo(outputS3Key);
+        assertThat(job.getProcessedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("markAsFailed()는 동일한 객체를 변경해야 한다 (가변 패턴)")
+    void shouldMutateStatusWhenMarkAsFailed() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.aJob()
+                .status(JobStatusFixture.processing())
+                .build();
+        String errorMessage = "Processing failed";
+
+        // When
+        job.markAsFailed(errorMessage, java.time.Clock.systemUTC());
+
+        // Then - 동일한 객체가 변경됨
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.failed());
+        assertThat(job.getErrorMessage()).isEqualTo(errorMessage);
+        assertThat(job.getProcessedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("markAsCompleted()는 새 객체를 반환하지 않아야 한다 (동일 객체 변경)")
+    void shouldNotReturnNewInstanceWhenMarkAsCompleted() {
+        // Given
+        FileProcessingJob job = FileProcessingJobFixture.aJob()
+                .status(JobStatusFixture.processing())
+                .build();
+
+        // When
+        job.markAsCompleted("output.jpg", java.time.Clock.systemUTC());
+
+        // Then - 반환값이 void이므로 상태만 검증
+        assertThat(job.getStatus()).isEqualTo(JobStatusFixture.completed());
+    }
 }
