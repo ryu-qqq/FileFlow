@@ -13,7 +13,7 @@
 
 ---
 
-### 1️⃣ FilePersistencePort 정의 (Cycle 1)
+### 1️⃣ FilePersistencePort 정의 (Cycle 1) 🔄 IN PROGRESS
 
 #### 🔴 Red: 테스트 작성
 - [ ] `application/src/test/java/.../port/out/command/FilePersistencePortTest.java` 생성
