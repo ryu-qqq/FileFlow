@@ -78,34 +78,34 @@
 > - **금지**: `save()`, `update()`, `delete()` 메서드 사용 금지
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileProcessingJobPersistencePortTest.java` 생성
-  - [ ] `persist(FileProcessingJob): FileProcessingJobId` 메서드 시그니처 검증
-  - [ ] Value Object 반환 타입 검증
-- [ ] `FileProcessingJobQueryPortTest.java` 생성
-  - [ ] 4개 필수 메서드 시그니처 검증: `findById()`, `existsById()`, `findByCriteria()`, `countByCriteria()`
-  - [ ] FileProcessingJobSearchCriteria VO 파라미터 검증
-- [ ] 커밋: `test: FileProcessingJobPort 테스트 추가 (Red)`
+- [x] `FileProcessingJobPersistencePortTest.java` 생성
+  - [x] `persist(FileProcessingJob): FileProcessingJobId` 메서드 시그니처 검증
+  - [x] Value Object 반환 타입 검증
+- [x] `FileProcessingJobQueryPortTest.java` 생성
+  - [x] 4개 필수 메서드 시그니처 검증: `findById()`, `existsById()`, `findByCriteria()`, `countByCriteria()`
+  - [x] FileProcessingJobSearchCriteria VO 파라미터 검증
+- [x] 커밋: `test: FileProcessingJobPort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `port/out/command/FileProcessingJobPersistencePort.java` 생성
-  - [ ] `FileProcessingJobId persist(FileProcessingJob job)` 메서드
-  - [ ] Javadoc: 신규 생성과 수정 통합 처리
-- [ ] `port/out/query/FileProcessingJobQueryPort.java` 생성
-  - [ ] `Optional<FileProcessingJob> findById(FileProcessingJobId id)`
-  - [ ] `boolean existsById(FileProcessingJobId id)`
-  - [ ] `List<FileProcessingJob> findByCriteria(FileProcessingJobSearchCriteria criteria)`
-  - [ ] `long countByCriteria(FileProcessingJobSearchCriteria criteria)`
-- [ ] `domain/vo/FileProcessingJobSearchCriteria.java` 생성 (필요 시)
-- [ ] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`, `QueryPortArchTest.java`)
-- [ ] 커밋: `feat: FileProcessingJobPort 구현 (Green)`
+- [x] `port/out/command/FileProcessingJobPersistencePort.java` 생성
+  - [x] `FileProcessingJobId persist(FileProcessingJob job)` 메서드
+  - [x] Javadoc: 신규 생성과 수정 통합 처리
+- [x] `port/out/query/FileProcessingJobQueryPort.java` 생성
+  - [x] `Optional<FileProcessingJob> findById(FileProcessingJobId id)`
+  - [x] `boolean existsById(FileProcessingJobId id)`
+  - [x] `List<FileProcessingJob> findByCriteria(FileProcessingJobSearchCriteria criteria)`
+  - [x] `long countByCriteria(FileProcessingJobSearchCriteria criteria)`
+- [x] `domain/vo/FileProcessingJobSearchCriteria.java` 생성 (필요 시)
+- [x] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`, `QueryPortArchTest.java`)
+- [x] 커밋: `feat: FileProcessingJobPort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가 (이미 GREEN에서 작성)
-- [ ] 테스트 여전히 통과 확인
-- [ ] 변경 사항 없음 (SKIP)
+- [x] Javadoc 추가 (이미 GREEN에서 작성)
+- [x] 테스트 여전히 통과 확인
+- [x] 변경 사항 없음 (SKIP)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture는 Port에 불필요 (생략)
+- [x] TestFixture는 Port에 불필요 (생략)
 
 ---
 
