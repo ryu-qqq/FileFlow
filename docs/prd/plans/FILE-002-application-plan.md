@@ -371,25 +371,26 @@
 
 ---
 
-### 1️⃣4️⃣ FileResponse 정의 (Cycle 14)
+### 1️⃣4️⃣ FileResponse 정의 (Cycle 14) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileResponseTest.java` 생성
-- [ ] fileId, status, s3Url, cdnUrl 검증
-- [ ] 커밋: `test: FileResponse 테스트 추가 (Red)`
+- [x] `FileResponseTest.java` 생성
+- [x] fileId, status, s3Url, cdnUrl 검증
+- [x] 커밋: `test: FileResponse 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileResponse.java` 생성 (Record)
-- [ ] 4개 필드 정의
-- [ ] 커밋: `feat: FileResponse 구현 (Green)`
+- [x] `FileResponse.java` 생성 (Record)
+- [x] 4개 필드 정의 (fileId, status, s3Url, cdnUrl)
+- [x] `FileResponseFixture.java` 생성 (GREEN 단계에서 함께 생성)
+- [x] 커밋: `feat: FileResponse 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: FileResponse 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (DtoRecordArchTest가 이미 존재)
+- [x] Javadoc 추가 (GREEN 단계에서 완료)
+- [x] 구조 개선 불필요 (이미 완성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileResponseFixture.java` 생성
-- [ ] 커밋: `test: FileResponseFixture 정리 (Tidy)`
+- [x] TestFixture 사용 패턴 확인 완료 (GREEN 단계에서 함께 생성)
 
 ---
 
