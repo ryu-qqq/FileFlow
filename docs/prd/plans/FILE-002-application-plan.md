@@ -72,49 +72,79 @@
 
 ### 3️⃣ FileProcessingJobPort 정의 (Cycle 3)
 
+> **Zero-Tolerance 규칙 준수**:
+> - **PersistencePort**: `*PersistencePort` 네이밍, `persist()` 메서드만 사용
+> - **QueryPort**: `*QueryPort` 네이밍, 4개 필수 메서드 (findById, existsById, findByCriteria, countByCriteria)
+> - **금지**: `save()`, `update()`, `delete()` 메서드 사용 금지
+
 #### 🔴 Red: 테스트 작성
-- [ ] `FileProcessingJobCommandPortTest.java` 생성
+- [ ] `FileProcessingJobPersistencePortTest.java` 생성
+  - [ ] `persist(FileProcessingJob): FileProcessingJobId` 메서드 시그니처 검증
+  - [ ] Value Object 반환 타입 검증
 - [ ] `FileProcessingJobQueryPortTest.java` 생성
-- [ ] Command Port 메서드: `save()`, `saveAll()`, `updateStatus()`
-- [ ] Query Port 메서드: `findByFileId()`, `findById()`
+  - [ ] 4개 필수 메서드 시그니처 검증: `findById()`, `existsById()`, `findByCriteria()`, `countByCriteria()`
+  - [ ] FileProcessingJobSearchCriteria VO 파라미터 검증
 - [ ] 커밋: `test: FileProcessingJobPort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `port/out/command/FileProcessingJobCommandPort.java` 생성
+- [ ] `port/out/command/FileProcessingJobPersistencePort.java` 생성
+  - [ ] `FileProcessingJobId persist(FileProcessingJob job)` 메서드
+  - [ ] Javadoc: 신규 생성과 수정 통합 처리
 - [ ] `port/out/query/FileProcessingJobQueryPort.java` 생성
+  - [ ] `Optional<FileProcessingJob> findById(FileProcessingJobId id)`
+  - [ ] `boolean existsById(FileProcessingJobId id)`
+  - [ ] `List<FileProcessingJob> findByCriteria(FileProcessingJobSearchCriteria criteria)`
+  - [ ] `long countByCriteria(FileProcessingJobSearchCriteria criteria)`
+- [ ] `domain/vo/FileProcessingJobSearchCriteria.java` 생성 (필요 시)
+- [ ] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`, `QueryPortArchTest.java`)
 - [ ] 커밋: `feat: FileProcessingJobPort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: FileProcessingJobPort 개선 (Refactor)`
+- [ ] Javadoc 추가 (이미 GREEN에서 작성)
+- [ ] 테스트 여전히 통과 확인
+- [ ] 변경 사항 없음 (SKIP)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: FileProcessingJobPort 테스트 정리 (Tidy)`
+- [ ] TestFixture는 Port에 불필요 (생략)
 
 ---
 
 ### 4️⃣ MessageOutboxPort 정의 (Cycle 4)
 
+> **Zero-Tolerance 규칙 준수**:
+> - **PersistencePort**: `*PersistencePort` 네이밍, `persist()` 메서드만 사용
+> - **QueryPort**: `*QueryPort` 네이밍, 4개 필수 메서드 (findById, existsById, findByCriteria, countByCriteria)
+> - **금지**: `save()`, `update()`, `delete()` 메서드 사용 금지
+
 #### 🔴 Red: 테스트 작성
-- [ ] `MessageOutboxCommandPortTest.java` 생성
+- [ ] `MessageOutboxPersistencePortTest.java` 생성
+  - [ ] `persist(MessageOutbox): MessageOutboxId` 메서드 시그니처 검증
+  - [ ] Value Object 반환 타입 검증
 - [ ] `MessageOutboxQueryPortTest.java` 생성
-- [ ] Command: `save()`, `updateStatus()`
-- [ ] Query: `findPendingMessages()`
+  - [ ] 4개 필수 메서드 시그니처 검증: `findById()`, `existsById()`, `findByCriteria()`, `countByCriteria()`
+  - [ ] MessageOutboxSearchCriteria VO 파라미터 검증
 - [ ] 커밋: `test: MessageOutboxPort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `port/out/command/MessageOutboxCommandPort.java` 생성
+- [ ] `port/out/command/MessageOutboxPersistencePort.java` 생성
+  - [ ] `MessageOutboxId persist(MessageOutbox outbox)` 메서드
+  - [ ] Javadoc: 신규 생성과 수정 통합 처리
 - [ ] `port/out/query/MessageOutboxQueryPort.java` 생성
+  - [ ] `Optional<MessageOutbox> findById(MessageOutboxId id)`
+  - [ ] `boolean existsById(MessageOutboxId id)`
+  - [ ] `List<MessageOutbox> findByCriteria(MessageOutboxSearchCriteria criteria)`
+  - [ ] `long countByCriteria(MessageOutboxSearchCriteria criteria)`
+- [ ] `domain/vo/MessageOutboxSearchCriteria.java` 생성 (필요 시)
+- [ ] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`, `QueryPortArchTest.java`)
 - [ ] 커밋: `feat: MessageOutboxPort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: MessageOutboxPort 개선 (Refactor)`
+- [ ] Javadoc 추가 (이미 GREEN에서 작성)
+- [ ] 테스트 여전히 통과 확인
+- [ ] 변경 사항 없음 (SKIP)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: MessageOutboxPort 테스트 정리 (Tidy)`
+- [ ] TestFixture는 Port에 불필요 (생략)
 
 ---
 
