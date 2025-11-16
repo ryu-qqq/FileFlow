@@ -271,25 +271,26 @@
 
 ---
 
-### 🔟 ProcessFileCommand 정의 (Cycle 10)
+### 🔟 ProcessFileCommand 정의 (Cycle 10) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ProcessFileCommandTest.java` 생성
-- [ ] fileId, jobTypes 검증
-- [ ] 커밋: `test: ProcessFileCommand 테스트 추가 (Red)`
+- [x] `ProcessFileCommandTest.java` 생성
+- [x] fileId, jobTypes 검증
+- [x] 커밋: `test: ProcessFileCommand 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ProcessFileCommand.java` 생성 (Record)
-- [ ] fileId, jobTypes 필드 정의
-- [ ] 커밋: `feat: ProcessFileCommand 구현 (Green)`
+- [x] `ProcessFileCommand.java` 생성 (Record)
+- [x] fileId, jobTypes 필드 정의
+- [x] 커밋: `feat: ProcessFileCommand 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: ProcessFileCommand 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (DtoRecordArchTest가 이미 존재)
+- [x] Javadoc 추가 (GREEN 단계에서 완료)
+- [x] 구조 개선 불필요 (이미 완성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `ProcessFileCommandFixture.java` 생성
-- [ ] 커밋: `test: ProcessFileCommandFixture 정리 (Tidy)`
+- [x] `ProcessFileCommandFixture.java` 생성
+- [x] 커밋: `test: ProcessFileCommandFixture 정리 (Tidy)`
 
 ---
 
