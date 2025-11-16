@@ -13,30 +13,30 @@
 
 ---
 
-### 1️⃣ FilePersistencePort 정의 (Cycle 1) 🔄 IN PROGRESS
+### 1️⃣ FilePersistencePort 정의 (Cycle 1) ✅ COMPLETED
 
 #### 🔴 Red: 테스트 작성
-- [ ] `application/src/test/java/.../port/out/command/FilePersistencePortTest.java` 생성
-- [ ] Port 인터페이스 메서드 테스트 작성
+- [x] `application/src/test/java/.../port/out/command/FilePersistencePortTest.java` 생성
+- [x] Port 인터페이스 메서드 테스트 작성
   - `persist(File file)` 메서드 (Zero-Tolerance 규칙 준수)
   - 반환 타입: `FileId` (Value Object)
-- [ ] 컴파일 에러 확인 (인터페이스 없음)
-- [ ] 커밋: `test: FilePersistencePort 테스트 추가 (Red)`
+- [x] 컴파일 에러 확인 (인터페이스 없음)
+- [x] 커밋: `test: FilePersistencePort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `application/src/main/java/.../port/out/command/FilePersistencePort.java` 생성
-- [ ] `persist(File file): FileId` 메서드 시그니처 정의
-- [ ] 테스트 실행 → 통과 확인
-- [ ] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`)
-- [ ] 커밋: `feat: FilePersistencePort 구현 (Green)`
+- [x] `application/src/main/java/.../port/out/command/FilePersistencePort.java` 생성
+- [x] `persist(File file): FileId` 메서드 시그니처 정의
+- [x] 테스트 실행 → 통과 확인
+- [x] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`)
+- [x] 커밋: `feat: FilePersistencePort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가 (메서드 설명, 파라미터, 반환값)
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: FilePersistencePort 개선 (Refactor)`
+- [x] Javadoc 추가 (메서드 설명, 파라미터, 반환값)
+- [x] 테스트 여전히 통과 확인
+- [x] 변경 사항 없음 (Javadoc 이미 GREEN에서 작성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture는 Port에 불필요 (생략)
+- [x] TestFixture는 Port에 불필요 (생략)
 
 ---
 
