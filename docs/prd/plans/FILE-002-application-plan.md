@@ -225,25 +225,26 @@
 
 ---
 
-### 8️⃣ CompleteUploadCommand 정의 (Cycle 8)
+### 8️⃣ CompleteUploadCommand 정의 (Cycle 8) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `CompleteUploadCommandTest.java` 생성
-- [ ] fileId 검증 테스트
-- [ ] 커밋: `test: CompleteUploadCommand 테스트 추가 (Red)`
+- [x] `CompleteUploadCommandTest.java` 생성
+- [x] fileId 검증 테스트
+- [x] 커밋: `test: CompleteUploadCommand 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `CompleteUploadCommand.java` 생성 (Record)
-- [ ] fileId 필드 정의
-- [ ] 커밋: `feat: CompleteUploadCommand 구현 (Green)`
+- [x] `CompleteUploadCommand.java` 생성 (Record)
+- [x] fileId 필드 정의
+- [x] 커밋: `feat: CompleteUploadCommand 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: CompleteUploadCommand 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (DtoRecordArchTest가 이미 존재)
+- [x] Javadoc 추가 (GREEN 단계에서 완료)
+- [x] 구조 개선 불필요 (이미 완성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `CompleteUploadCommandFixture.java` 생성
-- [ ] 커밋: `test: CompleteUploadCommandFixture 정리 (Tidy)`
+- [x] `CompleteUploadCommandFixture.java` 생성
+- [x] 커밋: `test: CompleteUploadCommandFixture 정리 (Tidy)`
 
 ---
 
