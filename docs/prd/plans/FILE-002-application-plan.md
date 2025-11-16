@@ -199,29 +199,29 @@
 
 ---
 
-### 7️⃣ GeneratePresignedUrlCommand 정의 (Cycle 7)
+### 7️⃣ GeneratePresignedUrlCommand 정의 (Cycle 7) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `dto/command/GeneratePresignedUrlCommandTest.java` 생성
-- [ ] Record 필드 검증 테스트:
+- [x] `dto/command/GeneratePresignedUrlCommandTest.java` 생성
+- [x] Record 필드 검증 테스트:
   - fileName, fileSize, mimeType, uploaderId, category, tags
-- [ ] 커밋: `test: GeneratePresignedUrlCommand 테스트 추가 (Red)`
+- [x] 커밋: `test: GeneratePresignedUrlCommand 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `dto/command/GeneratePresignedUrlCommand.java` 생성 (Record)
-- [ ] 6개 필드 정의
-- [ ] 커밋: `feat: GeneratePresignedUrlCommand 구현 (Green)`
+- [x] `dto/command/GeneratePresignedUrlCommand.java` 생성 (Record)
+- [x] 6개 필드 정의
+- [x] 커밋: `feat: GeneratePresignedUrlCommand 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가 (Command DTO는 Record, Lombok 금지)
-- [ ] Javadoc 추가
-- [ ] 커밋: `struct: GeneratePresignedUrlCommand 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (DtoRecordArchTest가 이미 존재)
+- [x] Javadoc 추가 (GREEN 단계에서 완료)
+- [x] 구조 개선 불필요 (이미 완성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `GeneratePresignedUrlCommandFixture.java` 생성 (Object Mother 패턴)
-- [ ] `aCommand()` 메서드 작성
-- [ ] 테스트 → Fixture 사용으로 리팩토링
-- [ ] 커밋: `test: GeneratePresignedUrlCommandFixture 정리 (Tidy)`
+- [x] `GeneratePresignedUrlCommandFixture.java` 생성 (Object Mother 패턴)
+- [x] `aCommand()` 메서드 작성
+- [x] 테스트 → Fixture 사용으로 리팩토링
+- [x] 커밋: `test: GeneratePresignedUrlCommandFixture 정리 (Tidy)`
 
 ---
 
