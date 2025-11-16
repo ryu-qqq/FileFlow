@@ -248,25 +248,26 @@
 
 ---
 
-### 9️⃣ UploadFromExternalUrlCommand 정의 (Cycle 9)
+### 9️⃣ UploadFromExternalUrlCommand 정의 (Cycle 9) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `UploadFromExternalUrlCommandTest.java` 생성
-- [ ] externalUrl, uploaderId, category, tags, webhookUrl 검증
-- [ ] 커밋: `test: UploadFromExternalUrlCommand 테스트 추가 (Red)`
+- [x] `UploadFromExternalUrlCommandTest.java` 생성
+- [x] externalUrl, uploaderId, category, tags, webhookUrl 검증
+- [x] 커밋: `test: UploadFromExternalUrlCommand 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `UploadFromExternalUrlCommand.java` 생성 (Record)
-- [ ] 5개 필드 정의
-- [ ] 커밋: `feat: UploadFromExternalUrlCommand 구현 (Green)`
+- [x] `UploadFromExternalUrlCommand.java` 생성 (Record)
+- [x] 5개 필드 정의
+- [x] 커밋: `feat: UploadFromExternalUrlCommand 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: UploadFromExternalUrlCommand 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (DtoRecordArchTest가 이미 존재)
+- [x] Javadoc 추가 (GREEN 단계에서 완료)
+- [x] 구조 개선 불필요 (이미 완성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `UploadFromExternalUrlCommandFixture.java` 생성
-- [ ] 커밋: `test: UploadFromExternalUrlCommandFixture 정리 (Tidy)`
+- [x] `UploadFromExternalUrlCommandFixture.java` 생성
+- [x] 커밋: `test: UploadFromExternalUrlCommandFixture 정리 (Tidy)`
 
 ---
 
