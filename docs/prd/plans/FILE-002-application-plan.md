@@ -151,23 +151,23 @@
 ### 5️⃣ S3ClientPort 정의 (Cycle 5)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `S3ClientPortTest.java` 생성
-- [ ] 외부 API Port 메서드 테스트:
+- [x] `S3ClientPortTest.java` 생성
+- [x] 외부 API Port 메서드 테스트:
   - `generatePresignedUrl()`, `initiateMultipartUpload()`, `headObject()`, `uploadFromUrl()`
-- [ ] 커밋: `test: S3ClientPort 테스트 추가 (Red)`
+- [x] 커밋: `test: S3ClientPort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `port/out/external/S3ClientPort.java` 생성
-- [ ] 4개 메서드 시그니처 정의
-- [ ] 커밋: `feat: S3ClientPort 구현 (Green)`
+- [x] `port/out/external/S3ClientPort.java` 생성
+- [x] 4개 메서드 시그니처 정의
+- [x] 커밋: `feat: S3ClientPort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가 (Timeout, Retry 정책 명시)
-- [ ] ArchUnit 테스트 추가 (외부 API Port 규칙)
-- [ ] 커밋: `struct: S3ClientPort 개선 (Refactor)`
+- [x] Javadoc 추가 (Timeout, Retry 정책 명시)
+- [x] ArchUnit 테스트 추가 (외부 API Port 규칙)
+- [x] 변경 사항 없음 (SKIP - 이미 GREEN에서 작성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: S3ClientPort 테스트 정리 (Tidy)`
+- [x] TestFixture는 Port에 불필요 (생략)
 
 ---
 
