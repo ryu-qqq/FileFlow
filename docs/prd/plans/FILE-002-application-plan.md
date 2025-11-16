@@ -348,25 +348,26 @@
 
 ---
 
-### 1️⃣3️⃣ PresignedUrlResponse 정의 (Cycle 13)
+### 1️⃣3️⃣ PresignedUrlResponse 정의 (Cycle 13) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `dto/response/PresignedUrlResponseTest.java` 생성
-- [ ] fileId, presignedUrl, expiresIn, s3Key 검증
-- [ ] 커밋: `test: PresignedUrlResponse 테스트 추가 (Red)`
+- [x] `dto/response/PresignedUrlResponseTest.java` 생성
+- [x] fileId, presignedUrl, expiresIn, s3Key 검증
+- [x] 커밋: `test: PresignedUrlResponse 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `PresignedUrlResponse.java` 생성 (Record)
-- [ ] 4개 필드 정의
-- [ ] 커밋: `feat: PresignedUrlResponse 구현 (Green)`
+- [x] `PresignedUrlResponse.java` 생성 (Record)
+- [x] 4개 필드 정의 (fileId, presignedUrl, expiresIn, s3Key)
+- [x] `PresignedUrlResponseFixture.java` 생성 (GREEN 단계에서 함께 생성)
+- [x] 커밋: `feat: PresignedUrlResponse 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: PresignedUrlResponse 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (DtoRecordArchTest가 이미 존재)
+- [x] Javadoc 추가 (GREEN 단계에서 완료)
+- [x] 구조 개선 불필요 (이미 완성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `PresignedUrlResponseFixture.java` 생성
-- [ ] 커밋: `test: PresignedUrlResponseFixture 정리 (Tidy)`
+- [x] TestFixture 사용 패턴 확인 완료 (GREEN 단계에서 함께 생성)
 
 ---
 
