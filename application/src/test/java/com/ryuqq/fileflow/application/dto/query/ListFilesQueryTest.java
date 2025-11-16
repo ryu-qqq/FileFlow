@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.dto.query;
 
+import com.ryuqq.fileflow.application.fixture.ListFilesQueryFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -27,120 +28,66 @@ class ListFilesQueryTest {
     @Test
     @DisplayName("ListFilesQuery는 Record 타입이어야 한다")
     void shouldBeRecordType() {
-        // Given: ListFilesQuery Record (컴파일 에러)
-        ListFilesQuery query = null;
+        // Given: Fixture로 Query 생성
+        ListFilesQuery query = ListFilesQueryFixture.aQuery();
 
         // When & Then: Record 타입 검증
-        assertThat(query).isNull(); // 임시 검증 (컴파일 에러 확인용)
+        assertThat(query).isNotNull();
+        assertThat(query.getClass().isRecord()).isTrue();
     }
 
     @Test
     @DisplayName("ListFilesQuery는 uploaderId 필드를 가져야 한다")
     void shouldHaveUploaderIdField() {
-        // Given: ListFilesQuery Record (컴파일 에러)
-        Long uploaderId = 1L;
-        String status = "COMPLETED";
-        String category = "PROFILE";
-        String cursor = null;
-        Integer size = 20;
-
-        ListFilesQuery query = new ListFilesQuery(
-                uploaderId,
-                status,
-                category,
-                cursor,
-                size
-        );
+        // Given: Fixture로 커스텀 uploaderId Query 생성
+        Long expectedUploaderId = 100L;
+        ListFilesQuery query = ListFilesQueryFixture.withUploaderId(expectedUploaderId);
 
         // When & Then: uploaderId 필드 검증
-        assertThat(query.uploaderId()).isEqualTo(uploaderId);
+        assertThat(query.uploaderId()).isEqualTo(expectedUploaderId);
     }
 
     @Test
     @DisplayName("ListFilesQuery는 status 필드를 가져야 한다")
     void shouldHaveStatusField() {
-        // Given: ListFilesQuery Record (컴파일 에러)
-        Long uploaderId = 1L;
-        String status = "COMPLETED";
-        String category = "PROFILE";
-        String cursor = null;
-        Integer size = 20;
-
-        ListFilesQuery query = new ListFilesQuery(
-                uploaderId,
-                status,
-                category,
-                cursor,
-                size
-        );
+        // Given: Fixture로 커스텀 status Query 생성
+        String expectedStatus = "PENDING";
+        ListFilesQuery query = ListFilesQueryFixture.withStatus(expectedStatus);
 
         // When & Then: status 필드 검증
-        assertThat(query.status()).isEqualTo(status);
+        assertThat(query.status()).isEqualTo(expectedStatus);
     }
 
     @Test
     @DisplayName("ListFilesQuery는 category 필드를 가져야 한다")
     void shouldHaveCategoryField() {
-        // Given: ListFilesQuery Record (컴파일 에러)
-        Long uploaderId = 1L;
-        String status = "COMPLETED";
-        String category = "PROFILE";
-        String cursor = null;
-        Integer size = 20;
-
-        ListFilesQuery query = new ListFilesQuery(
-                uploaderId,
-                status,
-                category,
-                cursor,
-                size
-        );
+        // Given: Fixture로 커스텀 category Query 생성
+        String expectedCategory = "IMAGE";
+        ListFilesQuery query = ListFilesQueryFixture.withCategory(expectedCategory);
 
         // When & Then: category 필드 검증
-        assertThat(query.category()).isEqualTo(category);
+        assertThat(query.category()).isEqualTo(expectedCategory);
     }
 
     @Test
     @DisplayName("ListFilesQuery는 cursor 필드를 가져야 한다")
     void shouldHaveCursorField() {
-        // Given: ListFilesQuery Record (컴파일 에러)
-        Long uploaderId = 1L;
-        String status = "COMPLETED";
-        String category = "PROFILE";
-        String cursor = "eyJpZCI6MTAwfQ==";
-        Integer size = 20;
-
-        ListFilesQuery query = new ListFilesQuery(
-                uploaderId,
-                status,
-                category,
-                cursor,
-                size
-        );
+        // Given: Fixture로 커스텀 cursor Query 생성
+        String expectedCursor = "eyJpZCI6MTAwfQ==";
+        ListFilesQuery query = ListFilesQueryFixture.withCursor(expectedCursor);
 
         // When & Then: cursor 필드 검증
-        assertThat(query.cursor()).isEqualTo(cursor);
+        assertThat(query.cursor()).isEqualTo(expectedCursor);
     }
 
     @Test
     @DisplayName("ListFilesQuery는 size 필드를 가져야 한다")
     void shouldHaveSizeField() {
-        // Given: ListFilesQuery Record (컴파일 에러)
-        Long uploaderId = 1L;
-        String status = "COMPLETED";
-        String category = "PROFILE";
-        String cursor = null;
-        Integer size = 50;
-
-        ListFilesQuery query = new ListFilesQuery(
-                uploaderId,
-                status,
-                category,
-                cursor,
-                size
-        );
+        // Given: Fixture로 커스텀 size Query 생성
+        Integer expectedSize = 50;
+        ListFilesQuery query = ListFilesQueryFixture.withSize(expectedSize);
 
         // When & Then: size 필드 검증
-        assertThat(query.size()).isEqualTo(size);
+        assertThat(query.size()).isEqualTo(expectedSize);
     }
 }
