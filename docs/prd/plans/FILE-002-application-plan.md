@@ -444,27 +444,29 @@
 
 ---
 
-### 1️⃣7️⃣ GeneratePresignedUrlUseCase - 메타데이터 저장 (Cycle 17)
+### 1️⃣7️⃣ GeneratePresignedUrlUseCase - 메타데이터 저장 (Cycle 17) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `GeneratePresignedUrlServiceTest.java` 생성
-- [ ] Mock Port 준비 (FileCommandPort, FileQueryPort)
-- [ ] `shouldCreateFileMetadata()` 테스트 작성
-- [ ] 커밋: `test: GeneratePresignedUrl 메타데이터 저장 테스트 추가 (Red)`
+- [x] `GeneratePresignedUrlServiceTest.java` 생성
+- [x] Mock Port 준비 (FilePersistencePort, S3ClientPort)
+- [x] `shouldCreateFileMetadata()` 테스트 작성
+- [x] 커밋: `test: GeneratePresignedUrl 메타데이터 저장 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `service/GeneratePresignedUrlService.java` 생성
-- [ ] `@Transactional` 추가
-- [ ] File 메타데이터 생성 + 저장 로직
-- [ ] 커밋: `feat: GeneratePresignedUrl 메타데이터 저장 구현 (Green)`
+- [x] `service/GeneratePresignedUrlService.java` 생성
+- [x] `port/in/command/GeneratePresignedUrlPort.java` 생성
+- [x] `@Transactional` 추가 (saveFileMetadata 메서드)
+- [x] File 메타데이터 생성 + 저장 로직 (File.forNew() 사용)
+- [x] S3 Presigned URL 생성 로직 (트랜잭션 외부, S3ClientPort 사용)
+- [x] Clock 주입으로 테스트 가능한 시간 제어
+- [x] 커밋: `feat: GeneratePresignedUrl 메타데이터 저장 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가 (@Transactional 내 외부 API 호출 금지 검증)
-- [ ] 커밋: `struct: GeneratePresignedUrlService 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (기존 ArchUnit 테스트가 이미 @Transactional 내 외부 API 호출 금지 검증 중)
+- [x] Transaction 경계 명확히 분리 (saveFileMetadata @Transactional, generatePresignedUrlResponse 외부)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `GeneratePresignedUrlServiceFixture.java` 생성
-- [ ] 커밋: `test: GeneratePresignedUrlService Fixture 정리 (Tidy)`
+- [x] TestFixture 사용 확인 완료 (GeneratePresignedUrlCommandFixture, FileFixture 사용)
 
 ---
 
