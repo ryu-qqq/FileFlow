@@ -40,7 +40,7 @@
 
 ---
 
-### 2️⃣ FileQueryPort 정의 (Cycle 2)
+### 2️⃣ FileQueryPort 정의 (Cycle 2) 🔄 IN PROGRESS
 
 #### 🔴 Red: 테스트 작성
 - [ ] `FileQueryPortTest.java` 생성
