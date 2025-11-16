@@ -40,33 +40,33 @@
 
 ---
 
-### 2️⃣ FileQueryPort 정의 (Cycle 2) 🔄 IN PROGRESS
+### 2️⃣ FileQueryPort 정의 (Cycle 2) ✅ COMPLETED
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileQueryPortTest.java` 생성
-- [ ] Port 인터페이스 메서드 테스트 작성 (Zero-Tolerance 규칙 준수)
+- [x] `FileQueryPortTest.java` 생성
+- [x] Port 인터페이스 메서드 테스트 작성 (Zero-Tolerance 규칙 준수)
   - `findById(FileId id): Optional<File>`
   - `existsById(FileId id): boolean`
   - `findByCriteria(FileSearchCriteria criteria): List<File>`
   - `countByCriteria(FileSearchCriteria criteria): long`
-- [ ] 컴파일 에러 확인 (FileSearchCriteria VO 미존재)
-- [ ] 커밋: `test: FileQueryPort 테스트 추가 (Red)`
+- [x] 컴파일 에러 확인 (FileSearchCriteria VO 미존재)
+- [x] 커밋: `test: FileQueryPort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `port/out/query/FileQueryPort.java` 생성
-- [ ] 4개 메서드 시그니처 정의
-- [ ] `FileSearchCriteria` VO 생성 (domain layer)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] ArchUnit 테스트 자동 검증 (`QueryPortArchTest.java`)
-- [ ] 커밋: `feat: FileQueryPort 구현 (Green)`
+- [x] `port/out/query/FileQueryPort.java` 생성
+- [x] 4개 메서드 시그니처 정의
+- [x] `FileSearchCriteria` VO 생성 (domain layer)
+- [x] 테스트 실행 → 통과 확인
+- [x] ArchUnit 테스트 자동 검증 (`QueryPortArchTest.java`)
+- [x] 커밋: `feat: FileQueryPort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: FileQueryPort 개선 (Refactor)`
+- [x] Javadoc 추가 (이미 GREEN에서 작성)
+- [x] 테스트 여전히 통과 확인
+- [x] 변경 사항 없음 (SKIP)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture는 Port에 불필요 (생략)
+- [x] TestFixture는 Port에 불필요 (생략)
 
 ---
 
