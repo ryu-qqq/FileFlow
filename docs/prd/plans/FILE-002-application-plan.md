@@ -321,25 +321,26 @@
 
 ---
 
-### 1️⃣2️⃣ ListFilesQuery 정의 (Cycle 12)
+### 1️⃣2️⃣ ListFilesQuery 정의 (Cycle 12) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ListFilesQueryTest.java` 생성
-- [ ] uploaderId, status, category, cursor, size 검증
-- [ ] 커밋: `test: ListFilesQuery 테스트 추가 (Red)`
+- [x] `ListFilesQueryTest.java` 생성
+- [x] uploaderId, status, category, cursor, size 검증
+- [x] 커밋: `test: ListFilesQuery 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ListFilesQuery.java` 생성 (Record)
-- [ ] 5개 필드 정의
-- [ ] 커밋: `feat: ListFilesQuery 구현 (Green)`
+- [x] `ListFilesQuery.java` 생성 (Record)
+- [x] 5개 필드 정의 (uploaderId, status, category, cursor, size)
+- [x] 커밋: `feat: ListFilesQuery 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: ListFilesQuery 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (DtoRecordArchTest가 이미 존재)
+- [x] Javadoc 추가 (GREEN 단계에서 완료)
+- [x] 구조 개선 불필요 (이미 완성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `ListFilesQueryFixture.java` 생성
-- [ ] 커밋: `test: ListFilesQueryFixture 정리 (Tidy)`
+- [x] `ListFilesQueryFixture.java` 생성
+- [x] 커밋: `test: ListFilesQueryFixture 정리 (Tidy)`
 
 ---
 
