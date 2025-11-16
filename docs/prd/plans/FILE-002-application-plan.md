@@ -470,23 +470,24 @@
 
 ---
 
-### 1️⃣8️⃣ GeneratePresignedUrlUseCase - 파일 크기 검증 (Cycle 18)
+### 1️⃣8️⃣ GeneratePresignedUrlUseCase - 파일 크기 검증 (Cycle 18) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldThrowExceptionWhenFileSizeExceeds1GB()` 테스트 작성
-- [ ] 커밋: `test: 파일 크기 검증 테스트 추가 (Red)`
+- [x] `shouldThrowExceptionWhenFileSizeExceeds1GB()` 테스트 작성
+- [x] 커밋: `test: 파일 크기 검증 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] 파일 크기 검증 로직 추가 (최대 1GB)
-- [ ] FileSizeExceededException 예외 발생
-- [ ] 커밋: `feat: 파일 크기 검증 구현 (Green)`
+- [x] 파일 크기 검증 로직 이미 구현됨 (Domain Layer File.forNew()에서 수행)
+- [x] File.validateFileSize() 메서드에서 MAX_FILE_SIZE (1GB) 검증 중
+- [x] InvalidFileSizeException 예외 발생 확인
+- [x] Application Layer는 Domain 예외를 자연스럽게 전파
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 상수 추출 (MAX_FILE_SIZE = 1GB)
-- [ ] 커밋: `struct: 파일 크기 검증 개선 (Refactor)`
+- [x] 상수 이미 존재 (Domain Layer: MAX_FILE_SIZE = 1024L * 1024L * 1024L)
+- [x] 검증 로직 이미 최적화됨 (File.validateFileSize() private static method)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: 파일 크기 검증 테스트 정리 (Tidy)`
+- [x] GeneratePresignedUrlCommandFixture.withFileSize() 사용 확인
 
 ---
 
