@@ -298,25 +298,26 @@
 
 ---
 
-### 1️⃣1️⃣ GetFileQuery 정의 (Cycle 11)
+### 1️⃣1️⃣ GetFileQuery 정의 (Cycle 11) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `dto/query/GetFileQueryTest.java` 생성
-- [ ] fileId 검증
-- [ ] 커밋: `test: GetFileQuery 테스트 추가 (Red)`
+- [x] `dto/query/GetFileQueryTest.java` 생성
+- [x] fileId 검증
+- [x] 커밋: `test: GetFileQuery 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `GetFileQuery.java` 생성 (Record)
-- [ ] fileId 필드 정의
-- [ ] 커밋: `feat: GetFileQuery 구현 (Green)`
+- [x] `GetFileQuery.java` 생성 (Record)
+- [x] fileId 필드 정의
+- [x] 커밋: `feat: GetFileQuery 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가 (Query DTO 규칙)
-- [ ] 커밋: `struct: GetFileQuery 개선 (Refactor)`
+- [x] ArchUnit 테스트 생략 (DtoRecordArchTest가 이미 존재)
+- [x] Javadoc 추가 (GREEN 단계에서 완료)
+- [x] 구조 개선 불필요 (이미 완성)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `GetFileQueryFixture.java` 생성
-- [ ] 커밋: `test: GetFileQueryFixture 정리 (Tidy)`
+- [x] `GetFileQueryFixture.java` 생성
+- [x] 커밋: `test: GetFileQueryFixture 정리 (Tidy)`
 
 ---
 
