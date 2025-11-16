@@ -35,12 +35,24 @@ class GeneratePresignedUrlServiceTest {
     @Mock
     private FilePersistencePort filePersistencePort;
 
+    @Mock
+    private com.ryuqq.fileflow.application.port.out.external.S3ClientPort s3ClientPort;
+
     private GeneratePresignedUrlService generatePresignedUrlService;
 
     @BeforeEach
     void setUp() {
-        // GeneratePresignedUrlService가 존재하지 않으므로 컴파일 에러 발생
-        generatePresignedUrlService = new GeneratePresignedUrlService(filePersistencePort);
+        // Fixed Clock for deterministic testing
+        java.time.Clock clock = java.time.Clock.fixed(
+                java.time.Instant.parse("2024-11-16T10:00:00Z"),
+                java.time.ZoneId.systemDefault()
+        );
+
+        generatePresignedUrlService = new GeneratePresignedUrlService(
+                filePersistencePort,
+                s3ClientPort,
+                clock
+        );
     }
 
     /**
@@ -56,12 +68,17 @@ class GeneratePresignedUrlServiceTest {
         GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.create();
 
         // Given: Domain Fixture로 File Aggregate 생성
-        File file = FileFixture.create();
+        File file = FileFixture.aJpgImage();
         FileId expectedFileId = file.getFileId();
 
-        // Given: Mock Port 동작 정의
+        // Given: Mock FilePersistencePort 동작 정의
         given(filePersistencePort.persist(any(File.class)))
                 .willReturn(expectedFileId);
+
+        // Given: Mock S3ClientPort 동작 정의
+        String expectedPresignedUrl = "https://s3.amazonaws.com/fileflow-bucket/uploads/test.jpg?signature=abc123";
+        given(s3ClientPort.generatePresignedUrl(any(String.class), any(java.time.Duration.class)))
+                .willReturn(expectedPresignedUrl);
 
         // When: UseCase 실행
         PresignedUrlResponse response = generatePresignedUrlService.execute(command);
@@ -69,10 +86,13 @@ class GeneratePresignedUrlServiceTest {
         // Then: 파일 메타데이터가 저장되었는지 검증
         verify(filePersistencePort).persist(any(File.class));
 
+        // Then: S3 Presigned URL이 생성되었는지 검증
+        verify(s3ClientPort).generatePresignedUrl(any(String.class), any(java.time.Duration.class));
+
         // Then: Response 검증
         assertThat(response).isNotNull();
         assertThat(response.fileId()).isNotNull();
-        assertThat(response.presignedUrl()).isNotNull();
+        assertThat(response.presignedUrl()).isEqualTo(expectedPresignedUrl);
         assertThat(response.s3Key()).isNotNull();
         assertThat(response.expiresIn()).isEqualTo(3600L); // 기본 1시간
     }
