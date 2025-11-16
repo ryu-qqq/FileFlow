@@ -117,34 +117,34 @@
 > - **금지**: `save()`, `update()`, `delete()` 메서드 사용 금지
 
 #### 🔴 Red: 테스트 작성
-- [ ] `MessageOutboxPersistencePortTest.java` 생성
-  - [ ] `persist(MessageOutbox): MessageOutboxId` 메서드 시그니처 검증
-  - [ ] Value Object 반환 타입 검증
-- [ ] `MessageOutboxQueryPortTest.java` 생성
-  - [ ] 4개 필수 메서드 시그니처 검증: `findById()`, `existsById()`, `findByCriteria()`, `countByCriteria()`
-  - [ ] MessageOutboxSearchCriteria VO 파라미터 검증
-- [ ] 커밋: `test: MessageOutboxPort 테스트 추가 (Red)`
+- [x] `MessageOutboxPersistencePortTest.java` 생성
+  - [x] `persist(MessageOutbox): MessageOutboxId` 메서드 시그니처 검증
+  - [x] Value Object 반환 타입 검증
+- [x] `MessageOutboxQueryPortTest.java` 생성
+  - [x] 4개 필수 메서드 시그니처 검증: `findById()`, `existsById()`, `findByCriteria()`, `countByCriteria()`
+  - [x] MessageOutboxSearchCriteria VO 파라미터 검증
+- [x] 커밋: `test: MessageOutboxPort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `port/out/command/MessageOutboxPersistencePort.java` 생성
-  - [ ] `MessageOutboxId persist(MessageOutbox outbox)` 메서드
-  - [ ] Javadoc: 신규 생성과 수정 통합 처리
-- [ ] `port/out/query/MessageOutboxQueryPort.java` 생성
-  - [ ] `Optional<MessageOutbox> findById(MessageOutboxId id)`
-  - [ ] `boolean existsById(MessageOutboxId id)`
-  - [ ] `List<MessageOutbox> findByCriteria(MessageOutboxSearchCriteria criteria)`
-  - [ ] `long countByCriteria(MessageOutboxSearchCriteria criteria)`
-- [ ] `domain/vo/MessageOutboxSearchCriteria.java` 생성 (필요 시)
-- [ ] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`, `QueryPortArchTest.java`)
-- [ ] 커밋: `feat: MessageOutboxPort 구현 (Green)`
+- [x] `port/out/command/MessageOutboxPersistencePort.java` 생성
+  - [x] `MessageOutboxId persist(MessageOutbox outbox)` 메서드
+  - [x] Javadoc: 신규 생성과 수정 통합 처리
+- [x] `port/out/query/MessageOutboxQueryPort.java` 생성
+  - [x] `Optional<MessageOutbox> findById(MessageOutboxId id)`
+  - [x] `boolean existsById(MessageOutboxId id)`
+  - [x] `List<MessageOutbox> findByCriteria(MessageOutboxSearchCriteria criteria)`
+  - [x] `long countByCriteria(MessageOutboxSearchCriteria criteria)`
+- [x] `domain/vo/MessageOutboxSearchCriteria.java` 생성 (필요 시)
+- [x] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`, `QueryPortArchTest.java`)
+- [x] 커밋: `feat: MessageOutboxPort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가 (이미 GREEN에서 작성)
-- [ ] 테스트 여전히 통과 확인
-- [ ] 변경 사항 없음 (SKIP)
+- [x] Javadoc 추가 (이미 GREEN에서 작성)
+- [x] 테스트 여전히 통과 확인
+- [x] 변경 사항 없음 (SKIP)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture는 Port에 불필요 (생략)
+- [x] TestFixture는 Port에 불필요 (생략)
 
 ---
 
