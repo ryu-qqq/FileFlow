@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.dto.command;
 
+import com.ryuqq.fileflow.application.fixture.GeneratePresignedUrlCommandFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -29,154 +30,77 @@ class GeneratePresignedUrlCommandTest {
     @Test
     @DisplayName("GeneratePresignedUrlCommand는 Record 타입이어야 한다")
     void shouldBeRecordType() {
-        // Given: GeneratePresignedUrlCommand Record (컴파일 에러)
-        GeneratePresignedUrlCommand command = null;
+        // Given: Fixture로 Command 생성
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.aCommand();
 
         // When & Then: Record 타입 검증
-        assertThat(command).isNull(); // 임시 검증 (컴파일 에러 확인용)
+        assertThat(command).isNotNull();
+        assertThat(command.getClass().isRecord()).isTrue();
     }
 
     @Test
     @DisplayName("GeneratePresignedUrlCommand는 fileName 필드를 가져야 한다")
     void shouldHaveFileNameField() {
-        // Given: GeneratePresignedUrlCommand Record (컴파일 에러)
-        String fileName = "test.jpg";
-        Long fileSize = 1024L;
-        String mimeType = "image/jpeg";
-        Long uploaderId = 1L;
-        String category = "PROFILE";
-        List<String> tags = List.of("profile", "avatar");
-
-        GeneratePresignedUrlCommand command = new GeneratePresignedUrlCommand(
-                fileName,
-                fileSize,
-                mimeType,
-                uploaderId,
-                category,
-                tags
-        );
+        // Given: Fixture로 Command 생성
+        String expectedFileName = "custom.jpg";
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withFileName(expectedFileName);
 
         // When & Then: fileName 필드 검증
-        assertThat(command.fileName()).isEqualTo(fileName);
+        assertThat(command.fileName()).isEqualTo(expectedFileName);
     }
 
     @Test
     @DisplayName("GeneratePresignedUrlCommand는 fileSize 필드를 가져야 한다")
     void shouldHaveFileSizeField() {
-        // Given: GeneratePresignedUrlCommand Record (컴파일 에러)
-        String fileName = "test.jpg";
-        Long fileSize = 1024L;
-        String mimeType = "image/jpeg";
-        Long uploaderId = 1L;
-        String category = "PROFILE";
-        List<String> tags = List.of("profile", "avatar");
-
-        GeneratePresignedUrlCommand command = new GeneratePresignedUrlCommand(
-                fileName,
-                fileSize,
-                mimeType,
-                uploaderId,
-                category,
-                tags
-        );
+        // Given: Fixture로 Command 생성
+        Long expectedFileSize = 2048L;
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withFileSize(expectedFileSize);
 
         // When & Then: fileSize 필드 검증
-        assertThat(command.fileSize()).isEqualTo(fileSize);
+        assertThat(command.fileSize()).isEqualTo(expectedFileSize);
     }
 
     @Test
     @DisplayName("GeneratePresignedUrlCommand는 mimeType 필드를 가져야 한다")
     void shouldHaveMimeTypeField() {
-        // Given: GeneratePresignedUrlCommand Record (컴파일 에러)
-        String fileName = "test.jpg";
-        Long fileSize = 1024L;
-        String mimeType = "image/jpeg";
-        Long uploaderId = 1L;
-        String category = "PROFILE";
-        List<String> tags = List.of("profile", "avatar");
-
-        GeneratePresignedUrlCommand command = new GeneratePresignedUrlCommand(
-                fileName,
-                fileSize,
-                mimeType,
-                uploaderId,
-                category,
-                tags
-        );
+        // Given: Fixture로 Command 생성
+        String expectedMimeType = "application/pdf";
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withMimeType(expectedMimeType);
 
         // When & Then: mimeType 필드 검증
-        assertThat(command.mimeType()).isEqualTo(mimeType);
+        assertThat(command.mimeType()).isEqualTo(expectedMimeType);
     }
 
     @Test
     @DisplayName("GeneratePresignedUrlCommand는 uploaderId 필드를 가져야 한다")
     void shouldHaveUploaderIdField() {
-        // Given: GeneratePresignedUrlCommand Record (컴파일 에러)
-        String fileName = "test.jpg";
-        Long fileSize = 1024L;
-        String mimeType = "image/jpeg";
-        Long uploaderId = 1L;
-        String category = "PROFILE";
-        List<String> tags = List.of("profile", "avatar");
-
-        GeneratePresignedUrlCommand command = new GeneratePresignedUrlCommand(
-                fileName,
-                fileSize,
-                mimeType,
-                uploaderId,
-                category,
-                tags
-        );
+        // Given: Fixture로 Command 생성
+        Long expectedUploaderId = 99L;
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withUploaderId(expectedUploaderId);
 
         // When & Then: uploaderId 필드 검증
-        assertThat(command.uploaderId()).isEqualTo(uploaderId);
+        assertThat(command.uploaderId()).isEqualTo(expectedUploaderId);
     }
 
     @Test
     @DisplayName("GeneratePresignedUrlCommand는 category 필드를 가져야 한다")
     void shouldHaveCategoryField() {
-        // Given: GeneratePresignedUrlCommand Record (컴파일 에러)
-        String fileName = "test.jpg";
-        Long fileSize = 1024L;
-        String mimeType = "image/jpeg";
-        Long uploaderId = 1L;
-        String category = "PROFILE";
-        List<String> tags = List.of("profile", "avatar");
-
-        GeneratePresignedUrlCommand command = new GeneratePresignedUrlCommand(
-                fileName,
-                fileSize,
-                mimeType,
-                uploaderId,
-                category,
-                tags
-        );
+        // Given: Fixture로 Command 생성
+        String expectedCategory = "DOCUMENT";
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withCategory(expectedCategory);
 
         // When & Then: category 필드 검증
-        assertThat(command.category()).isEqualTo(category);
+        assertThat(command.category()).isEqualTo(expectedCategory);
     }
 
     @Test
     @DisplayName("GeneratePresignedUrlCommand는 tags 필드를 가져야 한다")
     void shouldHaveTagsField() {
-        // Given: GeneratePresignedUrlCommand Record (컴파일 에러)
-        String fileName = "test.jpg";
-        Long fileSize = 1024L;
-        String mimeType = "image/jpeg";
-        Long uploaderId = 1L;
-        String category = "PROFILE";
-        List<String> tags = List.of("profile", "avatar");
-
-        GeneratePresignedUrlCommand command = new GeneratePresignedUrlCommand(
-                fileName,
-                fileSize,
-                mimeType,
-                uploaderId,
-                category,
-                tags
-        );
+        // Given: Fixture로 Command 생성
+        List<String> expectedTags = List.of("custom", "tag");
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withTags(expectedTags);
 
         // When & Then: tags 필드 검증
-        assertThat(command.tags()).isEqualTo(tags);
+        assertThat(command.tags()).isEqualTo(expectedTags);
     }
 }
