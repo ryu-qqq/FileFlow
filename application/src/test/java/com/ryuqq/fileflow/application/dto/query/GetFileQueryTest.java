@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.dto.query;
 
+import com.ryuqq.fileflow.application.fixture.GetFileQueryFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -27,35 +28,35 @@ class GetFileQueryTest {
     @Test
     @DisplayName("GetFileQuery는 Record 타입이어야 한다")
     void shouldBeRecordType() {
-        // Given: GetFileQuery Record (컴파일 에러)
-        GetFileQuery query = null;
+        // Given: Fixture로 Query 생성
+        GetFileQuery query = GetFileQueryFixture.aQuery();
 
         // When & Then: Record 타입 검증
-        assertThat(query).isNull(); // 임시 검증 (컴파일 에러 확인용)
+        assertThat(query).isNotNull();
+        assertThat(query.getClass().isRecord()).isTrue();
     }
 
     @Test
     @DisplayName("GetFileQuery는 fileId 필드를 가져야 한다")
     void shouldHaveFileIdField() {
-        // Given: GetFileQuery Record (컴파일 에러)
-        Long fileId = 1L;
-
-        GetFileQuery query = new GetFileQuery(fileId);
+        // Given: Fixture로 커스텀 fileId Query 생성
+        Long expectedFileId = 100L;
+        GetFileQuery query = GetFileQueryFixture.withFileId(expectedFileId);
 
         // When & Then: fileId 필드 검증
-        assertThat(query.fileId()).isEqualTo(fileId);
+        assertThat(query.fileId()).isEqualTo(expectedFileId);
     }
 
     @Test
     @DisplayName("GetFileQuery는 fileId를 받는 생성자를 가져야 한다")
     void shouldHaveConstructorWithFileId() {
-        // Given: GetFileQuery Record (컴파일 에러)
-        Long fileId = 100L;
+        // Given: Fixture로 커스텀 fileId Query 생성
+        Long expectedFileId = 200L;
 
         // When: fileId로 Query 생성
-        GetFileQuery query = new GetFileQuery(fileId);
+        GetFileQuery query = GetFileQueryFixture.withFileId(expectedFileId);
 
         // Then: fileId가 올바르게 설정됨
-        assertThat(query.fileId()).isEqualTo(fileId);
+        assertThat(query.fileId()).isEqualTo(expectedFileId);
     }
 }
