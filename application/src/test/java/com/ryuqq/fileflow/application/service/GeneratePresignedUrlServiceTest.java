@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.dto.response.PresignedUrlResponse;
 import com.ryuqq.fileflow.application.fixture.GeneratePresignedUrlCommandFixture;
 import com.ryuqq.fileflow.application.port.out.command.FilePersistencePort;
 import com.ryuqq.fileflow.domain.aggregate.File;
+import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
 import com.ryuqq.fileflow.domain.vo.FileId;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -95,5 +97,26 @@ class GeneratePresignedUrlServiceTest {
         assertThat(response.presignedUrl()).isEqualTo(expectedPresignedUrl);
         assertThat(response.s3Key()).isNotNull();
         assertThat(response.expiresIn()).isEqualTo(3600L); // 기본 1시간
+    }
+
+    /**
+     * 🔴 RED Phase: 파일 크기 검증 실패 테스트
+     * <p>
+     * 1GB를 초과하는 파일 크기일 경우 InvalidFileSizeException이 발생해야 합니다.
+     * File.forNew() 메서드에서 Domain 레벨 검증을 수행하므로,
+     * Service는 Domain 예외를 전파합니다.
+     * </p>
+     */
+    @Test
+    @DisplayName("파일 크기가 1GB를 초과하면 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenFileSizeExceeds1GB() {
+        // Given: 1GB를 초과하는 파일 크기 Command
+        long exceedingSize = 1024L * 1024L * 1024L + 1L; // 1GB + 1 byte
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withFileSize(exceedingSize);
+
+        // When & Then: InvalidFileSizeException 발생 검증
+        assertThatThrownBy(() -> generatePresignedUrlService.execute(command))
+                .isInstanceOf(InvalidFileSizeException.class)
+                .hasMessageContaining("1GB");
     }
 }
