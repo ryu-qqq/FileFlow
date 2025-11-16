@@ -13,30 +13,30 @@
 
 ---
 
-### 1️⃣ FileCommandPort 정의 (Cycle 1)
+### 1️⃣ FilePersistencePort 정의 (Cycle 1)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `application/src/test/java/.../port/out/command/FileCommandPortTest.java` 생성
+- [ ] `application/src/test/java/.../port/out/command/FilePersistencePortTest.java` 생성
 - [ ] Port 인터페이스 메서드 테스트 작성
-  - `save()`, `saveAll()`, `updateStatus()`, `softDelete()`
+  - `persist(File file)` 메서드 (Zero-Tolerance 규칙 준수)
+  - 반환 타입: `FileId` (Value Object)
 - [ ] 컴파일 에러 확인 (인터페이스 없음)
-- [ ] 커밋: `test: FileCommandPort 테스트 추가 (Red)`
+- [ ] 커밋: `test: FilePersistencePort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `application/src/main/java/.../port/out/command/FileCommandPort.java` 생성
-- [ ] 4개 메서드 시그니처 정의
+- [ ] `application/src/main/java/.../port/out/command/FilePersistencePort.java` 생성
+- [ ] `persist(File file): FileId` 메서드 시그니처 정의
 - [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: FileCommandPort 구현 (Green)`
+- [ ] ArchUnit 테스트 자동 검증 (`PersistencePortArchTest.java`)
+- [ ] 커밋: `feat: FilePersistencePort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] Javadoc 추가 (메서드 설명, 파라미터, 반환값)
-- [ ] ArchUnit 테스트 추가 (application/port/out/command 패키지 검증)
 - [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: FileCommandPort 개선 (Refactor)`
+- [ ] 커밋: `struct: FilePersistencePort 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture는 Port에 불필요 (생략 가능)
-- [ ] 커밋: `test: FileCommandPort 테스트 정리 (Tidy)`
+- [ ] TestFixture는 Port에 불필요 (생략)
 
 ---
 
@@ -44,22 +44,29 @@
 
 #### 🔴 Red: 테스트 작성
 - [ ] `FileQueryPortTest.java` 생성
-- [ ] Port 인터페이스 메서드 테스트 작성
-  - `findById()`, `findByIdWithLock()`, `findByUploaderIdAndStatusWithCursor()`, `existsByFileId()`
+- [ ] Port 인터페이스 메서드 테스트 작성 (Zero-Tolerance 규칙 준수)
+  - `findById(FileId id): Optional<File>`
+  - `existsById(FileId id): boolean`
+  - `findByCriteria(FileSearchCriteria criteria): List<File>`
+  - `countByCriteria(FileSearchCriteria criteria): long`
+- [ ] 컴파일 에러 확인 (FileSearchCriteria VO 미존재)
 - [ ] 커밋: `test: FileQueryPort 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `port/out/query/FileQueryPort.java` 생성
 - [ ] 4개 메서드 시그니처 정의
+- [ ] `FileSearchCriteria` VO 생성 (domain layer)
+- [ ] 테스트 실행 → 통과 확인
+- [ ] ArchUnit 테스트 자동 검증 (`QueryPortArchTest.java`)
 - [ ] 커밋: `feat: FileQueryPort 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] Javadoc 추가
-- [ ] ArchUnit 테스트 추가
+- [ ] 테스트 여전히 통과 확인
 - [ ] 커밋: `struct: FileQueryPort 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: FileQueryPort 테스트 정리 (Tidy)`
+- [ ] TestFixture는 Port에 불필요 (생략)
 
 ---
 
