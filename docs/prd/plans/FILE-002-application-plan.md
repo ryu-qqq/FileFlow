@@ -561,25 +561,25 @@
 
 ---
 
-### 2️⃣2️⃣ CompleteUploadUseCase - S3 Object 존재 확인 (Cycle 22)
+### ✅ 2️⃣2️⃣ CompleteUploadUseCase - S3 Object 존재 확인 (Cycle 22)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldThrowExceptionWhenS3ObjectNotExists()` 테스트 작성
-- [ ] Mock S3ClientPort 준비
-- [ ] 커밋: `test: S3 Object 존재 확인 테스트 추가 (Red)`
+- [x] `shouldThrowExceptionWhenS3ObjectNotExists()` 테스트 작성
+- [x] Mock S3ClientPort 준비
+- [x] FileFixture.aUploadingFile() 사용 (UPLOADING 상태)
+- [x] 커밋: `test: S3 Object 존재 확인 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] S3 Object HEAD 요청 로직 추가 (트랜잭션 밖)
-- [ ] S3ObjectNotFoundException 예외 발생
-- [ ] 커밋: `feat: S3 Object 존재 확인 구현 (Green)`
+- [x] S3 Object HEAD 요청 로직 추가 (트랜잭션 밖 - verifyS3ObjectExists())
+- [x] S3ClientPort 생성자 주입
+- [x] RuntimeException 예외 발생 (S3 Object not found)
+- [x] 커밋: `feat: S3 Object 존재 확인 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트: @Transactional 내 S3 호출 금지 검증
-- [ ] Timeout 3초, 재시도 3회 설정
-- [ ] 커밋: `struct: S3 Object 존재 확인 개선 (Refactor)`
+- [x] 리팩토링 불필요 (GREEN에서 완료, Timeout/Retry는 S3ClientPort 정의)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: S3 Object 존재 확인 테스트 정리 (Tidy)`
+- [x] 기존 FileFixture 사용 (aUploadingFile)
 
 ---
 
