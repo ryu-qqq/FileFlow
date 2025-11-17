@@ -76,9 +76,14 @@ public class FileFixture {
      * UPLOADING 상태 파일
      */
     public static File aUploadingFile() {
-        File file = createFile("uploading.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        file.markAsUploading();
-        return file;
+        return aFile()
+                .fileName("uploading.jpg")
+                .fileSize(1024000L)
+                .mimeType("image/jpeg")
+                .uploaderId(UploaderId.of(1L))
+                .category("IMAGE")
+                .status(FileStatusFixture.uploading())
+                .build();
     }
 
     /**

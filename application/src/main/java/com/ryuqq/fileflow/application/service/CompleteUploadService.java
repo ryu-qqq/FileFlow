@@ -2,9 +2,12 @@ package com.ryuqq.fileflow.application.service;
 
 import com.ryuqq.fileflow.application.dto.command.CompleteUploadCommand;
 import com.ryuqq.fileflow.application.port.in.command.CompleteUploadPort;
+import com.ryuqq.fileflow.application.port.out.command.MessageOutboxPersistencePort;
 import com.ryuqq.fileflow.application.port.out.external.S3ClientPort;
 import com.ryuqq.fileflow.application.port.out.query.LoadFilePort;
 import com.ryuqq.fileflow.domain.aggregate.File;
+import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
+import com.ryuqq.fileflow.domain.vo.AggregateId;
 import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
 import org.springframework.stereotype.Service;
@@ -32,15 +35,18 @@ public class CompleteUploadService implements CompleteUploadPort {
 
     private final LoadFilePort loadFilePort;
     private final S3ClientPort s3ClientPort;
+    private final MessageOutboxPersistencePort messageOutboxPersistencePort;
     private final Clock clock;
 
     public CompleteUploadService(
             LoadFilePort loadFilePort,
             S3ClientPort s3ClientPort,
+            MessageOutboxPersistencePort messageOutboxPersistencePort,
             Clock clock
     ) {
         this.loadFilePort = Objects.requireNonNull(loadFilePort, "loadFilePort must not be null");
         this.s3ClientPort = Objects.requireNonNull(s3ClientPort, "s3ClientPort must not be null");
+        this.messageOutboxPersistencePort = Objects.requireNonNull(messageOutboxPersistencePort, "messageOutboxPersistencePort must not be null");
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
     }
 
@@ -48,8 +54,13 @@ public class CompleteUploadService implements CompleteUploadPort {
      * 업로드 완료 UseCase 실행
      * <p>
      * Cycle 21: 상태 검증 구현 완료
-     * Cycle 22: S3 Object 존재 확인 구현 중
-     * Cycle 23: MessageOutbox 생성 추가 예정
+     * Cycle 22: S3 Object 존재 확인 구현 완료
+     * Cycle 23: MessageOutbox 생성 구현 중
+     * </p>
+     * <p>
+     * Zero-Tolerance Transaction 경계:
+     * - S3 Object 존재 확인 (트랜잭션 밖 - 외부 API)
+     * - File 상태 업데이트 + MessageOutbox 생성 (트랜잭션 안 - DB 작업)
      * </p>
      */
     @Override
@@ -64,6 +75,12 @@ public class CompleteUploadService implements CompleteUploadPort {
 
         // 3. S3 Object 존재 확인 (트랜잭션 밖 - 외부 API 호출)
         verifyS3ObjectExists(file);
+
+        // 4. File 상태 업데이트 (COMPLETED)
+        file.markAsCompleted();
+
+        // 5. MessageOutbox 생성 (FILE_UPLOADED 이벤트)
+        createFileUploadedOutbox(file);
     }
 
     /**
@@ -102,5 +119,37 @@ public class CompleteUploadService implements CompleteUploadPort {
         } catch (Exception e) {
             throw new RuntimeException("S3 Object not found: " + s3Key, e);
         }
+    }
+
+    /**
+     * FILE_UPLOADED 이벤트를 MessageOutbox에 저장
+     * <p>
+     * Transactional Outbox Pattern:
+     * - File 상태 업데이트와 동일한 트랜잭션에서 실행
+     * - 이벤트 발행 보장 (DB 트랜잭션 성공 시 이벤트 발행)
+     * </p>
+     */
+    private void createFileUploadedOutbox(File file) {
+        // FILE_UPLOADED 이벤트 페이로드 생성 (JSON)
+        String payload = String.format(
+                "{\"fileId\":\"%s\",\"fileName\":\"%s\",\"s3Key\":\"%s\",\"fileSize\":%d,\"mimeType\":\"%s\"}",
+                file.getFileIdValue(),
+                file.getFileName(),
+                file.getS3Key(),
+                file.getFileSize(),
+                file.getMimeType()
+        );
+
+        // MessageOutbox 생성 (Factory Method)
+        MessageOutbox outbox = MessageOutbox.forNew(
+                "FILE_UPLOADED",
+                AggregateId.of(file.getFileIdValue()),
+                payload,
+                3,  // maxRetryCount
+                clock
+        );
+
+        // MessageOutbox 영속화
+        messageOutboxPersistencePort.persist(outbox);
     }
 }

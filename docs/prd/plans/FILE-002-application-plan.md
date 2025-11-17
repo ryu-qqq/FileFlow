@@ -583,11 +583,11 @@
 
 ---
 
-### 2️⃣3️⃣ CompleteUploadUseCase - MessageOutbox 생성 (Cycle 23)
+### 🔄 2️⃣3️⃣ CompleteUploadUseCase - MessageOutbox 생성 (Cycle 23)
 
 #### 🔴 Red: 테스트 작성
 - [ ] `shouldCreateMessageOutboxWhenUploadCompleted()` 테스트 작성
-- [ ] Mock MessageOutboxCommandPort 준비
+- [ ] Mock MessageOutboxPersistencePort 준비
 - [ ] 커밋: `test: MessageOutbox 생성 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
