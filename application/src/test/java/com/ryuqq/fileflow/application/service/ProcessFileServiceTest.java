@@ -44,8 +44,7 @@ class ProcessFileServiceTest {
 
     @BeforeEach
     void setUp() {
-        // TODO: ProcessFileService 생성자 주입 (GREEN 단계에서 구현)
-        // processFileService = new ProcessFileService(loadFilePort, ...);
+        processFileService = new ProcessFileService(loadFilePort);
     }
 
     /**
