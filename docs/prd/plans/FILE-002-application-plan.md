@@ -583,24 +583,23 @@
 
 ---
 
-### 🔄 2️⃣3️⃣ CompleteUploadUseCase - MessageOutbox 생성 (Cycle 23)
+### ✅ 2️⃣3️⃣ CompleteUploadUseCase - MessageOutbox 생성 (Cycle 23)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldCreateMessageOutboxWhenUploadCompleted()` 테스트 작성
-- [ ] Mock MessageOutboxPersistencePort 준비
-- [ ] 커밋: `test: MessageOutbox 생성 테스트 추가 (Red)`
+- [x] `shouldCreateMessageOutboxWhenUploadCompleted()` 테스트 작성
+- [x] Mock MessageOutboxPersistencePort 준비
+- [x] 커밋: `test: MessageOutbox 생성 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] File 상태 업데이트 (COMPLETED) + MessageOutbox 생성 로직
-- [ ] FILE_UPLOADED 이벤트 Outbox에 저장
-- [ ] 커밋: `feat: MessageOutbox 생성 구현 (Green)`
+- [x] File 상태 업데이트 (COMPLETED) + MessageOutbox 생성 로직
+- [x] FILE_UPLOADED 이벤트 Outbox에 저장
+- [x] 커밋: `feat: MessageOutbox 생성 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Transaction 경계 검증 (S3 호출 → 트랜잭션 시작 → Outbox 생성 → 커밋)
-- [ ] 커밋: `struct: MessageOutbox 생성 개선 (Refactor)`
+- [x] 리팩토링 불필요 (GREEN에서 완료, Law of Demeter 준수)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: MessageOutbox 생성 테스트 정리 (Tidy)`
+- [x] FileFixture.aUploadingFile() Builder 패턴으로 수정 (FileId null 문제 해결)
 
 ---
 
