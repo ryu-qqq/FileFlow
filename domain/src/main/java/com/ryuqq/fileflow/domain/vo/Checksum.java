@@ -42,6 +42,23 @@ public record Checksum(String algorithm, String value) {
     private static final Pattern HEX_PATTERN = Pattern.compile("^[0-9a-fA-F]+$");
 
     /**
+     * 알고리즘과 값으로 Checksum 생성 (표준 of 패턴)
+     *
+     * @param algorithm 알고리즘 이름 (SHA-256, MD5)
+     * @param value 체크섬 값
+     * @return Checksum VO
+     */
+    public static Checksum of(String algorithm, String value) {
+        if (SHA256_ALGORITHM.equals(algorithm)) {
+            return sha256(value);
+        } else if (MD5_ALGORITHM.equals(algorithm)) {
+            return md5(value);
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 알고리즘입니다: " + algorithm);
+        }
+    }
+
+    /**
      * SHA-256 체크섬 생성 팩토리 메서드
      *
      * @param value SHA-256 체크섬 값 (64자 16진수)

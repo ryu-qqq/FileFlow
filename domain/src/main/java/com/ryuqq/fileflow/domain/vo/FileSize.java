@@ -1,5 +1,8 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.exception.InvalidFileSizeErrorCode;
+import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
+
 /**
  * FileSize Value Object
  * <p>
@@ -60,10 +63,11 @@ public record FileSize(long value) {
      * 범위 검증 (1 byte ~ 1GB)
      */
     private static void validateRange(long value) {
-        if (value < MIN_SIZE || value > MAX_SIZE) {
-            throw new IllegalArgumentException(
-                    String.format("파일 크기는 1 byte 이상 1GB 이하여야 합니다 (현재: %d bytes)", value)
-            );
+        if (value < MIN_SIZE) {
+            throw new InvalidFileSizeException(InvalidFileSizeErrorCode.NEGATIVE_FILE_SIZE);
+        }
+        if (value > MAX_SIZE) {
+            throw new InvalidFileSizeException(InvalidFileSizeErrorCode.FILE_SIZE_LIMIT_EXCEEDED);
         }
     }
 

@@ -19,15 +19,22 @@ import java.util.UUID;
  * - Timestamp 기반 정렬 가능
  * - DB Index 성능 최적화 (B-Tree 친화적)
  * </p>
+ *
+ * @param value Session ID 값 (null 가능 - forNew()로 생성 시)
  */
 public record SessionId(String value) {
 
     /**
      * Compact Constructor (Record 검증 패턴)
+     * <p>
+     * null은 forNew()를 통해서만 허용됩니다.
+     * </p>
      */
     public SessionId {
-        validateNotNullOrEmpty(value);
-        validateUuidFormat(value);
+        if (value != null) {
+            validateNotNullOrEmpty(value);
+            validateUuidFormat(value);
+        }
     }
 
     /**
@@ -48,9 +55,34 @@ public record SessionId(String value) {
      *
      * @param value UUID 문자열
      * @return SessionId VO
+     * @throws IllegalArgumentException value가 null일 때
      */
     public static SessionId of(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("SessionId는 null일 수 없습니다 (forNew() 사용)");
+        }
         return new SessionId(value);
+    }
+
+    /**
+     * 신규 Entity용 팩토리 메서드
+     * <p>
+     * 영속화 전 상태를 나타내기 위해 null 값을 가진 ID를 생성합니다.
+     * </p>
+     *
+     * @return null 값을 가진 SessionId
+     */
+    public static SessionId forNew() {
+        return new SessionId(null);
+    }
+
+    /**
+     * 신규 Entity 여부 확인
+     *
+     * @return value가 null이면 true (영속화 전), 아니면 false
+     */
+    public boolean isNew() {
+        return value == null;
     }
 
     /**

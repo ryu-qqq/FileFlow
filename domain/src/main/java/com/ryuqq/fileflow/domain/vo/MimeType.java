@@ -1,5 +1,8 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeErrorCode;
+import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
+
 import java.util.Set;
 
 /**
@@ -101,7 +104,7 @@ public record MimeType(String value) {
      */
     private static void validateNotNullOrEmpty(String value) {
         if (value == null || value.isEmpty()) {
-            throw new IllegalArgumentException("MIME 타입은 null이거나 빈 값일 수 없습니다");
+            throw new InvalidMimeTypeException(InvalidMimeTypeErrorCode.EMPTY_MIME_TYPE);
         }
     }
 
@@ -110,9 +113,7 @@ public record MimeType(String value) {
      */
     private static void validateAllowedMimeType(String value) {
         if (!ALLOWED_MIME_TYPES.contains(value)) {
-            throw new IllegalArgumentException(
-                    String.format("허용되지 않은 MIME 타입입니다: %s", value)
-            );
+            throw new InvalidMimeTypeException(InvalidMimeTypeErrorCode.INVALID_MIME_TYPE);
         }
     }
 
