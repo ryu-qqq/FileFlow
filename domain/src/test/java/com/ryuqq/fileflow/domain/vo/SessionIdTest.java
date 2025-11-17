@@ -43,7 +43,7 @@ class SessionIdTest {
         // when & then
         assertThatThrownBy(() -> SessionId.of(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("SessionId는 null이거나 빈 값일 수 없습니다");
+                .hasMessageContaining("SessionId는 null일 수 없습니다 (forNew() 사용)");
 
         assertThatThrownBy(() -> SessionId.of(""))
                 .isInstanceOf(IllegalArgumentException.class)
