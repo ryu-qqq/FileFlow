@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.domain.util.UuidV7Generator;
 import com.ryuqq.fileflow.domain.vo.AggregateId;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.vo.RetryCount;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -31,8 +32,7 @@ public class MessageOutbox {
     private final AggregateId aggregateId;
     private final String payload;
     private OutboxStatus status;  // 가변: markAsSent(), markAsFailed()에서 변경
-    private int retryCount;  // 가변: incrementRetryCount()에서 변경
-    private final int maxRetryCount;
+    private RetryCount retryCount;  // VO 적용
     private final Clock clock;
     private final LocalDateTime createdAt;
     private LocalDateTime processedAt;  // 가변: markAsSent(), markAsFailed()에서 변경
@@ -50,8 +50,7 @@ public class MessageOutbox {
      * @param aggregateId   이벤트 발생 Aggregate ID (VO)
      * @param payload       이벤트 페이로드 (JSON)
      * @param status        메시지 상태
-     * @param retryCount    재시도 횟수
-     * @param maxRetryCount 최대 재시도 횟수
+     * @param retryCount    재시도 횟수 (RetryCount VO)
      * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
@@ -63,14 +62,13 @@ public class MessageOutbox {
             AggregateId aggregateId,
             String payload,
             OutboxStatus status,
-            int retryCount,
-            int maxRetryCount,
+            RetryCount retryCount,
             Clock clock,
             LocalDateTime createdAt,
             LocalDateTime processedAt,
             LocalDateTime updatedAt
     ) {
-        validateConstructorArguments(eventType, aggregateId, payload, status, retryCount, maxRetryCount, clock, createdAt);
+        validateConstructorArguments(eventType, aggregateId, payload, status, clock, createdAt);
 
         this.id = id;
         this.eventType = eventType;
@@ -78,7 +76,6 @@ public class MessageOutbox {
         this.payload = payload;
         this.status = status;
         this.retryCount = retryCount;
-        this.maxRetryCount = maxRetryCount;
         this.clock = clock;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
@@ -95,8 +92,6 @@ public class MessageOutbox {
             AggregateId aggregateId,
             String payload,
             OutboxStatus status,
-            int retryCount,
-            int maxRetryCount,
             Clock clock,
             LocalDateTime createdAt
     ) {
@@ -111,12 +106,6 @@ public class MessageOutbox {
         }
         if (status == null) {
             throw new IllegalArgumentException("status는 null일 수 없습니다");
-        }
-        if (retryCount < 0) {
-            throw new IllegalArgumentException("retryCount는 0 이상이어야 합니다");
-        }
-        if (maxRetryCount <= 0) {
-            throw new IllegalArgumentException("maxRetryCount는 1 이상이어야 합니다");
         }
         if (clock == null) {
             throw new IllegalArgumentException("clock은 null일 수 없습니다");
@@ -165,14 +154,14 @@ public class MessageOutbox {
      * 재시도 횟수 조회
      */
     public int getRetryCount() {
-        return retryCount;
+        return retryCount.current();
     }
 
     /**
      * 최대 재시도 횟수 조회
      */
     public int getMaxRetryCount() {
-        return maxRetryCount;
+        return retryCount.max();
     }
 
     /**
@@ -230,7 +219,6 @@ public class MessageOutbox {
      * @param eventType     이벤트 유형
      * @param aggregateId   이벤트 발생 Aggregate ID (VO)
      * @param payload       이벤트 페이로드 (JSON)
-     * @param maxRetryCount 최대 재시도 횟수
      * @param clock         시간 생성용 Clock (테스트에서 고정 시간 사용 가능)
      * @return 신규 MessageOutbox Aggregate (ID null)
      */
@@ -238,7 +226,6 @@ public class MessageOutbox {
             String eventType,
             AggregateId aggregateId,
             String payload,
-            int maxRetryCount,
             Clock clock
     ) {
         LocalDateTime now = LocalDateTime.now(clock);
@@ -248,8 +235,7 @@ public class MessageOutbox {
                 aggregateId,
                 payload,
                 OutboxStatus.PENDING,
-                0, // 초기 재시도 횟수
-                maxRetryCount,
+                RetryCount.forOutbox(), // Outbox 재시도 전략 (최대 3회)
                 clock,
                 now, // createdAt
                 null, // processedAt
@@ -269,8 +255,7 @@ public class MessageOutbox {
      * @param aggregateId   이벤트 발생 Aggregate ID (VO)
      * @param payload       이벤트 페이로드 (JSON)
      * @param status        메시지 상태
-     * @param retryCount    재시도 횟수
-     * @param maxRetryCount 최대 재시도 횟수
+     * @param retryCount    재시도 횟수 (RetryCount VO)
      * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
@@ -284,8 +269,7 @@ public class MessageOutbox {
             AggregateId aggregateId,
             String payload,
             OutboxStatus status,
-            int retryCount,
-            int maxRetryCount,
+            RetryCount retryCount,
             Clock clock,
             LocalDateTime createdAt,
             LocalDateTime processedAt,
@@ -302,7 +286,6 @@ public class MessageOutbox {
                 payload,
                 status,
                 retryCount,
-                maxRetryCount,
                 clock,
                 createdAt,
                 processedAt,
@@ -322,8 +305,7 @@ public class MessageOutbox {
      * @param aggregateId   이벤트 발생 Aggregate ID (VO)
      * @param payload       이벤트 페이로드 (JSON)
      * @param status        메시지 상태
-     * @param retryCount    재시도 횟수
-     * @param maxRetryCount 최대 재시도 횟수
+     * @param retryCount    재시도 횟수 (RetryCount VO)
      * @param clock         시간 생성용 Clock
      * @param createdAt     생성 시각
      * @param processedAt   처리 완료 시각
@@ -337,8 +319,7 @@ public class MessageOutbox {
             AggregateId aggregateId,
             String payload,
             OutboxStatus status,
-            int retryCount,
-            int maxRetryCount,
+            RetryCount retryCount,
             Clock clock,
             LocalDateTime createdAt,
             LocalDateTime processedAt,
@@ -355,7 +336,6 @@ public class MessageOutbox {
                 payload,
                 status,
                 retryCount,
-                maxRetryCount,
                 clock,
                 createdAt,
                 processedAt,
@@ -404,7 +384,7 @@ public class MessageOutbox {
      * </p>
      */
     public void incrementRetryCount() {
-        this.retryCount++;
+        this.retryCount = this.retryCount.increment();
     }
 
     /**
@@ -413,7 +393,7 @@ public class MessageOutbox {
      * @return 재시도 가능하면 true, 불가능하면 false
      */
     public boolean canRetry() {
-        return this.retryCount < this.maxRetryCount;
+        return this.retryCount.canRetry();
     }
 
     /**

@@ -7,6 +7,7 @@ import com.ryuqq.fileflow.domain.fixture.OutboxStatusFixture;
 import com.ryuqq.fileflow.domain.vo.AggregateId;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.vo.RetryCount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +30,6 @@ class MessageOutboxTest {
                 .eventType("FileCreated")
                 .aggregateId("file-uuid-v7-123")
                 .payload("{\"fileName\":\"test.jpg\",\"fileSize\":1024000}")
-                .maxRetryCount(3)
                 .build();
 
         // Then
@@ -41,7 +41,7 @@ class MessageOutboxTest {
         assertThat(outbox.getPayload()).contains("fileName");
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
         assertThat(outbox.getRetryCount()).isEqualTo(0);
-        assertThat(outbox.getMaxRetryCount()).isEqualTo(3);
+        assertThat(outbox.getMaxRetryCount()).isEqualTo(3); // Outbox 전략: 최대 3회
         assertThat(outbox.getCreatedAt()).isNotNull();
         assertThat(outbox.getProcessedAt()).isNull();
     }
@@ -72,11 +72,10 @@ class MessageOutboxTest {
         String eventType = "FileCreated";
         AggregateId aggregateId = AggregateIdFixture.anAggregateId();
         String payload = "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}";
-        int maxRetryCount = 3;
         Clock clock = Clock.systemUTC();
 
         // When
-        MessageOutbox outbox = MessageOutbox.forNew(eventType, aggregateId, payload, maxRetryCount, clock);
+        MessageOutbox outbox = MessageOutbox.forNew(eventType, aggregateId, payload, clock);
 
         // Then
         assertThat(outbox.getId()).isNull(); // ID는 영속화 전 (null)
@@ -85,7 +84,7 @@ class MessageOutboxTest {
         assertThat(outbox.getPayload()).isEqualTo(payload);
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending()); // PENDING 상태
         assertThat(outbox.getRetryCount()).isEqualTo(0); // 초기 재시도 횟수 0
-        assertThat(outbox.getMaxRetryCount()).isEqualTo(maxRetryCount);
+        assertThat(outbox.getMaxRetryCount()).isEqualTo(3); // Outbox 전략: 최대 3회
         assertThat(outbox.getCreatedAt()).isNotNull();
         assertThat(outbox.getProcessedAt()).isNull();
     }
@@ -99,8 +98,7 @@ class MessageOutboxTest {
         MessageOutbox outbox = MessageOutboxFixture.createOutbox(
                 "FileCreated",
                 "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\"}",
-                3
+                "{\"fileName\":\"test.jpg\"}"
         );
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
 
@@ -119,8 +117,7 @@ class MessageOutboxTest {
         MessageOutbox outbox = MessageOutboxFixture.createOutbox(
                 "FileCreated",
                 "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\"}",
-                3
+                "{\"fileName\":\"test.jpg\"}"
         );
 
         // When
@@ -138,8 +135,7 @@ class MessageOutboxTest {
         MessageOutbox outbox = MessageOutboxFixture.createOutbox(
                 "FileCreated",
                 "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\"}",
-                3
+                "{\"fileName\":\"test.jpg\"}"
         );
 
         // When
@@ -159,8 +155,7 @@ class MessageOutboxTest {
         MessageOutbox outbox = MessageOutboxFixture.createOutbox(
                 "FileCreated",
                 "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\"}",
-                3
+                "{\"fileName\":\"test.jpg\"}"
         );
         assertThat(outbox.getRetryCount()).isEqualTo(0);
 
@@ -176,8 +171,7 @@ class MessageOutboxTest {
     void shouldReturnTrueWhenCanRetry() {
         // Given
         MessageOutbox outbox = MessageOutboxFixture.anOutbox()
-                .retryCount(2)
-                .maxRetryCount(3)
+                .retryCount(RetryCount.forOutbox().increment().increment()) // current=2, max=3
                 .build();
 
         // When
@@ -192,8 +186,7 @@ class MessageOutboxTest {
     void shouldReturnFalseWhenCannotRetry() {
         // Given
         MessageOutbox outbox = MessageOutboxFixture.anOutbox()
-                .retryCount(3)
-                .maxRetryCount(3)
+                .retryCount(RetryCount.forOutbox().increment().increment().increment()) // current=3, max=3 → canRetry=false
                 .build();
 
         // When
@@ -272,14 +265,12 @@ class MessageOutboxTest {
         String eventType = "FileCreated";
         String aggregateId = "file-uuid-v7-123";
         String payload = "{\"fileName\":\"test.jpg\"}";
-        int maxRetryCount = 3;
 
         // When
         MessageOutbox outbox = MessageOutbox.forNew(
                 eventType,
                 AggregateId.of(aggregateId),
                 payload,
-                maxRetryCount,
                 Clock.systemUTC()
         );
 
@@ -291,7 +282,7 @@ class MessageOutboxTest {
         assertThat(outbox.getPayload()).isEqualTo(payload);
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
         assertThat(outbox.getRetryCount()).isEqualTo(0);
-        assertThat(outbox.getMaxRetryCount()).isEqualTo(maxRetryCount);
+        assertThat(outbox.getMaxRetryCount()).isEqualTo(3); // Outbox 전략: 최대 3회
         assertThat(outbox.getCreatedAt()).isNotNull();
         assertThat(outbox.getProcessedAt()).isNull();
     }
@@ -305,8 +296,6 @@ class MessageOutboxTest {
         String aggregateId = "file-uuid-v7-123";
         String payload = "{\"fileName\":\"test.jpg\"}";
         OutboxStatus status = OutboxStatusFixture.pending();
-        int retryCount = 0;
-        int maxRetryCount = 3;
         LocalDateTime createdAt = LocalDateTime.now();
 
         // When
@@ -316,8 +305,7 @@ class MessageOutboxTest {
                 AggregateId.of(aggregateId),
                 payload,
                 status,
-                retryCount,
-                maxRetryCount,
+                RetryCount.forOutbox(), // current=0, max=3
                 Clock.systemUTC(),
                 createdAt,
                 null,  // processedAt
@@ -345,8 +333,7 @@ class MessageOutboxTest {
                 AggregateId.of("file-uuid-v7-123"),
                 "{}",
                 OutboxStatusFixture.pending(),
-                0,
-                3,
+                RetryCount.forOutbox(), // current=0, max=3
                 Clock.systemUTC(),
                 LocalDateTime.now(),
                 null,  // processedAt
@@ -365,8 +352,6 @@ class MessageOutboxTest {
         String aggregateId = "file-uuid-v7-123";
         String payload = "{\"fileName\":\"test.jpg\"}";
         OutboxStatus status = OutboxStatusFixture.sent();
-        int retryCount = 2;
-        int maxRetryCount = 3;
         LocalDateTime createdAt = LocalDateTime.now().minusDays(1);
         LocalDateTime processedAt = LocalDateTime.now();
 
@@ -377,8 +362,7 @@ class MessageOutboxTest {
                 AggregateId.of(aggregateId),
                 payload,
                 status,
-                retryCount,
-                maxRetryCount,
+                RetryCount.forOutbox().increment().increment(), // current=2, max=3
                 Clock.systemUTC(),
                 createdAt,
                 processedAt,
@@ -390,7 +374,7 @@ class MessageOutboxTest {
         assertThat(outbox.getId()).isEqualTo(id);
         assertThat(outbox.getEventType()).isEqualTo(eventType);
         assertThat(outbox.getStatus()).isEqualTo(status);
-        assertThat(outbox.getRetryCount()).isEqualTo(retryCount);
+        assertThat(outbox.getRetryCount()).isEqualTo(2); // current=2 from RetryCount VO
         assertThat(outbox.getProcessedAt()).isEqualTo(processedAt);
     }
 
@@ -407,8 +391,7 @@ class MessageOutboxTest {
                 AggregateId.of("file-uuid-v7-123"),
                 "{}",
                 OutboxStatusFixture.pending(),
-                0,
-                3,
+                RetryCount.forOutbox(), // current=0, max=3
                 Clock.systemUTC(),
                 LocalDateTime.now(),
                 null,  // processedAt
@@ -435,7 +418,6 @@ class MessageOutboxTest {
                 "FileCreated",
                 AggregateId.of("file-uuid-v7-123"),
                 "{\"fileName\":\"test.jpg\"}",
-                3,
                 fixedClock
         );
 
@@ -475,7 +457,6 @@ class MessageOutboxTest {
                 "FileCreated",
                 AggregateId.of("file-1"),
                 "{}",
-                3,
                 fixedClock
         );
 
@@ -483,7 +464,6 @@ class MessageOutboxTest {
                 "FileDeleted",
                 AggregateId.of("file-2"),
                 "{}",
-                3,
                 fixedClock
         );
 
@@ -532,8 +512,7 @@ class MessageOutboxTest {
     void shouldMutateRetryCountWhenIncrement() {
         // Given
         MessageOutbox outbox = MessageOutboxFixture.anOutbox()
-                .retryCount(0)
-                .maxRetryCount(3)
+                .retryCount(RetryCount.forOutbox()) // current=0, max=3
                 .build();
 
         // When
@@ -577,7 +556,6 @@ class MessageOutboxTest {
                 "FileCreated",
                 AggregateId.of("file-uuid-v7-123"),
                 "{\"fileName\":\"test.jpg\"}",
-                3,
                 fixedClock
         );
 
@@ -603,7 +581,6 @@ class MessageOutboxTest {
                 "FileCreated",
                 AggregateId.of("file-uuid-v7-123"),
                 "{\"fileName\":\"test.jpg\"}",
-                3,
                 initialClock
         );
 
@@ -635,7 +612,6 @@ class MessageOutboxTest {
                 "FileCreated",
                 AggregateId.of("file-uuid-v7-123"),
                 "{\"fileName\":\"test.jpg\"}",
-                3,
                 initialClock
         );
 

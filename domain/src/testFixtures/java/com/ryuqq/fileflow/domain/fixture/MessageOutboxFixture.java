@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
 import com.ryuqq.fileflow.domain.vo.AggregateId;
 import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import com.ryuqq.fileflow.domain.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.vo.RetryCount;
 
 import static com.ryuqq.fileflow.domain.fixture.AggregateIdFixture.aDefaultAggregateId;
 
@@ -24,15 +25,18 @@ public class MessageOutboxFixture {
 
     /**
      * MessageOutbox.forNew() 팩토리 메서드 사용 (PENDING 상태, ID null)
+     * <p>
+     * 새 메시지 생성 시 사용하는 헬퍼 메서드입니다.
+     * RetryCount는 Outbox 전략 (최대 3회)으로 자동 설정됩니다.
+     * </p>
      *
      * @param eventType     이벤트 유형
      * @param aggregateId   이벤트 발생 Aggregate ID
      * @param payload       이벤트 페이로드 (JSON)
-     * @param maxRetryCount 최대 재시도 횟수
      * @return 신규 MessageOutbox Aggregate (ID null)
      */
-    public static MessageOutbox createOutbox(String eventType, String aggregateId, String payload, int maxRetryCount) {
-        return MessageOutbox.forNew(eventType, AggregateId.of(aggregateId), payload, maxRetryCount, Clock.systemUTC());
+    public static MessageOutbox createOutbox(String eventType, String aggregateId, String payload) {
+        return MessageOutbox.forNew(eventType, AggregateId.of(aggregateId), payload, Clock.systemUTC());
     }
 
 
@@ -46,8 +50,7 @@ public class MessageOutboxFixture {
         MessageOutbox outbox = createOutbox(
                 "FileCreated",
                 "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}",
-                3
+                "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}"
         );
         outbox.markAsSent(Clock.systemUTC());
         return outbox;
@@ -63,8 +66,7 @@ public class MessageOutboxFixture {
         MessageOutbox outbox = createOutbox(
                 "FileCreated",
                 "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}",
-                3
+                "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}"
         );
         outbox.markAsFailed(Clock.systemUTC());
         return outbox;
@@ -92,8 +94,7 @@ public class MessageOutboxFixture {
         private AggregateId aggregateId = aDefaultAggregateId();
         private String payload = "{\"fileName\":\"default.jpg\",\"fileSize\":1024}";
         private OutboxStatus status = OutboxStatusFixture.pending();
-        private int retryCount = 0;
-        private int maxRetryCount = 3;
+        private RetryCount retryCount = RetryCount.forOutbox(); // VO 적용 (Outbox 전략: 최대 3회)
         private Clock clock = Clock.systemUTC();
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime processedAt = null;
@@ -124,13 +125,8 @@ public class MessageOutboxFixture {
             return this;
         }
 
-        public MessageOutboxBuilder retryCount(int retryCount) {
+        public MessageOutboxBuilder retryCount(RetryCount retryCount) {
             this.retryCount = retryCount;
-            return this;
-        }
-
-        public MessageOutboxBuilder maxRetryCount(int maxRetryCount) {
-            this.maxRetryCount = maxRetryCount;
             return this;
         }
 
@@ -156,6 +152,9 @@ public class MessageOutboxFixture {
 
         /**
          * MessageOutbox 객체 생성
+         * <p>
+         * reconstitute() 팩토리 메서드를 사용하여 테스트용 객체 생성
+         * </p>
          */
         public MessageOutbox build() {
             return MessageOutbox.reconstitute(
@@ -165,7 +164,6 @@ public class MessageOutboxFixture {
                     payload,
                     status,
                     retryCount,
-                    maxRetryCount,
                     clock,
                     createdAt,
                     processedAt,
