@@ -536,26 +536,28 @@
 
 ---
 
-### 2️⃣1️⃣ CompleteUploadUseCase - 상태 검증 (Cycle 21)
+### ✅ 2️⃣1️⃣ CompleteUploadUseCase - 상태 검증 (Cycle 21)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `CompleteUploadServiceTest.java` 생성
-- [ ] `shouldThrowExceptionWhenInvalidStatus()` 테스트 작성
-- [ ] 커밋: `test: 상태 검증 테스트 추가 (Red)`
+- [x] `CompleteUploadServiceTest.java` 생성
+- [x] `shouldThrowExceptionWhenInvalidStatus()` 테스트 작성
+  - shouldThrowExceptionWhenAlreadyCompleted() (COMPLETED 상태 거부)
+  - shouldThrowExceptionWhenFailed() (FAILED 상태 거부)
+- [x] 커밋: `test: 상태 검증 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `service/CompleteUploadService.java` 생성
-- [ ] File 조회 + 상태 검증 로직 (PENDING/UPLOADING만 허용)
-- [ ] InvalidFileStatusException 예외 발생
-- [ ] 커밋: `feat: 상태 검증 구현 (Green)`
+- [x] `service/CompleteUploadService.java` 생성
+- [x] File 조회 + 상태 검증 로직 (PENDING/UPLOADING만 허용)
+- [x] LoadFilePort (Outbound Query Port) 생성
+- [x] CompleteUploadPort (Inbound Port) 생성
+- [x] IllegalStateException 예외 발생 (InvalidFileStatusException 대신)
+- [x] 커밋: `feat: 상태 검증 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: CompleteUploadService 개선 (Refactor)`
+- [x] 리팩토링 불필요 (GREEN에서 완료)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `CompleteUploadServiceFixture.java` 생성
-- [ ] 커밋: `test: CompleteUploadService Fixture 정리 (Tidy)`
+- [x] 기존 FileFixture 사용 (aCompletedFile, aFailedFile)
 
 ---
 
