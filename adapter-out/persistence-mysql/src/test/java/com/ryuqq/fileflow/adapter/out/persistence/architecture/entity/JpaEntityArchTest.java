@@ -56,7 +56,7 @@ class JpaEntityArchTest {
     @BeforeAll
     static void setUp() {
         allClasses = new ClassFileImporter()
-            .importPackages("com.ryuqq.adapter.out.persistence");
+            .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
 
         entityClasses = allClasses.that(
             DescribedPredicate.describe(

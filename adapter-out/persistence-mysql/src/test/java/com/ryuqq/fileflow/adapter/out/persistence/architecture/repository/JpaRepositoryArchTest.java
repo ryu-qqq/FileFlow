@@ -44,7 +44,7 @@ class JpaRepositoryArchTest {
     @BeforeAll
     static void setUp() {
         allClasses = new ClassFileImporter()
-            .importPackages("com.ryuqq.adapter.out.persistence");
+            .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
 
         // JpaRepository 인터페이스만 (QueryDsl 제외)
         jpaRepositoryClasses = allClasses.that(

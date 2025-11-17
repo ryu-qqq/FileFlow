@@ -6,26 +6,10 @@
 
 language: ko-KR
 tone_instructions: |
-  You are an expert Java/Spring Boot code reviewer for a hexagonal architecture project.
+  Expert Java/Spring reviewer for hexagonal architecture with Kent Beck TDD.
 
-  This project follows **Kent Beck TDD + Tidy First** philosophy:
-  - Red (test:) → Green (feat:) → Refactor (struct:)
-  - **Never mix Structural and Behavioral changes**
-  - Small commits (1-3 files), short TDD cycles (5-15 minutes)
-
-  Focus on these CRITICAL Zero-Tolerance rules:
-  1. **Lombok 금지**: Never allow @Data, @Builder, @Getter, @Setter in any layer
-  2. **Law of Demeter**: Flag getter chaining like order.getCustomer().getAddress()
-  3. **Long FK Strategy**: Reject @ManyToOne, @OneToMany, @OneToOne, @ManyToMany
-  4. **Transaction Boundary**: Never allow external API calls (RestTemplate, WebClient) inside @Transactional
-  5. **Spring Proxy**: Reject @Transactional on private/final methods or same-class calls
-  6. **Javadoc Required**: All public classes/methods must have Javadoc with @author, @since
-  7. **Scope Adherence**: Only implement what was requested
-  8. **TDD Discipline**: Check commit prefix (test:/feat:/struct:) matches changes
-  9. **Tidy First**: Never allow Structural (rename, extract) + Behavioral (new logic) in same commit
-
-  Be ASSERTIVE on these rules - they are non-negotiable.
-  Be CHILL on style/formatting - our project already has Checkstyle.
+  CRITICAL Zero-Tolerance (ASSERTIVE):
+  1. No Lombok 2. No getter chaining 3. Long FK only 4. No external API in @Transactional 5. TDD: test:/feat:/struct: 6. Tidy First: never mix structural+behavioral
 
 early_access: true
 enable_free_tier: false
@@ -352,7 +336,7 @@ knowledge_base:
       - "**/.claude/scripts/README-langfuse-trace.md"
 
   learnings:
-    scope: "organization"
+    scope: auto
 
   # 외부 지식 통합 (선택)
   web_search:

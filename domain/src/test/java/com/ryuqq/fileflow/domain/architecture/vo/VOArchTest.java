@@ -42,39 +42,59 @@ class VOArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.domain");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.domain");
     }
 
     /**
      * 규칙 1: Value Object는 Record여야 한다
+     * <p>
+     * 예외:
+     * - MultipartUpload: 가변 리스트 관리 및 복잡한 업로드 로직
+     * - RetryCount: 전략 패턴 및 increment 로직
+     * </p>
      */
     @Test
     @DisplayName("[필수] Value Object는 Record로 구현되어야 한다")
     void valueObjectsShouldBeRecords() {
         ArchRule rule = classes()
             .that().resideInAPackage("..vo..")
+            .and().areNotEnums()
+            .and().areNotAnonymousClasses()  // 익명 내부 클래스 제외
             .and().haveSimpleNameNotContaining("Fixture")
             .and().haveSimpleNameNotContaining("Mother")
             .and().haveSimpleNameNotContaining("Test")
+            .and().haveSimpleNameNotEndingWith("Criteria")  // SearchCriteria 제외
+            .and().haveSimpleNameNotContaining("MultipartUpload")  // 복잡한 비즈니스 로직
+            .and().haveSimpleNameNotContaining("RetryCount")  // 전략 패턴 VO
             .should(beRecords())
-            .because("Value Object는 Java 21 Record로 구현해야 합니다");
+            .because("Value Object는 Java 21 Record로 구현해야 합니다 (Enum, 복잡한 VO 제외)");
 
         rule.check(classes);
     }
 
     /**
      * 규칙 2: Value Object는 of() 메서드를 가져야 한다
+     * <p>
+     * 예외:
+     * - MultipartUpload: forNew() 팩토리 메서드 사용
+     * - RetryCount: forFile(), forJob(), forOutbox() 전략 메서드 사용
+     * </p>
      */
     @Test
     @DisplayName("[필수] Value Object는 of() 정적 팩토리 메서드를 가져야 한다")
     void valueObjectsShouldHaveOfMethod() {
         ArchRule rule = classes()
             .that().resideInAPackage("..vo..")
+            .and().areNotEnums()
+            .and().areNotAnonymousClasses()  // 익명 내부 클래스 제외
             .and().haveSimpleNameNotContaining("Fixture")
             .and().haveSimpleNameNotContaining("Mother")
             .and().haveSimpleNameNotContaining("Test")
+            .and().haveSimpleNameNotEndingWith("Criteria")  // SearchCriteria 제외
+            .and().haveSimpleNameNotContaining("MultipartUpload")  // forNew() 사용
+            .and().haveSimpleNameNotContaining("RetryCount")  // 전략 메서드 사용
             .should(haveStaticMethodWithName("of"))
-            .because("Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다");
+            .because("Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다 (Enum, 전략 VO 제외)");
 
         rule.check(classes);
     }

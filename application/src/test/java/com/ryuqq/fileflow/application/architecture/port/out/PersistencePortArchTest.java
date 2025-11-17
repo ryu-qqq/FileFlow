@@ -34,7 +34,7 @@ class PersistencePortArchTest {
     @BeforeAll
     static void setUp() {
         classes = new ClassFileImporter()
-            .importPackages("com.ryuqq.application");
+            .importPackages("com.ryuqq.fileflow.application");
     }
 
     /**
