@@ -2,12 +2,15 @@ package com.ryuqq.fileflow.application.service;
 
 import com.ryuqq.fileflow.application.dto.command.CompleteUploadCommand;
 import com.ryuqq.fileflow.application.fixture.CompleteUploadCommandFixture;
+import com.ryuqq.fileflow.application.port.out.command.MessageOutboxPersistencePort;
 import com.ryuqq.fileflow.application.port.out.external.S3ClientPort;
 import com.ryuqq.fileflow.application.port.out.query.LoadFilePort;
 import com.ryuqq.fileflow.domain.aggregate.File;
+import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
 import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
+import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 /**
  * CompleteUploadService 테스트
@@ -41,6 +45,9 @@ class CompleteUploadServiceTest {
     @Mock
     private S3ClientPort s3ClientPort;
 
+    @Mock
+    private MessageOutboxPersistencePort messageOutboxPersistencePort;
+
     private CompleteUploadService completeUploadService;
 
     @BeforeEach
@@ -53,6 +60,7 @@ class CompleteUploadServiceTest {
         completeUploadService = new CompleteUploadService(
                 loadFilePort,
                 s3ClientPort,
+                messageOutboxPersistencePort,
                 clock
         );
     }
@@ -129,5 +137,37 @@ class CompleteUploadServiceTest {
         assertThatThrownBy(() -> completeUploadService.execute(command))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("S3");
+    }
+
+    /**
+     * 🔴 RED Phase: MessageOutbox 생성 테스트
+     * <p>
+     * 업로드 완료 시 FILE_UPLOADED 이벤트를 MessageOutbox에 저장해야 합니다.
+     * Transaction 경계: S3 확인 (밖) → File 상태 업데이트 + Outbox 생성 (안)
+     * </p>
+     */
+    @Test
+    @DisplayName("업로드 완료 시 FILE_UPLOADED 이벤트를 MessageOutbox에 저장해야 한다")
+    void shouldCreateMessageOutboxWhenUploadCompleted() {
+        // Given: UPLOADING 상태 파일 (정상)
+        CompleteUploadCommand command = CompleteUploadCommandFixture.create();
+        File uploadingFile = FileFixture.aUploadingFile();
+
+        given(loadFilePort.loadById(any(FileId.class)))
+                .willReturn(Optional.of(uploadingFile));
+
+        // Given: S3 Object 존재 (정상)
+        given(s3ClientPort.headObject(anyString()))
+                .willReturn(new S3ClientPort.HeadObjectResponse(1024L, "image/jpeg", "2024-11-16", "etag123"));
+
+        // Given: MessageOutbox 저장 성공
+        given(messageOutboxPersistencePort.persist(any(MessageOutbox.class)))
+                .willReturn(MessageOutboxId.of("outbox-123"));
+
+        // When: 업로드 완료 실행
+        completeUploadService.execute(command);
+
+        // Then: MessageOutbox가 persist 되었는지 검증
+        verify(messageOutboxPersistencePort).persist(any(MessageOutbox.class));
     }
 }
