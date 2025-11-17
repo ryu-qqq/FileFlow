@@ -140,4 +140,60 @@ class GeneratePresignedUrlServiceTest {
                 .isInstanceOf(InvalidMimeTypeException.class)
                 .hasMessageContaining("허용되지 않는");
     }
+
+    /**
+     * 🔴 RED Phase: 작은 파일 단일 업로드 테스트
+     * <p>
+     * 100MB 미만 파일은 단일 업로드 전략을 사용해야 합니다.
+     * Response의 uploadStrategy 필드로 전략 확인
+     * </p>
+     */
+    @Test
+    @DisplayName("100MB 미만 파일은 단일 업로드 전략을 사용해야 한다")
+    void shouldUseSingleUploadForSmallFile() {
+        // Given: 10MB 파일 Command
+        long smallFileSize = 10L * 1024L * 1024L; // 10MB
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withFileSize(smallFileSize);
+
+        // Given: Mock Port 동작 정의
+        File file = FileFixture.aJpgImage();
+        given(filePersistencePort.persist(any(File.class)))
+                .willReturn(file.getFileId());
+        given(s3ClientPort.generatePresignedUrl(any(String.class), any(java.time.Duration.class)))
+                .willReturn("https://s3.amazonaws.com/presigned-url");
+
+        // When: UseCase 실행
+        PresignedUrlResponse response = generatePresignedUrlService.execute(command);
+
+        // Then: 단일 업로드 전략 확인
+        assertThat(response.uploadStrategy()).isEqualTo("SINGLE");
+    }
+
+    /**
+     * 🔴 RED Phase: 큰 파일 Multipart 업로드 테스트
+     * <p>
+     * 100MB 이상 파일은 Multipart 업로드 전략을 사용해야 합니다.
+     * Response의 uploadStrategy 필드로 전략 확인
+     * </p>
+     */
+    @Test
+    @DisplayName("100MB 이상 파일은 Multipart 업로드 전략을 사용해야 한다")
+    void shouldUseMultipartUploadForLargeFile() {
+        // Given: 200MB 파일 Command
+        long largeFileSize = 200L * 1024L * 1024L; // 200MB
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withFileSize(largeFileSize);
+
+        // Given: Mock Port 동작 정의
+        File file = FileFixture.aJpgImage();
+        given(filePersistencePort.persist(any(File.class)))
+                .willReturn(file.getFileId());
+        given(s3ClientPort.generatePresignedUrl(any(String.class), any(java.time.Duration.class)))
+                .willReturn("https://s3.amazonaws.com/presigned-url");
+
+        // When: UseCase 실행
+        PresignedUrlResponse response = generatePresignedUrlService.execute(command);
+
+        // Then: Multipart 업로드 전략 확인
+        assertThat(response.uploadStrategy()).isEqualTo("MULTIPART");
+    }
 }
