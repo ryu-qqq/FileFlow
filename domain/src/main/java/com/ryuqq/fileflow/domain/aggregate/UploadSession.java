@@ -23,12 +23,12 @@ import java.util.Optional;
  * </p>
  *
  * <p>
- * 불변 객체 (Immutable):
- * - 상태 변경 시 새로운 인스턴스 반환
- * - Thread-safe
+ * 가변 객체 (Mutable):
+ * - 상태 변경 시 this 객체 직접 변경
+ * - Spring @Transactional 내에서 안전하게 동작
  * </p>
  */
-public final class UploadSession {
+public class UploadSession {
 
     /**
      * Presigned URL 유효 시간 (5분)
@@ -39,21 +39,24 @@ public final class UploadSession {
     private final SessionId sessionId;
 
     // Value Objects
-    private final TenantId tenantId; // Nullable (향후 확장)
+    private TenantId tenantId; // Nullable (향후 확장)
     private final FileName fileName;
     private final FileSize fileSize;
     private final MimeType mimeType;
     private final UploadType uploadType;
-    private final MultipartUpload multipartUpload; // Nullable (MULTIPART일 때만)
-    private final Checksum checksum; // Nullable (Optional)
-    private final ETag etag; // Nullable (업로드 완료 후)
+    private MultipartUpload multipartUpload; // Nullable (MULTIPART일 때만)
+    private Checksum checksum; // Nullable (Optional)
+    private ETag etag; // Nullable (업로드 완료 후)
 
     // Primitives
-    private final String presignedUrl; // Nullable
+    private String presignedUrl; // Nullable
     private final LocalDateTime expiresAt;
-    private final SessionStatus status;
+    private SessionStatus status;
     private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;  // 가변: 모든 비즈니스 메서드에서 자동 갱신
+
+    // Clock (테스트 가능한 시간 처리)
+    private final Clock clock;
 
     /**
      * Private Constructor (정적 팩토리 메서드 사용)
@@ -71,6 +74,7 @@ public final class UploadSession {
             String presignedUrl,
             LocalDateTime expiresAt,
             SessionStatus status,
+            Clock clock,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
@@ -86,27 +90,27 @@ public final class UploadSession {
         this.presignedUrl = presignedUrl;
         this.expiresAt = Objects.requireNonNull(expiresAt, "expiresAt은 null일 수 없습니다");
         this.status = Objects.requireNonNull(status, "status는 null일 수 없습니다");
+        this.clock = Objects.requireNonNull(clock, "clock은 null일 수 없습니다");
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt은 null일 수 없습니다");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt는 null일 수 없습니다");
     }
 
     /**
-     * 새로운 UploadSession 생성
+     * 새로운 UploadSession 생성 (영속화 전)
      * <p>
+     * ID가 null인 새로운 세션을 생성합니다.
      * 업로드 전략 자동 결정:
      * - fileSize < 100MB → SINGLE
      * - fileSize >= 100MB → MULTIPART
      * </p>
      *
-     * @param sessionId 세션 ID (멱등키)
-     * @param fileName  파일명
-     * @param fileSize  파일 크기
-     * @param mimeType  MIME 타입
-     * @param clock     시각 생성용 Clock
-     * @return 새로운 UploadSession (INITIATED 상태)
+     * @param fileName 파일명
+     * @param fileSize 파일 크기
+     * @param mimeType MIME 타입
+     * @param clock    시각 생성용 Clock
+     * @return 새로운 UploadSession (INITIATED 상태, ID null)
      */
-    public static UploadSession create(
-            SessionId sessionId,
+    public static UploadSession forNew(
             FileName fileName,
             FileSize fileSize,
             MimeType mimeType,
@@ -117,7 +121,7 @@ public final class UploadSession {
         LocalDateTime expiresAt = now.plusMinutes(PRESIGNED_URL_EXPIRY_MINUTES);
 
         return new UploadSession(
-                sessionId,
+                SessionId.forNew(), // ID는 영속화 시점에 생성
                 null, // tenantId (향후 확장)
                 fileName,
                 fileSize,
@@ -129,114 +133,206 @@ public final class UploadSession {
                 null, // presignedUrl (외부에서 설정)
                 expiresAt,
                 SessionStatus.INITIATED,
+                clock,
                 now,
                 now
         );
     }
 
     /**
-     * IN_PROGRESS 상태로 전환
+     * 기존 값으로 UploadSession 생성 (비즈니스 로직용)
+     * <p>
+     * ID가 필수인 세션을 생성합니다.
+     * </p>
      *
-     * @return IN_PROGRESS 상태의 새로운 UploadSession
+     * @param sessionId       세션 ID (필수, null 불가)
+     * @param tenantId        테넌트 ID
+     * @param fileName        파일명
+     * @param fileSize        파일 크기
+     * @param mimeType        MIME 타입
+     * @param uploadType      업로드 타입
+     * @param multipartUpload 멀티파트 업로드 정보
+     * @param checksum        체크섬
+     * @param etag            ETag
+     * @param presignedUrl    Presigned URL
+     * @param expiresAt       만료 시각
+     * @param status          세션 상태
+     * @param clock           시각 생성용 Clock
+     * @param createdAt       생성 시각
+     * @param updatedAt       최종 수정 시각
+     * @return UploadSession
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
      */
-    public UploadSession markAsInProgress() {
+    public static UploadSession of(
+            SessionId sessionId,
+            TenantId tenantId,
+            FileName fileName,
+            FileSize fileSize,
+            MimeType mimeType,
+            UploadType uploadType,
+            MultipartUpload multipartUpload,
+            Checksum checksum,
+            ETag etag,
+            String presignedUrl,
+            LocalDateTime expiresAt,
+            SessionStatus status,
+            Clock clock,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        validateIdNotNullOrNew(sessionId, "ID는 null이거나 새로운 ID일 수 없습니다");
+
         return new UploadSession(
                 sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
                 multipartUpload, checksum, etag, presignedUrl, expiresAt,
-                SessionStatus.IN_PROGRESS,
-                createdAt, LocalDateTime.now()
+                status, clock, createdAt, updatedAt
         );
+    }
+
+    /**
+     * 영속성 복원용 팩토리 메서드
+     * <p>
+     * 데이터베이스에서 조회한 엔티티를 Aggregate로 변환할 때 사용합니다.
+     * </p>
+     *
+     * @param sessionId       세션 ID (필수)
+     * @param tenantId        테넌트 ID
+     * @param fileName        파일명
+     * @param fileSize        파일 크기
+     * @param mimeType        MIME 타입
+     * @param uploadType      업로드 타입
+     * @param multipartUpload 멀티파트 업로드 정보
+     * @param checksum        체크섬
+     * @param etag            ETag
+     * @param presignedUrl    Presigned URL
+     * @param expiresAt       만료 시각
+     * @param status          세션 상태
+     * @param clock           시각 생성용 Clock
+     * @param createdAt       생성 시각
+     * @param updatedAt       최종 수정 시각
+     * @return 복원된 UploadSession
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
+     */
+    public static UploadSession reconstitute(
+            SessionId sessionId,
+            TenantId tenantId,
+            FileName fileName,
+            FileSize fileSize,
+            MimeType mimeType,
+            UploadType uploadType,
+            MultipartUpload multipartUpload,
+            Checksum checksum,
+            ETag etag,
+            String presignedUrl,
+            LocalDateTime expiresAt,
+            SessionStatus status,
+            Clock clock,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        validateIdNotNullOrNew(sessionId, "재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+
+        return new UploadSession(
+                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
+                multipartUpload, checksum, etag, presignedUrl, expiresAt,
+                status, clock, createdAt, updatedAt
+        );
+    }
+
+    /**
+     * ID 검증 헬퍼 메서드
+     */
+    private static void validateIdNotNullOrNew(SessionId sessionId, String errorMessage) {
+        if (sessionId == null || sessionId.isNew()) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+    }
+
+    /**
+     * IN_PROGRESS 상태로 전환
+     * <p>
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * </p>
+     */
+    public void updateToInProgress() {
+        this.status = SessionStatus.IN_PROGRESS;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * COMPLETED 상태로 전환 및 ETag 저장
+     * <p>
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * </p>
      *
      * @param etag S3가 반환한 ETag
-     * @return COMPLETED 상태의 새로운 UploadSession
      */
-    public UploadSession markAsCompleted(ETag etag) {
+    public void completeWithETag(ETag etag) {
         Objects.requireNonNull(etag, "etag는 null일 수 없습니다");
-        return new UploadSession(
-                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
-                multipartUpload, checksum, etag, presignedUrl, expiresAt,
-                SessionStatus.COMPLETED,
-                createdAt, LocalDateTime.now()
-        );
+        this.status = SessionStatus.COMPLETED;
+        this.etag = etag;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * EXPIRED 상태로 전환
-     *
-     * @return EXPIRED 상태의 새로운 UploadSession
+     * <p>
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * </p>
      */
-    public UploadSession markAsExpired() {
-        return new UploadSession(
-                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
-                multipartUpload, checksum, etag, presignedUrl, expiresAt,
-                SessionStatus.EXPIRED,
-                createdAt, LocalDateTime.now()
-        );
+    public void updateToExpired() {
+        this.status = SessionStatus.EXPIRED;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * FAILED 상태로 전환
+     * <p>
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * </p>
      *
-     * @param reason 실패 사유 (로깅용)
-     * @return FAILED 상태의 새로운 UploadSession
+     * @param reason 실패 사유 (로깅용, 도메인 객체에는 저장하지 않음)
      */
-    public UploadSession markAsFailed(String reason) {
+    public void fail(String reason) {
         // reason은 로깅용, 도메인 객체에는 저장하지 않음
-        return new UploadSession(
-                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
-                multipartUpload, checksum, etag, presignedUrl, expiresAt,
-                SessionStatus.FAILED,
-                createdAt, LocalDateTime.now()
-        );
+        this.status = SessionStatus.FAILED;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 멀티파트 업로드 초기화
      * <p>
      * MULTIPART 타입일 때만 호출 가능
+     * 가변 패턴: this 객체를 직접 변경합니다.
      * </p>
      *
      * @param uploadId   S3 Multipart Upload ID
      * @param totalParts 전체 파트 수
-     * @param clock      시각 생성용 Clock
-     * @return 멀티파트 업로드가 초기화된 새로운 UploadSession
      */
-    public UploadSession initiateMultipartUpload(MultipartUploadId uploadId, int totalParts, Clock clock) {
+    public void initiateMultipartUpload(MultipartUploadId uploadId, int totalParts) {
         if (!uploadType.isMultipartUpload()) {
             throw new IllegalStateException("MULTIPART 타입에서만 멀티파트 업로드를 초기화할 수 있습니다");
         }
 
-        MultipartUpload newMultipartUpload = MultipartUpload.forNew(uploadId, totalParts, clock);
-
-        return new UploadSession(
-                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
-                newMultipartUpload, checksum, etag, presignedUrl, expiresAt,
-                status, createdAt, LocalDateTime.now()
-        );
+        this.multipartUpload = MultipartUpload.forNew(uploadId, totalParts, clock);
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
      * 멀티파트 파트 추가
+     * <p>
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * </p>
      *
      * @param part 업로드된 파트
-     * @return 파트가 추가된 새로운 UploadSession
      */
-    public UploadSession addUploadedPart(UploadedPart part) {
+    public void addUploadedPart(UploadedPart part) {
         if (multipartUpload == null) {
             throw new IllegalStateException("멀티파트 업로드가 초기화되지 않았습니다");
         }
 
-        MultipartUpload updatedMultipartUpload = multipartUpload.withAddedPart(part);
-
-        return new UploadSession(
-                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
-                updatedMultipartUpload, checksum, etag, presignedUrl, expiresAt,
-                status, createdAt, LocalDateTime.now()
-        );
+        this.multipartUpload = multipartUpload.withAddedPart(part);
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**

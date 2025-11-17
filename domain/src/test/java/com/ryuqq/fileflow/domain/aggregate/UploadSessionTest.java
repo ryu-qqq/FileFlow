@@ -198,6 +198,142 @@ class UploadSessionTest {
         assertThat(result).isTrue();
     }
 
+    @Test
+    @DisplayName("of() 메서드로 기존 ID를 가진 UploadSession을 생성할 수 있어야 한다")
+    void shouldCreateUploadSessionUsingOfMethod() {
+        // given
+        SessionId sessionId = SessionId.of("01234567-89ab-7def-0123-456789abcdef"); // 기존 ID (not new)
+        TenantId tenantId = TenantId.of(1L);
+        FileName fileName = FileName.of("test.jpg");
+        FileSize fileSize = FileSize.of(50 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("image/jpeg");
+        UploadType uploadType = UploadType.SINGLE;
+        SessionStatus status = SessionStatus.INITIATED;
+        LocalDateTime createdAt = LocalDateTime.now(FIXED_CLOCK);
+        LocalDateTime updatedAt = LocalDateTime.now(FIXED_CLOCK);
+        LocalDateTime expiresAt = createdAt.plusMinutes(5);
+
+        // when
+        UploadSession session = UploadSession.of(
+                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
+                null, null, null, null, expiresAt, status, FIXED_CLOCK, createdAt, updatedAt
+        );
+
+        // then
+        assertThat(session.sessionId()).isEqualTo(sessionId);
+        assertThat(session.fileName()).isEqualTo(fileName);
+        assertThat(session.status()).isEqualTo(status);
+    }
+
+    @Test
+    @DisplayName("of() 메서드는 null ID일 때 예외를 발생시켜야 한다")
+    void shouldThrowExceptionWhenOfMethodWithNullId() {
+        // given
+        TenantId tenantId = TenantId.of(1L);
+        FileName fileName = FileName.of("test.jpg");
+        FileSize fileSize = FileSize.of(50 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("image/jpeg");
+
+        // when & then
+        assertThatThrownBy(() -> UploadSession.of(
+                null, tenantId, fileName, fileSize, mimeType, UploadType.SINGLE,
+                null, null, null, null, null, SessionStatus.INITIATED, FIXED_CLOCK,
+                LocalDateTime.now(FIXED_CLOCK), LocalDateTime.now(FIXED_CLOCK)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("of() 메서드는 새로운 ID일 때 예외를 발생시켜야 한다")
+    void shouldThrowExceptionWhenOfMethodWithNewId() {
+        // given
+        SessionId newId = SessionId.forNew(); // isNew() == true
+        TenantId tenantId = TenantId.of(1L);
+        FileName fileName = FileName.of("test.jpg");
+        FileSize fileSize = FileSize.of(50 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("image/jpeg");
+
+        // when & then
+        assertThatThrownBy(() -> UploadSession.of(
+                newId, tenantId, fileName, fileSize, mimeType, UploadType.SINGLE,
+                null, null, null, null, null, SessionStatus.INITIATED, FIXED_CLOCK,
+                LocalDateTime.now(FIXED_CLOCK), LocalDateTime.now(FIXED_CLOCK)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute() 메서드로 영속성 복원을 할 수 있어야 한다")
+    void shouldReconstituteUploadSessionFromPersistence() {
+        // given
+        SessionId sessionId = SessionId.of("abcdef01-2345-6789-abcd-ef0123456789");
+        TenantId tenantId = TenantId.of(1L);
+        FileName fileName = FileName.of("restored.pdf");
+        FileSize fileSize = FileSize.of(100 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("application/pdf");
+        UploadType uploadType = UploadType.SINGLE;
+        SessionStatus status = SessionStatus.COMPLETED;
+        ETag etag = ETag.of("abc123def456");
+        LocalDateTime createdAt = LocalDateTime.now(FIXED_CLOCK).minusHours(1);
+        LocalDateTime updatedAt = LocalDateTime.now(FIXED_CLOCK);
+        LocalDateTime expiresAt = createdAt.plusMinutes(5);
+
+        // when
+        UploadSession session = UploadSession.reconstitute(
+                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
+                null, null, etag, null, expiresAt, status, FIXED_CLOCK, createdAt, updatedAt
+        );
+
+        // then
+        assertThat(session.sessionId()).isEqualTo(sessionId);
+        assertThat(session.fileName()).isEqualTo(fileName);
+        assertThat(session.status()).isEqualTo(SessionStatus.COMPLETED);
+        assertThat(session.etag()).isEqualTo(etag);
+        assertThat(session.createdAt()).isEqualTo(createdAt);
+        assertThat(session.updatedAt()).isEqualTo(updatedAt);
+    }
+
+    @Test
+    @DisplayName("reconstitute() 메서드는 null ID일 때 예외를 발생시켜야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNullId() {
+        // given
+        TenantId tenantId = TenantId.of(1L);
+        FileName fileName = FileName.of("test.jpg");
+        FileSize fileSize = FileSize.of(50 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("image/jpeg");
+
+        // when & then
+        assertThatThrownBy(() -> UploadSession.reconstitute(
+                null, tenantId, fileName, fileSize, mimeType, UploadType.SINGLE,
+                null, null, null, null, null, SessionStatus.INITIATED, FIXED_CLOCK,
+                LocalDateTime.now(FIXED_CLOCK), LocalDateTime.now(FIXED_CLOCK)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute() 메서드는 새로운 ID일 때 예외를 발생시켜야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNewId() {
+        // given
+        SessionId newId = SessionId.forNew();
+        TenantId tenantId = TenantId.of(1L);
+        FileName fileName = FileName.of("test.jpg");
+        FileSize fileSize = FileSize.of(50 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("image/jpeg");
+
+        // when & then
+        assertThatThrownBy(() -> UploadSession.reconstitute(
+                newId, tenantId, fileName, fileSize, mimeType, UploadType.SINGLE,
+                null, null, null, null, null, SessionStatus.INITIATED, FIXED_CLOCK,
+                LocalDateTime.now(FIXED_CLOCK), LocalDateTime.now(FIXED_CLOCK)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
     // Helper Methods
 
     private UploadSession createDefaultSession() {
