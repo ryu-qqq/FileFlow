@@ -144,17 +144,17 @@ git commit -m "test: File Aggregate 비즈니스 메서드 테스트 추가"
 git commit -m "feat: File Aggregate 비즈니스 메서드 구현 (이미 구현됨)"
 ```
 
-#### Cycle 15: UploadSession Aggregate 테스트 보강
+#### Cycle 15: UploadSession Aggregate 테스트 보강 - ✅ **완료**
 ```
 테스트 항목:
-- [ ] updateToInProgress() 상태 전환
-- [ ] completeWithETag() 상태 전환 + ETag 저장
-- [ ] updateToExpired() 만료 처리
-- [ ] fail() 실패 처리
-- [ ] initiateMultipartUpload() 멀티파트 초기화
-- [ ] addUploadedPart() 파트 추가
-- [ ] isExpired() 만료 여부 체크
-- [ ] validateChecksum() 체크섬 검증
+- [x] updateToInProgress() 상태 전환 ✅ 이미 존재
+- [x] completeWithETag() 상태 전환 + ETag 저장 ✅ 이미 존재
+- [x] updateToExpired() 만료 처리 ✅ 추가 완료
+- [x] fail() 실패 처리 ✅ 추가 완료
+- [x] initiateMultipartUpload() 멀티파트 초기화 ✅ 이미 존재
+- [x] addUploadedPart() 파트 추가 ✅ 이미 존재
+- [x] isExpired() 만료 여부 체크 ✅ 이미 존재
+- [x] validateChecksum() 체크섬 검증 ✅ 추가 완료
 ```
 
 **커밋**:
