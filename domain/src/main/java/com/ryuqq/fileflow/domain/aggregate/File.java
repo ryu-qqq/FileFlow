@@ -1,6 +1,8 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
+import com.ryuqq.fileflow.domain.exception.InvalidFileSizeErrorCode;
 import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
+import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeErrorCode;
 import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
 import com.ryuqq.fileflow.domain.vo.*;
 
@@ -490,12 +492,10 @@ public class File {
      */
     private static void validateFileSize(long fileSize) {
         if (fileSize <= 0) {
-            throw new InvalidFileSizeException("파일 크기는 0보다 커야 합니다. 현재 크기: " + fileSize + " bytes");
+            throw new InvalidFileSizeException(InvalidFileSizeErrorCode.EMPTY_FILE_SIZE);
         }
         if (fileSize > MAX_FILE_SIZE) {
-            throw new InvalidFileSizeException(
-                    "파일 크기는 1GB를 초과할 수 없습니다. 현재 크기: " + fileSize + " bytes, 최대 크기: " + MAX_FILE_SIZE + " bytes"
-            );
+            throw new InvalidFileSizeException(InvalidFileSizeErrorCode.FILE_SIZE_LIMIT_EXCEEDED);
         }
     }
 
@@ -507,9 +507,7 @@ public class File {
      */
     private static void validateMimeType(String mimeType) {
         if (!ALLOWED_MIME_TYPES.contains(mimeType)) {
-            throw new InvalidMimeTypeException(
-                    "허용되지 않는 MIME 타입입니다. 제공된 타입: " + mimeType
-            );
+            throw new InvalidMimeTypeException(InvalidMimeTypeErrorCode.INVALID_MIME_TYPE);
         }
     }
 

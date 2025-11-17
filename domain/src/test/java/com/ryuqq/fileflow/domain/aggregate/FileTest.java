@@ -282,6 +282,70 @@ class FileTest {
                 .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
     }
 
+    @Test
+    @DisplayName("of()는 새로운 ID로 생성 시 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenOfWithNewId() {
+        // Given
+        com.ryuqq.fileflow.domain.vo.FileId newFileId = com.ryuqq.fileflow.domain.vo.FileId.forNew(); // isNew() == true
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+
+        // When & Then
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        assertThatThrownBy(() -> File.of(
+                java.time.Clock.systemUTC(),
+                newFileId,
+                "test.jpg",
+                1024000L,
+                "image/jpeg",
+                FileStatusFixture.pending(),
+                "uploads/test.jpg",
+                "fileflow-storage",
+                "https://cdn.fileflow.com/uploads/test.jpg",
+                uploaderId,
+                "IMAGE",
+                null,
+                RetryCount.forFile(),
+                1,
+                null,
+                now,
+                now
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute()는 새로운 ID로 재구성 시 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNewId() {
+        // Given
+        com.ryuqq.fileflow.domain.vo.FileId newFileId = com.ryuqq.fileflow.domain.vo.FileId.forNew(); // isNew() == true
+        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+
+        // When & Then
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        assertThatThrownBy(() -> File.reconstitute(
+                java.time.Clock.systemUTC(),
+                newFileId,
+                "test.jpg",
+                1024000L,
+                "image/jpeg",
+                FileStatusFixture.pending(),
+                "uploads/test.jpg",
+                "fileflow-storage",
+                "https://cdn.fileflow.com/uploads/test.jpg",
+                uploaderId,
+                "IMAGE",
+                null,
+                RetryCount.forFile(),
+                1,
+                null,
+                now,
+                now
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
     // ===== create() 팩토리 메서드 테스트 =====
 
     @Test
