@@ -29,6 +29,7 @@ public class GeneratePresignedUrlService implements GeneratePresignedUrlPort {
 
     private static final Duration PRESIGNED_URL_EXPIRATION = Duration.ofHours(1); // 1시간
     private static final String S3_BUCKET = "fileflow-bucket"; // TODO: 설정 외부화
+    private static final long MULTIPART_THRESHOLD = 100L * 1024L * 1024L; // 100MB
 
     private final FilePersistencePort filePersistencePort;
     private final S3ClientPort s3ClientPort;
@@ -125,9 +126,7 @@ public class GeneratePresignedUrlService implements GeneratePresignedUrlPort {
      * </p>
      */
     private String determineUploadStrategy(long fileSize) {
-        long multipartThreshold = 100L * 1024L * 1024L; // 100MB
-
-        if (fileSize < multipartThreshold) {
+        if (fileSize < MULTIPART_THRESHOLD) {
             return "SINGLE";
         } else {
             return "MULTIPART";
