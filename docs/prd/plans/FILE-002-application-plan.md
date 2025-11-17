@@ -603,26 +603,24 @@
 
 ---
 
-### 🔄 2️⃣4️⃣ UploadFromExternalUrlUseCase - URL 검증 (Cycle 24)
+### ✅ 2️⃣4️⃣ UploadFromExternalUrlUseCase - URL 검증 (Cycle 24)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `UploadFromExternalUrlServiceTest.java` 생성
-- [ ] `shouldThrowExceptionWhenInvalidUrl()` 테스트 작성 (HTTPS만 허용)
-- [ ] 커밋: `test: 외부 URL 검증 테스트 추가 (Red)`
+- [x] `UploadFromExternalUrlServiceTest.java` 생성
+- [x] `shouldThrowExceptionWhenInvalidUrl()` 테스트 작성 (HTTPS만 허용)
+- [x] 커밋: `test: 외부 URL 검증 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `service/UploadFromExternalUrlService.java` 생성
-- [ ] HTTPS URL 검증 로직 추가
-- [ ] InvalidUrlException 예외 발생
-- [ ] 커밋: `feat: 외부 URL 검증 구현 (Green)`
+- [x] `service/UploadFromExternalUrlService.java` 생성
+- [x] HTTPS URL 검증 로직 추가
+- [x] IllegalArgumentException 예외 발생 (보안 강화)
+- [x] 커밋: `feat: 외부 URL 검증 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: UploadFromExternalUrlService 개선 (Refactor)`
+- [x] 리팩토링 불필요 (GREEN에서 완료, 단순 검증 로직)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `UploadFromExternalUrlServiceFixture.java` 생성
-- [ ] 커밋: `test: UploadFromExternalUrlService Fixture 정리 (Tidy)`
+- [x] UploadFromExternalUrlCommandFixture 이미 존재 (사용 중)
 
 ---
 
