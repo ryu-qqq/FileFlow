@@ -104,7 +104,6 @@ public class UploadFromExternalUrlService implements UploadFromExternalUrlPort {
                 "FILE_DOWNLOAD_REQUESTED",
                 AggregateId.of(fileId.getValue()),
                 payload,
-                3, // maxRetryCount: 최대 3번 재시도
                 clock
         );
     }

@@ -184,6 +184,20 @@ public class FileFixture {
     }
 
     /**
+     * PENDING 상태 파일
+     */
+    public static File aPendingFile() {
+        return aFile()
+                .fileName("pending.jpg")
+                .fileSize(1024000L)
+                .mimeType("image/jpeg")
+                .uploaderId(UploaderId.of(1L))
+                .category("IMAGE")
+                .status(FileStatusFixture.pending())
+                .build();
+    }
+
+    /**
      * UPLOADING 상태 파일
      */
     public static File aUploadingFile() {

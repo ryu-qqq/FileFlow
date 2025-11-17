@@ -145,7 +145,6 @@ public class CompleteUploadService implements CompleteUploadPort {
                 "FILE_UPLOADED",
                 AggregateId.of(file.getFileIdValue()),
                 payload,
-                3,  // maxRetryCount
                 clock
         );
 
