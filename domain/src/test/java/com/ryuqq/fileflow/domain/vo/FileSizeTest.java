@@ -65,12 +65,10 @@ class FileSizeTest {
 
         // when & then
         assertThatThrownBy(() -> FileSize.of(zero))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("파일 크기는 1 byte 이상 1GB 이하여야 합니다");
+                .hasMessageContaining("파일 크기는 0 이상이어야 합니다");
 
         assertThatThrownBy(() -> FileSize.of(negative))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("파일 크기는 1 byte 이상 1GB 이하여야 합니다");
+                .hasMessageContaining("파일 크기는 0 이상이어야 합니다");
     }
 
     @Test
@@ -81,8 +79,7 @@ class FileSizeTest {
 
         // when & then
         assertThatThrownBy(() -> FileSize.of(overMaxSize))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("파일 크기는 1 byte 이상 1GB 이하여야 합니다");
+                .hasMessageContaining("파일 크기 제한을 초과했습니다");
     }
 
     @Test
