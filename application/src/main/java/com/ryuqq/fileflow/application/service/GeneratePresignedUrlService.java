@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.application.service;
 
 import com.ryuqq.fileflow.application.dto.command.GeneratePresignedUrlCommand;
 import com.ryuqq.fileflow.application.dto.response.PresignedUrlResponse;
-import com.ryuqq.fileflow.application.port.in.command.GeneratePresignedUrlPort;
+import com.ryuqq.fileflow.application.port.in.command.GeneratePresignedUrlUseCase;
 import com.ryuqq.fileflow.application.port.out.command.FilePersistencePort;
 import com.ryuqq.fileflow.application.port.out.external.S3ClientPort;
 import com.ryuqq.fileflow.domain.aggregate.File;
@@ -25,7 +25,7 @@ import java.util.Objects;
  * </p>
  */
 @Service
-public class GeneratePresignedUrlService implements GeneratePresignedUrlPort {
+public class GeneratePresignedUrlService implements GeneratePresignedUrlUseCase {
 
     private static final Duration PRESIGNED_URL_EXPIRATION = Duration.ofHours(1); // 1시간
     private static final String S3_BUCKET = "fileflow-bucket"; // TODO: 설정 외부화

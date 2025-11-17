@@ -3,10 +3,10 @@ package com.ryuqq.fileflow.application.port.in.command;
 import com.ryuqq.fileflow.application.dto.command.CompleteUploadCommand;
 
 /**
- * 업로드 완료 Port (Inbound Port)
+ * 업로드 완료 UseCase (Inbound Port - Command)
  * <p>
- * Inbound Port 규칙:
- * - 인터페이스명: *Port
+ * Zero-Tolerance 규칙 준수:
+ * - 인터페이스명: *UseCase (Port In Command)
  * - 패키지: ..application..port.in.command..
  * - 메서드: execute() 하나만
  * - Command 입력, Response 반환 (void 가능)
@@ -15,8 +15,11 @@ import com.ryuqq.fileflow.application.dto.command.CompleteUploadCommand;
  * 파일 업로드 완료 시 호출됩니다.
  * 클라이언트가 Presigned URL로 업로드 완료 후, 백엔드에 완료를 통지할 때 사용합니다.
  * </p>
+ *
+ * @author development-team
+ * @since 1.0.0
  */
-public interface CompleteUploadPort {
+public interface CompleteUploadUseCase {
 
     /**
      * 업로드 완료 UseCase 실행

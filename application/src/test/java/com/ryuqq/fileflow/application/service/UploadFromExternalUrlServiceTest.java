@@ -2,9 +2,9 @@ package com.ryuqq.fileflow.application.service;
 
 import com.ryuqq.fileflow.application.dto.command.UploadFromExternalUrlCommand;
 import com.ryuqq.fileflow.application.fixture.UploadFromExternalUrlCommandFixture;
-import com.ryuqq.fileflow.application.port.in.command.UploadFromExternalUrlPort;
+import com.ryuqq.fileflow.application.port.in.command.UploadFromExternalUrlUseCase;
+import com.ryuqq.fileflow.application.port.out.command.FilePersistencePort;
 import com.ryuqq.fileflow.application.port.out.command.MessageOutboxPersistencePort;
-import com.ryuqq.fileflow.application.port.out.command.SaveFilePort;
 import com.ryuqq.fileflow.domain.aggregate.File;
 import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
@@ -36,12 +36,12 @@ import static org.mockito.Mockito.verify;
 class UploadFromExternalUrlServiceTest {
 
     @Mock
-    private SaveFilePort saveFilePort;
+    private FilePersistencePort filePersistencePort;
 
     @Mock
     private MessageOutboxPersistencePort messageOutboxPersistencePort;
 
-    private UploadFromExternalUrlPort uploadFromExternalUrlPort;
+    private UploadFromExternalUrlUseCase uploadFromExternalUrlUseCase;
 
     @BeforeEach
     void setUp() {
@@ -50,8 +50,8 @@ class UploadFromExternalUrlServiceTest {
                 java.time.ZoneId.systemDefault()
         );
 
-        uploadFromExternalUrlPort = new UploadFromExternalUrlService(
-                saveFilePort,
+        uploadFromExternalUrlUseCase = new UploadFromExternalUrlService(
+                filePersistencePort,
                 messageOutboxPersistencePort,
                 clock
         );
@@ -71,7 +71,7 @@ class UploadFromExternalUrlServiceTest {
                 .withExternalUrl("http://example.com/image.jpg");
 
         // When & Then: IllegalArgumentException 발생 (InvalidUrlException)
-        assertThatThrownBy(() -> uploadFromExternalUrlPort.execute(command))
+        assertThatThrownBy(() -> uploadFromExternalUrlUseCase.execute(command))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("HTTPS");
     }
@@ -93,7 +93,7 @@ class UploadFromExternalUrlServiceTest {
         File pendingFile = FileFixture.aFile()
                 .fileName("external-image.jpg")
                 .build();
-        given(saveFilePort.save(any(File.class)))
+        given(filePersistencePort.persist(any(File.class)))
                 .willReturn(FileId.of("file-123"));
 
         // Given: MessageOutbox 저장 성공
@@ -101,10 +101,10 @@ class UploadFromExternalUrlServiceTest {
                 .willReturn(MessageOutboxId.of("outbox-456"));
 
         // When: 외부 URL 다운로드 요청 실행
-        uploadFromExternalUrlPort.execute(command);
+        uploadFromExternalUrlUseCase.execute(command);
 
         // Then: File이 저장되었는지 검증
-        verify(saveFilePort).save(any(File.class));
+        verify(filePersistencePort).persist(any(File.class));
 
         // Then: MessageOutbox가 persist 되었는지 검증
         verify(messageOutboxPersistencePort).persist(any(MessageOutbox.class));

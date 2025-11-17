@@ -1,10 +1,10 @@
 package com.ryuqq.fileflow.application.service;
 
 import com.ryuqq.fileflow.application.dto.command.CompleteUploadCommand;
-import com.ryuqq.fileflow.application.port.in.command.CompleteUploadPort;
+import com.ryuqq.fileflow.application.port.in.command.CompleteUploadUseCase;
 import com.ryuqq.fileflow.application.port.out.command.MessageOutboxPersistencePort;
 import com.ryuqq.fileflow.application.port.out.external.S3ClientPort;
-import com.ryuqq.fileflow.application.port.out.query.LoadFilePort;
+import com.ryuqq.fileflow.application.port.out.query.FileQueryPort;
 import com.ryuqq.fileflow.domain.aggregate.File;
 import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
 import com.ryuqq.fileflow.domain.vo.AggregateId;
@@ -26,25 +26,25 @@ import java.util.Set;
  * </p>
  */
 @Service
-public class CompleteUploadService implements CompleteUploadPort {
+public class CompleteUploadService implements CompleteUploadUseCase {
 
     private static final Set<FileStatus> ALLOWED_STATUSES = Set.of(
             FileStatus.PENDING,
             FileStatus.UPLOADING
     );
 
-    private final LoadFilePort loadFilePort;
+    private final FileQueryPort fileQueryPort;
     private final S3ClientPort s3ClientPort;
     private final MessageOutboxPersistencePort messageOutboxPersistencePort;
     private final Clock clock;
 
     public CompleteUploadService(
-            LoadFilePort loadFilePort,
+            FileQueryPort fileQueryPort,
             S3ClientPort s3ClientPort,
             MessageOutboxPersistencePort messageOutboxPersistencePort,
             Clock clock
     ) {
-        this.loadFilePort = Objects.requireNonNull(loadFilePort, "loadFilePort must not be null");
+        this.fileQueryPort = Objects.requireNonNull(fileQueryPort, "fileQueryPort must not be null");
         this.s3ClientPort = Objects.requireNonNull(s3ClientPort, "s3ClientPort must not be null");
         this.messageOutboxPersistencePort = Objects.requireNonNull(messageOutboxPersistencePort, "messageOutboxPersistencePort must not be null");
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
@@ -67,7 +67,7 @@ public class CompleteUploadService implements CompleteUploadPort {
     public void execute(CompleteUploadCommand command) {
         // 1. File 조회
         FileId fileId = FileId.of(command.fileId().toString());
-        File file = loadFilePort.loadById(fileId)
+        File file = fileQueryPort.findById(fileId)
                 .orElseThrow(() -> new IllegalArgumentException("File not found: " + command.fileId()));
 
         // 2. 상태 검증

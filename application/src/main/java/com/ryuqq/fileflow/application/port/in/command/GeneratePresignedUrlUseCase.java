@@ -4,10 +4,10 @@ import com.ryuqq.fileflow.application.dto.command.GeneratePresignedUrlCommand;
 import com.ryuqq.fileflow.application.dto.response.PresignedUrlResponse;
 
 /**
- * Presigned URL 생성 Port (Inbound Port)
+ * Presigned URL 생성 UseCase (Inbound Port - Command)
  * <p>
- * Inbound Port 규칙:
- * - 인터페이스명: *Port
+ * Zero-Tolerance 규칙 준수:
+ * - 인터페이스명: *UseCase (Port In Command)
  * - 패키지: ..application..port.in.command..
  * - 메서드: execute() 하나만
  * - Command 입력, Response 반환
@@ -15,8 +15,11 @@ import com.ryuqq.fileflow.application.dto.response.PresignedUrlResponse;
  * <p>
  * REST API Controller에서 호출하여 S3 업로드를 위한 Presigned URL을 생성합니다.
  * </p>
+ *
+ * @author development-team
+ * @since 1.0.0
  */
-public interface GeneratePresignedUrlPort {
+public interface GeneratePresignedUrlUseCase {
 
     /**
      * Presigned URL 생성 UseCase 실행

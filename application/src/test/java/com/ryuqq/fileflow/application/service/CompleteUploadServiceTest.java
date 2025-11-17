@@ -4,7 +4,7 @@ import com.ryuqq.fileflow.application.dto.command.CompleteUploadCommand;
 import com.ryuqq.fileflow.application.fixture.CompleteUploadCommandFixture;
 import com.ryuqq.fileflow.application.port.out.command.MessageOutboxPersistencePort;
 import com.ryuqq.fileflow.application.port.out.external.S3ClientPort;
-import com.ryuqq.fileflow.application.port.out.query.LoadFilePort;
+import com.ryuqq.fileflow.application.port.out.query.FileQueryPort;
 import com.ryuqq.fileflow.domain.aggregate.File;
 import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verify;
 class CompleteUploadServiceTest {
 
     @Mock
-    private LoadFilePort loadFilePort;
+    private FileQueryPort fileQueryPort;
 
     @Mock
     private S3ClientPort s3ClientPort;
@@ -58,7 +58,7 @@ class CompleteUploadServiceTest {
         );
 
         completeUploadService = new CompleteUploadService(
-                loadFilePort,
+                fileQueryPort,
                 s3ClientPort,
                 messageOutboxPersistencePort,
                 clock
@@ -79,7 +79,7 @@ class CompleteUploadServiceTest {
         CompleteUploadCommand command = CompleteUploadCommandFixture.create();
         File completedFile = FileFixture.aCompletedFile();
 
-        given(loadFilePort.loadById(any(FileId.class)))
+        given(fileQueryPort.findById(any(FileId.class)))
                 .willReturn(Optional.of(completedFile));
 
         // When & Then: IllegalStateException 발생 (Domain에서 검증)
@@ -102,7 +102,7 @@ class CompleteUploadServiceTest {
         CompleteUploadCommand command = CompleteUploadCommandFixture.create();
         File failedFile = FileFixture.aFailedFile();
 
-        given(loadFilePort.loadById(any(FileId.class)))
+        given(fileQueryPort.findById(any(FileId.class)))
                 .willReturn(Optional.of(failedFile));
 
         // When & Then: IllegalStateException 발생 (Domain에서 검증)
@@ -126,7 +126,7 @@ class CompleteUploadServiceTest {
         CompleteUploadCommand command = CompleteUploadCommandFixture.create();
         File uploadingFile = FileFixture.aUploadingFile();
 
-        given(loadFilePort.loadById(any(FileId.class)))
+        given(fileQueryPort.findById(any(FileId.class)))
                 .willReturn(Optional.of(uploadingFile));
 
         // Given: S3 Object가 존재하지 않음 (Mock S3ClientPort)
@@ -153,7 +153,7 @@ class CompleteUploadServiceTest {
         CompleteUploadCommand command = CompleteUploadCommandFixture.create();
         File uploadingFile = FileFixture.aUploadingFile();
 
-        given(loadFilePort.loadById(any(FileId.class)))
+        given(fileQueryPort.findById(any(FileId.class)))
                 .willReturn(Optional.of(uploadingFile));
 
         // Given: S3 Object 존재 (정상)

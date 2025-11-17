@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.application.service;
 
 import com.ryuqq.fileflow.application.dto.command.UploadFromExternalUrlCommand;
-import com.ryuqq.fileflow.application.port.in.command.UploadFromExternalUrlPort;
+import com.ryuqq.fileflow.application.port.in.command.UploadFromExternalUrlUseCase;
+import com.ryuqq.fileflow.application.port.out.command.FilePersistencePort;
 import com.ryuqq.fileflow.application.port.out.command.MessageOutboxPersistencePort;
-import com.ryuqq.fileflow.application.port.out.command.SaveFilePort;
 import com.ryuqq.fileflow.domain.aggregate.File;
 import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
 import com.ryuqq.fileflow.domain.vo.AggregateId;
@@ -23,18 +23,18 @@ import java.time.Clock;
  * </p>
  */
 @Service
-public class UploadFromExternalUrlService implements UploadFromExternalUrlPort {
+public class UploadFromExternalUrlService implements UploadFromExternalUrlUseCase {
 
-    private final SaveFilePort saveFilePort;
+    private final FilePersistencePort filePersistencePort;
     private final MessageOutboxPersistencePort messageOutboxPersistencePort;
     private final Clock clock;
 
     public UploadFromExternalUrlService(
-            SaveFilePort saveFilePort,
+            FilePersistencePort filePersistencePort,
             MessageOutboxPersistencePort messageOutboxPersistencePort,
             Clock clock
     ) {
-        this.saveFilePort = saveFilePort;
+        this.filePersistencePort = filePersistencePort;
         this.messageOutboxPersistencePort = messageOutboxPersistencePort;
         this.clock = clock;
     }
@@ -46,7 +46,7 @@ public class UploadFromExternalUrlService implements UploadFromExternalUrlPort {
 
         // 2. File 메타데이터 생성 (PENDING 상태)
         File pendingFile = createPendingFile(command);
-        FileId fileId = saveFilePort.save(pendingFile);
+        FileId fileId = filePersistencePort.persist(pendingFile);
 
         // 3. MessageOutbox 생성 (FILE_DOWNLOAD_REQUESTED 이벤트)
         MessageOutbox outbox = createFileDownloadRequestedOutbox(fileId, command);
