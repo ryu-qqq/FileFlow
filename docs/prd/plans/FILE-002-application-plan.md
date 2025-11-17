@@ -491,23 +491,24 @@
 
 ---
 
-### 1️⃣9️⃣ GeneratePresignedUrlUseCase - MIME 타입 검증 (Cycle 19)
+### 1️⃣9️⃣ GeneratePresignedUrlUseCase - MIME 타입 검증 (Cycle 19) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldThrowExceptionWhenInvalidMimeType()` 테스트 작성
-- [ ] 커밋: `test: MIME 타입 검증 테스트 추가 (Red)`
+- [x] `shouldThrowExceptionWhenInvalidMimeType()` 테스트 작성
+- [x] 커밋: `test: MIME 타입 검증 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] MIME 타입 허용 목록 검증 로직 추가
-- [ ] InvalidMimeTypeException 예외 발생
-- [ ] 커밋: `feat: MIME 타입 검증 구현 (Green)`
+- [x] MIME 타입 검증 로직 이미 구현됨 (Domain Layer File.forNew()에서 수행)
+- [x] File.validateMimeType() 메서드에서 ALLOWED_MIME_TYPES 검증 중
+- [x] InvalidMimeTypeException 예외 발생 확인
+- [x] Application Layer는 Domain 예외를 자연스럽게 전파
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 허용 목록 상수 추출 (ALLOWED_MIME_TYPES)
-- [ ] 커밋: `struct: MIME 타입 검증 개선 (Refactor)`
+- [x] 상수 이미 존재 (Domain Layer: ALLOWED_MIME_TYPES)
+- [x] 검증 로직 이미 최적화됨 (File.validateMimeType() private static method)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: MIME 타입 검증 테스트 정리 (Tidy)`
+- [x] GeneratePresignedUrlCommandFixture.withMimeType() 사용 확인
 
 ---
 
