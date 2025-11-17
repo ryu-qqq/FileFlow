@@ -25,7 +25,7 @@ class UploadFromExternalUrlServiceTest {
 
     @BeforeEach
     void setUp() {
-        // TODO: UploadFromExternalUrlService 생성 (GREEN phase에서 구현)
+        uploadFromExternalUrlPort = new UploadFromExternalUrlService();
     }
 
     /**
