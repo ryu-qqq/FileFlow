@@ -320,11 +320,7 @@ class FileProcessingJobTest {
     @DisplayName("PENDING 상태에서 PROCESSING 상태로 전환할 수 있어야 한다")
     void shouldMarkAsProcessing() {
         // Given
-        FileProcessingJob job = FileProcessingJobFixture.createJob(
-                "file-uuid-v7-123",
-                JobTypeFixture.thumbnailGeneration(),
-                "uploads/image.jpg"
-        );
+        FileProcessingJob job = FileProcessingJobFixture.forNew();
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending());
 
         // When
@@ -339,11 +335,7 @@ class FileProcessingJobTest {
     @DisplayName("작업을 완료 처리하고 outputS3Key를 설정할 수 있어야 한다")
     void shouldMarkAsCompleted() {
         // Given
-        FileProcessingJob job = FileProcessingJobFixture.createJob(
-                "file-uuid-v7-123",
-                JobTypeFixture.thumbnailGeneration(),
-                "uploads/image.jpg"
-        );
+        FileProcessingJob job = FileProcessingJobFixture.forNew();
         String outputS3Key = "processed/2024/01/thumbnail.jpg";
 
         // When
@@ -359,11 +351,7 @@ class FileProcessingJobTest {
     @DisplayName("작업을 실패 처리하고 errorMessage를 설정할 수 있어야 한다")
     void shouldMarkAsFailed() {
         // Given
-        FileProcessingJob job = FileProcessingJobFixture.createJob(
-                "file-uuid-v7-123",
-                JobTypeFixture.thumbnailGeneration(),
-                "uploads/image.jpg"
-        );
+        FileProcessingJob job = FileProcessingJobFixture.forNew();
         String errorMessage = "Image processing failed: Invalid format";
 
         // When
@@ -381,11 +369,7 @@ class FileProcessingJobTest {
     @DisplayName("재시도 횟수를 증가시킬 수 있어야 한다")
     void shouldIncrementRetryCount() {
         // Given
-        FileProcessingJob job = FileProcessingJobFixture.createJob(
-                "file-uuid-v7-123",
-                JobTypeFixture.thumbnailGeneration(),
-                "uploads/image.jpg"
-        );
+        FileProcessingJob job = FileProcessingJobFixture.forNew();
         assertThat(job.getRetryCount()).isEqualTo(0);
 
         // When

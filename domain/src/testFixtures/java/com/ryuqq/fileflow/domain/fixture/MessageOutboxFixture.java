@@ -24,19 +24,98 @@ public class MessageOutboxFixture {
     }
 
     /**
-     * MessageOutbox.forNew() 팩토리 메서드 사용 (PENDING 상태, ID null)
+     * MessageOutbox.forNew() 팩토리 메서드 (영속화 전, ID null)
      * <p>
-     * 새 메시지 생성 시 사용하는 헬퍼 메서드입니다.
+     * 기본값으로 MessageOutbox를 생성합니다. PENDING 상태.
      * RetryCount는 Outbox 전략 (최대 3회)으로 자동 설정됩니다.
      * </p>
      *
-     * @param eventType     이벤트 유형
-     * @param aggregateId   이벤트 발생 Aggregate ID
-     * @param payload       이벤트 페이로드 (JSON)
-     * @return 신규 MessageOutbox Aggregate (ID null)
+     * @return 생성된 MessageOutbox Aggregate (ID null)
      */
-    public static MessageOutbox createOutbox(String eventType, String aggregateId, String payload) {
-        return MessageOutbox.forNew(eventType, AggregateId.of(aggregateId), payload, Clock.systemUTC());
+    public static MessageOutbox forNew() {
+        return MessageOutbox.forNew(
+                "FileCreated",
+                aDefaultAggregateId(),
+                "{\"fileName\":\"test.jpg\",\"fileSize\":1024}",
+                Clock.systemUTC()
+        );
+    }
+
+    /**
+     * MessageOutbox.of() 팩토리 메서드 (ID 필수, 비즈니스 로직용)
+     * <p>
+     * 모든 필드를 커스터마이징할 수 있는 팩토리 메서드입니다.
+     * </p>
+     *
+     * @param id          메시지 ID (필수, null 불가)
+     * @param eventType   이벤트 유형
+     * @param aggregateId 이벤트 발생 Aggregate ID
+     * @param payload     이벤트 페이로드 (JSON)
+     * @param status      메시지 상태
+     * @return 생성된 MessageOutbox Aggregate
+     */
+    public static MessageOutbox of(
+            MessageOutboxId id,
+            String eventType,
+            AggregateId aggregateId,
+            String payload,
+            OutboxStatus status
+    ) {
+        LocalDateTime now = LocalDateTime.now();
+        return MessageOutbox.reconstitute(
+                id,
+                eventType,
+                aggregateId,
+                payload,
+                status,
+                RetryCount.forOutbox(),
+                Clock.systemUTC(),
+                now,  // createdAt
+                null, // processedAt
+                now   // updatedAt
+        );
+    }
+
+    /**
+     * MessageOutbox.reconstitute() 팩토리 메서드 (영속성 복원용)
+     * <p>
+     * 모든 필드를 지정하여 MessageOutbox를 복원합니다.
+     * </p>
+     *
+     * @param id          메시지 ID (필수, null 불가)
+     * @param eventType   이벤트 유형
+     * @param aggregateId 이벤트 발생 Aggregate ID
+     * @param payload     이벤트 페이로드 (JSON)
+     * @param status      메시지 상태
+     * @param retryCount  재시도 횟수
+     * @param createdAt   생성 시각
+     * @param processedAt 처리 시각
+     * @param updatedAt   수정 시각
+     * @return 복원된 MessageOutbox Aggregate
+     */
+    public static MessageOutbox reconstitute(
+            MessageOutboxId id,
+            String eventType,
+            AggregateId aggregateId,
+            String payload,
+            OutboxStatus status,
+            RetryCount retryCount,
+            LocalDateTime createdAt,
+            LocalDateTime processedAt,
+            LocalDateTime updatedAt
+    ) {
+        return MessageOutbox.reconstitute(
+                id,
+                eventType,
+                aggregateId,
+                payload,
+                status,
+                retryCount,
+                Clock.systemUTC(),
+                createdAt,
+                processedAt,
+                updatedAt
+        );
     }
 
 
@@ -47,11 +126,7 @@ public class MessageOutboxFixture {
      * </p>
      */
     public static MessageOutbox aSentOutbox() {
-        MessageOutbox outbox = createOutbox(
-                "FileCreated",
-                "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}"
-        );
+        MessageOutbox outbox = forNew();
         outbox.markAsSent(Clock.systemUTC());
         return outbox;
     }
@@ -63,11 +138,7 @@ public class MessageOutboxFixture {
      * </p>
      */
     public static MessageOutbox aFailedOutbox() {
-        MessageOutbox outbox = createOutbox(
-                "FileCreated",
-                "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\",\"fileSize\":1024000}"
-        );
+        MessageOutbox outbox = forNew();
         outbox.markAsFailed(Clock.systemUTC());
         return outbox;
     }

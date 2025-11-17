@@ -22,22 +22,104 @@ public class FileProcessingJobFixture {
     }
 
     /**
-     * FileProcessingJob.forNew() 팩토리 메서드 사용 (PENDING 상태, ID null)
+     * FileProcessingJob.forNew() 팩토리 메서드 (영속화 전, ID null)
      * <p>
-     * 새 작업 생성 시 사용하는 헬퍼 메서드입니다.
+     * 기본값으로 FileProcessingJob을 생성합니다. PENDING 상태.
      * RetryCount는 Job 전략 (최대 2회)으로 자동 설정됩니다.
      * </p>
      *
-     * @param fileId     파일 ID (String)
+     * @return 생성된 FileProcessingJob Aggregate (ID null)
+     */
+    public static FileProcessingJob forNew() {
+        return FileProcessingJob.forNew(
+                FileId.of(UuidV7GeneratorFixture.aUuidV7()),
+                JobTypeFixture.thumbnailGeneration(),
+                "uploads/2024/01/test-file.jpg",
+                java.time.Clock.systemUTC()
+        );
+    }
+
+    /**
+     * FileProcessingJob.of() 팩토리 메서드 (ID 필수, 비즈니스 로직용)
+     * <p>
+     * 모든 필드를 커스터마이징할 수 있는 팩토리 메서드입니다.
+     * </p>
+     *
+     * @param jobId      작업 ID (필수, null 불가)
+     * @param fileId     파일 ID
      * @param jobType    작업 유형
      * @param inputS3Key 입력 S3 키
+     * @param status     작업 상태
      * @return 생성된 FileProcessingJob Aggregate
      */
-    public static FileProcessingJob createJob(String fileId, JobType jobType, String inputS3Key) {
-        return FileProcessingJob.forNew(
-                FileId.of(fileId),
+    public static FileProcessingJob of(
+            FileProcessingJobId jobId,
+            FileId fileId,
+            JobType jobType,
+            String inputS3Key,
+            JobStatus status
+    ) {
+        LocalDateTime now = LocalDateTime.now();
+        return FileProcessingJob.reconstitute(
+                jobId,
+                fileId,
                 jobType,
+                status,
+                RetryCount.forJob(),
                 inputS3Key,
+                null, // outputS3Key
+                null, // errorMessage
+                now,  // createdAt
+                null, // processedAt
+                now,  // updatedAt
+                java.time.Clock.systemUTC()
+        );
+    }
+
+    /**
+     * FileProcessingJob.reconstitute() 팩토리 메서드 (영속성 복원용)
+     * <p>
+     * 모든 필드를 지정하여 FileProcessingJob을 복원합니다.
+     * </p>
+     *
+     * @param jobId       작업 ID (필수, null 불가)
+     * @param fileId      파일 ID
+     * @param jobType     작업 유형
+     * @param status      작업 상태
+     * @param retryCount  재시도 횟수
+     * @param inputS3Key  입력 S3 키
+     * @param outputS3Key 출력 S3 키
+     * @param errorMessage 에러 메시지
+     * @param createdAt   생성 시각
+     * @param processedAt 처리 시각
+     * @param updatedAt   수정 시각
+     * @return 복원된 FileProcessingJob Aggregate
+     */
+    public static FileProcessingJob reconstitute(
+            FileProcessingJobId jobId,
+            FileId fileId,
+            JobType jobType,
+            JobStatus status,
+            RetryCount retryCount,
+            String inputS3Key,
+            String outputS3Key,
+            String errorMessage,
+            LocalDateTime createdAt,
+            LocalDateTime processedAt,
+            LocalDateTime updatedAt
+    ) {
+        return FileProcessingJob.reconstitute(
+                jobId,
+                fileId,
+                jobType,
+                status,
+                retryCount,
+                inputS3Key,
+                outputS3Key,
+                errorMessage,
+                createdAt,
+                processedAt,
+                updatedAt,
                 java.time.Clock.systemUTC()
         );
     }
@@ -46,11 +128,7 @@ public class FileProcessingJobFixture {
      * COMPLETED 상태 작업
      */
     public static FileProcessingJob aCompletedJob() {
-        FileProcessingJob job = createJob(
-                "file-uuid-v7-123",
-                JobTypeFixture.thumbnailGeneration(),
-                "uploads/2024/01/image.jpg"
-        );
+        FileProcessingJob job = forNew();
         job.markAsCompleted("processed/2024/01/thumbnail.jpg", java.time.Clock.systemUTC());
         return job;
     }
@@ -59,11 +137,7 @@ public class FileProcessingJobFixture {
      * FAILED 상태 작업
      */
     public static FileProcessingJob aFailedJob() {
-        FileProcessingJob job = createJob(
-                "file-uuid-v7-123",
-                JobTypeFixture.thumbnailGeneration(),
-                "uploads/2024/01/image.jpg"
-        );
+        FileProcessingJob job = forNew();
         job.markAsFailed("Processing error: Invalid image format", java.time.Clock.systemUTC());
         return job;
     }

@@ -22,19 +22,129 @@ public class FileFixture {
     }
 
     /**
-     * File.forNew() 팩토리 메서드 사용 (PENDING 상태, UUID v7 자동 생성)
+     * File.forNew() 팩토리 메서드 (영속화 전, ID null)
+     * <p>
+     * 기본값으로 File을 생성합니다. PENDING 상태, UUID v7 자동 생성.
+     * </p>
      *
+     * @return 생성된 File Aggregate (ID null)
+     */
+    public static File forNew() {
+        String fileName = "test-file.dat";
+        long fileSize = 1024L; // 1KB
+        String mimeType = "application/octet-stream";
+        String s3Key = "uploads/2024/01/" + fileName;
+        String s3Bucket = "fileflow-storage";
+        UploaderId uploaderId = UploaderIdFixture.anUploaderId();
+        String category = "OTHER";
+        return File.forNew(fileName, fileSize, mimeType, s3Key, s3Bucket, uploaderId, category, null, Clock.systemUTC());
+    }
+
+    /**
+     * File.of() 팩토리 메서드 (ID 필수, 비즈니스 로직용)
+     * <p>
+     * 모든 필드를 커스터마이징할 수 있는 팩토리 메서드입니다.
+     * </p>
+     *
+     * @param fileId     파일 ID (필수, null 불가)
      * @param fileName   파일명
      * @param fileSize   파일 크기 (바이트)
      * @param mimeType   MIME 타입
+     * @param status     파일 상태
      * @param uploaderId 업로더 ID
      * @param category   파일 카테고리
      * @return 생성된 File Aggregate
      */
-    public static File createFile(String fileName, long fileSize, String mimeType, Long uploaderId, String category) {
+    public static File of(FileId fileId, String fileName, long fileSize, String mimeType, FileStatus status, UploaderId uploaderId, String category) {
         String s3Key = "uploads/2024/01/" + fileName;
         String s3Bucket = "fileflow-storage";
-        return File.forNew(fileName, fileSize, mimeType, s3Key, s3Bucket, UploaderId.of(uploaderId), category, null, java.time.Clock.systemUTC());
+        String cdnUrl = "https://cdn.example.com/" + s3Key;
+        RetryCount retryCount = RetryCount.forFile();
+        int version = 1;
+        LocalDateTime now = LocalDateTime.now();
+
+        return File.of(
+                Clock.systemUTC(),
+                fileId,
+                fileName,
+                fileSize,
+                mimeType,
+                status,
+                s3Key,
+                s3Bucket,
+                cdnUrl,
+                uploaderId,
+                category,
+                null, // tags
+                retryCount,
+                version,
+                null, // deletedAt
+                now, // createdAt
+                now  // updatedAt
+        );
+    }
+
+    /**
+     * File.reconstitute() 팩토리 메서드 (영속성 복원용)
+     * <p>
+     * 모든 필드를 지정하여 File을 복원합니다.
+     * </p>
+     *
+     * @param fileId     파일 ID (필수, null 불가)
+     * @param fileName   파일명
+     * @param fileSize   파일 크기 (바이트)
+     * @param mimeType   MIME 타입
+     * @param status     파일 상태
+     * @param s3Key      S3 객체 키
+     * @param s3Bucket   S3 버킷명
+     * @param cdnUrl     CDN URL
+     * @param uploaderId 업로더 ID
+     * @param category   파일 카테고리
+     * @param tags       태그
+     * @param retryCount 재시도 횟수
+     * @param version    낙관적 락 버전
+     * @param deletedAt  소프트 삭제 시각
+     * @param createdAt  생성 시각
+     * @param updatedAt  수정 시각
+     * @return 복원된 File Aggregate
+     */
+    public static File reconstitute(
+            FileId fileId,
+            String fileName,
+            long fileSize,
+            String mimeType,
+            FileStatus status,
+            String s3Key,
+            String s3Bucket,
+            String cdnUrl,
+            UploaderId uploaderId,
+            String category,
+            String tags,
+            RetryCount retryCount,
+            int version,
+            LocalDateTime deletedAt,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        return File.reconstitute(
+                Clock.systemUTC(),
+                fileId,
+                fileName,
+                fileSize,
+                mimeType,
+                status,
+                s3Key,
+                s3Bucket,
+                cdnUrl,
+                uploaderId,
+                category,
+                tags,
+                retryCount,
+                version,
+                deletedAt,
+                createdAt,
+                updatedAt
+        );
     }
 
     /**
@@ -91,37 +201,57 @@ public class FileFixture {
      * COMPLETED 상태 파일
      */
     public static File aCompletedFile() {
-        File file = createFile("completed.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        file.markAsCompleted();
-        return file;
+        return aFile()
+                .fileName("completed.jpg")
+                .fileSize(1024000L)
+                .mimeType("image/jpeg")
+                .uploaderId(UploaderId.of(1L))
+                .category("IMAGE")
+                .status(FileStatusFixture.completed())
+                .build();
     }
 
     /**
      * PROCESSING 상태 파일
      */
     public static File aProcessingFile() {
-        File file = createFile("processing.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        file.markAsCompleted();
-        file.markAsProcessing();
-        return file;
+        return aFile()
+                .fileName("processing.jpg")
+                .fileSize(1024000L)
+                .mimeType("image/jpeg")
+                .uploaderId(UploaderId.of(1L))
+                .category("IMAGE")
+                .status(FileStatusFixture.processing())
+                .build();
     }
 
     /**
      * FAILED 상태 파일
      */
     public static File aFailedFile() {
-        File file = createFile("failed.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        file.markAsFailed();
-        return file;
+        return aFile()
+                .fileName("failed.jpg")
+                .fileSize(1024000L)
+                .mimeType("image/jpeg")
+                .uploaderId(UploaderId.of(1L))
+                .category("IMAGE")
+                .status(FileStatusFixture.failed())
+                .build();
     }
 
     /**
      * 삭제된 파일 (softDelete)
      */
     public static File aDeletedFile() {
-        File file = createFile("deleted.jpg", 1024000L, "image/jpeg", 1L, "IMAGE");
-        file.softDelete();
-        return file;
+        LocalDateTime now = LocalDateTime.now();
+        return aFile()
+                .fileName("deleted.jpg")
+                .fileSize(1024000L)
+                .mimeType("image/jpeg")
+                .uploaderId(UploaderId.of(1L))
+                .category("IMAGE")
+                .deletedAt(now)
+                .build();
     }
 
     /**
