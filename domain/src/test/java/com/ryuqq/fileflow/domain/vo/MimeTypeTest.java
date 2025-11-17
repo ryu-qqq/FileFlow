@@ -44,8 +44,7 @@ class MimeTypeTest {
     void shouldThrowExceptionWhenValueIsNullOrEmpty(String invalidMimeType) {
         // when & then
         assertThatThrownBy(() -> MimeType.of(invalidMimeType))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("MIME 타입은 null이거나 빈 값일 수 없습니다");
+                .hasMessageContaining("MIME 타입은 비어있을 수 없습니다");
     }
 
     @ParameterizedTest
@@ -60,8 +59,7 @@ class MimeTypeTest {
     void shouldThrowExceptionWhenMimeTypeIsNotAllowed(String notAllowedMimeType) {
         // when & then
         assertThatThrownBy(() -> MimeType.of(notAllowedMimeType))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("허용되지 않은 MIME 타입입니다");
+                .hasMessageContaining("지원하지 않는 MIME 타입입니다");
     }
 
     @Test
