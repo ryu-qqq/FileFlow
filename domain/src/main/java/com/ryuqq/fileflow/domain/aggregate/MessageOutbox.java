@@ -275,9 +275,7 @@ public class MessageOutbox {
             LocalDateTime processedAt,
             LocalDateTime updatedAt
     ) {
-        if (id == null) {
-            throw new IllegalArgumentException("ID는 null일 수 없습니다");
-        }
+        validateIdNotNullOrNew(id, "ID는 null이거나 새로운 ID일 수 없습니다");
 
         return new MessageOutbox(
                 id,
@@ -325,9 +323,7 @@ public class MessageOutbox {
             LocalDateTime processedAt,
             LocalDateTime updatedAt
     ) {
-        if (id == null) {
-            throw new IllegalArgumentException("ID는 null일 수 없습니다");
-        }
+        validateIdNotNullOrNew(id, "재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
 
         return new MessageOutbox(
                 id,
@@ -343,6 +339,18 @@ public class MessageOutbox {
         );
     }
 
+    /**
+     * ID 검증: null이거나 새로운 ID일 때 예외 발생
+     *
+     * @param id           검증할 ID
+     * @param errorMessage 예외 메시지
+     * @throws IllegalArgumentException ID가 null이거나 새로운 ID일 때
+     */
+    private static void validateIdNotNullOrNew(MessageOutboxId id, String errorMessage) {
+        if (id == null || id.isNew()) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+    }
 
     /**
      * 메시지를 발송 완료 상태로 변경

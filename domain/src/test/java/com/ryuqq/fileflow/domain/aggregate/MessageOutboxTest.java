@@ -95,11 +95,7 @@ class MessageOutboxTest {
     @DisplayName("메시지를 발송 완료 처리하고 processedAt을 설정할 수 있어야 한다")
     void shouldMarkAsSent() {
         // Given
-        MessageOutbox outbox = MessageOutboxFixture.createOutbox(
-                "FileCreated",
-                "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\"}"
-        );
+        MessageOutbox outbox = MessageOutboxFixture.forNew();
         assertThat(outbox.getStatus()).isEqualTo(OutboxStatusFixture.pending());
 
         // When
@@ -114,11 +110,7 @@ class MessageOutboxTest {
     @DisplayName("발송 완료 시 processedAt이 현재 시각으로 설정되어야 한다")
     void shouldMarkAsSentWithProcessedAt() {
         // Given
-        MessageOutbox outbox = MessageOutboxFixture.createOutbox(
-                "FileCreated",
-                "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\"}"
-        );
+        MessageOutbox outbox = MessageOutboxFixture.forNew();
 
         // When
         outbox.markAsSent(Clock.systemUTC());
@@ -132,11 +124,7 @@ class MessageOutboxTest {
     @DisplayName("메시지를 실패 처리할 수 있어야 한다")
     void shouldMarkAsFailed() {
         // Given
-        MessageOutbox outbox = MessageOutboxFixture.createOutbox(
-                "FileCreated",
-                "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\"}"
-        );
+        MessageOutbox outbox = MessageOutboxFixture.forNew();
 
         // When
         outbox.markAsFailed(Clock.systemUTC());
@@ -152,11 +140,7 @@ class MessageOutboxTest {
     @DisplayName("재시도 횟수를 증가시킬 수 있어야 한다")
     void shouldIncrementRetryCount() {
         // Given
-        MessageOutbox outbox = MessageOutboxFixture.createOutbox(
-                "FileCreated",
-                "file-uuid-v7-123",
-                "{\"fileName\":\"test.jpg\"}"
-        );
+        MessageOutbox outbox = MessageOutboxFixture.forNew();
         assertThat(outbox.getRetryCount()).isEqualTo(0);
 
         // When
@@ -340,7 +324,7 @@ class MessageOutboxTest {
                 LocalDateTime.now()  // updatedAt
         ))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("ID는 null일 수 없습니다");
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
     }
 
     @Test
@@ -398,7 +382,53 @@ class MessageOutboxTest {
                 LocalDateTime.now()  // updatedAt
         ))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("ID는 null일 수 없습니다");
+                .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("of() 팩토리 메서드에 새로운 ID를 전달하면 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenOfWithNewId() {
+        // Given
+        MessageOutboxId newId = MessageOutboxId.forNew(); // isNew() == true
+
+        // When & Then
+        assertThatThrownBy(() -> MessageOutbox.of(
+                newId,
+                "FileCreated",
+                AggregateId.of("file-uuid-v7-123"),
+                "{\"fileName\":\"test.jpg\"}",
+                OutboxStatusFixture.pending(),
+                RetryCount.forOutbox(),
+                Clock.systemUTC(),
+                LocalDateTime.now(),
+                null,
+                LocalDateTime.now()
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute() 팩토리 메서드에 새로운 ID를 전달하면 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNewId() {
+        // Given
+        MessageOutboxId newId = MessageOutboxId.forNew(); // isNew() == true
+
+        // When & Then
+        assertThatThrownBy(() -> MessageOutbox.reconstitute(
+                newId,
+                "FileCreated",
+                AggregateId.of("file-uuid-v7-123"),
+                "{}",
+                OutboxStatusFixture.pending(),
+                RetryCount.forOutbox(),
+                Clock.systemUTC(),
+                LocalDateTime.now(),
+                null,
+                LocalDateTime.now()
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
     }
 
     // ========================================
