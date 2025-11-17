@@ -4,6 +4,13 @@
 # Git Post-Commit Hook for LangFuse TDD Tracking
 # =====================================================
 
+# .env 파일 로드 (LangFuse 환경 변수)
+if [[ -f ".env" ]]; then
+    set -a
+    source .env
+    set +a
+fi
+
 # 프로젝트 정보
 PROJECT_NAME=$(basename "$(pwd)")
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)

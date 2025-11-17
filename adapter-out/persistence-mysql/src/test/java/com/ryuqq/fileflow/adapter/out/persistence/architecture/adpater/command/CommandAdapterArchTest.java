@@ -42,7 +42,7 @@ class CommandAdapterArchTest {
     @BeforeAll
     static void setUp() {
         commandAdapterClasses = new ClassFileImporter()
-            .importPackages("com.ryuqq.adapter.out.persistence");
+            .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
     }
 
     /**

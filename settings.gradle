@@ -1,4 +1,4 @@
-rootProject.name = 'com.ryuqq.fileflow'
+rootProject.name = 'fileflow'
 
 // ========================================
 // Core Modules (Hexagonal Architecture)
