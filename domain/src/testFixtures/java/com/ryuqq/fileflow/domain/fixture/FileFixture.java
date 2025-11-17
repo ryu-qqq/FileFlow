@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.domain.fixture;
 import com.ryuqq.fileflow.domain.aggregate.File;
 import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
+import com.ryuqq.fileflow.domain.vo.RetryCount;
 import com.ryuqq.fileflow.domain.vo.UploaderId;
 
 import java.time.Clock;
@@ -138,7 +139,7 @@ public class FileFixture {
         private UploaderId uploaderId = UploaderIdFixture.anUploaderId();
         private String category = "OTHER";
         private String tags = null;
-        private int retryCount = 0;
+        private RetryCount retryCount = RetryCount.forFile(); // VO 적용
         private int version = 1;
         private LocalDateTime deletedAt = null;
         private LocalDateTime createdAt = LocalDateTime.now();
@@ -201,7 +202,7 @@ public class FileFixture {
             return this;
         }
 
-        public FileBuilder retryCount(int retryCount) {
+        public FileBuilder retryCount(RetryCount retryCount) {
             this.retryCount = retryCount;
             return this;
         }

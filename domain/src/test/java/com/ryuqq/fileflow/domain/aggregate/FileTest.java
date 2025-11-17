@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
 import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
 import com.ryuqq.fileflow.domain.fixture.FileStatusFixture;
+import com.ryuqq.fileflow.domain.vo.RetryCount;
 import com.ryuqq.fileflow.domain.vo.UploaderId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -160,7 +161,7 @@ class FileTest {
                 uploaderId,
                 "DOCUMENT",
                 "important,contract",
-                0,
+                RetryCount.forFile(),
                 1,
                 null, // deletedAt
                 now, // createdAt
@@ -197,7 +198,7 @@ class FileTest {
                 uploaderId,
                 "IMAGE",
                 null,
-                0,
+                RetryCount.forFile(),
                 1,
                 null,
                 now,
@@ -232,7 +233,7 @@ class FileTest {
                 uploaderId,
                 "IMAGE",
                 "archived",
-                2,
+                RetryCount.forFile().increment().increment(),
                 5,
                 null,
                 now.minusDays(7), // createdAt
@@ -271,7 +272,7 @@ class FileTest {
                 uploaderId,
                 "IMAGE",
                 null,
-                0,
+                RetryCount.forFile(),
                 1,
                 null,
                 now,

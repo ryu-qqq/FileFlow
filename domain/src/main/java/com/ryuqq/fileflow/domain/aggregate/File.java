@@ -2,9 +2,9 @@ package com.ryuqq.fileflow.domain.aggregate;
 
 import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
 import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
-import com.ryuqq.fileflow.domain.vo.FileId;
-import com.ryuqq.fileflow.domain.vo.FileStatus;
-import com.ryuqq.fileflow.domain.vo.UploaderId;
+import com.ryuqq.fileflow.domain.vo.*;
+
+// VO imports for File fields
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -63,7 +63,7 @@ public class File {
     private final UploaderId uploaderId;
     private final String category;
     private final String tags;
-    private int retryCount;
+    private RetryCount retryCount; // VO 적용
     private final int version;
     private LocalDateTime deletedAt;
     private final LocalDateTime createdAt;
@@ -87,7 +87,7 @@ public class File {
      * @param uploaderId 업로더 사용자 ID (UploaderId VO, Long FK 전략)
      * @param category   파일 카테고리
      * @param tags       태그 (콤마 구분)
-     * @param retryCount 재시도 횟수
+     * @param retryCount 재시도 횟수 (RetryCount VO)
      * @param version    낙관적 락 버전
      * @param deletedAt  소프트 삭제 시각
      * @param createdAt  생성 시각
@@ -106,7 +106,7 @@ public class File {
             UploaderId uploaderId,
             String category,
             String tags,
-            int retryCount,
+            RetryCount retryCount,
             int version,
             LocalDateTime deletedAt,
             LocalDateTime createdAt,
@@ -236,7 +236,7 @@ public class File {
      * 재시도 횟수 조회
      */
     public int getRetryCount() {
-        return retryCount;
+        return retryCount.current();
     }
 
     /**
@@ -322,7 +322,7 @@ public class File {
                 uploaderId,
                 category,
                 tags,
-                0, // 초기 재시도 횟수 0
+                RetryCount.forFile(), // 파일 재시도 전략 (최대 3회)
                 1, // 초기 버전 1
                 null, // deletedAt은 null
                 now, // createdAt
@@ -348,7 +348,7 @@ public class File {
      * @param uploaderId  업로더 사용자 ID (UploaderId VO)
      * @param category    파일 카테고리
      * @param tags        태그 (콤마 구분, nullable)
-     * @param retryCount  재시도 횟수
+     * @param retryCount  재시도 횟수 (RetryCount VO)
      * @param version     낙관적 락 버전
      * @param deletedAt   소프트 삭제 시각
      * @param createdAt   생성 시각
@@ -369,7 +369,7 @@ public class File {
             UploaderId uploaderId,
             String category,
             String tags,
-            int retryCount,
+            RetryCount retryCount,
             int version,
             LocalDateTime deletedAt,
             LocalDateTime createdAt,
@@ -416,7 +416,7 @@ public class File {
      * @param uploaderId  업로더 사용자 ID (UploaderId VO)
      * @param category    파일 카테고리
      * @param tags        태그 (콤마 구분, nullable)
-     * @param retryCount  재시도 횟수
+     * @param retryCount  재시도 횟수 (RetryCount VO)
      * @param version     낙관적 락 버전
      * @param deletedAt   소프트 삭제 시각
      * @param createdAt   생성 시각
@@ -437,7 +437,7 @@ public class File {
             UploaderId uploaderId,
             String category,
             String tags,
-            int retryCount,
+            RetryCount retryCount,
             int version,
             LocalDateTime deletedAt,
             LocalDateTime createdAt,
@@ -574,7 +574,7 @@ public class File {
      * </p>
      */
     public void incrementRetryCount() {
-        this.retryCount++;
+        this.retryCount = this.retryCount.increment();
         this.updatedAt = LocalDateTime.now(clock);
     }
 
