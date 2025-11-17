@@ -8,6 +8,7 @@ import com.ryuqq.fileflow.domain.fixture.JobTypeFixture;
 import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileProcessingJobId;
 import com.ryuqq.fileflow.domain.vo.JobType;
+import com.ryuqq.fileflow.domain.vo.RetryCount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,6 @@ class FileProcessingJobTest {
                 .jobType(JobTypeFixture.thumbnailGeneration())
                 .fileId(fileId)
                 .inputS3Key("uploads/2024/01/image.jpg")
-                .maxRetryCount(3)
                 .build();
 
         // Then
@@ -36,7 +36,7 @@ class FileProcessingJobTest {
         assertThat(job.getJobType()).isEqualTo(JobTypeFixture.thumbnailGeneration());
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending());
         assertThat(job.getInputS3Key()).isEqualTo("uploads/2024/01/image.jpg");
-        assertThat(job.getMaxRetryCount()).isEqualTo(3);
+        assertThat(job.getMaxRetryCount()).isEqualTo(2); // Job 전략: 최대 2회
         assertThat(job.getRetryCount()).isEqualTo(0);
         assertThat(job.getOutputS3Key()).isNull();
         assertThat(job.getErrorMessage()).isNull();
@@ -69,14 +69,12 @@ class FileProcessingJobTest {
         FileId fileId = FileIdFixture.aFileId();
         JobType jobType = JobTypeFixture.thumbnailGeneration();
         String inputS3Key = "uploads/2024/01/image.jpg";
-        int maxRetryCount = 3;
 
         // When
         FileProcessingJob job = FileProcessingJob.forNew(
                 fileId,
                 jobType,
                 inputS3Key,
-                maxRetryCount,
                 java.time.Clock.systemUTC()
         );
 
@@ -88,7 +86,7 @@ class FileProcessingJobTest {
         assertThat(job.getJobType()).isEqualTo(jobType);
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending());
         assertThat(job.getInputS3Key()).isEqualTo(inputS3Key);
-        assertThat(job.getMaxRetryCount()).isEqualTo(maxRetryCount);
+        assertThat(job.getMaxRetryCount()).isEqualTo(2); // Job 전략: 최대 2회
         assertThat(job.getRetryCount()).isEqualTo(0);
         assertThat(job.getOutputS3Key()).isNull();
         assertThat(job.getErrorMessage()).isNull();
@@ -112,8 +110,7 @@ class FileProcessingJobTest {
                 fileId,
                 jobType,
                 JobStatusFixture.pending(),
-                0,
-                3,
+                RetryCount.forJob(),
                 inputS3Key,
                 null,
                 null,
@@ -144,8 +141,7 @@ class FileProcessingJobTest {
                 fileId,
                 JobTypeFixture.thumbnailGeneration(),
                 JobStatusFixture.pending(),
-                0,
-                3,
+                RetryCount.forJob(),
                 "uploads/image.jpg",
                 null,
                 null,
@@ -174,8 +170,7 @@ class FileProcessingJobTest {
                 fileId,
                 jobType,
                 JobStatusFixture.pending(),
-                0,
-                3,
+                RetryCount.forJob(),
                 inputS3Key,
                 null,
                 null,
@@ -206,8 +201,7 @@ class FileProcessingJobTest {
                 fileId,
                 JobTypeFixture.thumbnailGeneration(),
                 JobStatusFixture.pending(),
-                0,
-                3,
+                RetryCount.forJob(),
                 "uploads/image.jpg",
                 null,
                 null,
@@ -238,7 +232,6 @@ class FileProcessingJobTest {
                 fileId,
                 jobType,
                 "uploads/image.jpg",
-                3,
                 fixedClock
         );
 
@@ -259,7 +252,6 @@ class FileProcessingJobTest {
                 fileId,
                 JobTypeFixture.thumbnailGeneration(),
                 "uploads/image.jpg",
-                3,
                 fixedClock
         );
 
@@ -285,7 +277,6 @@ class FileProcessingJobTest {
                 fileId,
                 JobTypeFixture.thumbnailGeneration(),
                 "uploads/image.jpg",
-                3,
                 fixedClock
         );
 
@@ -303,11 +294,10 @@ class FileProcessingJobTest {
         FileId fileId = FileIdFixture.aFileId();
         JobType jobType = JobTypeFixture.thumbnailGeneration();
         String inputS3Key = "uploads/2024/01/image.jpg";
-        int maxRetryCount = 3;
         java.time.Clock clock = java.time.Clock.systemUTC();
 
         // When
-        FileProcessingJob job = FileProcessingJob.forNew(fileId, jobType, inputS3Key, maxRetryCount, clock);
+        FileProcessingJob job = FileProcessingJob.forNew(fileId, jobType, inputS3Key, clock);
 
         // Then
         assertThat(job.getJobId()).isNotNull();
@@ -316,7 +306,7 @@ class FileProcessingJobTest {
         assertThat(job.getJobType()).isEqualTo(jobType);
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending()); // PENDING 상태
         assertThat(job.getInputS3Key()).isEqualTo(inputS3Key);
-        assertThat(job.getMaxRetryCount()).isEqualTo(maxRetryCount);
+        assertThat(job.getMaxRetryCount()).isEqualTo(2); // Job 전략: 최대 2회
         assertThat(job.getRetryCount()).isEqualTo(0); // 초기 재시도 횟수 0
         assertThat(job.getOutputS3Key()).isNull();
         assertThat(job.getErrorMessage()).isNull();
@@ -333,8 +323,7 @@ class FileProcessingJobTest {
         FileProcessingJob job = FileProcessingJobFixture.createJob(
                 "file-uuid-v7-123",
                 JobTypeFixture.thumbnailGeneration(),
-                "uploads/image.jpg",
-                3
+                "uploads/image.jpg"
         );
         assertThat(job.getStatus()).isEqualTo(JobStatusFixture.pending());
 
@@ -353,8 +342,7 @@ class FileProcessingJobTest {
         FileProcessingJob job = FileProcessingJobFixture.createJob(
                 "file-uuid-v7-123",
                 JobTypeFixture.thumbnailGeneration(),
-                "uploads/image.jpg",
-                3
+                "uploads/image.jpg"
         );
         String outputS3Key = "processed/2024/01/thumbnail.jpg";
 
@@ -374,8 +362,7 @@ class FileProcessingJobTest {
         FileProcessingJob job = FileProcessingJobFixture.createJob(
                 "file-uuid-v7-123",
                 JobTypeFixture.thumbnailGeneration(),
-                "uploads/image.jpg",
-                3
+                "uploads/image.jpg"
         );
         String errorMessage = "Image processing failed: Invalid format";
 
@@ -397,8 +384,7 @@ class FileProcessingJobTest {
         FileProcessingJob job = FileProcessingJobFixture.createJob(
                 "file-uuid-v7-123",
                 JobTypeFixture.thumbnailGeneration(),
-                "uploads/image.jpg",
-                3
+                "uploads/image.jpg"
         );
         assertThat(job.getRetryCount()).isEqualTo(0);
 
@@ -414,8 +400,7 @@ class FileProcessingJobTest {
     void shouldReturnTrueWhenCanRetry() {
         // Given
         FileProcessingJob job = FileProcessingJobFixture.aJob()
-                .retryCount(2)
-                .maxRetryCount(3)
+                .retryCount(RetryCount.forJob().increment()) // current=1, max=2 → canRetry=true
                 .build();
 
         // When
@@ -430,8 +415,7 @@ class FileProcessingJobTest {
     void shouldReturnFalseWhenCannotRetry() {
         // Given
         FileProcessingJob job = FileProcessingJobFixture.aJob()
-                .retryCount(3)
-                .maxRetryCount(3)
+                .retryCount(RetryCount.forJob().increment().increment()) // current=2, max=2 → canRetry=false
                 .build();
 
         // When
@@ -527,7 +511,6 @@ class FileProcessingJobTest {
                 FileIdFixture.aFileId(),
                 JobTypeFixture.thumbnailGeneration(),
                 "uploads/image.jpg",
-                3,
                 fixedClock
         );
 
@@ -553,7 +536,6 @@ class FileProcessingJobTest {
                 FileIdFixture.aFileId(),
                 JobTypeFixture.thumbnailGeneration(),
                 "uploads/image.jpg",
-                3,
                 initialClock
         );
 
@@ -585,7 +567,6 @@ class FileProcessingJobTest {
                 FileIdFixture.aFileId(),
                 JobTypeFixture.thumbnailGeneration(),
                 "uploads/image.jpg",
-                3,
                 initialClock
         );
 

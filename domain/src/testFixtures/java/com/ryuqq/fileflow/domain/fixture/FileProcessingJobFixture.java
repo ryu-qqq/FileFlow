@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileProcessingJobId;
 import com.ryuqq.fileflow.domain.vo.JobStatus;
 import com.ryuqq.fileflow.domain.vo.JobType;
+import com.ryuqq.fileflow.domain.vo.RetryCount;
 
 import java.time.LocalDateTime;
 
@@ -24,20 +25,19 @@ public class FileProcessingJobFixture {
      * FileProcessingJob.forNew() 팩토리 메서드 사용 (PENDING 상태, ID null)
      * <p>
      * 새 작업 생성 시 사용하는 헬퍼 메서드입니다.
+     * RetryCount는 Job 전략 (최대 2회)으로 자동 설정됩니다.
      * </p>
      *
-     * @param fileId        파일 ID (String)
-     * @param jobType       작업 유형
-     * @param inputS3Key    입력 S3 키
-     * @param maxRetryCount 최대 재시도 횟수
+     * @param fileId     파일 ID (String)
+     * @param jobType    작업 유형
+     * @param inputS3Key 입력 S3 키
      * @return 생성된 FileProcessingJob Aggregate
      */
-    public static FileProcessingJob createJob(String fileId, JobType jobType, String inputS3Key, int maxRetryCount) {
+    public static FileProcessingJob createJob(String fileId, JobType jobType, String inputS3Key) {
         return FileProcessingJob.forNew(
                 FileId.of(fileId),
                 jobType,
                 inputS3Key,
-                maxRetryCount,
                 java.time.Clock.systemUTC()
         );
     }
@@ -49,8 +49,7 @@ public class FileProcessingJobFixture {
         FileProcessingJob job = createJob(
                 "file-uuid-v7-123",
                 JobTypeFixture.thumbnailGeneration(),
-                "uploads/2024/01/image.jpg",
-                3
+                "uploads/2024/01/image.jpg"
         );
         job.markAsCompleted("processed/2024/01/thumbnail.jpg", java.time.Clock.systemUTC());
         return job;
@@ -63,8 +62,7 @@ public class FileProcessingJobFixture {
         FileProcessingJob job = createJob(
                 "file-uuid-v7-123",
                 JobTypeFixture.thumbnailGeneration(),
-                "uploads/2024/01/image.jpg",
-                3
+                "uploads/2024/01/image.jpg"
         );
         job.markAsFailed("Processing error: Invalid image format", java.time.Clock.systemUTC());
         return job;
@@ -78,8 +76,7 @@ public class FileProcessingJobFixture {
         private FileId fileId = FileId.of(UuidV7GeneratorFixture.aUuidV7());
         private JobType jobType = JobTypeFixture.thumbnailGeneration();
         private JobStatus status = JobStatusFixture.pending();
-        private int retryCount = 0;
-        private int maxRetryCount = 3;
+        private RetryCount retryCount = RetryCount.forJob(); // VO 적용 (Job 전략: 최대 2회)
         private String inputS3Key = "uploads/2024/01/test-file.jpg";
         private String outputS3Key = null;
         private String errorMessage = null;
@@ -106,13 +103,8 @@ public class FileProcessingJobFixture {
             return this;
         }
 
-        public FileProcessingJobBuilder retryCount(int retryCount) {
+        public FileProcessingJobBuilder retryCount(RetryCount retryCount) {
             this.retryCount = retryCount;
-            return this;
-        }
-
-        public FileProcessingJobBuilder maxRetryCount(int maxRetryCount) {
-            this.maxRetryCount = maxRetryCount;
             return this;
         }
 
@@ -154,7 +146,6 @@ public class FileProcessingJobFixture {
                     jobType,
                     status,
                     retryCount,
-                    maxRetryCount,
                     inputS3Key,
                     outputS3Key,
                     errorMessage,

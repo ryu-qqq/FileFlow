@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.domain.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileProcessingJobId;
 import com.ryuqq.fileflow.domain.vo.JobStatus;
 import com.ryuqq.fileflow.domain.vo.JobType;
+import com.ryuqq.fileflow.domain.vo.RetryCount;
 
 import java.time.LocalDateTime;
 
@@ -20,8 +21,7 @@ public class FileProcessingJob {
     private final FileId fileId;
     private final JobType jobType;
     private JobStatus status;
-    private int retryCount;
-    private final int maxRetryCount;
+    private RetryCount retryCount; // VO 적용
     private final String inputS3Key;
     private String outputS3Key;
     private String errorMessage;
@@ -36,27 +36,25 @@ public class FileProcessingJob {
      * Private 생성자: 외부에서 직접 생성 불가, 팩토리 메서드 사용 필수
      * </p>
      *
-     * @param jobId         작업 고유 ID (FileProcessingJobId VO)
-     * @param fileId        파일 고유 ID (FileId VO)
-     * @param jobType       작업 유형 (THUMBNAIL_GENERATION, HTML_PARSING 등)
-     * @param status        작업 상태
-     * @param retryCount    재시도 횟수
-     * @param maxRetryCount 최대 재시도 횟수
-     * @param inputS3Key    입력 파일 S3 키
-     * @param outputS3Key   출력 파일 S3 키 (완료 후)
-     * @param errorMessage  에러 메시지 (실패 시)
-     * @param createdAt     생성 시각
-     * @param processedAt   처리 완료 시각
-     * @param updatedAt     최종 수정 시각
-     * @param clock         시간 처리 Clock (테스트 가능한 시간 처리)
+     * @param jobId        작업 고유 ID (FileProcessingJobId VO)
+     * @param fileId       파일 고유 ID (FileId VO)
+     * @param jobType      작업 유형 (THUMBNAIL_GENERATION, HTML_PARSING 등)
+     * @param status       작업 상태
+     * @param retryCount   재시도 횟수 (RetryCount VO)
+     * @param inputS3Key   입력 파일 S3 키
+     * @param outputS3Key  출력 파일 S3 키 (완료 후)
+     * @param errorMessage 에러 메시지 (실패 시)
+     * @param createdAt    생성 시각
+     * @param processedAt  처리 완료 시각
+     * @param updatedAt    최종 수정 시각
+     * @param clock        시간 처리 Clock (테스트 가능한 시간 처리)
      */
     private FileProcessingJob(
             FileProcessingJobId jobId,
             FileId fileId,
             JobType jobType,
             JobStatus status,
-            int retryCount,
-            int maxRetryCount,
+            RetryCount retryCount,
             String inputS3Key,
             String outputS3Key,
             String errorMessage,
@@ -70,7 +68,6 @@ public class FileProcessingJob {
         this.jobType = jobType;
         this.status = status;
         this.retryCount = retryCount;
-        this.maxRetryCount = maxRetryCount;
         this.inputS3Key = inputS3Key;
         this.outputS3Key = outputS3Key;
         this.errorMessage = errorMessage;
@@ -112,14 +109,14 @@ public class FileProcessingJob {
      * 재시도 횟수 조회
      */
     public int getRetryCount() {
-        return retryCount;
+        return retryCount.current();
     }
 
     /**
      * 최대 재시도 횟수 조회
      */
     public int getMaxRetryCount() {
-        return maxRetryCount;
+        return retryCount.max();
     }
 
     /**
@@ -194,18 +191,16 @@ public class FileProcessingJob {
      * ID가 null인 새로운 작업을 생성합니다. 영속화 전 상태입니다.
      * </p>
      *
-     * @param fileId        파일 고유 ID
-     * @param jobType       작업 유형
-     * @param inputS3Key    입력 파일 S3 키
-     * @param maxRetryCount 최대 재시도 횟수
-     * @param clock         시간 처리 Clock
+     * @param fileId     파일 고유 ID
+     * @param jobType    작업 유형
+     * @param inputS3Key 입력 파일 S3 키
+     * @param clock      시간 처리 Clock
      * @return 생성된 FileProcessingJob Aggregate (ID null)
      */
     public static FileProcessingJob forNew(
             FileId fileId,
             JobType jobType,
             String inputS3Key,
-            int maxRetryCount,
             java.time.Clock clock
     ) {
         LocalDateTime now = LocalDateTime.now(clock);
@@ -215,8 +210,7 @@ public class FileProcessingJob {
                 fileId,
                 jobType,
                 JobStatus.PENDING, // 초기 상태는 PENDING
-                0, // 초기 재시도 횟수 0
-                maxRetryCount,
+                RetryCount.forJob(), // Job 재시도 전략 (최대 2회)
                 inputS3Key,
                 null, // outputS3Key는 null
                 null, // errorMessage는 null
@@ -233,19 +227,18 @@ public class FileProcessingJob {
      * ID가 필수인 작업을 생성합니다. 비즈니스 로직에서 사용합니다.
      * </p>
      *
-     * @param jobId         작업 고유 ID (필수, null 불가)
-     * @param fileId        파일 고유 ID
-     * @param jobType       작업 유형
-     * @param status        작업 상태
-     * @param retryCount    재시도 횟수
-     * @param maxRetryCount 최대 재시도 횟수
-     * @param inputS3Key    입력 파일 S3 키
-     * @param outputS3Key   출력 파일 S3 키
-     * @param errorMessage  에러 메시지
-     * @param createdAt     생성 시각
-     * @param processedAt   처리 완료 시각
-     * @param updatedAt     최종 수정 시각
-     * @param clock         시간 처리 Clock
+     * @param jobId        작업 고유 ID (필수, null 불가)
+     * @param fileId       파일 고유 ID
+     * @param jobType      작업 유형
+     * @param status       작업 상태
+     * @param retryCount   재시도 횟수 (RetryCount VO)
+     * @param inputS3Key   입력 파일 S3 키
+     * @param outputS3Key  출력 파일 S3 키
+     * @param errorMessage 에러 메시지
+     * @param createdAt    생성 시각
+     * @param processedAt  처리 완료 시각
+     * @param updatedAt    최종 수정 시각
+     * @param clock        시간 처리 Clock
      * @return 생성된 FileProcessingJob Aggregate
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
      */
@@ -254,8 +247,7 @@ public class FileProcessingJob {
             FileId fileId,
             JobType jobType,
             JobStatus status,
-            int retryCount,
-            int maxRetryCount,
+            RetryCount retryCount,
             String inputS3Key,
             String outputS3Key,
             String errorMessage,
@@ -272,7 +264,6 @@ public class FileProcessingJob {
                 jobType,
                 status,
                 retryCount,
-                maxRetryCount,
                 inputS3Key,
                 outputS3Key,
                 errorMessage,
@@ -289,19 +280,18 @@ public class FileProcessingJob {
      * 영속성 계층에서 조회한 데이터로 Aggregate를 재구성합니다.
      * </p>
      *
-     * @param jobId         작업 고유 ID (필수, null 불가)
-     * @param fileId        파일 고유 ID
-     * @param jobType       작업 유형
-     * @param status        작업 상태
-     * @param retryCount    재시도 횟수
-     * @param maxRetryCount 최대 재시도 횟수
-     * @param inputS3Key    입력 파일 S3 키
-     * @param outputS3Key   출력 파일 S3 키
-     * @param errorMessage  에러 메시지
-     * @param createdAt     생성 시각
-     * @param processedAt   처리 완료 시각
-     * @param updatedAt     최종 수정 시각
-     * @param clock         시간 처리 Clock
+     * @param jobId        작업 고유 ID (필수, null 불가)
+     * @param fileId       파일 고유 ID
+     * @param jobType      작업 유형
+     * @param status       작업 상태
+     * @param retryCount   재시도 횟수 (RetryCount VO)
+     * @param inputS3Key   입력 파일 S3 키
+     * @param outputS3Key  출력 파일 S3 키
+     * @param errorMessage 에러 메시지
+     * @param createdAt    생성 시각
+     * @param processedAt  처리 완료 시각
+     * @param updatedAt    최종 수정 시각
+     * @param clock        시간 처리 Clock
      * @return 재구성된 FileProcessingJob Aggregate
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
      */
@@ -310,8 +300,7 @@ public class FileProcessingJob {
             FileId fileId,
             JobType jobType,
             JobStatus status,
-            int retryCount,
-            int maxRetryCount,
+            RetryCount retryCount,
             String inputS3Key,
             String outputS3Key,
             String errorMessage,
@@ -328,7 +317,6 @@ public class FileProcessingJob {
                 jobType,
                 status,
                 retryCount,
-                maxRetryCount,
                 inputS3Key,
                 outputS3Key,
                 errorMessage,
@@ -396,7 +384,7 @@ public class FileProcessingJob {
      * 재시도 횟수 증가
      */
     public void incrementRetryCount() {
-        this.retryCount++;
+        this.retryCount = this.retryCount.increment();
         this.updatedAt = LocalDateTime.now(clock);
     }
 
@@ -406,6 +394,6 @@ public class FileProcessingJob {
      * @return 재시도 가능하면 true, 불가능하면 false
      */
     public boolean canRetry() {
-        return this.retryCount < this.maxRetryCount;
+        return this.retryCount.canRetry();
     }
 }
