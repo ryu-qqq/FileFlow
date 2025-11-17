@@ -20,16 +20,23 @@ package com.ryuqq.fileflow.application.dto.response;
  * 3. 클라이언트가 받은 presignedUrl로 직접 S3에 PUT 요청
  * 4. 업로드 완료 후 CompleteUploadPort를 통해 서버에 완료 알림
  * </p>
+ * <p>
+ * 업로드 전략:
+ * - SINGLE: 100MB 미만 파일, 단일 PUT 요청
+ * - MULTIPART: 100MB 이상 파일, Multipart Upload (여러 Part로 분할)
+ * </p>
  *
  * @param fileId 생성된 파일 ID (File Aggregate의 식별자)
  * @param presignedUrl S3 Presigned URL (클라이언트가 직접 업로드할 URL, 서명 포함)
  * @param expiresIn URL 유효 시간 (초 단위, 기본 3600초 = 1시간)
  * @param s3Key S3 객체 키 (예: "uploads/2024/11/16/file-12345.jpg")
+ * @param uploadStrategy 업로드 전략 ("SINGLE" 또는 "MULTIPART")
  */
 public record PresignedUrlResponse(
         Long fileId,
         String presignedUrl,
         Long expiresIn,
-        String s3Key
+        String s3Key,
+        String uploadStrategy
 ) {
 }

@@ -103,13 +103,35 @@ public class GeneratePresignedUrlService implements GeneratePresignedUrlPort {
         // S3 Presigned URL 생성 (외부 API 호출)
         String presignedUrl = s3ClientPort.generatePresignedUrl(s3Key, PRESIGNED_URL_EXPIRATION);
 
+        // 업로드 전략 결정 (100MB 기준)
+        String uploadStrategy = determineUploadStrategy(command.fileSize());
+
         // Response 생성
         return new PresignedUrlResponse(
                 (long) fileId.getValue().hashCode(), // TODO: UUID String -> Long 임시 변환, 설계 재검토 필요
                 presignedUrl,
                 PRESIGNED_URL_EXPIRATION.toSeconds(),
-                s3Key
+                s3Key,
+                uploadStrategy
         );
+    }
+
+    /**
+     * 업로드 전략 결정
+     * <p>
+     * 파일 크기에 따라 업로드 전략을 결정합니다:
+     * - < 100MB: SINGLE (단일 PUT 요청)
+     * - >= 100MB: MULTIPART (여러 Part로 분할 업로드)
+     * </p>
+     */
+    private String determineUploadStrategy(long fileSize) {
+        long multipartThreshold = 100L * 1024L * 1024L; // 100MB
+
+        if (fileSize < multipartThreshold) {
+            return "SINGLE";
+        } else {
+            return "MULTIPART";
+        }
     }
 
     /**

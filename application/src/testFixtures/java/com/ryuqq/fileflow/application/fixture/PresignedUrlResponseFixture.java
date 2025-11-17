@@ -22,7 +22,8 @@ public class PresignedUrlResponseFixture {
                 1L,
                 "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/file-1.jpg?signature=abc123",
                 3600L,
-                "uploads/2024/11/16/file-1.jpg"
+                "uploads/2024/11/16/file-1.jpg",
+                "SINGLE"
         );
     }
 
@@ -41,7 +42,8 @@ public class PresignedUrlResponseFixture {
                 fileId,
                 "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/file-1.jpg?signature=abc123",
                 3600L,
-                "uploads/2024/11/16/file-1.jpg"
+                "uploads/2024/11/16/file-1.jpg",
+                "SINGLE"
         );
     }
 
@@ -53,7 +55,8 @@ public class PresignedUrlResponseFixture {
                 1L,
                 presignedUrl,
                 3600L,
-                "uploads/2024/11/16/file-1.jpg"
+                "uploads/2024/11/16/file-1.jpg",
+                "SINGLE"
         );
     }
 
@@ -65,7 +68,8 @@ public class PresignedUrlResponseFixture {
                 1L,
                 "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/file-1.jpg?signature=abc123",
                 expiresIn,
-                "uploads/2024/11/16/file-1.jpg"
+                "uploads/2024/11/16/file-1.jpg",
+                "SINGLE"
         );
     }
 
@@ -77,7 +81,8 @@ public class PresignedUrlResponseFixture {
                 1L,
                 "https://s3.amazonaws.com/fileflow-bucket/" + s3Key + "?signature=abc123",
                 3600L,
-                s3Key
+                s3Key,
+                "SINGLE"
         );
     }
 
@@ -89,7 +94,8 @@ public class PresignedUrlResponseFixture {
                 2L,
                 "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/small-file.jpg?signature=xyz789",
                 3600L,
-                "uploads/2024/11/16/small-file.jpg"
+                "uploads/2024/11/16/small-file.jpg",
+                "SINGLE"
         );
     }
 
@@ -101,7 +107,8 @@ public class PresignedUrlResponseFixture {
                 3L,
                 "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/large-file.mp4?uploadId=ABC&signature=def456",
                 7200L,
-                "uploads/2024/11/16/large-file.mp4"
+                "uploads/2024/11/16/large-file.mp4",
+                "MULTIPART"
         );
     }
 
@@ -113,7 +120,8 @@ public class PresignedUrlResponseFixture {
                 4L,
                 "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/temp-file.txt?signature=ghi789",
                 300L,
-                "uploads/2024/11/16/temp-file.txt"
+                "uploads/2024/11/16/temp-file.txt",
+                "SINGLE"
         );
     }
 }
