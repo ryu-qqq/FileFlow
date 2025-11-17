@@ -603,7 +603,7 @@
 
 ---
 
-### 2️⃣4️⃣ UploadFromExternalUrlUseCase - URL 검증 (Cycle 24)
+### 🔄 2️⃣4️⃣ UploadFromExternalUrlUseCase - URL 검증 (Cycle 24)
 
 #### 🔴 Red: 테스트 작성
 - [ ] `UploadFromExternalUrlServiceTest.java` 생성
