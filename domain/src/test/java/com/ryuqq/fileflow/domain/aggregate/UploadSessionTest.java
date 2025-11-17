@@ -56,9 +56,9 @@ class UploadSessionTest {
     void shouldCreateUploadSessionWithMultipartUploadType() {
         // given
         SessionId sessionId = SessionId.generate();
-        FileName fileName = FileName.of("large-file.zip");
+        FileName fileName = FileName.of("large-file.pdf");
         FileSize fileSize = FileSize.of(200 * 1024 * 1024L); // 200MB
-        MimeType mimeType = MimeType.of("application/zip");
+        MimeType mimeType = MimeType.of("application/pdf");
 
         // when
         UploadSession session = UploadSession.create(
@@ -172,9 +172,9 @@ class UploadSessionTest {
     private UploadSession createLargeFileSession() {
         return UploadSession.create(
                 SessionId.generate(),
-                FileName.of("large-file.zip"),
+                FileName.of("large-file.pdf"),
                 FileSize.of(200 * 1024 * 1024L), // 200MB (MULTIPART)
-                MimeType.of("application/zip"),
+                MimeType.of("application/pdf"),
                 FIXED_CLOCK
         );
     }
