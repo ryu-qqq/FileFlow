@@ -1,8 +1,9 @@
 # PRD: File Management System (파일 관리 시스템)
 
 **작성일**: 2025-01-14
+**최종 수정일**: 2025-01-17
 **작성자**: ryu-qqq
-**상태**: Draft
+**상태**: Draft → **재설계 (VO 확장 + 세션 기반 아키텍처)**
 
 ---
 
@@ -18,14 +19,15 @@ S3 기반 파일 저장소 및 CDN을 활용한 파일 관리 시스템 구축�
 
 ### 성공 기준
 1. **파일 크기가 커도 누락 없이 S3 업로드 성공** (최우선)
-2. 업로드 성공률 > 99.9%
-3. Presigned URL 발급 응답 시간 < 200ms (P95)
-4. 파일 가공 완료율 > 95%
-5. CDN Hit Rate > 90% (상품 이미지)
+2. **멱등성 보장**: 동일 요청에 대해 중복 업로드/다운로드 방지
+3. 업로드 성공률 > 99.9%
+4. Presigned URL 발급 응답 시간 < 200ms (P95)
+5. 파일 가공 완료율 > 95%
+6. CDN Hit Rate > 90% (상품 이미지)
 
 ### 기술 스택
 - **Storage**: AWS S3
-- **CDN**: CloudFront (또는 AWS CloudFront)
+- **CDN**: CloudFront
 - **Message Queue**: AWS SQS (Standard Queue)
 - **Database**: MySQL (JPA + QueryDSL)
 - **File Processing**: 백그라운드 비동기 처리
@@ -36,51 +38,148 @@ S3 기반 파일 저장소 및 CDN을 활용한 파일 관리 시스템 구축�
 
 ### 1. Domain Layer
 
+---
+
+#### Value Objects (VO 중심 설계)
+
+##### Core File VOs
+| VO | 책임 | 검증 규칙 | 예시 |
+|----|------|----------|------|
+| **FileName** | 파일명 검증 | - 길이: 1-255자<br>- 금지 문자: `/`, `\`, `<`, `>`, `:`, `"`, `|`, `?`, `*`<br>- Null/Empty 불가 | `FileName.of("example.jpg")` |
+| **FileSize** | 파일 크기 검증 | - 범위: 1 byte ~ 1GB (1,073,741,824 bytes)<br>- 0 이하 불가 | `FileSize.of(1048576L)` |
+| **MimeType** | MIME 타입 검증 | - 허용 목록 체크 (image/*, application/pdf 등)<br>- Null 불가 | `MimeType.of("image/jpeg")` |
+| **FileCategory** | 파일 카테고리 검증 | - 허용 목록: "상품", "전시영역", "외부몰연동", "문서"<br>- Null 허용 (기본값: "기타") | `FileCategory.of("상품")` |
+| **Tags** | 파일 태그 (복수) | - 콤마 구분 문자열 또는 List<String><br>- 최대 10개 태그<br>- 각 태그 최대 20자 | `Tags.of("이미지,상품,썸네일")` |
+| **Checksum** | 체크섬 검증 | - 알고리즘: SHA-256, MD5<br>- 값: Hex String (64자 또는 32자) | `Checksum.sha256("abc123...")` |
+| **ETag** | S3 ETag | - S3 반환 값 저장<br>- 체크섬 비교용 | `ETag.of("d41d8cd98f00b204e9800998ecf8427e")` |
+| **ExternalUrl** | 외부 URL 검증 | - HTTPS 필수<br>- URL 형식 검증 | `ExternalUrl.of("https://example.com/image.jpg")` |
+
+##### Upload Session VOs
+| VO | 책임 | 속성 | 예시 |
+|----|------|------|------|
+| **SessionId** | 멱등키 (UUID v7) | - value: String (UUID) | `SessionId.generate()` |
+| **UploadType** | 업로드 전략 | - Enum: SINGLE, MULTIPART<br>- 파일 크기로 자동 결정 | `UploadType.determineBySize(fileSize)` |
+| **SessionStatus** | 세션 상태 | - Enum: INITIATED, IN_PROGRESS, COMPLETED, EXPIRED, FAILED | `SessionStatus.INITIATED` |
+| **MultipartUpload** | 멀티파트 업로드 정보 | - uploadId: MultipartUploadId<br>- status: MultipartStatus<br>- totalParts: int<br>- uploadedParts: List<UploadedPart><br>- initiatedAt, completedAt, abortedAt | `MultipartUpload.forNew(...)` |
+| **UploadedPart** | 업로드된 파트 | - partNumber: int<br>- etag: ETag<br>- size: long | `UploadedPart.of(1, etag, 5242880L)` |
+| **MultipartUploadId** | S3 멀티파트 업로드 ID | - value: String (S3 반환 값) | `MultipartUploadId.of("...")` |
+| **MultipartStatus** | 멀티파트 상태 | - Enum: INITIATED, IN_PROGRESS, COMPLETED, ABORTED | `MultipartStatus.INITIATED` |
+
+##### Retry & Quota VOs
+| VO | 책임 | 속성 | 예시 |
+|----|------|------|------|
+| **RetryCount** | 재시도 횟수 관리 | - current: int (현재 횟수)<br>- max: int (최대 횟수)<br>- canRetry(): boolean | `RetryCount.of(0, 3)` |
+
+##### Tenant/Organization VOs (향후 확장)
+| VO | 책임 | 비고 |
+|----|------|------|
+| **TenantId** | 테넌트 식별자 | - value: Long<br>- Long FK 전략 |
+| **OrganizationId** | 조직 식별자 | - value: Long<br>- Tenant 하위 조직 |
+| **DailyUploadQuota** | 일일 업로드 할당량 | - quota: long (bytes)<br>- 향후 구현 |
+
+**MultipartUpload VO 상세**:
+```java
+/**
+ * 멀티파트 업로드 VO
+ * <p>
+ * 멀티파트 업로드 관련 모든 정보를 캡슐화합니다.
+ * File Aggregate에서 분리하여 단일 책임 원칙을 준수합니다.
+ * </p>
+ */
+public class MultipartUpload {
+    private final MultipartUploadId uploadId; // S3 multipart upload ID
+    private final MultipartStatus status; // INITIATED, IN_PROGRESS, COMPLETED, ABORTED
+    private final int totalParts; // 전체 파트 수
+    private final List<UploadedPart> uploadedParts; // 업로드된 파트 목록
+    private final LocalDateTime initiatedAt; // 시작 시각
+    private final LocalDateTime completedAt; // 완료 시각 (Nullable)
+    private final LocalDateTime abortedAt; // 중단 시각 (Nullable)
+
+    // 도메인 메서드
+    public void addPart(UploadedPart part) { ... }
+    public boolean isAllPartsUploaded() { ... }
+    public void markAsCompleted(Clock clock) { ... }
+    public void markAsAborted(Clock clock) { ... }
+}
+```
+
+**RetryCount VO 상세**:
+```java
+/**
+ * 재시도 횟수 VO
+ * <p>
+ * 재시도 로직을 캡슐화하여 중복 코드를 제거합니다.
+ * </p>
+ */
+public class RetryCount {
+    private final int current; // 현재 재시도 횟수
+    private final int max; // 최대 재시도 횟수
+
+    public static RetryCount forFile() {
+        return new RetryCount(0, 3); // File: 최대 3회
+    }
+
+    public static RetryCount forJob() {
+        return new RetryCount(0, 2); // FileProcessingJob: 최대 2회
+    }
+
+    public static RetryCount forOutbox() {
+        return new RetryCount(0, 3); // MessageOutbox: 최대 3회
+    }
+
+    public boolean canRetry() {
+        return current < max;
+    }
+
+    public RetryCount increment() {
+        if (!canRetry()) {
+            throw new IllegalStateException("최대 재시도 횟수를 초과했습니다");
+        }
+        return new RetryCount(current + 1, max);
+    }
+}
+```
+
+---
+
 #### Aggregate: File
 
 **핵심 개념**: 파일 메타데이터 및 업로드 상태 관리
 
-**속성**:
-- `fileId`: String (UUID v7 - 날짜 포함, 시간 순서 정렬 가능)
-- `fileName`: String (원본 파일명)
-- `fileSize`: Long (바이트 단위)
-- `mimeType`: String (예: `image/jpeg`, `text/html`)
+**속성** (VO 적용):
+- `fileId`: FileId (UUID v7 VO)
+- `fileName`: **FileName** (VO)
+- `fileSize`: **FileSize** (VO)
+- `mimeType`: **MimeType** (VO)
 - `status`: FileStatus (Enum)
 - `s3Key`: String (S3 Object Key)
 - `s3Bucket`: String (S3 Bucket Name)
 - `cdnUrl`: String (Nullable, CDN URL)
-- `uploaderId`: Long (업로더 User ID)
-- `category`: String (상품, 전시영역, 외부몰 연동 문서 등)
-- `tags`: List<String> (파일 태그, 예: #이미지, #문서)
+- `uploaderId`: UploaderId (VO, Long FK 전략)
+- `tenantId`: **TenantId** (VO, Nullable, 향후 확장)
+- `category`: **FileCategory** (VO)
+- `tags`: **Tags** (VO)
+- `checksum`: **Checksum** (VO, Optional, 업로드 시 클라이언트 제공)
+- `etag`: **ETag** (VO, Nullable, S3 ETag)
+- `retryCount`: **RetryCount** (VO)
 - `version`: Integer (파일 버전, 같은 파일명 재업로드 시 증가)
 - `deletedAt`: LocalDateTime (Nullable, Soft Delete)
 - `createdAt`: LocalDateTime
 - `updatedAt`: LocalDateTime
 
-**비즈니스 규칙** (구체화):
+**비즈니스 규칙**:
 
 1. **파일 ID 생성**:
    - UUID v7 사용 (날짜 포함, 시간 순서 정렬 가능)
    - S3 Key와 동일하게 사용 (예: `{fileId}.jpg`)
 
 2. **파일 크기 제한**:
-   - 최대 파일 크기: **1GB**
+   - 최대 파일 크기: **1GB** (FileSize VO에서 검증)
    - 파일 크기별 업로드 전략:
      - **< 100MB**: 단일 업로드 (Single PUT)
-     - **≥ 100MB**: Multipart Upload (청크 크기: 5MB 또는 10MB)
+     - **≥ 100MB**: Multipart Upload
 
-3. **Presigned URL 직접 업로드**:
-   - Presigned URL 유효 시간: **5분**
-   - 업로드 완료 검증: **S3 Event Notification + 클라이언트 명시적 API 호출** (둘 다)
-   - 업로드 상태 추적: 성공 여부만 추적 (Progress는 추후 고려)
-
-4. **외부 링크 다운로드 후 업로드**:
-   - 외부 URL 검증: **HTTPS만 허용**, 모든 도메인 허용 (추후 차단 리스트 추가)
-   - 다운로드 타임아웃: **60초**
-   - 다운로드 재시도: **3회** (Exponential Backoff)
-   - 파일 크기 사전 체크: HEAD 요청으로 Content-Length 확인, 1GB 초과 시 에러
-
-5. **파일 상태 전환**:
+3. **파일 상태 전환**:
    ```
    PENDING → UPLOADING → COMPLETED
                 ↓
@@ -88,32 +187,144 @@ S3 기반 파일 저장소 및 CDN을 활용한 파일 관리 시스템 구축�
                 ↓
            PROCESSING (파일 가공 중)
    ```
-   - **PENDING**: Presigned URL 발급 완료, 업로드 대기
-   - **UPLOADING**: 클라이언트가 S3에 업로드 중
-   - **COMPLETED**: 업로드 완료, S3 Object 존재 확인
-   - **FAILED**: 업로드 실패 (Presigned URL 만료, S3 Object 없음)
-   - **RETRY_PENDING**: 재시도 대기 (최대 3회)
-   - **PROCESSING**: 파일 가공 중 (썸네일 생성, OCR 등)
 
-6. **파일 버전 관리**:
-   - 같은 파일명 재업로드 시 **새로운 File Entity 생성** (version 증가)
-   - 예: `example.jpg` (version 1) → `example.jpg` (version 2)
-   - 이전 버전은 Soft Delete (`deletedAt` 설정)
+4. **체크섬 검증** (Optional):
+   - 클라이언트가 `checksum` 제공 시: 업로드 완료 후 S3 ETag와 비교
+   - 불일치 시: `FAILED` 상태 전환
 
-7. **Soft Delete**:
-   - 파일 삭제 시 `deletedAt` 설정 (물리적 삭제 아님)
-   - S3 Object는 유지 (추후 Lifecycle Policy로 자동 삭제)
+5. **재시도 전략**:
+   - `retryCount.canRetry()`: true → 재시도 가능
+   - 최대 재시도 횟수: **3회** (RetryCount VO에서 관리)
 
-**Value Objects**:
-- **FileStatus**: Enum (PENDING, UPLOADING, COMPLETED, FAILED, RETRY_PENDING, PROCESSING)
-- **MimeType**: String (Validation: `image/*`, `text/html`, `application/pdf`, `application/vnd.ms-excel` 등)
+**도메인 메서드**:
+- `markAsCompleted(ETag etag)`: COMPLETED 상태 전환, ETag 저장
+- `markAsFailed()`: FAILED 상태 전환
+- `validateChecksum(Checksum uploadedChecksum)`: 체크섬 검증
+- `incrementRetryCount()`: 재시도 횟수 증가
+- `canRetry()`: 재시도 가능 여부 체크
 
 **Zero-Tolerance 규칙 준수**:
 - ✅ **Lombok 금지**: Pure Java 또는 Record 사용
-- ✅ **Law of Demeter**: Getter 체이닝 금지
-  - `file.getS3Url()` (O)
-  - `file.getS3().getUrl()` (X)
-- ✅ **Long FK 전략**: JPA 관계 어노테이션 금지, Long uploaderId 사용
+- ✅ **Law of Demeter**: `file.getFileNameValue()` (O), `file.getFileName().getValue()` (X)
+- ✅ **Long FK 전략**: JPA 관계 어노테이션 금지, TenantId, UploaderId VO 사용
+
+---
+
+#### Aggregate: UploadSession
+
+**핵심 개념**: 프리사인드 URL 발급부터 업로드 완료까지의 세션 추적 및 멱등성 보장
+
+**속성**:
+- `sessionId`: **SessionId** (멱등키, UUID v7 VO)
+- `tenantId`: **TenantId** (VO, Nullable, 향후 확장)
+- `fileName`: **FileName** (VO)
+- `fileSize`: **FileSize** (VO)
+- `mimeType`: **MimeType** (VO)
+- `uploadType`: **UploadType** (VO, SINGLE/MULTIPART)
+- `multipartUpload`: **MultipartUpload** (VO, Optional, uploadType=MULTIPART일 때만)
+- `checksum`: **Checksum** (VO, Optional)
+- `etag`: **ETag** (VO, Nullable, 업로드 완료 후)
+- `presignedUrl`: String (Nullable)
+- `expiresAt`: LocalDateTime (세션 만료 시각)
+- `status`: **SessionStatus** (VO)
+- `createdAt`: LocalDateTime
+- `updatedAt`: LocalDateTime
+
+**비즈니스 규칙**:
+
+1. **멱등성 보장**:
+   - 동일한 `sessionId`로 중복 발급 방지
+   - 기존 세션 조회 시: 상태에 따라 기존 URL 반환 또는 에러
+
+2. **세션 만료**:
+   - Presigned URL 유효 시간: **5분**
+   - 만료 시 자동으로 `EXPIRED` 상태 전환
+
+3. **업로드 전략 자동 결정**:
+   - `fileSize < 100MB` → `uploadType = SINGLE`
+   - `fileSize >= 100MB` → `uploadType = MULTIPART`
+
+4. **멀티파트 업로드 추적**:
+   - `uploadType = MULTIPART`일 때 `multipartUpload` 필수
+   - S3 Initiate Multipart Upload → `MultipartUploadId` 생성
+   - 각 파트 업로드 완료 시 → `multipartUpload.addPart(part)`
+
+5. **체크섬 검증** (Optional):
+   - 클라이언트가 `checksum` 제공 시: 업로드 완료 후 S3 ETag와 비교
+
+**상태 전환**:
+```
+INITIATED (URL 발급 완료)
+    ↓
+IN_PROGRESS (클라이언트 업로드 시작)
+    ↓
+COMPLETED (업로드 완료) → 24시간 후 삭제
+    ↓
+EXPIRED (5분 만료) → 24시간 후 삭제
+    ↓
+FAILED (체크섬 불일치, S3 에러) → 7일 후 삭제
+```
+
+**도메인 메서드**:
+- `markAsInProgress()`: IN_PROGRESS 상태 전환
+- `markAsCompleted(ETag etag)`: COMPLETED 상태 전환, ETag 저장
+- `markAsExpired()`: EXPIRED 상태 전환
+- `markAsFailed(String reason)`: FAILED 상태 전환
+- `addUploadedPart(UploadedPart part)`: 멀티파트 파트 추가
+- `isExpired(Clock clock)`: 만료 여부 체크
+- `validateChecksum(ETag s3Etag)`: 체크섬 검증
+
+---
+
+#### Aggregate: DownloadSession
+
+**핵심 개념**: 외부 URL 다운로드 요청부터 완료까지의 세션 추적 및 중복 방지
+
+**속성**:
+- `sessionId`: **SessionId** (멱등키, UUID v7 VO)
+- `externalUrl`: **ExternalUrl** (VO, HTTPS 검증)
+- `tenantId`: **TenantId** (VO, Nullable, 향후 확장)
+- `uploadSessionId`: **SessionId** (VO, Nullable, 다운로드 후 생성된 UploadSession ID)
+- `status`: **SessionStatus** (VO)
+- `retryCount`: **RetryCount** (VO)
+- `expiresAt`: LocalDateTime (세션 만료 시각)
+- `createdAt`: LocalDateTime
+- `updatedAt`: LocalDateTime
+
+**비즈니스 규칙**:
+
+1. **중복 다운로드 방지**:
+   - 동일한 `externalUrl`로 24시간 내 다운로드 요청 시: 기존 세션 반환
+   - `externalUrl`의 SHA-256 해시로 중복 체크
+
+2. **다운로드 → 업로드 연결**:
+   - 외부 URL 다운로드 완료 후 → `UploadSession` 생성
+   - `uploadSessionId`에 생성된 UploadSession ID 저장
+
+3. **재시도 전략**:
+   - `retryCount.canRetry()`: true → 재시도 가능
+   - 최대 재시도 횟수: **3회** (RetryCount VO에서 관리)
+   - Exponential Backoff: 1초, 2초, 4초
+
+**상태 전환**:
+```
+INITIATED (다운로드 요청)
+    ↓
+IN_PROGRESS (다운로드 중)
+    ↓
+COMPLETED (다운로드 완료, UploadSession 생성) → 7일 후 삭제
+    ↓
+EXPIRED (60초 타임아웃) → 7일 후 삭제
+    ↓
+FAILED (다운로드 실패, 3회 재시도 후) → 7일 후 삭제
+```
+
+**도메인 메서드**:
+- `markAsInProgress()`: IN_PROGRESS 상태 전환
+- `markAsCompleted(SessionId uploadSessionId)`: COMPLETED 상태 전환, UploadSession 연결
+- `markAsFailed()`: FAILED 상태 전환
+- `incrementRetryCount()`: 재시도 횟수 증가
+- `canRetry()`: 재시도 가능 여부 체크 (retryCount.canRetry())
 
 ---
 
@@ -121,61 +332,37 @@ S3 기반 파일 저장소 및 CDN을 활용한 파일 관리 시스템 구축�
 
 **핵심 개념**: 파일 타입별 가공 작업 관리
 
-**속성**:
-- `jobId`: String (UUID v7)
-- `fileId`: String (FK, File UUID)
+**속성** (VO 적용):
+- `jobId`: JobId (UUID v7 VO)
+- `fileId`: FileId (FK, File UUID VO)
 - `jobType`: JobType (Enum)
 - `status`: JobStatus (Enum)
-- `retryCount`: Integer (현재 재시도 횟수)
-- `maxRetryCount`: Integer (최대 재시도 횟수: 2회)
+- `retryCount`: **RetryCount** (VO)
 - `inputS3Key`: String (원본 파일 S3 Key)
 - `outputS3Key`: String (Nullable, 가공된 파일 S3 Key)
 - `errorMessage`: String (Nullable, 에러 메시지)
 - `createdAt`: LocalDateTime
 - `processedAt`: LocalDateTime (Nullable)
 
-**비즈니스 규칙** (구체화):
+**비즈니스 규칙**:
 
 1. **가공 유형** (JobType Enum):
-   - **이미지**:
-     - `THUMBNAIL_GENERATION`: 썸네일 생성 (예: 200x200)
-     - `IMAGE_RESIZE`: 리사이징 (예: 1920x1080)
-     - `IMAGE_FORMAT_CONVERSION`: 포맷 변환 (JPEG → WebP)
-     - `OCR`: OCR 텍스트 추출
-   - **HTML**:
-     - `HTML_PARSING`: HTML 파싱
-     - `HTML_IMAGE_UPLOAD`: HTML 내부 이미지 업로드
-     - `HTML_TEXT_ANALYSIS`: 글자 분석
-   - **문서**:
-     - `DOCUMENT_TEXT_EXTRACTION`: 텍스트 추출 (PDF, Word)
-     - `DOCUMENT_FORMAT_CONVERSION`: 포맷 변환 (Word → PDF)
-   - **엑셀**:
-     - `EXCEL_CSV_CONVERSION`: CSV 변환
-     - `EXCEL_DATA_EXTRACTION`: 데이터 추출
+   - **이미지**: `THUMBNAIL_GENERATION`, `IMAGE_RESIZE`, `IMAGE_FORMAT_CONVERSION`, `OCR`
+   - **HTML**: `HTML_PARSING`, `HTML_IMAGE_UPLOAD`, `HTML_TEXT_ANALYSIS`
+   - **문서**: `DOCUMENT_TEXT_EXTRACTION`, `DOCUMENT_FORMAT_CONVERSION`
+   - **엑셀**: `EXCEL_CSV_CONVERSION`, `EXCEL_DATA_EXTRACTION`
 
-2. **가공 시점**:
-   - 파일 업로드 완료 (`COMPLETED`) 후 **백그라운드 큐**에 가공 작업 등록
-   - **비동기 처리** (AWS SQS)
+2. **가공 실패 처리**:
+   - 자동 재시도: **최대 2회** (RetryCount VO에서 관리)
+   - `retryCount.canRetry()`: true → 재시도 가능
+   - 2회 재시도 후 실패 시: 상태를 `FAILED`로 변경
 
-3. **가공 실패 처리**:
-   - 원본 파일은 **유지** (삭제하지 않음)
-   - 자동 재시도: **최대 2회**
-   - 2회 재시도 후 실패 시: 상태를 `FAILED`로 변경, 관리자 수동 재시도 API 제공
-
-4. **가공 상태 전환**:
-   ```
-   PENDING → PROCESSING → COMPLETED
-                ↓
-            FAILED, RETRY_PENDING
-   ```
-
-5. **CDN 연동**:
-   - 가공된 파일 중 **커머스 노출 상품 이미지 및 HTML만** CDN에 업로드
-   - 조건: `category == "상품"` && (`jobType == THUMBNAIL_GENERATION` || `jobType == HTML_PARSING`)
-
-**Value Objects**:
-- **JobType**: Enum (위 가공 유형)
-- **JobStatus**: Enum (PENDING, PROCESSING, COMPLETED, FAILED, RETRY_PENDING)
+**도메인 메서드**:
+- `markAsProcessing()`: PROCESSING 상태 전환
+- `markAsCompleted(String outputS3Key)`: COMPLETED 상태 전환
+- `markAsFailed(String errorMessage)`: FAILED 상태 전환
+- `incrementRetryCount()`: 재시도 횟수 증가
+- `canRetry()`: 재시도 가능 여부 체크 (retryCount.canRetry())
 
 ---
 
@@ -183,53 +370,71 @@ S3 기반 파일 저장소 및 CDN을 활용한 파일 관리 시스템 구축�
 
 **핵심 개념**: 아웃박스 패턴을 통한 메시지 전송 신뢰성 보장
 
-**속성**:
-- `id`: Long (PK, Auto Increment)
+**속성** (VO 적용):
+- `id`: OutboxId (Long PK VO)
 - `eventType`: String (이벤트 타입)
-- `aggregateId`: String (File UUID 또는 FileProcessingJob UUID)
+- `aggregateId`: AggregateId (VO, File/Session/Job UUID)
 - `payload`: String (JSON, 메시지 페이로드)
 - `status`: OutboxStatus (Enum)
-- `retryCount`: Integer (현재 재시도 횟수)
-- `maxRetryCount`: Integer (최대 재시도 횟수: 3회)
+- `retryCount`: **RetryCount** (VO)
 - `createdAt`: LocalDateTime
 - `processedAt`: LocalDateTime (Nullable)
 
-**비즈니스 규칙** (구체화):
+**비즈니스 규칙**:
 
-1. **이벤트 타입**:
-   - `FILE_UPLOADED`: Presigned URL 업로드 완료
-   - `FILE_DOWNLOAD_COMPLETED`: 외부 URL 다운로드 완료
-   - `FILE_PROCESSING_COMPLETED`: 파일 가공 완료
-
-2. **아웃박스 패턴 플로우**:
-   ```
-   UseCase 트랜잭션 안:
-   1. File 또는 FileProcessingJob Entity 저장
-   2. MessageOutbox Entity 저장 (PENDING 상태)
-   3. 커밋
-
-   애프터 커밋 리스너 (해피 패스):
-   4. @TransactionalEventListener(phase = AFTER_COMMIT)
-   5. SQS에 메시지 전송
-   6. MessageOutbox 상태를 SENT로 업데이트
-
-   폴백 스케줄러 (장애 복구):
-   7. 주기적으로 (예: 1분마다) PENDING 상태의 MessageOutbox 조회
-   8. SQS에 메시지 전송
-   9. MessageOutbox 상태를 SENT로 업데이트
-   ```
-
-3. **재시도 전략**:
-   - 최대 재시도 횟수: **3회**
+1. **재시도 전략**:
+   - 최대 재시도 횟수: **3회** (RetryCount VO에서 관리)
+   - `retryCount.canRetry()`: true → 재시도 가능
    - Exponential Backoff: 1초, 2초, 4초
-   - 3회 재시도 후 실패 시: Dead Letter Queue (DLQ)로 이동
 
-4. **메시지 TTL (Time To Live)**:
-   - 성공한 메시지 (`SENT`): **7일 후 삭제**
-   - 실패한 메시지 (`FAILED`): **30일 후 삭제**
+**도메인 메서드**:
+- `markAsSent()`: SENT 상태 전환
+- `markAsFailed()`: FAILED 상태 전환
+- `incrementRetryCount()`: 재시도 횟수 증가
+- `canRetry()`: 재시도 가능 여부 체크 (retryCount.canRetry())
 
-**Value Objects**:
-- **OutboxStatus**: Enum (PENDING, SENT, FAILED)
+---
+
+### 향후 확장: Tenant/Organization 구조
+
+**목적**: 멀티테넌시 지원 및 조직별 할당량 관리
+
+**구조**:
+```
+Tenant (테넌트)
+  ├─ dailyUploadQuota (일일 업로드 할당량)
+  ├─ storageQuota (저장소 할당량)
+  └─ Organization (조직)
+      ├─ permissions (권한 관리)
+      └─ File (파일)
+```
+
+**향후 추가 예정 Aggregates**:
+
+**Tenant Aggregate**:
+- `tenantId`: TenantId
+- `tenantName`: String
+- `dailyUploadQuota`: DailyUploadQuota (일일 업로드 할당량)
+- `storageQuota`: StorageQuota (저장소 할당량)
+- `status`: TenantStatus (ACTIVE, SUSPENDED)
+
+**Organization Aggregate** (참고: `legacy/domain/iam/organization/Organization.java`):
+- `organizationId`: OrganizationId
+- `tenantId`: TenantId (FK, Long FK 전략)
+- `orgCode`: OrgCode
+- `name`: String
+- `permissions`: List<Permission> (권한 목록)
+- `status`: OrganizationStatus (ACTIVE, INACTIVE)
+
+**현재 설계 반영**:
+- ✅ **UploadSession**에 `tenantId` 필드 포함 (Nullable)
+- ✅ **DownloadSession**에 `tenantId` 필드 포함 (Nullable)
+- ✅ **File**에 `tenantId` 필드 포함 (Nullable)
+- ⏳ **검증 로직 없음** (현재는 null 허용, 추후 FK 제약조건 추가)
+- ⏳ **할당량 체크 로직 없음** (추후 확장)
+
+**참고 문서**:
+- `legacy/domain/src/main/java/com/ryuqq/fileflow/domain/iam/organization/Organization.java`
 
 ---
 
@@ -237,109 +442,88 @@ S3 기반 파일 저장소 및 CDN을 활용한 파일 관리 시스템 구축�
 
 #### Command UseCase
 
-**A. GeneratePresignedUrlUseCase** (Presigned URL 발급):
+**A. GeneratePresignedUrlUseCase** (Presigned URL 발급) - **세션 기반 재설계**
 
-**Input**: `GeneratePresignedUrlCommand(fileName, fileSize, mimeType, uploaderId, category, tags)`
+**Input**: `GeneratePresignedUrlCommand(sessionId, fileName, fileSize, mimeType, uploaderId, tenantId, category, tags, checksum)`
 
-**Output**: `PresignedUrlResponse(fileId, presignedUrl, expiresIn, s3Key)`
-
-**Transaction 경계**:
-1. File 메타데이터 생성 (DB 저장, PENDING 상태) ← **트랜잭션 안**
-2. **트랜잭션 커밋**
-3. S3 Presigned URL 발급 (AWS SDK 호출) ← **트랜잭션 밖**
-4. S3 API 실패 시: File 상태를 `FAILED`로 변경 (보상 트랜잭션)
-
-**비즈니스 로직**:
-1. 파일 크기 검증 (최대 1GB)
-2. MIME 타입 검증 (허용 목록: 이미지, HTML, 문서, 엑셀)
-3. File Entity 생성 (UUID v7, PENDING 상태)
-4. S3 Presigned URL 발급 (유효 시간: 5분)
-5. 파일 크기별 업로드 전략 결정:
-   - < 100MB: 단일 업로드 URL
-   - ≥ 100MB: Multipart Upload Initiate URL
-
-**Timeout & Retry**:
-- S3 Presigned URL 발급 Timeout: **3초**
-- 재시도: **3회**
-
----
-
-**B. CompleteUploadUseCase** (업로드 완료 처리):
-
-**Input**: `CompleteUploadCommand(fileId)`
-
-**Output**: `FileResponse(fileId, status, s3Url, cdnUrl)`
+**Output**: `PresignedUrlResponse(sessionId, fileId, presignedUrl, expiresIn, uploadType, multipartUploadId)`
 
 **Transaction 경계**:
-1. S3 Object 존재 여부 확인 (S3 HEAD 요청) ← **트랜잭션 밖**
-2. S3 Object 존재 확인 → **트랜잭션 시작**
-3. File 상태를 `UPLOADING` → `COMPLETED`로 업데이트
+1. UploadSession 조회 (sessionId로) - **멱등성 체크** ← **트랜잭션 안**
+2. 기존 세션 있으면:
+   - 상태 확인 → `INITIATED` 또는 `IN_PROGRESS`: 기존 URL 반환 (멱등성 보장)
+   - 상태 확인 → `EXPIRED` 또는 `FAILED`: 에러 반환
+3. 기존 세션 없으면:
+   - UploadSession 생성 (`INITIATED` 상태)
+   - File 메타데이터 생성 (`PENDING` 상태)
 4. **트랜잭션 커밋**
-5. S3 Object 없으면: 예외 발생 + File 상태를 `FAILED`로 변경
+5. S3 Presigned URL 발급 (단일/멀티파트 분기) ← **트랜잭션 밖**
+6. **트랜잭션 시작**
+7. UploadSession 업데이트 (`presignedUrl`, `multipartUploadId` 저장)
+8. UploadSession 상태를 `IN_PROGRESS`로 변경
+9. **트랜잭션 커밋**
 
 **비즈니스 로직**:
-1. File 조회 (fileId로)
-2. 현재 상태 검증 (PENDING 또는 UPLOADING만 허용)
-3. S3 Object 존재 여부 확인 (HEAD 요청)
-4. 존재하면: 상태를 `COMPLETED`로 변경
-5. 파일 가공 작업 등록 (MessageOutbox 생성, FILE_UPLOADED 이벤트)
-
-**Timeout & Retry**:
-- S3 Object HEAD 요청 Timeout: **3초**
-- 재시도: **3회**
+1. **멱등성 체크**: `sessionId`로 기존 UploadSession 조회
+2. **VO 검증**:
+   - `FileName.of(fileName)` → 파일명 검증
+   - `FileSize.of(fileSize)` → 파일 크기 검증 (0 < size <= 1GB)
+   - `MimeType.of(mimeType)` → MIME 타입 검증 (허용 목록)
+   - `FileCategory.of(category)` → 카테고리 검증
+   - `Tags.of(tags)` → 태그 검증 (최대 10개)
+3. **업로드 전략 자동 결정**:
+   - `UploadType.determineBySize(fileSize)` → SINGLE/MULTIPART
+4. **UploadSession 생성**:
+   - `sessionId`, `fileName`, `fileSize`, `mimeType`, `uploadType`, `expiresAt` (5분 후)
+5. **S3 Presigned URL 발급** (트랜잭션 밖):
+   - **SINGLE**: `s3Client.generatePresignedUrl(s3Key, 5분)`
+   - **MULTIPART**: `s3Client.initiateMultipartUpload(s3Key)` → `MultipartUpload` VO 생성
 
 ---
 
-**C. UploadFromExternalUrlUseCase** (외부 URL 다운로드 후 업로드):
+**B. CompleteUploadUseCase** (업로드 완료 처리) - **세션 검증 추가**
 
-**Input**: `UploadFromExternalUrlCommand(externalUrl, uploaderId, category, tags, webhookUrl)`
+**Input**: `CompleteUploadCommand(sessionId, checksum)`
 
-**Output**: `FileResponse(fileId, status)` (비동기, 즉시 반환)
+**Output**: `FileResponse(sessionId, fileId, status, s3Url, cdnUrl)`
 
 **Transaction 경계**:
-1. 외부 URL 검증 (HTTPS만 허용)
-2. File 메타데이터 생성 (DB 저장, PENDING 상태) ← **트랜잭션 안**
-3. MessageOutbox 생성 (FILE_DOWNLOAD_REQUESTED 이벤트) ← **트랜잭션 안**
+1. UploadSession 조회 (sessionId로) ← **트랜잭션 안**
+2. 세션 상태 검증: `IN_PROGRESS`만 허용
+3. File 조회 (UploadSession.fileId로)
+4. **트랜잭션 커밋**
+5. S3 Object 존재 여부 확인 (S3 HEAD 요청) ← **트랜잭션 밖**
+6. 멀티파트 업로드인 경우: S3 Complete Multipart Upload ← **트랜잭션 밖**
+7. 체크섬 검증 (클라이언트 vs S3 ETag) ← **트랜잭션 밖**
+8. **트랜잭션 시작**
+9. File 상태를 `COMPLETED`로 업데이트, ETag 저장
+10. UploadSession 상태를 `COMPLETED`로 업데이트
+11. **트랜잭션 커밋**
+
+---
+
+**C. UploadFromExternalUrlUseCase** (외부 URL 다운로드 후 업로드) - **다운로드 세션 추가**
+
+**Input**: `UploadFromExternalUrlCommand(sessionId, externalUrl, uploaderId, tenantId, category, tags, webhookUrl)`
+
+**Output**: `FileResponse(sessionId, fileId, status)` (비동기, 즉시 반환)
+
+**Transaction 경계**:
+1. DownloadSession 조회 (sessionId 또는 externalUrl 해시로) - **중복 다운로드 체크** ← **트랜잭션 안**
+2. 기존 세션 있으면: 상태에 따라 기존 File 반환 또는 진행 중 상태 반환
+3. 기존 세션 없으면:
+   - `ExternalUrl.of(externalUrl)` → HTTPS 검증
+   - DownloadSession 생성 (`INITIATED` 상태)
+   - MessageOutbox 생성 (`FILE_DOWNLOAD_REQUESTED` 이벤트)
 4. **트랜잭션 커밋**
 5. 애프터 커밋 리스너: SQS에 메시지 전송 ← **트랜잭션 밖**
 
 **백그라운드 작업 (SQS Consumer)**:
-1. 외부 URL에서 파일 다운로드 (스트리밍, 메모리 직접 업로드) ← **트랜잭션 밖**
-2. 파일 크기 체크 (1GB 초과 시 에러)
-3. S3에 업로드 (Multipart Upload 사용) ← **트랜잭션 밖**
-4. **트랜잭션 시작**
-5. File 상태를 `COMPLETED`로 업데이트
-6. **트랜잭션 커밋**
-7. Webhook 전송 ← **트랜잭션 밖**
-
-**비즈니스 로직**:
-1. 외부 URL 검증 (HTTPS 체크)
-2. File Entity 생성 (UUID v7, PENDING 상태)
-3. MessageOutbox 생성 + 애프터 커밋 리스너 → SQS 전송
-4. 백그라운드에서 다운로드 + S3 업로드
-5. 성공 시: Webhook 전송 (webhookUrl로)
-
-**Timeout & Retry**:
-- 외부 URL 다운로드 Timeout: **60초**
-- Webhook 전송 Timeout: **3초**
-- 재시도: **3회** (Exponential Backoff)
-
-**Webhook Payload**:
-```json
-{
-  "fileId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "COMPLETED",
-  "fileName": "example.jpg",
-  "fileSize": 1048576,
-  "s3Url": "https://s3.amazonaws.com/bucket/550e8400-e29b-41d4-a716-446655440000.jpg",
-  "cdnUrl": "https://cdn.example.com/files/550e8400-e29b-41d4-a716-446655440000.jpg"
-}
-```
-
-**Webhook 인증**: HMAC 서명 (SHA256)
-```
-X-Webhook-Signature: sha256=<HMAC-SHA256(payload, secret)>
-```
+1. 외부 URL에서 파일 다운로드 (60초 타임아웃)
+2. UploadSession 생성 (다운로드 파일 → S3 업로드용)
+3. S3 Multipart Upload
+4. DownloadSession에 `uploadSessionId` 저장
+5. Webhook 전송
 
 ---
 
@@ -349,77 +533,22 @@ X-Webhook-Signature: sha256=<HMAC-SHA256(payload, secret)>
 
 **Output**: `List<FileProcessingJobResponse>`
 
-**Transaction 경계**:
-1. File 조회 (상태가 COMPLETED인지 확인) ← **트랜잭션 안**
-2. FileProcessingJob Entity 생성 (PENDING 상태) ← **트랜잭션 안**
-3. MessageOutbox 생성 (FILE_PROCESSING_REQUESTED 이벤트) ← **트랜잭션 안**
-4. **트랜잭션 커밋**
-5. 애프터 커밋 리스너: SQS에 메시지 전송 ← **트랜잭션 밖**
-
-**백그라운드 작업 (SQS Consumer)**:
-1. S3에서 원본 파일 다운로드 ← **트랜잭션 밖**
-2. 파일 가공 (썸네일, OCR, 변환 등) ← **트랜잭션 밖**
-3. 가공된 파일 S3에 업로드 ← **트랜잭션 밖**
-4. **트랜잭션 시작**
-5. FileProcessingJob 상태를 `COMPLETED`로 업데이트, outputS3Key 저장
-6. File 상태를 `PROCESSING` → `COMPLETED`로 업데이트
-7. **트랜잭션 커밋**
-8. CDN 조건 체크: 상품 이미지/HTML이면 CDN 업로드
-
 **비즈니스 로직**:
 1. File 조회 (COMPLETED 상태만 가공 가능)
-2. FileProcessingJob Entity 생성 (각 jobType마다)
+2. FileProcessingJob Entity 생성 (각 jobType마다, RetryCount.forJob() 사용)
 3. MessageOutbox 생성 + 애프터 커밋 리스너 → SQS 전송
-4. 백그라운드에서 파일 가공 + S3 업로드
-5. CDN 조건 충족 시: CloudFront Invalidation 요청
-
-**가공 실패 처리**:
-- 자동 재시도: **최대 2회**
-- 2회 재시도 후 실패: 상태를 `FAILED`로 변경, 관리자 수동 재시도 API 제공
 
 ---
 
 #### Query UseCase
 
 **E. GetFileUseCase** (파일 조회):
-
-**Input**: `GetFileQuery(fileId)`
-
-**Output**: `FileDetailResponse(fileId, fileName, fileSize, status, s3Url, cdnUrl, processingJobs, ...)`
-
-**Transaction**: ReadOnly
-
-**비즈니스 로직**:
-1. File 조회 (Soft Delete 제외)
-2. FileProcessingJob 목록 조회 (fileId로)
-3. Response DTO 조합
-
----
+- File 조회 (Soft Delete 제외)
+- FileProcessingJob 목록 조회
 
 **F. ListFilesUseCase** (파일 목록 조회):
-
-**Input**: `ListFilesQuery(uploaderId, status, category, cursor, size)`
-
-**Output**: `CursorPageResponse<FileSummaryResponse>`
-
-**Transaction**: ReadOnly
-
-**페이징**: Cursor-based Pagination (createdAt 기준)
-```sql
-SELECT * FROM files
-WHERE uploader_id = ?
-  AND status = ?
-  AND created_at < ? -- cursor
-ORDER BY created_at DESC
-LIMIT ?;
-```
-
----
-
-#### Zero-Tolerance 규칙 준수
-- ✅ **Command/Query 분리** (CQRS)
-- ✅ **Transaction 경계 엄격 관리** (외부 API 호출은 트랜잭션 밖)
-- ✅ **아웃박스 패턴 필수** (메시지 전송 신뢰성 보장)
+- Cursor-based Pagination
+- 필터: uploaderId, status, category
 
 ---
 
@@ -428,101 +557,67 @@ LIMIT ?;
 #### A. JPA Entity
 
 **FileJpaEntity**:
-- **테이블**: `files`
 - **필드**:
-  - `id`: Long (PK, Auto Increment)
-  - `file_id`: String (UUID v7, Unique, Not Null)
-  - `file_name`: String (Not Null)
-  - `file_size`: Long (Not Null, CHECK > 0)
-  - `mime_type`: String (Not Null)
-  - `status`: String (Not Null, Index)
-  - `s3_key`: String (Not Null)
-  - `s3_bucket`: String (Not Null)
-  - `cdn_url`: String (Nullable)
-  - `uploader_id`: Long (FK, Not Null, Index)
-  - `category`: String (Nullable, Index)
-  - `tags`: String (JSON, Nullable)
-  - `version`: Integer (Not Null, Default: 1)
-  - `deleted_at`: LocalDateTime (Nullable)
-  - `created_at`: LocalDateTime (Not Null, Index)
-  - `updated_at`: LocalDateTime (Not Null)
-- **인덱스**:
-  - **Primary Key**: `id`
-  - **Unique**: `file_id`
-  - **복합 인덱스**: `(uploader_id, status, created_at DESC)` - 사용자별 상태 필터링 + 정렬 최적화
-  - **단일 인덱스**: `category` (카테고리별 조회)
-- **Optimistic Lock**: `@Version` 필드 추가 (동시성 제어)
+  - `file_name`: String
+  - `file_size`: Long
+  - `mime_type`: String
+  - `category`: String
+  - `tags`: String (JSON)
+  - `tenant_id`: Long (Nullable)
+  - `checksum_algorithm`: String (Nullable)
+  - `checksum_value`: String (Nullable)
+  - `etag`: String (Nullable)
+  - `retry_count`: Integer
+  - `max_retry_count`: Integer
 
----
+**UploadSessionJpaEntity**:
+- **테이블**: `upload_sessions`
+- **필드**:
+  - `session_id`: String (UUID v7, Unique)
+  - `tenant_id`: Long (Nullable)
+  - `file_name`: String
+  - `file_size`: Long
+  - `mime_type`: String
+  - `upload_type`: String (SINGLE/MULTIPART)
+  - `multipart_upload_id`: String (Nullable)
+  - `multipart_status`: String (Nullable)
+  - `total_parts`: Integer (Nullable)
+  - `uploaded_parts`: String (JSON, Nullable)
+  - `checksum_algorithm`: String (Nullable)
+  - `checksum_value`: String (Nullable)
+  - `etag`: String (Nullable)
+  - `presigned_url`: TEXT
+  - `expires_at`: LocalDateTime
+  - `status`: String
+- **인덱스**:
+  - `(status, expires_at)` - 만료된 세션 정리
+  - `(tenant_id, created_at DESC)` - 테넌트별 세션 조회
+
+**DownloadSessionJpaEntity**:
+- **테이블**: `download_sessions`
+- **필드**:
+  - `session_id`: String (UUID v7, Unique)
+  - `external_url`: TEXT
+  - `external_url_hash`: VARCHAR(64) - SHA-256 해시 (중복 체크)
+  - `tenant_id`: Long (Nullable)
+  - `upload_session_id`: String (Nullable)
+  - `status`: String
+  - `retry_count`: Integer
+  - `max_retry_count`: Integer
+  - `expires_at`: LocalDateTime
+- **인덱스**:
+  - `(external_url_hash, created_at DESC)` - 중복 다운로드 체크
+  - `(status, expires_at)` - 만료된 세션 정리
 
 **FileProcessingJobJpaEntity**:
-- **테이블**: `file_processing_jobs`
 - **필드**:
-  - `id`: Long (PK, Auto Increment)
-  - `job_id`: String (UUID v7, Unique, Not Null)
-  - `file_id`: String (FK, Not Null, Index)
-  - `job_type`: String (Not Null)
-  - `status`: String (Not Null, Index)
-  - `retry_count`: Integer (Not Null, Default: 0)
-  - `max_retry_count`: Integer (Not Null, Default: 2)
-  - `input_s3_key`: String (Not Null)
-  - `output_s3_key`: String (Nullable)
-  - `error_message`: String (Nullable)
-  - `created_at`: LocalDateTime (Not Null)
-  - `processed_at`: LocalDateTime (Nullable)
-- **인덱스**:
-  - **Primary Key**: `id`
-  - **Unique**: `job_id`
-  - **복합 인덱스**: `(file_id, status)` - 파일별 상태 필터링
-
----
+  - `retry_count`: Integer
+  - `max_retry_count`: Integer (Default: 2)
 
 **MessageOutboxJpaEntity**:
-- **테이블**: `message_outbox`
 - **필드**:
-  - `id`: Long (PK, Auto Increment)
-  - `event_type`: String (Not Null)
-  - `aggregate_id`: String (Not Null)
-  - `payload`: String (JSON, Not Null)
-  - `status`: String (Not Null, Index)
-  - `retry_count`: Integer (Not Null, Default: 0)
-  - `max_retry_count`: Integer (Not Null, Default: 3)
-  - `created_at`: LocalDateTime (Not Null, Index)
-  - `processed_at`: LocalDateTime (Nullable)
-- **인덱스**:
-  - **Primary Key**: `id`
-  - **복합 인덱스**: `(status, created_at)` - 스케줄러 성능 최적화 (PENDING 메시지 조회)
-
----
-
-#### B. Repository
-
-**FileJpaRepository**:
-```java
-public interface FileJpaRepository extends JpaRepository<FileJpaEntity, Long> {
-    Optional<FileJpaEntity> findByFileId(String fileId);
-
-    @Query("SELECT f FROM FileJpaEntity f WHERE f.uploaderId = :uploaderId " +
-           "AND f.status = :status AND f.createdAt < :cursor " +
-           "AND f.deletedAt IS NULL " +
-           "ORDER BY f.createdAt DESC")
-    List<FileJpaEntity> findByUploaderIdAndStatusWithCursor(
-        Long uploaderId, String status, LocalDateTime cursor, Pageable pageable);
-}
-```
-
-**FileQueryDslRepository** (복잡한 쿼리):
-- **메서드**: `findByUploaderIdAndStatusAndCategoryWithCursor(...)`
-- **최적화**: DTO Projection (N+1 방지)
-
-**MessageOutboxJpaRepository**:
-```java
-public interface MessageOutboxJpaRepository extends JpaRepository<MessageOutboxJpaEntity, Long> {
-    @Query("SELECT m FROM MessageOutboxJpaEntity m WHERE m.status = 'PENDING' " +
-           "AND m.createdAt < :threshold ORDER BY m.createdAt ASC")
-    List<MessageOutboxJpaEntity> findPendingMessages(LocalDateTime threshold, Pageable pageable);
-}
-```
+  - `retry_count`: Integer
+  - `max_retry_count`: Integer (Default: 3)
 
 ---
 
@@ -541,45 +636,90 @@ CREATE TABLE files (
     s3_bucket VARCHAR(100) NOT NULL,
     cdn_url VARCHAR(500),
     uploader_id BIGINT NOT NULL,
+    tenant_id BIGINT,
     category VARCHAR(100),
     tags JSON,
+    checksum_algorithm VARCHAR(20),
+    checksum_value VARCHAR(100),
+    etag VARCHAR(100),
+    retry_count INT NOT NULL DEFAULT 0,
+    max_retry_count INT NOT NULL DEFAULT 3,
     version INT NOT NULL DEFAULT 1,
     deleted_at DATETIME(6),
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NOT NULL,
 
     INDEX idx_uploader_status_created (uploader_id, status, created_at DESC),
+    INDEX idx_tenant_created (tenant_id, created_at DESC),
     INDEX idx_category (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
----
+**V2__create_upload_sessions_table.sql**:
+```sql
+CREATE TABLE upload_sessions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(36) NOT NULL UNIQUE,
+    tenant_id BIGINT,
+    file_name VARCHAR(255) NOT NULL,
+    file_size BIGINT NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    upload_type VARCHAR(20) NOT NULL,
+    multipart_upload_id VARCHAR(200),
+    multipart_status VARCHAR(20),
+    total_parts INT,
+    uploaded_parts JSON,
+    multipart_initiated_at DATETIME(6),
+    multipart_completed_at DATETIME(6),
+    multipart_aborted_at DATETIME(6),
+    checksum_algorithm VARCHAR(20),
+    checksum_value VARCHAR(100),
+    etag VARCHAR(100),
+    presigned_url TEXT,
+    expires_at DATETIME(6) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
 
-#### D. 동시성 제어
-
-**Optimistic Lock** (`@Version`):
-- File Entity에 `@Version` 필드 추가
-- 동시 업로드 완료 API 호출 시 충돌 감지 → 예외 발생 → 클라이언트 재시도
-
-**예시**:
-```java
-@Entity
-public class FileJpaEntity {
-    @Version
-    private Long version;
-
-    // ...
-}
+    INDEX idx_session_status_expires (status, expires_at),
+    INDEX idx_tenant_created (tenant_id, created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
----
+**V3__create_download_sessions_table.sql**:
+```sql
+CREATE TABLE download_sessions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(36) NOT NULL UNIQUE,
+    external_url TEXT NOT NULL,
+    external_url_hash VARCHAR(64) NOT NULL,
+    tenant_id BIGINT,
+    upload_session_id VARCHAR(36),
+    status VARCHAR(20) NOT NULL,
+    retry_count INT NOT NULL DEFAULT 0,
+    max_retry_count INT NOT NULL DEFAULT 3,
+    expires_at DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
 
-#### Zero-Tolerance 규칙 준수
-- ✅ **Long FK 전략** (관계 어노테이션 금지)
-  - `private Long uploaderId;` (O)
-  - `@ManyToOne private User user;` (X)
-- ✅ **QueryDSL 최적화** (N+1 방지, DTO Projection)
-- ✅ **Lombok 금지** (Pure Java 또는 Record)
+    INDEX idx_url_hash_created (external_url_hash, created_at DESC),
+    INDEX idx_status_expires (status, expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+**V4__update_processing_jobs_table.sql**:
+```sql
+ALTER TABLE file_processing_jobs
+ADD COLUMN retry_count INT NOT NULL DEFAULT 0,
+ADD COLUMN max_retry_count INT NOT NULL DEFAULT 2;
+```
+
+**V5__update_message_outbox_table.sql**:
+```sql
+ALTER TABLE message_outbox
+ADD COLUMN retry_count INT NOT NULL DEFAULT 0,
+ADD COLUMN max_retry_count INT NOT NULL DEFAULT 3;
+```
 
 ---
 
@@ -589,14 +729,11 @@ public class FileJpaEntity {
 
 | Method | Path | Description | Request DTO | Response DTO | Status Code |
 |--------|------|-------------|-------------|--------------|-------------|
-| POST | /api/v1/files/presigned-url | Presigned URL 발급 | GeneratePresignedUrlRequest | PresignedUrlResponse | 201 Created |
-| POST | /api/v1/files/upload-complete | 업로드 완료 알림 | CompleteUploadRequest | FileResponse | 200 OK |
-| POST | /api/v1/files/from-external-url | 외부 URL 다운로드 요청 | UploadFromExternalUrlRequest | FileResponse | 202 Accepted |
+| POST | /api/v1/files/presigned-url | Presigned URL 발급 (세션 기반) | GeneratePresignedUrlRequest | PresignedUrlResponse | 201 Created |
+| POST | /api/v1/files/upload-complete | 업로드 완료 알림 (세션 검증) | CompleteUploadRequest | FileResponse | 200 OK |
+| POST | /api/v1/files/from-external-url | 외부 URL 다운로드 요청 (세션 기반) | UploadFromExternalUrlRequest | FileResponse | 202 Accepted |
 | GET | /api/v1/files/{fileId} | 파일 조회 | - | FileDetailResponse | 200 OK |
 | GET | /api/v1/files | 파일 목록 조회 | ListFilesRequest (Query Params) | CursorPageResponse<FileSummaryResponse> | 200 OK |
-| DELETE | /api/v1/files/{fileId} | 파일 삭제 (Soft Delete) | - | ApiResponse<Void> | 204 No Content |
-| POST | /api/v1/files/{fileId}/process | 파일 가공 요청 | ProcessFileRequest | List<FileProcessingJobResponse> | 202 Accepted |
-| GET | /api/v1/files/{fileId}/processing-jobs | 파일 가공 작업 조회 | - | List<FileProcessingJobResponse> | 200 OK |
 
 ---
 
@@ -605,272 +742,87 @@ public class FileJpaEntity {
 **GeneratePresignedUrlRequest**:
 ```java
 public record GeneratePresignedUrlRequest(
+    @NotBlank String sessionId, // 멱등키 (UUID v7)
     @NotBlank String fileName,
-    @NotNull @Min(1) @Max(1073741824) Long fileSize, // 최대 1GB
+    @NotNull @Min(1) @Max(1073741824) Long fileSize,
     @NotBlank String mimeType,
     @NotNull Long uploaderId,
-    String category,
-    List<String> tags
+    Long tenantId, // Nullable
+    String category, // Nullable
+    List<String> tags, // Nullable
+    String checksumAlgorithm, // Nullable (SHA-256, MD5)
+    String checksumValue // Nullable
 ) {}
 ```
 
 **PresignedUrlResponse**:
 ```java
 public record PresignedUrlResponse(
+    String sessionId,
     String fileId,
     String presignedUrl,
     int expiresIn, // 초 단위 (300초 = 5분)
-    String s3Key
+    String uploadType, // SINGLE, MULTIPART
+    String multipartUploadId // Nullable (MULTIPART일 때만)
 ) {}
 ```
 
 **CompleteUploadRequest**:
 ```java
 public record CompleteUploadRequest(
-    @NotBlank String fileId
+    @NotBlank String sessionId,
+    String checksumAlgorithm, // Nullable
+    String checksumValue // Nullable
 ) {}
 ```
-
-**UploadFromExternalUrlRequest**:
-```java
-public record UploadFromExternalUrlRequest(
-    @NotBlank @Pattern(regexp = "^https://.*") String externalUrl,
-    @NotNull Long uploaderId,
-    String category,
-    List<String> tags,
-    String webhookUrl // Webhook URL (Nullable)
-) {}
-```
-
-**FileResponse**:
-```java
-public record FileResponse(
-    String fileId,
-    String fileName,
-    Long fileSize,
-    String status,
-    String s3Url,
-    String cdnUrl
-) {}
-```
-
-**FileDetailResponse**:
-```java
-public record FileDetailResponse(
-    String fileId,
-    String fileName,
-    Long fileSize,
-    String mimeType,
-    String status,
-    String s3Url,
-    String cdnUrl,
-    Long uploaderId,
-    String category,
-    List<String> tags,
-    Integer version,
-    List<FileProcessingJobResponse> processingJobs,
-    LocalDateTime createdAt
-) {}
-```
-
-**ProcessFileRequest**:
-```java
-public record ProcessFileRequest(
-    @NotEmpty List<String> jobTypes // ["THUMBNAIL_GENERATION", "OCR"]
-) {}
-```
-
-**FileProcessingJobResponse**:
-```java
-public record FileProcessingJobResponse(
-    String jobId,
-    String jobType,
-    String status,
-    String outputS3Key,
-    String errorMessage,
-    LocalDateTime createdAt,
-    LocalDateTime processedAt
-) {}
-```
-
----
-
-#### C. Error Handling
-
-**ApiResponse<T> 사용** (프로젝트 표준):
-```json
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "errorCode": "FILE_NOT_FOUND",
-    "message": "파일을 찾을 수 없습니다."
-  },
-  "timestamp": "2025-01-14T12:34:56",
-  "requestId": "req-123456"
-}
-```
-
-**Error Code 규칙** (대문자 스네이크 케이스):
-- `FILE_NOT_FOUND`: 파일 없음
-- `FILE_SIZE_EXCEEDED`: 파일 크기 초과 (> 1GB)
-- `FILE_TYPE_NOT_SUPPORTED`: 지원하지 않는 파일 타입
-- `PRESIGNED_URL_EXPIRED`: Presigned URL 만료
-- `UPLOAD_FAILED`: 업로드 실패
-- `EXTERNAL_URL_DOWNLOAD_FAILED`: 외부 URL 다운로드 실패
-- `FILE_PROCESSING_FAILED`: 파일 가공 실패
-- `S3_SERVICE_UNAVAILABLE`: S3 서비스 장애
-
-**HTTP Status Code 전략**:
-- **200 OK**: 성공 (조회, 업데이트)
-- **201 Created**: 리소스 생성 (Presigned URL 발급)
-- **202 Accepted**: 비동기 작업 수락 (외부 URL 다운로드, 파일 가공)
-- **204 No Content**: 성공 (삭제)
-- **400 Bad Request**: Validation 실패 (파일 크기 초과, 잘못된 파일 타입)
-- **401 Unauthorized**: 인증 실패 (추후 인증 추가 시)
-- **403 Forbidden**: 권한 없음 (타인 파일 접근)
-- **404 Not Found**: 파일 없음
-- **409 Conflict**: 비즈니스 규칙 위반 (이미 완료된 파일 재업로드)
-- **413 Payload Too Large**: 파일 크기 초과 (> 1GB)
-- **500 Internal Server Error**: 서버 오류
-- **503 Service Unavailable**: S3 장애
-
----
-
-#### D. 인증/인가
-
-**현재 (Phase 1)**: 인증 없음, 모든 API 접근 가능
-
-**추후 (Phase 2)**: JWT 인증 추가
-- Access Token 만료: 1시간
-- Refresh Token 만료: 7일
-- 업로드/조회 모두 로그인 필수
-- Public URL 별도 API: `/api/v1/files/{fileId}/public-url` (인증 불필요)
-
----
-
-#### Zero-Tolerance 규칙 준수
-- ✅ **RESTful 설계 원칙**
-- ✅ **일관된 Error Response 형식** (ApiResponse<T>)
-- ✅ **Validation 필수** (@NotNull, @NotBlank, @Min, @Max, @Pattern)
-
----
-
-## ⚠️ 제약사항
-
-### 비기능 요구사항
-
-**성능**:
-- Presigned URL 발급 응답 시간: < 200ms (P95)
-- 파일 조회 응답 시간: < 100ms (P95)
-- 업로드 성공률: > 99.9%
-- 파일 가공 완료율: > 95%
-
-**보안**:
-- HTTPS 통신 필수 (TLS 1.2+)
-- Presigned URL 유효 시간 제한 (5분)
-- Webhook HMAC 서명 검증
-- S3 Bucket Policy: 특정 IP만 접근 허용 (추후)
-
-**확장성**:
-- 동시 사용자: 20명 내외 (현재)
-- 예상 트래픽: 낮음 (일일 업로드 수: 100-500건)
-- S3 Bucket: 1TB 용량 (1년)
-
-**안정성**:
-- 아웃박스 패턴 + 애프터 커밋 리스너 + 폴백 스케줄러 (메시지 전송 신뢰성 보장)
-- Multipart Upload 실패 시 Part만 재시도
-- 전체 업로드 실패 시 최대 3회 재시도
-- Dead Letter Queue (DLQ) 활용
-
----
-
-## 🧪 테스트 전략
-
-### Unit Test
-
-**Domain**:
-- File Aggregate 비즈니스 로직 (상태 전환, 파일 크기 검증)
-- FileProcessingJob Aggregate (가공 타입별 로직)
-- FileStatus Enum 상태 전환 로직
-
-**Application**:
-- GeneratePresignedUrlUseCase (Mock S3 Client)
-- CompleteUploadUseCase (Mock S3 Client)
-- UploadFromExternalUrlUseCase (Mock SQS Client)
-- ProcessFileUseCase (Mock SQS Client)
-
-### Integration Test
-
-**Persistence**:
-- FileJpaRepository CRUD 테스트 (TestContainers MySQL)
-- FileQueryDslRepository 복잡한 쿼리 테스트 (Cursor Pagination)
-- MessageOutboxJpaRepository 스케줄러 쿼리 테스트
-
-**REST API**:
-- FileApiController (TestRestTemplate)
-- Validation 테스트 (400 Bad Request)
-- Error Handling 테스트 (404 Not Found, 413 Payload Too Large)
-
-### E2E Test
-
-- Presigned URL 발급 → 클라이언트 S3 업로드 → 업로드 완료 API 호출 → 파일 조회 플로우
-- 외부 URL 다운로드 → S3 업로드 → Webhook 전송 플로우
-- 파일 가공 요청 → 백그라운드 가공 → 가공 완료 확인 플로우
-- Multipart Upload 실패 → Part 재시도 → 최종 성공 플로우
 
 ---
 
 ## 🚀 개발 계획
 
-### Phase 1: 기본 업로드 기능 (예상: 10일)
+### Phase 1: VO 중심 Domain Layer 재설계 (예상: 5일)
 
-**Week 1 (Domain + Application)**:
-- [ ] Domain Layer 구현 (File, FileProcessingJob, MessageOutbox Aggregate)
-- [ ] Application Layer 구현 (GeneratePresignedUrlUseCase, CompleteUploadUseCase)
+**Week 1 (Domain Layer)**:
+- [ ] Value Objects 구현 (FileName, FileSize, MimeType, FileCategory, Tags, Checksum, ETag, RetryCount 등)
+- [ ] UploadSession Aggregate 구현
+- [ ] DownloadSession Aggregate 구현
+- [ ] File Aggregate 수정 (VO 적용)
+- [ ] FileProcessingJob, MessageOutbox 수정 (RetryCount VO 적용)
+- [ ] MultipartUpload VO 구현
 - [ ] Domain Unit Test (TestFixture 패턴)
+
+---
+
+### Phase 2: 세션 기반 Application Layer (예상: 7일)
+
+**Week 2 (Application Layer)**:
+- [ ] GeneratePresignedUrlUseCase 재구현 (세션 기반, 멱등성)
+- [ ] CompleteUploadUseCase 재구현 (세션 검증)
+- [ ] UploadFromExternalUrlUseCase 재구현 (다운로드 세션)
+- [ ] ProcessFileUseCase 재구현 (RetryCount VO)
 - [ ] Application Unit Test (Mock 사용)
 
-**Week 2 (Persistence + REST API)**:
-- [ ] Persistence Layer 구현 (JPA Entity, Repository, Flyway Migration)
-- [ ] REST API Layer 구현 (FileApiController, Request/Response DTO)
-- [ ] Integration Test (TestContainers MySQL, TestRestTemplate)
-- [ ] E2E Test (Presigned URL 발급 → 업로드 완료 플로우)
+---
+
+### Phase 3: Persistence Layer (예상: 5일)
+
+**Week 3 (Persistence Layer)**:
+- [ ] UploadSessionJpaEntity 구현
+- [ ] DownloadSessionJpaEntity 구현
+- [ ] FileJpaEntity 수정 (VO 매핑)
+- [ ] Flyway Migration (V1-V5)
+- [ ] Repository 구현
+- [ ] Integration Test (TestContainers MySQL)
 
 ---
 
-### Phase 2: 외부 URL 다운로드 + 아웃박스 패턴 (예상: 7일)
+### Phase 4: REST API Layer (예상: 3일)
 
-**Week 3 (비동기 처리)**:
-- [ ] UploadFromExternalUrlUseCase 구현 (비동기)
-- [ ] MessageOutbox 아웃박스 패턴 구현 (애프터 커밋 리스너 + 폴백 스케줄러)
-- [ ] SQS Consumer 구현 (외부 URL 다운로드 + S3 업로드)
-- [ ] Webhook 전송 구현 (HMAC 서명)
-- [ ] Integration Test (아웃박스 패턴 검증)
-
----
-
-### Phase 3: 파일 가공 파이프라인 (예상: 10일)
-
-**Week 4-5 (파일 가공)**:
-- [ ] ProcessFileUseCase 구현 (비동기)
-- [ ] 파일 가공 Worker 구현:
-  - [ ] 이미지 가공 (썸네일, 리사이징, JPEG→WebP, OCR)
-  - [ ] HTML 가공 (파싱, 내부 이미지 업로드, 글자 분석)
-  - [ ] 문서 가공 (텍스트 추출, 변환)
-  - [ ] 엑셀 가공 (CSV 변환, 데이터 추출)
-- [ ] CDN 연동 (CloudFront Invalidation)
-- [ ] Integration Test (파일 가공 플로우)
-
----
-
-### Phase 4: 운영 최적화 (예상: 3일)
-
-**Week 6 (모니터링 + 최적화)**:
-- [ ] 모니터링 대시보드 구축 (CloudWatch)
-- [ ] 알람 설정 (업로드 실패율, 가공 실패율)
-- [ ] 성능 최적화 (쿼리 튜닝, 인덱스 최적화)
-- [ ] Dead Letter Queue (DLQ) 관리자 API
+**Week 4 (REST API Layer)**:
+- [ ] FileApiController 수정 (세션 기반 API)
+- [ ] Request/Response DTO 수정
+- [ ] Integration Test (TestRestTemplate)
+- [ ] E2E Test (세션 기반 플로우)
 
 ---
 
@@ -891,12 +843,6 @@ public record FileProcessingJobResponse(
 
 ---
 
-**다음 단계**:
-1. PRD 검토 및 수정
-2. `/jira-from-prd docs/prd/file-management-system.md` - Jira 티켓 생성 (선택)
-3. Layer별 TDD 사이클 시작 (`/kb/domain/go`, `/kb/application/go` 등)
-
----
-
 **변경 이력**:
 - 2025-01-14: 초안 작성 (ryu-qqq)
+- 2025-01-17: **재설계** - VO 확장 (FileName, FileSize, MimeType, FileCategory, Tags, RetryCount 등) + 세션 기반 아키텍처 (UploadSession, DownloadSession) 추가 (ryu-qqq)
