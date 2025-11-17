@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.application.service;
 
 import com.ryuqq.fileflow.application.dto.command.CompleteUploadCommand;
 import com.ryuqq.fileflow.application.fixture.CompleteUploadCommandFixture;
+import com.ryuqq.fileflow.application.port.out.external.S3ClientPort;
 import com.ryuqq.fileflow.application.port.out.query.LoadFilePort;
 import com.ryuqq.fileflow.domain.aggregate.File;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
@@ -18,6 +19,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
 /**
@@ -36,6 +38,9 @@ class CompleteUploadServiceTest {
     @Mock
     private LoadFilePort loadFilePort;
 
+    @Mock
+    private S3ClientPort s3ClientPort;
+
     private CompleteUploadService completeUploadService;
 
     @BeforeEach
@@ -47,6 +52,7 @@ class CompleteUploadServiceTest {
 
         completeUploadService = new CompleteUploadService(
                 loadFilePort,
+                s3ClientPort,
                 clock
         );
     }
@@ -96,5 +102,32 @@ class CompleteUploadServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("PENDING")
                 .hasMessageContaining("UPLOADING");
+    }
+
+    /**
+     * 🔴 RED Phase: S3 Object 존재 확인 테스트
+     * <p>
+     * S3 Object가 존재하지 않으면 업로드 완료 처리할 수 없습니다.
+     * 트랜잭션 밖에서 S3 Object 존재 확인을 수행해야 합니다.
+     * </p>
+     */
+    @Test
+    @DisplayName("S3 Object가 존재하지 않으면 업로드 완료 처리할 수 없다")
+    void shouldThrowExceptionWhenS3ObjectNotExists() {
+        // Given: UPLOADING 상태 파일 (정상, 업로드 진행 중)
+        CompleteUploadCommand command = CompleteUploadCommandFixture.create();
+        File uploadingFile = FileFixture.aUploadingFile();
+
+        given(loadFilePort.loadById(any(FileId.class)))
+                .willReturn(Optional.of(uploadingFile));
+
+        // Given: S3 Object가 존재하지 않음 (Mock S3ClientPort)
+        given(s3ClientPort.headObject(anyString()))
+                .willThrow(new RuntimeException("S3 Object not found"));
+
+        // When & Then: RuntimeException 발생 (S3ObjectNotFoundException)
+        assertThatThrownBy(() -> completeUploadService.execute(command))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("S3");
     }
 }
