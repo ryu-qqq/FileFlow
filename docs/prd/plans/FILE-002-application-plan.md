@@ -675,24 +675,26 @@
 
 ---
 
-### 2️⃣7️⃣ ProcessFileUseCase - FileProcessingJob 생성 (Cycle 27)
+### 2️⃣7️⃣ ProcessFileUseCase - FileProcessingJob 생성 (Cycle 27) ✅
 
-#### 🔴 Red: 테스트 작성
-- [ ] `shouldCreateFileProcessingJobs()` 테스트 작성
-- [ ] Mock FileProcessingJobCommandPort 준비
-- [ ] 커밋: `test: FileProcessingJob 생성 테스트 추가 (Red)`
+#### 🔴 Red: 테스트 작성 ✅
+- [x] `shouldCreateFileProcessingJobs()` 테스트 작성
+- [x] Mock FileProcessingJobPersistencePort, MessageOutboxPersistencePort 준비
+- [x] **Zero-Tolerance Port 컨벤션 준수**: LoadFilePort ❌ → FileQueryPort ✅
+- [x] 커밋: `test: FileProcessingJob 생성 테스트 추가 (Red)` (433361a)
 
-#### 🟢 Green: 최소 구현
-- [ ] FileProcessingJob Entity 생성 로직 (각 jobType마다)
-- [ ] MessageOutbox 생성 (FILE_PROCESSING_REQUESTED 이벤트)
-- [ ] 커밋: `feat: FileProcessingJob 생성 구현 (Green)`
+#### 🟢 Green: 최소 구현 ✅
+- [x] FileProcessingJob 생성 로직 (각 jobType마다)
+- [x] MessageOutbox 생성 (FILE_PROCESSING_REQUESTED 이벤트)
+- [x] **Zero-Tolerance Port 컨벤션 준수**: findById() 메서드 사용
+- [x] 커밋: `feat: FileProcessingJob 생성 구현 (Green)` (27d6ada)
 
-#### ♻️ Refactor: 리팩토링
-- [ ] Transaction 경계 검증
-- [ ] 커밋: `struct: FileProcessingJob 생성 개선 (Refactor)`
+#### ♻️ Refactor: 리팩토링 ✅
+- [x] Transaction 경계 검증 완료 (추가 리팩토링 불필요)
+- [x] Port 컨벤션 100% 준수 확인
 
-#### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: FileProcessingJob 생성 테스트 정리 (Tidy)`
+#### 🧹 Tidy: TestFixture 정리 ✅
+- [x] TestFixture 이미 적절함 (ProcessFileCommandFixture, FileFixture)
 
 ---
 
