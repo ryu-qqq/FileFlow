@@ -323,7 +323,7 @@ class FileTest {
                 File.forNew(fileName, fileSize, mimeType, "s3key", "bucket", UploaderId.of(1L), "IMAGE", null, Clock.systemUTC())
         )
                 .isInstanceOf(InvalidFileSizeException.class)
-                .hasMessageContaining("파일 크기는 0보다 커야 합니다");
+                .hasMessageContaining("파일 크기는 0 이상이어야 합니다");
     }
 
     @Test
@@ -339,7 +339,7 @@ class FileTest {
                 File.forNew(fileName, fileSize, mimeType, "s3key", "bucket", UploaderId.of(1L), "IMAGE", null, Clock.systemUTC())
         )
                 .isInstanceOf(InvalidFileSizeException.class)
-                .hasMessageContaining("파일 크기는 1GB를 초과할 수 없습니다");
+                .hasMessageContaining("파일 크기 제한을 초과했습니다");
     }
 
     @Test
@@ -355,7 +355,7 @@ class FileTest {
                 File.forNew(fileName, fileSize, mimeType, "s3key", "bucket", UploaderId.of(1L), "OTHER", null, Clock.systemUTC())
         )
                 .isInstanceOf(InvalidMimeTypeException.class)
-                .hasMessageContaining("허용되지 않는 MIME 타입입니다");
+                .hasMessageContaining("지원하지 않는 MIME 타입입니다");
     }
 
     // ===== 상태 전환 메서드 테스트 =====
@@ -364,7 +364,7 @@ class FileTest {
     @DisplayName("PENDING 상태에서 UPLOADING 상태로 전환할 수 있어야 한다")
     void shouldMarkAsUploading() {
         // Given
-        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File file = FileFixture.aJpgImage();
         assertThat(file.getStatus()).isEqualTo(FileStatusFixture.pending());
 
         // When
@@ -378,7 +378,7 @@ class FileTest {
     @DisplayName("PENDING 또는 UPLOADING 상태에서 COMPLETED 상태로 전환할 수 있어야 한다")
     void shouldMarkAsCompleted() {
         // Given - PENDING에서 COMPLETED
-        File pendingFile = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File pendingFile = FileFixture.aJpgImage();
 
         // When
         pendingFile.markAsCompleted();
@@ -391,7 +391,7 @@ class FileTest {
     @DisplayName("COMPLETED가 아닌 상태에서 markAsCompleted 호출 시 예외가 발생해야 한다")
     void shouldMarkAsCompletedOnlyWhenPendingOrUploading() {
         // Given - PENDING 파일을 UPLOADING으로 변경
-        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File file = FileFixture.aJpgImage();
         file.markAsUploading();
 
         // When - UPLOADING에서 COMPLETED로 전환
@@ -405,7 +405,7 @@ class FileTest {
     @DisplayName("임의의 상태에서 FAILED 상태로 전환할 수 있어야 한다")
     void shouldMarkAsFailed() {
         // Given
-        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File file = FileFixture.aJpgImage();
 
         // When
         file.markAsFailed();
@@ -418,7 +418,7 @@ class FileTest {
     @DisplayName("COMPLETED 상태에서만 PROCESSING 상태로 전환할 수 있어야 한다")
     void shouldMarkAsProcessing() {
         // Given - COMPLETED 파일
-        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File file = FileFixture.aJpgImage();
         file.markAsCompleted();
 
         // When
@@ -432,7 +432,7 @@ class FileTest {
     @DisplayName("COMPLETED가 아닌 상태에서 markAsProcessing 호출 시 예외가 발생해야 한다")
     void shouldMarkAsProcessingOnlyWhenCompleted() {
         // Given - PENDING 파일
-        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File file = FileFixture.aJpgImage();
 
         // When & Then
         assertThatThrownBy(() -> file.markAsProcessing())
@@ -446,7 +446,7 @@ class FileTest {
     @DisplayName("재시도 횟수를 증가시킬 수 있어야 한다")
     void shouldIncrementRetryCount() {
         // Given
-        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File file = FileFixture.aJpgImage();
         assertThat(file.getRetryCount()).isEqualTo(0);
 
         // When
@@ -460,7 +460,7 @@ class FileTest {
     @DisplayName("파일을 소프트 삭제할 수 있어야 한다")
     void shouldSoftDelete() {
         // Given
-        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File file = FileFixture.aJpgImage();
         assertThat(file.getDeletedAt()).isNull();
 
         // When
@@ -474,7 +474,7 @@ class FileTest {
     @DisplayName("이미 삭제된 파일은 다시 삭제할 수 없어야 한다")
     void shouldNotSoftDeleteTwice() {
         // Given
-        File file = FileFixture.createFile("test.jpg", 1024L, "image/jpeg", 1L, "IMAGE");
+        File file = FileFixture.aJpgImage();
         file.softDelete();
 
         // When & Then
