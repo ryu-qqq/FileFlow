@@ -648,26 +648,30 @@
 
 ---
 
-### 2️⃣6️⃣ ProcessFileUseCase - 상태 검증 (Cycle 26)
+### ✅ 2️⃣6️⃣ ProcessFileUseCase - 상태 검증 (Cycle 26)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ProcessFileServiceTest.java` 생성
-- [ ] `shouldThrowExceptionWhenFileNotCompleted()` 테스트 작성
-- [ ] 커밋: `test: 파일 가공 상태 검증 테스트 추가 (Red)`
+- [x] `ProcessFileServiceTest.java` 생성
+- [x] `shouldThrowExceptionWhenFileNotCompleted()` 테스트 작성
+  - shouldThrowExceptionWhenFileNotCompleted_Pending()
+  - shouldThrowExceptionWhenFileNotCompleted_Uploading()
+  - shouldThrowExceptionWhenFileNotCompleted_Failed()
+  - shouldThrowExceptionWhenFileNotFound()
+- [x] FileFixture.aPendingFile() 추가
+- [x] 커밋: `test: 파일 가공 상태 검증 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `service/ProcessFileService.java` 생성
-- [ ] File 조회 + 상태 검증 로직 (COMPLETED만 허용)
-- [ ] FileNotCompletedException 예외 발생
-- [ ] 커밋: `feat: 파일 가공 상태 검증 구현 (Green)`
+- [x] `service/ProcessFileService.java` 생성
+- [x] File 조회 + 상태 검증 로직 (COMPLETED만 허용)
+- [x] IllegalStateException 예외 발생 (COMPLETED가 아닐 때)
+- [x] IllegalArgumentException 예외 발생 (파일 미존재)
+- [x] 커밋: `feat: 파일 가공 상태 검증 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ArchUnit 테스트 추가
-- [ ] 커밋: `struct: ProcessFileService 개선 (Refactor)`
+- [x] 리팩토링 불필요 (GREEN에서 완료, 단순 검증 로직)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `ProcessFileServiceFixture.java` 생성
-- [ ] 커밋: `test: ProcessFileService Fixture 정리 (Tidy)`
+- [x] ProcessFileCommandFixture 이미 존재 (사용 중)
 
 ---
 
