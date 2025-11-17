@@ -624,23 +624,27 @@
 
 ---
 
-### 2️⃣5️⃣ UploadFromExternalUrlUseCase - MessageOutbox 생성 (Cycle 25)
+### ✅ 2️⃣5️⃣ UploadFromExternalUrlUseCase - MessageOutbox 생성 (Cycle 25)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldCreateMessageOutboxForExternalDownload()` 테스트 작성
-- [ ] 커밋: `test: 외부 다운로드 Outbox 생성 테스트 추가 (Red)`
+- [x] `shouldCreateMessageOutboxForExternalDownload()` 테스트 작성
+- [x] Mock Port 준비 (SaveFilePort, MessageOutboxPersistencePort)
+- [x] Clock 주입 설정 (테스트 가능성)
+- [x] 커밋: `test: 외부 다운로드 Outbox 생성 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] File 메타데이터 생성 + MessageOutbox 생성 로직
-- [ ] FILE_DOWNLOAD_REQUESTED 이벤트 Outbox에 저장
-- [ ] 커밋: `feat: 외부 다운로드 Outbox 생성 구현 (Green)`
+- [x] SaveFilePort 인터페이스 생성 (Command Port)
+- [x] File 메타데이터 생성 (임시값으로 Domain 검증 통과)
+  - fileSize=1, mimeType="image/jpeg" (다운로드 후 업데이트)
+- [x] MessageOutbox 생성 (FILE_DOWNLOAD_REQUESTED 이벤트)
+- [x] Transactional Outbox Pattern 적용
+- [x] 커밋: `feat: 외부 다운로드 Outbox 생성 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Transaction 경계 검증
-- [ ] 커밋: `struct: 외부 다운로드 Outbox 생성 개선 (Refactor)`
+- [x] 리팩토링 불필요 (GREEN에서 완료, Transaction 경계 준수)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: 외부 다운로드 Outbox 생성 테스트 정리 (Tidy)`
+- [x] UploadFromExternalUrlCommandFixture 이미 존재 (사용 중)
 
 ---
 
