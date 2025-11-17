@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.application.fixture.GeneratePresignedUrlCommandFixture
 import com.ryuqq.fileflow.application.port.out.command.FilePersistencePort;
 import com.ryuqq.fileflow.domain.aggregate.File;
 import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
+import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
 import com.ryuqq.fileflow.domain.vo.FileId;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,5 +119,25 @@ class GeneratePresignedUrlServiceTest {
         assertThatThrownBy(() -> generatePresignedUrlService.execute(command))
                 .isInstanceOf(InvalidFileSizeException.class)
                 .hasMessageContaining("1GB");
+    }
+
+    /**
+     * 🔴 RED Phase: MIME 타입 검증 실패 테스트
+     * <p>
+     * 허용되지 않는 MIME 타입일 경우 InvalidMimeTypeException이 발생해야 합니다.
+     * File.forNew() 메서드에서 Domain 레벨 검증을 수행하므로,
+     * Service는 Domain 예외를 전파합니다.
+     * </p>
+     */
+    @Test
+    @DisplayName("허용되지 않는 MIME 타입이면 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenInvalidMimeType() {
+        // Given: 허용되지 않는 MIME 타입 Command
+        GeneratePresignedUrlCommand command = GeneratePresignedUrlCommandFixture.withMimeType("application/invalid");
+
+        // When & Then: InvalidMimeTypeException 발생 검증
+        assertThatThrownBy(() -> generatePresignedUrlService.execute(command))
+                .isInstanceOf(InvalidMimeTypeException.class)
+                .hasMessageContaining("허용되지 않는");
     }
 }
