@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.application.service;
 
 import com.ryuqq.fileflow.application.dto.command.CompleteUploadCommand;
 import com.ryuqq.fileflow.application.port.in.command.CompleteUploadPort;
+import com.ryuqq.fileflow.application.port.out.external.S3ClientPort;
 import com.ryuqq.fileflow.application.port.out.query.LoadFilePort;
 import com.ryuqq.fileflow.domain.aggregate.File;
 import com.ryuqq.fileflow.domain.vo.FileId;
@@ -30,21 +31,24 @@ public class CompleteUploadService implements CompleteUploadPort {
     );
 
     private final LoadFilePort loadFilePort;
+    private final S3ClientPort s3ClientPort;
     private final Clock clock;
 
     public CompleteUploadService(
             LoadFilePort loadFilePort,
+            S3ClientPort s3ClientPort,
             Clock clock
     ) {
         this.loadFilePort = Objects.requireNonNull(loadFilePort, "loadFilePort must not be null");
+        this.s3ClientPort = Objects.requireNonNull(s3ClientPort, "s3ClientPort must not be null");
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
     }
 
     /**
      * 업로드 완료 UseCase 실행
      * <p>
-     * Cycle 21: 상태 검증만 구현
-     * Cycle 22: S3 Object 존재 확인 추가 예정
+     * Cycle 21: 상태 검증 구현 완료
+     * Cycle 22: S3 Object 존재 확인 구현 중
      * Cycle 23: MessageOutbox 생성 추가 예정
      * </p>
      */
@@ -57,6 +61,9 @@ public class CompleteUploadService implements CompleteUploadPort {
 
         // 2. 상태 검증
         validateFileStatus(file);
+
+        // 3. S3 Object 존재 확인 (트랜잭션 밖 - 외부 API 호출)
+        verifyS3ObjectExists(file);
     }
 
     /**
@@ -75,6 +82,25 @@ public class CompleteUploadService implements CompleteUploadPort {
                             "허용 상태: PENDING, UPLOADING / " +
                             "현재 상태: " + currentStatus
             );
+        }
+    }
+
+    /**
+     * S3 Object 존재 확인
+     * <p>
+     * Zero-Tolerance 규칙:
+     * - 외부 API 호출이므로 @Transactional 메서드 밖에서 호출
+     * - Timeout: 10초 (S3ClientPort 정의)
+     * - Retry: 3회 (S3ClientPort 정의)
+     * </p>
+     */
+    private void verifyS3ObjectExists(File file) {
+        String s3Key = file.getS3Key();
+
+        try {
+            s3ClientPort.headObject(s3Key);
+        } catch (Exception e) {
+            throw new RuntimeException("S3 Object not found: " + s3Key, e);
         }
     }
 }
