@@ -158,6 +158,162 @@ class DownloadSessionTest {
         assertThat(session.updatedAt()).isNotNull();
     }
 
+    @Test
+    @DisplayName("of() 메서드로 기존 ID를 가진 DownloadSession을 생성할 수 있어야 한다")
+    void shouldCreateDownloadSessionUsingOfMethod() {
+        // given
+        SessionId sessionId = SessionId.of("01234567-89ab-7def-0123-456789abcdef"); // 기존 ID (not new)
+        TenantId tenantId = TenantId.of(1L);
+        ExternalUrl externalUrl = ExternalUrl.of("https://example.com/file.pdf");
+        FileName fileName = FileName.of("file.pdf");
+        FileSize fileSize = FileSize.of(10 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("application/pdf");
+        RetryCount retryCount = RetryCount.forFile();
+        SessionStatus status = SessionStatus.INITIATED;
+        LocalDateTime createdAt = LocalDateTime.now(FIXED_CLOCK);
+        LocalDateTime updatedAt = LocalDateTime.now(FIXED_CLOCK);
+        LocalDateTime expiresAt = createdAt.plusMinutes(60);
+
+        // when
+        DownloadSession session = DownloadSession.of(
+                sessionId, tenantId, externalUrl, fileName, fileSize, mimeType,
+                null, null, retryCount, expiresAt, status, FIXED_CLOCK, createdAt, updatedAt
+        );
+
+        // then
+        assertThat(session.sessionId()).isEqualTo(sessionId);
+        assertThat(session.externalUrl()).isEqualTo(externalUrl);
+        assertThat(session.fileName()).isEqualTo(fileName);
+        assertThat(session.status()).isEqualTo(status);
+    }
+
+    @Test
+    @DisplayName("of() 메서드는 null ID일 때 예외를 발생시켜야 한다")
+    void shouldThrowExceptionWhenOfMethodWithNullId() {
+        // given
+        TenantId tenantId = TenantId.of(1L);
+        ExternalUrl externalUrl = ExternalUrl.of("https://example.com/file.pdf");
+        FileName fileName = FileName.of("file.pdf");
+        FileSize fileSize = FileSize.of(10 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("application/pdf");
+        RetryCount retryCount = RetryCount.forFile();
+
+        // when & then
+        assertThatThrownBy(() -> DownloadSession.of(
+                null, tenantId, externalUrl, fileName, fileSize, mimeType,
+                null, null, retryCount,
+                LocalDateTime.now(FIXED_CLOCK).plusMinutes(60),
+                SessionStatus.INITIATED, FIXED_CLOCK,
+                LocalDateTime.now(FIXED_CLOCK), LocalDateTime.now(FIXED_CLOCK)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("of() 메서드는 새로운 ID일 때 예외를 발생시켜야 한다")
+    void shouldThrowExceptionWhenOfMethodWithNewId() {
+        // given
+        SessionId newId = SessionId.forNew(); // isNew() == true
+        TenantId tenantId = TenantId.of(1L);
+        ExternalUrl externalUrl = ExternalUrl.of("https://example.com/file.pdf");
+        FileName fileName = FileName.of("file.pdf");
+        FileSize fileSize = FileSize.of(10 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("application/pdf");
+        RetryCount retryCount = RetryCount.forFile();
+
+        // when & then
+        assertThatThrownBy(() -> DownloadSession.of(
+                newId, tenantId, externalUrl, fileName, fileSize, mimeType,
+                null, null, retryCount,
+                LocalDateTime.now(FIXED_CLOCK).plusMinutes(60),
+                SessionStatus.INITIATED, FIXED_CLOCK,
+                LocalDateTime.now(FIXED_CLOCK), LocalDateTime.now(FIXED_CLOCK)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute() 메서드로 영속성 복원을 할 수 있어야 한다")
+    void shouldReconstituteDownloadSessionFromPersistence() {
+        // given
+        SessionId sessionId = SessionId.of("abcdef01-2345-6789-abcd-ef0123456789");
+        TenantId tenantId = TenantId.of(1L);
+        ExternalUrl externalUrl = ExternalUrl.of("https://example.com/restored.pdf");
+        FileName fileName = FileName.of("restored.pdf");
+        FileSize fileSize = FileSize.of(20 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("application/pdf");
+        ETag etag = ETag.of("restored-etag-123");
+        RetryCount retryCount = RetryCount.forFile();
+        SessionStatus status = SessionStatus.COMPLETED;
+        LocalDateTime createdAt = LocalDateTime.now(FIXED_CLOCK).minusHours(1);
+        LocalDateTime updatedAt = LocalDateTime.now(FIXED_CLOCK);
+        LocalDateTime expiresAt = createdAt.plusMinutes(60);
+
+        // when
+        DownloadSession session = DownloadSession.reconstitute(
+                sessionId, tenantId, externalUrl, fileName, fileSize, mimeType,
+                null, etag, retryCount, expiresAt, status, FIXED_CLOCK, createdAt, updatedAt
+        );
+
+        // then
+        assertThat(session.sessionId()).isEqualTo(sessionId);
+        assertThat(session.externalUrl()).isEqualTo(externalUrl);
+        assertThat(session.fileName()).isEqualTo(fileName);
+        assertThat(session.status()).isEqualTo(SessionStatus.COMPLETED);
+        assertThat(session.etag()).isEqualTo(etag);
+        assertThat(session.createdAt()).isEqualTo(createdAt);
+        assertThat(session.updatedAt()).isEqualTo(updatedAt);
+    }
+
+    @Test
+    @DisplayName("reconstitute() 메서드는 null ID일 때 예외를 발생시켜야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNullId() {
+        // given
+        TenantId tenantId = TenantId.of(1L);
+        ExternalUrl externalUrl = ExternalUrl.of("https://example.com/file.pdf");
+        FileName fileName = FileName.of("file.pdf");
+        FileSize fileSize = FileSize.of(10 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("application/pdf");
+        RetryCount retryCount = RetryCount.forFile();
+
+        // when & then
+        assertThatThrownBy(() -> DownloadSession.reconstitute(
+                null, tenantId, externalUrl, fileName, fileSize, mimeType,
+                null, null, retryCount,
+                LocalDateTime.now(FIXED_CLOCK).plusMinutes(60),
+                SessionStatus.INITIATED, FIXED_CLOCK,
+                LocalDateTime.now(FIXED_CLOCK), LocalDateTime.now(FIXED_CLOCK)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("reconstitute() 메서드는 새로운 ID일 때 예외를 발생시켜야 한다")
+    void shouldThrowExceptionWhenReconstituteWithNewId() {
+        // given
+        SessionId newId = SessionId.forNew();
+        TenantId tenantId = TenantId.of(1L);
+        ExternalUrl externalUrl = ExternalUrl.of("https://example.com/file.pdf");
+        FileName fileName = FileName.of("file.pdf");
+        FileSize fileSize = FileSize.of(10 * 1024 * 1024L);
+        MimeType mimeType = MimeType.of("application/pdf");
+        RetryCount retryCount = RetryCount.forFile();
+
+        // when & then
+        assertThatThrownBy(() -> DownloadSession.reconstitute(
+                newId, tenantId, externalUrl, fileName, fileSize, mimeType,
+                null, null, retryCount,
+                LocalDateTime.now(FIXED_CLOCK).plusMinutes(60),
+                SessionStatus.INITIATED, FIXED_CLOCK,
+                LocalDateTime.now(FIXED_CLOCK), LocalDateTime.now(FIXED_CLOCK)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
+    }
+
     // Helper Methods
 
     private DownloadSession createDefaultSession() {
