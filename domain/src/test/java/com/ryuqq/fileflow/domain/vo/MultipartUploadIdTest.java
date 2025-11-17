@@ -31,7 +31,7 @@ class MultipartUploadIdTest {
         // when & then
         assertThatThrownBy(() -> MultipartUploadId.of(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Multipart Upload ID는 null이거나 빈 값일 수 없습니다");
+                .hasMessageContaining("Multipart Upload ID는 null일 수 없습니다 (forNew() 사용)");
 
         assertThatThrownBy(() -> MultipartUploadId.of(""))
                 .isInstanceOf(IllegalArgumentException.class)
