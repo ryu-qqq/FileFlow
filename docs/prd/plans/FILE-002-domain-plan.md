@@ -180,30 +180,28 @@ git commit -m "test: DownloadSession Aggregate 비즈니스 메서드 테스트 
 git commit -m "feat: DownloadSession Aggregate 비즈니스 메서드 구현 (이미 구현됨)"
 ```
 
-#### Cycle 17: FileProcessingJob Aggregate 테스트 보강
+#### Cycle 17: FileProcessingJob Aggregate 테스트 보강 - ✅ **완료**
 ```
 테스트 항목:
-- [ ] markAsProcessing() 상태 전환
-- [ ] markAsCompleted(String outputS3Key) 완료 처리
-- [ ] markAsFailed(String errorMessage) 실패 처리
-- [ ] incrementRetryCount() 재시도 로직 (Job은 최대 2회)
-- [ ] canRetry() 재시도 가능 여부
+- [x] markAsProcessing() 상태 전환 ✅ 이미 존재 (Lines 320, 415)
+- [x] markAsCompleted(String outputS3Key) 완료 처리 ✅ 이미 존재 (Lines 243, 335, 430, 466, 507)
+- [x] markAsFailed(String errorMessage) 실패 처리 ✅ 이미 존재 (Lines 351, 448, 538)
+- [x] incrementRetryCount() 재시도 로직 ✅ 이미 존재 (Line 369)
+- [x] canRetry() 재시도 가능 여부 ✅ 이미 존재 (Lines 383, 398)
 ```
 
-**커밋**:
-```bash
-git commit -m "test: FileProcessingJob Aggregate 비즈니스 메서드 테스트 추가"
-git commit -m "feat: FileProcessingJob Aggregate 비즈니스 메서드 구현 (이미 구현됨)"
-```
+**결과**: 모든 비즈니스 메서드 테스트 이미 존재 (25+ 테스트)
 
-#### Cycle 18: MessageOutbox Aggregate 테스트 보강
+#### Cycle 18: MessageOutbox Aggregate 테스트 보강 - ✅ **완료**
 ```
 테스트 항목:
-- [ ] markAsSent() 상태 전환
-- [ ] markAsFailed() 실패 처리
-- [ ] incrementRetryCount() 재시도 로직 (Outbox는 최대 3회)
-- [ ] canRetry() 재시도 가능 여부
+- [x] markAsSent() 상태 전환 ✅ 이미 존재 (Lines 96-107, 111-121)
+- [x] markAsFailed() 실패 처리 ✅ 이미 존재 (Lines 125-135)
+- [x] incrementRetryCount() 재시도 로직 ✅ 이미 존재 (Lines 141-151)
+- [x] canRetry() 재시도 가능 여부 ✅ 이미 존재 (Lines 155-166, 170-173)
 ```
+
+**결과**: 모든 비즈니스 메서드 테스트 이미 존재
 
 **커밋**:
 ```bash
