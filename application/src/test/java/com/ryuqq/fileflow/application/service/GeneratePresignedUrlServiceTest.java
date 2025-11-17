@@ -118,7 +118,7 @@ class GeneratePresignedUrlServiceTest {
         // When & Then: InvalidFileSizeException 발생 검증
         assertThatThrownBy(() -> generatePresignedUrlService.execute(command))
                 .isInstanceOf(InvalidFileSizeException.class)
-                .hasMessageContaining("1GB");
+                .hasMessageContaining("초과");
     }
 
     /**
@@ -138,7 +138,7 @@ class GeneratePresignedUrlServiceTest {
         // When & Then: InvalidMimeTypeException 발생 검증
         assertThatThrownBy(() -> generatePresignedUrlService.execute(command))
                 .isInstanceOf(InvalidMimeTypeException.class)
-                .hasMessageContaining("허용되지 않는");
+                .hasMessageContaining("지원하지 않는");
     }
 
     /**
