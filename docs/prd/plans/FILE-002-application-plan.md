@@ -512,26 +512,27 @@
 
 ---
 
-### 2️⃣0️⃣ GeneratePresignedUrlUseCase - 업로드 전략 결정 (Cycle 20)
+### 2️⃣0️⃣ GeneratePresignedUrlUseCase - 업로드 전략 결정 (Cycle 20) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldUseSingleUploadForSmallFile()` 테스트 작성
-- [ ] `shouldUseMultipartUploadForLargeFile()` 테스트 작성
-- [ ] 커밋: `test: 업로드 전략 결정 테스트 추가 (Red)`
+- [x] `shouldUseSingleUploadForSmallFile()` 테스트 작성 (10MB)
+- [x] `shouldUseMultipartUploadForLargeFile()` 테스트 작성 (200MB)
+- [x] 커밋: `test: 업로드 전략 결정 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] 파일 크기별 업로드 전략 결정 로직 추가
-  - < 100MB: 단일 업로드
-  - ≥ 100MB: Multipart Upload
-- [ ] 커밋: `feat: 업로드 전략 결정 구현 (Green)`
+- [x] PresignedUrlResponse에 uploadStrategy 필드 추가
+- [x] GeneratePresignedUrlService.determineUploadStrategy() 구현
+  - < 100MB: SINGLE
+  - ≥ 100MB: MULTIPART
+- [x] PresignedUrlResponseFixture 업데이트
+- [x] 커밋: `feat: 업로드 전략 결정 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 상수 추출 (MULTIPART_THRESHOLD = 100MB)
-- [ ] 전략 패턴 적용 고려
-- [ ] 커밋: `struct: 업로드 전략 결정 개선 (Refactor)`
+- [x] 상수 추출 (MULTIPART_THRESHOLD = 100MB)
+- [x] 커밋: `struct: MULTIPART_THRESHOLD 상수 추출 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 커밋: `test: 업로드 전략 결정 테스트 정리 (Tidy)`
+- [x] TestFixture 사용 확인 (GeneratePresignedUrlCommandFixture.withFileSize())
 
 ---
 
