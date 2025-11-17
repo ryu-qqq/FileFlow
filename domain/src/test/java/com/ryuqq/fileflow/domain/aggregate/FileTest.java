@@ -323,7 +323,7 @@ class FileTest {
                 File.forNew(fileName, fileSize, mimeType, "s3key", "bucket", UploaderId.of(1L), "IMAGE", null, Clock.systemUTC())
         )
                 .isInstanceOf(InvalidFileSizeException.class)
-                .hasMessageContaining("파일 크기는 0 이상이어야 합니다");
+                .hasMessageContaining("파일 크기는 0보다 커야 합니다");
     }
 
     @Test
