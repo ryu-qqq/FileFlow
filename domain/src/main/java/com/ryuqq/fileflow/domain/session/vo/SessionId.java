@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.session.vo;
 
+import com.github.f4b6a3.uuid.UuidCreator;
+
 import java.util.UUID;
 
 /**
@@ -10,14 +12,14 @@ import java.util.UUID;
  *
  * <p>
  * UUID 형식:
- * - 향후 UUID v7 (Time-based UUID) 적용 예정
- * - 현재는 UUID v4 (Random UUID) 사용
+ * - UUID v7 (Time-based UUID) 사용
  * </p>
  *
  * <p>
  * UUID v7 장점:
  * - Timestamp 기반 정렬 가능
  * - DB Index 성능 최적화 (B-Tree 친화적)
+ * - 멱등성 키로 사용 시 시간 순서 추적 가능
  * </p>
  *
  * @param value Session ID 값 (null 가능 - forNew()로 생성 시)
@@ -38,16 +40,15 @@ public record SessionId(String value) {
     }
 
     /**
-     * 새로운 SessionId 생성
+     * UUID v7로 새로운 SessionId 생성
      * <p>
-     * 향후 UUID v7 라이브러리 적용 시 이 메서드만 수정하면 됩니다.
+     * UUID v7: 시간 기반 정렬 가능 (Timestamp 포함)
      * </p>
      *
-     * @return 새로 생성된 SessionId
+     * @return 새로 생성된 SessionId (UUID v7)
      */
     public static SessionId generate() {
-        // TODO: UUID v7로 변경 예정 (예: com.github.f4b6a3:uuid-creator)
-        return new SessionId(UUID.randomUUID().toString());
+        return new SessionId(UuidCreator.getTimeOrderedEpoch().toString());
     }
 
     /**
