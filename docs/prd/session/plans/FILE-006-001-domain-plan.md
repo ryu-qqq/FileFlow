@@ -150,7 +150,7 @@
 ### 5️⃣ UserRole Enum 구현 (Cycle 5)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `UserRoleTest.java` 생성
+- [~] `UserRoleTest.java` 생성 *(in progress)*
 - [ ] `shouldReturnCorrectNamespace()` 테스트 작성
 - [ ] 각 Role별 네임스페이스 검증 테스트 작성
 - [ ] 커밋: `test: UserRole Enum 테스트 추가 (Red)`
