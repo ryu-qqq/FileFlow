@@ -1,12 +1,11 @@
 package com.ryuqq.fileflow.domain.file.vo;
 
+import com.ryuqq.fileflow.domain.file.support.FileSizeUnit;
+
 /**
  * 파일 크기 Value Object.
  */
 public record FileSize(long bytes) {
-
-    private static final long MB = 1024L * 1024L;
-    private static final long GB = 1024L * MB;
 
     public FileSize {
         if (bytes <= 0) {
@@ -34,11 +33,11 @@ public record FileSize(long bytes) {
     }
 
     public double toMB() {
-        return (double) bytes / MB;
+        return (double) bytes / FileSizeUnit.MB_IN_BYTES;
     }
 
     public double toGB() {
-        return (double) bytes / GB;
+        return (double) bytes / FileSizeUnit.GB_IN_BYTES;
     }
 }
 
