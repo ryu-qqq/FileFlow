@@ -1,7 +1,9 @@
 package com.ryuqq.fileflow.application.session.dto;
 
+import com.ryuqq.fileflow.domain.file.vo.*;
 import com.ryuqq.fileflow.domain.iam.vo.*;
 import com.ryuqq.fileflow.domain.session.aggregate.UploadSession;
+import com.ryuqq.fileflow.domain.session.vo.SessionId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -110,14 +112,10 @@ class SessionPreparationResultTest {
     }
 
     private UploadSession createSession(Clock clock) {
-        return UploadSession.initiate(
-            SessionId.generate(),
-            TenantId.of(1L),
+        return UploadSession.forNew(
             FileName.of("example.jpg"),
             FileSize.of(1048576L),
             MimeType.of("image/jpeg"),
-            UploadType.SINGLE,
-            PresignedUrl.of("https://example.com/presigned"),
             clock
         );
     }
