@@ -12,7 +12,7 @@
 ### 1️⃣ SessionId VO 구현 (Cycle 1)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `SessionIdTest.java` 파일 생성
+- [~] `SessionIdTest.java` 파일 생성 *(in progress)*
 - [ ] `shouldCreateNewSessionId()` 테스트 작성 (forNew() 메서드)
 - [ ] `shouldCreateFromValidUUID()` 테스트 작성 (from() 메서드)
 - [ ] `shouldThrowExceptionWhenInvalidUUID()` 테스트 작성
