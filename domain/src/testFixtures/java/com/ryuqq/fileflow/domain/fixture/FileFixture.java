@@ -1,10 +1,10 @@
 package com.ryuqq.fileflow.domain.fixture;
 
 import com.ryuqq.fileflow.domain.aggregate.File;
-import com.ryuqq.fileflow.domain.vo.FileId;
+import com.ryuqq.fileflow.domain.iam.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileStatus;
 import com.ryuqq.fileflow.domain.vo.RetryCount;
-import com.ryuqq.fileflow.domain.vo.UploaderId;
+import com.ryuqq.fileflow.domain.iam.vo.UploaderId;
 
 import java.time.Clock;
 import java.time.LocalDateTime;

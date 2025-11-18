@@ -4,8 +4,9 @@ import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
 import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
 import com.ryuqq.fileflow.domain.fixture.FileFixture;
 import com.ryuqq.fileflow.domain.fixture.FileStatusFixture;
+import com.ryuqq.fileflow.domain.iam.vo.FileId;
+import com.ryuqq.fileflow.domain.iam.vo.UploaderId;
 import com.ryuqq.fileflow.domain.vo.RetryCount;
-import com.ryuqq.fileflow.domain.vo.UploaderId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -97,7 +98,7 @@ class FileTest {
         String mimeType = "image/jpeg";
         String s3Key = "uploads/2024/01/test-image.jpg";
         String s3Bucket = "fileflow-storage";
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
         String category = "IMAGE";
         String tags = "product,thumbnail";
 
@@ -138,11 +139,11 @@ class FileTest {
     @DisplayName("of()는 유효한 ID로 파일을 생성해야 한다")
     void shouldCreateFileWithOf() {
         // Given
-        com.ryuqq.fileflow.domain.vo.FileId fileId = com.ryuqq.fileflow.domain.fixture.FileIdFixture.aFileId();
+        com.ryuqq.fileflow.domain.iam.vo.FileId fileId = com.ryuqq.fileflow.domain.fixture.FileIdFixture.aFileId();
         String fileName = "test-document.pdf";
         long fileSize = 5120000L; // 5MB
         String mimeType = "application/pdf";
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
         String s3Key = "uploads/2024/01/test-document.pdf";
         String s3Bucket = "fileflow-storage";
 
@@ -180,8 +181,8 @@ class FileTest {
     @DisplayName("of()는 null ID로 생성 시 예외가 발생해야 한다")
     void shouldThrowExceptionWhenOfWithNullId() {
         // Given
-        com.ryuqq.fileflow.domain.vo.FileId nullFileId = null;
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.FileId nullFileId = null;
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
 
         // When & Then
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -212,11 +213,11 @@ class FileTest {
     @DisplayName("reconstitute()는 영속성 계층에서 파일을 재구성해야 한다")
     void shouldReconstituteFile() {
         // Given
-        com.ryuqq.fileflow.domain.vo.FileId fileId = com.ryuqq.fileflow.domain.fixture.FileIdFixture.aFileId();
+        com.ryuqq.fileflow.domain.iam.vo.FileId fileId = com.ryuqq.fileflow.domain.fixture.FileIdFixture.aFileId();
         String fileName = "reconstructed.jpg";
         long fileSize = 3072000L; // 3MB
         String mimeType = "image/jpeg";
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
 
         // When
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -254,8 +255,8 @@ class FileTest {
     @DisplayName("reconstitute()는 null ID로 재구성 시 예외가 발생해야 한다")
     void shouldThrowExceptionWhenReconstituteWithNullId() {
         // Given
-        com.ryuqq.fileflow.domain.vo.FileId nullFileId = null;
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.FileId nullFileId = null;
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
 
         // When & Then
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -286,8 +287,8 @@ class FileTest {
     @DisplayName("of()는 새로운 ID로 생성 시 예외가 발생해야 한다")
     void shouldThrowExceptionWhenOfWithNewId() {
         // Given
-        com.ryuqq.fileflow.domain.vo.FileId newFileId = com.ryuqq.fileflow.domain.vo.FileId.forNew(); // isNew() == true
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.FileId newFileId = com.ryuqq.fileflow.domain.iam.vo.FileId.forNew(); // isNew() == true
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
 
         // When & Then
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -318,8 +319,8 @@ class FileTest {
     @DisplayName("reconstitute()는 새로운 ID로 재구성 시 예외가 발생해야 한다")
     void shouldThrowExceptionWhenReconstituteWithNewId() {
         // Given
-        com.ryuqq.fileflow.domain.vo.FileId newFileId = com.ryuqq.fileflow.domain.vo.FileId.forNew(); // isNew() == true
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.FileId newFileId = com.ryuqq.fileflow.domain.iam.vo.FileId.forNew(); // isNew() == true
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
 
         // When & Then
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -562,7 +563,7 @@ class FileTest {
         String mimeType = "image/jpeg";
         String s3Key = "uploads/2024/01/test-image.jpg";
         String s3Bucket = "fileflow-storage";
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
 
         // When
         File file = File.forNew(
@@ -590,7 +591,7 @@ class FileTest {
                 java.time.Instant.parse("2025-01-15T12:00:00Z"),
                 java.time.ZoneId.of("UTC")
         );
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
         File file = File.forNew(
                 "test.jpg",
                 1024000L,
@@ -618,7 +619,7 @@ class FileTest {
                 java.time.Instant.parse("2025-01-20T15:30:00Z"),
                 java.time.ZoneId.of("UTC")
         );
-        com.ryuqq.fileflow.domain.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
+        com.ryuqq.fileflow.domain.iam.vo.UploaderId uploaderId = com.ryuqq.fileflow.domain.fixture.UploaderIdFixture.anUploaderId();
 
         // When
         File file = File.forNew(

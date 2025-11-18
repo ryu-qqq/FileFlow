@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+
 /**
  * S3 Bucket Value Object
  * <p>

@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.fixture;
 
-import com.ryuqq.fileflow.domain.vo.FileId;
+import com.ryuqq.fileflow.domain.iam.vo.FileId;
 
 /**
  * FileId Test Fixture

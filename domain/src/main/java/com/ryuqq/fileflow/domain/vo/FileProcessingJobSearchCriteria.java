@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.iam.vo.FileId;
+
 /**
  * FileProcessingJob 검색 조건 Value Object
  * <p>

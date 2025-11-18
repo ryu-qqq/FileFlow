@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.fixture;
 
 import com.ryuqq.fileflow.domain.aggregate.DownloadSession;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.vo.*;
 
 import java.time.Clock;

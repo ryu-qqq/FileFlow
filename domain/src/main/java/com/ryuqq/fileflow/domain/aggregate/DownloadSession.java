@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.vo.*;
 
 import java.time.Clock;

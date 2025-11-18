@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.fixture;
 
-import com.ryuqq.fileflow.domain.vo.UploaderId;
+import com.ryuqq.fileflow.domain.iam.vo.UploaderId;
 
 /**
  * UploaderId Test Fixture

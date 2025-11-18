@@ -5,7 +5,7 @@ import com.ryuqq.fileflow.domain.fixture.FileProcessingJobFixture;
 import com.ryuqq.fileflow.domain.fixture.FileProcessingJobIdFixture;
 import com.ryuqq.fileflow.domain.fixture.JobStatusFixture;
 import com.ryuqq.fileflow.domain.fixture.JobTypeFixture;
-import com.ryuqq.fileflow.domain.vo.FileId;
+import com.ryuqq.fileflow.domain.iam.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileProcessingJobId;
 import com.ryuqq.fileflow.domain.vo.JobType;
 import com.ryuqq.fileflow.domain.vo.RetryCount;

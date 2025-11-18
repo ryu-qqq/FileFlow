@@ -4,6 +4,8 @@ import com.ryuqq.fileflow.domain.exception.InvalidFileSizeErrorCode;
 import com.ryuqq.fileflow.domain.exception.InvalidFileSizeException;
 import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeErrorCode;
 import com.ryuqq.fileflow.domain.exception.InvalidMimeTypeException;
+import com.ryuqq.fileflow.domain.iam.vo.FileId;
+import com.ryuqq.fileflow.domain.iam.vo.UploaderId;
 import com.ryuqq.fileflow.domain.vo.*;
 
 // VO imports for File fields

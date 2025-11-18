@@ -6,7 +6,7 @@ import com.ryuqq.fileflow.domain.vo.FileName;
 import com.ryuqq.fileflow.domain.vo.FileSize;
 import com.ryuqq.fileflow.domain.vo.MimeType;
 import com.ryuqq.fileflow.domain.vo.Tags;
-import com.ryuqq.fileflow.domain.vo.UploaderId;
+import com.ryuqq.fileflow.domain.iam.vo.UploaderId;
 
 import java.util.List;
 

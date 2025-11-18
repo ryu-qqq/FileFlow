@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.domain.vo;
 
 import com.ryuqq.fileflow.domain.fixture.FileStatusFixture;
 import com.ryuqq.fileflow.domain.fixture.UploaderIdFixture;
+import com.ryuqq.fileflow.domain.iam.vo.UploaderId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

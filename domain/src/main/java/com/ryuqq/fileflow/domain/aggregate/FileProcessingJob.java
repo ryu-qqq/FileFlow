@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.domain.aggregate;
 
 import com.ryuqq.fileflow.domain.util.UuidV7Generator;
-import com.ryuqq.fileflow.domain.vo.FileId;
+import com.ryuqq.fileflow.domain.iam.vo.FileId;
 import com.ryuqq.fileflow.domain.vo.FileProcessingJobId;
 import com.ryuqq.fileflow.domain.vo.JobStatus;
 import com.ryuqq.fileflow.domain.vo.JobType;

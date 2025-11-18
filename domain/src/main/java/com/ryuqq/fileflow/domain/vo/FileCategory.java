@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.iam.vo.UploaderType;
+
 import java.util.Set;
 
 /**

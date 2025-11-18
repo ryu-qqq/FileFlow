@@ -1,5 +1,9 @@
 package com.ryuqq.fileflow.domain.vo;
 
+import com.ryuqq.fileflow.domain.iam.vo.FileId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UploaderType;
+
 /**
  * S3 Object Key Value Object
  * <p>
