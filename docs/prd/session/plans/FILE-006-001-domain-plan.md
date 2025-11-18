@@ -47,7 +47,7 @@
 ### 2️⃣ FileName VO 구현 (Cycle 2)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileNameTest.java` 생성
+- [~] `FileNameTest.java` 생성 *(in progress)*
 - [ ] `shouldCreateFileNameWithExtension()` 테스트 작성
 - [ ] `shouldExtractExtensionCorrectly()` 테스트 작성
 - [ ] `shouldReturnWithoutExtension()` 테스트 작성
