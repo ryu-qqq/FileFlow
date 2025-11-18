@@ -81,7 +81,7 @@
 ### 3️⃣ FileSize VO 구현 (Cycle 3)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileSizeTest.java` 생성
+- [~] `FileSizeTest.java` 생성 *(in progress)*
 - [ ] `shouldCreateFileSize()` 테스트 작성
 - [ ] `shouldThrowExceptionWhenZeroOrNegative()` 테스트 작성
 - [ ] `shouldValidateForUploadType()` 테스트 작성 (SINGLE 5GB, MULTIPART 5TB)
