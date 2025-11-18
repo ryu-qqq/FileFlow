@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.application.fixture;
+package com.ryuqq.fileflow.application.session.fixture;
 
 import com.ryuqq.fileflow.application.dto.command.GeneratePresignedUrlCommand;
 import com.ryuqq.fileflow.domain.vo.FileCategory;

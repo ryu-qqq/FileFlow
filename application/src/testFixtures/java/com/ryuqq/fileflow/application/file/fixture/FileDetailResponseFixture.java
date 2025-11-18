@@ -1,7 +1,7 @@
-package com.ryuqq.fileflow.application.fixture;
+package com.ryuqq.fileflow.application.file.fixture;
 
 import com.ryuqq.fileflow.application.dto.response.FileDetailResponse;
-import com.ryuqq.fileflow.domain.aggregate.FileProcessingJob;
+import com.ryuqq.fileflow.domain.file.aggregate.FileProcessingJob;
 
 import java.util.ArrayList;
 import java.util.List;

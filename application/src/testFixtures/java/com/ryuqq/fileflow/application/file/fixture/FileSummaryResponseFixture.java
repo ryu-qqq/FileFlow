@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.application.fixture;
+package com.ryuqq.fileflow.application.file.fixture;
 
 import com.ryuqq.fileflow.application.dto.response.FileSummaryResponse;
 
