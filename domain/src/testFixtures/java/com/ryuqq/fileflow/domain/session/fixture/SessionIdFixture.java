@@ -15,6 +15,7 @@ import com.ryuqq.fileflow.domain.session.vo.SessionId;
 public final class SessionIdFixture {
 
     private static final String DEFAULT_SESSION_ID = "11111111-2222-3333-4444-555555555555";
+    public static final String INVALID_SESSION_ID = "invalid-session-id";
 
     private SessionIdFixture() {
     }
@@ -74,13 +75,5 @@ public final class SessionIdFixture {
         return new SessionId(null);
     }
 
-    /**
-     * 유효하지 않은 SessionId 문자열
-     *
-     * @return invalid 문자열
-     */
-    public static String invalidValue() {
-        return "invalid-session-id";
-    }
 }
 

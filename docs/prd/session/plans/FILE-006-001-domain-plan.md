@@ -12,35 +12,35 @@
 ### 1️⃣ SessionId VO 구현 (Cycle 1)
 
 #### 🔴 Red: 테스트 작성
-- [~] `SessionIdTest.java` 파일 생성 *(in progress)*
-- [ ] `shouldCreateNewSessionId()` 테스트 작성 (forNew() 메서드)
-- [ ] `shouldCreateFromValidUUID()` 테스트 작성 (from() 메서드)
-- [ ] `shouldThrowExceptionWhenInvalidUUID()` 테스트 작성
-- [ ] `shouldReturnTrueWhenIsNew()` 테스트 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: SessionId VO 테스트 추가 (Red)`
+- [x] `SessionIdTest.java` 파일 생성
+- [x] `shouldCreateNewSessionId()` 테스트 작성 (forNew() 메서드)
+- [x] `shouldCreateFromValidUUID()` 테스트 작성 (from() 메서드)
+- [x] `shouldThrowExceptionWhenInvalidUUID()` 테스트 작성
+- [x] `shouldReturnTrueWhenIsNew()` 테스트 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: SessionId VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `SessionId.java` 생성 (Record)
-- [ ] `forNew()` 메서드 구현 (UUID.randomUUID())
-- [ ] `from(String value)` 메서드 구현
-- [ ] `isNew()` 메서드 구현
-- [ ] UUID 형식 검증 로직 추가
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `impl: SessionId VO 구현 (Green)`
+- [x] `SessionId.java` 생성 (Record)
+- [x] `forNew()` 메서드 구현 (UUID.randomUUID())
+- [x] `from(String value)` 메서드 구현
+- [x] `isNew()` 메서드 구현
+- [x] UUID 형식 검증 로직 추가
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `impl: SessionId VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] UUID 검증 로직 메서드 추출
-- [ ] Javadoc 추가
-- [ ] ArchUnit VO 테스트 통과 확인
-- [ ] 커밋: `refactor: SessionId VO 개선 (Refactor)`
+- [x] UUID 검증 로직 메서드 추출
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과 확인
+- [x] 커밋: `refactor: SessionId VO 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `SessionIdFixture.java` 생성 (Object Mother 패턴)
-- [ ] `SessionIdFixture.forNew()` 메서드 작성
-- [ ] `SessionIdFixture.from(String value)` 메서드 작성
-- [ ] `SessionIdTest` → Fixture 사용으로 리팩토링
-- [ ] 커밋: `test: SessionIdFixture 정리 (Tidy)`
+- [x] `SessionIdFixture.java` 생성 (Object Mother 패턴)
+- [x] `SessionIdFixture.forNew()` 메서드 작성
+- [x] `SessionIdFixture.from(String value)` 메서드 작성
+- [x] `SessionIdTest` → Fixture 사용으로 리팩토링
+- [x] 커밋: `test: SessionIdFixture 정리 (Tidy)`
 
 ---
 
