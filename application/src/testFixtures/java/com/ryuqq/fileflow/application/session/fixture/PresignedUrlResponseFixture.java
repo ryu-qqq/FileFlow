@@ -1,126 +1,55 @@
 package com.ryuqq.fileflow.application.session.fixture;
 
-import com.ryuqq.fileflow.application.dto.response.PresignedUrlResponse;
+import com.ryuqq.fileflow.application.session.dto.response.PresignedUrlResponse;
 
 /**
  * PresignedUrlResponse TestFixture (Object Mother 패턴)
  * <p>
- * TestFixture 규칙:
- * - 패키지: ..application..fixture..
- * - 클래스명: *Fixture
- * - Object Mother 패턴 사용
- * - 팩토리 메서드: aResponse(), create()
+ * MVP Scope: Single Presigned URL Upload
  * </p>
  */
 public class PresignedUrlResponseFixture {
 
-    /**
-     * 기본 PresignedUrlResponse 생성
-     */
     public static PresignedUrlResponse aResponse() {
         return new PresignedUrlResponse(
-                1L,
-                "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/file-1.jpg?signature=abc123",
-                3600L,
-                "uploads/2024/11/16/file-1.jpg",
+                "01JD8000-1234-5678-9abc-def012345678",
+                "01JD8001-1234-5678-9abc-def012345678",
+                "https://fileflow-uploads-1.s3.amazonaws.com/uploads/1/admin/connectly/banner/01JD8001_example.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256",
+                300,
                 "SINGLE"
         );
     }
 
-    /**
-     * 기본 PresignedUrlResponse 생성 (alias)
-     */
     public static PresignedUrlResponse create() {
         return aResponse();
     }
 
-    /**
-     * 커스텀 파일 ID로 Response 생성
-     */
-    public static PresignedUrlResponse withFileId(Long fileId) {
+    public static PresignedUrlResponse withSessionId(String sessionId) {
         return new PresignedUrlResponse(
-                fileId,
-                "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/file-1.jpg?signature=abc123",
-                3600L,
-                "uploads/2024/11/16/file-1.jpg",
+                sessionId,
+                "01JD8001-1234-5678-9abc-def012345678",
+                "https://fileflow-uploads-1.s3.amazonaws.com/uploads/1/admin/connectly/banner/01JD8001_example.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256",
+                300,
                 "SINGLE"
         );
     }
 
-    /**
-     * 커스텀 Presigned URL로 Response 생성
-     */
+    public static PresignedUrlResponse withFileId(String fileId) {
+        return new PresignedUrlResponse(
+                "01JD8000-1234-5678-9abc-def012345678",
+                fileId,
+                "https://fileflow-uploads-1.s3.amazonaws.com/uploads/1/admin/connectly/banner/01JD8001_example.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256",
+                300,
+                "SINGLE"
+        );
+    }
+
     public static PresignedUrlResponse withPresignedUrl(String presignedUrl) {
         return new PresignedUrlResponse(
-                1L,
+                "01JD8000-1234-5678-9abc-def012345678",
+                "01JD8001-1234-5678-9abc-def012345678",
                 presignedUrl,
-                3600L,
-                "uploads/2024/11/16/file-1.jpg",
-                "SINGLE"
-        );
-    }
-
-    /**
-     * 커스텀 만료 시간으로 Response 생성
-     */
-    public static PresignedUrlResponse withExpiresIn(Long expiresIn) {
-        return new PresignedUrlResponse(
-                1L,
-                "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/file-1.jpg?signature=abc123",
-                expiresIn,
-                "uploads/2024/11/16/file-1.jpg",
-                "SINGLE"
-        );
-    }
-
-    /**
-     * 커스텀 S3 키로 Response 생성
-     */
-    public static PresignedUrlResponse withS3Key(String s3Key) {
-        return new PresignedUrlResponse(
-                1L,
-                "https://s3.amazonaws.com/fileflow-bucket/" + s3Key + "?signature=abc123",
-                3600L,
-                s3Key,
-                "SINGLE"
-        );
-    }
-
-    /**
-     * 단일 업로드용 Response (작은 파일, < 100MB)
-     */
-    public static PresignedUrlResponse singleUpload() {
-        return new PresignedUrlResponse(
-                2L,
-                "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/small-file.jpg?signature=xyz789",
-                3600L,
-                "uploads/2024/11/16/small-file.jpg",
-                "SINGLE"
-        );
-    }
-
-    /**
-     * 멀티파트 업로드용 Response (큰 파일, >= 100MB)
-     */
-    public static PresignedUrlResponse multipartUpload() {
-        return new PresignedUrlResponse(
-                3L,
-                "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/large-file.mp4?uploadId=ABC&signature=def456",
-                7200L,
-                "uploads/2024/11/16/large-file.mp4",
-                "MULTIPART"
-        );
-    }
-
-    /**
-     * 짧은 만료 시간 Response (5분)
-     */
-    public static PresignedUrlResponse shortExpiry() {
-        return new PresignedUrlResponse(
-                4L,
-                "https://s3.amazonaws.com/fileflow-bucket/uploads/2024/11/16/temp-file.txt?signature=ghi789",
-                300L,
-                "uploads/2024/11/16/temp-file.txt",
+                300,
                 "SINGLE"
         );
     }
