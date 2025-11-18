@@ -19,5 +19,9 @@ public enum UploadType {
     public long getMaxSize() {
         return maxSize;
     }
+
+    public long getMaxSizeInBytes() {
+        return maxSize;
+    }
 }
 
