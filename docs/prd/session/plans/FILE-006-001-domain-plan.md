@@ -176,7 +176,7 @@
 ### 6️⃣ UploadType Enum 구현 (Cycle 6)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `UploadTypeTest.java` 생성
+- [~] `UploadTypeTest.java` 생성 *(in progress)*
 - [ ] `shouldReturnCorrectMaxSize()` 테스트 작성
 - [ ] SINGLE(5GB), MULTIPART(5TB) 검증 테스트 작성
 - [ ] 커밋: `test: UploadType Enum 테스트 추가 (Red)`
