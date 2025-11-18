@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.file.vo;
 
+import java.util.regex.Pattern;
+
 import com.ryuqq.fileflow.domain.file.exception.UnsupportedFileTypeException;
 
 /**
@@ -9,6 +11,7 @@ public record MimeType(String value) {
 
     private static final String IMAGE_PREFIX = "image/";
     private static final String HTML_TYPE = "text/html";
+    private static final Pattern ALLOWED_IMAGE_PATTERN = Pattern.compile("^image/[a-z0-9.+-]+$");
 
     public MimeType {
         value = normalize(value);
@@ -47,21 +50,14 @@ public record MimeType(String value) {
     }
 
     private void validateAllowed(String candidate) {
-        if (candidate.startsWith(IMAGE_PREFIX)) {
-            ensureHasSubtype(candidate);
-            return;
-        }
-        if (candidate.equals(HTML_TYPE)) {
+        if (isAllowedImageType(candidate) || candidate.equals(HTML_TYPE)) {
             return;
         }
         throw new UnsupportedFileTypeException(candidate);
     }
 
-    private void ensureHasSubtype(String candidate) {
-        int slashIndex = candidate.indexOf('/');
-        if (slashIndex == -1 || slashIndex == candidate.length() - 1) {
-            throw new UnsupportedFileTypeException(candidate);
-        }
+    private boolean isAllowedImageType(String candidate) {
+        return ALLOWED_IMAGE_PATTERN.matcher(candidate).matches();
     }
 
     private String subtype() {
