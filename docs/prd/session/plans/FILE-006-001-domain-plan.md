@@ -176,25 +176,25 @@
 ### 6️⃣ UploadType Enum 구현 (Cycle 6)
 
 #### 🔴 Red: 테스트 작성
-- [~] `UploadTypeTest.java` 생성 *(in progress)*
-- [ ] `shouldReturnCorrectMaxSize()` 테스트 작성
-- [ ] SINGLE(5GB), MULTIPART(5TB) 검증 테스트 작성
-- [ ] 커밋: `test: UploadType Enum 테스트 추가 (Red)`
+- [x] `UploadTypeTest.java` 생성
+- [x] `shouldReturnCorrectMaxSize()` 테스트 작성
+- [x] SINGLE(5GB), MULTIPART(5TB) 검증 테스트 작성
+- [x] 커밋: `test: UploadType Enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `UploadType.java` 생성 (Enum)
-- [ ] SINGLE(5GB), MULTIPART(5TB) 정의
-- [ ] `getMaxSize()` 메서드 구현
-- [ ] 커밋: `impl: UploadType Enum 구현 (Green)`
+- [x] `UploadType.java` 생성 (Enum)
+- [x] SINGLE(5GB), MULTIPART(5TB) 정의
+- [x] `getMaxSize()` 메서드 구현
+- [x] 커밋: `impl: UploadType Enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] 바이트 계산 상수화
-- [ ] 커밋: `refactor: UploadType Enum 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] 바이트 계산 상수화
+- [x] 커밋: `refactor: UploadType Enum 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture 불필요 (Enum은 자체적으로 상수)
-- [ ] 커밋: `test: UploadType 테스트 정리 (Tidy)`
+- [x] TestFixture 불필요 (Enum은 자체적으로 상수)
+- [x] 커밋: `test: UploadType 테스트 정리 (Tidy)`
 
 ---
 
