@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.vo;
+package com.ryuqq.fileflow.domain.session.vo;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

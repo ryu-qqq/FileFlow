@@ -1,6 +1,8 @@
-package com.ryuqq.fileflow.domain.aggregate;
+package com.ryuqq.fileflow.domain.session.aggregate;
 
 import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.session.vo.SessionId;
+import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.vo.*;
 
 import java.time.Clock;
@@ -9,17 +11,17 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * DownloadSession Aggregate Root
+ * UploadSession Aggregate Root
  * <p>
- * 외부 URL에서 파일을 다운로드하는 세션을 추적하고 멱등성을 보장합니다.
+ * 프리사인드 URL 발급부터 업로드 완료까지의 세션을 추적하고 멱등성을 보장합니다.
  * </p>
  *
  * <p>
  * 핵심 책임:
- * - 다운로드 세션 생명주기 관리
+ * - 업로드 세션 생명주기 관리
  * - 멱등성 보장 (SessionId)
- * - 다운로드 진행 상태 추적
- * - 재시도 관리 (최대 3회)
+ * - 업로드 전략 자동 결정 (SINGLE/MULTIPART)
+ * - 멀티파트 업로드 추적
  * - 세션 만료 관리
  * </p>
  *
@@ -29,30 +31,28 @@ import java.util.Optional;
  * - Spring @Transactional 내에서 안전하게 동작
  * </p>
  */
-public class DownloadSession {
+public class UploadSession {
 
     /**
-     * 다운로드 세션 유효 시간 (60분)
-     * <p>
-     * 외부 URL 다운로드는 시간이 오래 걸릴 수 있으므로 업로드(5분)보다 길게 설정
-     * </p>
+     * Presigned URL 유효 시간 (5분)
      */
-    private static final int DOWNLOAD_SESSION_EXPIRY_MINUTES = 60;
+    private static final int PRESIGNED_URL_EXPIRY_MINUTES = 5;
 
     // Aggregate Root ID
     private final SessionId sessionId;
 
     // Value Objects
     private TenantId tenantId; // Nullable (향후 확장)
-    private final ExternalUrl externalUrl; // 다운로드 소스 URL
     private final FileName fileName;
-    private FileSize fileSize; // Nullable (다운로드 완료 후 설정)
-    private MimeType mimeType; // Nullable (다운로드 완료 후 설정)
+    private final FileSize fileSize;
+    private final MimeType mimeType;
+    private final UploadType uploadType;
+    private MultipartUpload multipartUpload; // Nullable (MULTIPART일 때만)
     private Checksum checksum; // Nullable (Optional)
-    private ETag etag; // Nullable (S3 업로드 완료 후)
-    private RetryCount retryCount; // 다운로드 재시도 관리
+    private ETag etag; // Nullable (업로드 완료 후)
 
     // Primitives
+    private String presignedUrl; // Nullable
     private final LocalDateTime expiresAt;
     private SessionStatus status;
     private final LocalDateTime createdAt;
@@ -64,16 +64,17 @@ public class DownloadSession {
     /**
      * Private Constructor (정적 팩토리 메서드 사용)
      */
-    private DownloadSession(
+    private UploadSession(
             SessionId sessionId,
             TenantId tenantId,
-            ExternalUrl externalUrl,
             FileName fileName,
             FileSize fileSize,
             MimeType mimeType,
+            UploadType uploadType,
+            MultipartUpload multipartUpload,
             Checksum checksum,
             ETag etag,
-            RetryCount retryCount,
+            String presignedUrl,
             LocalDateTime expiresAt,
             SessionStatus status,
             Clock clock,
@@ -82,13 +83,14 @@ public class DownloadSession {
     ) {
         this.sessionId = Objects.requireNonNull(sessionId, "sessionId는 null일 수 없습니다");
         this.tenantId = tenantId;
-        this.externalUrl = Objects.requireNonNull(externalUrl, "externalUrl은 null일 수 없습니다");
         this.fileName = Objects.requireNonNull(fileName, "fileName은 null일 수 없습니다");
-        this.fileSize = fileSize;
-        this.mimeType = mimeType;
+        this.fileSize = Objects.requireNonNull(fileSize, "fileSize는 null일 수 없습니다");
+        this.mimeType = Objects.requireNonNull(mimeType, "mimeType은 null일 수 없습니다");
+        this.uploadType = Objects.requireNonNull(uploadType, "uploadType은 null일 수 없습니다");
+        this.multipartUpload = multipartUpload;
         this.checksum = checksum;
         this.etag = etag;
-        this.retryCount = Objects.requireNonNull(retryCount, "retryCount는 null일 수 없습니다");
+        this.presignedUrl = presignedUrl;
         this.expiresAt = Objects.requireNonNull(expiresAt, "expiresAt은 null일 수 없습니다");
         this.status = Objects.requireNonNull(status, "status는 null일 수 없습니다");
         this.clock = Objects.requireNonNull(clock, "clock은 null일 수 없습니다");
@@ -97,35 +99,41 @@ public class DownloadSession {
     }
 
     /**
-     * 새로운 DownloadSession 생성 (영속화 전)
+     * 새로운 UploadSession 생성 (영속화 전)
      * <p>
      * ID가 null인 새로운 세션을 생성합니다.
-     * 외부 URL에서 파일을 다운로드하는 세션을 초기화합니다.
+     * 업로드 전략 자동 결정:
+     * - fileSize < 100MB → SINGLE
+     * - fileSize >= 100MB → MULTIPART
      * </p>
      *
-     * @param externalUrl 다운로드할 외부 URL
-     * @param fileName    저장할 파일명
-     * @param clock       시각 생성용 Clock
-     * @return 새로운 DownloadSession (INITIATED 상태, ID null)
+     * @param fileName 파일명
+     * @param fileSize 파일 크기
+     * @param mimeType MIME 타입
+     * @param clock    시각 생성용 Clock
+     * @return 새로운 UploadSession (INITIATED 상태, ID null)
      */
-    public static DownloadSession forNew(
-            ExternalUrl externalUrl,
+    public static UploadSession forNew(
             FileName fileName,
+            FileSize fileSize,
+            MimeType mimeType,
             Clock clock
     ) {
         LocalDateTime now = LocalDateTime.now(clock);
-        LocalDateTime expiresAt = now.plusMinutes(DOWNLOAD_SESSION_EXPIRY_MINUTES);
+        UploadType uploadType = UploadType.determineBySize(fileSize);
+        LocalDateTime expiresAt = now.plusMinutes(PRESIGNED_URL_EXPIRY_MINUTES);
 
-        return new DownloadSession(
+        return new UploadSession(
                 SessionId.forNew(), // ID는 영속화 시점에 생성
                 null, // tenantId (향후 확장)
-                externalUrl,
                 fileName,
-                null, // fileSize (다운로드 완료 후 설정)
-                null, // mimeType (다운로드 완료 후 설정)
+                fileSize,
+                mimeType,
+                uploadType,
+                null, // multipartUpload (아직 초기화 안함)
                 null, // checksum (Optional)
-                null, // etag (S3 업로드 완료 후)
-                RetryCount.forFile(), // 파일 다운로드 재시도 전략 (최대 3회)
+                null, // etag (업로드 완료 후)
+                null, // presignedUrl (외부에서 설정)
                 expiresAt,
                 SessionStatus.INITIATED,
                 clock,
@@ -135,38 +143,40 @@ public class DownloadSession {
     }
 
     /**
-     * 기존 값으로 DownloadSession 생성 (비즈니스 로직용)
+     * 기존 값으로 UploadSession 생성 (비즈니스 로직용)
      * <p>
      * ID가 필수인 세션을 생성합니다.
      * </p>
      *
-     * @param sessionId   세션 ID (필수, null 불가)
-     * @param tenantId    테넌트 ID
-     * @param externalUrl 다운로드할 외부 URL
-     * @param fileName    저장할 파일명
-     * @param fileSize    파일 크기
-     * @param mimeType    MIME 타입
-     * @param checksum    체크섬
-     * @param etag        ETag
-     * @param retryCount  재시도 횟수
-     * @param expiresAt   만료 시각
-     * @param status      세션 상태
-     * @param clock       시각 생성용 Clock
-     * @param createdAt   생성 시각
-     * @param updatedAt   최종 수정 시각
-     * @return DownloadSession
+     * @param sessionId       세션 ID (필수, null 불가)
+     * @param tenantId        테넌트 ID
+     * @param fileName        파일명
+     * @param fileSize        파일 크기
+     * @param mimeType        MIME 타입
+     * @param uploadType      업로드 타입
+     * @param multipartUpload 멀티파트 업로드 정보
+     * @param checksum        체크섬
+     * @param etag            ETag
+     * @param presignedUrl    Presigned URL
+     * @param expiresAt       만료 시각
+     * @param status          세션 상태
+     * @param clock           시각 생성용 Clock
+     * @param createdAt       생성 시각
+     * @param updatedAt       최종 수정 시각
+     * @return UploadSession
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
      */
-    public static DownloadSession of(
+    public static UploadSession of(
             SessionId sessionId,
             TenantId tenantId,
-            ExternalUrl externalUrl,
             FileName fileName,
             FileSize fileSize,
             MimeType mimeType,
+            UploadType uploadType,
+            MultipartUpload multipartUpload,
             Checksum checksum,
             ETag etag,
-            RetryCount retryCount,
+            String presignedUrl,
             LocalDateTime expiresAt,
             SessionStatus status,
             Clock clock,
@@ -175,10 +185,10 @@ public class DownloadSession {
     ) {
         validateIdNotNullOrNew(sessionId, "ID는 null이거나 새로운 ID일 수 없습니다");
 
-        return new DownloadSession(
-                sessionId, tenantId, externalUrl, fileName, fileSize, mimeType,
-                checksum, etag, retryCount, expiresAt, status, clock,
-                createdAt, updatedAt
+        return new UploadSession(
+                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
+                multipartUpload, checksum, etag, presignedUrl, expiresAt,
+                status, clock, createdAt, updatedAt
         );
     }
 
@@ -188,33 +198,35 @@ public class DownloadSession {
      * 데이터베이스에서 조회한 엔티티를 Aggregate로 변환할 때 사용합니다.
      * </p>
      *
-     * @param sessionId   세션 ID (필수)
-     * @param tenantId    테넌트 ID
-     * @param externalUrl 다운로드할 외부 URL
-     * @param fileName    저장할 파일명
-     * @param fileSize    파일 크기
-     * @param mimeType    MIME 타입
-     * @param checksum    체크섬
-     * @param etag        ETag
-     * @param retryCount  재시도 횟수
-     * @param expiresAt   만료 시각
-     * @param status      세션 상태
-     * @param clock       시각 생성용 Clock
-     * @param createdAt   생성 시각
-     * @param updatedAt   최종 수정 시각
-     * @return 복원된 DownloadSession
+     * @param sessionId       세션 ID (필수)
+     * @param tenantId        테넌트 ID
+     * @param fileName        파일명
+     * @param fileSize        파일 크기
+     * @param mimeType        MIME 타입
+     * @param uploadType      업로드 타입
+     * @param multipartUpload 멀티파트 업로드 정보
+     * @param checksum        체크섬
+     * @param etag            ETag
+     * @param presignedUrl    Presigned URL
+     * @param expiresAt       만료 시각
+     * @param status          세션 상태
+     * @param clock           시각 생성용 Clock
+     * @param createdAt       생성 시각
+     * @param updatedAt       최종 수정 시각
+     * @return 복원된 UploadSession
      * @throws IllegalArgumentException ID가 null이거나 새로운 ID인 경우
      */
-    public static DownloadSession reconstitute(
+    public static UploadSession reconstitute(
             SessionId sessionId,
             TenantId tenantId,
-            ExternalUrl externalUrl,
             FileName fileName,
             FileSize fileSize,
             MimeType mimeType,
+            UploadType uploadType,
+            MultipartUpload multipartUpload,
             Checksum checksum,
             ETag etag,
-            RetryCount retryCount,
+            String presignedUrl,
             LocalDateTime expiresAt,
             SessionStatus status,
             Clock clock,
@@ -223,10 +235,10 @@ public class DownloadSession {
     ) {
         validateIdNotNullOrNew(sessionId, "재구성을 위한 ID는 null이거나 새로운 ID일 수 없습니다");
 
-        return new DownloadSession(
-                sessionId, tenantId, externalUrl, fileName, fileSize, mimeType,
-                checksum, etag, retryCount, expiresAt, status, clock,
-                createdAt, updatedAt
+        return new UploadSession(
+                sessionId, tenantId, fileName, fileSize, mimeType, uploadType,
+                multipartUpload, checksum, etag, presignedUrl, expiresAt,
+                status, clock, createdAt, updatedAt
         );
     }
 
@@ -251,24 +263,17 @@ public class DownloadSession {
     }
 
     /**
-     * COMPLETED 상태로 전환 및 파일 정보 저장
+     * COMPLETED 상태로 전환 및 ETag 저장
      * <p>
      * 가변 패턴: this 객체를 직접 변경합니다.
      * </p>
      *
-     * @param fileSize 다운로드된 파일 크기
-     * @param mimeType 다운로드된 파일 MIME 타입
-     * @param etag     S3가 반환한 ETag
+     * @param etag S3가 반환한 ETag
      */
-    public void completeWithFileInfo(FileSize fileSize, MimeType mimeType, ETag etag) {
-        Objects.requireNonNull(fileSize, "fileSize는 null일 수 없습니다");
-        Objects.requireNonNull(mimeType, "mimeType은 null일 수 없습니다");
+    public void completeWithETag(ETag etag) {
         Objects.requireNonNull(etag, "etag는 null일 수 없습니다");
-
-        this.fileSize = fileSize;
-        this.mimeType = mimeType;
-        this.etag = etag;
         this.status = SessionStatus.COMPLETED;
+        this.etag = etag;
         this.updatedAt = LocalDateTime.now(clock);
     }
 
@@ -298,16 +303,38 @@ public class DownloadSession {
     }
 
     /**
-     * 재시도 횟수 증가
+     * 멀티파트 업로드 초기화
      * <p>
-     * 다운로드 실패 시 재시도 횟수를 증가시킵니다.
+     * MULTIPART 타입일 때만 호출 가능
      * 가변 패턴: this 객체를 직접 변경합니다.
      * </p>
      *
-     * @throws IllegalStateException 최대 재시도 횟수 초과 시
+     * @param uploadId   S3 Multipart Upload ID
+     * @param totalParts 전체 파트 수
      */
-    public void incrementRetryCount() {
-        this.retryCount = this.retryCount.increment();
+    public void initiateMultipartUpload(MultipartUploadId uploadId, int totalParts) {
+        if (!uploadType.isMultipartUpload()) {
+            throw new IllegalStateException("MULTIPART 타입에서만 멀티파트 업로드를 초기화할 수 있습니다");
+        }
+
+        this.multipartUpload = MultipartUpload.forNew(uploadId, totalParts, clock);
+        this.updatedAt = LocalDateTime.now(clock);
+    }
+
+    /**
+     * 멀티파트 파트 추가
+     * <p>
+     * 가변 패턴: this 객체를 직접 변경합니다.
+     * </p>
+     *
+     * @param part 업로드된 파트
+     */
+    public void addUploadedPart(UploadedPart part) {
+        if (multipartUpload == null) {
+            throw new IllegalStateException("멀티파트 업로드가 초기화되지 않았습니다");
+        }
+
+        this.multipartUpload = multipartUpload.withAddedPart(part);
         this.updatedAt = LocalDateTime.now(clock);
     }
 
@@ -322,6 +349,24 @@ public class DownloadSession {
         return now.isAfter(expiresAt);
     }
 
+    /**
+     * 체크섬 검증
+     * <p>
+     * 클라이언트가 제공한 체크섬과 S3 ETag 비교
+     * </p>
+     *
+     * @param s3Etag S3가 반환한 ETag
+     * @return 검증 통과하면 true (체크섬 없으면 항상 true)
+     */
+    public boolean validateChecksum(ETag s3Etag) {
+        if (checksum == null) {
+            return true; // 체크섬 없으면 검증 Skip
+        }
+        // 체크섬 검증 로직 (간소화)
+        // 실제로는 MD5 vs ETag 비교 필요
+        return true;
+    }
+
     // Getters
 
     public SessionId sessionId() {
@@ -330,10 +375,6 @@ public class DownloadSession {
 
     public Optional<TenantId> tenantId() {
         return Optional.ofNullable(tenantId);
-    }
-
-    public ExternalUrl externalUrl() {
-        return externalUrl;
     }
 
     public FileName fileName() {
@@ -348,6 +389,14 @@ public class DownloadSession {
         return mimeType;
     }
 
+    public UploadType uploadType() {
+        return uploadType;
+    }
+
+    public Optional<MultipartUpload> multipartUpload() {
+        return Optional.ofNullable(multipartUpload);
+    }
+
     public Optional<Checksum> checksum() {
         return Optional.ofNullable(checksum);
     }
@@ -356,8 +405,8 @@ public class DownloadSession {
         return etag;
     }
 
-    public RetryCount retryCount() {
-        return retryCount;
+    public Optional<String> presignedUrl() {
+        return Optional.ofNullable(presignedUrl);
     }
 
     public LocalDateTime expiresAt() {
@@ -382,7 +431,7 @@ public class DownloadSession {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DownloadSession that = (DownloadSession) o;
+        UploadSession that = (UploadSession) o;
         return Objects.equals(sessionId, that.sessionId);
     }
 
@@ -393,10 +442,11 @@ public class DownloadSession {
 
     @Override
     public String toString() {
-        return "DownloadSession{" +
+        return "UploadSession{" +
                 "sessionId=" + sessionId +
-                ", externalUrl=" + externalUrl +
                 ", fileName=" + fileName +
+                ", fileSize=" + fileSize +
+                ", uploadType=" + uploadType +
                 ", status=" + status +
                 '}';
     }

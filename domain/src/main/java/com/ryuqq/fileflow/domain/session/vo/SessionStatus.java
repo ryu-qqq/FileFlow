@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.vo;
+package com.ryuqq.fileflow.domain.session.vo;
 
 /**
  * SessionStatus Value Object
