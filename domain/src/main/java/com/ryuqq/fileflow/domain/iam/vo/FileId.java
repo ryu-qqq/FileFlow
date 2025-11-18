@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.iam.vo;
 
+import com.github.f4b6a3.uuid.UuidCreator;
+
 /**
  * File ID Value Object
  * <p>
@@ -19,6 +21,18 @@ public record FileId(String value) {
         if (value != null && value.isBlank()) {
             throw new IllegalArgumentException("File ID는 빈 값일 수 없습니다");
         }
+    }
+
+    /**
+     * UUID v7로 새 FileId 생성
+     * <p>
+     * UUID v7: 시간 기반 정렬 가능 (Timestamp 포함)
+     * </p>
+     *
+     * @return 새로운 FileId (UUID v7)
+     */
+    public static FileId generate() {
+        return new FileId(UuidCreator.getTimeOrderedEpoch().toString());
     }
 
     /**
