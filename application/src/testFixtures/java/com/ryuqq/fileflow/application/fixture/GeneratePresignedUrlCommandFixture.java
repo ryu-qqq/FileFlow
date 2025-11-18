@@ -1,6 +1,12 @@
 package com.ryuqq.fileflow.application.fixture;
 
 import com.ryuqq.fileflow.application.dto.command.GeneratePresignedUrlCommand;
+import com.ryuqq.fileflow.domain.vo.FileCategory;
+import com.ryuqq.fileflow.domain.vo.FileName;
+import com.ryuqq.fileflow.domain.vo.FileSize;
+import com.ryuqq.fileflow.domain.vo.MimeType;
+import com.ryuqq.fileflow.domain.vo.Tags;
+import com.ryuqq.fileflow.domain.vo.UploaderId;
 
 import java.util.List;
 
@@ -12,6 +18,7 @@ import java.util.List;
  * - 클래스명: *Fixture
  * - Object Mother 패턴 사용
  * - 팩토리 메서드: aCommand(), create()
+ * - Domain VO 사용 (primitive type 금지)
  * </p>
  */
 public class GeneratePresignedUrlCommandFixture {
@@ -24,12 +31,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand aCommand() {
         return new GeneratePresignedUrlCommand(
-                "profile.jpg",
-                1024L,
-                "image/jpeg",
-                1L,
-                "PROFILE",
-                List.of("profile", "avatar")
+                FileName.of("profile.jpg"),
+                FileSize.of(1024L),
+                MimeType.of("image/jpeg"),
+                UploaderId.of(1L),
+                FileCategory.of("기타"),
+                Tags.of(List.of("profile", "avatar"))
         );
     }
 
@@ -45,12 +52,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand withFileName(String fileName) {
         return new GeneratePresignedUrlCommand(
-                fileName,
-                1024L,
-                "image/jpeg",
-                1L,
-                "PROFILE",
-                List.of("profile", "avatar")
+                FileName.of(fileName),
+                FileSize.of(1024L),
+                MimeType.of("image/jpeg"),
+                UploaderId.of(1L),
+                FileCategory.of("기타"),
+                Tags.of(List.of("profile", "avatar"))
         );
     }
 
@@ -59,12 +66,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand withFileSize(Long fileSize) {
         return new GeneratePresignedUrlCommand(
-                "profile.jpg",
-                fileSize,
-                "image/jpeg",
-                1L,
-                "PROFILE",
-                List.of("profile", "avatar")
+                FileName.of("profile.jpg"),
+                FileSize.of(fileSize),
+                MimeType.of("image/jpeg"),
+                UploaderId.of(1L),
+                FileCategory.of("기타"),
+                Tags.of(List.of("profile", "avatar"))
         );
     }
 
@@ -73,12 +80,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand withMimeType(String mimeType) {
         return new GeneratePresignedUrlCommand(
-                "document.pdf",
-                2048L,
-                mimeType,
-                1L,
-                "DOCUMENT",
-                List.of("doc", "pdf")
+                FileName.of("document.pdf"),
+                FileSize.of(2048L),
+                MimeType.of(mimeType),
+                UploaderId.of(1L),
+                FileCategory.of("문서"),
+                Tags.of(List.of("doc", "pdf"))
         );
     }
 
@@ -87,12 +94,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand withUploaderId(Long uploaderId) {
         return new GeneratePresignedUrlCommand(
-                "profile.jpg",
-                1024L,
-                "image/jpeg",
-                uploaderId,
-                "PROFILE",
-                List.of("profile", "avatar")
+                FileName.of("profile.jpg"),
+                FileSize.of(1024L),
+                MimeType.of("image/jpeg"),
+                UploaderId.of(uploaderId),
+                FileCategory.of("기타"),
+                Tags.of(List.of("profile", "avatar"))
         );
     }
 
@@ -101,12 +108,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand withCategory(String category) {
         return new GeneratePresignedUrlCommand(
-                "file.bin",
-                512L,
-                "application/octet-stream",
-                1L,
-                category,
-                List.of("file")
+                FileName.of("file.bin"),
+                FileSize.of(512L),
+                MimeType.of("application/octet-stream"),
+                UploaderId.of(1L),
+                FileCategory.of(category),
+                Tags.of(List.of("file"))
         );
     }
 
@@ -115,12 +122,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand withTags(List<String> tags) {
         return new GeneratePresignedUrlCommand(
-                "profile.jpg",
-                1024L,
-                "image/jpeg",
-                1L,
-                "PROFILE",
-                tags
+                FileName.of("profile.jpg"),
+                FileSize.of(1024L),
+                MimeType.of("image/jpeg"),
+                UploaderId.of(1L),
+                FileCategory.of("기타"),
+                Tags.of(tags)
         );
     }
 
@@ -129,12 +136,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand documentCommand() {
         return new GeneratePresignedUrlCommand(
-                "report.pdf",
-                5120L,
-                "application/pdf",
-                2L,
-                "DOCUMENT",
-                List.of("report", "pdf", "official")
+                FileName.of("report.pdf"),
+                FileSize.of(5120L),
+                MimeType.of("application/pdf"),
+                UploaderId.of(2L),
+                FileCategory.of("문서"),
+                Tags.of(List.of("report", "pdf", "official"))
         );
     }
 
@@ -143,12 +150,12 @@ public class GeneratePresignedUrlCommandFixture {
      */
     public static GeneratePresignedUrlCommand videoCommand() {
         return new GeneratePresignedUrlCommand(
-                "demo.mp4",
-                10485760L, // 10MB
-                "video/mp4",
-                3L,
-                "VIDEO",
-                List.of("demo", "video", "tutorial")
+                FileName.of("demo.mp4"),
+                FileSize.of(10485760L), // 10MB
+                MimeType.of("video/mp4"),
+                UploaderId.of(3L),
+                FileCategory.of("전시영역"),
+                Tags.of(List.of("demo", "video", "tutorial"))
         );
     }
 }
