@@ -5,14 +5,14 @@ import java.util.Set;
 /**
  * FileCategory Value Object
  * <p>
- * 파일 카테고리를 검증하고 캡슐화합니다.
+ * 파일 카테고리를 UploaderType별로 검증하고 캡슐화합니다.
  * </p>
  *
  * <p>
- * 검증 규칙:
- * - 허용 목록: "상품", "전시영역", "외부몰연동", "문서"
- * - Null 입력 시: 기본값 "기타" 반환
- * - Empty/허용되지 않은 값: 예외 발생
+ * UploaderType별 허용 카테고리:
+ * - ADMIN: banner, event, excel, notice, default
+ * - SELLER: product, review, promotion, default
+ * - CUSTOMER: default만 허용
  * </p>
  */
 public record FileCategory(String value) {
@@ -20,16 +20,33 @@ public record FileCategory(String value) {
     /**
      * 기본 카테고리
      */
-    private static final String DEFAULT_CATEGORY = "기타";
+    private static final String DEFAULT_CATEGORY = "default";
 
     /**
-     * 허용된 카테고리 목록
+     * Admin 허용 카테고리 목록
      */
-    private static final Set<String> ALLOWED_CATEGORIES = Set.of(
-            "상품",
-            "전시영역",
-            "외부몰연동",
-            "문서",
+    private static final Set<String> ADMIN_CATEGORIES = Set.of(
+            "banner",
+            "event",
+            "excel",
+            "notice",
+            DEFAULT_CATEGORY
+    );
+
+    /**
+     * Seller 허용 카테고리 목록
+     */
+    private static final Set<String> SELLER_CATEGORIES = Set.of(
+            "product",
+            "review",
+            "promotion",
+            DEFAULT_CATEGORY
+    );
+
+    /**
+     * Customer 허용 카테고리 목록
+     */
+    private static final Set<String> CUSTOMER_CATEGORIES = Set.of(
             DEFAULT_CATEGORY
     );
 
@@ -37,48 +54,58 @@ public record FileCategory(String value) {
      * Compact Constructor (Record 검증 패턴)
      * <p>
      * 카테고리 검증 로직을 수행합니다.
+     * Null이나 빈 문자열은 기본값으로 처리되지 않고 예외 발생합니다.
      * </p>
      */
     public FileCategory {
-        validateAllowedCategory(value);
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("파일 카테고리는 null이거나 빈 값일 수 없습니다");
+        }
     }
 
     /**
-     * 정적 팩토리 메서드 (of 패턴)
+     * UploaderType별 카테고리 검증 및 생성
      * <p>
-     * Null 입력 시 기본값 "기타"를 반환합니다.
+     * Null 입력 시 기본값 "default"를 반환합니다.
      * </p>
      *
      * @param value 파일 카테고리
+     * @param uploaderType 업로더 타입
      * @return FileCategory VO
-     * @throws IllegalArgumentException 허용되지 않은 카테고리일 때
+     * @throws IllegalArgumentException UploaderType에서 허용하지 않는 카테고리일 때
      */
-    public static FileCategory of(String value) {
-        if (value == null) {
-            return new FileCategory(DEFAULT_CATEGORY);
+    public static FileCategory of(String value, UploaderType uploaderType) {
+        // Null이거나 빈 문자열이면 기본값 반환
+        String normalized = (value != null && !value.isBlank())
+                ? value.toLowerCase()
+                : DEFAULT_CATEGORY;
+
+        // UploaderType별 허용 카테고리 확인
+        Set<String> allowedCategories = switch (uploaderType) {
+            case ADMIN -> ADMIN_CATEGORIES;
+            case SELLER -> SELLER_CATEGORIES;
+            case CUSTOMER -> CUSTOMER_CATEGORIES;
+        };
+
+        if (!allowedCategories.contains(normalized)) {
+            throw new IllegalArgumentException(
+                    String.format("%s에서 지원하지 않는 카테고리입니다: %s (허용 목록: %s)",
+                            uploaderType,
+                            value,
+                            String.join(", ", allowedCategories))
+            );
         }
-        return new FileCategory(value);
+
+        return new FileCategory(normalized);
     }
 
     /**
      * 기본 카테고리 생성 팩토리 메서드
      *
-     * @return 기본값 "기타"를 가진 FileCategory
+     * @return 기본값 "default"를 가진 FileCategory
      */
-    public static FileCategory ofDefault() {
+    public static FileCategory defaultCategory() {
         return new FileCategory(DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 허용 목록 검증
-     */
-    private static void validateAllowedCategory(String value) {
-        if (value == null || value.isBlank() || !ALLOWED_CATEGORIES.contains(value)) {
-            throw new IllegalArgumentException(
-                    String.format("허용되지 않은 파일 카테고리입니다: %s (허용 목록: %s)",
-                            value, String.join(", ", ALLOWED_CATEGORIES))
-            );
-        }
     }
 
     /**
