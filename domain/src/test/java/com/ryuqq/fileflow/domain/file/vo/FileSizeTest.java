@@ -7,8 +7,8 @@ import com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture;
 
 import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.ONE_GB_IN_BYTES;
 import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.ONE_MB_IN_BYTES;
-import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.exceedingMultipartUploadSize;
-import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.exceedingSingleUploadSize;
+import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.exceedingMultipartLimit;
+import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.exceedingSingleLimit;
 import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.fiveGigabytes;
 import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.fiveTerabytes;
 import static com.ryuqq.fileflow.domain.file.fixture.FileSizeFixture.oneGigabyte;
@@ -54,11 +54,11 @@ class FileSizeTest {
         assertThatCode(() -> multipartLimit.validateForUploadType(UploadType.MULTIPART))
             .doesNotThrowAnyException();
 
-        assertThatThrownBy(() -> FileSize.of(exceedingSingleUploadSize())
+        assertThatThrownBy(() -> exceedingSingleLimit()
             .validateForUploadType(UploadType.SINGLE))
             .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> FileSize.of(exceedingMultipartUploadSize())
+        assertThatThrownBy(() -> exceedingMultipartLimit()
             .validateForUploadType(UploadType.MULTIPART))
             .isInstanceOf(IllegalArgumentException.class);
     }

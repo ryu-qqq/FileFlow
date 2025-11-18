@@ -81,34 +81,34 @@
 ### 3️⃣ FileSize VO 구현 (Cycle 3)
 
 #### 🔴 Red: 테스트 작성
-- [~] `FileSizeTest.java` 생성 *(in progress)*
-- [ ] `shouldCreateFileSize()` 테스트 작성
-- [ ] `shouldThrowExceptionWhenZeroOrNegative()` 테스트 작성
-- [ ] `shouldValidateForUploadType()` 테스트 작성 (SINGLE 5GB, MULTIPART 5TB)
-- [ ] `shouldCompareSizeCorrectly()` 테스트 작성 (isLargerThan)
-- [ ] `shouldConvertToMBAndGB()` 테스트 작성
-- [ ] 커밋: `test: FileSize VO 테스트 추가 (Red)`
+- [x] `FileSizeTest.java` 생성
+- [x] `shouldCreateFileSize()` 테스트 작성
+- [x] `shouldThrowExceptionWhenZeroOrNegative()` 테스트 작성
+- [x] `shouldValidateForUploadType()` 테스트 작성 (SINGLE 5GB, MULTIPART 5TB)
+- [x] `shouldCompareSizeCorrectly()` 테스트 작성 (isLargerThan)
+- [x] `shouldConvertToMBAndGB()` 테스트 작성
+- [x] 커밋: `test: FileSize VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileSize.java` 생성 (Record)
-- [ ] `of(long bytes)` 메서드 구현
-- [ ] `validateForUploadType(UploadType)` 메서드 구현
-- [ ] `isLargerThan(long threshold)` 메서드 구현
-- [ ] `toMB()`, `toGB()` 메서드 구현
-- [ ] 크기 검증 로직 추가
-- [ ] 커밋: `impl: FileSize VO 구현 (Green)`
+- [x] `FileSize.java` 생성 (Record)
+- [x] `of(long bytes)` 메서드 구현
+- [x] `validateForUploadType(UploadType)` 메서드 구현
+- [x] `isLargerThan(long threshold)` 메서드 구현
+- [x] `toMB()`, `toGB()` 메서드 구현
+- [x] 크기 검증 로직 추가
+- [x] 커밋: `impl: FileSize VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 단위 변환 상수 추출 (MB, GB)
-- [ ] Javadoc 추가
-- [ ] ArchUnit VO 테스트 통과
-- [ ] 커밋: `refactor: FileSize VO 개선 (Refactor)`
+- [x] 단위 변환 상수 추출 (MB, GB)
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과
+- [x] 커밋: `refactor: FileSize VO 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileSizeFixture.java` 생성
-- [ ] `FileSizeFixture.of(long bytes)` 메서드 작성
-- [ ] 다양한 크기 Fixture 메서드 추가 (1MB, 100MB, 1GB)
-- [ ] 커밋: `test: FileSizeFixture 정리 (Tidy)`
+- [x] `FileSizeFixture.java` 생성
+- [x] `FileSizeFixture.of(long bytes)` 메서드 작성
+- [x] 다양한 크기 Fixture 메서드 추가 (1MB, 100MB, 1GB)
+- [x] 커밋: `test: FileSizeFixture 정리 (Tidy)`
 
 ---
 

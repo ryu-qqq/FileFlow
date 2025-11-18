@@ -45,5 +45,13 @@ public final class FileSizeFixture {
     public static long exceedingMultipartUploadSize() {
         return 6 * ONE_TB_IN_BYTES;
     }
+
+    public static FileSize exceedingSingleLimit() {
+        return ofBytes(exceedingSingleUploadSize());
+    }
+
+    public static FileSize exceedingMultipartLimit() {
+        return ofBytes(exceedingMultipartUploadSize());
+    }
 }
 
