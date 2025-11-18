@@ -150,26 +150,26 @@
 ### 5️⃣ UserRole Enum 구현 (Cycle 5)
 
 #### 🔴 Red: 테스트 작성
-- [~] `UserRoleTest.java` 생성 *(in progress)*
-- [ ] `shouldReturnCorrectNamespace()` 테스트 작성
-- [ ] 각 Role별 네임스페이스 검증 테스트 작성
-- [ ] 커밋: `test: UserRole Enum 테스트 추가 (Red)`
+- [x] `UserRoleTest.java` 생성
+- [x] `shouldReturnCorrectNamespace()` 테스트 작성
+- [x] 각 Role별 네임스페이스 검증 테스트 작성
+- [x] 커밋: `test: UserRole Enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `UserRole.java` 생성 (Enum)
-- [ ] ADMIN("connectly"), SELLER("setof"), DEFAULT("setof") 정의
-- [ ] `getNamespace()` 메서드 구현
-- [ ] 커밋: `impl: UserRole Enum 구현 (Green)`
+- [x] `UserRole.java` 생성 (Enum)
+- [x] ADMIN("connectly"), SELLER("setof"), DEFAULT("setof") 정의
+- [x] `getNamespace()` 메서드 구현
+- [x] 커밋: `impl: UserRole Enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] ArchUnit Enum 테스트 통과
-- [ ] 커밋: `refactor: UserRole Enum 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] ArchUnit Enum 테스트 통과
+- [x] 커밋: `refactor: UserRole Enum 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture 불필요 (Enum은 자체적으로 상수)
-- [ ] 테스트 코드 간소화
-- [ ] 커밋: `test: UserRole 테스트 정리 (Tidy)`
+- [x] TestFixture 불필요 (Enum은 자체적으로 상수)
+- [x] 테스트 코드 간소화
+- [x] 커밋: `test: UserRole 테스트 정리 (Tidy)`
 
 ---
 
