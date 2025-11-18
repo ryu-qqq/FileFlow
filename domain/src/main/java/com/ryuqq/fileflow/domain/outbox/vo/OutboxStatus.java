@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.vo;
+package com.ryuqq.fileflow.domain.outbox.vo;
 
 /**
  * 메시지 발행 상태를 나타내는 Value Object

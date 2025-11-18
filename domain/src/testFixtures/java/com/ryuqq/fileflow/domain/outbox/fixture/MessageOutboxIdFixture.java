@@ -1,6 +1,6 @@
-package com.ryuqq.fileflow.domain.fixture;
+package com.ryuqq.fileflow.domain.outbox.fixture;
 
-import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
+import com.ryuqq.fileflow.domain.outbox.vo.MessageOutboxId;
 
 /**
  * MessageOutboxId Test Fixture

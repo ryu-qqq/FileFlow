@@ -1,6 +1,6 @@
-package com.ryuqq.fileflow.domain.vo;
+package com.ryuqq.fileflow.domain.outbox.vo;
 
-import com.ryuqq.fileflow.domain.fixture.OutboxStatusFixture;
+import com.ryuqq.fileflow.domain.outbox.fixture.OutboxStatusFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

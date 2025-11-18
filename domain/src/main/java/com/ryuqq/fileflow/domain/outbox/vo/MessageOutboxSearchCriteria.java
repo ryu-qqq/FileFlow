@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.vo;
+package com.ryuqq.fileflow.domain.outbox.vo;
 
 /**
  * MessageOutbox 검색 조건 Value Object

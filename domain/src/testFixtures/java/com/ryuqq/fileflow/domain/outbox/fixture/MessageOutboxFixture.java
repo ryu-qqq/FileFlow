@@ -1,9 +1,9 @@
-package com.ryuqq.fileflow.domain.fixture;
+package com.ryuqq.fileflow.domain.outbox.fixture;
 
-import com.ryuqq.fileflow.domain.aggregate.MessageOutbox;
+import com.ryuqq.fileflow.domain.outbox.aggregate.MessageOutbox;
 import com.ryuqq.fileflow.domain.vo.AggregateId;
-import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
-import com.ryuqq.fileflow.domain.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.outbox.vo.MessageOutboxId;
+import com.ryuqq.fileflow.domain.outbox.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.vo.RetryCount;
 
 import static com.ryuqq.fileflow.domain.fixture.AggregateIdFixture.aDefaultAggregateId;

@@ -1,9 +1,9 @@
-package com.ryuqq.fileflow.domain.aggregate;
+package com.ryuqq.fileflow.domain.outbox.aggregate;
 
 import com.ryuqq.fileflow.domain.util.UuidV7Generator;
 import com.ryuqq.fileflow.domain.vo.AggregateId;
-import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
-import com.ryuqq.fileflow.domain.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.outbox.vo.MessageOutboxId;
+import com.ryuqq.fileflow.domain.outbox.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.vo.RetryCount;
 
 import java.time.Clock;

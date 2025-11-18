@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.vo;
+package com.ryuqq.fileflow.domain.outbox.vo;
 
 /**
  * MessageOutbox ID Value Object (Record 구현)

@@ -1,12 +1,12 @@
-package com.ryuqq.fileflow.domain.aggregate;
+package com.ryuqq.fileflow.domain.outbox.aggregate;
 
 import com.ryuqq.fileflow.domain.fixture.AggregateIdFixture;
-import com.ryuqq.fileflow.domain.fixture.MessageOutboxFixture;
-import com.ryuqq.fileflow.domain.fixture.MessageOutboxIdFixture;
-import com.ryuqq.fileflow.domain.fixture.OutboxStatusFixture;
+import com.ryuqq.fileflow.domain.outbox.fixture.MessageOutboxFixture;
+import com.ryuqq.fileflow.domain.outbox.fixture.MessageOutboxIdFixture;
+import com.ryuqq.fileflow.domain.outbox.fixture.OutboxStatusFixture;
 import com.ryuqq.fileflow.domain.vo.AggregateId;
-import com.ryuqq.fileflow.domain.vo.MessageOutboxId;
-import com.ryuqq.fileflow.domain.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.outbox.vo.MessageOutboxId;
+import com.ryuqq.fileflow.domain.outbox.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.vo.RetryCount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
