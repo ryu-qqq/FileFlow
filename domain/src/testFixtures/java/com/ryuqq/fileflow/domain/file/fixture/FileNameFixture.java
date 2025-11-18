@@ -1,23 +1,33 @@
 package com.ryuqq.fileflow.domain.file.fixture;
 
+import com.ryuqq.fileflow.domain.file.vo.FileName;
+
 /**
  * FileName Test Fixture (Object Mother)
  */
 public final class FileNameFixture {
 
+    public static final String IMAGE_JPEG_NAME = "product-image.jpg";
+    public static final String HTML_PAGE_NAME = "landing-page.html";
+    public static final String WITHOUT_EXTENSION_NAME = "product-image";
+
     private FileNameFixture() {
     }
 
-    public static String imageJpegName() {
-        return "product-image.jpg";
+    public static FileName from(String value) {
+        return FileName.from(value);
     }
 
-    public static String htmlPageName() {
-        return "landing-page.html";
+    public static FileName imageJpeg() {
+        return from(IMAGE_JPEG_NAME);
     }
 
-    public static String nameWithoutExtension() {
-        return "product-image";
+    public static FileName htmlPage() {
+        return from(HTML_PAGE_NAME);
+    }
+
+    public static FileName withoutExtensionFile() {
+        return from(WITHOUT_EXTENSION_NAME);
     }
 
     public static String overMaxLengthName() {

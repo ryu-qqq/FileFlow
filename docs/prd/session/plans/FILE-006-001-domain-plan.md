@@ -47,34 +47,34 @@
 ### 2️⃣ FileName VO 구현 (Cycle 2)
 
 #### 🔴 Red: 테스트 작성
-- [~] `FileNameTest.java` 생성 *(in progress)*
-- [ ] `shouldCreateFileNameWithExtension()` 테스트 작성
-- [ ] `shouldExtractExtensionCorrectly()` 테스트 작성
-- [ ] `shouldReturnWithoutExtension()` 테스트 작성
-- [ ] `shouldThrowExceptionWhenNull()` 테스트 작성
-- [ ] `shouldThrowExceptionWhenTooLong()` 테스트 작성 (>255자)
-- [ ] 커밋: `test: FileName VO 테스트 추가 (Red)`
+- [x] `FileNameTest.java` 생성
+- [x] `shouldCreateFileNameWithExtension()` 테스트 작성
+- [x] `shouldExtractExtensionCorrectly()` 테스트 작성
+- [x] `shouldReturnWithoutExtension()` 테스트 작성
+- [x] `shouldThrowExceptionWhenNull()` 테스트 작성
+- [x] `shouldThrowExceptionWhenTooLong()` 테스트 작성 (>255자)
+- [x] 커밋: `test: FileName VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileName.java` 생성 (Record)
-- [ ] `from(String value)` 메서드 구현
-- [ ] 확장자 추출 로직 구현
-- [ ] `withoutExtension()` 메서드 구현
-- [ ] null, 빈 문자열, 길이 검증
-- [ ] 테스트 통과
-- [ ] 커밋: `impl: FileName VO 구현 (Green)`
+- [x] `FileName.java` 생성 (Record)
+- [x] `from(String value)` 메서드 구현
+- [x] 확장자 추출 로직 구현
+- [x] `withoutExtension()` 메서드 구현
+- [x] null, 빈 문자열, 길이 검증
+- [x] 테스트 통과
+- [x] 커밋: `impl: FileName VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 확장자 추출 로직 메서드 분리
-- [ ] Javadoc 추가
-- [ ] ArchUnit VO 테스트 통과
-- [ ] 커밋: `refactor: FileName VO 개선 (Refactor)`
+- [x] 확장자 추출 로직 메서드 분리
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과
+- [x] 커밋: `refactor: FileName VO 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileNameFixture.java` 생성
-- [ ] `FileNameFixture.from(String value)` 메서드 작성
-- [ ] 다양한 파일 이름 Fixture 메서드 추가 (image, html)
-- [ ] 커밋: `test: FileNameFixture 정리 (Tidy)`
+- [x] `FileNameFixture.java` 생성
+- [x] `FileNameFixture.from(String value)` 메서드 작성
+- [x] 다양한 파일 이름 Fixture 메서드 추가 (image, html)
+- [x] 커밋: `test: FileNameFixture 정리 (Tidy)`
 
 ---
 

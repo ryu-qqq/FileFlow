@@ -3,10 +3,14 @@ package com.ryuqq.fileflow.domain.file.vo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.htmlPageName;
-import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.imageJpegName;
-import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.nameWithoutExtension;
+import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.HTML_PAGE_NAME;
+import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.IMAGE_JPEG_NAME;
+import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.WITHOUT_EXTENSION_NAME;
+import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.from;
+import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.htmlPage;
+import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.imageJpeg;
 import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.overMaxLengthName;
+import static com.ryuqq.fileflow.domain.file.fixture.FileNameFixture.withoutExtensionFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -16,25 +20,19 @@ class FileNameTest {
     @Test
     @DisplayName("확장자를 포함한 파일 이름을 생성할 수 있어야 한다")
     void shouldCreateFileNameWithExtension() {
-        // given
-        String fileNameValue = imageJpegName();
-
         // when
-        FileName fileName = FileName.from(fileNameValue);
+        FileName fileName = imageJpeg();
 
         // then
-        assertThat(fileName.value()).isEqualTo(fileNameValue);
+        assertThat(fileName.value()).isEqualTo(IMAGE_JPEG_NAME);
         assertThat(fileName.extension()).isEqualTo(".jpg");
     }
 
     @Test
     @DisplayName("확장자를 정확하게 추출해야 한다")
     void shouldExtractExtensionCorrectly() {
-        // given
-        String fileNameValue = htmlPageName();
-
         // when
-        FileName fileName = FileName.from(fileNameValue);
+        FileName fileName = htmlPage();
 
         // then
         assertThat(fileName.extension()).isEqualTo(".html");
@@ -44,14 +42,13 @@ class FileNameTest {
     @DisplayName("withoutExtension()은 확장자를 제외한 값을 반환해야 한다")
     void shouldReturnWithoutExtension() {
         // given
-        String fileNameValue = imageJpegName();
-        FileName fileName = FileName.from(fileNameValue);
+        FileName fileName = withoutExtensionFile();
 
         // when
         String withoutExtension = fileName.withoutExtension();
 
         // then
-        assertThat(withoutExtension).isEqualTo(nameWithoutExtension());
+        assertThat(withoutExtension).isEqualTo(WITHOUT_EXTENSION_NAME);
     }
 
     @Test
