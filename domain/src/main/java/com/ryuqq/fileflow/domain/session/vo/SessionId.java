@@ -19,15 +19,8 @@ public record SessionId(String value) {
 
     public SessionId {
         if (value != null) {
-            value = value.trim();
-
-            if (value.isEmpty()) {
-                throw new IllegalArgumentException("SessionId 값은 빈 문자열일 수 없습니다.");
-            }
-
-            if (!isValidUuid(value)) {
-                throw new IllegalArgumentException("유효하지 않은 SessionId 입니다: " + value);
-            }
+            value = normalize(value);
+            validateUuid(value);
         }
     }
 
@@ -57,10 +50,7 @@ public record SessionId(String value) {
      * @return SessionId
      */
     public static SessionId of(String value) {
-        if (value == null) {
-            throw new IllegalArgumentException("SessionId 값은 null일 수 없습니다.");
-        }
-        return new SessionId(value);
+        return new SessionId(requireNonNull(value));
     }
 
     /**
@@ -72,6 +62,12 @@ public record SessionId(String value) {
         return value == null;
     }
 
+    private static void validateUuid(String candidate) {
+        if (!isValidUuid(candidate)) {
+            throw new IllegalArgumentException("유효하지 않은 SessionId 입니다: " + candidate);
+        }
+    }
+
     private static boolean isValidUuid(String candidate) {
         try {
             UUID.fromString(candidate);
@@ -79,6 +75,21 @@ public record SessionId(String value) {
         } catch (IllegalArgumentException exception) {
             return false;
         }
+    }
+
+    private static String normalize(String candidate) {
+        String trimmed = candidate.trim();
+        if (trimmed.isEmpty()) {
+            throw new IllegalArgumentException("SessionId 값은 빈 문자열일 수 없습니다.");
+        }
+        return trimmed;
+    }
+
+    private static String requireNonNull(String candidate) {
+        if (candidate == null) {
+            throw new IllegalArgumentException("SessionId 값은 null일 수 없습니다.");
+        }
+        return candidate;
     }
 }
 
