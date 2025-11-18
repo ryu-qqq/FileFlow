@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.application.session.dto;
+package com.ryuqq.fileflow.application.session.dto.response;
 
 import com.ryuqq.fileflow.domain.file.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.file.vo.S3Key;

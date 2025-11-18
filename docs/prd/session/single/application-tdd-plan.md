@@ -24,7 +24,11 @@
 
 ## Cycle 1-2: Command/Response DTOs
 
-### Cycle 1: Command DTOs (2개)
+### Cycle 1: Command DTOs (2개) ✅ COMPLETED (기존 구현)
+
+**완료 상태**:
+- ✅ GeneratePresignedUrlCommand (Record) - 완벽 구현
+- ✅ CompleteUploadCommand (Record) - 완벽 구현
 
 #### Red (test:)
 
@@ -88,7 +92,11 @@ feat: Application Command DTO 구현 (Record)
 
 ---
 
-### Cycle 2: Response DTOs (2개)
+### Cycle 2: Response DTOs (2개) ✅ COMPLETED (기존 구현)
+
+**완료 상태**:
+- ✅ PresignedUrlResponse (Record) - 완벽 구현
+- ✅ FileResponse (Record) - 완벽 구현 (UploadCompletedResponse 역할)
 
 #### Red (test:)
 
@@ -169,7 +177,11 @@ feat: Application Response DTO 구현 (Record)
 
 ---
 
-## Cycle 3: UserContext
+## Cycle 3: UserContext ✅ COMPLETED
+
+**완료 상태**:
+- ✅ test: UserContext DTO 테스트 추가 (커밋: 0ba7ded3)
+- ✅ feat: UserContext DTO 구현 (커밋: 740ec310)
 
 #### Red (test:)
 
@@ -218,7 +230,11 @@ feat: UserContext DTO 구현 (JWT 추출용)
 
 ---
 
-## Cycle 4: SessionPreparationResult
+## Cycle 4: SessionPreparationResult ✅ COMPLETED
+
+**완료 상태**:
+- ✅ test: SessionPreparationResult DTO 테스트 추가 (커밋: 8c02acc9)
+- ✅ feat: SessionPreparationResult DTO 구현 (커밋: db63b03e)
 
 #### Red (test:)
 
@@ -348,9 +364,11 @@ feat: SessionPreparationResult DTO 구현 (Factory Methods)
 
 ---
 
-## Cycle 5-6: Port In (UseCases)
+## Cycle 5-6: Port In (UseCases) ⏳ TODO
 
-### Cycle 5: GeneratePresignedUrlUseCase
+**상태**: 미구현 (추후 TDD로 진행)
+
+### Cycle 5: GeneratePresignedUrlUseCase ⏳ TODO
 
 #### Red (test:)
 
@@ -439,19 +457,23 @@ feat: Persistence Ports 구현 (FilePersistencePort, UploadSessionPersistencePor
 
 ---
 
-### Cycle 8: Query Port
+### Cycle 8: Query Port ⏳ TODO
 
+**상태**: 미구현 (추후 TDD로 진행)
 **동일 패턴** (UploadSessionQueryPort)
 
 ---
 
-### Cycle 9: External Port
+### Cycle 9: External Port ⏳ TODO
 
+**상태**: 미구현 (추후 TDD로 진행)
 **동일 패턴** (S3ClientPort)
 
 ---
 
-## Cycle 10: SessionManager (Transaction 경계)
+## Cycle 10: SessionManager (Transaction 경계) ⏳ TODO
+
+**상태**: 미구현 (추후 TDD로 진행)
 
 #### Red (test:)
 
@@ -663,7 +685,9 @@ feat: SessionManager 구현 (@Transactional, 멱등성)
 
 ---
 
-## Cycle 11: GeneratePresignedUrlFacade (Orchestration)
+## Cycle 11: GeneratePresignedUrlFacade (Orchestration) ⏳ TODO
+
+**상태**: 미구현 (추후 TDD로 진행)
 
 #### Red (test:)
 
@@ -857,23 +881,24 @@ feat: GeneratePresignedUrlFacade 구현 (트랜잭션 없음, 외부 API 허용)
 
 ---
 
-## Cycle 12: CompleteUploadService
+## Cycle 12: CompleteUploadService ⏳ TODO
 
+**상태**: 미구현 (추후 TDD로 진행)
 **동일 패턴** (Transaction 전체 적용)
 
 ---
 
 ## 완료 조건
 
-- [x] 4개 DTOs (Command 2, Response 2) - Record
-- [x] UserContext (JWT 추출용)
-- [x] SessionPreparationResult (멱등성 구분)
-- [x] 2개 Port In (GeneratePresignedUrlUseCase, CompleteUploadUseCase)
-- [x] 4개 Port Out (FilePersistencePort, UploadSessionPersistencePort, UploadSessionQueryPort, S3ClientPort)
-- [x] SessionManager (Transaction 경계 관리)
-- [x] GeneratePresignedUrlFacade (Orchestration Pattern)
-- [x] CompleteUploadService (@Transactional)
-- [x] Zero-Tolerance Rule #4 준수 (S3 호출은 트랜잭션 밖)
+- [x] 4개 DTOs (Command 2, Response 2) - Record ✅ (기존 구현)
+- [ ] UserContext (JWT 추출용) ⏳ TODO
+- [ ] SessionPreparationResult (멱등성 구분) ⏳ TODO
+- [ ] 2개 Port In (GeneratePresignedUrlUseCase, CompleteUploadUseCase) ⏳ TODO
+- [ ] 4개 Port Out (FilePersistencePort, UploadSessionPersistencePort, UploadSessionQueryPort, S3ClientPort) ⏳ TODO
+- [ ] SessionManager (Transaction 경계 관리) ⏳ TODO
+- [ ] GeneratePresignedUrlFacade (Orchestration Pattern) ⏳ TODO
+- [ ] CompleteUploadService (@Transactional) ⏳ TODO
+- [ ] Zero-Tolerance Rule #4 준수 (S3 호출은 트랜잭션 밖) ⏳ TODO
 
 ---
 
