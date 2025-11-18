@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.domain.session.aggregate;
 import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.SessionId;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
+import com.ryuqq.fileflow.domain.file.vo.*;
 import com.ryuqq.fileflow.domain.vo.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

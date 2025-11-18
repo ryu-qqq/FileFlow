@@ -78,6 +78,8 @@ class VOArchTest {
      * 예외:
      * - MultipartUpload: forNew() 팩토리 메서드 사용
      * - RetryCount: forFile(), forJob(), forOutbox() 전략 메서드 사용
+     * - S3Bucket: forTenant() 도메인 특화 팩토리 사용
+     * - S3Key: generate() 복잡한 경로 생성 로직 사용
      * </p>
      */
     @Test
@@ -93,6 +95,8 @@ class VOArchTest {
             .and().haveSimpleNameNotEndingWith("Criteria")  // SearchCriteria 제외
             .and().haveSimpleNameNotContaining("MultipartUpload")  // forNew() 사용
             .and().haveSimpleNameNotContaining("RetryCount")  // 전략 메서드 사용
+            .and().haveSimpleNameNotContaining("S3Bucket")  // forTenant() 사용
+            .and().haveSimpleNameNotContaining("S3Key")  // generate() 사용
             .should(haveStaticMethodWithName("of"))
             .because("Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다 (Enum, 전략 VO 제외)");
 
