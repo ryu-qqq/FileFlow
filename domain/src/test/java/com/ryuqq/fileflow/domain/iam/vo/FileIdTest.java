@@ -118,4 +118,23 @@ class FileIdTest {
         // when & then
         assertThat(fileId.isNew()).isFalse();
     }
+
+    @Test
+    @DisplayName("UUID v7로 FileId를 생성해야 한다")
+    void shouldGenerateFileIdWithUuidV7() {
+        FileId fileId = FileId.generate();
+
+        assertThat(fileId.value()).hasSize(36);
+        assertThat(fileId.value()).contains("-");
+    }
+
+    @Test
+    @DisplayName("생성 시각 순서대로 정렬되어야 한다 (UUID v7)")
+    void shouldBeSortableByCreationTime() throws InterruptedException {
+        FileId first = FileId.generate();
+        Thread.sleep(10);
+        FileId second = FileId.generate();
+
+        assertThat(first.value()).isLessThan(second.value());
+    }
 }
