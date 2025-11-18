@@ -115,7 +115,7 @@
 ### 4️⃣ MimeType VO 구현 (Cycle 4)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `MimeTypeTest.java` 생성
+- [~] `MimeTypeTest.java` 생성 *(in progress)*
 - [ ] `shouldCreateAllowedMimeTypes()` 테스트 작성 (image/*, text/html)
 - [ ] `shouldThrowExceptionForUnsupportedType()` 테스트 작성
 - [ ] `shouldExtractExtensionCorrectly()` 테스트 작성
