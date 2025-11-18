@@ -15,8 +15,17 @@ public enum UserRole {
         this.namespace = namespace;
     }
 
-    public String getNamespace() {
+    /**
+     * Role별 네임스페이스 반환.
+     *
+     * @return 네임스페이스 문자열
+     */
+    public String namespace() {
         return namespace;
+    }
+
+    public String getNamespace() {
+        return namespace();
     }
 }
 
