@@ -115,35 +115,35 @@
 ### 4️⃣ MimeType VO 구현 (Cycle 4)
 
 #### 🔴 Red: 테스트 작성
-- [~] `MimeTypeTest.java` 생성 *(in progress)*
-- [ ] `shouldCreateAllowedMimeTypes()` 테스트 작성 (image/*, text/html)
-- [ ] `shouldThrowExceptionForUnsupportedType()` 테스트 작성
-- [ ] `shouldExtractExtensionCorrectly()` 테스트 작성
-- [ ] `shouldCheckIsImage()` 테스트 작성
-- [ ] `shouldCheckIsHtml()` 테스트 작성
-- [ ] 커밋: `test: MimeType VO 테스트 추가 (Red)`
+- [x] `MimeTypeTest.java` 생성
+- [x] `shouldCreateAllowedMimeTypes()` 테스트 작성 (image/*, text/html)
+- [x] `shouldThrowExceptionForUnsupportedType()` 테스트 작성
+- [x] `shouldExtractExtensionCorrectly()` 테스트 작성
+- [x] `shouldCheckIsImage()` 테스트 작성
+- [x] `shouldCheckIsHtml()` 테스트 작성
+- [x] 커밋: `test: MimeType VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `MimeType.java` 생성 (Record)
-- [ ] `of(String value)` 메서드 구현
-- [ ] 허용 타입 검증 로직 구현
-- [ ] `extractExtension()` 메서드 구현
-- [ ] `isImage()`, `isHtml()` 메서드 구현
-- [ ] `UnsupportedFileTypeException` 예외 던지기
-- [ ] 커밋: `impl: MimeType VO 구현 (Green)`
+- [x] `MimeType.java` 생성 (Record)
+- [x] `of(String value)` 메서드 구현
+- [x] 허용 타입 검증 로직 구현
+- [x] `extractExtension()` 메서드 구현
+- [x] `isImage()`, `isHtml()` 메서드 구현
+- [x] `UnsupportedFileTypeException` 예외 던지기
+- [x] 커밋: `impl: MimeType VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 허용 타입 상수 추출 (ALLOWED_PATTERNS)
-- [ ] 패턴 매칭 로직 메서드 분리
-- [ ] Javadoc 추가
-- [ ] ArchUnit VO 테스트 통과
-- [ ] 커밋: `refactor: MimeType VO 개선 (Refactor)`
+- [x] 허용 타입 상수 추출 (ALLOWED_PATTERNS)
+- [x] 패턴 매칭 로직 메서드 분리
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과
+- [x] 커밋: `refactor: MimeType VO 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `MimeTypeFixture.java` 생성
-- [ ] `MimeTypeFixture.of(String value)` 메서드 작성
-- [ ] 다양한 MIME 타입 Fixture 메서드 추가 (jpeg, png, html)
-- [ ] 커밋: `test: MimeTypeFixture 정리 (Tidy)`
+- [x] `MimeTypeFixture.java` 생성
+- [x] `MimeTypeFixture.of(String value)` 메서드 작성
+- [x] 다양한 MIME 타입 Fixture 메서드 추가 (jpeg, png, html)
+- [x] 커밋: `test: MimeTypeFixture 정리 (Tidy)`
 
 ---
 

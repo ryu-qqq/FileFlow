@@ -8,6 +8,7 @@ import com.ryuqq.fileflow.domain.file.exception.UnsupportedFileTypeException;
 
 import static com.ryuqq.fileflow.domain.file.fixture.MimeTypeFixture.htmlMimeType;
 import static com.ryuqq.fileflow.domain.file.fixture.MimeTypeFixture.imageMimeType;
+import static com.ryuqq.fileflow.domain.file.fixture.MimeTypeFixture.pngMimeType;
 import static com.ryuqq.fileflow.domain.file.fixture.MimeTypeFixture.textHtmlValue;
 import static com.ryuqq.fileflow.domain.file.fixture.MimeTypeFixture.unsupportedMimeValue;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,12 +22,15 @@ class MimeTypeTest {
     void shouldCreateAllowedMimeTypes() {
         // when
         MimeType image = imageMimeType();
+        MimeType png = pngMimeType();
         MimeType html = htmlMimeType();
 
         // then
         assertThat(image.value()).isEqualTo("image/jpeg");
+        assertThat(png.value()).isEqualTo("image/png");
         assertThat(html.value()).isEqualTo(textHtmlValue());
         assertThat(image.isImage()).isTrue();
+        assertThat(png.isImage()).isTrue();
         assertThat(html.isHtml()).isTrue();
     }
 
