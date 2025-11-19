@@ -402,10 +402,10 @@
 - [x] 커밋: `test: UploadSession of(), reconstitute() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `of(SessionId sessionId, ...)` 정적 메서드 구현
-- [ ] `reconstitute(...)` 정적 메서드 구현
-- [ ] 모든 필드 파라미터로 받기 (createdAt, updatedAt 포함)
-- [ ] 커밋: `impl: UploadSession of(), reconstitute() 구현 (Green)`
+- [x] `of(SessionId sessionId, ...)` 정적 메서드 구현
+- [x] `reconstitute(...)` 정적 메서드 구현
+- [x] 모든 필드 파라미터로 받기 (createdAt, updatedAt 포함)
+- [x] 커밋: `impl: UploadSession of(), reconstitute() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] Javadoc 추가

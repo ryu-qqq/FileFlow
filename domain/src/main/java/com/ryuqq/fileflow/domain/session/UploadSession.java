@@ -213,6 +213,142 @@ public class UploadSession {
         return createdAt.plusMinutes(15);
     }
 
+    /**
+     * ID 기반 업로드 세션 생성 (비즈니스 로직용).
+     *
+     * <p>
+     * 기존 SessionId로 세션을 생성하며, forNew()와 동일한 검증 로직을 수행합니다.
+     * </p>
+     *
+     * @param sessionId 세션 ID (null 불가)
+     * @param uploadType 업로드 타입 (SINGLE 또는 MULTIPART)
+     * @param customPath 커스텀 경로
+     * @param fileName 파일 이름 VO
+     * @param fileSize 파일 크기 VO
+     * @param mimeType MIME 타입 VO
+     * @param userId 사용자 ID
+     * @param tenantId 테넌트 ID
+     * @param role 사용자 역할
+     * @param sellerName 셀러명 (SELLER/DEFAULT 역할일 때 필수, ADMIN일 때 무시)
+     * @param clock 시간 의존성 (테스트 가능성)
+     * @return UploadSession
+     * @throws IllegalArgumentException sessionId가 null인 경우
+     * @throws FileSizeExceededException 파일 크기가 업로드 타입별 최대 크기를 초과한 경우
+     * @throws UnsupportedFileTypeException 지원하지 않는 MIME 타입인 경우
+     */
+    public static UploadSession of(
+        SessionId sessionId,
+        UploadType uploadType,
+        String customPath,
+        FileName fileName,
+        FileSize fileSize,
+        MimeType mimeType,
+        Long userId,
+        Long tenantId,
+        UserRole role,
+        String sellerName,
+        Clock clock
+    ) {
+        if (sessionId == null) {
+            throw new IllegalArgumentException("SessionId는 null일 수 없습니다.");
+        }
+
+        validateFileSize(fileSize, uploadType);
+
+        String fileId = sessionId.value();
+        S3Path s3Path = createS3Path(role, tenantId, sellerName, customPath, fileId, mimeType);
+
+        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime expiresAt = calculateExpiresAt(now);
+
+        return new UploadSession(
+            sessionId,
+            userId,
+            tenantId,
+            role,
+            sellerName,
+            uploadType,
+            customPath,
+            fileName,
+            fileSize,
+            mimeType,
+            s3Path,
+            SessionStatus.PREPARING,
+            clock,
+            now,
+            now,
+            expiresAt,
+            null
+        );
+    }
+
+    /**
+     * 영속성 복원용 업로드 세션 생성 (Repository 전용).
+     *
+     * <p>
+     * Repository에서 Entity → Domain 변환 시 사용합니다.
+     * 검증 로직을 실행하지 않으며, 모든 필드를 그대로 전달합니다.
+     * </p>
+     *
+     * @param sessionId 세션 ID
+     * @param userId 사용자 ID
+     * @param tenantId 테넌트 ID
+     * @param role 사용자 역할
+     * @param sellerName 셀러명
+     * @param uploadType 업로드 타입
+     * @param customPath 커스텀 경로
+     * @param fileName 파일 이름 VO
+     * @param fileSize 파일 크기 VO
+     * @param mimeType MIME 타입 VO
+     * @param s3Path S3 경로 VO
+     * @param status 세션 상태
+     * @param clock 시간 의존성 (테스트 가능성)
+     * @param createdAt 생성 시각
+     * @param updatedAt 수정 시각
+     * @param expiresAt 만료 시각
+     * @param completedAt 완료 시각 (Nullable)
+     * @return UploadSession
+     */
+    public static UploadSession reconstitute(
+        SessionId sessionId,
+        Long userId,
+        Long tenantId,
+        UserRole role,
+        String sellerName,
+        UploadType uploadType,
+        String customPath,
+        FileName fileName,
+        FileSize fileSize,
+        MimeType mimeType,
+        S3Path s3Path,
+        SessionStatus status,
+        Clock clock,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        LocalDateTime expiresAt,
+        LocalDateTime completedAt
+    ) {
+        return new UploadSession(
+            sessionId,
+            userId,
+            tenantId,
+            role,
+            sellerName,
+            uploadType,
+            customPath,
+            fileName,
+            fileSize,
+            mimeType,
+            s3Path,
+            status,
+            clock,
+            createdAt,
+            updatedAt,
+            expiresAt,
+            completedAt
+        );
+    }
+
     // ==================== Getter 메서드 ====================
 
     public SessionId getSessionId() {
