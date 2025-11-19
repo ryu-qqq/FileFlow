@@ -276,8 +276,8 @@
 - [x] 커밋: `refactor: SessionErrorCode Enum 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture 불필요 (Enum)
-- [ ] 커밋: `test: SessionErrorCode 테스트 정리 (Tidy)`
+- [x] TestFixture 불필요 (Enum)
+- [x] 커밋: `test: SessionErrorCode 테스트 정리 (Tidy)`
 
 ---
 
