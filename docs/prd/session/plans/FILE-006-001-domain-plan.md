@@ -513,13 +513,13 @@
 - [x] 커밋: `test: File Aggregate 정적 메서드 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `File.java` 생성 (Plain Java Class)
-- [ ] private 생성자 구현
-- [ ] `forNew(...)` 정적 메서드 구현
-- [ ] `of(SessionId fileId, ...)` 정적 메서드 구현
-- [ ] `reconstitute(...)` 정적 메서드 구현
-- [ ] Clock 주입 및 uploadedAt, updatedAt 설정
-- [ ] 커밋: `impl: File Aggregate 정적 메서드 구현 (Green)`
+- [x] `File.java` 생성 (Plain Java Class)
+- [x] private 생성자 구현
+- [x] `forNew(...)` 정적 메서드 구현
+- [x] `of(SessionId fileId, ...)` 정적 메서드 구현
+- [x] `reconstitute(...)` 정적 메서드 구현
+- [x] Clock 주입 및 uploadedAt, updatedAt 설정
+- [x] 커밋: `impl: File Aggregate 정적 메서드 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] Javadoc 추가
