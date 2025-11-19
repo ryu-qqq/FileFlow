@@ -266,10 +266,10 @@
 - [x] 커밋: `test: SessionErrorCode Enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `SessionErrorCode.java` 생성 (Enum)
-- [ ] FILE_SIZE_EXCEEDED, UNSUPPORTED_FILE_TYPE, INVALID_SESSION_STATUS, SESSION_EXPIRED 정의
-- [ ] Getter 메서드 구현
-- [ ] 커밋: `impl: SessionErrorCode Enum 구현 (Green)`
+- [x] `SessionErrorCode.java` 생성 (Enum)
+- [x] FILE_SIZE_EXCEEDED, UNSUPPORTED_FILE_TYPE, INVALID_SESSION_STATUS, SESSION_EXPIRED 정의
+- [x] Getter 메서드 구현
+- [x] 커밋: `impl: SessionErrorCode Enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] Javadoc 추가
