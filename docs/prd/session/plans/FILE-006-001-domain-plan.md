@@ -334,11 +334,11 @@
 ### 1️⃣2️⃣ Domain Exception: 나머지 3종 (Cycle 12)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `UnsupportedFileTypeExceptionTest.java` 생성
-- [ ] `InvalidSessionStatusExceptionTest.java` 생성
-- [ ] `SessionExpiredExceptionTest.java` 생성
-- [ ] 각 예외의 메시지, HTTP Status 검증 테스트 작성
-- [ ] 커밋: `test: 나머지 Domain Exception 테스트 추가 (Red)`
+- [x] `UnsupportedFileTypeExceptionTest.java` 생성
+- [x] `InvalidSessionStatusExceptionTest.java` 생성
+- [x] `SessionExpiredExceptionTest.java` 생성
+- [x] 각 예외의 메시지, HTTP Status 검증 테스트 작성
+- [x] 커밋: `test: 나머지 Domain Exception 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `UnsupportedFileTypeException.java` 생성
