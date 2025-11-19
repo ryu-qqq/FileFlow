@@ -48,6 +48,17 @@ public class DomainException extends RuntimeException {
     }
 
     /**
+     * ErrorCode + 커스텀 메시지 기반 생성자
+     *
+     * @param errorCode 에러 코드
+     * @param message 커스텀 메시지
+     */
+    public DomainException(ErrorCode errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+
+    /**
      * ErrorCode + Cause 기반 생성자
      *
      * @param errorCode 에러 코드

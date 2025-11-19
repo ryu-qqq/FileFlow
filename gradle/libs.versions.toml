@@ -65,6 +65,7 @@ micrometer = "1.12.4"
 # ========================================
 commonsLang3 = "3.14.0"
 jackson = "2.17.0"
+uuidCreator = "6.0.7"
 
 [libraries]
 # ========================================
@@ -153,6 +154,7 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" }
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version = "3.0.2" }
 jakarta-persistence-api = { module = "jakarta.persistence:jakarta.persistence-api", version = "3.1.0" }
+uuid-creator = { module = "com.github.f4b6a3:uuid-creator", version.ref = "uuidCreator" }
 
 [bundles]
 # ========================================

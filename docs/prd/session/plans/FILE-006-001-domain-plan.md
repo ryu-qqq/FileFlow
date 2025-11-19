@@ -1,0 +1,635 @@
+# FILE-006-001 TDD Plan
+
+**Task**: Domain Layer - 파일 업로드 세션 및 파일 메타데이터 도메인 모델 구현
+**Layer**: Domain Layer
+**브랜치**: feature/FILE-006-001-domain
+**예상 소요 시간**: 300분 (20 사이클 × 15분)
+
+---
+
+## 📝 TDD 사이클 체크리스트
+
+### 1️⃣ SessionId VO 구현 (Cycle 1)
+
+#### 🔴 Red: 테스트 작성
+- [x] `SessionIdTest.java` 파일 생성
+- [x] `shouldCreateNewSessionId()` 테스트 작성 (forNew() 메서드)
+- [x] `shouldCreateFromValidUUID()` 테스트 작성 (from() 메서드)
+- [x] `shouldThrowExceptionWhenInvalidUUID()` 테스트 작성
+- [x] `shouldReturnTrueWhenIsNew()` 테스트 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: SessionId VO 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `SessionId.java` 생성 (Record)
+- [x] `forNew()` 메서드 구현 (UUID.randomUUID())
+- [x] `from(String value)` 메서드 구현
+- [x] `isNew()` 메서드 구현
+- [x] UUID 형식 검증 로직 추가
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `impl: SessionId VO 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] UUID 검증 로직 메서드 추출
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과 확인
+- [x] 커밋: `refactor: SessionId VO 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `SessionIdFixture.java` 생성 (Object Mother 패턴)
+- [x] `SessionIdFixture.forNew()` 메서드 작성
+- [x] `SessionIdFixture.from(String value)` 메서드 작성
+- [x] `SessionIdTest` → Fixture 사용으로 리팩토링
+- [x] 커밋: `test: SessionIdFixture 정리 (Tidy)`
+
+---
+
+### 2️⃣ FileName VO 구현 (Cycle 2)
+
+#### 🔴 Red: 테스트 작성
+- [x] `FileNameTest.java` 생성
+- [x] `shouldCreateFileNameWithExtension()` 테스트 작성
+- [x] `shouldExtractExtensionCorrectly()` 테스트 작성
+- [x] `shouldReturnWithoutExtension()` 테스트 작성
+- [x] `shouldThrowExceptionWhenNull()` 테스트 작성
+- [x] `shouldThrowExceptionWhenTooLong()` 테스트 작성 (>255자)
+- [x] 커밋: `test: FileName VO 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `FileName.java` 생성 (Record)
+- [x] `from(String value)` 메서드 구현
+- [x] 확장자 추출 로직 구현
+- [x] `withoutExtension()` 메서드 구현
+- [x] null, 빈 문자열, 길이 검증
+- [x] 테스트 통과
+- [x] 커밋: `impl: FileName VO 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] 확장자 추출 로직 메서드 분리
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과
+- [x] 커밋: `refactor: FileName VO 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `FileNameFixture.java` 생성
+- [x] `FileNameFixture.from(String value)` 메서드 작성
+- [x] 다양한 파일 이름 Fixture 메서드 추가 (image, html)
+- [x] 커밋: `test: FileNameFixture 정리 (Tidy)`
+
+---
+
+### 3️⃣ FileSize VO 구현 (Cycle 3)
+
+#### 🔴 Red: 테스트 작성
+- [x] `FileSizeTest.java` 생성
+- [x] `shouldCreateFileSize()` 테스트 작성
+- [x] `shouldThrowExceptionWhenZeroOrNegative()` 테스트 작성
+- [x] `shouldValidateForUploadType()` 테스트 작성 (SINGLE 5GB, MULTIPART 5TB)
+- [x] `shouldCompareSizeCorrectly()` 테스트 작성 (isLargerThan)
+- [x] `shouldConvertToMBAndGB()` 테스트 작성
+- [x] 커밋: `test: FileSize VO 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `FileSize.java` 생성 (Record)
+- [x] `of(long bytes)` 메서드 구현
+- [x] `validateForUploadType(UploadType)` 메서드 구현
+- [x] `isLargerThan(long threshold)` 메서드 구현
+- [x] `toMB()`, `toGB()` 메서드 구현
+- [x] 크기 검증 로직 추가
+- [x] 커밋: `impl: FileSize VO 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] 단위 변환 상수 추출 (MB, GB)
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과
+- [x] 커밋: `refactor: FileSize VO 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `FileSizeFixture.java` 생성
+- [x] `FileSizeFixture.of(long bytes)` 메서드 작성
+- [x] 다양한 크기 Fixture 메서드 추가 (1MB, 100MB, 1GB)
+- [x] 커밋: `test: FileSizeFixture 정리 (Tidy)`
+
+---
+
+### 4️⃣ MimeType VO 구현 (Cycle 4)
+
+#### 🔴 Red: 테스트 작성
+- [x] `MimeTypeTest.java` 생성
+- [x] `shouldCreateAllowedMimeTypes()` 테스트 작성 (image/*, text/html)
+- [x] `shouldThrowExceptionForUnsupportedType()` 테스트 작성
+- [x] `shouldExtractExtensionCorrectly()` 테스트 작성
+- [x] `shouldCheckIsImage()` 테스트 작성
+- [x] `shouldCheckIsHtml()` 테스트 작성
+- [x] 커밋: `test: MimeType VO 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `MimeType.java` 생성 (Record)
+- [x] `of(String value)` 메서드 구현
+- [x] 허용 타입 검증 로직 구현
+- [x] `extractExtension()` 메서드 구현
+- [x] `isImage()`, `isHtml()` 메서드 구현
+- [x] `UnsupportedFileTypeException` 예외 던지기
+- [x] 커밋: `impl: MimeType VO 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] 허용 타입 상수 추출 (ALLOWED_PATTERNS)
+- [x] 패턴 매칭 로직 메서드 분리
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과
+- [x] 커밋: `refactor: MimeType VO 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `MimeTypeFixture.java` 생성
+- [x] `MimeTypeFixture.of(String value)` 메서드 작성
+- [x] 다양한 MIME 타입 Fixture 메서드 추가 (jpeg, png, html)
+- [x] 커밋: `test: MimeTypeFixture 정리 (Tidy)`
+
+---
+
+### 5️⃣ UserRole Enum 구현 (Cycle 5)
+
+#### 🔴 Red: 테스트 작성
+- [x] `UserRoleTest.java` 생성
+- [x] `shouldReturnCorrectNamespace()` 테스트 작성
+- [x] 각 Role별 네임스페이스 검증 테스트 작성
+- [x] 커밋: `test: UserRole Enum 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `UserRole.java` 생성 (Enum)
+- [x] ADMIN("connectly"), SELLER("setof"), DEFAULT("setof") 정의
+- [x] `getNamespace()` 메서드 구현
+- [x] 커밋: `impl: UserRole Enum 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] ArchUnit Enum 테스트 통과
+- [x] 커밋: `refactor: UserRole Enum 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] TestFixture 불필요 (Enum은 자체적으로 상수)
+- [x] 테스트 코드 간소화
+- [x] 커밋: `test: UserRole 테스트 정리 (Tidy)`
+
+---
+
+### 6️⃣ UploadType Enum 구현 (Cycle 6)
+
+#### 🔴 Red: 테스트 작성
+- [x] `UploadTypeTest.java` 생성
+- [x] `shouldReturnCorrectMaxSize()` 테스트 작성
+- [x] SINGLE(5GB), MULTIPART(5TB) 검증 테스트 작성
+- [x] 커밋: `test: UploadType Enum 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `UploadType.java` 생성 (Enum)
+- [x] SINGLE(5GB), MULTIPART(5TB) 정의
+- [x] `getMaxSize()` 메서드 구현
+- [x] 커밋: `impl: UploadType Enum 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] 바이트 계산 상수화
+- [x] 커밋: `refactor: UploadType Enum 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] TestFixture 불필요 (Enum은 자체적으로 상수)
+- [x] 커밋: `test: UploadType 테스트 정리 (Tidy)`
+
+---
+
+### 7️⃣ SessionStatus Enum 구현 (Cycle 7)
+
+#### 🔴 Red: 테스트 작성
+- [x] `SessionStatusTest.java` 생성
+- [x] `shouldTransitionCorrectly()` 테스트 작성
+- [x] 상태 전환 규칙 검증 (PREPARING → ACTIVE → {COMPLETED, EXPIRED, FAILED})
+- [x] 불가능한 전환 테스트 작성
+- [x] 커밋: `test: SessionStatus Enum 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `SessionStatus.java` 생성 (Enum)
+- [x] PREPARING, ACTIVE, COMPLETED, EXPIRED, FAILED 정의
+- [x] `canTransitionTo(SessionStatus next)` 메서드 구현
+- [x] 상태 전환 규칙 구현 (switch 표현식)
+- [x] 커밋: `impl: SessionStatus Enum 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] switch 표현식 최적화
+- [x] 커밋: `refactor: SessionStatus Enum 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] TestFixture 불필요 (Enum은 자체적으로 상수)
+- [x] 커밋: `test: SessionStatus 테스트 정리 (Tidy)`
+
+---
+
+### 8️⃣ S3Path VO 구현 (Cycle 8)
+
+#### 🔴 Red: 테스트 작성
+- [x] `S3PathTest.java` 생성
+- [x] `shouldCreateAdminPath()` 테스트 작성
+- [x] `shouldCreateSellerPath()` 테스트 작성
+- [x] `shouldCreateDefaultPath()` 테스트 작성
+- [x] `shouldExtractExtensionFromMimeType()` 테스트 작성
+- [x] `shouldGenerateFullPath()` 테스트 작성
+- [x] 커밋: `test: S3Path VO 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `S3Path.java` 생성 (Record)
+- [x] `from(UserRole, Long, String, String, String, String)` 메서드 구현
+- [x] `getFullPath()` 메서드 구현
+- [x] `extractExtension(String mimeType)` 메서드 구현
+- [x] Role별 네임스페이스 로직 구현
+- [x] 커밋: `impl: S3Path VO 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] 경로 생성 로직 명확화
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과
+- [x] 커밋: `refactor: S3Path VO 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `S3PathFixture.java` 생성
+- [x] `S3PathFixture.from(UserRole, ...)` 메서드 작성
+- [x] Role별 Fixture 메서드 추가
+- [x] 커밋: `test: S3PathFixture 정리 (Tidy)`
+
+---
+
+### 9️⃣ Domain Exception: SessionErrorCode Enum (Cycle 9)
+
+#### 🔴 Red: 테스트 작성
+- [x] `SessionErrorCodeTest.java` 생성
+- [x] 각 ErrorCode의 code, message, httpStatus 검증 테스트 작성
+- [x] 커밋: `test: SessionErrorCode Enum 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `SessionErrorCode.java` 생성 (Enum)
+- [x] FILE_SIZE_EXCEEDED, UNSUPPORTED_FILE_TYPE, INVALID_SESSION_STATUS, SESSION_EXPIRED 정의
+- [x] Getter 메서드 구현
+- [x] 커밋: `impl: SessionErrorCode Enum 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] 커밋: `refactor: SessionErrorCode Enum 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] TestFixture 불필요 (Enum)
+- [x] 커밋: `test: SessionErrorCode 테스트 정리 (Tidy)`
+
+---
+
+### 🔟 Domain Exception: DomainException 기본 클래스 (Cycle 10)
+
+#### 🔴 Red: 테스트 작성
+- [x] `DomainExceptionTest.java` 생성
+- [x] `shouldCreateExceptionWithErrorCode()` 테스트 작성
+- [x] `shouldReturnCorrectHttpStatus()` 테스트 작성
+- [x] 커밋: `test: DomainException 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `DomainException.java` 생성 (abstract class extends RuntimeException)
+- [x] errorCode, httpStatus 필드 추가
+- [x] protected 생성자 구현
+- [x] Getter 메서드 구현
+- [x] 커밋: `impl: DomainException 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] ArchUnit Exception 테스트 통과
+- [x] 커밋: `refactor: DomainException 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] TestFixture 불필요 (구체적인 예외 클래스에서 사용)
+- [x] 커밋: `test: DomainException 테스트 정리 (Tidy)`
+
+---
+
+### 1️⃣1️⃣ Domain Exception: FileSizeExceededException (Cycle 11)
+
+#### 🔴 Red: 테스트 작성
+- [x] `FileSizeExceededExceptionTest.java` 생성
+- [x] `shouldCreateExceptionWithCorrectMessage()` 테스트 작성
+- [x] `shouldReturnHttpStatus400()` 테스트 작성
+- [x] 커밋: `test: FileSizeExceededException 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `FileSizeExceededException.java` 생성 (extends DomainException)
+- [x] 생성자 구현 (actualSize, maxSize 파라미터)
+- [x] 메시지 포맷팅
+- [x] 커밋: `impl: FileSizeExceededException 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] 커밋: `refactor: FileSizeExceededException 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] TestFixture 불필요 (예외는 테스트에서 직접 생성)
+- [x] 커밋: `test: FileSizeExceededException 테스트 정리 (Tidy)`
+
+---
+
+### 1️⃣2️⃣ Domain Exception: 나머지 3종 (Cycle 12)
+
+#### 🔴 Red: 테스트 작성
+- [x] `UnsupportedFileTypeExceptionTest.java` 생성
+- [x] `InvalidSessionStatusExceptionTest.java` 생성
+- [x] `SessionExpiredExceptionTest.java` 생성
+- [x] 각 예외의 메시지, HTTP Status 검증 테스트 작성
+- [x] 커밋: `test: 나머지 Domain Exception 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `UnsupportedFileTypeException.java` 생성
+- [x] `InvalidSessionStatusException.java` 생성
+- [x] `SessionExpiredException.java` 생성
+- [x] 각 예외의 생성자 및 메시지 포맷팅 구현
+- [x] 커밋: `impl: 나머지 Domain Exception 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] ArchUnit Exception 테스트 통과
+- [x] 커밋: `refactor: Domain Exception 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] TestFixture 불필요
+- [x] 커밋: `test: Domain Exception 테스트 정리 (Tidy)`
+
+---
+
+### 1️⃣3️⃣ UploadSession Aggregate: 생성자 및 forNew() (Cycle 13)
+
+#### 🔴 Red: 테스트 작성
+- [x] `UploadSessionTest.java` 생성
+- [x] `shouldCreateNewSessionWithForNew()` 테스트 작성
+- [x] `shouldValidateFileSizeForUploadType()` 테스트 작성
+- [x] `shouldValidateMimeType()` 테스트 작성
+- [x] `shouldSetExpiresAt15Minutes()` 테스트 작성
+- [x] `shouldInitializeStatusAsPreparing()` 테스트 작성
+- [x] 커밋: `test: UploadSession forNew() 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `UploadSession.java` 생성 (Plain Java Class)
+- [x] private 생성자 구현
+- [x] `forNew(...)` 정적 메서드 구현
+- [x] Clock 필드 추가 및 주입
+- [x] createdAt, updatedAt = LocalDateTime.now(clock)
+- [x] expiresAt = createdAt + 15분
+- [x] 파일 크기, 타입 검증 로직
+- [x] 커밋: `impl: UploadSession forNew() 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] 검증 로직 메서드 추출
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (private 생성자, forNew() 필수)
+- [x] 커밋: `refactor: UploadSession forNew() 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `UploadSessionFixture.java` 생성
+- [x] `UploadSessionFixture.forNew()` 메서드 작성
+- [x] `UploadSessionTest` → Fixture 사용
+- [x] 커밋: `test: UploadSessionFixture 정리 (Tidy)`
+
+---
+
+### 1️⃣4️⃣ UploadSession Aggregate: of() 및 reconstitute() (Cycle 14)
+
+#### 🔴 Red: 테스트 작성
+- [x] `shouldCreateSessionWithOf()` 테스트 작성
+- [x] `shouldReconstituteSession()` 테스트 작성
+- [x] reconstitute()는 검증 로직 실행하지 않음 확인
+- [x] 커밋: `test: UploadSession of(), reconstitute() 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `of(SessionId sessionId, ...)` 정적 메서드 구현
+- [x] `reconstitute(...)` 정적 메서드 구현
+- [x] 모든 필드 파라미터로 받기 (createdAt, updatedAt 포함)
+- [x] 커밋: `impl: UploadSession of(), reconstitute() 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (of(), reconstitute() 필수)
+- [x] 커밋: `refactor: UploadSession 정적 메서드 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `UploadSessionFixture.of(SessionId)` 메서드 추가
+- [x] `UploadSessionFixture.reconstitute(...)` 메서드 추가
+- [x] 커밋: `test: UploadSessionFixture 정적 메서드 추가 (Tidy)`
+
+---
+
+### 1️⃣5️⃣ UploadSession Aggregate: 상태 전환 메서드 (Cycle 15)
+
+#### 🔴 Red: 테스트 작성
+- [x] `shouldActivateSession()` 테스트 작성 (PREPARING → ACTIVE)
+- [x] `shouldCompleteSession()` 테스트 작성 (ACTIVE → COMPLETED)
+- [x] `shouldExpireSession()` 테스트 작성 (ACTIVE → EXPIRED)
+- [x] `shouldFailSession()` 테스트 작성 (ACTIVE → FAILED)
+- [x] `shouldThrowExceptionWhenInvalidTransition()` 테스트 작성
+- [x] updatedAt 자동 갱신 확인 테스트
+- [x] 커밋: `test: UploadSession 상태 전환 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `activate()` 메서드 구현
+- [x] `complete()` 메서드 구현
+- [x] `expire()` 메서드 구현
+- [x] `fail()` 메서드 구현
+- [x] 각 메서드에서 `this.updatedAt = LocalDateTime.now(clock)` 필수
+- [x] 상태 전환 가능 여부 검증
+- [x] 커밋: `impl: UploadSession 상태 전환 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] 상태 전환 검증 로직 메서드 추출
+- [x] Javadoc 추가
+- [x] 커밋: `refactor: UploadSession 상태 전환 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] 다양한 상태의 UploadSession Fixture 메서드 추가
+- [x] `withStatusActive()`, `withStatusCompleted()` 등
+- [x] 커밋: `test: UploadSessionFixture 상태 메서드 추가 (Tidy)`
+
+---
+
+### 1️⃣6️⃣ UploadSession Aggregate: Tell Don't Ask 메서드 (Cycle 16)
+
+#### 🔴 Red: 테스트 작성
+- [x] `shouldCheckIsExpired()` 테스트 작성
+- [x] `shouldCheckCanComplete()` 테스트 작성
+- [x] `shouldCheckIsActive()` 테스트 작성
+- [x] `shouldCheckIsPreparing()` 테스트 작성
+- [x] `shouldCheckCanActivate()` 테스트 작성
+- [x] 커밋: `test: UploadSession Tell Don't Ask 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `isExpired()` 메서드 구현
+- [x] `canComplete()` 메서드 구현
+- [x] `isActive()` 메서드 구현
+- [x] `isPreparing()` 메서드 구현
+- [x] `canActivate()` 메서드 구현
+- [x] 커밋: `impl: UploadSession Tell Don't Ask 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (is*, can* 메서드 확인)
+- [x] 커밋: `refactor: UploadSession Tell Don't Ask 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] 테스트 코드 간소화
+- [x] 커밋: `test: UploadSession Tell Don't Ask 테스트 정리 (Tidy)`
+
+---
+
+### 1️⃣7️⃣ UploadSession Aggregate: Law of Demeter 메서드 (Cycle 17)
+
+#### 🔴 Red: 테스트 작성
+- [x] `shouldGetSessionIdValue()` 테스트 작성
+- [x] `getSessionIdValue()` 반환값 검증 (String)
+- [x] 커밋: `test: UploadSession Law of Demeter 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `getSessionIdValue()` 메서드 구현 (return sessionId.value())
+- [x] 커밋: `impl: UploadSession Law of Demeter 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (getIdValue() 필수)
+- [x] 커밋: `refactor: UploadSession Law of Demeter 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] 테스트 코드 간소화
+- [x] 커밋: `test: UploadSession Law of Demeter 테스트 정리 (Tidy)`
+
+---
+
+### 1️⃣8️⃣ File Aggregate: forNew(), of(), reconstitute() (Cycle 18)
+
+#### 🔴 Red: 테스트 작성
+- [x] `FileTest.java` 생성
+- [x] `shouldCreateNewFileWithForNew()` 테스트 작성
+- [x] `shouldCreateFileWithOf()` 테스트 작성
+- [x] `shouldReconstituteFile()` 테스트 작성
+- [x] uploadedAt, updatedAt 자동 설정 확인
+- [x] 커밋: `test: File Aggregate 정적 메서드 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `File.java` 생성 (Plain Java Class)
+- [x] private 생성자 구현
+- [x] `forNew(...)` 정적 메서드 구현
+- [x] `of(SessionId fileId, ...)` 정적 메서드 구현
+- [x] `reconstitute(...)` 정적 메서드 구현
+- [x] Clock 주입 및 uploadedAt, updatedAt 설정
+- [x] 커밋: `impl: File Aggregate 정적 메서드 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (private 생성자, forNew(), of(), reconstitute() 필수)
+- [x] 커밋: `refactor: File Aggregate 정적 메서드 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `FileFixture.java` 생성
+- [x] `FileFixture.forNew()` 메서드 작성
+- [x] `FileFixture.of(SessionId)` 메서드 작성
+- [x] `FileFixture.reconstitute(...)` 메서드 작성
+- [x] 커밋: `test: FileFixture 정리 (Tidy)`
+
+---
+
+### 1️⃣9️⃣ File Aggregate: delete() 메서드 (Cycle 19)
+
+#### 🔴 Red: 테스트 작성
+- [x] `shouldDeleteFile()` 테스트 작성
+- [x] deleted = true, deletedAt 설정 확인
+- [x] updatedAt 자동 갱신 확인
+- [x] 커밋: `test: File delete() 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `delete()` 메서드 구현
+- [x] deleted = true
+- [x] deletedAt = LocalDateTime.now(clock)
+- [x] updatedAt = LocalDateTime.now(clock)
+- [x] 커밋: `impl: File delete() 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] 커밋: `refactor: File delete() 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] `FileFixture.deleted()` 메서드 추가 (삭제된 파일 Fixture)
+- [x] 커밋: `test: FileFixture delete 메서드 추가 (Tidy)`
+
+---
+
+### 2️⃣0️⃣ File Aggregate: Tell Don't Ask 및 Law of Demeter (Cycle 20)
+
+#### 🔴 Red: 테스트 작성
+- [x] `shouldCheckIsDeleted()` 테스트 작성
+- [x] `shouldCheckCanDelete()` 테스트 작성
+- [x] `shouldGetFileIdValue()` 테스트 작성
+- [x] 커밋: `test: File Tell Don't Ask 및 Law of Demeter 테스트 추가 (Red)`
+
+#### 🟢 Green: 최소 구현
+- [x] `isDeleted()` 메서드 구현
+- [x] `canDelete()` 메서드 구현 (이미 삭제된 경우 false)
+- [x] `getFileIdValue()` 메서드 구현 (return fileId.value())
+- [x] 커밋: `impl: File Tell Don't Ask 및 Law of Demeter 구현 (Green)`
+
+#### ♻️ Refactor: 리팩토링
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과
+- [x] 커밋: `refactor: File 메서드 개선 (Refactor)`
+
+#### 🧹 Tidy: TestFixture 정리
+- [x] 모든 Fixture 최종 정리
+- [x] 커밋: `test: File Fixture 최종 정리 (Tidy)`
+
+---
+
+## ✅ 완료 조건
+
+- [ ] 모든 TDD 사이클 완료 (20 사이클 × 4단계 = 80 체크박스)
+- [ ] 모든 테스트 통과
+- [ ] ArchUnit 테스트 통과 (32개 규칙)
+  - Aggregate 규칙 (24개)
+  - Value Object 규칙 (8개)
+- [ ] Zero-Tolerance 규칙 준수
+  - Lombok 금지
+  - Long FK 전략
+  - Law of Demeter
+  - Tell Don't Ask
+- [ ] TestFixture 모두 정리 (Object Mother 패턴)
+- [ ] 테스트 커버리지 > 80%
+
+---
+
+## 🔗 관련 문서
+
+- Task: docs/prd/session/FILE-006-001.md
+- PRD: /Users/sangwon-ryu/fileflow/docs/prd/presigned-url-upload.md
+- Domain Layer 규칙: docs/coding_convention/02-domain-layer/
+
+---
+
+## 📊 사이클 요약
+
+**총 사이클 수**: 20
+**예상 소요 시간**: 300분 (5시간)
+**Red 단계**: 20개
+**Green 단계**: 20개
+**Refactor 단계**: 20개
+**Tidy 단계**: 20개
+
+**레이어별 분류**:
+- Value Objects: 8 사이클
+- Enums: 4 사이클
+- Domain Exceptions: 4 사이클
+- UploadSession Aggregate: 5 사이클
+- File Aggregate: 3 사이클
+
+---
+
+## 🔧 다음 단계
+
+1. `/kb/domain/go` - TDD 사이클 시작 (자동으로 다음 체크박스 진행)
+2. 각 사이클마다 4단계 커밋 (test: → impl: → refactor: → test:)
+3. 모든 사이클 완료 후 FILE-006-002 (Application Layer) 시작
