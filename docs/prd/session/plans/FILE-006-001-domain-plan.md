@@ -348,13 +348,13 @@
 - [x] 커밋: `impl: 나머지 Domain Exception 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] ArchUnit Exception 테스트 통과
-- [ ] 커밋: `refactor: Domain Exception 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] ArchUnit Exception 테스트 통과
+- [x] 커밋: `refactor: Domain Exception 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture 불필요
-- [ ] 커밋: `test: Domain Exception 테스트 정리 (Tidy)`
+- [x] TestFixture 불필요
+- [x] 커밋: `test: Domain Exception 테스트 정리 (Tidy)`
 
 ---
 
