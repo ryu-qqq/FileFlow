@@ -563,10 +563,10 @@
 ### 2️⃣0️⃣ File Aggregate: Tell Don't Ask 및 Law of Demeter (Cycle 20)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldCheckIsDeleted()` 테스트 작성
-- [ ] `shouldCheckCanDelete()` 테스트 작성
-- [ ] `shouldGetFileIdValue()` 테스트 작성
-- [ ] 커밋: `test: File Tell Don't Ask 및 Law of Demeter 테스트 추가 (Red)`
+- [x] `shouldCheckIsDeleted()` 테스트 작성
+- [x] `shouldCheckCanDelete()` 테스트 작성
+- [x] `shouldGetFileIdValue()` 테스트 작성
+- [x] 커밋: `test: File Tell Don't Ask 및 Law of Demeter 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `isDeleted()` 메서드 구현

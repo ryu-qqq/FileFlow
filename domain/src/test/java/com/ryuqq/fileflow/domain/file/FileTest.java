@@ -247,5 +247,86 @@ class FileTest {
         assertThat(file.getUpdatedAt()).isAfter(oldUpdatedAt);
         assertThat(file.getUpdatedAt()).isEqualTo(FIXED_TIME);
     }
+
+    @Test
+    @DisplayName("isDeleted()로 파일이 삭제되었는지 확인할 수 있어야 한다")
+    void shouldCheckIsDeleted() {
+        // given - 삭제되지 않은 파일
+        UploadSession session = UploadSession.forNew(
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            FIXED_CLOCK
+        );
+        File notDeletedFile = File.forNew(session, FIXED_CLOCK);
+
+        // given - 삭제된 파일
+        File deletedFile = File.forNew(session, FIXED_CLOCK);
+        deletedFile.delete();
+
+        // when & then
+        assertThat(notDeletedFile.isDeleted()).isFalse();
+        assertThat(deletedFile.isDeleted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("canDelete()로 파일을 삭제할 수 있는지 확인할 수 있어야 한다")
+    void shouldCheckCanDelete() {
+        // given - 삭제되지 않은 파일
+        UploadSession session = UploadSession.forNew(
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            FIXED_CLOCK
+        );
+        File notDeletedFile = File.forNew(session, FIXED_CLOCK);
+
+        // given - 삭제된 파일
+        File deletedFile = File.forNew(session, FIXED_CLOCK);
+        deletedFile.delete();
+
+        // when & then
+        assertThat(notDeletedFile.canDelete()).isTrue();
+        assertThat(deletedFile.canDelete()).isFalse();
+    }
+
+    @Test
+    @DisplayName("getFileIdValue()로 FileId의 원시 값을 반환할 수 있어야 한다")
+    void shouldGetFileIdValue() {
+        // given
+        SessionId fileId = SessionId.from("550e8400-e29b-41d4-a716-446655440000");
+        UploadSession session = UploadSession.forNew(
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            FIXED_CLOCK
+        );
+        File file = File.of(fileId, session, FIXED_CLOCK);
+
+        // when
+        String fileIdValue = file.getFileIdValue();
+
+        // then
+        assertThat(fileIdValue).isEqualTo("550e8400-e29b-41d4-a716-446655440000");
+        assertThat(fileIdValue).isEqualTo(fileId.value());
+    }
 }
 
