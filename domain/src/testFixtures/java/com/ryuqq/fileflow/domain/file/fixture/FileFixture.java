@@ -65,5 +65,16 @@ public final class FileFixture {
             deletedAt
         );
     }
+
+    /**
+     * 삭제된 파일 Fixture.
+     *
+     * @return 삭제된 File
+     */
+    public static File deleted() {
+        File file = forNew();
+        file.delete();
+        return file;
+    }
 }
 
