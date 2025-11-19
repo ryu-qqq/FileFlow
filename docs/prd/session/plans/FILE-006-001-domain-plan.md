@@ -431,13 +431,13 @@
 - [x] 커밋: `test: UploadSession 상태 전환 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `activate()` 메서드 구현
-- [ ] `complete()` 메서드 구현
-- [ ] `expire()` 메서드 구현
-- [ ] `fail()` 메서드 구현
-- [ ] 각 메서드에서 `this.updatedAt = LocalDateTime.now(clock)` 필수
-- [ ] 상태 전환 가능 여부 검증
-- [ ] 커밋: `impl: UploadSession 상태 전환 구현 (Green)`
+- [x] `activate()` 메서드 구현
+- [x] `complete()` 메서드 구현
+- [x] `expire()` 메서드 구현
+- [x] `fail()` 메서드 구현
+- [x] 각 메서드에서 `this.updatedAt = LocalDateTime.now(clock)` 필수
+- [x] 상태 전환 가능 여부 검증
+- [x] 커밋: `impl: UploadSession 상태 전환 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] 상태 전환 검증 로직 메서드 추출

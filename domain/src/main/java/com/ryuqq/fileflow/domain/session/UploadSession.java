@@ -10,6 +10,7 @@ import com.ryuqq.fileflow.domain.file.vo.MimeType;
 import com.ryuqq.fileflow.domain.file.vo.S3Path;
 import com.ryuqq.fileflow.domain.file.vo.UploadType;
 import com.ryuqq.fileflow.domain.session.exception.FileSizeExceededException;
+import com.ryuqq.fileflow.domain.session.exception.InvalidSessionStatusException;
 import com.ryuqq.fileflow.domain.session.vo.SessionId;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.UserRole;
@@ -347,6 +348,65 @@ public class UploadSession {
             expiresAt,
             completedAt
         );
+    }
+
+    // ==================== 비즈니스 메서드 ====================
+
+    /**
+     * 세션 활성화 (PREPARING → ACTIVE).
+     *
+     * @throws InvalidSessionStatusException 상태 전환이 불가능한 경우
+     */
+    public void activate() {
+        validateTransition(SessionStatus.ACTIVE);
+        this.status = SessionStatus.ACTIVE;
+        this.updatedAt = LocalDateTime.now(clock);
+    }
+
+    /**
+     * 세션 완료 (ACTIVE → COMPLETED).
+     *
+     * @throws InvalidSessionStatusException 상태 전환이 불가능한 경우
+     */
+    public void complete() {
+        validateTransition(SessionStatus.COMPLETED);
+        this.status = SessionStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
+    }
+
+    /**
+     * 세션 만료 (ACTIVE → EXPIRED).
+     *
+     * @throws InvalidSessionStatusException 상태 전환이 불가능한 경우
+     */
+    public void expire() {
+        validateTransition(SessionStatus.EXPIRED);
+        this.status = SessionStatus.EXPIRED;
+        this.updatedAt = LocalDateTime.now(clock);
+    }
+
+    /**
+     * 세션 실패 (ACTIVE → FAILED).
+     *
+     * @throws InvalidSessionStatusException 상태 전환이 불가능한 경우
+     */
+    public void fail() {
+        validateTransition(SessionStatus.FAILED);
+        this.status = SessionStatus.FAILED;
+        this.updatedAt = LocalDateTime.now(clock);
+    }
+
+    /**
+     * 상태 전환 가능 여부를 검증한다.
+     *
+     * @param nextStatus 다음 상태
+     * @throws InvalidSessionStatusException 상태 전환이 불가능한 경우
+     */
+    private void validateTransition(SessionStatus nextStatus) {
+        if (!this.status.canTransitionTo(nextStatus)) {
+            throw new InvalidSessionStatusException(this.status, nextStatus);
+        }
     }
 
     // ==================== Getter 메서드 ====================

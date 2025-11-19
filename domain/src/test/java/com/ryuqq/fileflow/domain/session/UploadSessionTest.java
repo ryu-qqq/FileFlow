@@ -383,7 +383,7 @@ class UploadSessionTest {
 
         // then
         assertThat(session.getStatus()).isEqualTo(SessionStatus.ACTIVE);
-        assertThat(session.getUpdatedAt()).isAfter(beforeUpdate);
+        assertThat(session.getUpdatedAt()).isEqualTo(FIXED_TIME);
     }
 
     @Test
@@ -417,8 +417,8 @@ class UploadSessionTest {
         // then
         assertThat(session.getStatus()).isEqualTo(SessionStatus.COMPLETED);
         assertThat(session.getCompletedAt()).isNotNull();
-        assertThat(session.getCompletedAt()).isAfterOrEqualTo(FIXED_TIME);
-        assertThat(session.getUpdatedAt()).isAfter(beforeUpdate);
+        assertThat(session.getCompletedAt()).isEqualTo(FIXED_TIME);
+        assertThat(session.getUpdatedAt()).isEqualTo(FIXED_TIME);
     }
 
     @Test
@@ -451,7 +451,7 @@ class UploadSessionTest {
 
         // then
         assertThat(session.getStatus()).isEqualTo(SessionStatus.EXPIRED);
-        assertThat(session.getUpdatedAt()).isAfter(beforeUpdate);
+        assertThat(session.getUpdatedAt()).isEqualTo(FIXED_TIME);
     }
 
     @Test
@@ -484,7 +484,7 @@ class UploadSessionTest {
 
         // then
         assertThat(session.getStatus()).isEqualTo(SessionStatus.FAILED);
-        assertThat(session.getUpdatedAt()).isAfter(beforeUpdate);
+        assertThat(session.getUpdatedAt()).isEqualTo(FIXED_TIME);
     }
 
     @Test
