@@ -4,12 +4,13 @@
 # Git Post-Commit Hook for LangFuse TDD Tracking
 # =====================================================
 
-# .env 파일 로드 (LangFuse 환경 변수)
-if [[ -f ".env" ]]; then
-    set -a
-    source .env
-    set +a
-fi
+# LangFuse 환경 변수는 ~/.zshrc에 설정되어 있음
+# 설정 방법:
+#   echo 'export LANGFUSE_PUBLIC_KEY="pk-lf-..."' >> ~/.zshrc
+#   echo 'export LANGFUSE_SECRET_KEY="sk-lf-..."' >> ~/.zshrc
+#   echo 'export LANGFUSE_HOST="https://us.cloud.langfuse.com"' >> ~/.zshrc
+#   source ~/.zshrc
+
 
 # 프로젝트 정보
 PROJECT_NAME=$(basename "$(pwd)")
@@ -27,24 +28,16 @@ if echo "$COMMIT_MSG" | grep -qiE "^struct:"; then
     TDD_PHASE="structural"
 elif echo "$COMMIT_MSG" | grep -qiE "^test:"; then
     TDD_PHASE="red"
-elif echo "$COMMIT_MSG" | grep -qiE "^impl:|^feat:"; then
+elif echo "$COMMIT_MSG" | grep -qiE "^(impl:|feat:|fix:)"; then
     TDD_PHASE="green"
 elif echo "$COMMIT_MSG" | grep -qiE "^refactor:"; then
     TDD_PHASE="refactor"
+elif echo "$COMMIT_MSG" | grep -qiE "^(docs:|chore:)"; then
+    TDD_PHASE="non-tdd"
 fi
 
-# LangFuse 로거 호출
+# LangFuse 로거 호출 (외부 전송 비활성화)
 LANGFUSE_LOGGER=".claude/scripts/log-to-langfuse.py"
 if [[ -f "$LANGFUSE_LOGGER" ]]; then
-    python3 "$LANGFUSE_LOGGER" \
-        --event-type "tdd_commit" \
-        --data "{
-            \"project\": \"$PROJECT_NAME\",
-            \"commit_hash\": \"$COMMIT_HASH\",
-            \"commit_msg\": \"$COMMIT_MSG\",
-            \"tdd_phase\": \"$TDD_PHASE\",
-            \"files_changed\": \"$FILES_CHANGED\",
-            \"lines_changed\": \"$LINES_CHANGED\",
-            \"timestamp\": \"$TIMESTAMP\"
-        }" 2>/dev/null
+    echo "[TDD Tracker] ${PROJECT_NAME} ${COMMIT_HASH} (${TDD_PHASE}) - LangFuse 전송 비활성화"
 fi
