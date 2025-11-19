@@ -413,9 +413,9 @@
 - [x] 커밋: `refactor: UploadSession 정적 메서드 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `UploadSessionFixture.of(SessionId)` 메서드 추가
-- [ ] `UploadSessionFixture.reconstitute(...)` 메서드 추가
-- [ ] 커밋: `test: UploadSessionFixture 정적 메서드 추가 (Tidy)`
+- [x] `UploadSessionFixture.of(SessionId)` 메서드 추가
+- [x] `UploadSessionFixture.reconstitute(...)` 메서드 추가
+- [x] 커밋: `test: UploadSessionFixture 정적 메서드 추가 (Tidy)`
 
 ---
 
