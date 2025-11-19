@@ -215,9 +215,9 @@
 - [x] 커밋: `impl: SessionStatus Enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] switch 표현식 최적화
-- [ ] 커밋: `refactor: SessionStatus Enum 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] switch 표현식 최적화
+- [x] 커밋: `refactor: SessionStatus Enum 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] TestFixture 불필요 (Enum은 자체적으로 상수)
