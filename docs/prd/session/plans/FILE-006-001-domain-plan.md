@@ -422,13 +422,13 @@
 ### 1️⃣5️⃣ UploadSession Aggregate: 상태 전환 메서드 (Cycle 15)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldActivateSession()` 테스트 작성 (PREPARING → ACTIVE)
-- [ ] `shouldCompleteSession()` 테스트 작성 (ACTIVE → COMPLETED)
-- [ ] `shouldExpireSession()` 테스트 작성 (ACTIVE → EXPIRED)
-- [ ] `shouldFailSession()` 테스트 작성 (ACTIVE → FAILED)
-- [ ] `shouldThrowExceptionWhenInvalidTransition()` 테스트 작성
-- [ ] updatedAt 자동 갱신 확인 테스트
-- [ ] 커밋: `test: UploadSession 상태 전환 테스트 추가 (Red)`
+- [x] `shouldActivateSession()` 테스트 작성 (PREPARING → ACTIVE)
+- [x] `shouldCompleteSession()` 테스트 작성 (ACTIVE → COMPLETED)
+- [x] `shouldExpireSession()` 테스트 작성 (ACTIVE → EXPIRED)
+- [x] `shouldFailSession()` 테스트 작성 (ACTIVE → FAILED)
+- [x] `shouldThrowExceptionWhenInvalidTransition()` 테스트 작성
+- [x] updatedAt 자동 갱신 확인 테스트
+- [x] 커밋: `test: UploadSession 상태 전환 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `activate()` 메서드 구현

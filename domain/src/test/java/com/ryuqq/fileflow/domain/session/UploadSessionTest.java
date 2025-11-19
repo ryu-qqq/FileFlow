@@ -10,6 +10,7 @@ import com.ryuqq.fileflow.domain.file.vo.MimeType;
 import com.ryuqq.fileflow.domain.file.vo.S3Path;
 import com.ryuqq.fileflow.domain.file.vo.UploadType;
 import com.ryuqq.fileflow.domain.session.exception.FileSizeExceededException;
+import com.ryuqq.fileflow.domain.session.exception.InvalidSessionStatusException;
 import com.ryuqq.fileflow.domain.session.vo.SessionId;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.UserRole;
@@ -350,6 +351,202 @@ class UploadSessionTest {
         // then - 검증 없이 생성되었음을 확인
         assertThat(session.getFileSize()).isEqualTo(oversizedFile);
         assertThat(session.getSessionId()).isEqualTo(sessionId);
+    }
+
+    @Test
+    @DisplayName("activate()로 세션을 활성화할 수 있어야 한다 (PREPARING → ACTIVE)")
+    void shouldActivateSession() {
+        // given
+        UploadSession session = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L, // userId
+            1L, // tenantId
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.PREPARING,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+        LocalDateTime beforeUpdate = session.getUpdatedAt();
+
+        // when
+        session.activate();
+
+        // then
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.ACTIVE);
+        assertThat(session.getUpdatedAt()).isAfter(beforeUpdate);
+    }
+
+    @Test
+    @DisplayName("complete()로 세션을 완료할 수 있어야 한다 (ACTIVE → COMPLETED)")
+    void shouldCompleteSession() {
+        // given
+        UploadSession session = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L, // userId
+            1L, // tenantId
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+        LocalDateTime beforeUpdate = session.getUpdatedAt();
+
+        // when
+        session.complete();
+
+        // then
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.COMPLETED);
+        assertThat(session.getCompletedAt()).isNotNull();
+        assertThat(session.getCompletedAt()).isAfterOrEqualTo(FIXED_TIME);
+        assertThat(session.getUpdatedAt()).isAfter(beforeUpdate);
+    }
+
+    @Test
+    @DisplayName("expire()로 세션을 만료시킬 수 있어야 한다 (ACTIVE → EXPIRED)")
+    void shouldExpireSession() {
+        // given
+        UploadSession session = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L, // userId
+            1L, // tenantId
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+        LocalDateTime beforeUpdate = session.getUpdatedAt();
+
+        // when
+        session.expire();
+
+        // then
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.EXPIRED);
+        assertThat(session.getUpdatedAt()).isAfter(beforeUpdate);
+    }
+
+    @Test
+    @DisplayName("fail()로 세션을 실패시킬 수 있어야 한다 (ACTIVE → FAILED)")
+    void shouldFailSession() {
+        // given
+        UploadSession session = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L, // userId
+            1L, // tenantId
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+        LocalDateTime beforeUpdate = session.getUpdatedAt();
+
+        // when
+        session.fail();
+
+        // then
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.FAILED);
+        assertThat(session.getUpdatedAt()).isAfter(beforeUpdate);
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 상태 전환이면 예외가 발생해야 한다")
+    void shouldThrowExceptionWhenInvalidTransition() {
+        // given - COMPLETED 상태에서 ACTIVE로 전환 시도
+        UploadSession session = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L, // userId
+            1L, // tenantId
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.COMPLETED,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            FIXED_TIME
+        );
+
+        // when & then
+        assertThatThrownBy(() -> session.activate())
+            .isInstanceOf(InvalidSessionStatusException.class);
+    }
+
+    @Test
+    @DisplayName("상태 전환 시 updatedAt이 자동으로 갱신되어야 한다")
+    void shouldUpdateUpdatedAtOnStatusTransition() {
+        // given
+        UploadSession session = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L, // userId
+            1L, // tenantId
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.PREPARING,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME.minusHours(1), // 1시간 전
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+        LocalDateTime oldUpdatedAt = session.getUpdatedAt();
+
+        // when
+        session.activate();
+
+        // then
+        assertThat(session.getUpdatedAt()).isAfter(oldUpdatedAt);
+        assertThat(session.getUpdatedAt()).isEqualTo(FIXED_TIME);
     }
 }
 
