@@ -245,10 +245,10 @@
 - [x] 커밋: `impl: S3Path VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 경로 생성 로직 명확화
-- [ ] Javadoc 추가
-- [ ] ArchUnit VO 테스트 통과
-- [ ] 커밋: `refactor: S3Path VO 개선 (Refactor)`
+- [x] 경로 생성 로직 명확화
+- [x] Javadoc 추가
+- [x] ArchUnit VO 테스트 통과
+- [x] 커밋: `refactor: S3Path VO 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] `S3PathFixture.java` 생성
