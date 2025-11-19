@@ -310,10 +310,10 @@
 ### 1️⃣1️⃣ Domain Exception: FileSizeExceededException (Cycle 11)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileSizeExceededExceptionTest.java` 생성
-- [ ] `shouldCreateExceptionWithCorrectMessage()` 테스트 작성
-- [ ] `shouldReturnHttpStatus400()` 테스트 작성
-- [ ] 커밋: `test: FileSizeExceededException 테스트 추가 (Red)`
+- [x] `FileSizeExceededExceptionTest.java` 생성
+- [x] `shouldCreateExceptionWithCorrectMessage()` 테스트 작성
+- [x] `shouldReturnHttpStatus400()` 테스트 작성
+- [x] 커밋: `test: FileSizeExceededException 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `FileSizeExceededException.java` 생성 (extends DomainException)
