@@ -488,17 +488,17 @@
 - [x] 커밋: `test: UploadSession Law of Demeter 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `getSessionIdValue()` 메서드 구현 (return sessionId.value())
-- [ ] 커밋: `impl: UploadSession Law of Demeter 구현 (Green)`
+- [x] `getSessionIdValue()` 메서드 구현 (return sessionId.value())
+- [x] 커밋: `impl: UploadSession Law of Demeter 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] Aggregate ArchUnit 테스트 통과 (getIdValue() 필수)
-- [ ] 커밋: `refactor: UploadSession Law of Demeter 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (getIdValue() 필수)
+- [x] 커밋: `refactor: UploadSession Law of Demeter 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 테스트 코드 간소화
-- [ ] 커밋: `test: UploadSession Law of Demeter 테스트 정리 (Tidy)`
+- [x] 테스트 코드 간소화
+- [x] 커밋: `test: UploadSession Law of Demeter 테스트 정리 (Tidy)`
 
 ---
 

@@ -462,6 +462,19 @@ public class UploadSession {
         return sessionId;
     }
 
+    /**
+     * SessionId의 원시 값을 반환한다 (Law of Demeter 준수).
+     *
+     * <p>
+     * 외부 레이어에서 SessionId VO를 직접 노출하지 않고 원시 값을 반환합니다.
+     * </p>
+     *
+     * @return SessionId의 UUID 문자열 값
+     */
+    public String getSessionIdValue() {
+        return sessionId.value();
+    }
+
     public Long getUserId() {
         return userId;
     }
