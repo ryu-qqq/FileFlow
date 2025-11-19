@@ -251,10 +251,10 @@
 - [x] 커밋: `refactor: S3Path VO 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `S3PathFixture.java` 생성
-- [ ] `S3PathFixture.from(UserRole, ...)` 메서드 작성
-- [ ] Role별 Fixture 메서드 추가
-- [ ] 커밋: `test: S3PathFixture 정리 (Tidy)`
+- [x] `S3PathFixture.java` 생성
+- [x] `S3PathFixture.from(UserRole, ...)` 메서드 작성
+- [x] Role별 Fixture 메서드 추가
+- [x] 커밋: `test: S3PathFixture 정리 (Tidy)`
 
 ---
 
