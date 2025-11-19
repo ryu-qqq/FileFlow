@@ -269,12 +269,43 @@ public class File {
         return updatedAt;
     }
 
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    // ==================== 상태 조회 메서드 (Tell Don't Ask) ====================
+
+    /**
+     * 파일이 삭제되었는지 확인한다.
+     *
+     * @return 삭제되었으면 true
+     */
     public boolean isDeleted() {
         return deleted;
     }
 
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
+    /**
+     * 파일을 삭제할 수 있는지 확인한다.
+     *
+     * @return 삭제되지 않은 경우 true, 이미 삭제된 경우 false
+     */
+    public boolean canDelete() {
+        return !deleted;
+    }
+
+    // ==================== Law of Demeter 준수 메서드 ====================
+
+    /**
+     * FileId의 원시 값을 반환한다 (Law of Demeter 준수).
+     *
+     * <p>
+     * 외부 레이어에서 FileId VO를 직접 노출하지 않고 원시 값을 반환합니다.
+     * </p>
+     *
+     * @return FileId의 UUID 문자열 값
+     */
+    public String getFileIdValue() {
+        return fileId.value();
     }
 }
 

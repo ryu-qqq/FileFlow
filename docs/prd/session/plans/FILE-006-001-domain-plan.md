@@ -569,19 +569,19 @@
 - [x] 커밋: `test: File Tell Don't Ask 및 Law of Demeter 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `isDeleted()` 메서드 구현
-- [ ] `canDelete()` 메서드 구현 (이미 삭제된 경우 false)
-- [ ] `getFileIdValue()` 메서드 구현 (return fileId.value())
-- [ ] 커밋: `impl: File Tell Don't Ask 및 Law of Demeter 구현 (Green)`
+- [x] `isDeleted()` 메서드 구현
+- [x] `canDelete()` 메서드 구현 (이미 삭제된 경우 false)
+- [x] `getFileIdValue()` 메서드 구현 (return fileId.value())
+- [x] 커밋: `impl: File Tell Don't Ask 및 Law of Demeter 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] Aggregate ArchUnit 테스트 통과
-- [ ] 커밋: `refactor: File 메서드 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과
+- [x] 커밋: `refactor: File 메서드 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 모든 Fixture 최종 정리
-- [ ] 커밋: `test: File Fixture 최종 정리 (Tidy)`
+- [x] 모든 Fixture 최종 정리
+- [x] 커밋: `test: File Fixture 최종 정리 (Tidy)`
 
 ---
 
