@@ -483,9 +483,9 @@
 ### 1️⃣7️⃣ UploadSession Aggregate: Law of Demeter 메서드 (Cycle 17)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldGetSessionIdValue()` 테스트 작성
-- [ ] `getSessionIdValue()` 반환값 검증 (String)
-- [ ] 커밋: `test: UploadSession Law of Demeter 테스트 추가 (Red)`
+- [x] `shouldGetSessionIdValue()` 테스트 작성
+- [x] `getSessionIdValue()` 반환값 검증 (String)
+- [x] 커밋: `test: UploadSession Law of Demeter 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `getSessionIdValue()` 메서드 구현 (return sessionId.value())

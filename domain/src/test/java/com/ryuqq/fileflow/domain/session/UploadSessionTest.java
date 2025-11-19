@@ -798,5 +798,38 @@ class UploadSessionTest {
         assertThat(preparingSession.canActivate()).isTrue();
         assertThat(activeSession.canActivate()).isFalse();
     }
+
+    @Test
+    @DisplayName("getSessionIdValue()로 SessionId의 원시 값을 반환할 수 있어야 한다")
+    void shouldGetSessionIdValue() {
+        // given
+        SessionId sessionId = SessionId.from("550e8400-e29b-41d4-a716-446655440000");
+        UploadSession session = UploadSession.reconstitute(
+            sessionId,
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", sessionId.value(), "image/jpeg"),
+            SessionStatus.PREPARING,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // when
+        String sessionIdValue = session.getSessionIdValue();
+
+        // then
+        assertThat(sessionIdValue).isEqualTo("550e8400-e29b-41d4-a716-446655440000");
+        assertThat(sessionIdValue).isEqualTo(sessionId.value());
+    }
 }
 
