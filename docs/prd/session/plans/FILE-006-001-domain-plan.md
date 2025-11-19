@@ -505,12 +505,12 @@
 ### 1️⃣8️⃣ File Aggregate: forNew(), of(), reconstitute() (Cycle 18)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileTest.java` 생성
-- [ ] `shouldCreateNewFileWithForNew()` 테스트 작성
-- [ ] `shouldCreateFileWithOf()` 테스트 작성
-- [ ] `shouldReconstituteFile()` 테스트 작성
-- [ ] uploadedAt, updatedAt 자동 설정 확인
-- [ ] 커밋: `test: File Aggregate 정적 메서드 테스트 추가 (Red)`
+- [x] `FileTest.java` 생성
+- [x] `shouldCreateNewFileWithForNew()` 테스트 작성
+- [x] `shouldCreateFileWithOf()` 테스트 작성
+- [x] `shouldReconstituteFile()` 테스트 작성
+- [x] uploadedAt, updatedAt 자동 설정 확인
+- [x] 커밋: `test: File Aggregate 정적 메서드 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `File.java` 생성 (Plain Java Class)
