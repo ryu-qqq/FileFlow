@@ -316,10 +316,10 @@
 - [x] 커밋: `test: FileSizeExceededException 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileSizeExceededException.java` 생성 (extends DomainException)
-- [ ] 생성자 구현 (actualSize, maxSize 파라미터)
-- [ ] 메시지 포맷팅
-- [ ] 커밋: `impl: FileSizeExceededException 구현 (Green)`
+- [x] `FileSizeExceededException.java` 생성 (extends DomainException)
+- [x] 생성자 구현 (actualSize, maxSize 파라미터)
+- [x] 메시지 포맷팅
+- [x] 커밋: `impl: FileSizeExceededException 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] Javadoc 추가
