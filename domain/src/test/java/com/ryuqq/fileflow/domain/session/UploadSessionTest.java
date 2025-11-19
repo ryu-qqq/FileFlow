@@ -198,5 +198,158 @@ class UploadSessionTest {
         // then
         assertThat(session.getStatus()).isEqualTo(SessionStatus.PREPARING);
     }
+
+    @Test
+    @DisplayName("of()로 기존 SessionId로 세션을 생성할 수 있어야 한다")
+    void shouldCreateSessionWithOf() {
+        // given
+        SessionId sessionId = SessionId.from("550e8400-e29b-41d4-a716-446655440000");
+        UploadType uploadType = UploadType.SINGLE;
+        String customPath = "uploads";
+        FileName fileName = FileName.from("test.jpg");
+        FileSize fileSize = FileSize.of(1024 * 1024); // 1MB
+        MimeType mimeType = MimeType.of("image/jpeg");
+        Long userId = 1L;
+        Long tenantId = 1L;
+        UserRole role = UserRole.DEFAULT;
+        String sellerName = "seller1";
+
+        // when
+        UploadSession session = UploadSession.of(
+            sessionId,
+            uploadType,
+            customPath,
+            fileName,
+            fileSize,
+            mimeType,
+            userId,
+            tenantId,
+            role,
+            sellerName,
+            FIXED_CLOCK
+        );
+
+        // then
+        assertThat(session.getSessionId()).isEqualTo(sessionId);
+        assertThat(session.getUserId()).isEqualTo(userId);
+        assertThat(session.getTenantId()).isEqualTo(tenantId);
+        assertThat(session.getRole()).isEqualTo(role);
+        assertThat(session.getSellerName()).isEqualTo(sellerName);
+        assertThat(session.getUploadType()).isEqualTo(uploadType);
+        assertThat(session.getCustomPath()).isEqualTo(customPath);
+        assertThat(session.getFileName()).isEqualTo(fileName);
+        assertThat(session.getFileSize()).isEqualTo(fileSize);
+        assertThat(session.getMimeType()).isEqualTo(mimeType);
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.PREPARING);
+        assertThat(session.getCreatedAt()).isEqualTo(FIXED_TIME);
+        assertThat(session.getUpdatedAt()).isEqualTo(FIXED_TIME);
+        assertThat(session.getExpiresAt()).isEqualTo(FIXED_TIME.plusMinutes(15));
+        assertThat(session.getS3Path()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("reconstitute()로 영속성 복원된 세션을 생성할 수 있어야 한다")
+    void shouldReconstituteSession() {
+        // given
+        SessionId sessionId = SessionId.from("550e8400-e29b-41d4-a716-446655440000");
+        Long userId = 1L;
+        Long tenantId = 1L;
+        UserRole role = UserRole.DEFAULT;
+        String sellerName = "seller1";
+        UploadType uploadType = UploadType.SINGLE;
+        String customPath = "uploads";
+        FileName fileName = FileName.from("test.jpg");
+        FileSize fileSize = FileSize.of(1024 * 1024); // 1MB
+        MimeType mimeType = MimeType.of("image/jpeg");
+        S3Path s3Path = S3Path.from(role, tenantId, sellerName, customPath, sessionId.value(), mimeType.value());
+        SessionStatus status = SessionStatus.ACTIVE;
+        LocalDateTime createdAt = LocalDateTime.of(2024, 1, 1, 10, 0, 0);
+        LocalDateTime updatedAt = LocalDateTime.of(2024, 1, 1, 11, 0, 0);
+        LocalDateTime expiresAt = LocalDateTime.of(2024, 1, 1, 10, 15, 0);
+        LocalDateTime completedAt = null;
+
+        // when
+        UploadSession session = UploadSession.reconstitute(
+            sessionId,
+            userId,
+            tenantId,
+            role,
+            sellerName,
+            uploadType,
+            customPath,
+            fileName,
+            fileSize,
+            mimeType,
+            s3Path,
+            status,
+            FIXED_CLOCK,
+            createdAt,
+            updatedAt,
+            expiresAt,
+            completedAt
+        );
+
+        // then
+        assertThat(session.getSessionId()).isEqualTo(sessionId);
+        assertThat(session.getUserId()).isEqualTo(userId);
+        assertThat(session.getTenantId()).isEqualTo(tenantId);
+        assertThat(session.getRole()).isEqualTo(role);
+        assertThat(session.getSellerName()).isEqualTo(sellerName);
+        assertThat(session.getUploadType()).isEqualTo(uploadType);
+        assertThat(session.getCustomPath()).isEqualTo(customPath);
+        assertThat(session.getFileName()).isEqualTo(fileName);
+        assertThat(session.getFileSize()).isEqualTo(fileSize);
+        assertThat(session.getMimeType()).isEqualTo(mimeType);
+        assertThat(session.getS3Path()).isEqualTo(s3Path);
+        assertThat(session.getStatus()).isEqualTo(status);
+        assertThat(session.getCreatedAt()).isEqualTo(createdAt);
+        assertThat(session.getUpdatedAt()).isEqualTo(updatedAt);
+        assertThat(session.getExpiresAt()).isEqualTo(expiresAt);
+        assertThat(session.getCompletedAt()).isEqualTo(completedAt);
+    }
+
+    @Test
+    @DisplayName("reconstitute()는 검증 로직을 실행하지 않아야 한다")
+    void shouldNotValidateWhenReconstituting() {
+        // given - 검증을 통과하지 못하는 데이터 (파일 크기 초과)
+        SessionId sessionId = SessionId.from("550e8400-e29b-41d4-a716-446655440000");
+        FileSize oversizedFile = FileSize.of(UploadType.SINGLE.getMaxSize() + 1); // 검증 실패해야 할 크기
+        LocalDateTime createdAt = LocalDateTime.of(2024, 1, 1, 10, 0, 0);
+        LocalDateTime updatedAt = LocalDateTime.of(2024, 1, 1, 11, 0, 0);
+        LocalDateTime expiresAt = LocalDateTime.of(2024, 1, 1, 10, 15, 0);
+        S3Path s3Path = S3Path.from(
+            UserRole.DEFAULT,
+            1L,
+            "seller1",
+            "uploads",
+            sessionId.value(),
+            "image/jpeg"
+        );
+
+        // when & then - reconstitute()는 검증 없이 생성해야 함
+        UploadSession session = UploadSession.reconstitute(
+            sessionId,
+            1L, // userId
+            1L, // tenantId
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            oversizedFile, // 검증 실패해야 할 크기
+            MimeType.of("image/jpeg"),
+            s3Path,
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            createdAt,
+            updatedAt,
+            expiresAt,
+            null
+        );
+
+        // then - 검증 없이 생성되었음을 확인
+        assertThat(session.getFileSize()).isEqualTo(oversizedFile);
+        assertThat(session.getSessionId()).isEqualTo(sessionId);
+    }
 }
 

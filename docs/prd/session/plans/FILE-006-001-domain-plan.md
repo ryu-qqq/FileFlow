@@ -396,10 +396,10 @@
 ### 1️⃣4️⃣ UploadSession Aggregate: of() 및 reconstitute() (Cycle 14)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldCreateSessionWithOf()` 테스트 작성
-- [ ] `shouldReconstituteSession()` 테스트 작성
-- [ ] reconstitute()는 검증 로직 실행하지 않음 확인
-- [ ] 커밋: `test: UploadSession of(), reconstitute() 테스트 추가 (Red)`
+- [x] `shouldCreateSessionWithOf()` 테스트 작성
+- [x] `shouldReconstituteSession()` 테스트 작성
+- [x] reconstitute()는 검증 로직 실행하지 않음 확인
+- [x] 커밋: `test: UploadSession of(), reconstitute() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `of(SessionId sessionId, ...)` 정적 메서드 구현
