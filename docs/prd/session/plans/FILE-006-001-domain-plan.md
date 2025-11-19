@@ -538,10 +538,10 @@
 ### 1️⃣9️⃣ File Aggregate: delete() 메서드 (Cycle 19)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldDeleteFile()` 테스트 작성
-- [ ] deleted = true, deletedAt 설정 확인
-- [ ] updatedAt 자동 갱신 확인
-- [ ] 커밋: `test: File delete() 테스트 추가 (Red)`
+- [x] `shouldDeleteFile()` 테스트 작성
+- [x] deleted = true, deletedAt 설정 확인
+- [x] updatedAt 자동 갱신 확인
+- [x] 커밋: `test: File delete() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `delete()` 메서드 구현

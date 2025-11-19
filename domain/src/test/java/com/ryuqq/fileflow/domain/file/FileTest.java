@@ -176,5 +176,76 @@ class FileTest {
         assertThat(file.getUpdatedAt()).isEqualTo(FIXED_TIME);
         assertThat(file.getUploadedAt()).isEqualTo(file.getUpdatedAt());
     }
+
+    @Test
+    @DisplayName("delete()로 파일을 논리 삭제할 수 있어야 한다")
+    void shouldDeleteFile() {
+        // given
+        UploadSession session = UploadSession.forNew(
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            FIXED_CLOCK
+        );
+        File file = File.forNew(session, FIXED_CLOCK);
+        LocalDateTime beforeUpdate = file.getUpdatedAt();
+
+        // when
+        file.delete();
+
+        // then
+        assertThat(file.isDeleted()).isTrue();
+        assertThat(file.getDeletedAt()).isNotNull();
+        assertThat(file.getDeletedAt()).isEqualTo(FIXED_TIME);
+        assertThat(file.getUpdatedAt()).isEqualTo(FIXED_TIME);
+    }
+
+    @Test
+    @DisplayName("delete() 시 updatedAt이 자동으로 갱신되어야 한다")
+    void shouldUpdateUpdatedAtOnDelete() {
+        // given
+        UploadSession session = UploadSession.forNew(
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            FIXED_CLOCK
+        );
+        File file = File.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            session.getUserId(),
+            session.getTenantId(),
+            session.getRole(),
+            session.getFileName(),
+            session.getFileSize(),
+            session.getMimeType(),
+            session.getS3Path(),
+            session.getUploadType(),
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME.minusHours(1), // 1시간 전
+            false,
+            null
+        );
+        LocalDateTime oldUpdatedAt = file.getUpdatedAt();
+
+        // when
+        file.delete();
+
+        // then
+        assertThat(file.getUpdatedAt()).isAfter(oldUpdatedAt);
+        assertThat(file.getUpdatedAt()).isEqualTo(FIXED_TIME);
+    }
 }
 
