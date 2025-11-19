@@ -228,13 +228,13 @@
 ### 8️⃣ S3Path VO 구현 (Cycle 8)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `S3PathTest.java` 생성
-- [ ] `shouldCreateAdminPath()` 테스트 작성
-- [ ] `shouldCreateSellerPath()` 테스트 작성
-- [ ] `shouldCreateDefaultPath()` 테스트 작성
-- [ ] `shouldExtractExtensionFromMimeType()` 테스트 작성
-- [ ] `shouldGenerateFullPath()` 테스트 작성
-- [ ] 커밋: `test: S3Path VO 테스트 추가 (Red)`
+- [x] `S3PathTest.java` 생성
+- [x] `shouldCreateAdminPath()` 테스트 작성
+- [x] `shouldCreateSellerPath()` 테스트 작성
+- [x] `shouldCreateDefaultPath()` 테스트 작성
+- [x] `shouldExtractExtensionFromMimeType()` 테스트 작성
+- [x] `shouldGenerateFullPath()` 테스트 작성
+- [x] 커밋: `test: S3Path VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `S3Path.java` 생성 (Record)
