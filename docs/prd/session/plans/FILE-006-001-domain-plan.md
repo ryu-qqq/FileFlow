@@ -454,12 +454,12 @@
 ### 1️⃣6️⃣ UploadSession Aggregate: Tell Don't Ask 메서드 (Cycle 16)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldCheckIsExpired()` 테스트 작성
-- [ ] `shouldCheckCanComplete()` 테스트 작성
-- [ ] `shouldCheckIsActive()` 테스트 작성
-- [ ] `shouldCheckIsPreparing()` 테스트 작성
-- [ ] `shouldCheckCanActivate()` 테스트 작성
-- [ ] 커밋: `test: UploadSession Tell Don't Ask 테스트 추가 (Red)`
+- [x] `shouldCheckIsExpired()` 테스트 작성
+- [x] `shouldCheckCanComplete()` 테스트 작성
+- [x] `shouldCheckIsActive()` 테스트 작성
+- [x] `shouldCheckIsPreparing()` 테스트 작성
+- [x] `shouldCheckCanActivate()` 테스트 작성
+- [x] 커밋: `test: UploadSession Tell Don't Ask 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `isExpired()` 메서드 구현

@@ -548,5 +548,255 @@ class UploadSessionTest {
         assertThat(session.getUpdatedAt()).isAfter(oldUpdatedAt);
         assertThat(session.getUpdatedAt()).isEqualTo(FIXED_TIME);
     }
+
+    @Test
+    @DisplayName("isExpired()로 세션이 만료되었는지 확인할 수 있어야 한다")
+    void shouldCheckIsExpired() {
+        // given - 만료된 세션 (expiresAt이 현재 시각보다 과거)
+        UploadSession expiredSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.minusMinutes(1), // 만료됨
+            null
+        );
+
+        // given - 만료되지 않은 세션
+        UploadSession activeSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440001"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440001", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15), // 아직 만료되지 않음
+            null
+        );
+
+        // when & then
+        assertThat(expiredSession.isExpired()).isTrue();
+        assertThat(activeSession.isExpired()).isFalse();
+    }
+
+    @Test
+    @DisplayName("canComplete()로 세션을 완료할 수 있는지 확인할 수 있어야 한다")
+    void shouldCheckCanComplete() {
+        // given - ACTIVE 상태 세션
+        UploadSession activeSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // given - PREPARING 상태 세션
+        UploadSession preparingSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440001"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440001", "image/jpeg"),
+            SessionStatus.PREPARING,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // when & then
+        assertThat(activeSession.canComplete()).isTrue();
+        assertThat(preparingSession.canComplete()).isFalse();
+    }
+
+    @Test
+    @DisplayName("isActive()로 세션이 활성 상태인지 확인할 수 있어야 한다")
+    void shouldCheckIsActive() {
+        // given - ACTIVE 상태 세션
+        UploadSession activeSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // given - PREPARING 상태 세션
+        UploadSession preparingSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440001"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440001", "image/jpeg"),
+            SessionStatus.PREPARING,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // when & then
+        assertThat(activeSession.isActive()).isTrue();
+        assertThat(preparingSession.isActive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("isPreparing()로 세션이 준비 상태인지 확인할 수 있어야 한다")
+    void shouldCheckIsPreparing() {
+        // given - PREPARING 상태 세션
+        UploadSession preparingSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.PREPARING,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // given - ACTIVE 상태 세션
+        UploadSession activeSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440001"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440001", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // when & then
+        assertThat(preparingSession.isPreparing()).isTrue();
+        assertThat(activeSession.isPreparing()).isFalse();
+    }
+
+    @Test
+    @DisplayName("canActivate()로 세션을 활성화할 수 있는지 확인할 수 있어야 한다")
+    void shouldCheckCanActivate() {
+        // given - PREPARING 상태 세션
+        UploadSession preparingSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440000"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440000", "image/jpeg"),
+            SessionStatus.PREPARING,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // given - ACTIVE 상태 세션
+        UploadSession activeSession = UploadSession.reconstitute(
+            SessionId.from("550e8400-e29b-41d4-a716-446655440001"),
+            1L,
+            1L,
+            UserRole.DEFAULT,
+            "seller1",
+            UploadType.SINGLE,
+            "uploads",
+            FileName.from("test.jpg"),
+            FileSize.of(1024 * 1024),
+            MimeType.of("image/jpeg"),
+            S3Path.from(UserRole.DEFAULT, 1L, "seller1", "uploads", "550e8400-e29b-41d4-a716-446655440001", "image/jpeg"),
+            SessionStatus.ACTIVE,
+            FIXED_CLOCK,
+            FIXED_TIME,
+            FIXED_TIME,
+            FIXED_TIME.plusMinutes(15),
+            null
+        );
+
+        // when & then
+        assertThat(preparingSession.canActivate()).isTrue();
+        assertThat(activeSession.canActivate()).isFalse();
+    }
 }
 
