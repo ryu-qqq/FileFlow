@@ -462,21 +462,21 @@
 - [x] 커밋: `test: UploadSession Tell Don't Ask 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `isExpired()` 메서드 구현
-- [ ] `canComplete()` 메서드 구현
-- [ ] `isActive()` 메서드 구현
-- [ ] `isPreparing()` 메서드 구현
-- [ ] `canActivate()` 메서드 구현
-- [ ] 커밋: `impl: UploadSession Tell Don't Ask 구현 (Green)`
+- [x] `isExpired()` 메서드 구현
+- [x] `canComplete()` 메서드 구현
+- [x] `isActive()` 메서드 구현
+- [x] `isPreparing()` 메서드 구현
+- [x] `canActivate()` 메서드 구현
+- [x] 커밋: `impl: UploadSession Tell Don't Ask 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] Aggregate ArchUnit 테스트 통과 (is*, can* 메서드 확인)
-- [ ] 커밋: `refactor: UploadSession Tell Don't Ask 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (is*, can* 메서드 확인)
+- [x] 커밋: `refactor: UploadSession Tell Don't Ask 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 테스트 코드 간소화
-- [ ] 커밋: `test: UploadSession Tell Don't Ask 테스트 정리 (Tidy)`
+- [x] 테스트 코드 간소화
+- [x] 커밋: `test: UploadSession Tell Don't Ask 테스트 정리 (Tidy)`
 
 ---
 

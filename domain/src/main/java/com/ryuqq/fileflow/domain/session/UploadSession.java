@@ -409,6 +409,53 @@ public class UploadSession {
         }
     }
 
+    // ==================== 상태 조회 메서드 (Tell Don't Ask) ====================
+
+    /**
+     * 세션이 만료되었는지 확인한다.
+     *
+     * @return expiresAt이 현재 시각보다 과거이면 true
+     */
+    public boolean isExpired() {
+        return expiresAt.isBefore(LocalDateTime.now(clock));
+    }
+
+    /**
+     * 세션을 완료할 수 있는지 확인한다.
+     *
+     * @return status가 ACTIVE이면 true
+     */
+    public boolean canComplete() {
+        return status == SessionStatus.ACTIVE;
+    }
+
+    /**
+     * 세션이 활성 상태인지 확인한다.
+     *
+     * @return status가 ACTIVE이면 true
+     */
+    public boolean isActive() {
+        return status == SessionStatus.ACTIVE;
+    }
+
+    /**
+     * 세션이 준비 상태인지 확인한다.
+     *
+     * @return status가 PREPARING이면 true
+     */
+    public boolean isPreparing() {
+        return status == SessionStatus.PREPARING;
+    }
+
+    /**
+     * 세션을 활성화할 수 있는지 확인한다.
+     *
+     * @return status가 PREPARING이면 true
+     */
+    public boolean canActivate() {
+        return status == SessionStatus.PREPARING;
+    }
+
     // ==================== Getter 메서드 ====================
 
     public SessionId getSessionId() {
