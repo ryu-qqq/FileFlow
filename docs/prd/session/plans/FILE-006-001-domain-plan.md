@@ -261,9 +261,9 @@
 ### 9️⃣ Domain Exception: SessionErrorCode Enum (Cycle 9)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `SessionErrorCodeTest.java` 생성
-- [ ] 각 ErrorCode의 code, message, httpStatus 검증 테스트 작성
-- [ ] 커밋: `test: SessionErrorCode Enum 테스트 추가 (Red)`
+- [x] `SessionErrorCodeTest.java` 생성
+- [x] 각 ErrorCode의 code, message, httpStatus 검증 테스트 작성
+- [x] 커밋: `test: SessionErrorCode Enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `SessionErrorCode.java` 생성 (Enum)
