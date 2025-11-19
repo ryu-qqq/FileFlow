@@ -380,10 +380,10 @@
 - [x] 커밋: `impl: UploadSession forNew() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 검증 로직 메서드 추출
-- [ ] Javadoc 추가
-- [ ] Aggregate ArchUnit 테스트 통과 (private 생성자, forNew() 필수)
-- [ ] 커밋: `refactor: UploadSession forNew() 개선 (Refactor)`
+- [x] 검증 로직 메서드 추출
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (private 생성자, forNew() 필수)
+- [x] 커밋: `refactor: UploadSession forNew() 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] `UploadSessionFixture.java` 생성
