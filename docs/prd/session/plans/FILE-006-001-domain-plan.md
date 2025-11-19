@@ -201,11 +201,11 @@
 ### 7️⃣ SessionStatus Enum 구현 (Cycle 7)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `SessionStatusTest.java` 생성
-- [ ] `shouldTransitionCorrectly()` 테스트 작성
-- [ ] 상태 전환 규칙 검증 (PREPARING → ACTIVE → {COMPLETED, EXPIRED, FAILED})
-- [ ] 불가능한 전환 테스트 작성
-- [ ] 커밋: `test: SessionStatus Enum 테스트 추가 (Red)`
+- [x] `SessionStatusTest.java` 생성
+- [x] `shouldTransitionCorrectly()` 테스트 작성
+- [x] 상태 전환 규칙 검증 (PREPARING → ACTIVE → {COMPLETED, EXPIRED, FAILED})
+- [x] 불가능한 전환 테스트 작성
+- [x] 커밋: `test: SessionStatus Enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `SessionStatus.java` 생성 (Enum)
