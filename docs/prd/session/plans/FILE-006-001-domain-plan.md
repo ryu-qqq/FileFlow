@@ -361,13 +361,13 @@
 ### 1️⃣3️⃣ UploadSession Aggregate: 생성자 및 forNew() (Cycle 13)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `UploadSessionTest.java` 생성
-- [ ] `shouldCreateNewSessionWithForNew()` 테스트 작성
-- [ ] `shouldValidateFileSizeForUploadType()` 테스트 작성
-- [ ] `shouldValidateMimeType()` 테스트 작성
-- [ ] `shouldSetExpiresAt15Minutes()` 테스트 작성
-- [ ] `shouldInitializeStatusAsPreparing()` 테스트 작성
-- [ ] 커밋: `test: UploadSession forNew() 테스트 추가 (Red)`
+- [x] `UploadSessionTest.java` 생성
+- [x] `shouldCreateNewSessionWithForNew()` 테스트 작성
+- [x] `shouldValidateFileSizeForUploadType()` 테스트 작성
+- [x] `shouldValidateMimeType()` 테스트 작성
+- [x] `shouldSetExpiresAt15Minutes()` 테스트 작성
+- [x] `shouldInitializeStatusAsPreparing()` 테스트 작성
+- [x] 커밋: `test: UploadSession forNew() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `UploadSession.java` 생성 (Plain Java Class)
