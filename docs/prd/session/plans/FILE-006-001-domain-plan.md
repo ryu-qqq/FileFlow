@@ -237,12 +237,12 @@
 - [x] 커밋: `test: S3Path VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `S3Path.java` 생성 (Record)
-- [ ] `from(UserRole, Long, String, String, String, String)` 메서드 구현
-- [ ] `getFullPath()` 메서드 구현
-- [ ] `extractExtension(String mimeType)` 메서드 구현
-- [ ] Role별 네임스페이스 로직 구현
-- [ ] 커밋: `impl: S3Path VO 구현 (Green)`
+- [x] `S3Path.java` 생성 (Record)
+- [x] `from(UserRole, Long, String, String, String, String)` 메서드 구현
+- [x] `getFullPath()` 메서드 구현
+- [x] `extractExtension(String mimeType)` 메서드 구현
+- [x] Role별 네임스페이스 로직 구현
+- [x] 커밋: `impl: S3Path VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] 경로 생성 로직 명확화
