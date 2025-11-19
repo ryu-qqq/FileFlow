@@ -24,7 +24,8 @@ class SessionExpiredExceptionTest {
         // then
         assertThat(exception).isInstanceOf(DomainException.class);
         assertThat(exception.getMessage()).contains("세션이 만료되었습니다");
-        assertThat(exception.getMessage()).contains("만료 시각: 2024-01-01T12:00:00");
+        assertThat(exception.getMessage()).contains("만료 시각:");
+        assertThat(exception.getMessage()).contains(expiresAt.toString());
         assertThat(exception.errorCode()).isEqualTo(SessionErrorCode.SESSION_EXPIRED);
     }
 

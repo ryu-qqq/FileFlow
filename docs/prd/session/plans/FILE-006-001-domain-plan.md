@@ -341,11 +341,11 @@
 - [x] 커밋: `test: 나머지 Domain Exception 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `UnsupportedFileTypeException.java` 생성
-- [ ] `InvalidSessionStatusException.java` 생성
-- [ ] `SessionExpiredException.java` 생성
-- [ ] 각 예외의 생성자 및 메시지 포맷팅 구현
-- [ ] 커밋: `impl: 나머지 Domain Exception 구현 (Green)`
+- [x] `UnsupportedFileTypeException.java` 생성
+- [x] `InvalidSessionStatusException.java` 생성
+- [x] `SessionExpiredException.java` 생성
+- [x] 각 예외의 생성자 및 메시지 포맷팅 구현
+- [x] 커밋: `impl: 나머지 Domain Exception 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] Javadoc 추가
