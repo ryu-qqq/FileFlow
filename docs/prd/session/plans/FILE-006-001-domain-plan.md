@@ -445,9 +445,9 @@
 - [x] 커밋: `refactor: UploadSession 상태 전환 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] 다양한 상태의 UploadSession Fixture 메서드 추가
-- [ ] `withStatusActive()`, `withStatusCompleted()` 등
-- [ ] 커밋: `test: UploadSessionFixture 상태 메서드 추가 (Tidy)`
+- [x] 다양한 상태의 UploadSession Fixture 메서드 추가
+- [x] `withStatusActive()`, `withStatusCompleted()` 등
+- [x] 커밋: `test: UploadSessionFixture 상태 메서드 추가 (Tidy)`
 
 ---
 

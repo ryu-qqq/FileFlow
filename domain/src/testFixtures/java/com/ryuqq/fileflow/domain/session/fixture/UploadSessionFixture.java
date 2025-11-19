@@ -114,5 +114,52 @@ public final class UploadSessionFixture {
             completedAt
         );
     }
+
+    /**
+     * ACTIVE 상태의 업로드 세션 Fixture.
+     *
+     * @return ACTIVE 상태의 UploadSession
+     */
+    public static UploadSession withStatusActive() {
+        UploadSession session = forNew();
+        session.activate();
+        return session;
+    }
+
+    /**
+     * COMPLETED 상태의 업로드 세션 Fixture.
+     *
+     * @return COMPLETED 상태의 UploadSession
+     */
+    public static UploadSession withStatusCompleted() {
+        UploadSession session = forNew();
+        session.activate();
+        session.complete();
+        return session;
+    }
+
+    /**
+     * EXPIRED 상태의 업로드 세션 Fixture.
+     *
+     * @return EXPIRED 상태의 UploadSession
+     */
+    public static UploadSession withStatusExpired() {
+        UploadSession session = forNew();
+        session.activate();
+        session.expire();
+        return session;
+    }
+
+    /**
+     * FAILED 상태의 업로드 세션 Fixture.
+     *
+     * @return FAILED 상태의 UploadSession
+     */
+    public static UploadSession withStatusFailed() {
+        UploadSession session = forNew();
+        session.activate();
+        session.fail();
+        return session;
+    }
 }
 
