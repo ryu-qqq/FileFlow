@@ -220,8 +220,8 @@
 - [x] 커밋: `refactor: SessionStatus Enum 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture 불필요 (Enum은 자체적으로 상수)
-- [ ] 커밋: `test: SessionStatus 테스트 정리 (Tidy)`
+- [x] TestFixture 불필요 (Enum은 자체적으로 상수)
+- [x] 커밋: `test: SessionStatus 테스트 정리 (Tidy)`
 
 ---
 
