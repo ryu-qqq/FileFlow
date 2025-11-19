@@ -440,9 +440,9 @@
 - [x] 커밋: `impl: UploadSession 상태 전환 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 상태 전환 검증 로직 메서드 추출
-- [ ] Javadoc 추가
-- [ ] 커밋: `refactor: UploadSession 상태 전환 개선 (Refactor)`
+- [x] 상태 전환 검증 로직 메서드 추출
+- [x] Javadoc 추가
+- [x] 커밋: `refactor: UploadSession 상태 전환 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] 다양한 상태의 UploadSession Fixture 메서드 추가
