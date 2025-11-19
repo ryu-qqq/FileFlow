@@ -527,11 +527,11 @@
 - [x] 커밋: `refactor: File Aggregate 정적 메서드 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileFixture.java` 생성
-- [ ] `FileFixture.forNew()` 메서드 작성
-- [ ] `FileFixture.of(SessionId)` 메서드 작성
-- [ ] `FileFixture.reconstitute(...)` 메서드 작성
-- [ ] 커밋: `test: FileFixture 정리 (Tidy)`
+- [x] `FileFixture.java` 생성
+- [x] `FileFixture.forNew()` 메서드 작성
+- [x] `FileFixture.of(SessionId)` 메서드 작성
+- [x] `FileFixture.reconstitute(...)` 메서드 작성
+- [x] 커밋: `test: FileFixture 정리 (Tidy)`
 
 ---
 
