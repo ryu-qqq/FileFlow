@@ -284,26 +284,26 @@
 ### 🔟 Domain Exception: DomainException 기본 클래스 (Cycle 10)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `DomainExceptionTest.java` 생성
-- [ ] `shouldCreateExceptionWithErrorCode()` 테스트 작성
-- [ ] `shouldReturnCorrectHttpStatus()` 테스트 작성
-- [ ] 커밋: `test: DomainException 테스트 추가 (Red)`
+- [x] `DomainExceptionTest.java` 생성
+- [x] `shouldCreateExceptionWithErrorCode()` 테스트 작성
+- [x] `shouldReturnCorrectHttpStatus()` 테스트 작성
+- [x] 커밋: `test: DomainException 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `DomainException.java` 생성 (abstract class extends RuntimeException)
-- [ ] errorCode, httpStatus 필드 추가
-- [ ] protected 생성자 구현
-- [ ] Getter 메서드 구현
-- [ ] 커밋: `impl: DomainException 구현 (Green)`
+- [x] `DomainException.java` 생성 (abstract class extends RuntimeException)
+- [x] errorCode, httpStatus 필드 추가
+- [x] protected 생성자 구현
+- [x] Getter 메서드 구현
+- [x] 커밋: `impl: DomainException 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] ArchUnit Exception 테스트 통과
-- [ ] 커밋: `refactor: DomainException 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] ArchUnit Exception 테스트 통과
+- [x] 커밋: `refactor: DomainException 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture 불필요 (구체적인 예외 클래스에서 사용)
-- [ ] 커밋: `test: DomainException 테스트 정리 (Tidy)`
+- [x] TestFixture 불필요 (구체적인 예외 클래스에서 사용)
+- [x] 커밋: `test: DomainException 테스트 정리 (Tidy)`
 
 ---
 
