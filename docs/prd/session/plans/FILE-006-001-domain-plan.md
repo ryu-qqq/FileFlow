@@ -272,8 +272,8 @@
 - [x] 커밋: `impl: SessionErrorCode Enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] 커밋: `refactor: SessionErrorCode Enum 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] 커밋: `refactor: SessionErrorCode Enum 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] TestFixture 불필요 (Enum)
