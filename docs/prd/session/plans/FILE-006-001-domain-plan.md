@@ -322,12 +322,12 @@
 - [x] 커밋: `impl: FileSizeExceededException 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] 커밋: `refactor: FileSizeExceededException 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] 커밋: `refactor: FileSizeExceededException 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] TestFixture 불필요 (예외는 테스트에서 직접 생성)
-- [ ] 커밋: `test: FileSizeExceededException 테스트 정리 (Tidy)`
+- [x] TestFixture 불필요 (예외는 테스트에서 직접 생성)
+- [x] 커밋: `test: FileSizeExceededException 테스트 정리 (Tidy)`
 
 ---
 
