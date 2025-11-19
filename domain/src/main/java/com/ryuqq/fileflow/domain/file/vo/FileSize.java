@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.file.vo;
 
 import com.ryuqq.fileflow.domain.file.support.FileSizeUnit;
+import com.ryuqq.fileflow.domain.session.exception.FileSizeExceededException;
 
 /**
  * 파일 크기 Value Object.
@@ -22,9 +23,7 @@ public record FileSize(long bytes) {
             throw new IllegalArgumentException("UploadType은 null일 수 없습니다.");
         }
         if (bytes > uploadType.getMaxSize()) {
-            throw new IllegalArgumentException(
-                "파일 크기가 업로드 타입 제한을 초과했습니다: " + bytes + " > " + uploadType.getMaxSize()
-            );
+            throw new FileSizeExceededException(bytes, uploadType.getMaxSize());
         }
     }
 

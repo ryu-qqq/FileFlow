@@ -112,25 +112,27 @@ class UploadSessionTest {
         String customPath = "uploads";
         FileName fileName = FileName.from("test.pdf");
         FileSize fileSize = FileSize.of(1024 * 1024); // 1MB
-        MimeType unsupportedMimeType = MimeType.of("application/pdf");
         Long userId = 1L;
         Long tenantId = 1L;
         UserRole role = UserRole.DEFAULT;
         String sellerName = "seller1";
 
-        // when & then
-        assertThatThrownBy(() -> UploadSession.forNew(
-            uploadType,
-            customPath,
-            fileName,
-            fileSize,
-            unsupportedMimeType,
-            userId,
-            tenantId,
-            role,
-            sellerName,
-            FIXED_CLOCK
-        )).isInstanceOf(UnsupportedFileTypeException.class);
+        // when & then - MimeType.of()에서 이미 검증되므로 예외가 발생
+        assertThatThrownBy(() -> {
+            MimeType unsupportedMimeType = MimeType.of("application/pdf");
+            UploadSession.forNew(
+                uploadType,
+                customPath,
+                fileName,
+                fileSize,
+                unsupportedMimeType,
+                userId,
+                tenantId,
+                role,
+                sellerName,
+                FIXED_CLOCK
+            );
+        }).isInstanceOf(UnsupportedFileTypeException.class);
     }
 
     @Test

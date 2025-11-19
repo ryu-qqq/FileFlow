@@ -370,14 +370,14 @@
 - [x] 커밋: `test: UploadSession forNew() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `UploadSession.java` 생성 (Plain Java Class)
-- [ ] private 생성자 구현
-- [ ] `forNew(...)` 정적 메서드 구현
-- [ ] Clock 필드 추가 및 주입
-- [ ] createdAt, updatedAt = LocalDateTime.now(clock)
-- [ ] expiresAt = createdAt + 15분
-- [ ] 파일 크기, 타입 검증 로직
-- [ ] 커밋: `impl: UploadSession forNew() 구현 (Green)`
+- [x] `UploadSession.java` 생성 (Plain Java Class)
+- [x] private 생성자 구현
+- [x] `forNew(...)` 정적 메서드 구현
+- [x] Clock 필드 추가 및 주입
+- [x] createdAt, updatedAt = LocalDateTime.now(clock)
+- [x] expiresAt = createdAt + 15분
+- [x] 파일 크기, 타입 검증 로직
+- [x] 커밋: `impl: UploadSession forNew() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] 검증 로직 메서드 추출
