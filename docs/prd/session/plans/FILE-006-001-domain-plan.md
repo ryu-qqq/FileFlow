@@ -544,19 +544,19 @@
 - [x] 커밋: `test: File delete() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `delete()` 메서드 구현
-- [ ] deleted = true
-- [ ] deletedAt = LocalDateTime.now(clock)
-- [ ] updatedAt = LocalDateTime.now(clock)
-- [ ] 커밋: `impl: File delete() 구현 (Green)`
+- [x] `delete()` 메서드 구현
+- [x] deleted = true
+- [x] deletedAt = LocalDateTime.now(clock)
+- [x] updatedAt = LocalDateTime.now(clock)
+- [x] 커밋: `impl: File delete() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] 커밋: `refactor: File delete() 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] 커밋: `refactor: File delete() 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileFixture.deleted()` 메서드 추가 (삭제된 파일 Fixture)
-- [ ] 커밋: `test: FileFixture delete 메서드 추가 (Tidy)`
+- [x] `FileFixture.deleted()` 메서드 추가 (삭제된 파일 Fixture)
+- [x] 커밋: `test: FileFixture delete 메서드 추가 (Tidy)`
 
 ---
 

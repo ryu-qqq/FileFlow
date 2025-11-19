@@ -208,6 +208,21 @@ public class File {
         );
     }
 
+    // ==================== 비즈니스 메서드 ====================
+
+    /**
+     * 파일 논리 삭제.
+     *
+     * <p>
+     * 파일을 논리적으로 삭제하며, deletedAt과 updatedAt을 현재 시각으로 설정합니다.
+     * </p>
+     */
+    public void delete() {
+        this.deleted = true;
+        this.deletedAt = LocalDateTime.now(clock);
+        this.updatedAt = LocalDateTime.now(clock);
+    }
+
     // ==================== Getter 메서드 ====================
 
     public SessionId getFileId() {
