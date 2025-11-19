@@ -208,11 +208,11 @@
 - [x] 커밋: `test: SessionStatus Enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `SessionStatus.java` 생성 (Enum)
-- [ ] PREPARING, ACTIVE, COMPLETED, EXPIRED, FAILED 정의
-- [ ] `canTransitionTo(SessionStatus next)` 메서드 구현
-- [ ] 상태 전환 규칙 구현 (switch 표현식)
-- [ ] 커밋: `impl: SessionStatus Enum 구현 (Green)`
+- [x] `SessionStatus.java` 생성 (Enum)
+- [x] PREPARING, ACTIVE, COMPLETED, EXPIRED, FAILED 정의
+- [x] `canTransitionTo(SessionStatus next)` 메서드 구현
+- [x] 상태 전환 규칙 구현 (switch 표현식)
+- [x] 커밋: `impl: SessionStatus Enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] Javadoc 추가
