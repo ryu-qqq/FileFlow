@@ -522,9 +522,9 @@
 - [x] 커밋: `impl: File Aggregate 정적 메서드 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] Aggregate ArchUnit 테스트 통과 (private 생성자, forNew(), of(), reconstitute() 필수)
-- [ ] 커밋: `refactor: File Aggregate 정적 메서드 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (private 생성자, forNew(), of(), reconstitute() 필수)
+- [x] 커밋: `refactor: File Aggregate 정적 메서드 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] `FileFixture.java` 생성
