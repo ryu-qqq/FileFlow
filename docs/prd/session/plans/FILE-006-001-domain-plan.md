@@ -408,9 +408,9 @@
 - [x] 커밋: `impl: UploadSession of(), reconstitute() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] Aggregate ArchUnit 테스트 통과 (of(), reconstitute() 필수)
-- [ ] 커밋: `refactor: UploadSession 정적 메서드 개선 (Refactor)`
+- [x] Javadoc 추가
+- [x] Aggregate ArchUnit 테스트 통과 (of(), reconstitute() 필수)
+- [x] 커밋: `refactor: UploadSession 정적 메서드 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] `UploadSessionFixture.of(SessionId)` 메서드 추가
