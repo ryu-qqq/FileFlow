@@ -386,10 +386,10 @@
 - [x] 커밋: `refactor: UploadSession forNew() 개선 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `UploadSessionFixture.java` 생성
-- [ ] `UploadSessionFixture.forNew()` 메서드 작성
-- [ ] `UploadSessionTest` → Fixture 사용
-- [ ] 커밋: `test: UploadSessionFixture 정리 (Tidy)`
+- [x] `UploadSessionFixture.java` 생성
+- [x] `UploadSessionFixture.forNew()` 메서드 작성
+- [x] `UploadSessionTest` → Fixture 사용
+- [x] 커밋: `test: UploadSessionFixture 정리 (Tidy)`
 
 ---
 
