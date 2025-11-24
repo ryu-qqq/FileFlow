@@ -10,7 +10,7 @@
 # ============================================================================
 
 module "fileflow_uploads" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/s3-bucket?ref=feat/fileflow-migration-modules"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/s3-bucket?ref=main"
 
   bucket_name        = "${var.project_name}-uploads-${var.environment}"
   versioning_enabled = true
