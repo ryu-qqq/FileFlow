@@ -1,0 +1,80 @@
+# ============================================================================
+# FileFlow - Atlantis Configuration
+# ============================================================================
+# PR-based Terraform automation for FileFlow infrastructure
+# ============================================================================
+
+version: 3
+
+automerge: false
+delete_source_branch_on_merge: false
+# Disable parallel plan to prevent plugin cache conflicts
+parallel_plan: false
+parallel_apply: false
+
+projects:
+  # ============================================================================
+  # Storage
+  # ============================================================================
+
+  # S3 Bucket for file uploads
+  - name: fileflow-s3-prod
+    dir: terraform/s3
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
+    apply_requirements: ["approved", "mergeable"]
+
+  # ============================================================================
+  # Container Registry
+  # ============================================================================
+
+  # ECR Repository for Docker images
+  - name: fileflow-ecr-prod
+    dir: terraform/ecr
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
+    apply_requirements: ["approved", "mergeable"]
+
+  # ============================================================================
+  # ECS Infrastructure
+  # ============================================================================
+
+  # ECS Cluster
+  - name: fileflow-ecs-cluster-prod
+    dir: terraform/ecs-cluster
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
+    apply_requirements: ["approved", "mergeable"]
+
+  # ElastiCache Redis
+  - name: fileflow-elasticache-prod
+    dir: terraform/elasticache
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
+    apply_requirements: ["approved", "mergeable"]
+
+  # ECS Web API Service
+  - name: fileflow-ecs-web-api-prod
+    dir: terraform/ecs-web-api
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
+    apply_requirements: ["approved", "mergeable"]
+
+  # ECS Scheduler Service
+  - name: fileflow-ecs-scheduler-prod
+    dir: terraform/ecs-scheduler
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
+    apply_requirements: ["approved", "mergeable"]
