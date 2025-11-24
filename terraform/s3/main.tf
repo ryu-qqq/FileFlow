@@ -30,7 +30,7 @@ module "fileflow_uploads" {
       allowed_headers = ["*"]
       allowed_methods = ["GET", "PUT", "POST", "HEAD"]
       allowed_origins = var.cors_allowed_origins
-      expose_headers  = ["ETag", "x-amz-meta-*"]
+      expose_headers  = ["ETag"]
       max_age_seconds = 3600
     }
   ]

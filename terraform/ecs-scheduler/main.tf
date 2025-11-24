@@ -155,13 +155,13 @@ module "scheduler_logs" {
   retention_in_days = 30
 
   # Governance tags
-  environment     = var.environment
-  service_name    = "${var.project_name}-scheduler"
-  owner           = "platform@ryuqqq.com"
-  cost_center     = "engineering"
-  data_class      = "confidential"
-  lifecycle_stage = "production"
-  project         = "infrastructure"
+  environment  = var.environment
+  service_name = "${var.project_name}-scheduler"
+  team         = "platform-team"
+  owner        = "platform@ryuqqq.com"
+  cost_center  = "engineering"
+  data_class   = "confidential"
+  project      = "infrastructure"
 }
 
 # ========================================

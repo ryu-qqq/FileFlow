@@ -1,0 +1,55 @@
+# ========================================
+# Terraform Provider Configuration
+# ========================================
+
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.0"
+    }
+  }
+
+  backend "s3" {
+    bucket         = "prod-connectly"
+    key            = "fileflow/s3/terraform.tfstate"
+    region         = "ap-northeast-2"
+    dynamodb_table = "prod-connectly-tf-lock"
+    encrypt        = true
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = var.project_name
+      Environment = var.environment
+      ManagedBy   = "terraform"
+    }
+  }
+}
+
+# ========================================
+# Common Variables
+# ========================================
+variable "project_name" {
+  description = "Project name"
+  type        = string
+  default     = "fileflow"
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "prod"
+}
+
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "ap-northeast-2"
+}
