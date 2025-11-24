@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.out.persistence.architecture.adpater.query;
+package com.ryuqq.crawlinghub.adapter.out.persistence.architecture.adpater.query;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +41,7 @@ class QueryAdapterArchTest {
     @BeforeAll
     static void setUp() {
         queryAdapterClasses = new ClassFileImporter()
-            .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+            .importPackages("com.ryuqq.adapter.out.persistence");
     }
 
     /**

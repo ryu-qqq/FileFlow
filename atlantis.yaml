@@ -24,7 +24,6 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
 
   # ============================================================================
   # Container Registry
@@ -37,7 +36,6 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
 
   # ============================================================================
   # ECS Infrastructure
@@ -50,7 +48,6 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
 
   # ElastiCache Redis
   - name: fileflow-elasticache-prod
@@ -59,7 +56,6 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
 
   # ECS Web API Service
   - name: fileflow-ecs-web-api-prod
@@ -68,7 +64,6 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
 
   # ECS Scheduler Service
   - name: fileflow-ecs-scheduler-prod
@@ -77,4 +72,3 @@ projects:
     autoplan:
       when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]

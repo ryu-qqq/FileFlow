@@ -1,93 +1,91 @@
-package com.ryuqq.fileflow.domain.common.exception;
+package com.ryuqq.crawlinghub.domain.common.exception;
 
-import com.ryuqq.fileflow.domain.session.exception.SessionErrorCode;
+import com.ryuqq.authhub.domain.common.exception.fixture.DomainExceptionFixture;
+
+import java.util.Map;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * DomainException 테스트
- */
-@DisplayName("DomainException Tests")
+@DisplayName("DomainException 테스트")
 class DomainExceptionTest {
 
     @Test
-    @DisplayName("ErrorCode 기반으로 예외를 생성할 수 있어야 한다")
-    void shouldCreateExceptionWithErrorCode() {
-        // given
-        ErrorCode errorCode = SessionErrorCode.FILE_SIZE_EXCEEDED;
+    @DisplayName("코드와 메시지로 DomainException 생성 성공")
+    void shouldCreateDomainExceptionWithCodeAndMessage() {
+        // Given
+        String code = "USER-001";
+        String message = "User not found";
 
-        // when
-        DomainException exception = new DomainException(errorCode);
+        // When
+        DomainException exception = DomainExceptionFixture.aDomainException(code, message);
 
-        // then
-        assertThat(exception.errorCode()).isEqualTo(errorCode);
-        assertThat(exception.getMessage()).isEqualTo(errorCode.getMessage());
-        assertThat(exception.code()).isEqualTo("FILE-SIZE-EXCEEDED");
-        assertThat(exception.httpStatus()).isEqualTo(400);
+        // Then
+        assertThat(exception).isNotNull();
+        assertThat(exception.code()).isEqualTo(code);
+        assertThat(exception.getMessage()).isEqualTo(message);
+        assertThat(exception.args()).isEmpty();
     }
 
     @Test
-    @DisplayName("ErrorCode와 Cause 기반으로 예외를 생성할 수 있어야 한다")
-    void shouldCreateExceptionWithErrorCodeAndCause() {
-        // given
-        ErrorCode errorCode = SessionErrorCode.UNSUPPORTED_FILE_TYPE;
-        Throwable cause = new IllegalArgumentException("원인 예외");
+    @DisplayName("코드, 메시지, 인자로 DomainException 생성 성공")
+    void shouldCreateDomainExceptionWithCodeMessageAndArgs() {
+        // Given
+        String code = "USER-002";
+        String message = "User with id {userId} not found";
+        Map<String, Object> args = Map.of("userId", 123L);
 
-        // when
-        DomainException exception = new DomainException(errorCode, cause);
+        // When
+        DomainException exception =
+                DomainExceptionFixture.aDomainExceptionWithArgs(code, message, args);
 
-        // then
-        assertThat(exception.errorCode()).isEqualTo(errorCode);
-        assertThat(exception.getMessage()).isEqualTo(errorCode.getMessage());
-        assertThat(exception.getCause()).isEqualTo(cause);
-        assertThat(exception.code()).isEqualTo("UNSUPPORTED-FILE-TYPE");
-        assertThat(exception.httpStatus()).isEqualTo(400);
+        // Then
+        assertThat(exception).isNotNull();
+        assertThat(exception.code()).isEqualTo(code);
+        assertThat(exception.getMessage()).isEqualTo(message);
+        assertThat(exception.args()).containsEntry("userId", 123L);
     }
 
     @Test
-    @DisplayName("code() 메서드는 ErrorCode의 코드를 반환해야 한다")
-    void shouldReturnCodeFromErrorCode() {
-        // given
-        ErrorCode errorCode = SessionErrorCode.INVALID_SESSION_STATUS;
-        DomainException exception = new DomainException(errorCode);
+    @DisplayName("null args로 DomainException 생성 시 빈 Map 반환")
+    void shouldCreateDomainExceptionWithNullArgs() {
+        // Given
+        String code = "USER-003";
+        String message = "Invalid user";
+        Map<String, Object> nullArgs = null;
 
-        // when
-        String code = exception.code();
+        // When
+        DomainException exception =
+                DomainExceptionFixture.aDomainExceptionWithArgs(code, message, nullArgs);
 
-        // then
-        assertThat(code).isEqualTo("INVALID-SESSION-STATUS");
+        // Then
+        assertThat(exception).isNotNull();
+        assertThat(exception.args()).isEmpty();
     }
 
     @Test
-    @DisplayName("httpStatus() 메서드는 ErrorCode의 HTTP 상태 코드를 반환해야 한다")
-    void shouldReturnCorrectHttpStatus() {
-        // given
-        ErrorCode errorCode = SessionErrorCode.SESSION_EXPIRED;
-        DomainException exception = new DomainException(errorCode);
+    @DisplayName("DomainException은 RuntimeException을 상속")
+    void shouldExtendRuntimeException() {
+        // When
+        DomainException exception = DomainExceptionFixture.aDomainException();
 
-        // when
-        int httpStatus = exception.httpStatus();
-
-        // then
-        assertThat(httpStatus).isEqualTo(410);
+        // Then
+        assertThat(exception).isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    @DisplayName("errorCode() 메서드는 생성 시 전달받은 ErrorCode를 반환해야 한다")
-    void shouldReturnOriginalErrorCode() {
-        // given
-        ErrorCode errorCode = SessionErrorCode.FILE_SIZE_EXCEEDED;
-        DomainException exception = new DomainException(errorCode);
+    @DisplayName("args Map은 불변")
+    void shouldReturnImmutableArgs() {
+        // Given
+        Map<String, Object> mutableArgs = Map.of("key", "value");
 
-        // when
-        ErrorCode returnedErrorCode = exception.errorCode();
+        // When
+        DomainException exception =
+                DomainExceptionFixture.aDomainExceptionWithArgs("TEST-002", "Test", mutableArgs);
 
-        // then
-        assertThat(returnedErrorCode).isEqualTo(errorCode);
-        assertThat(returnedErrorCode.getCode()).isEqualTo("FILE-SIZE-EXCEEDED");
-        assertThat(returnedErrorCode.getMessage()).isEqualTo("파일 크기가 최대 허용 크기를 초과했습니다");
-        assertThat(returnedErrorCode.getHttpStatus()).isEqualTo(400);
+        // Then
+        assertThat(exception.args()).isUnmodifiable();
     }
 }

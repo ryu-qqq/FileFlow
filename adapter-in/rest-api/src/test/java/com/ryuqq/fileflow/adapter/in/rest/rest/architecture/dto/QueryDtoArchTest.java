@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.in.rest.rest.architecture.dto;
+package com.ryuqq.crawlinghub.adapter.in.rest.architecture.dto;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -46,7 +46,7 @@ class QueryDtoArchTest {
     @BeforeAll
     static void setUp() {
         classes = new ClassFileImporter()
-            .importPackages("com.ryuqq.fileflow.adapter.in.rest");
+            .importPackages("com.ryuqq.adapter.in.rest");
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.architecture.vo;
+package com.ryuqq.crawlinghub.domain.architecture.vo;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -19,14 +19,15 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 /**
  * Value Object ArchUnit 아키텍처 검증 테스트
  *
- * <p><strong>검증 규칙</strong>:</p>
+ * <p><strong>검증 규칙</strong>:
+ *
  * <ul>
- *   <li>Record 사용 필수</li>
- *   <li>정적 팩토리 메서드 (of) 필수</li>
- *   <li>ID VO는 forNew() 추가 필수</li>
- *   <li>Lombok 금지</li>
- *   <li>JPA 어노테이션 금지</li>
- *   <li>Spring 어노테이션 금지</li>
+ *   <li>Record 사용 필수
+ *   <li>정적 팩토리 메서드 (of) 필수
+ *   <li>ID VO는 forNew() 추가 필수
+ *   <li>Lombok 금지
+ *   <li>JPA 어노테이션 금지
+ *   <li>Spring 어노테이션 금지
  * </ul>
  *
  * @author development-team
@@ -42,261 +43,312 @@ class VOArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.domain");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.authhub.domain");
     }
 
-    /**
-     * 규칙 1: Value Object는 Record여야 한다
-     * <p>
-     * 예외:
-     * - MultipartUpload: 가변 리스트 관리 및 복잡한 업로드 로직
-     * - RetryCount: 전략 패턴 및 increment 로직
-     * </p>
-     */
+    /** 규칙 1: Value Object는 Record여야 한다 */
     @Test
     @DisplayName("[필수] Value Object는 Record로 구현되어야 한다")
     void valueObjectsShouldBeRecords() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("..vo..")
-            .and().areNotEnums()
-            .and().areNotAnonymousClasses()  // 익명 내부 클래스 제외
-            .and().haveSimpleNameNotContaining("Fixture")
-            .and().haveSimpleNameNotContaining("Mother")
-            .and().haveSimpleNameNotContaining("Test")
-            .and().haveSimpleNameNotEndingWith("Criteria")  // SearchCriteria 제외
-            .and().haveSimpleNameNotContaining("MultipartUpload")  // 복잡한 비즈니스 로직
-            .and().haveSimpleNameNotContaining("RetryCount")  // 전략 패턴 VO
-            .should(beRecords())
-            .because("Value Object는 Java 21 Record로 구현해야 합니다 (Enum, 복잡한 VO 제외)");
+        ArchRule rule =
+                classes()
+                        .that()
+                        .resideInAPackage("..vo..")
+                        .and()
+                        .haveSimpleNameNotContaining("Fixture")
+                        .and()
+                        .haveSimpleNameNotContaining("Mother")
+                        .and()
+                        .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .haveSimpleNameNotContaining("Status")
+                        .and()
+                        .areNotAnonymousClasses()
+                        .and()
+                        .areNotMemberClasses()
+                        .and()
+                        .areNotEnums()
+                        .should(beRecords())
+                        .because("Value Object는 Java 21 Record로 구현해야 합니다");
 
         rule.check(classes);
     }
 
-    /**
-     * 규칙 2: Value Object는 of() 메서드를 가져야 한다
-     * <p>
-     * 예외:
-     * - MultipartUpload: forNew() 팩토리 메서드 사용
-     * - RetryCount: forFile(), forJob(), forOutbox() 전략 메서드 사용
-     * - S3Bucket: forTenant() 도메인 특화 팩토리 사용
-     * - S3Key: generate() 복잡한 경로 생성 로직 사용
-     * </p>
-     */
+    /** 규칙 2: Value Object는 of() 메서드를 가져야 한다 */
     @Test
     @DisplayName("[필수] Value Object는 of() 정적 팩토리 메서드를 가져야 한다")
     void valueObjectsShouldHaveOfMethod() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("..vo..")
-            .and().areNotEnums()
-            .and().areNotAnonymousClasses()  // 익명 내부 클래스 제외
-            .and().haveSimpleNameNotContaining("Fixture")
-            .and().haveSimpleNameNotContaining("Mother")
-            .and().haveSimpleNameNotContaining("Test")
-            .and().haveSimpleNameNotEndingWith("Criteria")  // SearchCriteria 제외
-            .and().haveSimpleNameNotContaining("MultipartUpload")  // forNew() 사용
-            .and().haveSimpleNameNotContaining("RetryCount")  // 전략 메서드 사용
-            .and().haveSimpleNameNotContaining("S3Bucket")  // forTenant() 사용
-            .and().haveSimpleNameNotContaining("S3Key")  // generate() 사용
-            .should(haveStaticMethodWithName("of"))
-            .because("Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다 (Enum, 전략 VO 제외)");
+        ArchRule rule =
+                classes()
+                        .that()
+                        .resideInAPackage("..vo..")
+                        .and()
+                        .haveSimpleNameNotContaining("Fixture")
+                        .and()
+                        .haveSimpleNameNotContaining("Mother")
+                        .and()
+                        .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .haveSimpleNameNotContaining("Status")
+                        .and()
+                        .areNotAnonymousClasses()
+                        .and()
+                        .areNotMemberClasses()
+                        .and()
+                        .areNotEnums()
+                        .should(haveStaticMethodWithName("of"))
+                        .because("Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다");
 
         rule.check(classes);
     }
 
-    /**
-     * 규칙 3: ID VO는 forNew() 메서드를 가져야 한다
-     */
+    /** 규칙 3: ID VO는 forNew() 메서드를 가져야 한다 */
     @Test
     @DisplayName("[필수] ID Value Object는 forNew() 메서드를 가져야 한다")
     void idValueObjectsShouldHaveForNewMethod() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("..vo..")
-            .and().haveSimpleNameEndingWith("Id")
-            .and().haveSimpleNameNotContaining("Fixture")
-            .and().haveSimpleNameNotContaining("Mother")
-            .and().haveSimpleNameNotContaining("Test")
-            .should(haveStaticMethodWithName("forNew"))
-            .because("ID Value Object는 forNew() 메서드로 null 생성을 지원해야 합니다");
+        ArchRule rule =
+                classes()
+                        .that()
+                        .resideInAPackage("..identifier..")
+                        .and()
+                        .haveSimpleNameEndingWith("Id")
+                        .and()
+                        .haveSimpleNameNotContaining("Fixture")
+                        .and()
+                        .haveSimpleNameNotContaining("Mother")
+                        .and()
+                        .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .areNotAnonymousClasses()
+                        .and()
+                        .areNotMemberClasses()
+                        .should(haveStaticMethodWithName("forNew"))
+                        .because("ID Value Object는 forNew() 메서드로 null 생성을 지원해야 합니다");
 
         rule.check(classes);
     }
 
-    /**
-     * 규칙 4: ID VO는 isNew() 메서드를 가져야 한다
-     */
+    /** 규칙 4: ID VO는 isNew() 메서드를 가져야 한다 */
     @Test
     @DisplayName("[필수] ID Value Object는 isNew() 메서드를 가져야 한다")
     void idValueObjectsShouldHaveIsNewMethod() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("..vo..")
-            .and().haveSimpleNameEndingWith("Id")
-            .and().haveSimpleNameNotContaining("Fixture")
-            .and().haveSimpleNameNotContaining("Mother")
-            .and().haveSimpleNameNotContaining("Test")
-            .should(haveMethodWithName("isNew"))
-            .because("ID Value Object는 isNew() 메서드로 null 여부를 확인해야 합니다");
+        ArchRule rule =
+                classes()
+                        .that()
+                        .resideInAPackage("..identifier..")
+                        .and()
+                        .haveSimpleNameEndingWith("Id")
+                        .and()
+                        .haveSimpleNameNotContaining("Fixture")
+                        .and()
+                        .haveSimpleNameNotContaining("Mother")
+                        .and()
+                        .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .areNotAnonymousClasses()
+                        .and()
+                        .areNotMemberClasses()
+                        .should(haveMethodWithName("isNew"))
+                        .because("ID Value Object는 isNew() 메서드로 null 여부를 확인해야 합니다");
 
         rule.check(classes);
     }
 
-    /**
-     * 규칙 5: Value Object는 Lombok 어노테이션을 사용하지 않아야 한다
-     */
+    /** 규칙 5: Value Object는 Lombok 어노테이션을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Value Object는 Lombok 어노테이션을 사용하지 않아야 한다")
     void valueObjectsShouldNotUseLombok() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("..vo..")
-            .should().notBeAnnotatedWith("lombok.Data")
-            .andShould().notBeAnnotatedWith("lombok.Value")
-            .andShould().notBeAnnotatedWith("lombok.Builder")
-            .andShould().notBeAnnotatedWith("lombok.Getter")
-            .andShould().notBeAnnotatedWith("lombok.Setter")
-            .andShould().notBeAnnotatedWith("lombok.AllArgsConstructor")
-            .andShould().notBeAnnotatedWith("lombok.NoArgsConstructor")
-            .because("Value Object는 Lombok을 사용하지 않고 Pure Java Record로 구현해야 합니다");
+        ArchRule rule =
+                classes()
+                        .that()
+                        .resideInAPackage("..vo..")
+                        .and()
+                        .areNotAnonymousClasses()
+                        .and()
+                        .areNotMemberClasses()
+                        .should()
+                        .notBeAnnotatedWith("lombok.Data")
+                        .andShould()
+                        .notBeAnnotatedWith("lombok.Value")
+                        .andShould()
+                        .notBeAnnotatedWith("lombok.Builder")
+                        .andShould()
+                        .notBeAnnotatedWith("lombok.Getter")
+                        .andShould()
+                        .notBeAnnotatedWith("lombok.Setter")
+                        .andShould()
+                        .notBeAnnotatedWith("lombok.AllArgsConstructor")
+                        .andShould()
+                        .notBeAnnotatedWith("lombok.NoArgsConstructor")
+                        .because("Value Object는 Lombok을 사용하지 않고 Pure Java Record로 구현해야 합니다");
 
         rule.check(classes);
     }
 
-    /**
-     * 규칙 6: Value Object는 JPA 어노테이션을 사용하지 않아야 한다
-     */
+    /** 규칙 6: Value Object는 JPA 어노테이션을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Value Object는 JPA 어노테이션을 사용하지 않아야 한다")
     void valueObjectsShouldNotUseJpa() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("..vo..")
-            .should().notBeAnnotatedWith("javax.persistence.Entity")
-            .andShould().notBeAnnotatedWith("javax.persistence.Table")
-            .andShould().notBeAnnotatedWith("javax.persistence.Embeddable")
-            .andShould().notBeAnnotatedWith("jakarta.persistence.Entity")
-            .andShould().notBeAnnotatedWith("jakarta.persistence.Table")
-            .andShould().notBeAnnotatedWith("jakarta.persistence.Embeddable")
-            .because("Value Object는 JPA 어노테이션을 사용하지 않아야 합니다");
+        ArchRule rule =
+                classes()
+                        .that()
+                        .resideInAPackage("..vo..")
+                        .and()
+                        .areNotAnonymousClasses()
+                        .and()
+                        .areNotMemberClasses()
+                        .should()
+                        .notBeAnnotatedWith("javax.persistence.Entity")
+                        .andShould()
+                        .notBeAnnotatedWith("javax.persistence.Table")
+                        .andShould()
+                        .notBeAnnotatedWith("javax.persistence.Embeddable")
+                        .andShould()
+                        .notBeAnnotatedWith("jakarta.persistence.Entity")
+                        .andShould()
+                        .notBeAnnotatedWith("jakarta.persistence.Table")
+                        .andShould()
+                        .notBeAnnotatedWith("jakarta.persistence.Embeddable")
+                        .because("Value Object는 JPA 어노테이션을 사용하지 않아야 합니다");
 
         rule.check(classes);
     }
 
-    /**
-     * 규칙 7: Value Object는 Spring 어노테이션을 사용하지 않아야 한다
-     */
+    /** 규칙 7: Value Object는 Spring 어노테이션을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Value Object는 Spring 어노테이션을 사용하지 않아야 한다")
     void valueObjectsShouldNotUseSpring() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("..vo..")
-            .should().notBeAnnotatedWith("org.springframework.stereotype.Component")
-            .andShould().notBeAnnotatedWith("org.springframework.stereotype.Service")
-            .andShould().notBeAnnotatedWith("org.springframework.context.annotation.Configuration")
-            .because("Value Object는 Spring 어노테이션을 사용하지 않아야 합니다");
+        ArchRule rule =
+                classes()
+                        .that()
+                        .resideInAPackage("..vo..")
+                        .and()
+                        .areNotAnonymousClasses()
+                        .and()
+                        .areNotMemberClasses()
+                        .should()
+                        .notBeAnnotatedWith("org.springframework.stereotype.Component")
+                        .andShould()
+                        .notBeAnnotatedWith("org.springframework.stereotype.Service")
+                        .andShould()
+                        .notBeAnnotatedWith("org.springframework.context.annotation.Configuration")
+                        .because("Value Object는 Spring 어노테이션을 사용하지 않아야 합니다");
 
         rule.check(classes);
     }
 
-    /**
-     * 규칙 8: Value Object는 create*() 메서드를 사용하지 않아야 한다
-     */
+    /** 규칙 8: Value Object는 create*() 메서드를 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Value Object는 create*() 메서드를 사용하지 않아야 한다")
     void valueObjectsShouldNotHaveCreateMethod() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("..vo..")
-            .and().haveSimpleNameNotContaining("Fixture")
-            .and().haveSimpleNameNotContaining("Mother")
-            .and().haveSimpleNameNotContaining("Test")
-            .should(notHaveMethodsWithNameStartingWith("create"))
-            .because("Value Object는 create*() 대신 of(), forNew()를 사용해야 합니다");
+        ArchRule rule =
+                classes()
+                        .that()
+                        .resideInAPackage("..vo..")
+                        .and()
+                        .haveSimpleNameNotContaining("Fixture")
+                        .and()
+                        .haveSimpleNameNotContaining("Mother")
+                        .and()
+                        .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .areNotAnonymousClasses()
+                        .and()
+                        .areNotMemberClasses()
+                        .should(notHaveMethodsWithNameStartingWith("create"))
+                        .because("Value Object는 create*() 대신 of(), forNew()를 사용해야 합니다");
 
         rule.check(classes);
     }
 
     // ==================== 커스텀 ArchCondition 헬퍼 메서드 ====================
 
-    /**
-     * Record 타입인지 검증
-     */
+    /** Record 타입인지 검증 */
     private static ArchCondition<JavaClass> beRecords() {
         return new ArchCondition<JavaClass>("be records") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean isRecord = javaClass.getModifiers().contains(JavaModifier.FINAL)
-                    && javaClass.getAllMethods().stream()
-                        .anyMatch(method -> method.getName().equals("toString")
-                            && method.getModifiers().contains(JavaModifier.PUBLIC)
-                            && method.getModifiers().contains(JavaModifier.FINAL));
+                // Java Record는 java.lang.Record를 상속함
+                boolean isRecord =
+                        javaClass.getAllRawSuperclasses().stream()
+                                .anyMatch(
+                                        superClass ->
+                                                superClass.getName().equals("java.lang.Record"));
 
                 if (!isRecord) {
-                    String message = String.format(
-                        "Class %s is not a record. Use 'public record' instead of 'public class'",
-                        javaClass.getName()
-                    );
+                    String message =
+                            String.format(
+                                    "Class %s is not a record. Use 'public record' instead of"
+                                            + " 'public class'",
+                                    javaClass.getName());
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
             }
         };
     }
 
-    /**
-     * 클래스가 특정 이름의 public static 메서드를 가지고 있는지 검증
-     */
+    /** 클래스가 특정 이름의 public static 메서드를 가지고 있는지 검증 */
     private static ArchCondition<JavaClass> haveStaticMethodWithName(String methodName) {
         return new ArchCondition<JavaClass>("have public static method with name " + methodName) {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasMethod = javaClass.getAllMethods().stream()
-                    .anyMatch(method -> method.getName().equals(methodName)
-                        && method.getModifiers().contains(JavaModifier.STATIC)
-                        && method.getModifiers().contains(JavaModifier.PUBLIC));
+                boolean hasMethod =
+                        javaClass.getAllMethods().stream()
+                                .anyMatch(
+                                        method ->
+                                                method.getName().equals(methodName)
+                                                        && method.getModifiers()
+                                                                .contains(JavaModifier.STATIC)
+                                                        && method.getModifiers()
+                                                                .contains(JavaModifier.PUBLIC));
 
                 if (!hasMethod) {
-                    String message = String.format(
-                        "Class %s does not have a public static method named '%s'",
-                        javaClass.getName(), methodName
-                    );
+                    String message =
+                            String.format(
+                                    "Class %s does not have a public static method named '%s'",
+                                    javaClass.getName(), methodName);
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
             }
         };
     }
 
-    /**
-     * 클래스가 특정 이름의 메서드를 가지고 있는지 검증 (static 아님)
-     */
+    /** 클래스가 특정 이름의 메서드를 가지고 있는지 검증 (static 아님) */
     private static ArchCondition<JavaClass> haveMethodWithName(String methodName) {
         return new ArchCondition<JavaClass>("have method with name " + methodName) {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasMethod = javaClass.getAllMethods().stream()
-                    .anyMatch(method -> method.getName().equals(methodName));
+                boolean hasMethod =
+                        javaClass.getAllMethods().stream()
+                                .anyMatch(method -> method.getName().equals(methodName));
 
                 if (!hasMethod) {
-                    String message = String.format(
-                        "Class %s does not have a method named '%s'",
-                        javaClass.getName(), methodName
-                    );
+                    String message =
+                            String.format(
+                                    "Class %s does not have a method named '%s'",
+                                    javaClass.getName(), methodName);
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
             }
         };
     }
 
-    /**
-     * 클래스가 특정 접두사로 시작하는 메서드를 가지지 않는지 검증
-     */
+    /** 클래스가 특정 접두사로 시작하는 메서드를 가지지 않는지 검증 */
     private static ArchCondition<JavaClass> notHaveMethodsWithNameStartingWith(String prefix) {
         return new ArchCondition<JavaClass>("not have methods with name starting with " + prefix) {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
                 javaClass.getAllMethods().stream()
-                    .filter(method -> method.getName().startsWith(prefix))
-                    .forEach(method -> {
-                        String message = String.format(
-                            "Class %s has method %s starting with '%s' which is prohibited",
-                            javaClass.getName(), method.getName(), prefix
-                        );
-                        events.add(SimpleConditionEvent.violated(javaClass, message));
-                    });
+                        .filter(method -> method.getName().startsWith(prefix))
+                        .forEach(
+                                method -> {
+                                    String message =
+                                            String.format(
+                                                    "Class %s has method %s starting with '%s'"
+                                                            + " which is prohibited",
+                                                    javaClass.getName(), method.getName(), prefix);
+                                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                                });
             }
         };
     }

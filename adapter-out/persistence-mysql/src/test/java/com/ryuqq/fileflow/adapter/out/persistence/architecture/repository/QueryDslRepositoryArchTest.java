@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.adapter.out.persistence.architecture.repository;
+package com.ryuqq.crawlinghub.adapter.out.persistence.architecture.repository;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +47,7 @@ class QueryDslRepositoryArchTest {
     @BeforeAll
     static void setUp() {
         allClasses = new ClassFileImporter()
-            .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+            .importPackages("com.ryuqq.adapter.out.persistence");
 
         // QueryDslRepository 클래스만
         queryDslRepositoryClasses = allClasses.that(
