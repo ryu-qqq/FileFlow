@@ -275,6 +275,34 @@ resource "aws_iam_role_policy" "eventbridge_access" {
   })
 }
 
+# ADOT permissions for AMP and S3 config
+resource "aws_iam_role_policy" "adot_amp_access" {
+  name = "${var.project_name}-web-api-adot-amp-${var.environment}"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AMPRemoteWrite"
+        Effect = "Allow"
+        Action = [
+          "aps:RemoteWrite"
+        ]
+        Resource = "arn:aws:aps:${var.aws_region}:*:workspace/*"
+      },
+      {
+        Sid    = "S3ConfigAccess"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "arn:aws:s3:::connectly-prod/*"
+      }
+    ]
+  })
+}
+
 # ========================================
 # CloudWatch Log Group (using infrastructure module)
 # ========================================
@@ -373,6 +401,29 @@ resource "aws_ecs_task_definition" "web_api" {
         timeout     = 5
         retries     = 3
         startPeriod = 60
+      }
+    },
+    # ADOT Sidecar for metrics collection to AMP
+    {
+      name      = "adot-collector"
+      image     = "public.ecr.aws/aws-observability/aws-otel-collector:latest"
+      cpu       = 256
+      memory    = 512
+      essential = false
+
+      command = [
+        "--config=https://cdn.set-of.com/otel-config/fileflow-web-api/otel-config.yaml"
+      ]
+
+      environment = []
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = module.web_api_logs.log_group_name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "adot"
+        }
       }
     }
   ])
