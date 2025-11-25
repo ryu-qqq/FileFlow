@@ -21,7 +21,7 @@ public class InvalidPartNumberException extends DomainException {
      */
     public InvalidPartNumberException(int partNumber, int totalParts) {
         super(
-                SessionErrorCode.INVALID_PART_NUMBER,
+                SessionErrorCode.INVALID_PART_NUMBER.getCode(),
                 String.format("Part 번호가 유효하지 않습니다: %d (전체: %d)", partNumber, totalParts));
     }
 }

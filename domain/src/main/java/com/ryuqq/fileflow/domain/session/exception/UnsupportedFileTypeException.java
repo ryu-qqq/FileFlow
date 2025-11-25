@@ -20,7 +20,7 @@ public class UnsupportedFileTypeException extends DomainException {
      */
     public UnsupportedFileTypeException(String mimeType) {
         super(
-                SessionErrorCode.UNSUPPORTED_FILE_TYPE,
+                SessionErrorCode.UNSUPPORTED_FILE_TYPE.getCode(),
                 String.format("지원하지 않는 파일 타입입니다. (요청: %s, 허용: image/*, text/html)", mimeType));
     }
 }

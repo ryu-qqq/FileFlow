@@ -18,7 +18,7 @@ public class ETagMismatchException extends DomainException {
      */
     public ETagMismatchException(ETag expectedETag, ETag actualETag) {
         super(
-                SessionErrorCode.ETAG_MISMATCH,
+                SessionErrorCode.ETAG_MISMATCH.getCode(),
                 String.format(
                         "업로드된 파일의 ETag가 일치하지 않습니다. 예상: %s, 실제: %s",
                         expectedETag.value(), actualETag.value()));
@@ -32,7 +32,7 @@ public class ETagMismatchException extends DomainException {
      */
     public ETagMismatchException(String expectedETag, String actualETag) {
         super(
-                SessionErrorCode.ETAG_MISMATCH,
+                SessionErrorCode.ETAG_MISMATCH.getCode(),
                 String.format(
                         "업로드된 파일의 ETag가 일치하지 않습니다. 예상: %s, 실제: %s", expectedETag, actualETag));
     }

@@ -86,7 +86,7 @@ public class UploadSessionErrorMapper implements ErrorMapper {
      */
     @Override
     public MappedError map(DomainException ex, Locale locale) {
-        String code = ex.errorCode().getCode();
+        String code = ex.code();
         HttpStatus status = statusMap.getOrDefault(code, HttpStatus.INTERNAL_SERVER_ERROR);
 
         String title = resolveTitle(code, locale);

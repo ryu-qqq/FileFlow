@@ -8,10 +8,9 @@ import com.ryuqq.fileflow.application.session.port.in.command.CompleteMultipartU
 import com.ryuqq.fileflow.application.session.port.out.client.S3ClientPort;
 import com.ryuqq.fileflow.application.session.port.out.query.FindCompletedPartQueryPort;
 import com.ryuqq.fileflow.application.session.port.out.query.FindUploadSessionQueryPort;
-import com.ryuqq.fileflow.domain.common.exception.DomainException;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
-import com.ryuqq.fileflow.domain.session.exception.SessionErrorCode;
+import com.ryuqq.fileflow.domain.session.exception.SessionNotFoundException;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import java.util.Comparator;
@@ -54,7 +53,7 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
         MultipartUploadSession session =
                 findUploadSessionQueryPort
                         .findMultipartUploadById(sessionId)
-                        .orElseThrow(() -> new DomainException(SessionErrorCode.SESSION_NOT_FOUND));
+                        .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
         // 2. CompletedParts 조회 및 정렬
         List<CompletedPart> completedParts =

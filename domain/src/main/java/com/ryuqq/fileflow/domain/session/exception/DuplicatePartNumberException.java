@@ -20,7 +20,7 @@ public class DuplicatePartNumberException extends DomainException {
      */
     public DuplicatePartNumberException(int partNumber) {
         super(
-                SessionErrorCode.DUPLICATE_PART_NUMBER,
+                SessionErrorCode.DUPLICATE_PART_NUMBER.getCode(),
                 String.format("Part %d는 이미 완료되었습니다.", partNumber));
     }
 }

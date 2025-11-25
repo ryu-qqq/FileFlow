@@ -1,93 +1,30 @@
 package com.ryuqq.fileflow.domain.common.exception;
 
-/**
- * Domain Layer 최상위 Exception
- *
- * <p>모든 Domain Exception은 이 클래스를 상속해야 합니다.
- *
- * <p><strong>설계 원칙</strong>:
- *
- * <ul>
- *   <li>RuntimeException 상속 (Unchecked Exception)
- *   <li>ErrorCode Enum 기반 에러 처리
- *   <li>Lombok 사용 금지 (Pure Java)
- *   <li>JPA/Spring 어노테이션 금지
- * </ul>
- *
- * <p><strong>사용 예시</strong>:
- *
- * <pre>{@code
- * public class InvalidMimeTypeException extends DomainException {
- *     public InvalidMimeTypeException(InvalidMimeTypeErrorCode errorCode) {
- *         super(errorCode);
- *     }
- * }
- * }</pre>
- *
- * @author development-team
- * @since 1.0.0
- */
+import java.util.Map;
+
+// domain 모듈
 public class DomainException extends RuntimeException {
 
-    /** 에러 코드 Enum */
-    private final ErrorCode errorCode;
+    private final String code; // ex) TENANT_NOT_FOUND
+    private final Map<String, Object> args; // 메시지 템플릿 파라미터 등 (선택)
 
-    /**
-     * ErrorCode 기반 생성자
-     *
-     * @param errorCode 에러 코드
-     */
-    public DomainException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
-    }
-
-    /**
-     * ErrorCode + 커스텀 메시지 기반 생성자
-     *
-     * @param errorCode 에러 코드
-     * @param message 커스텀 메시지
-     */
-    public DomainException(ErrorCode errorCode, String message) {
+    protected DomainException(String code, String message) {
         super(message);
-        this.errorCode = errorCode;
+        this.code = code;
+        this.args = Map.of();
     }
 
-    /**
-     * ErrorCode + Cause 기반 생성자
-     *
-     * @param errorCode 에러 코드
-     * @param cause 원인 예외
-     */
-    public DomainException(ErrorCode errorCode, Throwable cause) {
-        super(errorCode.getMessage(), cause);
-        this.errorCode = errorCode;
+    protected DomainException(String code, String message, Map<String, Object> args) {
+        super(message);
+        this.code = code;
+        this.args = args == null ? Map.of() : Map.copyOf(args);
     }
 
-    /**
-     * 에러 코드 Enum 반환
-     *
-     * @return ErrorCode
-     */
-    public ErrorCode errorCode() {
-        return errorCode;
-    }
-
-    /**
-     * 에러 코드 문자열 반환
-     *
-     * @return 에러 코드 (예: FILE-001)
-     */
     public String code() {
-        return errorCode.getCode();
+        return code;
     }
 
-    /**
-     * HTTP 상태 코드 반환
-     *
-     * @return HTTP 상태 코드 (예: 400, 404, 500)
-     */
-    public int httpStatus() {
-        return errorCode.getHttpStatus();
+    public Map<String, Object> args() {
+        return args;
     }
 }

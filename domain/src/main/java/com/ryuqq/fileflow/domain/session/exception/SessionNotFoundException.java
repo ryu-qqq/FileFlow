@@ -17,7 +17,7 @@ public class SessionNotFoundException extends DomainException {
      */
     public SessionNotFoundException(UploadSessionId sessionId) {
         super(
-                SessionErrorCode.SESSION_NOT_FOUND,
+                SessionErrorCode.SESSION_NOT_FOUND.getCode(),
                 String.format("세션을 찾을 수 없습니다: %s", sessionId.value()));
     }
 
@@ -28,7 +28,7 @@ public class SessionNotFoundException extends DomainException {
      */
     public SessionNotFoundException(String sessionIdString) {
         super(
-                SessionErrorCode.SESSION_NOT_FOUND,
+                SessionErrorCode.SESSION_NOT_FOUND.getCode(),
                 String.format("세션을 찾을 수 없습니다: %s", sessionIdString));
     }
 }
