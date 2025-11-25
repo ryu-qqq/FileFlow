@@ -1,25 +1,25 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.dto;
 
-
-import com.ryuqq.application.common.dto.response.SliceResponse;
-
+import com.ryuqq.fileflow.application.common.dto.response.SliceResponse;
 import java.util.List;
 import java.util.function.Function;
 
 /**
  * SliceApiResponse - 슬라이스 조회 REST API 응답 DTO (Cursor 기반)
  *
- * <p>REST API Layer 전용 응답 DTO로, Application Layer의 SliceResponse를 변환하여 사용합니다.</p>
+ * <p>REST API Layer 전용 응답 DTO로, Application Layer의 SliceResponse를 변환하여 사용합니다.
  *
- * <p><strong>Cursor 기반 페이지네이션:</strong></p>
+ * <p><strong>Cursor 기반 페이지네이션:</strong>
+ *
  * <ul>
- *   <li>무한 스크롤 UI에 적합</li>
- *   <li>COUNT 쿼리 불필요 (고성능)</li>
- *   <li>다음 페이지 존재 여부만 제공</li>
- *   <li>일반 사용자 페이지에 적합</li>
+ *   <li>무한 스크롤 UI에 적합
+ *   <li>COUNT 쿼리 불필요 (고성능)
+ *   <li>다음 페이지 존재 여부만 제공
+ *   <li>일반 사용자 페이지에 적합
  * </ul>
  *
- * <p><strong>응답 형식:</strong></p>
+ * <p><strong>응답 형식:</strong>
+ *
  * <pre>{@code
  * {
  *   "content": [...],
@@ -37,25 +37,19 @@ import java.util.function.Function;
  * @author windsurf
  * @since 1.0.0
  */
-public record SliceApiResponse<T>(
-    List<T> content,
-    int size,
-    boolean hasNext,
-    String nextCursor
-) {
+public record SliceApiResponse<T>(List<T> content, int size, boolean hasNext, String nextCursor) {
 
-    /**
-     * Compact Constructor - Defensive Copy
-     */
+    /** Compact Constructor - Defensive Copy */
     public SliceApiResponse {
-        content = List.copyOf(content);  // Immutability 보장
+        content = List.copyOf(content); // Immutability 보장
     }
 
     /**
      * Application Layer SliceResponse로부터 REST API SliceApiResponse 생성
      *
-     * <p>Application Layer의 SliceResponse를 Adapter-In Layer의 SliceApiResponse로 변환합니다.</p>
-     * <p>콘텐츠는 그대로 전달되며, 각 컨트롤러에서 적절한 ApiResponse DTO로 변환해야 합니다.</p>
+     * <p>Application Layer의 SliceResponse를 Adapter-In Layer의 SliceApiResponse로 변환합니다.
+     *
+     * <p>콘텐츠는 그대로 전달되며, 각 컨트롤러에서 적절한 ApiResponse DTO로 변환해야 합니다.
      *
      * @param <T> 콘텐츠 타입
      * @param appSliceResponse Application Layer의 SliceResponse
@@ -63,22 +57,21 @@ public record SliceApiResponse<T>(
      * @author windsurf
      * @since 1.0.0
      */
-    public static <T> SliceApiResponse<T> from(
-            SliceResponse<T> appSliceResponse) {
+    public static <T> SliceApiResponse<T> from(SliceResponse<T> appSliceResponse) {
 
         return new SliceApiResponse<>(
-            appSliceResponse.content(),
-            appSliceResponse.size(),
-            appSliceResponse.hasNext(),
-            appSliceResponse.nextCursor()
-        );
+                appSliceResponse.content(),
+                appSliceResponse.size(),
+                appSliceResponse.hasNext(),
+                appSliceResponse.nextCursor());
     }
 
     /**
      * Application Layer SliceResponse로부터 REST API SliceApiResponse 생성 (매퍼 함수 적용)
      *
-     * <p>Application Layer의 SliceResponse를 Adapter-In Layer의 SliceApiResponse로 변환하면서,</p>
-     * <p>각 콘텐츠 항목을 매퍼 함수를 통해 ApiResponse DTO로 변환합니다.</p>
+     * <p>Application Layer의 SliceResponse를 Adapter-In Layer의 SliceApiResponse로 변환하면서,
+     *
+     * <p>각 콘텐츠 항목을 매퍼 함수를 통해 ApiResponse DTO로 변환합니다.
      *
      * @param <S> Application Layer 콘텐츠 타입
      * @param <T> REST API Layer 콘텐츠 타입
@@ -89,19 +82,14 @@ public record SliceApiResponse<T>(
      * @since 1.0.0
      */
     public static <S, T> SliceApiResponse<T> from(
-            SliceResponse<S> appSliceResponse,
-            Function<S, T> mapper) {
+            SliceResponse<S> appSliceResponse, Function<S, T> mapper) {
 
-        List<T> content = appSliceResponse.content()
-            .stream()
-            .map(mapper)
-            .toList();
+        List<T> content = appSliceResponse.content().stream().map(mapper).toList();
 
         return new SliceApiResponse<>(
-            content,
-            appSliceResponse.size(),
-            appSliceResponse.hasNext(),
-            appSliceResponse.nextCursor()
-        );
+                content,
+                appSliceResponse.size(),
+                appSliceResponse.hasNext(),
+                appSliceResponse.nextCursor());
     }
 }

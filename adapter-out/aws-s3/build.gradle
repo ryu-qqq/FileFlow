@@ -1,0 +1,53 @@
+// ========================================
+// Adapter-Out: AWS S3
+// ========================================
+// Outbound adapter for AWS S3 operations
+// Implements S3ClientPort from application layer
+// Technology: AWS SDK v2
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // AWS SDK v2 - S3
+    implementation platform(libs.aws.bom)
+    implementation libs.aws.s3
+    implementation libs.aws.s3.transfer
+
+    // Spring Boot
+    implementation libs.spring.boot.starter.web
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.spring.boot.starter.test
+
+    // ArchUnit for architecture validation
+    testImplementation libs.archunit.junit5
+}
+
+// ========================================
+// Test Coverage (70% for adapters)
+// ========================================
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.70
+            }
+        }
+    }
+}
+
+tasks.test {
+    finalizedBy tasks.jacocoTestCoverageVerification
+}

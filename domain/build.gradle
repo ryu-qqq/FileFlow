@@ -26,6 +26,9 @@ dependencies {
     // Validation API (JSR-380) - Pure annotations, no implementation
     implementation libs.jakarta.validation.api
 
+    // SpotBugs Annotations (for @SuppressFBWarnings)
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.3'
+
     // ========================================
     // Test Dependencies
     // ========================================

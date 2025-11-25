@@ -1,0 +1,72 @@
+package com.ryuqq.fileflow.application.session.dto.command;
+
+/**
+ * Multipart 파일 업로드 세션 초기화 Command.
+ *
+ * <p>대용량 파일을 Part 단위로 나누어 업로드하기 위한 세션 생성 요청 정보를 담습니다.
+ *
+ * <p><strong>검증 규칙</strong>:
+ *
+ * <ul>
+ *   <li>fileName: null 불가, 빈 문자열 불가
+ *   <li>fileSize: 5MB ~ 5TB
+ *   <li>contentType: 허용된 MIME 타입만 가능
+ *   <li>partSize: 5MB ~ 5GB (기본값: 5MB)
+ *   <li>tenantId: 양수
+ *   <li>organizationId: 양수
+ *   <li>userId: 양수 (Customer), null 가능 (Admin/Seller는 email 사용)
+ *   <li>userEmail: null 가능 (Customer는 userId 사용)
+ * </ul>
+ *
+ * @param fileName 파일명 (확장자 포함)
+ * @param fileSize 파일 크기 (바이트)
+ * @param contentType Content-Type (MIME 타입)
+ * @param partSize 각 Part 크기 (바이트, 기본: 5MB)
+ * @param tenantId 테넌트 ID
+ * @param organizationId 조직 ID
+ * @param userId 사용자 ID (Customer 전용, null 가능)
+ * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
+ */
+public record InitMultipartUploadCommand(
+        String fileName,
+        long fileSize,
+        String contentType,
+        long partSize,
+        long tenantId,
+        long organizationId,
+        Long userId,
+        String userEmail) {
+
+    /**
+     * 값 기반 생성.
+     *
+     * @param fileName 파일명
+     * @param fileSize 파일 크기 (바이트)
+     * @param contentType Content-Type
+     * @param partSize 각 Part 크기 (바이트)
+     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID
+     * @param userId 사용자 ID (null 가능)
+     * @param userEmail 사용자 이메일 (null 가능)
+     * @return InitMultipartUploadCommand
+     */
+    public static InitMultipartUploadCommand of(
+            String fileName,
+            long fileSize,
+            String contentType,
+            long partSize,
+            long tenantId,
+            long organizationId,
+            Long userId,
+            String userEmail) {
+        return new InitMultipartUploadCommand(
+                fileName,
+                fileSize,
+                contentType,
+                partSize,
+                tenantId,
+                organizationId,
+                userId,
+                userEmail);
+    }
+}

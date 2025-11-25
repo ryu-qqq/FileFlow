@@ -1,0 +1,51 @@
+# ============================================================================
+# FileFlow - Atlantis Configuration
+# ============================================================================
+# PR-based Terraform automation for FileFlow infrastructure
+# ============================================================================
+
+version: 3
+
+automerge: false
+delete_source_branch_on_merge: false
+parallel_plan: true
+parallel_apply: false
+
+projects:
+  # ============================================================================
+  # Storage
+  # ============================================================================
+
+  # S3 Bucket for file uploads
+  - name: s3-prod
+    dir: terraform/s3
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      enabled: true
+    apply_requirements: ["approved", "mergeable"]
+    workflow: default
+
+  # ============================================================================
+  # Container Registry
+  # ============================================================================
+
+  # ECR Repository for Docker images
+  - name: ecr-prod
+    dir: terraform/ecr
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      enabled: true
+    apply_requirements: ["approved", "mergeable"]
+    workflow: default
+
+workflows:
+  default:
+    plan:
+      steps:
+        - init
+        - plan
+    apply:
+      steps:
+        - apply

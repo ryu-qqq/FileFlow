@@ -1,0 +1,73 @@
+package com.ryuqq.fileflow.adapter.out.persistence.redis.session.adapter;
+
+import com.ryuqq.fileflow.application.session.port.out.command.PersistUploadSessionCachePort;
+import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
+import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
+import java.time.Duration;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
+
+/**
+ * Upload Session Cache Adapter.
+ *
+ * <p>Redis를 통한 업로드 세션 캐싱을 담당합니다.
+ *
+ * <p><strong>책임</strong>:
+ *
+ * <ul>
+ *   <li>SingleUploadSession 캐시 저장
+ *   <li>MultipartUploadSession 캐시 저장
+ *   <li>TTL 기반 자동 만료
+ * </ul>
+ *
+ * <p><strong>Key Naming Convention</strong>:
+ *
+ * <ul>
+ *   <li>단일 업로드: cache::single-upload::{sessionId}
+ *   <li>멀티파트 업로드: cache::multipart-upload::{sessionId}
+ * </ul>
+ */
+@Component
+public class UploadSessionCacheAdapter implements PersistUploadSessionCachePort {
+
+    private static final String SINGLE_UPLOAD_KEY_PREFIX = "cache::single-upload::";
+    private static final String MULTIPART_UPLOAD_KEY_PREFIX = "cache::multipart-upload::";
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    public UploadSessionCacheAdapter(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    /**
+     * 단일 업로드 세션을 캐시에 저장합니다.
+     *
+     * @param session 저장할 세션
+     * @param ttl Time-To-Live (만료 시간)
+     */
+    @Override
+    public void persist(SingleUploadSession session, Duration ttl) {
+        String key = generateSingleUploadKey(session.getIdValue());
+        redisTemplate.opsForValue().set(key, session, ttl);
+    }
+
+    /**
+     * 멀티파트 업로드 세션을 캐시에 저장합니다.
+     *
+     * @param session 저장할 세션
+     * @param ttl Time-To-Live (만료 시간)
+     */
+    @Override
+    public void persist(MultipartUploadSession session, Duration ttl) {
+        String key = generateMultipartUploadKey(session.getId().value().toString());
+        redisTemplate.opsForValue().set(key, session, ttl);
+    }
+
+    private String generateSingleUploadKey(String sessionId) {
+        return SINGLE_UPLOAD_KEY_PREFIX + sessionId;
+    }
+
+    private String generateMultipartUploadKey(String sessionId) {
+        return MULTIPART_UPLOAD_KEY_PREFIX + sessionId;
+    }
+}

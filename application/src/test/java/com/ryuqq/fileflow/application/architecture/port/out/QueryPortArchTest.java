@@ -37,7 +37,7 @@ class QueryPortArchTest {
     @BeforeAll
     static void setUp() {
         classes = new ClassFileImporter()
-            .importPackages("com.ryuqq.fileflow.application");
+            .importPackages("com.ryuqq.application");
     }
 
     /**
