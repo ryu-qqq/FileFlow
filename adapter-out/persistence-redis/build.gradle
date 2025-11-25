@@ -1,0 +1,52 @@
+// ========================================
+// Adapter-Out: Persistence Redis
+// ========================================
+// Outbound adapter for Redis cache operations
+// Implements cache ports from application layer
+// Technology: Spring Data Redis + Lettuce
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Spring Data Redis
+    implementation libs.spring.boot.starter.data.redis
+
+    // Jackson for Serialization
+    implementation libs.jackson.databind
+    implementation libs.jackson.datatype.jsr310
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.spring.boot.starter.test
+
+    // ArchUnit for architecture validation
+    testImplementation libs.archunit.junit5
+}
+
+// ========================================
+// Test Coverage (70% for adapters)
+// ========================================
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.70
+            }
+        }
+    }
+}
+
+tasks.test {
+    finalizedBy tasks.jacocoTestCoverageVerification
+}

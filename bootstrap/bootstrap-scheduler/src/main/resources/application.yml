@@ -1,0 +1,33 @@
+# ===============================================
+# FileFlow Scheduler Bootstrap Configuration
+# ===============================================
+
+spring:
+  application:
+    name: fileflow-scheduler
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
+
+  config:
+    import:
+      - classpath:persistence.yml
+      - classpath:redis.yml
+      - classpath:s3.yml
+
+server:
+  port: ${SERVER_PORT:8081}
+
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: ${LOG_LEVEL:DEBUG}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized

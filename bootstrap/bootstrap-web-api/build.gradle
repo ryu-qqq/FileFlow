@@ -9,6 +9,8 @@ dependencies {
     implementation project(':application')
     implementation project(':adapter-in:rest-api')
     implementation project(':adapter-out:persistence-mysql')
+    implementation project(':adapter-out:persistence-redis')
+    implementation project(':adapter-out:aws-s3')
 
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter'

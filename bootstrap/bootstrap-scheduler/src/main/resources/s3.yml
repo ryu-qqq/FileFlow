@@ -1,0 +1,43 @@
+# ===============================================
+# AWS S3 Adapter Configuration
+# ===============================================
+
+---
+# ===============================================
+# Production Profile
+# ===============================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+aws:
+  s3:
+    region: ${AWS_REGION:ap-northeast-2}
+    bucket: ${AWS_S3_BUCKET:fileflow-bucket}
+    presigned-url:
+      expiration-minutes: 60
+
+  credentials:
+    access-key: ${AWS_ACCESS_KEY:}
+    secret-key: ${AWS_SECRET_KEY:}
+
+---
+# ===============================================
+# Test Profile
+# ===============================================
+spring:
+  config:
+    activate:
+      on-profile: test
+
+aws:
+  s3:
+    region: ap-northeast-2
+    bucket: test-bucket
+    presigned-url:
+      expiration-minutes: 60
+
+  credentials:
+    access-key: test-access-key
+    secret-key: test-secret-key

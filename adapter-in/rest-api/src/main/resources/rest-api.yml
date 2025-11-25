@@ -1,0 +1,48 @@
+# ===============================================
+# REST API Adapter Configuration
+# ===============================================
+
+# Common API Settings
+api:
+  endpoints:
+    base-v1: /api/v1
+    upload-session:
+      base: /upload-sessions
+      single:
+        init: /single
+        complete: /{sessionId}/single/complete
+      multipart:
+        init: /multipart
+        complete: /{sessionId}/multipart/complete
+      parts: /{sessionId}/parts
+      cancel: /{sessionId}/cancel
+
+  error:
+    base-url: about:blank
+    use-about-blank: true
+
+---
+# ===============================================
+# Production Profile
+# ===============================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+api:
+  error:
+    include-stacktrace: false
+
+---
+# ===============================================
+# Test Profile
+# ===============================================
+spring:
+  config:
+    activate:
+      on-profile: test
+
+api:
+  error:
+    include-stacktrace: true

@@ -11,14 +11,18 @@ include 'application'
 // ========================================
 // Inbound Adapters (Driving) - {type}-in-{subject}-{middleware}
 include 'adapter-in:rest-api'
+include 'adapter-in:redis-listener'
 
 // Outbound Adapters (Driven) - {purpose}-{technology}
 include 'adapter-out:persistence-mysql'
+include 'adapter-out:persistence-redis'
+include 'adapter-out:aws-s3'
 
 // ========================================
 // Bootstrap Modules (Runnable Applications)
 // ========================================
 include 'bootstrap:bootstrap-web-api'
+include 'bootstrap:bootstrap-scheduler'
 
 // ========================================
 // Project Structure
@@ -27,6 +31,10 @@ project(':domain').projectDir = file('domain')
 project(':application').projectDir = file('application')
 
 project(':adapter-in:rest-api').projectDir = file('adapter-in/rest-api')
+project(':adapter-in:redis-listener').projectDir = file('adapter-in/redis-listener')
 project(':adapter-out:persistence-mysql').projectDir = file('adapter-out/persistence-mysql')
+project(':adapter-out:persistence-redis').projectDir = file('adapter-out/persistence-redis')
+project(':adapter-out:aws-s3').projectDir = file('adapter-out/aws-s3')
 
 project(':bootstrap:bootstrap-web-api').projectDir = file('bootstrap/bootstrap-web-api')
+project(':bootstrap:bootstrap-scheduler').projectDir = file('bootstrap/bootstrap-scheduler')

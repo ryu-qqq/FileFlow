@@ -2,22 +2,20 @@ package com.ryuqq.fileflow.domain.common.exception;
 
 /**
  * Domain Layer 최상위 Exception
- * <p>
- * 모든 Domain Exception은 이 클래스를 상속해야 합니다.
- * </p>
  *
- * <p>
- * <strong>설계 원칙</strong>:
+ * <p>모든 Domain Exception은 이 클래스를 상속해야 합니다.
+ *
+ * <p><strong>설계 원칙</strong>:
+ *
  * <ul>
- *   <li>RuntimeException 상속 (Unchecked Exception)</li>
- *   <li>ErrorCode Enum 기반 에러 처리</li>
- *   <li>Lombok 사용 금지 (Pure Java)</li>
- *   <li>JPA/Spring 어노테이션 금지</li>
+ *   <li>RuntimeException 상속 (Unchecked Exception)
+ *   <li>ErrorCode Enum 기반 에러 처리
+ *   <li>Lombok 사용 금지 (Pure Java)
+ *   <li>JPA/Spring 어노테이션 금지
  * </ul>
- * </p>
  *
- * <p>
- * <strong>사용 예시</strong>:
+ * <p><strong>사용 예시</strong>:
+ *
  * <pre>{@code
  * public class InvalidMimeTypeException extends DomainException {
  *     public InvalidMimeTypeException(InvalidMimeTypeErrorCode errorCode) {
@@ -25,16 +23,13 @@ package com.ryuqq.fileflow.domain.common.exception;
  *     }
  * }
  * }</pre>
- * </p>
  *
  * @author development-team
  * @since 1.0.0
  */
 public class DomainException extends RuntimeException {
 
-    /**
-     * 에러 코드 Enum
-     */
+    /** 에러 코드 Enum */
     private final ErrorCode errorCode;
 
     /**

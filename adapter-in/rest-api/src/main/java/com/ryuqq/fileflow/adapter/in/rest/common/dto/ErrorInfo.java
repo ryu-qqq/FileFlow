@@ -3,9 +3,10 @@ package com.ryuqq.fileflow.adapter.in.rest.common.dto;
 /**
  * ErrorInfo - API 에러 정보
  *
- * <p>API 응답에서 발생한 에러의 상세 정보를 담습니다.</p>
+ * <p>API 응답에서 발생한 에러의 상세 정보를 담습니다.
  *
- * <p><strong>사용 예시:</strong></p>
+ * <p><strong>사용 예시:</strong>
+ *
  * <pre>{@code
  * ErrorInfo error = new ErrorInfo(
  *     "TENANT_NOT_FOUND",
@@ -13,10 +14,11 @@ package com.ryuqq.fileflow.adapter.in.rest.common.dto;
  * );
  * }</pre>
  *
- * <p><strong>에러 코드 규칙:</strong></p>
+ * <p><strong>에러 코드 규칙:</strong>
+ *
  * <ul>
- *   <li>대문자 스네이크 케이스 사용 (UPPER_SNAKE_CASE)</li>
- *   <li>도메인_상황_상태 형식 권장 (예: USER_NOT_FOUND, ORDER_INVALID_STATUS)</li>
+ *   <li>대문자 스네이크 케이스 사용 (UPPER_SNAKE_CASE)
+ *   <li>도메인_상황_상태 형식 권장 (예: USER_NOT_FOUND, ORDER_INVALID_STATUS)
  * </ul>
  *
  * @param errorCode 에러 코드 (예: "TENANT_NOT_FOUND")
@@ -24,10 +26,7 @@ package com.ryuqq.fileflow.adapter.in.rest.common.dto;
  * @author ryu-qqq
  * @since 2025-10-23
  */
-public record ErrorInfo(
-    String errorCode,
-    String message
-) {
+public record ErrorInfo(String errorCode, String message) {
     /**
      * ErrorInfo 생성자
      *

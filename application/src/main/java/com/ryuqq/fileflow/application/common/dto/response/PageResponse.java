@@ -5,23 +5,26 @@ import java.util.List;
 /**
  * PageResponse - 오프셋 기반 페이징 응답
  *
- * <p>전통적인 페이지 번호 기반 페이징을 위한 응답 구조입니다.</p>
+ * <p>전통적인 페이지 번호 기반 페이징을 위한 응답 구조입니다.
  *
- * <p><strong>Application Layer DTO:</strong></p>
+ * <p><strong>Application Layer DTO:</strong>
+ *
  * <ul>
- *   <li>Application Layer와 Adapter Layer 모두에서 사용 가능</li>
- *   <li>페이징 로직의 재사용성 향상</li>
- *   <li>Layer 간 일관된 페이징 인터페이스 제공</li>
+ *   <li>Application Layer와 Adapter Layer 모두에서 사용 가능
+ *   <li>페이징 로직의 재사용성 향상
+ *   <li>Layer 간 일관된 페이징 인터페이스 제공
  * </ul>
  *
- * <p><strong>사용 시나리오:</strong></p>
+ * <p><strong>사용 시나리오:</strong>
+ *
  * <ul>
- *   <li>페이지 번호가 있는 일반적인 페이징 UI</li>
- *   <li>전체 페이지 수를 알아야 하는 경우</li>
- *   <li>임의의 페이지로 점프가 필요한 경우</li>
+ *   <li>페이지 번호가 있는 일반적인 페이징 UI
+ *   <li>전체 페이지 수를 알아야 하는 경우
+ *   <li>임의의 페이지로 점프가 필요한 경우
  * </ul>
  *
- * <p><strong>사용 예시:</strong></p>
+ * <p><strong>사용 예시:</strong>
+ *
  * <pre>{@code
  * // UseCase에서 사용
  * PageResponse<TenantResponse> pageResponse = PageResponse.of(
@@ -38,7 +41,8 @@ import java.util.List;
  * return ResponseEntity.ok(ApiResponse.ofSuccess(pageResponse));
  * }</pre>
  *
- * <p><strong>응답 형식:</strong></p>
+ * <p><strong>응답 형식:</strong>
+ *
  * <pre>{@code
  * {
  *   "content": [...],
@@ -63,14 +67,13 @@ import java.util.List;
  * @since 2025-10-23
  */
 public record PageResponse<T>(
-    List<T> content,
-    int page,
-    int size,
-    long totalElements,
-    int totalPages,
-    boolean first,
-    boolean last
-) {
+        List<T> content,
+        int page,
+        int size,
+        long totalElements,
+        int totalPages,
+        boolean first,
+        boolean last) {
 
     /**
      * PageResponse 생성 (정적 팩토리 메서드)
@@ -88,23 +91,14 @@ public record PageResponse<T>(
      * @since 2025-10-23
      */
     public static <T> PageResponse<T> of(
-        List<T> content,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages,
-        boolean first,
-        boolean last
-    ) {
-        return new PageResponse<>(
-            content,
-            page,
-            size,
-            totalElements,
-            totalPages,
-            first,
-            last
-        );
+            List<T> content,
+            int page,
+            int size,
+            long totalElements,
+            int totalPages,
+            boolean first,
+            boolean last) {
+        return new PageResponse<>(content, page, size, totalElements, totalPages, first, last);
     }
 
     /**
@@ -118,14 +112,6 @@ public record PageResponse<T>(
      * @since 2025-10-23
      */
     public static <T> PageResponse<T> empty(int page, int size) {
-        return new PageResponse<>(
-            List.of(),
-            page,
-            size,
-            0L,
-            0,
-            true,
-            true
-        );
+        return new PageResponse<>(List.of(), page, size, 0L, 0, true, true);
     }
 }

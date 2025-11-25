@@ -1,49 +1,29 @@
+# ===============================================
+# FileFlow Web API Bootstrap Configuration
+# ===============================================
+
 spring:
   application:
     name: fileflow-api
 
   profiles:
-    active: local
+    active: ${SPRING_PROFILES_ACTIVE:prod}
 
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL:jdbc:mysql://localhost:3306/fileflow?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
-        use_sql_comments: true
-        default_batch_fetch_size: 100
-
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
-    baseline-version: 0
+  config:
+    import:
+      - classpath:rest-api.yml
+      - classpath:persistence.yml
+      - classpath:redis.yml
+      - classpath:s3.yml
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   shutdown: graceful
 
 logging:
   level:
     root: INFO
-    com.ryuqq.fileflow: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.ryuqq.fileflow: ${LOG_LEVEL:DEBUG}
 
 management:
   endpoints:
@@ -52,31 +32,4 @@ management:
         include: health,info,metrics
   endpoint:
     health:
-      show-details: always
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
-
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-  jpa:
-    properties:
-      hibernate:
-        format_sql: false
-        use_sql_comments: false
-  logging:
-    level:
-      com.ryuqq.fileflow: INFO
-      org.hibernate.SQL: INFO
+      show-details: when_authorized

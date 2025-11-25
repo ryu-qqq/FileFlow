@@ -1,14 +1,10 @@
 package com.ryuqq.fileflow.domain.session.vo;
 
 /**
- * 업로드 세션의 상태를 정의하는 Enum.
- * 상태 전환 규칙:
- * - PREPARING → ACTIVE (허용)
- * - ACTIVE → COMPLETED, EXPIRED, FAILED (허용)
- * - 기타 전환은 모두 거부
+ * 업로드 세션의 상태를 정의하는 Enum. 상태 전환 규칙: - PREPARING → ACTIVE (허용) - ACTIVE → COMPLETED, EXPIRED, FAILED
+ * (허용) - 기타 전환은 모두 거부
  */
 public enum SessionStatus {
-
     PREPARING,
     ACTIVE,
     COMPLETED,
@@ -29,4 +25,3 @@ public enum SessionStatus {
         };
     }
 }
-
