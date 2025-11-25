@@ -24,7 +24,7 @@ public class InvalidSessionStatusException extends DomainException {
     public InvalidSessionStatusException(
             SessionStatus currentStatus, SessionStatus requestedStatus) {
         super(
-                SessionErrorCode.INVALID_SESSION_STATUS,
+                SessionErrorCode.INVALID_SESSION_STATUS.getCode(),
                 String.format(
                         "세션 상태 전환이 불가능합니다. (현재: %s, 요청: %s)", currentStatus, requestedStatus));
     }

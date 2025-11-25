@@ -21,7 +21,7 @@ public class SessionExpiredException extends DomainException {
      */
     public SessionExpiredException(LocalDateTime expiresAt) {
         super(
-                SessionErrorCode.SESSION_EXPIRED,
+                SessionErrorCode.SESSION_EXPIRED.getCode(),
                 String.format("세션이 만료되었습니다. (만료 시각: %s)", expiresAt));
     }
 }

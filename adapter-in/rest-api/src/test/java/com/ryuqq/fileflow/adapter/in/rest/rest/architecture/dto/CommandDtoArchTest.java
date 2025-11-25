@@ -44,7 +44,7 @@ class CommandDtoArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.adapter.in.rest");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.adapter.in.rest");
     }
 
     /** 규칙 1: Record 타입 필수 */

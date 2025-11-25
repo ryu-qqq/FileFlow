@@ -6,9 +6,8 @@ import com.ryuqq.fileflow.application.session.dto.response.MarkPartUploadedRespo
 import com.ryuqq.fileflow.application.session.manager.UploadSessionManager;
 import com.ryuqq.fileflow.application.session.port.in.command.MarkPartUploadedUseCase;
 import com.ryuqq.fileflow.application.session.port.out.query.FindCompletedPartQueryPort;
-import com.ryuqq.fileflow.domain.common.exception.DomainException;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
-import com.ryuqq.fileflow.domain.session.exception.SessionErrorCode;
+import com.ryuqq.fileflow.domain.session.exception.SessionNotFoundException;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import org.springframework.stereotype.Service;
@@ -54,7 +53,7 @@ public class MarkPartUploadedService implements MarkPartUploadedUseCase {
         CompletedPart part =
                 findCompletedPartQueryPort
                         .findBySessionIdAndPartNumber(sessionId, command.partNumber())
-                        .orElseThrow(() -> new DomainException(SessionErrorCode.PART_NOT_FOUND));
+                        .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
         // 3. Domain 메서드 호출 (Part 완료 처리)
         part.complete(etag, command.size());

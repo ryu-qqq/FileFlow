@@ -43,7 +43,7 @@ class MapperArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.adapter.in.rest");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.adapter.in.rest");
     }
 
     /** 규칙 1: @Component 어노테이션 필수 */
