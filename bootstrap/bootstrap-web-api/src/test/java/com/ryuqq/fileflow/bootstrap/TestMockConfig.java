@@ -45,7 +45,8 @@ public class TestMockConfig {
     public DistributedLockPort distributedLockPort() {
         return new DistributedLockPort() {
             @Override
-            public boolean tryLock(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit) {
+            public boolean tryLock(
+                    String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit) {
                 return true;
             }
 
@@ -56,13 +57,21 @@ public class TestMockConfig {
 
             @Override
             public <T> T executeWithLock(
-                    String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit, Supplier<T> action) {
+                    String lockKey,
+                    long waitTime,
+                    long leaseTime,
+                    TimeUnit timeUnit,
+                    Supplier<T> action) {
                 return action.get();
             }
 
             @Override
             public boolean executeWithLock(
-                    String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit, Runnable action) {
+                    String lockKey,
+                    long waitTime,
+                    long leaseTime,
+                    TimeUnit timeUnit,
+                    Runnable action) {
                 action.run();
                 return true;
             }
