@@ -7,7 +7,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,9 +30,11 @@ import org.springframework.stereotype.Component;
  *   <li>EXTERNAL_DOWNLOAD: {@code external-download:{externalDownloadId}}
  *   <li>UPLOAD_SESSION: {@code upload-session:{sessionId}}
  * </ul>
+ *
+ * <p><strong>활성화 조건</strong>: {@code redisson.enabled=true}
  */
 @Component
-@ConditionalOnBean(RedissonClient.class)
+@ConditionalOnProperty(name = "redisson.enabled", havingValue = "true")
 public class DistributedLockAdapter implements DistributedLockPort {
 
     private static final Logger log = LoggerFactory.getLogger(DistributedLockAdapter.class);
