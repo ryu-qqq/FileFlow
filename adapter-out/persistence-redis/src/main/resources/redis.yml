@@ -4,6 +4,12 @@
 
 # Common Redis Settings
 spring:
+  # Exclude Redisson Spring Boot Starter auto-configuration
+  # We use custom RedissonConfig instead
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+
   data:
     redis:
       timeout: 3000ms
