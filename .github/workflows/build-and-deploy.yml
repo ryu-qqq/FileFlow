@@ -8,6 +8,7 @@
 name: Build and Deploy to ECS
 
 on:
+  workflow_dispatch:  # 수동 트리거 허용
   push:
     branches:
       - main
