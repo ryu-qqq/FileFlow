@@ -218,12 +218,8 @@ jobs:
             -f bootstrap/bootstrap-web-api/Dockerfile \
             -t "${IMAGE_URI}" .
 
-          # Latest 태그도 추가
-          docker tag "${IMAGE_URI}" "${ECR_REGISTRY}/${ECR_REPOSITORY}:web-api-latest"
-
           echo "📤 Pushing to ECR..."
           docker push "${IMAGE_URI}"
-          docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:web-api-latest"
 
           echo "image=${IMAGE_URI}" >> $GITHUB_OUTPUT
           echo "✅ Image pushed: ${IMAGE_URI}"
@@ -299,11 +295,8 @@ jobs:
             -f bootstrap/bootstrap-download-worker/Dockerfile \
             -t "${IMAGE_URI}" .
 
-          docker tag "${IMAGE_URI}" "${ECR_REGISTRY}/${ECR_REPOSITORY}:download-worker-latest"
-
           echo "📤 Pushing to ECR..."
           docker push "${IMAGE_URI}"
-          docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:download-worker-latest"
 
           echo "image=${IMAGE_URI}" >> $GITHUB_OUTPUT
           echo "✅ Image pushed: ${IMAGE_URI}"
@@ -379,11 +372,8 @@ jobs:
             -f bootstrap/bootstrap-scheduler/Dockerfile \
             -t "${IMAGE_URI}" .
 
-          docker tag "${IMAGE_URI}" "${ECR_REGISTRY}/${ECR_REPOSITORY}:scheduler-latest"
-
           echo "📤 Pushing to ECR..."
           docker push "${IMAGE_URI}"
-          docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:scheduler-latest"
 
           echo "image=${IMAGE_URI}" >> $GITHUB_OUTPUT
           echo "✅ Image pushed: ${IMAGE_URI}"
