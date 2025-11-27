@@ -8,7 +8,7 @@ import com.ryuqq.fileflow.application.download.port.out.client.SqsPublishPort;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -24,10 +24,10 @@ import org.springframework.stereotype.Component;
  *   <li>실패 시 false 반환 (예외를 던지지 않음)
  * </ul>
  *
- * <p><strong>활성화 조건</strong>: SqsTemplate 빈이 존재할 때만 활성화
+ * <p><strong>활성화 조건</strong>: {@code sqs.publish.enabled=true}
  */
 @Component
-@ConditionalOnBean(SqsTemplate.class)
+@ConditionalOnProperty(name = "sqs.publish.enabled", havingValue = "true")
 public class SqsPublishAdapter implements SqsPublishPort {
 
     private static final Logger log = LoggerFactory.getLogger(SqsPublishAdapter.class);
