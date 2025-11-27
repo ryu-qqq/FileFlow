@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.redis.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -22,9 +22,11 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  *   <li>Key: StringRedisSerializer
  *   <li>Value: GenericJackson2JsonRedisSerializer (타입 정보 보존)
  * </ul>
+ *
+ * <p><strong>활성화 조건</strong>: {@code redisson.enabled=true}
  */
 @Configuration
-@ConditionalOnBean(RedisConnectionFactory.class)
+@ConditionalOnProperty(name = "redisson.enabled", havingValue = "true")
 public class RedisConfig {
 
     @Bean

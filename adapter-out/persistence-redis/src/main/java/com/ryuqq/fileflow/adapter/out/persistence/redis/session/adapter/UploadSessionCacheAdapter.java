@@ -4,7 +4,7 @@ import com.ryuqq.fileflow.application.session.port.out.command.UploadSessionCach
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import java.time.Duration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -27,9 +27,11 @@ import org.springframework.stereotype.Component;
  *   <li>단일 업로드: cache::single-upload::{sessionId}
  *   <li>멀티파트 업로드: cache::multipart-upload::{sessionId}
  * </ul>
+ *
+ * <p><strong>활성화 조건</strong>: {@code redisson.enabled=true}
  */
 @Component
-@ConditionalOnBean(RedisTemplate.class)
+@ConditionalOnProperty(name = "redisson.enabled", havingValue = "true")
 public class UploadSessionCacheAdapter implements UploadSessionCachePersistencePort {
 
     private static final String SINGLE_UPLOAD_KEY_PREFIX = "cache::single-upload::";
