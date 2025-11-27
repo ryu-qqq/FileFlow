@@ -33,6 +33,11 @@ spring:
 redisson:
   enabled: false
 
+# Disable SQS publishing for tests (use mock from TestMockConfig)
+sqs:
+  publish:
+    enabled: false
+
 aws:
   credentials:
     access-key: test-access-key
