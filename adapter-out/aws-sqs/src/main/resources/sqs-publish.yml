@@ -5,6 +5,11 @@
 # Environment variables are injected via ECS Task Definition
 # ========================================
 
+# Enable/disable SQS publishing (default: false for safety)
+sqs:
+  publish:
+    enabled: ${SQS_PUBLISH_ENABLED:false}
+
 spring:
   cloud:
     aws:
