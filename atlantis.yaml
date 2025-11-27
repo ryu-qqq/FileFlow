@@ -25,12 +25,13 @@ projects:
       enabled: true
 
   # ============================================================================
-  # Storage (DISABLED - Atlantis IAM needs s3:GetBucketPolicy permission)
+  # Storage
   # ============================================================================
-  # TODO: Re-enable after adding s3:GetBucketPolicy to Atlantis ECS Task Role
-  # - name: s3-prod
-  #   dir: terraform/s3
-  #   workspace: default
-  #   autoplan:
-  #     when_modified: ["*.tf", "*.tfvars"]
-  #     enabled: true
+
+  # S3 Bucket for file uploads
+  - name: s3-prod
+    dir: terraform/s3
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
