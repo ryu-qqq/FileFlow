@@ -3,6 +3,8 @@ package com.ryuqq.fileflow.adapter.out.persistence.redis.lock.config;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +27,8 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(name = "redisson.enabled", havingValue = "true", matchIfMissing = true)
 public class RedissonConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(RedissonConfig.class);
+
     /**
      * Redisson Client Bean.
      *
@@ -40,19 +44,29 @@ public class RedissonConfig {
     public RedissonClient redissonClient(
             @Value("${spring.data.redis.host:localhost}") String host,
             @Value("${spring.data.redis.port:6379}") int port,
-            @Value("${redisson.connection-pool-size:64}") int connectionPoolSize,
-            @Value("${redisson.connection-minimum-idle-size:24}") int connectionMinimumIdleSize,
+            @Value("${redisson.connection-pool-size:16}") int connectionPoolSize,
+            @Value("${redisson.connection-minimum-idle-size:4}") int connectionMinimumIdleSize,
             @Value("${redisson.timeout:3000}") int timeout,
             @Value("${redisson.connect-timeout:10000}") int connectTimeout) {
 
-        Config config = new Config();
-        config.useSingleServer()
-                .setAddress("redis://" + host + ":" + port)
-                .setConnectionPoolSize(connectionPoolSize)
-                .setConnectionMinimumIdleSize(connectionMinimumIdleSize)
-                .setTimeout(timeout)
-                .setConnectTimeout(connectTimeout);
+        log.info("Creating RedissonClient - host: {}, port: {}, poolSize: {}, minIdle: {}",
+                host, port, connectionPoolSize, connectionMinimumIdleSize);
 
-        return Redisson.create(config);
+        try {
+            Config config = new Config();
+            config.useSingleServer()
+                    .setAddress("redis://" + host + ":" + port)
+                    .setConnectionPoolSize(connectionPoolSize)
+                    .setConnectionMinimumIdleSize(connectionMinimumIdleSize)
+                    .setTimeout(timeout)
+                    .setConnectTimeout(connectTimeout);
+
+            RedissonClient client = Redisson.create(config);
+            log.info("RedissonClient created successfully");
+            return client;
+        } catch (Exception e) {
+            log.error("Failed to create RedissonClient: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 }
