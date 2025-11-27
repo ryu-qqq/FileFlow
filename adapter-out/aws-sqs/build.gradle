@@ -1,0 +1,55 @@
+// ========================================
+// Adapter-Out: AWS SQS
+// ========================================
+// Outbound adapter for AWS SQS operations
+// Implements SqsPublishPort from application layer
+// Technology: Spring Cloud AWS SQS
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter'
+
+    // Spring Cloud AWS SQS
+    implementation libs.spring.cloud.aws.sqs
+
+    // JSON Processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.spring.boot.starter.test
+
+    // ArchUnit for architecture validation
+    testImplementation libs.archunit.junit5
+}
+
+// ========================================
+// Test Coverage (disabled during development)
+// ========================================
+tasks.jacocoTestCoverageVerification {
+    enabled = false
+}
+
+tasks.test {
+    useJUnitPlatform {
+        excludeTags 'arch-test'
+    }
+    filter {
+        excludeTestsMatching '*ArchTest'
+        failOnNoMatchingTests = false
+    }
+}

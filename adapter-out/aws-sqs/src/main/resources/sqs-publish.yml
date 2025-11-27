@@ -1,0 +1,25 @@
+# ========================================
+# SQS Publish Configuration
+# ========================================
+# Spring Cloud AWS SQS Publisher configuration
+# Environment variables are injected via ECS Task Definition
+# ========================================
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+
+aws:
+  sqs:
+    publish:
+      # ========================================
+      # Queue URLs (from Terraform SSM Parameters)
+      # ========================================
+      # ExternalDownload Queue: sends download tasks
+      external-download-queue-url: ${SQS_EXTERNAL_DOWNLOAD_QUEUE_URL:}
+
+logging:
+  level:
+    com.ryuqq.fileflow.adapter.out.aws.sqs: INFO
