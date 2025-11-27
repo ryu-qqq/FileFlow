@@ -24,6 +24,15 @@ spring:
       host: localhost
       port: 6379
 
+# Disable Redisson for tests (no Redis connection needed)
+redisson:
+  enabled: false
+
+# Disable SQS publishing for tests (use mock if needed)
+sqs:
+  publish:
+    enabled: false
+
 aws:
   credentials:
     access-key: test-access-key
