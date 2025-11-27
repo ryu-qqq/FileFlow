@@ -20,6 +20,7 @@ spring:
       - classpath:persistence.yml
       - classpath:redis.yml
       - classpath:s3.yml
+      - classpath:sqs-publish.yml
 
 # Enable Redisson for Redis operations
 redisson:
