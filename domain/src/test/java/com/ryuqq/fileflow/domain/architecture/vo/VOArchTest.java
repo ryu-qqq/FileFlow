@@ -42,10 +42,10 @@ class VOArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.domain");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.domain");
     }
 
-    /** 규칙 1: Value Object는 Record여야 한다 */
+    /** 규칙 1: Value Object는 Record여야 한다 (Enum 제외) */
     @Test
     @DisplayName("[필수] Value Object는 Record로 구현되어야 한다")
     void valueObjectsShouldBeRecords() {
@@ -63,13 +63,15 @@ class VOArchTest {
                         .areNotAnonymousClasses()
                         .and()
                         .areNotMemberClasses()
+                        .and()
+                        .areNotEnums() // Enum은 Record가 아니므로 제외
                         .should(beRecords())
-                        .because("Value Object는 Java 21 Record로 구현해야 합니다");
+                        .because("Value Object는 Java 21 Record로 구현해야 합니다 (Enum 제외)");
 
         rule.check(classes);
     }
 
-    /** 규칙 2: Value Object는 of() 메서드를 가져야 한다 */
+    /** 규칙 2: Value Object는 of() 메서드를 가져야 한다 (Enum 제외) */
     @Test
     @DisplayName("[필수] Value Object는 of() 정적 팩토리 메서드를 가져야 한다")
     void valueObjectsShouldHaveOfMethod() {
@@ -87,8 +89,10 @@ class VOArchTest {
                         .areNotAnonymousClasses()
                         .and()
                         .areNotMemberClasses()
+                        .and()
+                        .areNotEnums() // Enum은 자체 valueOf()를 사용하므로 제외
                         .should(haveStaticMethodWithName("of"))
-                        .because("Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다");
+                        .because("Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다 (Enum 제외)");
 
         rule.check(classes);
     }

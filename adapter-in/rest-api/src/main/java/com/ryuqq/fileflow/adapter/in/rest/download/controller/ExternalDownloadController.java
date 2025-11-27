@@ -1,0 +1,118 @@
+package com.ryuqq.fileflow.adapter.in.rest.download.controller;
+
+import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.download.dto.command.RequestExternalDownloadApiRequest;
+import com.ryuqq.fileflow.adapter.in.rest.download.dto.response.ExternalDownloadApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.download.dto.response.ExternalDownloadDetailApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.download.mapper.ExternalDownloadApiMapper;
+import com.ryuqq.fileflow.application.common.context.UserContextHolder;
+import com.ryuqq.fileflow.application.download.dto.command.RequestExternalDownloadCommand;
+import com.ryuqq.fileflow.application.download.dto.query.GetExternalDownloadQuery;
+import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadDetailResponse;
+import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
+import com.ryuqq.fileflow.application.download.port.in.command.RequestExternalDownloadUseCase;
+import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownloadUseCase;
+import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * External Download Controller
+ *
+ * <p>외부 URL 다운로드 요청 및 조회 API를 제공합니다.
+ *
+ * <p>제공하는 API:
+ *
+ * <ul>
+ *   <li>POST /api/v1/external-downloads - 외부 다운로드 요청
+ *   <li>GET /api/v1/external-downloads/{id} - 외부 다운로드 상태 조회
+ * </ul>
+ *
+ * @author development-team
+ * @since 1.0.0
+ */
+@RestController
+@RequestMapping("${api.endpoints.base-v1}/external-downloads")
+@Validated
+public class ExternalDownloadController {
+
+    private final RequestExternalDownloadUseCase requestExternalDownloadUseCase;
+    private final GetExternalDownloadUseCase getExternalDownloadUseCase;
+    private final ExternalDownloadApiMapper externalDownloadApiMapper;
+
+    /**
+     * ExternalDownloadController 생성자
+     *
+     * @param requestExternalDownloadUseCase 외부 다운로드 요청 UseCase
+     * @param getExternalDownloadUseCase 외부 다운로드 조회 UseCase
+     * @param externalDownloadApiMapper ExternalDownload API Mapper
+     */
+    public ExternalDownloadController(
+            RequestExternalDownloadUseCase requestExternalDownloadUseCase,
+            GetExternalDownloadUseCase getExternalDownloadUseCase,
+            ExternalDownloadApiMapper externalDownloadApiMapper) {
+        this.requestExternalDownloadUseCase = requestExternalDownloadUseCase;
+        this.getExternalDownloadUseCase = getExternalDownloadUseCase;
+        this.externalDownloadApiMapper = externalDownloadApiMapper;
+    }
+
+    /**
+     * 외부 다운로드 요청
+     *
+     * <p>외부 URL에서 이미지를 다운로드하여 S3에 업로드하는 비동기 요청을 생성합니다.
+     *
+     * @param request 외부 다운로드 요청 DTO
+     * @return 생성된 ExternalDownload ID 및 상태 (201 Created)
+     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<ExternalDownloadApiResponse>> requestExternalDownload(
+            @RequestBody @Valid RequestExternalDownloadApiRequest request) {
+
+        UserContext userContext = UserContextHolder.getRequired();
+        long tenantId = userContext.tenant().id();
+        long organizationId = userContext.getOrganizationId();
+
+        RequestExternalDownloadCommand command =
+                externalDownloadApiMapper.toCommand(request, tenantId, organizationId);
+
+        ExternalDownloadResponse useCaseResponse = requestExternalDownloadUseCase.execute(command);
+
+        ExternalDownloadApiResponse apiResponse =
+                externalDownloadApiMapper.toApiResponse(useCaseResponse);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ofSuccess(apiResponse));
+    }
+
+    /**
+     * 외부 다운로드 상태 조회
+     *
+     * <p>외부 다운로드 요청의 현재 상태를 조회합니다.
+     *
+     * @param id ExternalDownload ID
+     * @return 외부 다운로드 상세 정보 (200 OK)
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ExternalDownloadDetailApiResponse>> getExternalDownload(
+            @PathVariable Long id) {
+
+        UserContext userContext = UserContextHolder.getRequired();
+        long tenantId = userContext.tenant().id();
+
+        GetExternalDownloadQuery query = externalDownloadApiMapper.toQuery(id, tenantId);
+
+        ExternalDownloadDetailResponse useCaseResponse = getExternalDownloadUseCase.execute(query);
+
+        ExternalDownloadDetailApiResponse apiResponse =
+                externalDownloadApiMapper.toDetailApiResponse(useCaseResponse);
+
+        return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
+    }
+}

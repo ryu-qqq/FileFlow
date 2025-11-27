@@ -65,6 +65,9 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     protected FileAssetJpaEntity() {
         super();
     }
@@ -84,6 +87,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
             Long tenantId,
             FileAssetStatus status,
             LocalDateTime processedAt,
+            LocalDateTime deletedAt,
             LocalDateTime createdAt,
             LocalDateTime updatedAt) {
         super(createdAt, updatedAt);
@@ -101,6 +105,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
         this.tenantId = tenantId;
         this.status = status;
         this.processedAt = processedAt;
+        this.deletedAt = deletedAt;
     }
 
     public static FileAssetJpaEntity of(
@@ -118,6 +123,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
             Long tenantId,
             FileAssetStatus status,
             LocalDateTime processedAt,
+            LocalDateTime deletedAt,
             LocalDateTime createdAt,
             LocalDateTime updatedAt) {
         return new FileAssetJpaEntity(
@@ -135,6 +141,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
                 tenantId,
                 status,
                 processedAt,
+                deletedAt,
                 createdAt,
                 updatedAt);
     }
@@ -193,5 +200,24 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
 
     public LocalDateTime getProcessedAt() {
         return processedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    /**
+     * Entity 상태 업데이트.
+     *
+     * <p>상태 변경(Soft Delete 포함)에 사용됩니다.
+     *
+     * @param status 새로운 상태
+     * @param processedAt 처리 완료 시각 (nullable)
+     * @param deletedAt 삭제 시각 (nullable)
+     */
+    public void update(FileAssetStatus status, LocalDateTime processedAt, LocalDateTime deletedAt) {
+        this.status = status;
+        this.processedAt = processedAt;
+        this.deletedAt = deletedAt;
     }
 }

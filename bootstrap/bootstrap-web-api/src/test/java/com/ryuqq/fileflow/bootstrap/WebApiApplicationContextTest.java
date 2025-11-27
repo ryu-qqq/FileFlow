@@ -2,7 +2,9 @@ package com.ryuqq.fileflow.bootstrap;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 /**
  * Web API Application Context Loading Test.
@@ -11,6 +13,8 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @SpringBootTest
 @ActiveProfiles("test")
+@TestPropertySource(properties = "redisson.enabled=false")
+@Import(TestMockConfig.class)
 class WebApiApplicationContextTest {
 
     @Test

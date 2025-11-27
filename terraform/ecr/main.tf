@@ -1,111 +1,112 @@
 # ========================================
 # ECR Repositories for fileflow
 # ========================================
-# Container registries for:
+# Container registries using Infrastructure module
 # - web-api: REST API server
 # - scheduler: Background scheduler
 # ========================================
 
 # ========================================
-# ECR Repository: web-api
+# Common Tags (for governance)
 # ========================================
-resource "aws_ecr_repository" "web_api" {
-  name                 = "${var.project_name}-web-api-${var.environment}"
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-
-  tags = {
-    Environment = var.environment
-    Service     = "${var.project_name}-web-api-${var.environment}"
+locals {
+  common_tags = {
+    environment  = var.environment
+    service_name = "${var.project_name}-ecr"
+    team         = "platform-team"
+    owner        = "platform@ryuqqq.com"
+    cost_center  = "engineering"
+    project      = var.project_name
+    data_class   = "internal"
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "web_api" {
-  repository = aws_ecr_repository.web_api.name
+# ========================================
+# KMS Key for ECR Encryption
+# ========================================
+resource "aws_kms_key" "ecr" {
+  description             = "KMS key for FileFlow ECR repository encryption"
+  deletion_window_in_days = 30
+  enable_key_rotation     = true
 
-  policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1
-        description  = "Keep last 30 tagged images"
-        selection = {
-          tagStatus     = "tagged"
-          tagPrefixList = ["v", "prod", "latest"]
-          countType     = "imageCountMoreThan"
-          countNumber   = 30
-        }
-        action = {
-          type = "expire"
-        }
-      },
-      {
-        rulePriority = 2
-        description  = "Delete untagged images older than 7 days"
-        selection = {
-          tagStatus   = "untagged"
-          countType   = "sinceImagePushed"
-          countUnit   = "days"
-          countNumber = 7
-        }
-        action = {
-          type = "expire"
-        }
-      }
-    ]
-  })
+  tags = {
+    Name        = "${var.project_name}-ecr-kms-${var.environment}"
+    Environment = var.environment
+    Service     = "${var.project_name}-ecr"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+    DataClass   = local.common_tags.data_class
+    Lifecycle   = "production"
+    ManagedBy   = "terraform"
+    Project     = var.project_name
+  }
+}
+
+resource "aws_kms_alias" "ecr" {
+  name          = "alias/${var.project_name}-ecr-${var.environment}"
+  target_key_id = aws_kms_key.ecr.key_id
+}
+
+# ========================================
+# ECR Repository: web-api
+# ========================================
+module "ecr_web_api" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecr?ref=main"
+
+  name                 = "${var.project_name}-web-api-${var.environment}"
+  image_tag_mutability = "MUTABLE"
+  scan_on_push         = true
+
+  # KMS Encryption (required for governance)
+  kms_key_arn = aws_kms_key.ecr.arn
+
+  # Lifecycle Policy
+  enable_lifecycle_policy   = true
+  max_image_count           = 30
+  lifecycle_tag_prefixes    = ["v", "prod", "latest"]
+  untagged_image_expiry_days = 7
+
+  # SSM Parameter for cross-stack reference
+  create_ssm_parameter = true
+
+  # Required Tags (governance compliance)
+  environment = local.common_tags.environment
+  service_name = "${var.project_name}-web-api"
+  team        = local.common_tags.team
+  owner       = local.common_tags.owner
+  cost_center = local.common_tags.cost_center
+  project     = local.common_tags.project
+  data_class  = local.common_tags.data_class
 }
 
 # ========================================
 # ECR Repository: scheduler
 # ========================================
-resource "aws_ecr_repository" "scheduler" {
+module "ecr_scheduler" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecr?ref=main"
+
   name                 = "${var.project_name}-scheduler-${var.environment}"
   image_tag_mutability = "MUTABLE"
+  scan_on_push         = true
 
-  image_scanning_configuration {
-    scan_on_push = true
-  }
+  # KMS Encryption (required for governance)
+  kms_key_arn = aws_kms_key.ecr.arn
 
-  tags = {
-    Environment = var.environment
-    Service     = "${var.project_name}-scheduler-${var.environment}"
-  }
-}
+  # Lifecycle Policy
+  enable_lifecycle_policy   = true
+  max_image_count           = 30
+  lifecycle_tag_prefixes    = ["v", "prod", "latest"]
+  untagged_image_expiry_days = 7
 
-resource "aws_ecr_lifecycle_policy" "scheduler" {
-  repository = aws_ecr_repository.scheduler.name
+  # SSM Parameter for cross-stack reference
+  create_ssm_parameter = true
 
-  policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1
-        description  = "Keep last 30 tagged images"
-        selection = {
-          tagStatus     = "tagged"
-          tagPrefixList = ["v", "prod", "latest"]
-          countType     = "imageCountMoreThan"
-          countNumber   = 30
-        }
-        action = {
-          type = "expire"
-        }
-      },
-      {
-        rulePriority = 2
-        description  = "Delete untagged images older than 7 days"
-        selection = {
-          tagStatus   = "untagged"
-          countType   = "sinceImagePushed"
-          countUnit   = "days"
-          countNumber = 7
-        }
-        action = {
-          type = "expire"
-        }
-      }
-    ]
-  })
+  # Required Tags (governance compliance)
+  environment = local.common_tags.environment
+  service_name = "${var.project_name}-scheduler"
+  team        = local.common_tags.team
+  owner       = local.common_tags.owner
+  cost_center = local.common_tags.cost_center
+  project     = local.common_tags.project
+  data_class  = local.common_tags.data_class
 }

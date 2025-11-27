@@ -1,0 +1,30 @@
+package com.ryuqq.fileflow.application.asset.dto.command;
+
+/**
+ * Presigned Download URL 생성 Command.
+ *
+ * <p>단건 파일에 대한 Presigned URL 생성 요청 정보를 담습니다.
+ *
+ * @param fileAssetId 파일 자산 ID
+ * @param tenantId 테넌트 ID
+ * @param organizationId 조직 ID
+ * @param expirationMinutes URL 유효 기간 (분 단위)
+ */
+public record GenerateDownloadUrlCommand(
+        String fileAssetId, Long tenantId, Long organizationId, int expirationMinutes) {
+
+    /**
+     * 값 기반 생성.
+     *
+     * @param fileAssetId 파일 자산 ID
+     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID
+     * @param expirationMinutes URL 유효 기간 (분 단위)
+     * @return GenerateDownloadUrlCommand
+     */
+    public static GenerateDownloadUrlCommand of(
+            String fileAssetId, Long tenantId, Long organizationId, int expirationMinutes) {
+        return new GenerateDownloadUrlCommand(
+                fileAssetId, tenantId, organizationId, expirationMinutes);
+    }
+}

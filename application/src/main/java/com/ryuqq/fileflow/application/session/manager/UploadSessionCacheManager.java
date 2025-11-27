@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.session.manager;
 
-import com.ryuqq.fileflow.application.session.port.out.command.PersistUploadSessionCachePort;
+import com.ryuqq.fileflow.application.session.port.out.command.UploadSessionCachePersistencePort;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import java.time.Duration;
@@ -34,10 +34,11 @@ public class UploadSessionCacheManager {
 
     private static final Logger log = LoggerFactory.getLogger(UploadSessionCacheManager.class);
 
-    private final PersistUploadSessionCachePort persistUploadSessionCachePort;
+    private final UploadSessionCachePersistencePort uploadSessionCachePersistencePort;
 
-    public UploadSessionCacheManager(PersistUploadSessionCachePort persistUploadSessionCachePort) {
-        this.persistUploadSessionCachePort = persistUploadSessionCachePort;
+    public UploadSessionCacheManager(
+            UploadSessionCachePersistencePort uploadSessionCachePersistencePort) {
+        this.uploadSessionCachePersistencePort = uploadSessionCachePersistencePort;
     }
 
     /**
@@ -50,7 +51,7 @@ public class UploadSessionCacheManager {
      */
     public void cacheSingleUpload(SingleUploadSession session, Duration ttl) {
         try {
-            persistUploadSessionCachePort.persist(session, ttl);
+            uploadSessionCachePersistencePort.persist(session, ttl);
             log.debug(
                     "Cached SingleUploadSession: sessionId={}, ttl={}s",
                     session.getIdValue(),
@@ -78,7 +79,7 @@ public class UploadSessionCacheManager {
      */
     public void cacheMultipartUpload(MultipartUploadSession session, Duration ttl) {
         try {
-            persistUploadSessionCachePort.persist(session, ttl);
+            uploadSessionCachePersistencePort.persist(session, ttl);
             log.debug(
                     "Cached MultipartUploadSession: sessionId={}, ttl={}s",
                     session.getId().value(),

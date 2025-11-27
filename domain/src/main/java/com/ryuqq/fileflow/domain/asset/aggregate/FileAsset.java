@@ -53,6 +53,7 @@ public class FileAsset {
     private FileAssetStatus status;
     private final LocalDateTime createdAt;
     private LocalDateTime processedAt;
+    private LocalDateTime deletedAt;
 
     // 시간
     private final Clock clock;
@@ -103,6 +104,7 @@ public class FileAsset {
                 FileAssetStatus.PENDING,
                 LocalDateTime.now(clock),
                 null,
+                null,
                 clock);
     }
 
@@ -123,6 +125,7 @@ public class FileAsset {
             FileAssetStatus status,
             LocalDateTime createdAt,
             LocalDateTime processedAt,
+            LocalDateTime deletedAt,
             Clock clock) {
         return new FileAsset(
                 id,
@@ -140,6 +143,7 @@ public class FileAsset {
                 status,
                 createdAt,
                 processedAt,
+                deletedAt,
                 clock);
     }
 
@@ -159,6 +163,7 @@ public class FileAsset {
             FileAssetStatus status,
             LocalDateTime createdAt,
             LocalDateTime processedAt,
+            LocalDateTime deletedAt,
             Clock clock) {
         validateNotNull(id, "FileAssetId");
         validateNotNull(sessionId, "SessionId");
@@ -190,6 +195,7 @@ public class FileAsset {
         this.status = status;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
+        this.deletedAt = deletedAt;
         this.clock = clock;
     }
 
@@ -223,6 +229,21 @@ public class FileAsset {
     public void failProcessing() {
         this.status = FileAssetStatus.FAILED;
         this.processedAt = LocalDateTime.now(clock);
+    }
+
+    /**
+     * Soft Delete 처리.
+     *
+     * <p>DELETED 상태가 아닌 경우에만 삭제 가능합니다.
+     *
+     * @throws IllegalStateException 이미 삭제된 경우
+     */
+    public void delete() {
+        if (this.status == FileAssetStatus.DELETED) {
+            throw new IllegalStateException("이미 삭제된 FileAsset입니다.");
+        }
+        this.status = FileAssetStatus.DELETED;
+        this.deletedAt = LocalDateTime.now(clock);
     }
 
     // ==================== Getter ====================
@@ -317,5 +338,9 @@ public class FileAsset {
 
     public LocalDateTime getProcessedAt() {
         return processedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
     }
 }

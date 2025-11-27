@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.application.asset.port.out.query;
 
-import com.ryuqq.fileflow.application.asset.dto.query.FileAssetSearchCriteria;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetCriteria;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import java.util.List;
 import java.util.Optional;
@@ -26,16 +26,16 @@ public interface FileAssetQueryPort {
     /**
      * 검색 조건에 맞는 FileAsset 목록 조회.
      *
-     * @param criteria 검색 조건
+     * @param criteria 검색 조건 (Domain VO)
      * @return FileAsset Domain 목록
      */
-    List<FileAsset> findByCriteria(FileAssetSearchCriteria criteria);
+    List<FileAsset> findByCriteria(FileAssetCriteria criteria);
 
     /**
      * 검색 조건에 맞는 FileAsset 개수 조회.
      *
-     * @param criteria 검색 조건
+     * @param criteria 검색 조건 (Domain VO)
      * @return 전체 개수
      */
-    long countByCriteria(FileAssetSearchCriteria criteria);
+    long countByCriteria(FileAssetCriteria criteria);
 }

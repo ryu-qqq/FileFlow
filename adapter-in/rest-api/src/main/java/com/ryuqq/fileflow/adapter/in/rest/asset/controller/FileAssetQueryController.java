@@ -10,7 +10,9 @@ import com.ryuqq.fileflow.application.asset.dto.query.ListFileAssetsQuery;
 import com.ryuqq.fileflow.application.asset.dto.response.FileAssetResponse;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetsUseCase;
+import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.application.common.dto.response.PageResponse;
+import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +21,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -66,15 +67,15 @@ public class FileAssetQueryController {
      * 파일 자산 단건 조회
      *
      * @param id 파일 자산 ID
-     * @param organizationId 조직 ID
-     * @param tenantId 테넌트 ID
      * @return 파일 자산 상세 정보 (200 OK)
      */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<FileAssetApiResponse>> getFileAsset(
-            @PathVariable @NotBlank String id,
-            @RequestParam Long organizationId,
-            @RequestParam Long tenantId) {
+            @PathVariable @NotBlank String id) {
+
+        UserContext userContext = UserContextHolder.getRequired();
+        long organizationId = userContext.getOrganizationId();
+        long tenantId = userContext.tenant().id();
 
         GetFileAssetQuery query =
                 fileAssetApiMapper.toGetFileAssetQuery(id, organizationId, tenantId);
@@ -90,15 +91,15 @@ public class FileAssetQueryController {
      * 파일 자산 목록 조회
      *
      * @param request 검색 조건
-     * @param organizationId 조직 ID
-     * @param tenantId 테넌트 ID
      * @return 파일 자산 목록 (200 OK)
      */
     @GetMapping
     public ResponseEntity<ApiResponse<PageApiResponse<FileAssetApiResponse>>> getFileAssets(
-            @Valid @ModelAttribute FileAssetSearchApiRequest request,
-            @RequestParam Long organizationId,
-            @RequestParam Long tenantId) {
+            @Valid @ModelAttribute FileAssetSearchApiRequest request) {
+
+        UserContext userContext = UserContextHolder.getRequired();
+        long organizationId = userContext.getOrganizationId();
+        long tenantId = userContext.tenant().id();
 
         ListFileAssetsQuery query =
                 fileAssetApiMapper.toListFileAssetsQuery(request, organizationId, tenantId);

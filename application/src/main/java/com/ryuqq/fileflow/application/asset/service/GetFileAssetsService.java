@@ -1,13 +1,13 @@
 package com.ryuqq.fileflow.application.asset.service;
 
 import com.ryuqq.fileflow.application.asset.assembler.FileAssetQueryAssembler;
-import com.ryuqq.fileflow.application.asset.dto.query.FileAssetSearchCriteria;
 import com.ryuqq.fileflow.application.asset.dto.query.ListFileAssetsQuery;
 import com.ryuqq.fileflow.application.asset.dto.response.FileAssetResponse;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetsUseCase;
 import com.ryuqq.fileflow.application.asset.port.out.query.FileAssetQueryPort;
 import com.ryuqq.fileflow.application.common.dto.response.PageResponse;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetCriteria;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,14 +33,7 @@ public class GetFileAssetsService implements GetFileAssetsUseCase {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<FileAssetResponse> execute(ListFileAssetsQuery query) {
-        FileAssetSearchCriteria criteria =
-                FileAssetSearchCriteria.of(
-                        query.organizationId(),
-                        query.tenantId(),
-                        query.status(),
-                        query.category(),
-                        query.offset(),
-                        query.size());
+        FileAssetCriteria criteria = fileAssetQueryAssembler.toCriteria(query);
 
         List<FileAsset> fileAssets = fileAssetQueryPort.findByCriteria(criteria);
         long totalCount = fileAssetQueryPort.countByCriteria(criteria);

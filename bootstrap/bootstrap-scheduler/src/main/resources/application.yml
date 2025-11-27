@@ -18,6 +18,15 @@ spring:
 server:
   port: ${SERVER_PORT:8081}
 
+# ===============================================
+# Scheduler Configuration
+# ===============================================
+scheduler:
+  session-expiration:
+    enabled: ${SCHEDULER_SESSION_EXPIRATION_ENABLED:true}
+  outbox-retry:
+    enabled: ${SCHEDULER_OUTBOX_RETRY_ENABLED:true}
+
 logging:
   level:
     root: INFO

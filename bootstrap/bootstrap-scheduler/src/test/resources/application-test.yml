@@ -33,6 +33,13 @@ aws:
     bucket: test-bucket
     presigned-url-expiration: 3600
 
+# Scheduler disabled for tests
+scheduler:
+  session-expiration:
+    enabled: false
+  outbox-retry:
+    enabled: false
+
 logging:
   level:
     root: WARN

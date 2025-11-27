@@ -2,8 +2,24 @@
 # ECS Service: web-api
 # ========================================
 # REST API server with ALB and Auto Scaling
+# Using Infrastructure modules
 # Domain: files.set-of.com
 # ========================================
+
+# ========================================
+# Common Tags (for governance)
+# ========================================
+locals {
+  common_tags = {
+    environment  = var.environment
+    service_name = "${var.project_name}-web-api"
+    team         = "platform-team"
+    owner        = "platform@ryuqqq.com"
+    cost_center  = "engineering"
+    project      = var.project_name
+    data_class   = "internal"
+  }
+}
 
 # ========================================
 # ECR Repository Reference
@@ -20,9 +36,93 @@ data "aws_ecs_cluster" "main" {
 }
 
 # ========================================
+# KMS Key for CloudWatch Logs Encryption
+# ========================================
+resource "aws_kms_key" "logs" {
+  description             = "KMS key for FileFlow web-api CloudWatch logs encryption"
+  deletion_window_in_days = 30
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudWatch Logs"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${var.aws_region}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt*",
+          "kms:Decrypt*",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:Describe*"
+        ]
+        Resource = "*"
+        Condition = {
+          ArnLike = {
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${var.project_name}-web-api-${var.environment}"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.project_name}-web-api-logs-kms-${var.environment}"
+    Environment = var.environment
+    Service     = "${var.project_name}-web-api"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+    DataClass   = local.common_tags.data_class
+    Lifecycle   = "production"
+    ManagedBy   = "terraform"
+    Project     = var.project_name
+  }
+}
+
+resource "aws_kms_alias" "logs" {
+  name          = "alias/${var.project_name}-web-api-logs-${var.environment}"
+  target_key_id = aws_kms_key.logs.key_id
+}
+
+data "aws_caller_identity" "current" {}
+
+# ========================================
+# CloudWatch Log Group with KMS Encryption
+# ========================================
+module "web_api_logs" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/cloudwatch-log-group?ref=main"
+
+  name              = "/ecs/${var.project_name}-web-api-${var.environment}"
+  retention_in_days = 30
+  kms_key_id        = aws_kms_key.logs.arn
+
+  common_tags = {
+    Environment = var.environment
+    Service     = "${var.project_name}-web-api"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+    DataClass   = local.common_tags.data_class
+    Lifecycle   = "production"
+    ManagedBy   = "terraform"
+    Project     = var.project_name
+  }
+}
+
+# ========================================
 # Security Groups
 # ========================================
-
 resource "aws_security_group" "alb" {
   name        = "${var.project_name}-alb-sg-${var.environment}"
   description = "Security group for ALB"
@@ -52,7 +152,15 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name = "${var.project_name}-alb-sg-${var.environment}"
+    Name        = "${var.project_name}-alb-sg-${var.environment}"
+    Environment = var.environment
+    Service     = "${var.project_name}-web-api"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+    DataClass   = local.common_tags.data_class
+    Lifecycle   = "production"
+    ManagedBy   = "terraform"
+    Project     = var.project_name
   }
 }
 
@@ -77,13 +185,17 @@ resource "aws_security_group" "ecs_web_api" {
   }
 
   tags = {
-    Name = "${var.project_name}-web-api-sg-${var.environment}"
+    Name        = "${var.project_name}-web-api-sg-${var.environment}"
+    Environment = var.environment
+    Service     = "${var.project_name}-web-api"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+    DataClass   = local.common_tags.data_class
+    Lifecycle   = "production"
+    ManagedBy   = "terraform"
+    Project     = var.project_name
   }
 }
-
-# ========================================
-# Application Load Balancer
-# ========================================
 
 # ========================================
 # Application Load Balancer
@@ -100,7 +212,13 @@ resource "aws_lb" "web_api" {
   tags = {
     Name        = "${var.project_name}-alb-${var.environment}"
     Environment = var.environment
-    Service     = "${var.project_name}-web-api-${var.environment}"
+    Service     = "${var.project_name}-web-api"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+    DataClass   = local.common_tags.data_class
+    Lifecycle   = "production"
+    ManagedBy   = "terraform"
+    Project     = var.project_name
   }
 }
 
@@ -125,6 +243,9 @@ resource "aws_lb_target_group" "web_api" {
   tags = {
     Name        = "${var.project_name}-web-api-tg-${var.environment}"
     Environment = var.environment
+    Service     = "${var.project_name}-web-api"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
   }
 }
 
@@ -162,7 +283,6 @@ resource "aws_lb_listener" "http" {
 # ========================================
 # Route53 DNS Record
 # ========================================
-
 resource "aws_route53_record" "web_api" {
   zone_id = local.route53_zone_id
   name    = local.fqdn
@@ -178,7 +298,6 @@ resource "aws_route53_record" "web_api" {
 # ========================================
 # IAM Role for ECS Task Execution
 # ========================================
-
 resource "aws_iam_role" "ecs_task_execution" {
   name = "${var.project_name}-web-api-execution-role-${var.environment}"
 
@@ -194,6 +313,14 @@ resource "aws_iam_role" "ecs_task_execution" {
       }
     ]
   })
+
+  tags = {
+    Name        = "${var.project_name}-web-api-execution-role-${var.environment}"
+    Environment = var.environment
+    Service     = "${var.project_name}-web-api"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
@@ -224,7 +351,17 @@ resource "aws_iam_role_policy" "secrets_access" {
           "ssm:GetParameter"
         ]
         Resource = [
-          "arn:aws:ssm:${var.aws_region}:*:parameter/shared/*"
+          "arn:aws:ssm:${var.aws_region}:*:parameter/shared/*",
+          "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = [
+          aws_kms_key.logs.arn
         ]
       }
     ]
@@ -234,7 +371,6 @@ resource "aws_iam_role_policy" "secrets_access" {
 # ========================================
 # IAM Role for ECS Task
 # ========================================
-
 resource "aws_iam_role" "ecs_task" {
   name = "${var.project_name}-web-api-task-role-${var.environment}"
 
@@ -250,6 +386,14 @@ resource "aws_iam_role" "ecs_task" {
       }
     ]
   })
+
+  tags = {
+    Name        = "${var.project_name}-web-api-task-role-${var.environment}"
+    Environment = var.environment
+    Service     = "${var.project_name}-web-api"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+  }
 }
 
 # Add EventBridge permissions for web-api
@@ -276,178 +420,112 @@ resource "aws_iam_role_policy" "eventbridge_access" {
 }
 
 # ========================================
-# CloudWatch Log Group
+# ECS Service using Infrastructure Module
 # ========================================
+module "web_api_service" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecs-service?ref=main"
 
-resource "aws_cloudwatch_log_group" "web_api" {
-  name              = "/ecs/${var.project_name}-web-api-${var.environment}"
-  retention_in_days = 30
-
-  tags = {
-    Environment = var.environment
-    Service     = "${var.project_name}-web-api-${var.environment}"
-  }
-}
-
-# ========================================
-# ECS Task Definition
-# ========================================
-
-resource "aws_ecs_task_definition" "web_api" {
-  family                   = "${var.project_name}-web-api-${var.environment}"
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = var.web_api_cpu
-  memory                   = var.web_api_memory
-  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
-
-  container_definitions = jsonencode([
-    {
-      name  = "web-api"
-      image = "${data.aws_ecr_repository.web_api.repository_url}:latest"
-
-      portMappings = [
-        {
-          containerPort = 8080
-          protocol      = "tcp"
-        }
-      ]
-
-      environment = [
-        {
-          name  = "SPRING_PROFILES_ACTIVE"
-          value = var.environment
-        },
-        {
-          name  = "DB_HOST"
-          value = local.rds_host
-        },
-        {
-          name  = "DB_PORT"
-          value = local.rds_port
-        },
-        {
-          name  = "DB_NAME"
-          value = local.rds_dbname
-        },
-        {
-          name  = "DB_USER"
-          value = local.rds_username
-        },
-        {
-          name  = "REDIS_HOST"
-          value = local.redis_host
-        },
-        {
-          name  = "REDIS_PORT"
-          value = tostring(local.redis_port)
-        }
-      ]
-
-      secrets = [
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = "${data.aws_secretsmanager_secret.rds.arn}:password::"
-        }
-      ]
-
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.web_api.name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "web-api"
-        }
-      }
-
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 60
-      }
-    }
-  ])
-
-  tags = {
-    Environment = var.environment
-    Service     = "${var.project_name}-web-api-${var.environment}"
-  }
-}
-
-# ========================================
-# ECS Service
-# ========================================
-
-resource "aws_ecs_service" "web_api" {
   name            = "${var.project_name}-web-api-${var.environment}"
-  cluster         = data.aws_ecs_cluster.main.arn
-  task_definition = aws_ecs_task_definition.web_api.arn
-  desired_count   = var.web_api_desired_count
-  launch_type     = "FARGATE"
+  cluster_id      = data.aws_ecs_cluster.main.arn
+  container_name  = "web-api"
+  container_image = "${data.aws_ecr_repository.web_api.repository_url}:latest"
+  container_port  = 8080
 
-  network_configuration {
-    subnets          = local.private_subnets
-    security_groups  = [aws_security_group.ecs_web_api.id]
-    assign_public_ip = false
-  }
+  cpu    = var.web_api_cpu
+  memory = var.web_api_memory
 
-  load_balancer {
+  desired_count = var.web_api_desired_count
+
+  subnet_ids         = local.private_subnets
+  security_group_ids = [aws_security_group.ecs_web_api.id]
+
+  execution_role_arn = aws_iam_role.ecs_task_execution.arn
+  task_role_arn      = aws_iam_role.ecs_task.arn
+
+  # Load Balancer Configuration
+  load_balancer_config = {
     target_group_arn = aws_lb_target_group.web_api.arn
     container_name   = "web-api"
     container_port   = 8080
   }
 
-  deployment_circuit_breaker {
-    enable   = true
-    rollback = true
-  }
+  # Health Check Grace Period
+  health_check_grace_period_seconds = 60
 
-  tags = {
-    Environment = var.environment
-    Service     = "${var.project_name}-web-api-${var.environment}"
-  }
-}
-
-# ========================================
-# Auto Scaling
-# ========================================
-resource "aws_appautoscaling_target" "web_api" {
-  max_capacity       = 10
-  min_capacity       = 2
-  resource_id        = "service/${data.aws_ecs_cluster.main.cluster_name}/${aws_ecs_service.web_api.name}"
-  scalable_dimension = "ecs:service:DesiredCount"
-  service_namespace  = "ecs"
-}
-
-resource "aws_appautoscaling_policy" "web_api_cpu" {
-  name               = "${var.project_name}-web-api-cpu-${var.environment}"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.web_api.resource_id
-  scalable_dimension = aws_appautoscaling_target.web_api.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.web_api.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+  # Container Environment Variables
+  container_environment = [
+    {
+      name  = "SPRING_PROFILES_ACTIVE"
+      value = var.environment
+    },
+    {
+      name  = "DB_HOST"
+      value = local.rds_host
+    },
+    {
+      name  = "DB_PORT"
+      value = local.rds_port
+    },
+    {
+      name  = "DB_NAME"
+      value = local.rds_dbname
+    },
+    {
+      name  = "DB_USER"
+      value = local.rds_username
+    },
+    {
+      name  = "REDIS_HOST"
+      value = local.redis_host
+    },
+    {
+      name  = "REDIS_PORT"
+      value = tostring(local.redis_port)
     }
-    target_value = 70
-  }
-}
+  ]
 
-resource "aws_appautoscaling_policy" "web_api_memory" {
-  name               = "${var.project_name}-web-api-memory-${var.environment}"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.web_api.resource_id
-  scalable_dimension = aws_appautoscaling_target.web_api.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.web_api.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+  # Container Secrets
+  container_secrets = [
+    {
+      name      = "DB_PASSWORD"
+      valueFrom = "${data.aws_secretsmanager_secret.rds.arn}:password::"
     }
-    target_value = 80
+  ]
+
+  # Custom Log Configuration (using KMS-encrypted log group)
+  log_configuration = {
+    log_driver = "awslogs"
+    options = {
+      "awslogs-group"         = module.web_api_logs.log_group_name
+      "awslogs-region"        = var.aws_region
+      "awslogs-stream-prefix" = "web-api"
+    }
   }
+
+  # Health Check
+  health_check_command = ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+  health_check_interval    = 30
+  health_check_timeout     = 5
+  health_check_retries     = 3
+  health_check_start_period = 60
+
+  # Deployment Configuration
+  deployment_circuit_breaker_enable   = true
+  deployment_circuit_breaker_rollback = true
+
+  # Auto Scaling
+  enable_autoscaling       = true
+  autoscaling_min_capacity = 2
+  autoscaling_max_capacity = 10
+  autoscaling_target_cpu   = 70
+  autoscaling_target_memory = 80
+
+  # Required Tags (governance compliance)
+  environment  = local.common_tags.environment
+  service_name = local.common_tags.service_name
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = local.common_tags.project
+  data_class   = local.common_tags.data_class
 }

@@ -9,7 +9,9 @@ import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.UploadSession;
 import com.ryuqq.fileflow.domain.session.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
+import com.ryuqq.fileflow.domain.session.vo.UploadSessionSearchCriteria;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
@@ -80,5 +82,84 @@ public class FindUploadSessionQueryAdapter implements FindUploadSessionQueryPort
         return queryRepository.findExpiredMultipartUploads(expiredBefore, limit).stream()
                 .map(multipartMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<UploadSession> findByIdAndTenantId(UploadSessionId sessionId, Long tenantId) {
+        String id = sessionId.value().toString();
+
+        // 1. Single 세션 먼저 조회
+        Optional<SingleUploadSession> single =
+                queryRepository
+                        .findSingleUploadByIdAndTenantId(id, tenantId)
+                        .map(singleMapper::toDomain);
+        if (single.isPresent()) {
+            return single.map(s -> s);
+        }
+
+        // 2. Multipart 세션 조회
+        Optional<MultipartUploadSession> multipart =
+                queryRepository
+                        .findMultipartUploadByIdAndTenantId(id, tenantId)
+                        .map(multipartMapper::toDomain);
+        return multipart.map(m -> m);
+    }
+
+    @Override
+    public List<UploadSession> findByCriteria(UploadSessionSearchCriteria criteria) {
+        String uploadType = criteria.uploadType();
+        List<UploadSession> results = new ArrayList<>();
+
+        if (uploadType == null || "SINGLE".equals(uploadType)) {
+            List<SingleUploadSession> singles =
+                    queryRepository
+                            .findSingleUploadsByCriteria(
+                                    criteria.tenantId(),
+                                    criteria.organizationId(),
+                                    criteria.status(),
+                                    criteria.offset(),
+                                    criteria.limit())
+                            .stream()
+                            .map(singleMapper::toDomain)
+                            .toList();
+            results.addAll(singles);
+        }
+
+        if (uploadType == null || "MULTIPART".equals(uploadType)) {
+            List<MultipartUploadSession> multiparts =
+                    queryRepository
+                            .findMultipartUploadsByCriteria(
+                                    criteria.tenantId(),
+                                    criteria.organizationId(),
+                                    criteria.status(),
+                                    criteria.offset(),
+                                    criteria.limit())
+                            .stream()
+                            .map(multipartMapper::toDomain)
+                            .toList();
+            results.addAll(multiparts);
+        }
+
+        return results;
+    }
+
+    @Override
+    public long countByCriteria(UploadSessionSearchCriteria criteria) {
+        String uploadType = criteria.uploadType();
+        long count = 0L;
+
+        if (uploadType == null || "SINGLE".equals(uploadType)) {
+            count +=
+                    queryRepository.countSingleUploadsByCriteria(
+                            criteria.tenantId(), criteria.organizationId(), criteria.status());
+        }
+
+        if (uploadType == null || "MULTIPART".equals(uploadType)) {
+            count +=
+                    queryRepository.countMultipartUploadsByCriteria(
+                            criteria.tenantId(), criteria.organizationId(), criteria.status());
+        }
+
+        return count;
     }
 }

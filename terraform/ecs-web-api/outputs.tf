@@ -14,7 +14,17 @@ output "alb_arn" {
 
 output "service_name" {
   description = "ECS service name"
-  value       = aws_ecs_service.web_api.name
+  value       = module.web_api_service.service_name
+}
+
+output "service_arn" {
+  description = "ECS service ARN"
+  value       = module.web_api_service.service_id
+}
+
+output "task_definition_arn" {
+  description = "Task definition ARN"
+  value       = module.web_api_service.task_definition_arn
 }
 
 output "fqdn" {
@@ -25,4 +35,14 @@ output "fqdn" {
 output "url" {
   description = "Application URL"
   value       = "https://${local.fqdn}"
+}
+
+output "log_group_name" {
+  description = "CloudWatch log group name"
+  value       = module.web_api_logs.log_group_name
+}
+
+output "kms_key_arn" {
+  description = "KMS key ARN for logs encryption"
+  value       = aws_kms_key.logs.arn
 }

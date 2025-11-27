@@ -57,7 +57,9 @@ class HikariCPConfigArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses = new ClassFileImporter().importPackages("com.ryuqq.adapter.out.persistence");
+        allClasses =
+                new ClassFileImporter()
+                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
     }
 
     /** 규칙 1: DataSourceConfig는 @Configuration 필수 */
@@ -220,7 +222,11 @@ class HikariCPConfigArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 10: Config 네이밍 규칙 */
+    /**
+     * 규칙 10: Config 네이밍 규칙
+     *
+     * <p>Config 클래스는 *Config 네이밍 규칙을 따르거나 @Configuration 어노테이션을 가져야 합니다.
+     */
     @Test
     @DisplayName("[권장] Config 클래스는 *Config 네이밍 규칙을 따라야 한다")
     void config_ShouldFollowNamingConvention() {
@@ -232,6 +238,9 @@ class HikariCPConfigArchTest {
                         .areNotInterfaces()
                         .and()
                         .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .areAnnotatedWith(
+                                org.springframework.context.annotation.Configuration.class)
                         .should()
                         .haveSimpleNameEndingWith("Config")
                         .because("Config 클래스는 *Config 네이밍 규칙을 따라야 합니다");

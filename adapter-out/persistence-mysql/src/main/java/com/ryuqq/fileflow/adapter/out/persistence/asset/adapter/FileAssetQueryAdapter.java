@@ -3,9 +3,9 @@ package com.ryuqq.fileflow.adapter.out.persistence.asset.adapter;
 import com.ryuqq.fileflow.adapter.out.persistence.asset.entity.FileAssetJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.asset.mapper.FileAssetJpaEntityMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.asset.repository.FileAssetQueryRepository;
-import com.ryuqq.fileflow.application.asset.dto.query.FileAssetSearchCriteria;
 import com.ryuqq.fileflow.application.asset.port.out.query.FileAssetQueryPort;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetCriteria;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +37,7 @@ public class FileAssetQueryAdapter implements FileAssetQueryPort {
     }
 
     @Override
-    public List<FileAsset> findByCriteria(FileAssetSearchCriteria criteria) {
+    public List<FileAsset> findByCriteria(FileAssetCriteria criteria) {
         List<FileAssetJpaEntity> entities =
                 fileAssetQueryRepository.findAll(
                         criteria.organizationId(),
@@ -51,7 +51,7 @@ public class FileAssetQueryAdapter implements FileAssetQueryPort {
     }
 
     @Override
-    public long countByCriteria(FileAssetSearchCriteria criteria) {
+    public long countByCriteria(FileAssetCriteria criteria) {
         return fileAssetQueryRepository.count(
                 criteria.organizationId(),
                 criteria.tenantId(),

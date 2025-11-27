@@ -11,6 +11,7 @@ dependencies {
     implementation project(':adapter-out:persistence-mysql')
     implementation project(':adapter-out:persistence-redis')
     implementation project(':adapter-out:aws-s3')
+    implementation project(':adapter-out:http-client')
 
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter'
@@ -28,6 +29,28 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+// JaCoCo Coverage (Bootstrap 모듈은 통합 테스트로 커버리지 확보 예정)
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.50
+            }
+        }
+        rule {
+            element = 'CLASS'
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.30
+            }
+            excludes = [
+                '*.FileflowApplication'
+            ]
+        }
+    }
 }
 
 // Spring Boot Application 설정

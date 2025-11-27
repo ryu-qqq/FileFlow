@@ -4,20 +4,25 @@
 
 output "service_name" {
   description = "ECS scheduler service name"
-  value       = aws_ecs_service.scheduler.name
+  value       = module.scheduler_service.service_name
 }
 
 output "service_arn" {
   description = "ECS scheduler service ARN"
-  value       = aws_ecs_service.scheduler.id
+  value       = module.scheduler_service.service_id
 }
 
 output "task_definition_arn" {
   description = "Task definition ARN"
-  value       = aws_ecs_task_definition.scheduler.arn
+  value       = module.scheduler_service.task_definition_arn
 }
 
 output "log_group_name" {
   description = "CloudWatch log group name"
-  value       = aws_cloudwatch_log_group.scheduler.name
+  value       = module.scheduler_logs.log_group_name
+}
+
+output "kms_key_arn" {
+  description = "KMS key ARN for logs encryption"
+  value       = aws_kms_key.logs.arn
 }

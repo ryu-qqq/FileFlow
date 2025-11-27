@@ -1,0 +1,46 @@
+# ========================================
+# SQS Listener Configuration (Local Development)
+# ========================================
+# LocalStack SQS configuration for local testing
+# docker run -d --name localstack -p 4566:4566 localstack/localstack
+# ========================================
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      sqs:
+        # LocalStack endpoint
+        endpoint: http://localhost:4566
+        # SQS 리스너 기본 설정
+        listener:
+          max-concurrent-messages: 5
+          max-messages-per-poll: 5
+      # LocalStack 인증 비활성화
+      credentials:
+        access-key: test
+        secret-key: test
+
+aws:
+  sqs:
+    listener:
+      # ========================================
+      # Queue URLs (LocalStack)
+      # ========================================
+      # Create queues in LocalStack:
+      # awslocal sqs create-queue --queue-name external-download-queue
+      # awslocal sqs create-queue --queue-name external-download-dlq
+      external-download-queue-url: http://localhost:4566/000000000000/external-download-queue
+      external-download-dlq-url: http://localhost:4566/000000000000/external-download-dlq
+
+      # ========================================
+      # Feature Toggles (Local)
+      # ========================================
+      external-download-listener-enabled: true
+      external-download-dlq-listener-enabled: true
+
+logging:
+  level:
+    com.ryuqq.fileflow.adapter.in.sqs: DEBUG
+    io.awspring.cloud.sqs: DEBUG

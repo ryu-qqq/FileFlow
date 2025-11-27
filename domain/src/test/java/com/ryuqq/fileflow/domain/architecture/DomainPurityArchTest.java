@@ -49,7 +49,7 @@ class DomainPurityArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.domain");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.domain");
     }
 
     // ==================== Lombok 금지 ====================
@@ -61,7 +61,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .beAnnotatedWith("lombok.Data")
                         .orShould()
@@ -112,7 +112,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .beAnnotatedWith("jakarta.persistence.Entity")
                         .orShould()
@@ -171,7 +171,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .beAnnotatedWith("org.springframework.stereotype.Component")
                         .orShould()
@@ -222,7 +222,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .beAnnotatedWith("jakarta.validation.constraints.NotNull")
                         .orShould()
@@ -283,7 +283,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage(
@@ -309,7 +309,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.google.common..")
@@ -330,7 +330,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("io.vavr..")
@@ -353,7 +353,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.fasterxml.jackson..")
@@ -374,7 +374,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.google.gson..")
@@ -397,7 +397,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("org.slf4j..")
@@ -418,7 +418,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("ch.qos.logback..")
@@ -439,7 +439,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("org.apache.logging.log4j..")
@@ -462,12 +462,12 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage("com.ryuqq.fileflow.domain..")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage(
-                                "com.ryuqq.application..",
-                                "com.ryuqq.adapter..",
+                                "com.ryuqq.fileflow.application..",
+                                "com.ryuqq.fileflow.adapter..",
                                 "com.ryuqq.bootstrap..",
                                 "com.ryuqq.persistence..")
                         .because(

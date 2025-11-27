@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
@@ -17,11 +18,16 @@ import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedUploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -159,5 +165,35 @@ public class S3ClientAdapter implements S3ClientPort {
                         .build();
 
         s3Client.abortMultipartUpload(request);
+    }
+
+    @Override
+    public ETag putObject(S3Bucket bucket, S3Key s3Key, ContentType contentType, byte[] data) {
+        PutObjectRequest request =
+                PutObjectRequest.builder()
+                        .bucket(bucket.bucketName())
+                        .key(s3Key.key())
+                        .contentType(contentType.type())
+                        .contentLength((long) data.length)
+                        .build();
+
+        PutObjectResponse response = s3Client.putObject(request, RequestBody.fromBytes(data));
+        String etag = response.eTag().replace("\"", "");
+        return ETag.of(etag);
+    }
+
+    @Override
+    public String generatePresignedGetUrl(S3Bucket bucket, S3Key s3Key, Duration duration) {
+        GetObjectRequest getObjectRequest =
+                GetObjectRequest.builder().bucket(bucket.bucketName()).key(s3Key.key()).build();
+
+        GetObjectPresignRequest presignRequest =
+                GetObjectPresignRequest.builder()
+                        .signatureDuration(duration)
+                        .getObjectRequest(getObjectRequest)
+                        .build();
+
+        PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+        return presignedRequest.url().toString();
     }
 }

@@ -1,17 +1,35 @@
 package com.ryuqq.fileflow.application.asset.assembler;
 
+import com.ryuqq.fileflow.application.asset.dto.query.ListFileAssetsQuery;
 import com.ryuqq.fileflow.application.asset.dto.response.FileAssetResponse;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetCriteria;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
  * FileAsset Query Assembler.
  *
- * <p>FileAsset Domain을 Response DTO로 변환하는 Assembler입니다.
+ * <p>FileAsset Domain을 Response DTO로 변환하고, Query를 Domain VO로 변환하는 Assembler입니다.
  */
 @Component
 public class FileAssetQueryAssembler {
+
+    /**
+     * ListFileAssetsQuery를 FileAssetCriteria Domain VO로 변환.
+     *
+     * @param query ListFileAssetsQuery
+     * @return FileAssetCriteria
+     */
+    public FileAssetCriteria toCriteria(ListFileAssetsQuery query) {
+        return FileAssetCriteria.of(
+                query.organizationId(),
+                query.tenantId(),
+                query.status(),
+                query.category(),
+                query.offset(),
+                query.size());
+    }
 
     /**
      * FileAsset Domain을 Response DTO로 변환.

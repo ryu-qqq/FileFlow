@@ -1,122 +1,221 @@
 # ============================================================================
 # FileFlow - S3 Bucket for File Uploads
 # ============================================================================
-# S3 bucket for presigned URL uploads with encryption and lifecycle policies
+# S3 bucket using Infrastructure module with KMS encryption
+# Presigned URL uploads with encryption and lifecycle policies
 # ============================================================================
 
 # ============================================================================
-# S3 Bucket
+# Common Tags (for governance)
 # ============================================================================
+locals {
+  common_tags = {
+    environment  = var.environment
+    service_name = "${var.project_name}-s3"
+    team         = "platform-team"
+    owner        = "platform@ryuqqq.com"
+    cost_center  = "engineering"
+    project      = var.project_name
+    data_class   = "confidential"
+  }
+}
 
-resource "aws_s3_bucket" "fileflow_uploads" {
-  bucket = "${var.project_name}-uploads-${var.environment}"
+# ============================================================================
+# KMS Key for S3 Encryption
+# ============================================================================
+resource "aws_kms_key" "s3" {
+  description             = "KMS key for FileFlow S3 bucket encryption"
+  deletion_window_in_days = 30
+  enable_key_rotation     = true
 
-  tags = merge(var.common_tags, {
-    Name        = "${var.project_name}-uploads-${var.environment}"
+  tags = {
+    Name        = "${var.project_name}-s3-kms-${var.environment}"
     Environment = var.environment
-  })
-}
-
-# ============================================================================
-# Bucket Versioning
-# ============================================================================
-
-resource "aws_s3_bucket_versioning" "fileflow_uploads" {
-  bucket = aws_s3_bucket.fileflow_uploads.id
-  versioning_configuration {
-    status = "Enabled"
+    Service     = "${var.project_name}-s3"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+    DataClass   = local.common_tags.data_class
+    Lifecycle   = "production"
+    ManagedBy   = "terraform"
+    Project     = var.project_name
   }
 }
 
-# ============================================================================
-# Server-Side Encryption
-# ============================================================================
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "fileflow_uploads" {
-  bucket = aws_s3_bucket.fileflow_uploads.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-    bucket_key_enabled = true
-  }
+resource "aws_kms_alias" "s3" {
+  name          = "alias/${var.project_name}-s3-${var.environment}"
+  target_key_id = aws_kms_key.s3.key_id
 }
 
 # ============================================================================
-# Public Access Block
+# S3 Bucket using Infrastructure Module
 # ============================================================================
+module "fileflow_uploads" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/s3-bucket?ref=main"
 
-resource "aws_s3_bucket_public_access_block" "fileflow_uploads" {
-  bucket = aws_s3_bucket.fileflow_uploads.id
+  bucket_name = "${var.project_name}-uploads-${var.environment}"
 
+  # KMS Encryption (required for governance)
+  kms_key_id = aws_kms_key.s3.arn
+
+  # Versioning
+  versioning_enabled = true
+
+  # Public Access Block (all blocked)
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
-}
 
-# ============================================================================
-# CORS Configuration (for Presigned URL uploads)
-# ============================================================================
-
-resource "aws_s3_bucket_cors_configuration" "fileflow_uploads" {
-  bucket = aws_s3_bucket.fileflow_uploads.id
-
-  cors_rule {
-    allowed_headers = ["*"]
-    allowed_methods = ["GET", "PUT", "POST", "HEAD"]
-    allowed_origins = var.cors_allowed_origins
-    expose_headers  = ["ETag", "x-amz-meta-*"]
-    max_age_seconds = 3600
-  }
-}
-
-# ============================================================================
-# Lifecycle Rules
-# ============================================================================
-
-resource "aws_s3_bucket_lifecycle_configuration" "fileflow_uploads" {
-  bucket = aws_s3_bucket.fileflow_uploads.id
-
-  # Abort incomplete multipart uploads after 7 days
-  rule {
-    id     = "abort-incomplete-multipart-uploads"
-    status = "Enabled"
-
-    abort_incomplete_multipart_upload {
-      days_after_initiation = 7
+  # Lifecycle Rules
+  lifecycle_rules = [
+    {
+      id                           = "abort-incomplete-multipart-uploads"
+      enabled                      = true
+      prefix                       = null
+      expiration_days              = null
+      transition_to_ia_days        = null
+      transition_to_glacier_days   = null
+      noncurrent_expiration_days   = null
+      abort_incomplete_upload_days = 7
+    },
+    {
+      id                           = "intelligent-tiering-transition"
+      enabled                      = true
+      prefix                       = null
+      expiration_days              = null
+      transition_to_ia_days        = 30
+      transition_to_glacier_days   = null
+      noncurrent_expiration_days   = null
+      abort_incomplete_upload_days = null
+    },
+    {
+      id                           = "delete-old-versions"
+      enabled                      = true
+      prefix                       = null
+      expiration_days              = null
+      transition_to_ia_days        = null
+      transition_to_glacier_days   = null
+      noncurrent_expiration_days   = 90
+      abort_incomplete_upload_days = null
     }
-  }
+  ]
 
-  # Move to Intelligent-Tiering after 30 days
-  rule {
-    id     = "intelligent-tiering-transition"
-    status = "Enabled"
-
-    transition {
-      days          = 30
-      storage_class = "INTELLIGENT_TIERING"
+  # CORS Configuration (for Presigned URL uploads)
+  cors_rules = [
+    {
+      allowed_headers = ["*"]
+      allowed_methods = ["GET", "PUT", "POST", "HEAD"]
+      allowed_origins = var.cors_allowed_origins
+      expose_headers  = ["ETag", "x-amz-meta-*"]
+      max_age_seconds = 3600
     }
-  }
+  ]
 
-  # Delete non-current versions after 90 days
-  rule {
-    id     = "delete-old-versions"
-    status = "Enabled"
+  # CloudWatch Alarms
+  enable_cloudwatch_alarms    = true
+  alarm_bucket_size_threshold = 107374182400  # 100GB
+  alarm_object_count_threshold = 1000000      # 1M objects
 
-    noncurrent_version_expiration {
-      noncurrent_days = 90
-    }
-  }
+  # Required Tags (governance compliance)
+  environment  = local.common_tags.environment
+  service_name = local.common_tags.service_name
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = local.common_tags.project
+  data_class   = local.common_tags.data_class
 }
 
 # ============================================================================
 # Variables
 # ============================================================================
-
 variable "cors_allowed_origins" {
   description = "List of allowed origins for CORS"
   type        = list(string)
   default     = ["https://*.connectly.com", "http://localhost:*"]
+}
+
+# ============================================================================
+# IAM Policy for S3 Access (ECS Tasks)
+# ============================================================================
+data "aws_iam_policy_document" "s3_access" {
+  statement {
+    sid    = "AllowS3Access"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:ListBucket",
+      "s3:GetBucketLocation"
+    ]
+    resources = [
+      module.fileflow_uploads.bucket_arn,
+      "${module.fileflow_uploads.bucket_arn}/*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowKMSForS3"
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey",
+      "kms:DescribeKey"
+    ]
+    resources = [aws_kms_key.s3.arn]
+  }
+}
+
+resource "aws_iam_policy" "s3_access" {
+  name        = "${var.project_name}-s3-access-${var.environment}"
+  description = "IAM policy for FileFlow S3 bucket access"
+  policy      = data.aws_iam_policy_document.s3_access.json
+
+  tags = {
+    Name        = "${var.project_name}-s3-access-${var.environment}"
+    Environment = var.environment
+    Service     = "${var.project_name}-s3"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+  }
+}
+
+# ============================================================================
+# SSM Parameters for Cross-Stack Reference
+# ============================================================================
+resource "aws_ssm_parameter" "bucket_name" {
+  name        = "/${var.project_name}/s3/uploads-bucket-name"
+  description = "FileFlow uploads bucket name"
+  type        = "String"
+  value       = module.fileflow_uploads.bucket_id
+
+  tags = {
+    Name        = "${var.project_name}-s3-bucket-name"
+    Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "bucket_arn" {
+  name        = "/${var.project_name}/s3/uploads-bucket-arn"
+  description = "FileFlow uploads bucket ARN"
+  type        = "String"
+  value       = module.fileflow_uploads.bucket_arn
+
+  tags = {
+    Name        = "${var.project_name}-s3-bucket-arn"
+    Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "s3_policy_arn" {
+  name        = "/${var.project_name}/s3/access-policy-arn"
+  description = "FileFlow S3 access IAM policy ARN"
+  type        = "String"
+  value       = aws_iam_policy.s3_access.arn
+
+  tags = {
+    Name        = "${var.project_name}-s3-policy-arn"
+    Environment = var.environment
+  }
 }

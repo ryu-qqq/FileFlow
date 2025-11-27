@@ -3,10 +3,11 @@ package com.ryuqq.fileflow.application.asset.assembler;
 import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
 import org.springframework.stereotype.Component;
 
-/** FileUploadCompletedEvent를 FileAsset으로 변환하는 Assembler. */
+/** FileUploadCompletedEvent와 ExternalDownloadFileCreatedEvent를 FileAsset으로 변환하는 Assembler. */
 @Component
 public class FileAssetAssembler {
 
@@ -17,7 +18,7 @@ public class FileAssetAssembler {
     }
 
     /**
-     * 이벤트로부터 FileAsset을 생성합니다.
+     * 파일 업로드 완료 이벤트로부터 FileAsset을 생성합니다.
      *
      * @param event 파일 업로드 완료 이벤트
      * @return FileAsset
@@ -35,6 +36,28 @@ public class FileAssetAssembler {
                 event.s3Key(),
                 event.etag(),
                 event.userId(),
+                event.organizationId(),
+                event.tenantId(),
+                clockHolder.getClock());
+    }
+
+    /**
+     * 외부 다운로드 파일 생성 이벤트로부터 FileAsset을 생성합니다.
+     *
+     * @param event 외부 다운로드 파일 생성 이벤트
+     * @return FileAsset
+     */
+    public FileAsset toFileAsset(ExternalDownloadFileCreatedEvent event) {
+        return FileAsset.forNew(
+                null, // ExternalDownload는 세션 없음
+                event.fileName(),
+                event.fileSize(),
+                event.contentType(),
+                event.category(),
+                event.bucket(),
+                event.s3Key(),
+                event.etag(),
+                null, // ExternalDownload는 userId 없음
                 event.organizationId(),
                 event.tenantId(),
                 clockHolder.getClock());

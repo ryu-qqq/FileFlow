@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -26,8 +27,14 @@ import org.springframework.stereotype.Component;
  *   <li>S3 AbortMultipartUpload 처리
  *   <li>실패한 세션은 로깅 후 다음 주기에 재시도
  * </ol>
+ *
+ * <p><strong>활성화 조건</strong>: {@code scheduler.session-expiration.enabled=true}
  */
 @Component
+@ConditionalOnProperty(
+        name = "scheduler.session-expiration.enabled",
+        havingValue = "true",
+        matchIfMissing = false)
 public class MultipartUploadSessionExpirationScheduler {
 
     private static final Logger log =

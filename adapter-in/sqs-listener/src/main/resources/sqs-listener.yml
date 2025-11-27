@@ -1,0 +1,41 @@
+# ========================================
+# SQS Listener Configuration (Default/Production)
+# ========================================
+# Spring Cloud AWS SQS configuration
+# Environment variables are injected via ECS Task Definition
+# ========================================
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+      sqs:
+        # SQS 리스너 기본 설정
+        listener:
+          max-concurrent-messages: 10
+          max-messages-per-poll: 10
+
+aws:
+  sqs:
+    listener:
+      # ========================================
+      # Queue URLs (from Terraform SSM Parameters)
+      # ========================================
+      # ExternalDownload Queue: receives download tasks
+      external-download-queue-url: ${SQS_EXTERNAL_DOWNLOAD_QUEUE_URL:}
+
+      # ExternalDownload DLQ: receives failed tasks for error handling
+      external-download-dlq-url: ${SQS_EXTERNAL_DOWNLOAD_DLQ_URL:}
+
+      # ========================================
+      # Feature Toggles
+      # ========================================
+      # Enable/Disable individual listeners
+      external-download-listener-enabled: true
+      external-download-dlq-listener-enabled: true
+
+logging:
+  level:
+    com.ryuqq.fileflow.adapter.in.sqs: INFO
+    io.awspring.cloud.sqs: INFO

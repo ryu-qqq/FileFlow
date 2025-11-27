@@ -4,24 +4,31 @@ import com.ryuqq.fileflow.adapter.in.rest.session.dto.command.CompleteSingleUplo
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.command.InitMultipartUploadApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.command.InitSingleUploadApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.command.MarkPartUploadedApiRequest;
+import com.ryuqq.fileflow.adapter.in.rest.session.dto.query.UploadSessionSearchApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.response.CancelUploadSessionApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.response.CompleteMultipartUploadApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.response.CompleteSingleUploadApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.response.InitMultipartUploadApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.response.InitSingleUploadApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.response.MarkPartUploadedApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.session.dto.response.UploadSessionApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.session.dto.response.UploadSessionDetailApiResponse;
 import com.ryuqq.fileflow.application.session.dto.command.CancelUploadSessionCommand;
 import com.ryuqq.fileflow.application.session.dto.command.CompleteMultipartUploadCommand;
 import com.ryuqq.fileflow.application.session.dto.command.CompleteSingleUploadCommand;
 import com.ryuqq.fileflow.application.session.dto.command.InitMultipartUploadCommand;
 import com.ryuqq.fileflow.application.session.dto.command.InitSingleUploadCommand;
 import com.ryuqq.fileflow.application.session.dto.command.MarkPartUploadedCommand;
+import com.ryuqq.fileflow.application.session.dto.query.GetUploadSessionQuery;
+import com.ryuqq.fileflow.application.session.dto.query.ListUploadSessionsQuery;
 import com.ryuqq.fileflow.application.session.dto.response.CancelUploadSessionResponse;
 import com.ryuqq.fileflow.application.session.dto.response.CompleteMultipartUploadResponse;
 import com.ryuqq.fileflow.application.session.dto.response.CompleteSingleUploadResponse;
 import com.ryuqq.fileflow.application.session.dto.response.InitMultipartUploadResponse;
 import com.ryuqq.fileflow.application.session.dto.response.InitSingleUploadResponse;
 import com.ryuqq.fileflow.application.session.dto.response.MarkPartUploadedResponse;
+import com.ryuqq.fileflow.application.session.dto.response.UploadSessionDetailResponse;
+import com.ryuqq.fileflow.application.session.dto.response.UploadSessionResponse;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -245,5 +252,116 @@ public class UploadSessionApiMapper {
             CancelUploadSessionResponse response) {
         return CancelUploadSessionApiResponse.of(
                 response.sessionId(), response.status(), response.bucket(), response.key());
+    }
+
+    // ========== API Request → Query 변환 ==========
+
+    /**
+     * sessionId + tenantId → GetUploadSessionQuery 변환
+     *
+     * @param sessionId 세션 ID
+     * @param tenantId 테넌트 ID
+     * @return GetUploadSessionQuery
+     */
+    public GetUploadSessionQuery toGetUploadSessionQuery(String sessionId, long tenantId) {
+        return GetUploadSessionQuery.of(sessionId, tenantId);
+    }
+
+    /**
+     * UploadSessionSearchApiRequest → ListUploadSessionsQuery 변환
+     *
+     * @param request REST API 검색 요청
+     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID
+     * @return ListUploadSessionsQuery
+     */
+    public ListUploadSessionsQuery toListUploadSessionsQuery(
+            UploadSessionSearchApiRequest request, long tenantId, long organizationId) {
+        String uploadType = request.uploadType() != null ? request.uploadType().name() : null;
+
+        return ListUploadSessionsQuery.of(
+                tenantId,
+                organizationId,
+                request.status(),
+                uploadType,
+                request.page(),
+                request.size());
+    }
+
+    // ========== Application Response → Query API Response 변환 ==========
+
+    /**
+     * UploadSessionResponse → UploadSessionApiResponse 변환
+     *
+     * @param response Application Layer 세션 응답
+     * @return REST API 세션 응답
+     */
+    public UploadSessionApiResponse toUploadSessionApiResponse(UploadSessionResponse response) {
+        return UploadSessionApiResponse.of(
+                response.sessionId(),
+                response.fileName(),
+                response.fileSize(),
+                response.contentType(),
+                response.uploadType(),
+                response.status(),
+                response.bucket(),
+                response.key(),
+                response.createdAt(),
+                response.expiresAt());
+    }
+
+    /**
+     * UploadSessionDetailResponse → UploadSessionDetailApiResponse 변환
+     *
+     * @param response Application Layer 세션 상세 응답
+     * @return REST API 세션 상세 응답
+     */
+    public UploadSessionDetailApiResponse toUploadSessionDetailApiResponse(
+            UploadSessionDetailResponse response) {
+        if ("SINGLE".equals(response.uploadType())) {
+            return UploadSessionDetailApiResponse.ofSingle(
+                    response.sessionId(),
+                    response.fileName(),
+                    response.fileSize(),
+                    response.contentType(),
+                    response.status(),
+                    response.bucket(),
+                    response.key(),
+                    response.etag(),
+                    response.createdAt(),
+                    response.expiresAt(),
+                    response.completedAt());
+        }
+
+        List<UploadSessionDetailApiResponse.PartDetailApiResponse> parts = null;
+        if (response.parts() != null) {
+            parts =
+                    response.parts().stream()
+                            .map(
+                                    part ->
+                                            UploadSessionDetailApiResponse.PartDetailApiResponse.of(
+                                                    part.partNumber(),
+                                                    part.etag(),
+                                                    part.size(),
+                                                    part.uploadedAt()))
+                            .toList();
+        }
+
+        return UploadSessionDetailApiResponse.ofMultipart(
+                response.sessionId(),
+                response.fileName(),
+                response.fileSize(),
+                response.contentType(),
+                response.status(),
+                response.bucket(),
+                response.key(),
+                response.uploadId(),
+                response.totalParts() != null ? response.totalParts() : 0,
+                response.uploadedParts() != null ? response.uploadedParts() : 0,
+                parts,
+                response.etag(),
+                response.createdAt(),
+                response.expiresAt(),
+                response.completedAt());
     }
 }

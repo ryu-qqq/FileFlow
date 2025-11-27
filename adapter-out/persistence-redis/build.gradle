@@ -21,6 +21,9 @@ dependencies {
     // Spring Data Redis
     implementation libs.spring.boot.starter.data.redis
 
+    // Redisson for Distributed Lock
+    implementation libs.redisson
+
     // Jackson for Serialization
     implementation libs.jackson.databind
     implementation libs.jackson.datatype.jsr310
