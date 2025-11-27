@@ -80,6 +80,8 @@ class ControllerArchTest {
                         .resideInAPackage("..controller..")
                         .and()
                         .haveSimpleNameEndingWith("Controller")
+                        .and()
+                        .haveSimpleNameNotEndingWith("ApiDocsController")
                         .should()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RequestMapping.class)
@@ -224,7 +226,7 @@ class ControllerArchTest {
         rule.check(classes);
     }
 
-    /** 규칙 10: UseCase 의존성 필수 */
+    /** 규칙 10: UseCase 의존성 필수 (API Docs 등 유틸리티 컨트롤러 제외) */
     @Test
     @DisplayName("[필수] Controller는 UseCase 인터페이스에 의존해야 한다")
     void controller_MustDependOnUseCaseInterfaces() {
@@ -234,6 +236,8 @@ class ControllerArchTest {
                         .resideInAPackage("..controller..")
                         .and()
                         .haveSimpleNameEndingWith("Controller")
+                        .and()
+                        .haveSimpleNameNotEndingWith("ApiDocsController")
                         .should()
                         .dependOnClassesThat()
                         .resideInAPackage("..application..port.in..")

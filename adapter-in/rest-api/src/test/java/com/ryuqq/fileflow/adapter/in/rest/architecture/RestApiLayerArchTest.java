@@ -161,7 +161,7 @@ class RestApiLayerArchTest {
         rule.allowEmptyShould(true).check(classes);
     }
 
-    /** 규칙 5: REST API Layer는 Application Layer Port 의존 필수 */
+    /** 규칙 5: REST API Layer는 Application Layer Port 의존 필수 (유틸리티 컨트롤러 제외) */
     @Test
     @DisplayName("[필수] Controller는 Application Layer Port를 의존해야 한다")
     void controller_MustDependOnApplicationPorts() {
@@ -173,6 +173,8 @@ class RestApiLayerArchTest {
                         .haveSimpleNameEndingWith("Controller")
                         .and()
                         .haveSimpleNameNotContaining("GlobalExceptionHandler")
+                        .and()
+                        .haveSimpleNameNotContaining("ApiDocsController")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("..application..port..")

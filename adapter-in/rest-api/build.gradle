@@ -10,6 +10,7 @@
 plugins {
     id 'java-library'
     id 'java-test-fixtures'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
 }
 
 dependencies {
@@ -67,4 +68,37 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.test {
     finalizedBy tasks.jacocoTestCoverageVerification
+}
+
+// ========================================
+// REST Docs Configuration
+// ========================================
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
+test {
+    outputs.dir snippetsDir
+}
+
+asciidoctor {
+    inputs.dir snippetsDir
+    dependsOn test
+
+    baseDirFollowsSourceFile()
+
+    sources {
+        include '**/index.adoc'
+    }
+}
+
+// ========================================
+// Copy REST Docs to static resources (for deployment)
+// ========================================
+// copyDocs task is intended to be run explicitly or in CI/CD pipeline
+// after the build is complete: ./gradlew build copyDocs
+tasks.register('copyDocs', Copy) {
+    dependsOn asciidoctor
+    from asciidoctor.outputDir
+    into layout.buildDirectory.dir('resources/main/static/docs')
 }
