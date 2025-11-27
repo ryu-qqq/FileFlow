@@ -35,6 +35,10 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
 
+# Enable Redisson for distributed locking in production
+redisson:
+  enabled: true
+
 ---
 # ===============================================
 # Test Profile
@@ -49,3 +53,7 @@ spring:
       host: localhost
       port: 6379
       password:
+
+# Disable Redisson in test environment (no Redis needed)
+redisson:
+  enabled: false
