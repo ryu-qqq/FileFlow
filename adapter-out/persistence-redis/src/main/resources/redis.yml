@@ -2,7 +2,7 @@
 # Persistence Redis Adapter Configuration
 # ===============================================
 
-# Common Redis Settings
+# Common Redis Settings (applies to all profiles)
 spring:
   # Exclude Redisson Spring Boot Starter auto-configuration
   # We use custom RedissonConfig instead
@@ -20,6 +20,10 @@ spring:
           min-idle: 4
           max-wait: 3000ms
 
+# Enable Redisson by default (override in test profile)
+redisson:
+  enabled: true
+
 ---
 # ===============================================
 # Production Profile
@@ -34,10 +38,6 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-
-# Enable Redisson for distributed locking in production
-redisson:
-  enabled: true
 
 ---
 # ===============================================
