@@ -1,9 +1,24 @@
 # ========================================
-# ElastiCache (Redis) for Crawlinghub
+# ElastiCache (Redis) for FileFlow
 # ========================================
-# Dedicated Redis cluster
+# Redis cluster using Infrastructure module
 # Naming: fileflow-redis-prod
 # ========================================
+
+# ========================================
+# Common Tags (for governance)
+# ========================================
+locals {
+  common_tags = {
+    environment  = var.environment
+    service_name = "${var.project_name}-redis"
+    team         = "platform-team"
+    owner        = "platform@ryuqqq.com"
+    cost_center  = "engineering"
+    project      = var.project_name
+    data_class   = "internal"
+  }
+}
 
 # ========================================
 # Security Group for Redis
@@ -18,7 +33,7 @@ resource "aws_security_group" "redis" {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/8"] # VPC CIDR
+    cidr_blocks = ["10.0.0.0/8"]  # VPC CIDR
   }
 
   egress {
@@ -29,64 +44,62 @@ resource "aws_security_group" "redis" {
   }
 
   tags = {
-    Name = "${var.project_name}-redis-sg-${var.environment}"
-  }
-}
-
-# ========================================
-# ElastiCache Subnet Group
-# ========================================
-resource "aws_elasticache_subnet_group" "redis" {
-  name       = "${var.project_name}-redis-subnet-${var.environment}"
-  subnet_ids = local.private_subnets
-
-  tags = {
-    Name        = "${var.project_name}-redis-subnet-${var.environment}"
+    Name        = "${var.project_name}-redis-sg-${var.environment}"
     Environment = var.environment
+    Service     = "${var.project_name}-redis"
+    Owner       = local.common_tags.owner
+    CostCenter  = local.common_tags.cost_center
+    DataClass   = local.common_tags.data_class
+    Lifecycle   = "production"
+    ManagedBy   = "terraform"
+    Project     = var.project_name
   }
 }
 
 # ========================================
-# ElastiCache Parameter Group
+# ElastiCache using Infrastructure Module
 # ========================================
-resource "aws_elasticache_parameter_group" "redis" {
-  name   = "${var.project_name}-redis-params-${var.environment}"
-  family = "redis7"
+module "redis" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/elasticache?ref=main"
 
-  parameter {
-    name  = "maxmemory-policy"
-    value = "allkeys-lru"
-  }
+  cluster_id     = "${var.project_name}-redis-${var.environment}"
+  engine         = "redis"
+  engine_version = "7.0"
+  node_type      = var.redis_node_type
+  num_cache_nodes = 1
 
-  tags = {
-    Name        = "${var.project_name}-redis-params-${var.environment}"
-    Environment = var.environment
-  }
-}
+  # Network Configuration
+  subnet_ids         = local.private_subnets
+  security_group_ids = [aws_security_group.redis.id]
 
-# ========================================
-# ElastiCache Cluster
-# ========================================
-resource "aws_elasticache_cluster" "redis" {
-  cluster_id           = "${var.project_name}-redis-${var.environment}"
-  engine               = "redis"
-  engine_version       = "7.0"
-  node_type            = var.redis_node_type
-  num_cache_nodes      = 1
-  parameter_group_name = aws_elasticache_parameter_group.redis.name
-  subnet_group_name    = aws_elasticache_subnet_group.redis.name
-  security_group_ids   = [aws_security_group.redis.id]
-  port                 = 6379
+  # Parameter Group
+  parameter_group_family = "redis7"
+  parameters = [
+    {
+      name  = "maxmemory-policy"
+      value = "allkeys-lru"
+    }
+  ]
 
+  # Maintenance and Backup
   snapshot_retention_limit = 1
   snapshot_window          = "05:00-09:00"
   maintenance_window       = "mon:09:00-mon:10:00"
 
-  tags = {
-    Name        = "${var.project_name}-redis-${var.environment}"
-    Environment = var.environment
-    Service     = "${var.project_name}-redis-${var.environment}"
-  }
+  # CloudWatch Alarms
+  enable_cloudwatch_alarms = true
+  alarm_cpu_threshold      = 80
+  alarm_memory_threshold   = 85
+  alarm_connection_threshold = 1000
+
+  # Required Tags (governance compliance)
+  environment  = local.common_tags.environment
+  service_name = local.common_tags.service_name
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = local.common_tags.project
+  data_class   = local.common_tags.data_class
 }
 
 # ========================================
@@ -99,19 +112,28 @@ variable "redis_node_type" {
 }
 
 # ========================================
-# Outputs
+# SSM Parameters for Cross-Stack Reference
 # ========================================
-output "redis_endpoint" {
-  description = "Redis primary endpoint"
-  value       = aws_elasticache_cluster.redis.cache_nodes[0].address
+resource "aws_ssm_parameter" "redis_endpoint" {
+  name        = "/${var.project_name}/elasticache/redis-endpoint"
+  description = "FileFlow Redis endpoint"
+  type        = "String"
+  value       = module.redis.primary_endpoint_address
+
+  tags = {
+    Name        = "${var.project_name}-redis-endpoint"
+    Environment = var.environment
+  }
 }
 
-output "redis_port" {
-  description = "Redis port"
-  value       = aws_elasticache_cluster.redis.port
-}
+resource "aws_ssm_parameter" "redis_port" {
+  name        = "/${var.project_name}/elasticache/redis-port"
+  description = "FileFlow Redis port"
+  type        = "String"
+  value       = tostring(module.redis.port)
 
-output "redis_security_group_id" {
-  description = "Redis security group ID"
-  value       = aws_security_group.redis.id
+  tags = {
+    Name        = "${var.project_name}-redis-port"
+    Environment = var.environment
+  }
 }
