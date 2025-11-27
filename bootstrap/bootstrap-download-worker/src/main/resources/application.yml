@@ -9,6 +9,11 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod}
 
+  # Exclude Redisson auto-configuration (use custom RedissonConfig)
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+
   config:
     import:
       - classpath:persistence.yml
