@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.adapter;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSessionJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.mapper.SingleUploadSessionJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.session.repository.SingleUploadSessionJpaRepository;
-import com.ryuqq.fileflow.application.session.port.out.command.PersistSingleUploadSessionPort;
+import com.ryuqq.fileflow.application.session.port.out.command.SingleUploadSessionPersistencePort;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * <p>PersistSingleUploadSessionPort를 구현하여 RDB에 세션을 저장합니다.
  */
 @Component
-public class PersistSingleUploadSessionAdapter implements PersistSingleUploadSessionPort {
+public class PersistSingleUploadSessionAdapter implements SingleUploadSessionPersistencePort {
 
     private final SingleUploadSessionJpaRepository repository;
     private final SingleUploadSessionJpaMapper mapper;

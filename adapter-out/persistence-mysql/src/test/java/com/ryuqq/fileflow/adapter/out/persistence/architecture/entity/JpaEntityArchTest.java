@@ -54,7 +54,9 @@ class JpaEntityArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses = new ClassFileImporter().importPackages("com.ryuqq.adapter.out.persistence");
+        allClasses =
+                new ClassFileImporter()
+                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
 
         entityClasses =
                 allClasses.that(
@@ -63,6 +65,13 @@ class JpaEntityArchTest {
                                 javaClass -> javaClass.isAnnotatedWith(Entity.class)));
     }
 
+    /**
+     * 규칙 1: @Entity 어노테이션 필수
+     *
+     * <p>JpaEntity로 끝나는 클래스는 @Entity 어노테이션이 필수입니다.
+     *
+     * <p>Note: entity 패키지 내 *JpaEntity 클래스만 검증 (Mapper, Fixture 등 제외)
+     */
     @Test
     @DisplayName("규칙 1: @Entity 어노테이션 필수")
     void jpaEntity_MustBeAnnotatedWithEntity() {
@@ -70,6 +79,14 @@ class JpaEntityArchTest {
                 classes()
                         .that()
                         .haveSimpleNameEndingWith("JpaEntity")
+                        .and()
+                        .resideInAPackage("..entity..")
+                        .and()
+                        .haveSimpleNameNotContaining("Mapper")
+                        .and()
+                        .haveSimpleNameNotContaining("Fixture")
+                        .and()
+                        .haveSimpleNameNotStartingWith("Q") // QueryDSL Q타입 제외
                         .should()
                         .beAnnotatedWith(Entity.class)
                         .because("JPA Entity 클래스는 @Entity 어노테이션이 필수입니다");
@@ -221,6 +238,18 @@ class JpaEntityArchTest {
         rule.check(entityClasses);
     }
 
+    /**
+     * 규칙 4: Setter 메서드 금지
+     *
+     * <p>JPA Entity는 불변성 보장을 위해 Setter가 금지됩니다.
+     *
+     * <ul>
+     *   <li>❌ setId(), setName() 등 Setter 메서드
+     *   <li>✅ Getter만 제공
+     * </ul>
+     *
+     * <p>Note: Setter가 없는 경우도 정상이므로 allowEmptyShould(true) 적용
+     */
     @Test
     @DisplayName("규칙 4: Setter 메서드 금지")
     void jpaEntity_MustNotHaveSetterMethods() {
@@ -236,9 +265,21 @@ class JpaEntityArchTest {
                         .should(notExist())
                         .because("JPA Entity는 Setter 메서드가 금지됩니다 (Getter만 제공)");
 
-        rule.check(entityClasses);
+        rule.allowEmptyShould(true).check(entityClasses);
     }
 
+    /**
+     * 규칙 5: 비즈니스 로직 금지 (특정 메서드 패턴)
+     *
+     * <p>JPA Entity는 순수 데이터 저장소 역할만 합니다.
+     *
+     * <ul>
+     *   <li>❌ approve*, cancel*, complete* 등 비즈니스 메서드
+     *   <li>✅ Getter, of() 등 데이터 접근 메서드만
+     * </ul>
+     *
+     * <p>Note: 비즈니스 로직 메서드가 없는 경우도 정상이므로 allowEmptyShould(true) 적용
+     */
     @Test
     @DisplayName("규칙 5: 비즈니스 로직 금지 (특정 메서드 패턴)")
     void jpaEntity_MustNotHaveBusinessLogicMethods() {
@@ -255,7 +296,7 @@ class JpaEntityArchTest {
                         .should(notExist())
                         .because("JPA Entity는 비즈니스 로직이 금지됩니다 (Domain Layer에서 처리)");
 
-        rule.check(entityClasses);
+        rule.allowEmptyShould(true).check(entityClasses);
     }
 
     @Test

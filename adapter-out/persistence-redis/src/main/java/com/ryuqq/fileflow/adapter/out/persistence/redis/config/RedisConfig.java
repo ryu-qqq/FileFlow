@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.redis.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -23,6 +24,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * </ul>
  */
 @Configuration
+@ConditionalOnBean(RedisConnectionFactory.class)
 public class RedisConfig {
 
     @Bean

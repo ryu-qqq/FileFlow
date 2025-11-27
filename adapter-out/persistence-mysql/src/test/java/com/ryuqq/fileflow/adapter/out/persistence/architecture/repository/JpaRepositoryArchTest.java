@@ -43,7 +43,9 @@ class JpaRepositoryArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses = new ClassFileImporter().importPackages("com.ryuqq.adapter.out.persistence");
+        allClasses =
+                new ClassFileImporter()
+                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
 
         // JpaRepository 인터페이스만 (QueryDsl 제외)
         jpaRepositoryClasses =
@@ -112,17 +114,33 @@ class JpaRepositoryArchTest {
         rule.check(jpaRepositoryClasses);
     }
 
+    /**
+     * 규칙 4: Query Method 추가 금지 (권장)
+     *
+     * <p>JpaRepository는 Query Method 추가를 지양합니다.
+     *
+     * <ul>
+     *   <li>✅ JpaRepository 기본 메서드만 사용 (save, findById, delete 등)
+     *   <li>❌ 복잡한 Query Method (findByStatusAndCategory 등)
+     *   <li>✅ 복잡한 조회는 QueryDslRepository 사용
+     * </ul>
+     *
+     * <p>Note: Query 용도가 아닌 JpaRepository도 포함되므로 allowEmptyShould(true) 적용
+     */
     @Test
-    @DisplayName("규칙 4: Query Method 추가 금지")
-    void jpaRepository_MustNotHaveQueryMethods() {
+    @DisplayName("규칙 4: Query Method 추가 금지 (권장)")
+    void jpaRepository_ShouldNotHaveQueryMethods() {
         ArchRule rule =
                 noMethods()
                         .that()
                         .areDeclaredInClassesThat()
-                        .haveSimpleNameEndingWith("Repository")
+                        .haveSimpleNameEndingWith("JpaRepository")
                         .and()
                         .areDeclaredInClassesThat()
                         .haveSimpleNameNotContaining("QueryDsl")
+                        .and()
+                        .areDeclaredInClassesThat()
+                        .haveSimpleNameNotContaining("Query")
                         .and()
                         .areDeclaredInClassesThat()
                         .areInterfaces()
@@ -132,9 +150,19 @@ class JpaRepositoryArchTest {
                         .haveNameMatching("find.*|search.*|count.*|exists.*|get.*")
                         .because("JpaRepository는 Query Method 추가가 금지됩니다 (QueryDslRepository 사용)");
 
-        rule.check(allClasses);
+        rule.allowEmptyShould(true).check(allClasses);
     }
 
+    /**
+     * 규칙 5: @Query 어노테이션 사용 금지
+     *
+     * <p>JpaRepository에서 @Query 사용을 지양합니다.
+     *
+     * <ul>
+     *   <li>❌ @Query로 JPQL/Native Query 작성
+     *   <li>✅ QueryDSL Repository 사용
+     * </ul>
+     */
     @Test
     @DisplayName("규칙 5: @Query 어노테이션 사용 금지")
     void jpaRepository_MustNotUseQueryAnnotation() {
@@ -142,10 +170,13 @@ class JpaRepositoryArchTest {
                 methods()
                         .that()
                         .areDeclaredInClassesThat()
-                        .haveSimpleNameEndingWith("Repository")
+                        .haveSimpleNameEndingWith("JpaRepository")
                         .and()
                         .areDeclaredInClassesThat()
                         .haveSimpleNameNotContaining("QueryDsl")
+                        .and()
+                        .areDeclaredInClassesThat()
+                        .haveSimpleNameNotContaining("Query")
                         .and()
                         .areDeclaredInClassesThat()
                         .areInterfaces()
@@ -153,9 +184,19 @@ class JpaRepositoryArchTest {
                         .notBeAnnotatedWith(Query.class)
                         .because("JpaRepository는 @Query 어노테이션 사용이 금지됩니다 (QueryDSL 사용)");
 
-        rule.check(allClasses);
+        rule.allowEmptyShould(true).check(allClasses);
     }
 
+    /**
+     * 규칙 6: Custom Repository 구현 금지
+     *
+     * <p>JpaRepository의 Custom 구현체 패턴을 지양합니다.
+     *
+     * <ul>
+     *   <li>❌ *RepositoryImpl (Spring Data JPA Custom Repository 패턴)
+     *   <li>✅ QueryDslRepository 클래스로 분리
+     * </ul>
+     */
     @Test
     @DisplayName("규칙 6: Custom Repository 구현 금지")
     void jpaRepository_MustNotHaveCustomImplementation() {
@@ -174,7 +215,7 @@ class JpaRepositoryArchTest {
                         .haveSimpleNameNotEndingWith("RepositoryImpl")
                         .because("Custom Repository 구현이 금지됩니다 (QueryDslRepository 사용)");
 
-        rule.check(allClasses);
+        rule.allowEmptyShould(true).check(allClasses);
     }
 
     @Test

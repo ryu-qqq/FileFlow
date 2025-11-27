@@ -94,4 +94,27 @@ public interface S3ClientPort {
      * @param uploadId S3 Upload ID
      */
     void abortMultipartUpload(S3Bucket bucket, S3Key s3Key, String uploadId);
+
+    /**
+     * 바이트 배열을 S3에 직접 업로드합니다.
+     *
+     * <p>외부 다운로드 Worker에서 다운로드한 이미지를 S3에 업로드할 때 사용합니다.
+     *
+     * @param bucket S3 버킷
+     * @param s3Key S3 객체 키
+     * @param contentType Content-Type
+     * @param data 업로드할 바이트 배열
+     * @return 업로드된 객체의 ETag
+     */
+    ETag putObject(S3Bucket bucket, S3Key s3Key, ContentType contentType, byte[] data);
+
+    /**
+     * S3 객체의 다운로드용 Presigned URL을 발급합니다.
+     *
+     * @param bucket S3 버킷
+     * @param s3Key S3 객체 키
+     * @param duration 유효 기간
+     * @return Presigned GET URL
+     */
+    String generatePresignedGetUrl(S3Bucket bucket, S3Key s3Key, Duration duration);
 }

@@ -1,0 +1,29 @@
+// ========================================
+// Adapter-Out: HTTP Client
+// ========================================
+// Outbound adapter for HTTP download operations
+// Implements HttpDownloadPort from application layer
+// Technology: Spring WebClient (WebFlux)
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Spring WebFlux (WebClient)
+    implementation libs.spring.boot.starter.webflux
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.bundles.testing.basic
+    testImplementation libs.spring.boot.starter.test
+}

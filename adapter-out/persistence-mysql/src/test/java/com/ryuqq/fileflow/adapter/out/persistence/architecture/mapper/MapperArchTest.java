@@ -46,7 +46,9 @@ class MapperArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses = new ClassFileImporter().importPackages("com.ryuqq.adapter.out.persistence");
+        allClasses =
+                new ClassFileImporter()
+                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
 
         mapperClasses =
                 allClasses.that(
@@ -172,6 +174,18 @@ class MapperArchTest {
         rule.check(mapperClasses);
     }
 
+    /**
+     * 규칙 4: 비즈니스 로직 금지
+     *
+     * <p>Mapper는 순수 변환 로직만 담당해야 합니다.
+     *
+     * <ul>
+     *   <li>❌ validate*, calculate*, approve*, cancel* 등 비즈니스 메서드
+     *   <li>✅ toEntity(), toDomain() 등 변환 메서드만
+     * </ul>
+     *
+     * <p>Note: 비즈니스 로직 메서드가 없는 경우도 정상이므로 allowEmptyShould(true) 적용
+     */
     @Test
     @DisplayName("규칙 4: 비즈니스 로직 금지")
     void mapper_MustNotHaveBusinessLogicMethods() {
@@ -188,7 +202,7 @@ class MapperArchTest {
                         .should(notExist())
                         .because("Mapper는 비즈니스 로직이 금지됩니다 (단순 변환만 담당)");
 
-        rule.check(mapperClasses);
+        rule.allowEmptyShould(true).check(mapperClasses);
     }
 
     @Test

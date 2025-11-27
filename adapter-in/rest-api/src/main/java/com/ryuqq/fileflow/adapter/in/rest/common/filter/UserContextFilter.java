@@ -29,6 +29,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
  *
  * <p>Authorization 헤더에서 JWT 토큰을 추출하고 파싱하여 UserContext를 생성한 후 ThreadLocal과 MDC에 설정합니다.
  *
+ * <p><strong>개발 모드</strong>: 토큰이 없는 경우 기본 Admin UserContext를 생성합니다. (Gateway/인증서버 개발 전까지 임시 사용)
+ *
  * <p><strong>JWT Payload 필드</strong>:
  *
  * <ul>
@@ -75,34 +77,36 @@ public class UserContextFilter extends OncePerRequestFilter {
 
         try {
             String token = extractToken(request);
+            UserContext userContext;
 
             if (token == null) {
-                sendErrorResponse(
-                        request,
-                        response,
-                        HttpStatus.UNAUTHORIZED,
-                        "MISSING_TOKEN",
-                        "Authorization token is required");
-                return;
+                // 개발 모드: 토큰이 없으면 기본 Admin UserContext 생성
+                // TODO: Gateway/인증서버 완성 후 이 블록 제거하고 401 응답으로 변경
+                userContext = createDefaultAdminContext();
+                log.warn("토큰 없음 - 개발용 기본 Admin UserContext 사용: {}", userContext.email());
+            } else {
+                try {
+                    userContext = parseToken(token);
+                } catch (IllegalArgumentException e) {
+                    log.warn("JWT 토큰 파싱 실패: {}", e.getMessage());
+                    sendErrorResponse(
+                            request,
+                            response,
+                            HttpStatus.BAD_REQUEST,
+                            "INVALID_TOKEN",
+                            e.getMessage());
+                    return;
+                }
             }
 
-            try {
-                UserContext userContext = parseToken(token);
-                UserContextHolder.set(userContext);
+            UserContextHolder.set(userContext);
 
-                // MDC 설정
-                MDC.put(MDC_USER_ID, userContext.getUserIdentifier());
-                MDC.put(MDC_ORGANIZATION_ID, String.valueOf(userContext.getOrganizationId()));
-                MDC.put(MDC_ROLE, userContext.getRole().name());
+            // MDC 설정
+            MDC.put(MDC_USER_ID, userContext.getUserIdentifier());
+            MDC.put(MDC_ORGANIZATION_ID, String.valueOf(userContext.getOrganizationId()));
+            MDC.put(MDC_ROLE, userContext.getRole().name());
 
-                log.debug("UserContext 설정 완료: {}", userContext.getUserIdentifier());
-
-            } catch (IllegalArgumentException e) {
-                log.warn("JWT 토큰 파싱 실패: {}", e.getMessage());
-                sendErrorResponse(
-                        request, response, HttpStatus.BAD_REQUEST, "INVALID_TOKEN", e.getMessage());
-                return;
-            }
+            log.debug("UserContext 설정 완료: {}", userContext.getUserIdentifier());
 
             filterChain.doFilter(request, response);
 
@@ -113,6 +117,17 @@ public class UserContextFilter extends OncePerRequestFilter {
             MDC.remove(MDC_ORGANIZATION_ID);
             MDC.remove(MDC_ROLE);
         }
+    }
+
+    /**
+     * 개발용 기본 Admin UserContext를 생성합니다.
+     *
+     * <p>Gateway/인증서버가 완성되기 전까지 토큰 없이 API 테스트를 위해 사용합니다.
+     *
+     * @return 기본 Admin UserContext
+     */
+    private UserContext createDefaultAdminContext() {
+        return UserContext.admin("master@connectly.com");
     }
 
     /**

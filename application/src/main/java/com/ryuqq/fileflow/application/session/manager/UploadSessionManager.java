@@ -1,8 +1,8 @@
 package com.ryuqq.fileflow.application.session.manager;
 
-import com.ryuqq.fileflow.application.session.port.out.command.PersistCompletedPartPort;
-import com.ryuqq.fileflow.application.session.port.out.command.PersistMultipartUploadSessionPort;
-import com.ryuqq.fileflow.application.session.port.out.command.PersistSingleUploadSessionPort;
+import com.ryuqq.fileflow.application.session.port.out.command.CompletedPartPersistencePort;
+import com.ryuqq.fileflow.application.session.port.out.command.MultipartUploadSessionPersistencePort;
+import com.ryuqq.fileflow.application.session.port.out.command.SingleUploadSessionPersistencePort;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
@@ -43,17 +43,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class UploadSessionManager {
 
-    private final PersistSingleUploadSessionPort persistSingleUploadSessionPort;
-    private final PersistMultipartUploadSessionPort persistMultipartUploadSessionPort;
-    private final PersistCompletedPartPort persistCompletedPartPort;
+    private final SingleUploadSessionPersistencePort singleUploadSessionPersistencePort;
+    private final MultipartUploadSessionPersistencePort multipartUploadSessionPersistencePort;
+    private final CompletedPartPersistencePort completedPartPersistencePort;
 
     public UploadSessionManager(
-            PersistSingleUploadSessionPort persistSingleUploadSessionPort,
-            PersistMultipartUploadSessionPort persistMultipartUploadSessionPort,
-            PersistCompletedPartPort persistCompletedPartPort) {
-        this.persistSingleUploadSessionPort = persistSingleUploadSessionPort;
-        this.persistMultipartUploadSessionPort = persistMultipartUploadSessionPort;
-        this.persistCompletedPartPort = persistCompletedPartPort;
+            SingleUploadSessionPersistencePort singleUploadSessionPersistencePort,
+            MultipartUploadSessionPersistencePort multipartUploadSessionPersistencePort,
+            CompletedPartPersistencePort completedPartPersistencePort) {
+        this.singleUploadSessionPersistencePort = singleUploadSessionPersistencePort;
+        this.multipartUploadSessionPersistencePort = multipartUploadSessionPersistencePort;
+        this.completedPartPersistencePort = completedPartPersistencePort;
     }
 
     /**
@@ -66,7 +66,7 @@ public class UploadSessionManager {
      */
     @Transactional
     public SingleUploadSession save(SingleUploadSession session) {
-        return persistSingleUploadSessionPort.persist(session);
+        return singleUploadSessionPersistencePort.persist(session);
     }
 
     /**
@@ -79,7 +79,7 @@ public class UploadSessionManager {
      */
     @Transactional
     public MultipartUploadSession save(MultipartUploadSession session) {
-        return persistMultipartUploadSessionPort.persist(session);
+        return multipartUploadSessionPersistencePort.persist(session);
     }
 
     /**
@@ -92,7 +92,7 @@ public class UploadSessionManager {
      */
     @Transactional
     public CompletedPart saveCompletedPart(UploadSessionId sessionId, CompletedPart completedPart) {
-        return persistCompletedPartPort.persist(sessionId, completedPart);
+        return completedPartPersistencePort.persist(sessionId, completedPart);
     }
 
     /**
@@ -107,7 +107,7 @@ public class UploadSessionManager {
     public void saveAllCompletedParts(
             UploadSessionId sessionId, List<CompletedPart> completedParts) {
         for (CompletedPart part : completedParts) {
-            persistCompletedPartPort.persist(sessionId, part);
+            completedPartPersistencePort.persist(sessionId, part);
         }
     }
 }

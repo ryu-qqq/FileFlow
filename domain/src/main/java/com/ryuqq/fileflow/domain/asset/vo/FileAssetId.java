@@ -15,8 +15,21 @@ public record FileAssetId(UUID value) {
         }
     }
 
-    public static FileAssetId generate() {
+    /**
+     * 신규 FileAsset ID 생성 (UUID 랜덤 생성).
+     *
+     * @return 신규 FileAssetId
+     */
+    public static FileAssetId forNew() {
         return new FileAssetId(UUID.randomUUID());
+    }
+
+    /**
+     * @deprecated use {@link #forNew()} instead
+     */
+    @Deprecated
+    public static FileAssetId generate() {
+        return forNew();
     }
 
     public static FileAssetId of(UUID value) {
@@ -25,6 +38,15 @@ public record FileAssetId(UUID value) {
 
     public static FileAssetId of(String value) {
         return new FileAssetId(UUID.fromString(value));
+    }
+
+    /**
+     * ID가 신규인지 확인 (항상 false, 생성 시 값이 필수).
+     *
+     * @return 항상 false (null 허용하지 않음)
+     */
+    public boolean isNew() {
+        return false; // Record 생성 시 null 검증으로 항상 값이 존재
     }
 
     public String getValue() {

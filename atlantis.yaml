@@ -13,20 +13,6 @@ parallel_apply: false
 
 projects:
   # ============================================================================
-  # Storage
-  # ============================================================================
-
-  # S3 Bucket for file uploads
-  - name: s3-prod
-    dir: terraform/s3
-    workspace: default
-    autoplan:
-      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
-      enabled: true
-    apply_requirements: ["approved", "mergeable"]
-    workflow: default
-
-  # ============================================================================
   # Container Registry
   # ============================================================================
 
@@ -35,17 +21,17 @@ projects:
     dir: terraform/ecr
     workspace: default
     autoplan:
-      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      when_modified: ["*.tf", "*.tfvars"]
       enabled: true
-    apply_requirements: ["approved", "mergeable"]
-    workflow: default
 
-workflows:
-  default:
-    plan:
-      steps:
-        - init
-        - plan
-    apply:
-      steps:
-        - apply
+  # ============================================================================
+  # Storage
+  # ============================================================================
+
+  # S3 Bucket for file uploads
+  - name: s3-prod
+    dir: terraform/s3
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars"]
+      enabled: true
