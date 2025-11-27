@@ -2,7 +2,7 @@
 # FileFlow Build & Deploy
 #
 # Reusable Workflows 사용하여 단순화
-# 기존 600줄 → 약 100줄로 단순화
+# 기존 600줄 → 약 150줄로 단순화
 # ============================================================================
 
 name: Build and Deploy to ECS
@@ -27,10 +27,35 @@ env:
 
 jobs:
   # ============================================================================
+  # 테스트 (공통 - 한 번만 실행)
+  # ============================================================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run tests
+        run: |
+          chmod +x gradlew
+          ./gradlew clean test -x jacocoTestCoverageVerification --no-daemon
+
+  # ============================================================================
   # 빌드 Jobs (병렬 실행)
   # ============================================================================
   build-web-api:
     name: Build web-api
+    needs: test
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
     with:
       ecr-repository: fileflow-web-api-prod
@@ -41,8 +66,22 @@ jobs:
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
+  build-download-worker:
+    name: Build download-worker
+    needs: test
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
+    with:
+      ecr-repository: fileflow-download-worker-prod
+      component: download-worker
+      dockerfile: bootstrap/bootstrap-download-worker/Dockerfile
+      gradle-task: ":bootstrap:bootstrap-download-worker:bootJar"
+      timeout-minutes: 30
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
   build-scheduler:
     name: Build scheduler
+    needs: test
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
     with:
       ecr-repository: fileflow-scheduler-prod
@@ -67,6 +106,17 @@ jobs:
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
+  deploy-download-worker:
+    name: Deploy download-worker
+    needs: build-download-worker
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
+    with:
+      ecs-cluster: fileflow-cluster-prod
+      ecs-service: fileflow-download-worker-prod
+      image-uri: ${{ needs.build-download-worker.outputs.image-uri }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
   deploy-scheduler:
     name: Deploy scheduler
     needs: build-scheduler
@@ -83,16 +133,17 @@ jobs:
   # ============================================================================
   notify:
     name: Deployment Notification
-    needs: [build-web-api, build-scheduler, deploy-web-api, deploy-scheduler]
+    needs: [build-web-api, build-download-worker, build-scheduler, deploy-web-api, deploy-download-worker, deploy-scheduler]
     if: always()
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-notify-slack.yml@main
     with:
       project-name: FileFlow
       environment: prod
-      status: ${{ (needs.deploy-web-api.result == 'success' && needs.deploy-scheduler.result == 'success') && 'success' || 'failure' }}
+      status: ${{ (needs.deploy-web-api.result == 'success' && needs.deploy-download-worker.result == 'success' && needs.deploy-scheduler.result == 'success') && 'success' || 'failure' }}
       components: |
         [
           {"name": "web-api", "status": "${{ needs.deploy-web-api.result }}", "image": "${{ needs.build-web-api.outputs.image-tag || 'N/A' }}"},
+          {"name": "download-worker", "status": "${{ needs.deploy-download-worker.result }}", "image": "${{ needs.build-download-worker.outputs.image-tag || 'N/A' }}"},
           {"name": "scheduler", "status": "${{ needs.deploy-scheduler.result }}", "image": "${{ needs.build-scheduler.outputs.image-tag || 'N/A' }}"}
         ]
       mention-on-failure: "@here"
