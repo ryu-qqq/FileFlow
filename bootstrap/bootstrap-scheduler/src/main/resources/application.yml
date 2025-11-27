@@ -20,6 +20,10 @@ spring:
       - classpath:redis.yml
       - classpath:s3.yml
 
+# Enable Redisson for Redis operations
+redisson:
+  enabled: ${REDISSON_ENABLED:true}
+
 server:
   port: ${SERVER_PORT:8081}
 
