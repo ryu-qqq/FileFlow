@@ -1,4 +1,11 @@
-name: Build and Deploy to ECS (Multi-Bootstrap)
+# ============================================================================
+# FileFlow Build & Deploy
+#
+# Reusable Workflows 사용하여 단순화
+# 기존 600줄 → 약 100줄로 단순화
+# ============================================================================
+
+name: Build and Deploy to ECS
 
 on:
   push:
@@ -16,584 +23,78 @@ permissions:
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: fileflow
-  ECS_CLUSTER: fileflow-prod
+  ECS_CLUSTER: fileflow-cluster-prod
 
 jobs:
-  # ========================================
-  # Step 1: 변경 감지 (어떤 Bootstrap이 변경되었나?)
-  # ========================================
-  detect-changes:
-    name: Detect Changed Bootstraps
-    runs-on: ubuntu-latest
-    outputs:
-      web-api: ${{ steps.filter.outputs.web-api }}
-      download-worker: ${{ steps.filter.outputs.download-worker }}
-      scheduler: ${{ steps.filter.outputs.scheduler }}
-      any-changed: ${{ steps.filter.outputs.any-changed }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2  # 이전 커밋과 비교
-
-      - name: Detect changed paths
-        id: filter
-        run: |
-          # 변경된 파일 목록
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-
-          echo "📁 Changed files:"
-          echo "$CHANGED_FILES"
-          echo ""
-
-          # 강제 빌드 플래그 체크 (Commit message에 [build-all] 또는 [rebuild] 포함 시)
-          FORCE_BUILD_ALL=false
-          # Commit message 제목만 추출 (PR 본문 제외, shell injection 방지)
-          COMMIT_MSG=$(git log -1 --format=%s HEAD)
-          if echo "$COMMIT_MSG" | grep -qE '\[build-all\]|\[rebuild\]'; then
-            FORCE_BUILD_ALL=true
-            echo "🔄 Force build all flag detected in commit message"
-          fi
-
-          # 공통 레이어 변경 체크 (domain, application 등)
-          COMMON_CHANGED=false
-          if echo "$CHANGED_FILES" | grep -qE '^(domain/|application/)'; then
-            COMMON_CHANGED=true
-            echo "🔄 Common layer (domain/application) changed - building all bootstraps"
-          fi
-
-          # Bootstrap별 변경 여부 감지
-          WEB_API=false
-          DOWNLOAD_WORKER=false
-          SCHEDULER=false
-
-          # 강제 빌드 또는 공통 레이어 변경 시 모든 bootstrap 빌드
-          if [ "$FORCE_BUILD_ALL" = "true" ] || [ "$COMMON_CHANGED" = "true" ]; then
-            WEB_API=true
-            DOWNLOAD_WORKER=true
-            SCHEDULER=true
-            echo "✅ Building all bootstraps (force_build=${FORCE_BUILD_ALL}, common_changed=${COMMON_CHANGED})"
-          else
-            # 개별 Bootstrap 변경 감지 (효율성 유지)
-
-            # Web API 변경 (REST API)
-            if echo "$CHANGED_FILES" | grep -qE '^(adapter-in/rest-api/|bootstrap/bootstrap-web-api/)'; then
-              WEB_API=true
-            fi
-
-            # Download Worker 변경 (SQS Listener + HTTP Client)
-            if echo "$CHANGED_FILES" | grep -qE '^(adapter-in/sqs-listener/|adapter-out/http-client/|bootstrap/bootstrap-download-worker/)'; then
-              DOWNLOAD_WORKER=true
-            fi
-
-            # Scheduler 변경 (기존 스케줄러)
-            if echo "$CHANGED_FILES" | grep -qE '^(bootstrap/bootstrap-scheduler/)'; then
-              SCHEDULER=true
-            fi
-
-            # 공통 Adapter 변경 (모든 bootstrap 사용)
-            if echo "$CHANGED_FILES" | grep -qE '^(adapter-out/(persistence-mysql|persistence-redis|aws-s3)/)'; then
-              WEB_API=true
-              DOWNLOAD_WORKER=true
-              SCHEDULER=true
-              echo "✅ Common adapter changed - building all bootstraps"
-            fi
-          fi
-
-          # 출력
-          echo "web-api=${WEB_API}" >> $GITHUB_OUTPUT
-          echo "download-worker=${DOWNLOAD_WORKER}" >> $GITHUB_OUTPUT
-          echo "scheduler=${SCHEDULER}" >> $GITHUB_OUTPUT
-
-          # 하나라도 변경되었는지
-          ANY_CHANGED=false
-          if [ "$WEB_API" = "true" ] || [ "$DOWNLOAD_WORKER" = "true" ] || [ "$SCHEDULER" = "true" ]; then
-            ANY_CHANGED=true
-          fi
-          echo "any-changed=${ANY_CHANGED}" >> $GITHUB_OUTPUT
-
-          echo ""
-          echo "🔍 Final Detection Results:"
-          echo "  - Force Build All: ${FORCE_BUILD_ALL}"
-          echo "  - Common Layer Changed: ${COMMON_CHANGED}"
-          echo "  - Web API: ${WEB_API}"
-          echo "  - Download Worker: ${DOWNLOAD_WORKER}"
-          echo "  - Scheduler: ${SCHEDULER}"
-          echo "  - Any Changed: ${ANY_CHANGED}"
-
-  # ========================================
-  # Step 2: 테스트 실행 (공통) - TEMPORARILY DISABLED FOR QUICK DEPLOYMENT
-  # ========================================
-  test:
-    name: Run Tests
-    needs: detect-changes
-    if: false  # DISABLED: Tests will be refactored later, deploy to ECS first
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Run tests
-        run: |
-          echo "🧪 Running tests..."
-          ./gradlew clean test -x jacocoTestCoverageVerification --no-daemon --stacktrace
-          echo "✅ Tests completed"
-
-  # ========================================
-  # Step 3: 빌드 및 푸시 (부트스트랩별 독립 작업)
-  # ========================================
+  # ============================================================================
+  # 빌드 Jobs (병렬 실행)
+  # ============================================================================
   build-web-api:
-    name: Build Web API
-    needs: [detect-changes]  # test removed: tests disabled for quick deployment
-    if: needs.detect-changes.outputs.web-api == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    outputs:
-      image-uri: ${{ steps.build-image.outputs.image }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build JAR
-        run: |
-          echo "🔨 Building web-api JAR..."
-          ./gradlew :bootstrap:bootstrap-web-api:bootJar -x test --no-daemon
-          ls -la bootstrap/bootstrap-web-api/build/libs/
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-duration-seconds: 3600
-          role-session-name: GitHubActions-WebAPI-Build
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Generate image tag
-        id: image-tag
-        run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          TAG="web-api-${{ github.run_number }}-${SHORT_SHA}"
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "📦 Image tag: ${TAG}"
-
-      - name: Build and push Docker image
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
-        run: |
-          echo "🐳 Building Docker image for web-api..."
-          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-
-          docker build \
-            -f bootstrap/bootstrap-web-api/Dockerfile \
-            -t "${IMAGE_URI}" .
-
-          echo "📤 Pushing to ECR..."
-          docker push "${IMAGE_URI}"
-
-          echo "image=${IMAGE_URI}" >> $GITHUB_OUTPUT
-          echo "✅ Image pushed: ${IMAGE_URI}"
-
-      - name: Image vulnerability scan
-        continue-on-error: true
-        run: |
-          echo "🔍 Checking ECR scan results..."
-          aws ecr describe-image-scan-findings \
-            --repository-name "${ECR_REPOSITORY}" \
-            --image-id imageTag="${{ steps.image-tag.outputs.tag }}" \
-            --region "${AWS_REGION}" || echo "⚠️ Scan not yet complete"
-
-  build-download-worker:
-    name: Build Download Worker
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.download-worker == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    outputs:
-      image-uri: ${{ steps.build-image.outputs.image }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build JAR
-        run: |
-          echo "🔨 Building download-worker JAR..."
-          ./gradlew :bootstrap:bootstrap-download-worker:bootJar -x test --no-daemon
-          ls -la bootstrap/bootstrap-download-worker/build/libs/
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-duration-seconds: 3600
-          role-session-name: GitHubActions-DownloadWorker-Build
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Generate image tag
-        id: image-tag
-        run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          TAG="download-worker-${{ github.run_number }}-${SHORT_SHA}"
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "📦 Image tag: ${TAG}"
-
-      - name: Build and push Docker image
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
-        run: |
-          echo "🐳 Building Docker image for download-worker..."
-          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-
-          docker build \
-            -f bootstrap/bootstrap-download-worker/Dockerfile \
-            -t "${IMAGE_URI}" .
-
-          echo "📤 Pushing to ECR..."
-          docker push "${IMAGE_URI}"
-
-          echo "image=${IMAGE_URI}" >> $GITHUB_OUTPUT
-          echo "✅ Image pushed: ${IMAGE_URI}"
-
-      - name: Image vulnerability scan
-        continue-on-error: true
-        run: |
-          echo "🔍 Checking ECR scan results..."
-          aws ecr describe-image-scan-findings \
-            --repository-name "${ECR_REPOSITORY}" \
-            --image-id imageTag="${{ steps.image-tag.outputs.tag }}" \
-            --region "${AWS_REGION}" || echo "⚠️ Scan not yet complete"
+    name: Build web-api
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
+    with:
+      ecr-repository: fileflow-web-api-prod
+      component: web-api
+      dockerfile: bootstrap/bootstrap-web-api/Dockerfile
+      gradle-task: ":bootstrap:bootstrap-web-api:bootJar"
+      timeout-minutes: 30
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
   build-scheduler:
-    name: Build Scheduler
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.scheduler == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    outputs:
-      image-uri: ${{ steps.build-image.outputs.image }}
+    name: Build scheduler
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
+    with:
+      ecr-repository: fileflow-scheduler-prod
+      component: scheduler
+      dockerfile: bootstrap/bootstrap-scheduler/Dockerfile
+      gradle-task: ":bootstrap:bootstrap-scheduler:bootJar"
+      timeout-minutes: 30
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build JAR
-        run: |
-          echo "🔨 Building scheduler JAR..."
-          ./gradlew :bootstrap:bootstrap-scheduler:bootJar -x test --no-daemon
-          ls -la bootstrap/bootstrap-scheduler/build/libs/
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-duration-seconds: 3600
-          role-session-name: GitHubActions-Scheduler-Build
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Generate image tag
-        id: image-tag
-        run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          TAG="scheduler-${{ github.run_number }}-${SHORT_SHA}"
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "📦 Image tag: ${TAG}"
-
-      - name: Build and push Docker image
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
-        run: |
-          echo "🐳 Building Docker image for scheduler..."
-          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-
-          docker build \
-            -f bootstrap/bootstrap-scheduler/Dockerfile \
-            -t "${IMAGE_URI}" .
-
-          echo "📤 Pushing to ECR..."
-          docker push "${IMAGE_URI}"
-
-          echo "image=${IMAGE_URI}" >> $GITHUB_OUTPUT
-          echo "✅ Image pushed: ${IMAGE_URI}"
-
-      - name: Image vulnerability scan
-        continue-on-error: true
-        run: |
-          echo "🔍 Checking ECR scan results..."
-          aws ecr describe-image-scan-findings \
-            --repository-name "${ECR_REPOSITORY}" \
-            --image-id imageTag="${{ steps.image-tag.outputs.tag }}" \
-            --region "${AWS_REGION}" || echo "⚠️ Scan not yet complete"
-
-  # ========================================
-  # Step 4: ECS 배포 (변경된 Bootstrap만)
-  # ========================================
+  # ============================================================================
+  # 배포 Jobs (병렬 실행)
+  # ============================================================================
   deploy-web-api:
-    name: Deploy Web API
-    needs: [detect-changes, build-web-api]
-    if: needs.detect-changes.outputs.web-api == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-duration-seconds: 3600
-          role-session-name: GitHubActions-WebAPI-Deploy
-
-      - name: Update ECS service (Web API)
-        run: |
-          echo "🚀 Deploying Web API..."
-
-          # Task Definition ARN 가져오기
-          TASK_DEF_ARN=$(aws ecs describe-services \
-            --cluster "${ECS_CLUSTER}" \
-            --services fileflow-api \
-            --query 'services[0].taskDefinition' \
-            --output text)
-
-          # Task Definition 가져오기
-          aws ecs describe-task-definition \
-            --task-definition "${TASK_DEF_ARN}" \
-            --query 'taskDefinition' > task-definition.json
-
-          # 새 이미지 URI로 업데이트
-          IMAGE_URI="${{ needs.build-web-api.outputs.image-uri }}"
-          cat task-definition.json | \
-            jq --arg IMAGE "$IMAGE_URI" \
-               '.containerDefinitions[0].image = $IMAGE' | \
-            jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' \
-            > new-task-definition.json
-
-          # 새 Task Definition 등록
-          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://new-task-definition.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-
-          # ECS 서비스 업데이트
-          aws ecs update-service \
-            --cluster "${ECS_CLUSTER}" \
-            --service fileflow-api \
-            --task-definition "${NEW_TASK_DEF_ARN}" \
-            --force-new-deployment \
-            --no-cli-pager
-
-          echo "⏳ Waiting for service stability..."
-          aws ecs wait services-stable \
-            --cluster "${ECS_CLUSTER}" \
-            --services fileflow-api
-
-          echo "✅ Web API deployment completed"
-
-  deploy-download-worker:
-    name: Deploy Download Worker
-    needs: [detect-changes, build-download-worker]
-    if: needs.detect-changes.outputs.download-worker == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-duration-seconds: 3600
-          role-session-name: GitHubActions-DownloadWorker-Deploy
-
-      - name: Update ECS service (Download Worker)
-        run: |
-          echo "🚀 Deploying Download Worker..."
-
-          SERVICE_NAME="fileflow-download-worker"
-
-          TASK_DEF_ARN=$(aws ecs describe-services \
-            --cluster "${ECS_CLUSTER}" \
-            --services "${SERVICE_NAME}" \
-            --query 'services[0].taskDefinition' \
-            --output text)
-
-          aws ecs describe-task-definition \
-            --task-definition "${TASK_DEF_ARN}" \
-            --query 'taskDefinition' > task-definition.json
-
-          IMAGE_URI="${{ needs.build-download-worker.outputs.image-uri }}"
-          cat task-definition.json | \
-            jq --arg IMAGE "$IMAGE_URI" \
-               '.containerDefinitions[0].image = $IMAGE' | \
-            jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' \
-            > new-task-definition.json
-
-          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://new-task-definition.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-
-          aws ecs update-service \
-            --cluster "${ECS_CLUSTER}" \
-            --service ${SERVICE_NAME} \
-            --task-definition "${NEW_TASK_DEF_ARN}" \
-            --force-new-deployment \
-            --no-cli-pager
-
-          echo "⏳ Waiting for service stability..."
-          aws ecs wait services-stable \
-            --cluster "${ECS_CLUSTER}" \
-            --services "${SERVICE_NAME}"
-
-          echo "✅ Download Worker deployment completed"
+    name: Deploy web-api
+    needs: build-web-api
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
+    with:
+      ecs-cluster: fileflow-cluster-prod
+      ecs-service: fileflow-web-api-prod
+      image-uri: ${{ needs.build-web-api.outputs.image-uri }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
   deploy-scheduler:
-    name: Deploy Scheduler
-    needs: [detect-changes, build-scheduler]
-    if: needs.detect-changes.outputs.scheduler == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    name: Deploy scheduler
+    needs: build-scheduler
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
+    with:
+      ecs-cluster: fileflow-cluster-prod
+      ecs-service: fileflow-scheduler-prod
+      image-uri: ${{ needs.build-scheduler.outputs.image-uri }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-duration-seconds: 3600
-          role-session-name: GitHubActions-Scheduler-Deploy
-
-      - name: Update ECS service (Scheduler)
-        run: |
-          echo "🚀 Deploying Scheduler..."
-
-          SERVICE_NAME="fileflow-scheduler"
-
-          TASK_DEF_ARN=$(aws ecs describe-services \
-            --cluster "${ECS_CLUSTER}" \
-            --services "${SERVICE_NAME}" \
-            --query 'services[0].taskDefinition' \
-            --output text)
-
-          aws ecs describe-task-definition \
-            --task-definition "${TASK_DEF_ARN}" \
-            --query 'taskDefinition' > task-definition.json
-
-          IMAGE_URI="${{ needs.build-scheduler.outputs.image-uri }}"
-          cat task-definition.json | \
-            jq --arg IMAGE "$IMAGE_URI" \
-               '.containerDefinitions[0].image = $IMAGE' | \
-            jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' \
-            > new-task-definition.json
-
-          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://new-task-definition.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-
-          aws ecs update-service \
-            --cluster "${ECS_CLUSTER}" \
-            --service ${SERVICE_NAME} \
-            --task-definition "${NEW_TASK_DEF_ARN}" \
-            --force-new-deployment \
-            --no-cli-pager
-
-          echo "⏳ Waiting for service stability..."
-          aws ecs wait services-stable \
-            --cluster "${ECS_CLUSTER}" \
-            --services "${SERVICE_NAME}"
-
-          echo "✅ Scheduler deployment completed"
-
-  # ========================================
-  # Step 5: 배포 완료 알림
-  # ========================================
-  notify-completion:
-    name: Notify Deployment Completion
-    needs: [detect-changes, build-web-api, build-download-worker, build-scheduler, deploy-web-api, deploy-download-worker, deploy-scheduler]
-    runs-on: ubuntu-latest
+  # ============================================================================
+  # 배포 완료 알림 (Slack + GitHub Summary)
+  # ============================================================================
+  notify:
+    name: Deployment Notification
+    needs: [build-web-api, build-scheduler, deploy-web-api, deploy-scheduler]
     if: always()
-
-    steps:
-      - name: Create Deployment Summary
-        run: |
-          echo "## 🚀 FileFlow Multi-Bootstrap Deployment" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment**: Production" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployed by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Deployment Status" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Bootstrap | Changed | Build | Deploy |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|---------|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Web API | ${{ needs.detect-changes.outputs.web-api }} | ${{ needs.build-web-api.result }} | ${{ needs.deploy-web-api.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Download Worker | ${{ needs.detect-changes.outputs.download-worker }} | ${{ needs.build-download-worker.result }} | ${{ needs.deploy-download-worker.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Scheduler | ${{ needs.detect-changes.outputs.scheduler }} | ${{ needs.build-scheduler.result }} | ${{ needs.deploy-scheduler.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Next Steps**:" >> $GITHUB_STEP_SUMMARY
-          echo "1. Check CloudWatch logs for application startup" >> $GITHUB_STEP_SUMMARY
-          echo "2. Verify health checks" >> $GITHUB_STEP_SUMMARY
-          echo "3. Monitor CloudWatch metrics" >> $GITHUB_STEP_SUMMARY
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-notify-slack.yml@main
+    with:
+      project-name: FileFlow
+      environment: prod
+      status: ${{ (needs.deploy-web-api.result == 'success' && needs.deploy-scheduler.result == 'success') && 'success' || 'failure' }}
+      components: |
+        [
+          {"name": "web-api", "status": "${{ needs.deploy-web-api.result }}", "image": "${{ needs.build-web-api.outputs.image-tag || 'N/A' }}"},
+          {"name": "scheduler", "status": "${{ needs.deploy-scheduler.result }}", "image": "${{ needs.build-scheduler.outputs.image-tag || 'N/A' }}"}
+        ]
+      mention-on-failure: "@here"
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
