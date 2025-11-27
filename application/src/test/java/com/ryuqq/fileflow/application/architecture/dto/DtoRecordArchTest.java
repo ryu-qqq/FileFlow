@@ -36,7 +36,7 @@ class DtoRecordArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.application");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.application");
     }
 
     /** 규칙 1: Command는 Record 타입이어야 함 */
@@ -100,6 +100,8 @@ class DtoRecordArchTest {
                         .resideInAPackage("..dto.command..")
                         .and()
                         .areNotMemberClasses() // Nested 클래스 제외
+                        .and()
+                        .haveSimpleNameNotEndingWith("Test") // 테스트 클래스 제외
                         .should()
                         .haveSimpleNameEndingWith("Command")
                         .because("Command DTO는 'Command' 접미사를 사용해야 합니다");
@@ -117,6 +119,8 @@ class DtoRecordArchTest {
                         .resideInAPackage("..dto.query..")
                         .and()
                         .areNotMemberClasses() // Nested 클래스 제외
+                        .and()
+                        .haveSimpleNameNotEndingWith("Test") // 테스트 클래스 제외
                         .should()
                         .haveSimpleNameEndingWith("Query")
                         .because("Query DTO는 'Query' 접미사를 사용해야 합니다");
@@ -134,6 +138,8 @@ class DtoRecordArchTest {
                         .resideInAPackage("..dto.response..")
                         .and()
                         .areNotMemberClasses() // Nested 클래스 제외
+                        .and()
+                        .haveSimpleNameNotEndingWith("Test") // 테스트 클래스 제외
                         .should()
                         .haveSimpleNameEndingWith("Response")
                         .because("Response DTO는 'Response' 접미사를 사용해야 합니다");
@@ -192,6 +198,8 @@ class DtoRecordArchTest {
     @Test
     @DisplayName("[금지] DTO는 비즈니스 메서드를 가지지 않아야 한다")
     void dto_MustNotHaveBusinessMethods() {
+        // update.*은 updateUser(), updateStatus() 같은 비즈니스 메서드 금지 의도
+        // updatedAt은 Record 필드 접근자이므로 제외 (부정 전방탐색 사용)
         ArchRule rule =
                 noMethods()
                         .that()
@@ -201,7 +209,7 @@ class DtoRecordArchTest {
                         .arePublic()
                         .should()
                         .haveNameMatching(
-                                "validate.*|place.*|confirm.*|cancel.*|approve.*|reject.*|modify.*|change.*|update.*|delete.*|save.*|persist.*")
+                                "validate.*|place.*|confirm.*|cancel.*|approve.*|reject.*|modify.*|change.*|update(?!dAt$).*|delete.*|save.*|persist.*")
                         .because("DTO는 비즈니스 로직을 가질 수 없습니다 (데이터 전달만)");
 
         rule.check(classes);

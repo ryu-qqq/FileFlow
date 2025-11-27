@@ -1,0 +1,266 @@
+package com.ryuqq.fileflow.adapter.out.persistence.download.adapter;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
+import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownloadJpaEntity;
+import com.ryuqq.fileflow.adapter.out.persistence.download.mapper.ExternalDownloadJpaMapper;
+import com.ryuqq.fileflow.adapter.out.persistence.download.repository.ExternalDownloadQueryDslRepository;
+import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
+import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
+import com.ryuqq.fileflow.domain.download.vo.RetryCount;
+import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
+import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@DisplayName("ExternalDownloadQueryAdapter 단위 테스트")
+@ExtendWith(MockitoExtension.class)
+class ExternalDownloadQueryAdapterTest {
+
+    @Mock private ExternalDownloadQueryDslRepository queryDslRepository;
+
+    @Mock private ExternalDownloadJpaMapper mapper;
+
+    private ExternalDownloadQueryAdapter adapter;
+
+    @BeforeEach
+    void setUp() {
+        adapter = new ExternalDownloadQueryAdapter(queryDslRepository, mapper);
+    }
+
+    @Nested
+    @DisplayName("findById 메서드")
+    class FindByIdTest {
+
+        @Test
+        @DisplayName("ID로 조회 시 존재하면 Domain을 반환한다")
+        void shouldReturnDomainWhenExists() {
+            // given
+            Long id = 1L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+            ExternalDownloadJpaEntity entity = createEntity(id);
+            ExternalDownload domain = createDomain(id);
+
+            given(queryDslRepository.findById(id)).willReturn(Optional.of(entity));
+            given(mapper.toDomain(entity)).willReturn(domain);
+
+            // when
+            Optional<ExternalDownload> result = adapter.findById(downloadId);
+
+            // then
+            assertThat(result).isPresent();
+            assertThat(result.get().getId().value()).isEqualTo(id);
+            verify(queryDslRepository).findById(id);
+            verify(mapper).toDomain(entity);
+        }
+
+        @Test
+        @DisplayName("ID로 조회 시 존재하지 않으면 빈 Optional을 반환한다")
+        void shouldReturnEmptyWhenNotExists() {
+            // given
+            Long id = 999L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+
+            given(queryDslRepository.findById(id)).willReturn(Optional.empty());
+
+            // when
+            Optional<ExternalDownload> result = adapter.findById(downloadId);
+
+            // then
+            assertThat(result).isEmpty();
+            verify(queryDslRepository).findById(id);
+        }
+
+        @Test
+        @DisplayName("Repository와 Mapper를 순차적으로 호출한다")
+        void shouldCallRepositoryThenMapper() {
+            // given
+            Long id = 1L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+            ExternalDownloadJpaEntity entity = createEntity(id);
+            ExternalDownload domain = createDomain(id);
+
+            given(queryDslRepository.findById(id)).willReturn(Optional.of(entity));
+            given(mapper.toDomain(entity)).willReturn(domain);
+
+            // when
+            adapter.findById(downloadId);
+
+            // then
+            verify(queryDslRepository).findById(id);
+            verify(mapper).toDomain(entity);
+        }
+    }
+
+    @Nested
+    @DisplayName("findByIdAndTenantId 메서드")
+    class FindByIdAndTenantIdTest {
+
+        @Test
+        @DisplayName("ID와 TenantId로 조회 시 존재하면 Domain을 반환한다")
+        void shouldReturnDomainWhenExists() {
+            // given
+            Long id = 1L;
+            Long tenantId = 100L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+            ExternalDownloadJpaEntity entity = createEntity(id);
+            ExternalDownload domain = createDomain(id);
+
+            given(queryDslRepository.findByIdAndTenantId(id, tenantId))
+                    .willReturn(Optional.of(entity));
+            given(mapper.toDomain(entity)).willReturn(domain);
+
+            // when
+            Optional<ExternalDownload> result = adapter.findByIdAndTenantId(downloadId, tenantId);
+
+            // then
+            assertThat(result).isPresent();
+            verify(queryDslRepository).findByIdAndTenantId(id, tenantId);
+        }
+
+        @Test
+        @DisplayName("TenantId가 다르면 빈 Optional을 반환한다")
+        void shouldReturnEmptyWhenTenantMismatch() {
+            // given
+            Long id = 1L;
+            Long wrongTenantId = 999L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+
+            given(queryDslRepository.findByIdAndTenantId(id, wrongTenantId))
+                    .willReturn(Optional.empty());
+
+            // when
+            Optional<ExternalDownload> result =
+                    adapter.findByIdAndTenantId(downloadId, wrongTenantId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("ID와 TenantId 모두 일치해야 조회된다")
+        void shouldRequireBothIdAndTenantIdMatch() {
+            // given
+            Long id = 1L;
+            Long tenantId = 100L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+            ExternalDownloadJpaEntity entity = createEntity(id);
+            ExternalDownload domain = createDomain(id);
+
+            given(queryDslRepository.findByIdAndTenantId(id, tenantId))
+                    .willReturn(Optional.of(entity));
+            given(mapper.toDomain(entity)).willReturn(domain);
+
+            // when
+            Optional<ExternalDownload> result = adapter.findByIdAndTenantId(downloadId, tenantId);
+
+            // then
+            assertThat(result).isPresent();
+            verify(queryDslRepository).findByIdAndTenantId(id, tenantId);
+        }
+    }
+
+    @Nested
+    @DisplayName("existsById 메서드")
+    class ExistsByIdTest {
+
+        @Test
+        @DisplayName("존재하면 true를 반환한다")
+        void shouldReturnTrueWhenExists() {
+            // given
+            Long id = 1L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+
+            given(queryDslRepository.existsById(id)).willReturn(true);
+
+            // when
+            boolean result = adapter.existsById(downloadId);
+
+            // then
+            assertThat(result).isTrue();
+            verify(queryDslRepository).existsById(id);
+        }
+
+        @Test
+        @DisplayName("존재하지 않으면 false를 반환한다")
+        void shouldReturnFalseWhenNotExists() {
+            // given
+            Long id = 999L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+
+            given(queryDslRepository.existsById(id)).willReturn(false);
+
+            // when
+            boolean result = adapter.existsById(downloadId);
+
+            // then
+            assertThat(result).isFalse();
+            verify(queryDslRepository).existsById(id);
+        }
+
+        @Test
+        @DisplayName("Repository의 existsById를 직접 호출한다")
+        void shouldCallRepositoryExistsById() {
+            // given
+            Long id = 42L;
+            ExternalDownloadId downloadId = ExternalDownloadId.of(id);
+
+            given(queryDslRepository.existsById(id)).willReturn(true);
+
+            // when
+            adapter.existsById(downloadId);
+
+            // then
+            verify(queryDslRepository).existsById(id);
+        }
+    }
+
+    // ==================== Helper Methods ====================
+
+    private ExternalDownload createDomain(Long id) {
+        return ExternalDownload.of(
+                ExternalDownloadId.of(id),
+                SourceUrl.of("https://example.com/file.jpg"),
+                100L,
+                200L,
+                S3Bucket.of("test-bucket"),
+                "downloads/",
+                ExternalDownloadStatus.PENDING,
+                RetryCount.initial(),
+                null,
+                null,
+                null,
+                Instant.now(),
+                Instant.now());
+    }
+
+    private ExternalDownloadJpaEntity createEntity(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        return ExternalDownloadJpaEntity.of(
+                id,
+                "https://example.com/file.jpg",
+                100L,
+                200L,
+                "test-bucket",
+                "downloads/",
+                ExternalDownloadStatus.PENDING,
+                0,
+                null,
+                null,
+                null,
+                0L,
+                now,
+                now);
+    }
+}

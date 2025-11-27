@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.UploadSession;
 import com.ryuqq.fileflow.domain.session.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
+import com.ryuqq.fileflow.domain.session.vo.UploadSessionSearchCriteria;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -71,4 +72,31 @@ public interface FindUploadSessionQueryPort {
      * @return 만료된 세션 목록
      */
     List<MultipartUploadSession> findExpiredMultipartUploads(Instant expiredBefore, int limit);
+
+    /**
+     * 세션 ID와 테넌트 ID로 업로드 세션을 조회합니다.
+     *
+     * <p>테넌트 스코프를 적용하여 세션을 조회합니다.
+     *
+     * @param sessionId 세션 ID
+     * @param tenantId 테넌트 ID
+     * @return 조회된 세션 (없으면 Optional.empty())
+     */
+    Optional<UploadSession> findByIdAndTenantId(UploadSessionId sessionId, Long tenantId);
+
+    /**
+     * 검색 조건에 맞는 업로드 세션 목록을 조회합니다.
+     *
+     * @param criteria 검색 조건
+     * @return 업로드 세션 목록
+     */
+    List<UploadSession> findByCriteria(UploadSessionSearchCriteria criteria);
+
+    /**
+     * 검색 조건에 맞는 업로드 세션 개수를 조회합니다.
+     *
+     * @param criteria 검색 조건
+     * @return 전체 개수
+     */
+    long countByCriteria(UploadSessionSearchCriteria criteria);
 }

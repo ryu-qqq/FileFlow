@@ -1,8 +1,10 @@
 package com.ryuqq.fileflow.application.asset.manager;
 
 import com.ryuqq.fileflow.application.asset.assembler.FileAssetAssembler;
-import com.ryuqq.fileflow.application.asset.port.out.command.PersistFileAssetPort;
+import com.ryuqq.fileflow.application.asset.port.out.command.FileAssetPersistencePort;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
+import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class FileAssetManager {
 
     private final FileAssetAssembler fileAssetAssembler;
-    private final PersistFileAssetPort persistFileAssetPort;
+    private final FileAssetPersistencePort fileAssetPersistencePort;
 
     public FileAssetManager(
-            FileAssetAssembler fileAssetAssembler, PersistFileAssetPort persistFileAssetPort) {
+            FileAssetAssembler fileAssetAssembler,
+            FileAssetPersistencePort fileAssetPersistencePort) {
         this.fileAssetAssembler = fileAssetAssembler;
-        this.persistFileAssetPort = persistFileAssetPort;
+        this.fileAssetPersistencePort = fileAssetPersistencePort;
     }
 
     /**
@@ -32,6 +35,18 @@ public class FileAssetManager {
     @Transactional
     public void createAndPersist(FileUploadCompletedEvent event) {
         FileAsset fileAsset = fileAssetAssembler.toFileAsset(event);
-        persistFileAssetPort.persist(fileAsset);
+        fileAssetPersistencePort.persist(fileAsset);
+    }
+
+    /**
+     * 외부 다운로드 파일 생성 이벤트로부터 FileAsset을 생성하고 저장합니다.
+     *
+     * @param event 외부 다운로드 파일 생성 이벤트
+     * @return 생성된 FileAssetId
+     */
+    @Transactional
+    public FileAssetId createAndPersist(ExternalDownloadFileCreatedEvent event) {
+        FileAsset fileAsset = fileAssetAssembler.toFileAsset(event);
+        return fileAssetPersistencePort.persist(fileAsset);
     }
 }

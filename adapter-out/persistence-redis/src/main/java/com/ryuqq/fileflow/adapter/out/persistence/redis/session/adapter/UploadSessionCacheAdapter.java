@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.redis.session.adapter;
 
-import com.ryuqq.fileflow.application.session.port.out.command.PersistUploadSessionCachePort;
+import com.ryuqq.fileflow.application.session.port.out.command.UploadSessionCachePersistencePort;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import java.time.Duration;
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
-public class UploadSessionCacheAdapter implements PersistUploadSessionCachePort {
+public class UploadSessionCacheAdapter implements UploadSessionCachePersistencePort {
 
     private static final String SINGLE_UPLOAD_KEY_PREFIX = "cache::single-upload::";
     private static final String MULTIPART_UPLOAD_KEY_PREFIX = "cache::multipart-upload::";

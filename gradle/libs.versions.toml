@@ -27,6 +27,12 @@ hikaricp = "5.1.0"
 # AWS SDK
 # ========================================
 awsSdk = "2.25.11"
+springCloudAws = "3.1.1"
+
+# ========================================
+# Redis
+# ========================================
+redisson = "3.27.2"
 
 # ========================================
 # Testing
@@ -73,6 +79,7 @@ uuidCreator = "6.0.7"
 # Spring Boot Starters
 # ========================================
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
 spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
 spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
@@ -114,6 +121,19 @@ aws-s3 = { module = "software.amazon.awssdk:s3" }
 aws-s3-transfer = { module = "software.amazon.awssdk:s3-transfer-manager" }
 aws-sqs = { module = "software.amazon.awssdk:sqs" }
 aws-apache-client = { module = "software.amazon.awssdk:apache-client" }
+
+
+# ========================================
+# Spring Cloud AWS
+# ========================================
+spring-cloud-aws-sqs = { module = "io.awspring.cloud:spring-cloud-aws-starter-sqs", version.ref = "springCloudAws" }
+
+# ========================================
+# Redis
+# ========================================
+redisson = { module = "org.redisson:redisson-spring-boot-starter", version.ref = "redisson" }
+
+
 
 # ========================================
 # Testing

@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.session.repository;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.MultipartUploadSessionJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.QCompletedPartJpaEntity;
@@ -119,5 +120,141 @@ public class SessionQueryDslRepository {
                         multipart.status.in(SessionStatus.PREPARING, SessionStatus.ACTIVE))
                 .limit(limit)
                 .fetch();
+    }
+
+    /**
+     * Single Upload Session을 ID와 tenantId로 조회한다.
+     *
+     * @param sessionId 세션 ID
+     * @param tenantId 테넌트 ID
+     * @return SingleUploadSessionJpaEntity Optional
+     */
+    public Optional<SingleUploadSessionJpaEntity> findSingleUploadByIdAndTenantId(
+            String sessionId, Long tenantId) {
+        SingleUploadSessionJpaEntity result =
+                queryFactory
+                        .selectFrom(single)
+                        .where(single.id.eq(sessionId), single.tenantId.eq(tenantId))
+                        .fetchOne();
+        return Optional.ofNullable(result);
+    }
+
+    /**
+     * Multipart Upload Session을 ID와 tenantId로 조회한다.
+     *
+     * @param sessionId 세션 ID
+     * @param tenantId 테넌트 ID
+     * @return MultipartUploadSessionJpaEntity Optional
+     */
+    public Optional<MultipartUploadSessionJpaEntity> findMultipartUploadByIdAndTenantId(
+            String sessionId, Long tenantId) {
+        MultipartUploadSessionJpaEntity result =
+                queryFactory
+                        .selectFrom(multipart)
+                        .where(multipart.id.eq(sessionId), multipart.tenantId.eq(tenantId))
+                        .fetchOne();
+        return Optional.ofNullable(result);
+    }
+
+    /**
+     * Single Upload Session을 검색 조건으로 조회한다.
+     *
+     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID (nullable)
+     * @param status 상태 (nullable)
+     * @param offset 오프셋
+     * @param limit 조회 개수
+     * @return SingleUploadSessionJpaEntity 목록
+     */
+    public List<SingleUploadSessionJpaEntity> findSingleUploadsByCriteria(
+            Long tenantId, Long organizationId, SessionStatus status, long offset, int limit) {
+        return queryFactory
+                .selectFrom(single)
+                .where(
+                        single.tenantId.eq(tenantId),
+                        eqOrganizationId(single.organizationId, organizationId),
+                        eqStatus(single.status, status))
+                .orderBy(single.createdAt.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * Multipart Upload Session을 검색 조건으로 조회한다.
+     *
+     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID (nullable)
+     * @param status 상태 (nullable)
+     * @param offset 오프셋
+     * @param limit 조회 개수
+     * @return MultipartUploadSessionJpaEntity 목록
+     */
+    public List<MultipartUploadSessionJpaEntity> findMultipartUploadsByCriteria(
+            Long tenantId, Long organizationId, SessionStatus status, long offset, int limit) {
+        return queryFactory
+                .selectFrom(multipart)
+                .where(
+                        multipart.tenantId.eq(tenantId),
+                        eqOrganizationId(multipart.organizationId, organizationId),
+                        eqStatus(multipart.status, status))
+                .orderBy(multipart.createdAt.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * Single Upload Session 개수를 검색 조건으로 조회한다.
+     *
+     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID (nullable)
+     * @param status 상태 (nullable)
+     * @return 개수
+     */
+    public long countSingleUploadsByCriteria(
+            Long tenantId, Long organizationId, SessionStatus status) {
+        Long count =
+                queryFactory
+                        .select(single.count())
+                        .from(single)
+                        .where(
+                                single.tenantId.eq(tenantId),
+                                eqOrganizationId(single.organizationId, organizationId),
+                                eqStatus(single.status, status))
+                        .fetchOne();
+        return count != null ? count : 0L;
+    }
+
+    /**
+     * Multipart Upload Session 개수를 검색 조건으로 조회한다.
+     *
+     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID (nullable)
+     * @param status 상태 (nullable)
+     * @return 개수
+     */
+    public long countMultipartUploadsByCriteria(
+            Long tenantId, Long organizationId, SessionStatus status) {
+        Long count =
+                queryFactory
+                        .select(multipart.count())
+                        .from(multipart)
+                        .where(
+                                multipart.tenantId.eq(tenantId),
+                                eqOrganizationId(multipart.organizationId, organizationId),
+                                eqStatus(multipart.status, status))
+                        .fetchOne();
+        return count != null ? count : 0L;
+    }
+
+    private BooleanExpression eqOrganizationId(
+            com.querydsl.core.types.dsl.NumberPath<Long> path, Long organizationId) {
+        return organizationId != null ? path.eq(organizationId) : null;
+    }
+
+    private BooleanExpression eqStatus(
+            com.querydsl.core.types.dsl.EnumPath<SessionStatus> path, SessionStatus status) {
+        return status != null ? path.eq(status) : null;
     }
 }

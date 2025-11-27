@@ -13,5 +13,8 @@ public enum FileAssetStatus {
     COMPLETED,
 
     /** 실패. */
-    FAILED
+    FAILED,
+
+    /** 삭제됨 (Soft Delete). */
+    DELETED
 }

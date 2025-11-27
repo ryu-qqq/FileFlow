@@ -60,7 +60,7 @@ class DomainEventArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.domain");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.domain");
     }
 
     // ==================== DomainEvent 인터페이스 규칙 ====================
@@ -428,12 +428,19 @@ class DomainEventArchTest {
         };
     }
 
-    /** occurredAt 필드를 가지고 있는지 검증 */
+    /**
+     * occurredAt 필드 또는 메서드를 가지고 있는지 검증.
+     *
+     * <p>DomainEvent는 occurredAt 필드를 직접 가지거나, occurredAt() 메서드를 제공해야 합니다. Record의 경우 다른 필드명(예:
+     * completedAt)을 사용하고 occurredAt() 메서드로 반환할 수 있습니다.
+     */
     private static ArchCondition<JavaClass> haveOccurredAtField() {
-        return new ArchCondition<JavaClass>("have occurredAt field of type LocalDateTime") {
+        return new ArchCondition<JavaClass>(
+                "have occurredAt field or method of type LocalDateTime") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasOccurredAt =
+                // 1. occurredAt 필드가 있는지 확인
+                boolean hasOccurredAtField =
                         javaClass.getAllFields().stream()
                                 .anyMatch(
                                         field ->
@@ -442,10 +449,21 @@ class DomainEventArchTest {
                                                                 .isEquivalentTo(
                                                                         LocalDateTime.class));
 
-                if (!hasOccurredAt) {
+                // 2. occurredAt() 메서드가 있는지 확인 (Record에서 다른 필드를 반환할 수 있음)
+                boolean hasOccurredAtMethod =
+                        javaClass.getAllMethods().stream()
+                                .anyMatch(
+                                        method ->
+                                                method.getName().equals("occurredAt")
+                                                        && method.getRawReturnType()
+                                                                .isEquivalentTo(
+                                                                        LocalDateTime.class));
+
+                if (!hasOccurredAtField && !hasOccurredAtMethod) {
                     String message =
                             String.format(
-                                    "Event %s does not have occurredAt field of type LocalDateTime",
+                                    "Event %s does not have occurredAt field or method of type"
+                                            + " LocalDateTime",
                                     javaClass.getName());
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }

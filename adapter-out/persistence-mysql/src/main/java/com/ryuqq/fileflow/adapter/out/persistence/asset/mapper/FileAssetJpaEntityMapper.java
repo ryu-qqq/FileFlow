@@ -50,6 +50,7 @@ public class FileAssetJpaEntityMapper {
                 domain.getTenantId(),
                 domain.getStatus(),
                 domain.getProcessedAt(),
+                domain.getDeletedAt(),
                 domain.getCreatedAt(),
                 domain.getCreatedAt());
     }
@@ -77,6 +78,7 @@ public class FileAssetJpaEntityMapper {
                 entity.getStatus(),
                 entity.getCreatedAt(),
                 entity.getProcessedAt(),
+                entity.getDeletedAt(),
                 clockHolder.getClock());
     }
 }

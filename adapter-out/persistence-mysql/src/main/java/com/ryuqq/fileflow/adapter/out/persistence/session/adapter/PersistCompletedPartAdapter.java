@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.adapter;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.CompletedPartJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.mapper.MultipartUploadSessionJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.session.repository.CompletedPartJpaRepository;
-import com.ryuqq.fileflow.application.session.port.out.command.PersistCompletedPartPort;
+import com.ryuqq.fileflow.application.session.port.out.command.CompletedPartPersistencePort;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import java.util.List;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * <p>PersistCompletedPartPort를 구현하여 RDB에 개별 파트를 저장합니다.
  */
 @Component
-public class PersistCompletedPartAdapter implements PersistCompletedPartPort {
+public class PersistCompletedPartAdapter implements CompletedPartPersistencePort {
 
     private final CompletedPartJpaRepository repository;
     private final MultipartUploadSessionJpaMapper mapper;
