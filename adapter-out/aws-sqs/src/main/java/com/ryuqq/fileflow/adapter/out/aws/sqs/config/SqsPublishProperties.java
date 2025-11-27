@@ -1,7 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.aws.sqs.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * SQS Publish 설정 Properties.
@@ -14,8 +13,9 @@ import org.springframework.stereotype.Component;
  *     publish:
  *       external-download-queue-url: https://sqs.ap-northeast-2.amazonaws.com/.../external-download-queue
  * }</pre>
+ *
+ * <p><strong>빈 등록</strong>: {@code @EnableConfigurationProperties}를 통해 등록됨 ({@link SqsPublishConfig} 참고)
  */
-@Component
 @ConfigurationProperties(prefix = "aws.sqs.publish")
 public class SqsPublishProperties {
 
