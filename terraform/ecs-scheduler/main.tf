@@ -120,41 +120,36 @@ module "scheduler_logs" {
 }
 
 # ========================================
-# Security Groups
+# Security Group (using Infrastructure module)
 # ========================================
-resource "aws_security_group" "ecs_scheduler" {
+module "ecs_security_group" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/security-group?ref=main"
+
   name        = "${var.project_name}-scheduler-sg-${var.environment}"
   description = "Security group for scheduler ECS tasks"
   vpc_id      = local.vpc_id
 
-  # No ingress - scheduler doesn't expose any ports
+  # Custom type for scheduler (egress only - no ingress needed)
+  type = "custom"
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
-  }
+  # No ingress rules - scheduler doesn't expose any ports
 
-  tags = {
-    Name        = "${var.project_name}-scheduler-sg-${var.environment}"
-    Environment = var.environment
-    Service     = "${var.project_name}-scheduler"
-    Owner       = local.common_tags.owner
-    CostCenter  = local.common_tags.cost_center
-    DataClass   = local.common_tags.data_class
-    Lifecycle   = "production"
-    ManagedBy   = "terraform"
-    Project     = var.project_name
-  }
+  environment  = local.common_tags.environment
+  service_name = local.common_tags.service_name
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = local.common_tags.project
+  data_class   = local.common_tags.data_class
 }
 
 # ========================================
-# IAM Role for ECS Task Execution
+# IAM Role for ECS Task Execution (using Infrastructure module)
 # ========================================
-resource "aws_iam_role" "scheduler_task_execution" {
-  name = "${var.project_name}-scheduler-execution-role-${var.environment}"
+module "scheduler_task_execution_role" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=main"
+
+  role_name = "${var.project_name}-scheduler-execution-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -169,158 +164,171 @@ resource "aws_iam_role" "scheduler_task_execution" {
     ]
   })
 
-  tags = {
-    Name        = "${var.project_name}-scheduler-execution-role-${var.environment}"
-    Environment = var.environment
-    Service     = "${var.project_name}-scheduler"
-    Owner       = local.common_tags.owner
-    CostCenter  = local.common_tags.cost_center
-  }
-}
+  attach_aws_managed_policies = [
+    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  ]
 
-resource "aws_iam_role_policy_attachment" "scheduler_task_execution" {
-  role       = aws_iam_role.scheduler_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
+  enable_secrets_manager_policy = true
+  secrets_manager_secret_arns   = [data.aws_secretsmanager_secret.rds.arn]
 
-resource "aws_iam_role_policy" "scheduler_secrets_access" {
-  name = "${var.project_name}-scheduler-secrets-access-${var.environment}"
-  role = aws_iam_role.scheduler_task_execution.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = [
-          data.aws_secretsmanager_secret.rds.arn
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ssm:GetParameters",
-          "ssm:GetParameter"
-        ]
-        Resource = [
-          "arn:aws:ssm:${var.aws_region}:*:parameter/shared/*",
-          "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "kms:Decrypt"
-        ]
-        Resource = [
-          aws_kms_key.logs.arn
-        ]
-      }
-    ]
-  })
-}
-
-# ========================================
-# IAM Role for ECS Task
-# ========================================
-resource "aws_iam_role" "scheduler_task" {
-  name = "${var.project_name}-scheduler-task-role-${var.environment}"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name        = "${var.project_name}-scheduler-task-role-${var.environment}"
-    Environment = var.environment
-    Service     = "${var.project_name}-scheduler"
-    Owner       = local.common_tags.owner
-    CostCenter  = local.common_tags.cost_center
-  }
-}
-
-# EventBridge permissions for scheduler
-resource "aws_iam_role_policy" "scheduler_eventbridge_access" {
-  name = "${var.project_name}-scheduler-eventbridge-access-${var.environment}"
-  role = aws_iam_role.scheduler_task.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "events:PutEvents",
-          "events:PutRule",
-          "events:PutTargets",
-          "events:DeleteRule",
-          "events:RemoveTargets"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# Add OpenTelemetry permissions for ADOT Collector sidecar
-resource "aws_iam_role_policy" "scheduler_otel_access" {
-  name = "${var.project_name}-scheduler-otel-access-${var.environment}"
-  role = aws_iam_role.scheduler_task.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "XRayAccess"
-        Effect = "Allow"
-        Action = [
-          "xray:PutTraceSegments",
-          "xray:PutTelemetryRecords",
-          "xray:GetSamplingRules",
-          "xray:GetSamplingTargets"
-        ]
-        Resource = "*"
-      },
-      {
-        Sid    = "CloudWatchLogsAccess"
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:DescribeLogStreams"
-        ]
-        Resource = [
-          "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel:*"
-        ]
-      },
-      {
-        Sid    = "CloudWatchMetricsAccess"
-        Effect = "Allow"
-        Action = [
-          "cloudwatch:PutMetricData"
-        ]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "cloudwatch:namespace" = "FileFlow"
+  custom_inline_policies = {
+    ssm-and-kms-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Allow"
+            Action = [
+              "ssm:GetParameters",
+              "ssm:GetParameter"
+            ]
+            Resource = [
+              "arn:aws:ssm:${var.aws_region}:*:parameter/shared/*",
+              "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/*"
+            ]
+          },
+          {
+            Effect = "Allow"
+            Action = [
+              "kms:Decrypt"
+            ]
+            Resource = [
+              aws_kms_key.logs.arn
+            ]
           }
+        ]
+      })
+    }
+  }
+
+  environment  = local.common_tags.environment
+  service_name = local.common_tags.service_name
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = local.common_tags.project
+  data_class   = local.common_tags.data_class
+}
+
+# ========================================
+# IAM Role for ECS Task (using Infrastructure module)
+# ========================================
+module "scheduler_task_role" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=main"
+
+  role_name = "${var.project_name}-scheduler-task-role-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
         }
       }
     ]
   })
+
+  custom_inline_policies = {
+    eventbridge-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Allow"
+            Action = [
+              "events:PutEvents",
+              "events:PutRule",
+              "events:PutTargets",
+              "events:DeleteRule",
+              "events:RemoveTargets"
+            ]
+            Resource = "*"
+          }
+        ]
+      })
+    }
+    adot-amp-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "AMPRemoteWrite"
+            Effect = "Allow"
+            Action = [
+              "aps:RemoteWrite"
+            ]
+            Resource = local.amp_workspace_arn
+          },
+          {
+            Sid    = "XRayTracing"
+            Effect = "Allow"
+            Action = [
+              "xray:PutTraceSegments",
+              "xray:PutTelemetryRecords",
+              "xray:GetSamplingRules",
+              "xray:GetSamplingTargets",
+              "xray:GetSamplingStatisticSummaries"
+            ]
+            Resource = "*"
+          },
+          {
+            Sid    = "CloudWatchLogsAccess"
+            Effect = "Allow"
+            Action = [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ]
+            Resource = [
+              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel:*"
+            ]
+          },
+          {
+            Sid    = "CloudWatchMetricsAccess"
+            Effect = "Allow"
+            Action = [
+              "cloudwatch:PutMetricData"
+            ]
+            Resource = "*"
+            Condition = {
+              StringEquals = {
+                "cloudwatch:namespace" = "FileFlow"
+              }
+            }
+          }
+        ]
+      })
+    }
+  }
+
+  environment  = local.common_tags.environment
+  service_name = local.common_tags.service_name
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = local.common_tags.project
+  data_class   = local.common_tags.data_class
+}
+
+# ========================================
+# ADOT Sidecar (using Infrastructure module)
+# ========================================
+module "adot_sidecar" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/adot-sidecar?ref=main"
+
+  project_name              = var.project_name
+  service_name              = "scheduler"
+  aws_region                = var.aws_region
+  amp_workspace_arn         = local.amp_workspace_arn
+  amp_remote_write_endpoint = local.amp_remote_write_url
+  log_group_name            = module.scheduler_logs.log_group_name
+  app_port                  = 8080
+  cluster_name              = data.aws_ecs_cluster.main.cluster_name
+  environment               = var.environment
 }
 
 # ========================================
@@ -341,10 +349,10 @@ module "scheduler_service" {
   desired_count = 1  # Fixed at 1
 
   subnet_ids         = local.private_subnets
-  security_group_ids = [aws_security_group.ecs_scheduler.id]
+  security_group_ids = [module.ecs_security_group.security_group_id]
 
-  execution_role_arn = aws_iam_role.scheduler_task_execution.arn
-  task_role_arn      = aws_iam_role.scheduler_task.arn
+  execution_role_arn = module.scheduler_task_execution_role.role_arn
+  task_role_arn      = module.scheduler_task_role.role_arn
 
   # No Load Balancer for scheduler
 
@@ -419,57 +427,6 @@ module "scheduler_service" {
   project      = local.common_tags.project
   data_class   = local.common_tags.data_class
 
-  # OpenTelemetry Collector Sidecar
-  sidecars = [
-    {
-      name      = "otel-collector"
-      image     = "public.ecr.aws/aws-observability/aws-otel-collector:latest"
-      cpu       = 256
-      memory    = 512
-      essential = false
-      portMappings = [
-        { containerPort = 4317, protocol = "tcp" },
-        { containerPort = 4318, protocol = "tcp" }
-      ]
-      environment = [
-        {
-          name  = "AOT_CONFIG_CONTENT"
-          value = <<-EOT
-receivers:
-  otlp:
-    protocols:
-      grpc:
-        endpoint: 0.0.0.0:4317
-      http:
-        endpoint: 0.0.0.0:4318
-exporters:
-  awsxray:
-    region: ${var.aws_region}
-  awsemf:
-    region: ${var.aws_region}
-    namespace: FileFlow
-    log_group_name: /ecs/fileflow/otel
-    dimension_rollup_option: NoDimensionRollup
-service:
-  pipelines:
-    traces:
-      receivers: [otlp]
-      exporters: [awsxray]
-    metrics:
-      receivers: [otlp]
-      exporters: [awsemf]
-EOT
-        }
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = "/ecs/fileflow/otel-collector"
-          "awslogs-create-group"  = "true"
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "otel-scheduler"
-        }
-      }
-    }
-  ]
+  # ADOT Collector Sidecar
+  sidecars = [module.adot_sidecar.container_definition]
 }
