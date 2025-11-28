@@ -648,7 +648,59 @@ public class TracingMdcFilter extends OncePerRequestFilter {
 
 ## 8. OpenTelemetry 통합
 
-### 8.1 Dockerfile 설정
+### 8.1 ADOT Agent vs ADOT Collector 이해
+
+OpenTelemetry 기반 모니터링은 **Agent**와 **Collector** 두 가지 구성요소로 나뉩니다:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                           ECS Task                                   │
+│  ┌─────────────────────┐         ┌─────────────────────┐           │
+│  │   Application       │         │   ADOT Collector    │           │
+│  │   Container         │         │   (Sidecar)         │           │
+│  │                     │         │                     │           │
+│  │  ┌───────────────┐  │  OTLP   │  ┌───────────────┐  │           │
+│  │  │ Spring Boot   │  │  :4317  │  │  Receivers    │  │           │
+│  │  │ Application   │──┼────────▶│  │  (OTLP)       │  │           │
+│  │  └───────────────┘  │         │  └───────┬───────┘  │           │
+│  │         │           │         │          │          │           │
+│  │  ┌──────▼────────┐  │         │  ┌───────▼───────┐  │           │
+│  │  │ ADOT Agent    │  │         │  │  Processors   │  │           │
+│  │  │ (javaagent)   │  │         │  │  (Batch, etc) │  │           │
+│  │  │               │  │         │  └───────┬───────┘  │           │
+│  │  │ - 메트릭 수집 │  │         │          │          │           │
+│  │  │ - 트레이스 수집│  │         │  ┌───────▼───────┐  │           │
+│  │  │ - 자동 계측   │  │         │  │  Exporters    │──┼──────────▶│
+│  │  └───────────────┘  │         │  │  - X-Ray      │  │    AWS    │
+│  │                     │         │  │  - CloudWatch │  │  Services │
+│  └─────────────────────┘         │  │  - Prometheus │  │           │
+│                                   │  └───────────────┘  │           │
+│                                   └─────────────────────┘           │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+| 구성요소 | 역할 | 실행 방식 | 필수 여부 |
+|----------|------|-----------|-----------|
+| **ADOT Agent** | 애플리케이션 계측 (데이터 수집) | `-javaagent` JVM 옵션 | ✅ 적용됨 |
+| **ADOT Collector** | 데이터 수신/처리/AWS 전송 | 별도 컨테이너 (Sidecar) | ❌ 미적용 |
+
+#### 현재 상태 (2024-11)
+
+- **ADOT Agent**: ✅ 모든 서비스에 적용됨 (`aws-opentelemetry-agent.jar`)
+- **ADOT Collector**: ❌ 미적용 (ECS Task Definition에 sidecar 추가 필요)
+- **OTLP Exporter**: ❌ 비활성화 (`none` 설정)
+
+```dockerfile
+# 현재 Dockerfile 설정 (OTLP 비활성화)
+ENV OTEL_METRICS_EXPORTER="none"   # Collector 없으면 timeout 발생
+ENV OTEL_TRACES_EXPORTER="none"    # Collector 없으면 timeout 발생
+ENV OTEL_LOGS_EXPORTER="none"
+```
+
+> **주의**: ADOT Collector 없이 `OTEL_METRICS_EXPORTER="otlp"`로 설정하면
+> `HttpExporter - Failed to export metrics. timeout` 에러가 발생합니다.
+
+### 8.2 Dockerfile 설정 (현재)
 
 ```dockerfile
 FROM eclipse-temurin:21-jre-alpine
@@ -656,55 +708,91 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # AWS ADOT Agent 다운로드
-ADD https://github.com/aws-observability/aws-otel-java-instrumentation/releases/latest/download/aws-opentelemetry-agent.jar /app/otel-agent.jar
+ADD https://github.com/aws-observability/aws-otel-java-instrumentation/releases/latest/download/aws-opentelemetry-agent.jar /app/aws-opentelemetry-agent.jar
 
 COPY app.jar app.jar
 
 # JVM 옵션
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
-ENV OTEL_AGENT_OPTS="-javaagent:/app/otel-agent.jar"
+ENV OTEL_AGENT_OPTS="-javaagent:/app/aws-opentelemetry-agent.jar"
 
 # OpenTelemetry 환경변수
 ENV OTEL_SERVICE_NAME="my-service"
 ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
-ENV OTEL_METRICS_EXPORTER="otlp"
-ENV OTEL_TRACES_EXPORTER="otlp"
+
+# OTLP Exporter 비활성화 (Collector 미배포 상태)
+# TODO: OTel Collector sidecar 추가 후 "otlp"로 변경
+ENV OTEL_METRICS_EXPORTER="none"
+ENV OTEL_TRACES_EXPORTER="none"
 ENV OTEL_LOGS_EXPORTER="none"
+
 ENV OTEL_PROPAGATORS="xray,tracecontext,baggage"
+ENV OTEL_RESOURCE_ATTRIBUTES="service.namespace=fileflow"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS $OTEL_AGENT_OPTS -jar app.jar"]
 ```
 
-### 8.2 ECS Task Definition 환경변수
+### 8.3 ADOT Collector 추가 방법 (향후 작업)
+
+Collector를 추가하려면 ECS Task Definition에 sidecar 컨테이너를 추가해야 합니다:
+
+#### Step 1: ECS Task Definition에 ADOT Collector Sidecar 추가
 
 ```json
 {
   "containerDefinitions": [
     {
       "name": "app",
+      "image": "your-ecr-repo/fileflow-api:latest",
+      "essential": true,
       "environment": [
         { "name": "OTEL_SERVICE_NAME", "value": "fileflow-api" },
         { "name": "OTEL_EXPORTER_OTLP_ENDPOINT", "value": "http://localhost:4317" },
+        { "name": "OTEL_METRICS_EXPORTER", "value": "otlp" },
+        { "name": "OTEL_TRACES_EXPORTER", "value": "otlp" },
         { "name": "OTEL_RESOURCE_ATTRIBUTES", "value": "service.namespace=fileflow,deployment.environment=prod" }
+      ],
+      "dependsOn": [
+        { "containerName": "otel-collector", "condition": "START" }
       ]
     },
     {
       "name": "otel-collector",
       "image": "amazon/aws-otel-collector:latest",
-      "essential": false
+      "essential": false,
+      "command": ["--config=/etc/ecs/ecs-default-config.yaml"],
+      "portMappings": [
+        { "containerPort": 4317, "protocol": "tcp" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/fileflow-otel-collector",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "otel"
+        }
+      }
     }
   ]
 }
 ```
 
-### 8.3 otel-collector 설정
+#### Step 2: ADOT Collector 설정 파일
 
 ```yaml
+# otel-collector-config.yaml
 receivers:
   otlp:
     protocols:
       grpc:
         endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
 
 exporters:
   awsxray:
@@ -715,14 +803,75 @@ exporters:
     auth:
       authenticator: sigv4auth
 
+extensions:
+  sigv4auth:
+    region: ap-northeast-2
+    service: aps
+
 service:
+  extensions: [sigv4auth]
   pipelines:
     traces:
       receivers: [otlp]
+      processors: [batch]
       exporters: [awsxray]
     metrics:
       receivers: [otlp]
+      processors: [batch]
       exporters: [prometheusremotewrite]
+```
+
+#### Step 3: Dockerfile OTLP 활성화
+
+Collector 배포 후 Dockerfile에서 exporter를 활성화합니다:
+
+```dockerfile
+# OTLP Exporter 활성화 (Collector 배포 후)
+ENV OTEL_METRICS_EXPORTER="otlp"
+ENV OTEL_TRACES_EXPORTER="otlp"
+ENV OTEL_LOGS_EXPORTER="none"
+```
+
+#### 데이터 흐름 (Collector 활성화 시)
+
+```
+Spring Boot App (ADOT Agent)
+       │
+       │ OTLP (gRPC :4317)
+       ▼
+ADOT Collector (Sidecar)
+       │
+       ├──▶ AWS X-Ray (Traces)
+       ├──▶ Amazon Managed Prometheus (Metrics)
+       └──▶ CloudWatch Logs (선택적)
+```
+
+### 8.4 AWS 사전 준비사항
+
+ADOT Collector 사용을 위한 AWS 리소스:
+
+| 리소스 | 용도 | 필요 여부 |
+|--------|------|-----------|
+| **AWS X-Ray** | 분산 트레이싱 | 선택 |
+| **Amazon Managed Prometheus** | 메트릭 저장 | 선택 |
+| **IAM Role** | Collector 권한 | 필수 |
+
+필요한 IAM 권한:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "aps:RemoteWrite"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
 ```
 
 ---
