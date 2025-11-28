@@ -62,7 +62,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("${api.endpoints.base-v1}/upload-sessions")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.upload-session.base}")
 @Validated
 public class UploadSessionCommandController {
 
@@ -108,7 +108,7 @@ public class UploadSessionCommandController {
      * @param request 단일 업로드 초기화 요청 DTO
      * @return 세션 정보 및 Presigned URL (201 Created)
      */
-    @PostMapping("/single")
+    @PostMapping("${api.endpoints.upload-session.single-init}")
     public ResponseEntity<ApiResponse<InitSingleUploadApiResponse>> initSingleUpload(
             @RequestBody @Valid InitSingleUploadApiRequest request) {
 
@@ -128,7 +128,7 @@ public class UploadSessionCommandController {
      * @param request Multipart 업로드 초기화 요청 DTO
      * @return 세션 정보 및 Part별 Presigned URL (201 Created)
      */
-    @PostMapping("/multipart")
+    @PostMapping("${api.endpoints.upload-session.multipart-init}")
     public ResponseEntity<ApiResponse<InitMultipartUploadApiResponse>> initMultipartUpload(
             @RequestBody @Valid InitMultipartUploadApiRequest request) {
 
@@ -150,7 +150,7 @@ public class UploadSessionCommandController {
      * @param request 단일 업로드 완료 요청 DTO
      * @return 완료된 세션 정보 (200 OK)
      */
-    @PatchMapping("/{sessionId}/single/complete")
+    @PatchMapping("${api.endpoints.upload-session.single-complete}")
     public ResponseEntity<ApiResponse<CompleteSingleUploadApiResponse>> completeSingleUpload(
             @PathVariable @NotBlank String sessionId,
             @RequestBody @Valid CompleteSingleUploadApiRequest request) {
@@ -172,7 +172,7 @@ public class UploadSessionCommandController {
      * @param sessionId 세션 ID
      * @return 완료된 세션 정보 및 Part 목록 (200 OK)
      */
-    @PatchMapping("/{sessionId}/multipart/complete")
+    @PatchMapping("${api.endpoints.upload-session.multipart-complete}")
     public ResponseEntity<ApiResponse<CompleteMultipartUploadApiResponse>> completeMultipartUpload(
             @PathVariable @NotBlank String sessionId) {
 
@@ -195,7 +195,7 @@ public class UploadSessionCommandController {
      * @param request Part 업로드 완료 요청 DTO
      * @return Part 업로드 진행 상황 (200 OK)
      */
-    @PatchMapping("/{sessionId}/parts")
+    @PatchMapping("${api.endpoints.upload-session.parts}")
     public ResponseEntity<ApiResponse<MarkPartUploadedApiResponse>> markPartUploaded(
             @PathVariable @NotBlank String sessionId,
             @RequestBody @Valid MarkPartUploadedApiRequest request) {
@@ -217,7 +217,7 @@ public class UploadSessionCommandController {
      * @param sessionId 세션 ID
      * @return 취소된 세션 정보 (200 OK)
      */
-    @PatchMapping("/{sessionId}/cancel")
+    @PatchMapping("${api.endpoints.upload-session.cancel}")
     public ResponseEntity<ApiResponse<CancelUploadSessionApiResponse>> cancelUploadSession(
             @PathVariable @NotBlank String sessionId) {
 

@@ -6,16 +6,30 @@
 api:
   endpoints:
     base-v1: /api/v1
+
+    # Upload Session 도메인 엔드포인트
     upload-session:
       base: /upload-sessions
-      single:
-        init: /single
-        complete: /{sessionId}/single/complete
-      multipart:
-        init: /multipart
-        complete: /{sessionId}/multipart/complete
+      single-init: /single
+      single-complete: /{sessionId}/single/complete
+      multipart-init: /multipart
+      multipart-complete: /{sessionId}/multipart/complete
       parts: /{sessionId}/parts
       cancel: /{sessionId}/cancel
+      by-id: /{sessionId}
+
+    # File Asset 도메인 엔드포인트
+    file-asset:
+      base: /file-assets
+      by-id: /{id}
+      delete: /{id}/delete
+      download-url: /{id}/download-url
+      batch-download-url: /batch-download-url
+
+    # External Download 도메인 엔드포인트
+    external-download:
+      base: /external-downloads
+      by-id: /{id}
 
   error:
     base-url: about:blank

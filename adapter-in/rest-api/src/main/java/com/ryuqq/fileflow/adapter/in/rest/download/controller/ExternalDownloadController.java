@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("${api.endpoints.base-v1}/external-downloads")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.external-download.base}")
 @Validated
 public class ExternalDownloadController {
 
@@ -99,7 +99,7 @@ public class ExternalDownloadController {
      * @param id ExternalDownload ID
      * @return 외부 다운로드 상세 정보 (200 OK)
      */
-    @GetMapping("/{id}")
+    @GetMapping("${api.endpoints.external-download.by-id}")
     public ResponseEntity<ApiResponse<ExternalDownloadDetailApiResponse>> getExternalDownload(
             @PathVariable Long id) {
 
