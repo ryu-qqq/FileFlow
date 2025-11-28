@@ -1,10 +1,9 @@
 # ========================================
-# ECS Service: scheduler
+# ECS Service: download-worker
 # ========================================
-# Background scheduler service
+# SQS-based background worker service
 # Using Infrastructure modules
-# No ALB, no auto scaling
-# Desired count: 1 (fixed)
+# No ALB, no auto scaling (can be enabled)
 # ========================================
 
 # ========================================
@@ -13,7 +12,7 @@
 locals {
   common_tags = {
     environment  = var.environment
-    service_name = "${var.project_name}-scheduler"
+    service_name = "${var.project_name}-download-worker"
     team         = "platform-team"
     owner        = "platform@ryuqqq.com"
     cost_center  = "engineering"
@@ -25,8 +24,8 @@ locals {
 # ========================================
 # ECR Repository Reference
 # ========================================
-data "aws_ecr_repository" "scheduler" {
-  name = "${var.project_name}-scheduler-${var.environment}"
+data "aws_ecr_repository" "download_worker" {
+  name = "${var.project_name}-download-worker-${var.environment}"
 }
 
 # ========================================
@@ -42,7 +41,7 @@ data "aws_caller_identity" "current" {}
 # KMS Key for CloudWatch Logs Encryption
 # ========================================
 resource "aws_kms_key" "logs" {
-  description             = "KMS key for FileFlow scheduler CloudWatch logs encryption"
+  description             = "KMS key for FileFlow download-worker CloudWatch logs encryption"
   deletion_window_in_days = 30
   enable_key_rotation     = true
 
@@ -74,7 +73,7 @@ resource "aws_kms_key" "logs" {
         Resource = "*"
         Condition = {
           ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${var.project_name}-scheduler-${var.environment}"
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${var.project_name}-download-worker-${var.environment}"
           }
         }
       }
@@ -82,9 +81,9 @@ resource "aws_kms_key" "logs" {
   })
 
   tags = {
-    Name        = "${var.project_name}-scheduler-logs-kms-${var.environment}"
+    Name        = "${var.project_name}-download-worker-logs-kms-${var.environment}"
     Environment = var.environment
-    Service     = "${var.project_name}-scheduler"
+    Service     = "${var.project_name}-download-worker"
     Owner       = local.common_tags.owner
     CostCenter  = local.common_tags.cost_center
     DataClass   = local.common_tags.data_class
@@ -95,23 +94,23 @@ resource "aws_kms_key" "logs" {
 }
 
 resource "aws_kms_alias" "logs" {
-  name          = "alias/${var.project_name}-scheduler-logs-${var.environment}"
+  name          = "alias/${var.project_name}-download-worker-logs-${var.environment}"
   target_key_id = aws_kms_key.logs.key_id
 }
 
 # ========================================
 # CloudWatch Log Group with KMS Encryption
 # ========================================
-module "scheduler_logs" {
+module "download_worker_logs" {
   source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/cloudwatch-log-group?ref=main"
 
-  name              = "/ecs/${var.project_name}-scheduler-${var.environment}"
+  name              = "/ecs/${var.project_name}-download-worker-${var.environment}"
   retention_in_days = 30
   kms_key_id        = aws_kms_key.logs.arn
 
   common_tags = {
     Environment = var.environment
-    Service     = "${var.project_name}-scheduler"
+    Service     = "${var.project_name}-download-worker"
     Owner       = local.common_tags.owner
     CostCenter  = local.common_tags.cost_center
     DataClass   = local.common_tags.data_class
@@ -124,12 +123,12 @@ module "scheduler_logs" {
 # ========================================
 # Security Groups
 # ========================================
-resource "aws_security_group" "ecs_scheduler" {
-  name        = "${var.project_name}-scheduler-sg-${var.environment}"
-  description = "Security group for scheduler ECS tasks"
+resource "aws_security_group" "ecs_download_worker" {
+  name        = "${var.project_name}-download-worker-sg-${var.environment}"
+  description = "Security group for download-worker ECS tasks"
   vpc_id      = local.vpc_id
 
-  # No ingress - scheduler doesn't expose any ports
+  # No ingress - download-worker doesn't expose any ports
 
   egress {
     from_port   = 0
@@ -140,9 +139,9 @@ resource "aws_security_group" "ecs_scheduler" {
   }
 
   tags = {
-    Name        = "${var.project_name}-scheduler-sg-${var.environment}"
+    Name        = "${var.project_name}-download-worker-sg-${var.environment}"
     Environment = var.environment
-    Service     = "${var.project_name}-scheduler"
+    Service     = "${var.project_name}-download-worker"
     Owner       = local.common_tags.owner
     CostCenter  = local.common_tags.cost_center
     DataClass   = local.common_tags.data_class
@@ -155,8 +154,8 @@ resource "aws_security_group" "ecs_scheduler" {
 # ========================================
 # IAM Role for ECS Task Execution
 # ========================================
-resource "aws_iam_role" "scheduler_task_execution" {
-  name = "${var.project_name}-scheduler-execution-role-${var.environment}"
+resource "aws_iam_role" "download_worker_task_execution" {
+  name = "${var.project_name}-download-worker-execution-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -172,22 +171,22 @@ resource "aws_iam_role" "scheduler_task_execution" {
   })
 
   tags = {
-    Name        = "${var.project_name}-scheduler-execution-role-${var.environment}"
+    Name        = "${var.project_name}-download-worker-execution-role-${var.environment}"
     Environment = var.environment
-    Service     = "${var.project_name}-scheduler"
+    Service     = "${var.project_name}-download-worker"
     Owner       = local.common_tags.owner
     CostCenter  = local.common_tags.cost_center
   }
 }
 
-resource "aws_iam_role_policy_attachment" "scheduler_task_execution" {
-  role       = aws_iam_role.scheduler_task_execution.name
+resource "aws_iam_role_policy_attachment" "download_worker_task_execution" {
+  role       = aws_iam_role.download_worker_task_execution.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-resource "aws_iam_role_policy" "scheduler_secrets_access" {
-  name = "${var.project_name}-scheduler-secrets-access-${var.environment}"
-  role = aws_iam_role.scheduler_task_execution.id
+resource "aws_iam_role_policy" "download_worker_secrets_access" {
+  name = "${var.project_name}-download-worker-secrets-access-${var.environment}"
+  role = aws_iam_role.download_worker_task_execution.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -228,8 +227,8 @@ resource "aws_iam_role_policy" "scheduler_secrets_access" {
 # ========================================
 # IAM Role for ECS Task
 # ========================================
-resource "aws_iam_role" "scheduler_task" {
-  name = "${var.project_name}-scheduler-task-role-${var.environment}"
+resource "aws_iam_role" "download_worker_task" {
+  name = "${var.project_name}-download-worker-task-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -245,18 +244,18 @@ resource "aws_iam_role" "scheduler_task" {
   })
 
   tags = {
-    Name        = "${var.project_name}-scheduler-task-role-${var.environment}"
+    Name        = "${var.project_name}-download-worker-task-role-${var.environment}"
     Environment = var.environment
-    Service     = "${var.project_name}-scheduler"
+    Service     = "${var.project_name}-download-worker"
     Owner       = local.common_tags.owner
     CostCenter  = local.common_tags.cost_center
   }
 }
 
-# EventBridge permissions for scheduler
-resource "aws_iam_role_policy" "scheduler_eventbridge_access" {
-  name = "${var.project_name}-scheduler-eventbridge-access-${var.environment}"
-  role = aws_iam_role.scheduler_task.id
+# SQS permissions for download-worker
+resource "aws_iam_role_policy" "download_worker_sqs_access" {
+  name = "${var.project_name}-download-worker-sqs-access-${var.environment}"
+  role = aws_iam_role.download_worker_task.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -264,22 +263,49 @@ resource "aws_iam_role_policy" "scheduler_eventbridge_access" {
       {
         Effect = "Allow"
         Action = [
-          "events:PutEvents",
-          "events:PutRule",
-          "events:PutTargets",
-          "events:DeleteRule",
-          "events:RemoveTargets"
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:ChangeMessageVisibility"
         ]
-        Resource = "*"
+        Resource = [
+          data.aws_sqs_queue.download_queue.arn,
+          data.aws_sqs_queue.download_dlq.arn
+        ]
+      }
+    ]
+  })
+}
+
+# S3 permissions for download-worker (file downloads)
+resource "aws_iam_role_policy" "download_worker_s3_access" {
+  name = "${var.project_name}-download-worker-s3-access-${var.environment}"
+  role = aws_iam_role.download_worker_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.project_name}-*",
+          "arn:aws:s3:::${var.project_name}-*/*"
+        ]
       }
     ]
   })
 }
 
 # Add OpenTelemetry permissions for ADOT Collector sidecar
-resource "aws_iam_role_policy" "scheduler_otel_access" {
-  name = "${var.project_name}-scheduler-otel-access-${var.environment}"
-  role = aws_iam_role.scheduler_task.id
+resource "aws_iam_role_policy" "download_worker_otel_access" {
+  name = "${var.project_name}-download-worker-otel-access-${var.environment}"
+  role = aws_iam_role.download_worker_task.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -328,27 +354,27 @@ resource "aws_iam_role_policy" "scheduler_otel_access" {
 # ========================================
 # ECS Service using Infrastructure Module
 # ========================================
-module "scheduler_service" {
+module "download_worker_service" {
   source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecs-service?ref=main"
 
-  name            = "${var.project_name}-scheduler-${var.environment}"
+  name            = "${var.project_name}-download-worker-${var.environment}"
   cluster_id      = data.aws_ecs_cluster.main.arn
-  container_name  = "scheduler"
-  container_image = "${data.aws_ecr_repository.scheduler.repository_url}:latest"
+  container_name  = "download-worker"
+  container_image = "${data.aws_ecr_repository.download_worker.repository_url}:latest"
   container_port  = 8080  # Required by module, but no actual port exposure
 
-  cpu    = var.scheduler_cpu
-  memory = var.scheduler_memory
+  cpu    = var.worker_cpu
+  memory = var.worker_memory
 
-  desired_count = 1  # Fixed at 1
+  desired_count = var.worker_desired_count
 
   subnet_ids         = local.private_subnets
-  security_group_ids = [aws_security_group.ecs_scheduler.id]
+  security_group_ids = [aws_security_group.ecs_download_worker.id]
 
-  execution_role_arn = aws_iam_role.scheduler_task_execution.arn
-  task_role_arn      = aws_iam_role.scheduler_task.arn
+  execution_role_arn = aws_iam_role.download_worker_task_execution.arn
+  task_role_arn      = aws_iam_role.download_worker_task.arn
 
-  # No Load Balancer for scheduler
+  # No Load Balancer for download-worker
 
   # Container Environment Variables
   container_environment = [
@@ -379,6 +405,10 @@ module "scheduler_service" {
     {
       name  = "REDIS_PORT"
       value = tostring(local.redis_port)
+    },
+    {
+      name  = "SQS_QUEUE_URL"
+      value = data.aws_sqs_queue.download_queue.url
     }
   ]
 
@@ -394,9 +424,9 @@ module "scheduler_service" {
   log_configuration = {
     log_driver = "awslogs"
     options = {
-      "awslogs-group"         = module.scheduler_logs.log_group_name
+      "awslogs-group"         = module.download_worker_logs.log_group_name
       "awslogs-region"        = var.aws_region
-      "awslogs-stream-prefix" = "scheduler"
+      "awslogs-stream-prefix" = "download-worker"
     }
   }
 
@@ -409,7 +439,7 @@ module "scheduler_service" {
   # Enable ECS Exec for debugging
   enable_execute_command = true
 
-  # No Auto Scaling for scheduler
+  # No Auto Scaling for download-worker (can be enabled for SQS-based scaling)
   enable_autoscaling = false
 
   # Required Tags (governance compliance)
