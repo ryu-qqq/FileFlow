@@ -29,7 +29,7 @@ class ETagMismatchExceptionTest {
                 .contains("업로드된 파일의 ETag가 일치하지 않습니다")
                 .contains("예상: expected-etag-value")
                 .contains("실제: actual-etag-value");
-            assertThat(exception.getErrorCode()).isEqualTo("ETAG_MISMATCH");
+            assertThat(exception.code()).isEqualTo("ETAG-MISMATCH");
         }
 
         @Test
@@ -67,7 +67,7 @@ class ETagMismatchExceptionTest {
                 .contains("업로드된 파일의 ETag가 일치하지 않습니다")
                 .contains("예상: expected-etag-string")
                 .contains("실제: actual-etag-string");
-            assertThat(exception.getErrorCode()).isEqualTo("ETAG_MISMATCH");
+            assertThat(exception.code()).isEqualTo("ETAG-MISMATCH");
         }
 
         @Test
