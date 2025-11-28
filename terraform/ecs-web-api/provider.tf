@@ -18,6 +18,7 @@ terraform {
     region         = "ap-northeast-2"
     dynamodb_table = "prod-connectly-tf-lock"
     encrypt        = true
+    kms_key_id     = "arn:aws:kms:ap-northeast-2:646886795421:key/086b1677-614f-46ba-863e-23c215fb5010"
   }
 }
 
@@ -70,6 +71,12 @@ variable "web_api_desired_count" {
   description = "Desired count for web-api service"
   type        = number
   default     = 2
+}
+
+variable "image_tag" {
+  description = "Docker image tag to deploy (CI/CD sets this value)"
+  type        = string
+  default     = "web-api-82-377de0d"
 }
 
 # ========================================
