@@ -27,9 +27,9 @@ jobs:
           - name: ecr
             dir: terraform/ecr
             order: 0
-          - name: elasticache
-            dir: terraform/elasticache
-            order: 1
+          # - name: elasticache  # TODO: State migration needed - existing resources don't match module paths
+          #   dir: terraform/elasticache
+          #   order: 1
           - name: s3
             dir: terraform/s3
             order: 2

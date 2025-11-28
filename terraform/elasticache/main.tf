@@ -68,6 +68,9 @@ module "redis" {
   node_type      = var.redis_node_type
   num_cache_nodes = 1
 
+  # Explicit port to avoid module validation bug with null
+  port = 6379
+
   # Network Configuration
   subnet_ids         = local.private_subnets
   security_group_ids = [aws_security_group.redis.id]
