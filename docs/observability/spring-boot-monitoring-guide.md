@@ -673,32 +673,47 @@ OpenTelemetry 기반 모니터링은 **Agent**와 **Collector** 두 가지 구�
 │  │  │ - 자동 계측   │  │         │  │  Exporters    │──┼──────────▶│
 │  │  └───────────────┘  │         │  │  - X-Ray      │  │    AWS    │
 │  │                     │         │  │  - CloudWatch │  │  Services │
-│  └─────────────────────┘         │  │  - Prometheus │  │           │
+│  └─────────────────────┘         │  │               │  │           │
 │                                   │  └───────────────┘  │           │
 │                                   └─────────────────────┘           │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-| 구성요소 | 역할 | 실행 방식 | 필수 여부 |
-|----------|------|-----------|-----------|
+| 구성요소 | 역할 | 실행 방식 | 상태 |
+|----------|------|-----------|------|
 | **ADOT Agent** | 애플리케이션 계측 (데이터 수집) | `-javaagent` JVM 옵션 | ✅ 적용됨 |
-| **ADOT Collector** | 데이터 수신/처리/AWS 전송 | 별도 컨테이너 (Sidecar) | ❌ 미적용 |
+| **ADOT Collector** | 데이터 수신/처리/AWS 전송 | Sidecar 컨테이너 | ✅ 적용됨 |
 
 #### 현재 상태 (2024-11)
 
 - **ADOT Agent**: ✅ 모든 서비스에 적용됨 (`aws-opentelemetry-agent.jar`)
-- **ADOT Collector**: ❌ 미적용 (ECS Task Definition에 sidecar 추가 필요)
-- **OTLP Exporter**: ❌ 비활성화 (`none` 설정)
+- **ADOT Collector**: ✅ ECS Task Definition에 sidecar로 배포됨
+- **OTLP Exporter**: ✅ 활성화 (`otlp` 설정)
 
 ```dockerfile
-# 현재 Dockerfile 설정 (OTLP 비활성화)
-ENV OTEL_METRICS_EXPORTER="none"   # Collector 없으면 timeout 발생
-ENV OTEL_TRACES_EXPORTER="none"    # Collector 없으면 timeout 발생
-ENV OTEL_LOGS_EXPORTER="none"
+# 현재 Dockerfile 설정 (OTLP 활성화)
+ENV OTEL_METRICS_EXPORTER="otlp"   # Collector로 메트릭 전송
+ENV OTEL_TRACES_EXPORTER="otlp"    # Collector로 트레이스 전송
+ENV OTEL_LOGS_EXPORTER="none"      # 로그는 CloudWatch Logs 직접 사용
 ```
 
-> **주의**: ADOT Collector 없이 `OTEL_METRICS_EXPORTER="otlp"`로 설정하면
-> `HttpExporter - Failed to export metrics. timeout` 에러가 발생합니다.
+#### Collector 설정 (ECS Task Definition)
+
+```yaml
+# otel-collector 컨테이너 설정
+receivers:
+  otlp:
+    protocols:
+      grpc: 0.0.0.0:4317
+      http: 0.0.0.0:4318
+
+exporters:
+  awsxray:      # Traces → AWS X-Ray
+  awsemf:       # Metrics → CloudWatch EMF
+```
+
+> **참고**: 컨테이너 시작 순서에 따라 초기 timeout이 발생할 수 있습니다.
+> `dependsOn` 설정으로 otel-collector가 먼저 시작되도록 하면 해결됩니다.
 
 ### 8.2 Dockerfile 설정 (현재)
 
@@ -720,10 +735,9 @@ ENV OTEL_AGENT_OPTS="-javaagent:/app/aws-opentelemetry-agent.jar"
 ENV OTEL_SERVICE_NAME="my-service"
 ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 
-# OTLP Exporter 비활성화 (Collector 미배포 상태)
-# TODO: OTel Collector sidecar 추가 후 "otlp"로 변경
-ENV OTEL_METRICS_EXPORTER="none"
-ENV OTEL_TRACES_EXPORTER="none"
+# OTLP Exporters - ECS Task에 otel-collector sidecar 배포됨
+ENV OTEL_METRICS_EXPORTER="otlp"
+ENV OTEL_TRACES_EXPORTER="otlp"
 ENV OTEL_LOGS_EXPORTER="none"
 
 ENV OTEL_PROPAGATORS="xray,tracecontext,baggage"
