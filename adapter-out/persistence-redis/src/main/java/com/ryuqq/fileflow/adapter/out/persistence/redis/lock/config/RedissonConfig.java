@@ -49,8 +49,12 @@ public class RedissonConfig {
             @Value("${redisson.timeout:3000}") int timeout,
             @Value("${redisson.connect-timeout:10000}") int connectTimeout) {
 
-        log.info("Creating RedissonClient - host: {}, port: {}, poolSize: {}, minIdle: {}",
-                host, port, connectionPoolSize, connectionMinimumIdleSize);
+        log.info(
+                "Creating RedissonClient - host: {}, port: {}, poolSize: {}, minIdle: {}",
+                host,
+                port,
+                connectionPoolSize,
+                connectionMinimumIdleSize);
 
         try {
             Config config = new Config();

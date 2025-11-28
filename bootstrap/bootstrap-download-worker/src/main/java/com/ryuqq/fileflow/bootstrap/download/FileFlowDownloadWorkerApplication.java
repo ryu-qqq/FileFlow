@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.bootstrap.download;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * FileFlow Download Worker Application.
@@ -25,6 +26,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * </ul>
  */
 @SpringBootApplication(scanBasePackages = "com.ryuqq.fileflow")
+@ConfigurationPropertiesScan(basePackages = "com.ryuqq.fileflow")
 public class FileFlowDownloadWorkerApplication {
 
     public static void main(String[] args) {
