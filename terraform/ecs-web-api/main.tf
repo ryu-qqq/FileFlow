@@ -496,8 +496,8 @@ module "web_api_service" {
     container_port   = 8080
   }
 
-  # Health Check Grace Period
-  health_check_grace_period_seconds = 60
+  # Health Check Grace Period (Spring Boot 시작 시간: ~109초)
+  health_check_grace_period_seconds = 180
 
   # Container Environment Variables
   container_environment = [
@@ -554,7 +554,7 @@ module "web_api_service" {
   health_check_interval    = 30
   health_check_timeout     = 5
   health_check_retries     = 3
-  health_check_start_period = 60
+  health_check_start_period = 120
 
   # Deployment Configuration
   deployment_circuit_breaker_enable   = true
