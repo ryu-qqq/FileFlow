@@ -71,7 +71,7 @@ resource "aws_kms_key" "logs" {
         Resource = "*"
         Condition = {
           ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${var.project_name}-web-api-${var.environment}"
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/ecs/${var.project_name}-web-api/${var.environment}"
           }
         }
       }
@@ -104,20 +104,18 @@ data "aws_caller_identity" "current" {}
 module "web_api_logs" {
   source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/cloudwatch-log-group?ref=main"
 
-  name              = "/ecs/${var.project_name}-web-api-${var.environment}"
+  name              = "/aws/ecs/${var.project_name}-web-api/${var.environment}"
   retention_in_days = 30
   kms_key_id        = aws_kms_key.logs.arn
 
-  common_tags = {
-    Environment = var.environment
-    Service     = "${var.project_name}-web-api"
-    Owner       = local.common_tags.owner
-    CostCenter  = local.common_tags.cost_center
-    DataClass   = local.common_tags.data_class
-    Lifecycle   = "production"
-    ManagedBy   = "terraform"
-    Project     = var.project_name
-  }
+  # Required tag variables (new module interface)
+  environment  = var.environment
+  service_name = "${var.project_name}-web-api"
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = var.project_name
+  data_class   = local.common_tags.data_class
 }
 
 # ========================================
@@ -477,7 +475,7 @@ module "web_api_service" {
   name            = "${var.project_name}-web-api-${var.environment}"
   cluster_id      = data.aws_ecs_cluster.main.arn
   container_name  = "web-api"
-  container_image = "${data.aws_ecr_repository.web_api.repository_url}:latest"
+  container_image = "${data.aws_ecr_repository.web_api.repository_url}:${var.image_tag}"
   container_port  = 8080
 
   cpu    = var.web_api_cpu
@@ -551,8 +549,8 @@ module "web_api_service" {
     }
   }
 
-  # Health Check
-  health_check_command = ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+  # Health Check (wget for Alpine Linux - curl not available)
+  health_check_command = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
   health_check_interval    = 30
   health_check_timeout     = 5
   health_check_retries     = 3
@@ -577,4 +575,58 @@ module "web_api_service" {
   cost_center  = local.common_tags.cost_center
   project      = local.common_tags.project
   data_class   = local.common_tags.data_class
+
+  # OpenTelemetry Collector Sidecar
+  sidecars = [
+    {
+      name      = "otel-collector"
+      image     = "public.ecr.aws/aws-observability/aws-otel-collector:latest"
+      cpu       = 256
+      memory    = 512
+      essential = false
+      portMappings = [
+        { containerPort = 4317, protocol = "tcp" },
+        { containerPort = 4318, protocol = "tcp" }
+      ]
+      environment = [
+        {
+          name  = "AOT_CONFIG_CONTENT"
+          value = <<-EOT
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+exporters:
+  awsxray:
+    region: ${var.aws_region}
+  awsemf:
+    region: ${var.aws_region}
+    namespace: FileFlow
+    log_group_name: /ecs/fileflow/otel
+    dimension_rollup_option: NoDimensionRollup
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [awsxray]
+    metrics:
+      receivers: [otlp]
+      exporters: [awsemf]
+EOT
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/fileflow/otel-collector"
+          "awslogs-create-group"  = "true"
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "otel-web-api"
+        }
+      }
+    }
+  ]
 }
