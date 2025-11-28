@@ -153,6 +153,13 @@ jobs:
         working-directory: ${{ matrix.module.dir }}
         run: |
           echo "🚀 Applying Terraform for ${{ matrix.module.name }}..."
+
+          # tfplan 파일이 없으면 새로 생성
+          if [ ! -f tfplan ]; then
+            echo "⚠️  tfplan 파일이 없습니다. Plan 재실행 중..."
+            terraform plan -out=tfplan
+          fi
+
           terraform apply -auto-approve -no-color tfplan
           echo "✅ Apply completed for ${{ matrix.module.name }}"
 
