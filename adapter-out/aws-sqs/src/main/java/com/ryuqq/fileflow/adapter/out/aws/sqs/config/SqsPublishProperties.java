@@ -14,7 +14,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       external-download-queue-url: https://sqs.ap-northeast-2.amazonaws.com/.../external-download-queue
  * }</pre>
  *
- * <p><strong>빈 등록</strong>: {@code @EnableConfigurationProperties}를 통해 등록됨 ({@link SqsPublishConfig} 참고)
+ * <p><strong>빈 등록</strong>: {@code @EnableConfigurationProperties}를 통해 등록됨 ({@link
+ * SqsPublishConfig} 참고)
  */
 @ConfigurationProperties(prefix = "aws.sqs.publish")
 public class SqsPublishProperties {
