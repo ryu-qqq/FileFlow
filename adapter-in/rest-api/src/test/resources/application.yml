@@ -1,0 +1,21 @@
+api:
+  endpoints:
+    base-v1: /api/v1
+    upload-session:
+      base: /upload-sessions
+      single-init: /single
+      single-complete: /{sessionId}/single/complete
+      multipart-init: /multipart
+      multipart-complete: /{sessionId}/multipart/complete
+      parts: /{sessionId}/parts
+      cancel: /{sessionId}/cancel
+      by-id: /{sessionId}
+    file-asset:
+      base: /file-assets
+      by-id: /{id}
+      delete: /{id}/delete
+      download-url: /{id}/download-url
+      batch-download-url: /batch-download-url
+    external-download:
+      base: /external-downloads
+      by-id: /{id}
