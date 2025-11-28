@@ -14,17 +14,17 @@ output "alb_arn" {
 
 output "service_name" {
   description = "ECS service name"
-  value       = module.web_api_service.service_name
+  value       = module.ecs_service.service_name
 }
 
 output "service_arn" {
   description = "ECS service ARN"
-  value       = module.web_api_service.service_id
+  value       = module.ecs_service.service_id
 }
 
 output "task_definition_arn" {
   description = "Task definition ARN"
-  value       = module.web_api_service.task_definition_arn
+  value       = module.ecs_service.task_definition_arn
 }
 
 output "fqdn" {

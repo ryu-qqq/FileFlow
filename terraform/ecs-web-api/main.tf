@@ -529,31 +529,3 @@ module "ecs_service" {
   project      = local.common_tags.project
   data_class   = local.common_tags.data_class
 }
-
-# ========================================
-# Outputs
-# ========================================
-output "service_name" {
-  description = "ECS Service name"
-  value       = module.ecs_service.service_name
-}
-
-output "task_definition_arn" {
-  description = "Task definition ARN"
-  value       = module.ecs_service.task_definition_arn
-}
-
-output "alb_dns_name" {
-  description = "ALB DNS name"
-  value       = aws_lb.web_api.dns_name
-}
-
-output "service_url" {
-  description = "Service URL"
-  value       = "https://${local.fqdn}"
-}
-
-output "log_group_name" {
-  description = "CloudWatch log group name"
-  value       = module.web_api_logs.log_group_name
-}
