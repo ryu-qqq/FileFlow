@@ -15,6 +15,7 @@ import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +43,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
+@ConditionalOnBean(HttpDownloadPort.class)
 public class ExternalDownloadProcessingFacade {
 
     private static final Logger log =
