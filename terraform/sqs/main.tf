@@ -47,7 +47,7 @@ resource "aws_kms_alias" "sqs" {
 module "external_download_queue" {
   source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/sqs?ref=main"
 
-  name       = "${var.project_name}-external-download-${var.environment}"
+  name       = "${var.environment}-monitoring-sqs-${var.project_name}-external-download"
   fifo_queue = false
 
   # KMS Encryption (required)
