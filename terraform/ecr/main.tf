@@ -56,7 +56,6 @@ module "ecr_web_api" {
   name                 = "${var.project_name}-web-api-${var.environment}"
   image_tag_mutability = "MUTABLE"
   scan_on_push         = true
-  force_delete         = true  # Allow deletion even with images
 
   # KMS Encryption (required for governance)
   kms_key_arn = aws_kms_key.ecr.arn
@@ -89,7 +88,6 @@ module "ecr_scheduler" {
   name                 = "${var.project_name}-scheduler-${var.environment}"
   image_tag_mutability = "MUTABLE"
   scan_on_push         = true
-  force_delete         = true  # Allow deletion even with images
 
   # KMS Encryption (required for governance)
   kms_key_arn = aws_kms_key.ecr.arn
