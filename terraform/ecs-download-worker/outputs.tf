@@ -29,10 +29,10 @@ output "kms_key_arn" {
 
 output "task_role_arn" {
   description = "ECS task role ARN"
-  value       = aws_iam_role.download_worker_task.arn
+  value       = module.download_worker_task_role.role_arn
 }
 
 output "execution_role_arn" {
   description = "ECS task execution role ARN"
-  value       = aws_iam_role.download_worker_task_execution.arn
+  value       = module.download_worker_task_execution_role.role_arn
 }

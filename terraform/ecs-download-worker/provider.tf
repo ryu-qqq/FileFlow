@@ -113,14 +113,18 @@ data "aws_secretsmanager_secret_version" "rds" {
 }
 
 # ========================================
-# SQS Queue References
+# SQS Queue References (from SSM Parameters)
 # ========================================
-data "aws_sqs_queue" "download_queue" {
-  name = "${var.project_name}-${var.environment}"
+data "aws_ssm_parameter" "external_download_queue_url" {
+  name = "/${var.project_name}/sqs/external-download-queue-url"
 }
 
-data "aws_sqs_queue" "download_dlq" {
-  name = "${var.project_name}-dlq-${var.environment}"
+data "aws_ssm_parameter" "external_download_dlq_url" {
+  name = "/${var.project_name}/sqs/external-download-dlq-url"
+}
+
+data "aws_ssm_parameter" "external_download_queue_arn" {
+  name = "/${var.project_name}/sqs/external-download-queue-arn"
 }
 
 # ========================================
