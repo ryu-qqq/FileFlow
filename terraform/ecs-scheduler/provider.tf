@@ -98,6 +98,17 @@ data "aws_secretsmanager_secret_version" "rds" {
 }
 
 # ========================================
+# Monitoring Configuration (AMP)
+# ========================================
+data "aws_ssm_parameter" "amp_workspace_arn" {
+  name = "/shared/monitoring/amp-workspace-arn"
+}
+
+data "aws_ssm_parameter" "amp_remote_write_url" {
+  name = "/shared/monitoring/amp-remote-write-url"
+}
+
+# ========================================
 # Locals
 # ========================================
 locals {
@@ -114,4 +125,8 @@ locals {
   # Redis Configuration
   redis_host = "fileflow-redis-prod.j9czrc.0001.apn2.cache.amazonaws.com"
   redis_port = 6379
+
+  # AMP Configuration
+  amp_workspace_arn     = data.aws_ssm_parameter.amp_workspace_arn.value
+  amp_remote_write_url  = data.aws_ssm_parameter.amp_remote_write_url.value
 }
