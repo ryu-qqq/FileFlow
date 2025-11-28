@@ -419,6 +419,55 @@ resource "aws_iam_role_policy" "eventbridge_access" {
   })
 }
 
+# Add OpenTelemetry permissions for ADOT Collector sidecar
+resource "aws_iam_role_policy" "otel_access" {
+  name = "${var.project_name}-otel-access-${var.environment}"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "XRayAccess"
+        Effect = "Allow"
+        Action = [
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords",
+          "xray:GetSamplingRules",
+          "xray:GetSamplingTargets"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "CloudWatchLogsAccess"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = [
+          "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel:*"
+        ]
+      },
+      {
+        Sid    = "CloudWatchMetricsAccess"
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutMetricData"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "cloudwatch:namespace" = "FileFlow"
+          }
+        }
+      }
+    ]
+  })
+}
+
 # ========================================
 # ECS Service using Infrastructure Module
 # ========================================
