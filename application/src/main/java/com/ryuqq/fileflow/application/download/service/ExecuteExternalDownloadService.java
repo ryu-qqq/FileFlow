@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.download.facade.ExternalDownloadProcessing
 import com.ryuqq.fileflow.application.download.port.in.command.ExecuteExternalDownloadUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
  * <p><strong>처리 흐름</strong>: {@link ExternalDownloadProcessingFacade} 참조
  */
 @Service
+@ConditionalOnBean(ExternalDownloadProcessingFacade.class)
 public class ExecuteExternalDownloadService implements ExecuteExternalDownloadUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(ExecuteExternalDownloadService.class);
