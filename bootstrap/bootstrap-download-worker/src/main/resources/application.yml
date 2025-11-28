@@ -9,6 +9,10 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod}
 
+  # Disable web server (SQS listener only, no Tomcat needed)
+  main:
+    web-application-type: none
+
   # Exclude Redisson auto-configuration (use custom RedissonConfig)
   autoconfigure:
     exclude:
@@ -25,9 +29,6 @@ spring:
 redisson:
   enabled: ${REDISSON_ENABLED:true}
 
-server:
-  port: ${SERVER_PORT:8080}
-
 # ===============================================
 # Worker Configuration
 # ===============================================
@@ -40,12 +41,3 @@ logging:
     root: INFO
     com.ryuqq.fileflow: ${LOG_LEVEL:DEBUG}
     io.awspring.cloud.sqs: ${SQS_LOG_LEVEL:INFO}
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: when_authorized
