@@ -36,7 +36,7 @@ module "ecr_web_api" {
   source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecr?ref=main"
 
   name                 = "${var.project_name}-web-api-${var.environment}"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"  # Keep existing state to avoid permission error
   scan_on_push         = true
 
   # Lifecycle Policy
@@ -65,7 +65,7 @@ module "ecr_scheduler" {
   source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecr?ref=main"
 
   name                 = "${var.project_name}-scheduler-${var.environment}"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"  # Keep existing state to avoid permission error
   scan_on_push         = true
 
   # Lifecycle Policy
