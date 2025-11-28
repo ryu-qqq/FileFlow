@@ -250,6 +250,21 @@ module "scheduler_task_role" {
         ]
       })
     }
+    s3-otel-config-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "OtelConfigAccess"
+            Effect = "Allow"
+            Action = [
+              "s3:GetObject"
+            ]
+            Resource = "arn:aws:s3:::connectly-prod/otel-config/*"
+          }
+        ]
+      })
+    }
     adot-amp-access = {
       policy = jsonencode({
         Version = "2012-10-17"
@@ -284,7 +299,8 @@ module "scheduler_task_role" {
               "logs:DescribeLogStreams"
             ]
             Resource = [
-              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel:*"
+              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel:*",
+              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel-collector:*"
             ]
           },
           {
@@ -329,6 +345,7 @@ module "adot_sidecar" {
   app_port                  = 8080
   cluster_name              = data.aws_ecs_cluster.main.cluster_name
   environment               = var.environment
+  config_version            = "20251128"  # Cache busting for OTEL config with OTLP receiver
 }
 
 # ========================================

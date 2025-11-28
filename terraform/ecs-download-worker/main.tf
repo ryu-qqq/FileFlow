@@ -245,8 +245,8 @@ module "download_worker_task_role" {
               "sqs:ChangeMessageVisibility"
             ]
             Resource = [
-              data.aws_sqs_queue.download_queue.arn,
-              data.aws_sqs_queue.download_dlq.arn
+              data.aws_ssm_parameter.external_download_queue_arn.value,
+              "${data.aws_ssm_parameter.external_download_queue_arn.value}-dlq"
             ]
           }
         ]
@@ -267,6 +267,21 @@ module "download_worker_task_role" {
               "arn:aws:s3:::${var.project_name}-*",
               "arn:aws:s3:::${var.project_name}-*/*"
             ]
+          }
+        ]
+      })
+    }
+    s3-otel-config-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "OtelConfigAccess"
+            Effect = "Allow"
+            Action = [
+              "s3:GetObject"
+            ]
+            Resource = "arn:aws:s3:::connectly-prod/otel-config/*"
           }
         ]
       })
@@ -305,7 +320,8 @@ module "download_worker_task_role" {
               "logs:DescribeLogStreams"
             ]
             Resource = [
-              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel:*"
+              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel:*",
+              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel-collector:*"
             ]
           },
           {
@@ -350,6 +366,7 @@ module "adot_sidecar" {
   app_port                  = 8080
   cluster_name              = data.aws_ecs_cluster.main.cluster_name
   environment               = var.environment
+  config_version            = "20251128"  # Cache busting for OTEL config with OTLP receiver
 }
 
 # ========================================
@@ -408,8 +425,12 @@ module "download_worker_service" {
       value = tostring(local.redis_port)
     },
     {
-      name  = "SQS_QUEUE_URL"
-      value = data.aws_sqs_queue.download_queue.url
+      name  = "SQS_EXTERNAL_DOWNLOAD_QUEUE_URL"
+      value = data.aws_ssm_parameter.external_download_queue_url.value
+    },
+    {
+      name  = "SQS_EXTERNAL_DOWNLOAD_DLQ_URL"
+      value = data.aws_ssm_parameter.external_download_dlq_url.value
     }
   ]
 
