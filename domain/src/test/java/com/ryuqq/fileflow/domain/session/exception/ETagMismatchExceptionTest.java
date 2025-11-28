@@ -26,9 +26,9 @@ class ETagMismatchExceptionTest {
 
             // then
             assertThat(exception.getMessage())
-                .contains("업로드된 파일의 ETag가 일치하지 않습니다")
-                .contains("예상: expected-etag-value")
-                .contains("실제: actual-etag-value");
+                    .contains("업로드된 파일의 ETag가 일치하지 않습니다")
+                    .contains("예상: expected-etag-value")
+                    .contains("실제: actual-etag-value");
             assertThat(exception.code()).isEqualTo("ETAG-MISMATCH");
         }
 
@@ -43,8 +43,7 @@ class ETagMismatchExceptionTest {
             ETagMismatchException exception = new ETagMismatchException(expectedETag, actualETag);
 
             // then
-            assertThat(exception.getMessage())
-                .contains("업로드된 파일의 ETag가 일치하지 않습니다");
+            assertThat(exception.getMessage()).contains("업로드된 파일의 ETag가 일치하지 않습니다");
         }
     }
 
@@ -64,9 +63,9 @@ class ETagMismatchExceptionTest {
 
             // then
             assertThat(exception.getMessage())
-                .contains("업로드된 파일의 ETag가 일치하지 않습니다")
-                .contains("예상: expected-etag-string")
-                .contains("실제: actual-etag-string");
+                    .contains("업로드된 파일의 ETag가 일치하지 않습니다")
+                    .contains("예상: expected-etag-string")
+                    .contains("실제: actual-etag-string");
             assertThat(exception.code()).isEqualTo("ETAG-MISMATCH");
         }
 
@@ -82,9 +81,9 @@ class ETagMismatchExceptionTest {
 
             // then
             assertThat(exception.getMessage())
-                .contains("업로드된 파일의 ETag가 일치하지 않습니다")
-                .contains("예상: null")
-                .contains("실제: some-etag");
+                    .contains("업로드된 파일의 ETag가 일치하지 않습니다")
+                    .contains("예상: null")
+                    .contains("실제: some-etag");
         }
     }
 
@@ -92,8 +91,7 @@ class ETagMismatchExceptionTest {
     @DisplayName("DomainException을 상속한다")
     void shouldExtendDomainException() {
         // given
-        ETagMismatchException exception = 
-            new ETagMismatchException("expected", "actual");
+        ETagMismatchException exception = new ETagMismatchException("expected", "actual");
 
         // when & then
         assertThat(exception).isInstanceOf(RuntimeException.class);

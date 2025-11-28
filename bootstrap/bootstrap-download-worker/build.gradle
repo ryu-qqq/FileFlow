@@ -29,6 +29,10 @@ dependencies {
     // Configuration Processor
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
+    // Observability
+    implementation libs.micrometer.prometheus
+    implementation libs.logstash.logback.encoder
+
     // Test Dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

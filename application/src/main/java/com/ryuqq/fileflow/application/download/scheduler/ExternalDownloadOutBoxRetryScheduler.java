@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.download.scheduler;
 
+import com.ryuqq.fileflow.application.common.metrics.SchedulerMetrics;
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadMessage;
 import com.ryuqq.fileflow.application.download.manager.ExternalDownloadOutboxManager;
 import com.ryuqq.fileflow.application.download.port.out.client.SqsPublishPort;
@@ -7,6 +8,7 @@ import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadOu
 import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
+import io.micrometer.core.instrument.Timer;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,22 +47,26 @@ public class ExternalDownloadOutBoxRetryScheduler {
     private static final Logger log =
             LoggerFactory.getLogger(ExternalDownloadOutBoxRetryScheduler.class);
 
+    private static final String JOB_NAME = "outbox-retry";
     private static final int BATCH_SIZE = 100;
 
     private final ExternalDownloadOutboxQueryPort outboxQueryPort;
     private final ExternalDownloadQueryPort downloadQueryPort;
     private final ExternalDownloadOutboxManager outboxManager;
     private final SqsPublishPort sqsPublishPort;
+    private final SchedulerMetrics schedulerMetrics;
 
     public ExternalDownloadOutBoxRetryScheduler(
             ExternalDownloadOutboxQueryPort outboxQueryPort,
             ExternalDownloadQueryPort downloadQueryPort,
             ExternalDownloadOutboxManager outboxManager,
-            SqsPublishPort sqsPublishPort) {
+            SqsPublishPort sqsPublishPort,
+            SchedulerMetrics schedulerMetrics) {
         this.outboxQueryPort = outboxQueryPort;
         this.downloadQueryPort = downloadQueryPort;
         this.outboxManager = outboxManager;
         this.sqsPublishPort = sqsPublishPort;
+        this.schedulerMetrics = schedulerMetrics;
     }
 
     /**
@@ -71,56 +77,68 @@ public class ExternalDownloadOutBoxRetryScheduler {
     @Scheduled(fixedRate = 300000) // 5분
     public void retryUnpublishedOutboxes() {
         log.info("Starting ExternalDownload outbox retry");
+        Timer.Sample sample = schedulerMetrics.startJob(JOB_NAME);
 
         int totalRetried = 0;
         int totalSucceeded = 0;
         int totalFailed = 0;
 
-        List<ExternalDownloadOutbox> unpublishedOutboxes =
-                outboxQueryPort.findUnpublished(BATCH_SIZE);
+        try {
+            List<ExternalDownloadOutbox> unpublishedOutboxes =
+                    outboxQueryPort.findUnpublished(BATCH_SIZE);
 
-        while (!unpublishedOutboxes.isEmpty()) {
-            for (ExternalDownloadOutbox outbox : unpublishedOutboxes) {
-                totalRetried++;
+            while (!unpublishedOutboxes.isEmpty()) {
+                for (ExternalDownloadOutbox outbox : unpublishedOutboxes) {
+                    totalRetried++;
 
-                try {
-                    boolean success = retryPublish(outbox);
+                    try {
+                        boolean success = retryPublish(outbox);
 
-                    if (success) {
-                        outboxManager.markAsPublished(outbox);
-                        totalSucceeded++;
-                        log.debug(
-                                "Successfully retried outbox: externalDownloadId={}",
-                                outbox.getExternalDownloadId().value());
-                    } else {
+                        if (success) {
+                            outboxManager.markAsPublished(outbox);
+                            totalSucceeded++;
+                            log.debug(
+                                    "Successfully retried outbox: externalDownloadId={}",
+                                    outbox.getExternalDownloadId().value());
+                        } else {
+                            totalFailed++;
+                            log.warn(
+                                    "Failed to retry outbox (publish returned false):"
+                                            + " externalDownloadId={}",
+                                    outbox.getExternalDownloadId().value());
+                        }
+                    } catch (Exception e) {
                         totalFailed++;
                         log.warn(
-                                "Failed to retry outbox (publish returned false):"
-                                        + " externalDownloadId={}",
-                                outbox.getExternalDownloadId().value());
+                                "Failed to retry outbox: externalDownloadId={}, error={}",
+                                outbox.getExternalDownloadId().value(),
+                                e.getMessage());
                     }
-                } catch (Exception e) {
-                    totalFailed++;
-                    log.warn(
-                            "Failed to retry outbox: externalDownloadId={}, error={}",
-                            outbox.getExternalDownloadId().value(),
-                            e.getMessage());
                 }
+
+                if (unpublishedOutboxes.size() < BATCH_SIZE) {
+                    break;
+                }
+
+                unpublishedOutboxes = outboxQueryPort.findUnpublished(BATCH_SIZE);
             }
 
-            if (unpublishedOutboxes.size() < BATCH_SIZE) {
-                break;
-            }
+            // 메트릭 기록: 처리된 항목 수
+            schedulerMetrics.recordJobItemsProcessed(JOB_NAME, totalRetried);
+            schedulerMetrics.recordJobSuccess(JOB_NAME, sample);
 
-            unpublishedOutboxes = outboxQueryPort.findUnpublished(BATCH_SIZE);
+            log.info(
+                    "ExternalDownload outbox retry completed."
+                            + " Retried: {}, Succeeded: {}, Failed: {}",
+                    totalRetried,
+                    totalSucceeded,
+                    totalFailed);
+
+        } catch (Exception e) {
+            schedulerMetrics.recordJobFailure(JOB_NAME, sample, e.getClass().getSimpleName());
+            log.error("ExternalDownload outbox retry failed", e);
+            throw e;
         }
-
-        log.info(
-                "ExternalDownload outbox retry completed."
-                        + " Retried: {}, Succeeded: {}, Failed: {}",
-                totalRetried,
-                totalSucceeded,
-                totalFailed);
     }
 
     private boolean retryPublish(ExternalDownloadOutbox outbox) {

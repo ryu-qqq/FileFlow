@@ -1,9 +1,11 @@
 package com.ryuqq.fileflow.application.session.scheduler;
 
+import com.ryuqq.fileflow.application.common.metrics.SchedulerMetrics;
 import com.ryuqq.fileflow.application.session.dto.command.ExpireUploadSessionCommand;
 import com.ryuqq.fileflow.application.session.port.in.command.ExpireUploadSessionUseCase;
 import com.ryuqq.fileflow.application.session.port.out.query.FindUploadSessionQueryPort;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
+import io.micrometer.core.instrument.Timer;
 import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
@@ -39,16 +41,20 @@ public class SingleUploadSessionExpirationScheduler {
     private static final Logger log =
             LoggerFactory.getLogger(SingleUploadSessionExpirationScheduler.class);
 
+    private static final String JOB_NAME = "single-session-expiration";
     private static final int BATCH_SIZE = 100;
 
     private final FindUploadSessionQueryPort findUploadSessionQueryPort;
     private final ExpireUploadSessionUseCase expireUploadSessionUseCase;
+    private final SchedulerMetrics schedulerMetrics;
 
     public SingleUploadSessionExpirationScheduler(
             FindUploadSessionQueryPort findUploadSessionQueryPort,
-            ExpireUploadSessionUseCase expireUploadSessionUseCase) {
+            ExpireUploadSessionUseCase expireUploadSessionUseCase,
+            SchedulerMetrics schedulerMetrics) {
         this.findUploadSessionQueryPort = findUploadSessionQueryPort;
         this.expireUploadSessionUseCase = expireUploadSessionUseCase;
+        this.schedulerMetrics = schedulerMetrics;
     }
 
     /**
@@ -59,41 +65,53 @@ public class SingleUploadSessionExpirationScheduler {
     @Scheduled(fixedRate = 3600000) // 1시간
     public void expireStalesSingleUploadSessions() {
         log.info("Starting single upload session expiration cleanup");
+        Timer.Sample sample = schedulerMetrics.startJob(JOB_NAME);
 
         Instant now = Instant.now();
         int totalExpired = 0;
         int totalFailed = 0;
 
-        List<SingleUploadSession> expiredSessions =
-                findUploadSessionQueryPort.findExpiredSingleUploads(now, BATCH_SIZE);
+        try {
+            List<SingleUploadSession> expiredSessions =
+                    findUploadSessionQueryPort.findExpiredSingleUploads(now, BATCH_SIZE);
 
-        while (!expiredSessions.isEmpty()) {
-            for (SingleUploadSession session : expiredSessions) {
-                try {
-                    ExpireUploadSessionCommand command =
-                            ExpireUploadSessionCommand.of(session.getIdValue());
-                    expireUploadSessionUseCase.execute(command);
-                    totalExpired++;
-                    log.debug("Expired single upload session: {}", session.getIdValue());
-                } catch (Exception e) {
-                    totalFailed++;
-                    log.warn(
-                            "Failed to expire single upload session: {}. Reason: {}",
-                            session.getIdValue(),
-                            e.getMessage());
+            while (!expiredSessions.isEmpty()) {
+                for (SingleUploadSession session : expiredSessions) {
+                    try {
+                        ExpireUploadSessionCommand command =
+                                ExpireUploadSessionCommand.of(session.getIdValue());
+                        expireUploadSessionUseCase.execute(command);
+                        totalExpired++;
+                        log.debug("Expired single upload session: {}", session.getIdValue());
+                    } catch (Exception e) {
+                        totalFailed++;
+                        log.warn(
+                                "Failed to expire single upload session: {}. Reason: {}",
+                                session.getIdValue(),
+                                e.getMessage());
+                    }
                 }
+
+                if (expiredSessions.size() < BATCH_SIZE) {
+                    break;
+                }
+
+                expiredSessions =
+                        findUploadSessionQueryPort.findExpiredSingleUploads(now, BATCH_SIZE);
             }
 
-            if (expiredSessions.size() < BATCH_SIZE) {
-                break;
-            }
+            schedulerMetrics.recordJobItemsProcessed(JOB_NAME, totalExpired);
+            schedulerMetrics.recordJobSuccess(JOB_NAME, sample);
 
-            expiredSessions = findUploadSessionQueryPort.findExpiredSingleUploads(now, BATCH_SIZE);
+            log.info(
+                    "Single upload session expiration cleanup completed. Expired: {}, Failed: {}",
+                    totalExpired,
+                    totalFailed);
+
+        } catch (Exception e) {
+            schedulerMetrics.recordJobFailure(JOB_NAME, sample, e.getClass().getSimpleName());
+            log.error("Single upload session expiration cleanup failed", e);
+            throw e;
         }
-
-        log.info(
-                "Single upload session expiration cleanup completed. Expired: {}, Failed: {}",
-                totalExpired,
-                totalFailed);
     }
 }
