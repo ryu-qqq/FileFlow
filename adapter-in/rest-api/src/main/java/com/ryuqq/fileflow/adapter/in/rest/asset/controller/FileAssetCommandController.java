@@ -56,7 +56,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("${api.endpoints.base-v1}/file-assets")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.file-asset.base}")
 @Validated
 public class FileAssetCommandController {
 
@@ -93,7 +93,7 @@ public class FileAssetCommandController {
      * @param request 삭제 요청 (삭제 사유 선택적)
      * @return 삭제 결과 (200 OK)
      */
-    @PatchMapping("/{id}/delete")
+    @PatchMapping("${api.endpoints.file-asset.delete}")
     public ResponseEntity<ApiResponse<DeleteFileAssetApiResponse>> deleteFileAsset(
             @PathVariable @NotBlank String id,
             @Valid @RequestBody(required = false) DeleteFileAssetApiRequest request) {
@@ -122,7 +122,7 @@ public class FileAssetCommandController {
      * @param request URL 생성 요청 (유효 기간 설정 선택적)
      * @return Download URL 정보 (200 OK)
      */
-    @PostMapping("/{id}/download-url")
+    @PostMapping("${api.endpoints.file-asset.download-url}")
     public ResponseEntity<ApiResponse<DownloadUrlApiResponse>> generateDownloadUrl(
             @PathVariable @NotBlank String id,
             @Valid @RequestBody(required = false) GenerateDownloadUrlApiRequest request) {
@@ -151,7 +151,7 @@ public class FileAssetCommandController {
      * @param request 일괄 URL 생성 요청
      * @return Download URL 목록 및 실패 정보 (200 OK)
      */
-    @PostMapping("/batch-download-url")
+    @PostMapping("${api.endpoints.file-asset.batch-download-url}")
     public ResponseEntity<ApiResponse<BatchDownloadUrlApiResponse>> batchGenerateDownloadUrl(
             @Valid @RequestBody BatchGenerateDownloadUrlApiRequest request) {
 

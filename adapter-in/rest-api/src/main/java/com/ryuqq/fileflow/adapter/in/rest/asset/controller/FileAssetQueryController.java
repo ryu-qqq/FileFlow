@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("${api.endpoints.base-v1}/file-assets")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.file-asset.base}")
 @Validated
 public class FileAssetQueryController {
 
@@ -69,7 +69,7 @@ public class FileAssetQueryController {
      * @param id 파일 자산 ID
      * @return 파일 자산 상세 정보 (200 OK)
      */
-    @GetMapping("/{id}")
+    @GetMapping("${api.endpoints.file-asset.by-id}")
     public ResponseEntity<ApiResponse<FileAssetApiResponse>> getFileAsset(
             @PathVariable @NotBlank String id) {
 

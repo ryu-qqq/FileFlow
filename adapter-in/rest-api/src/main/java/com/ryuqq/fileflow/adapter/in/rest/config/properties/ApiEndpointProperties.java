@@ -8,32 +8,31 @@ import org.springframework.stereotype.Component;
  *
  * <p>REST API 엔드포인트 경로를 application.yml에서 중앙 관리합니다.
  *
- * <p><strong>설정 예시 (application.yml):</strong>
+ * <p><strong>설정 예시 (rest-api.yml):</strong>
  *
  * <pre>{@code
  * api:
  *   endpoints:
  *     base-v1: /api/v1
- *     example:
- *       base: /examples
- *       by-id: /{id}
- *       admin-search: /admin/examples/search
+ *     upload-session:
+ *       base: /upload-sessions
+ *       single-init: /single
+ *       single-complete: /{sessionId}/single/complete
  * }</pre>
  *
  * <p><strong>사용 방법:</strong>
  *
  * <pre>{@code
  * @RestController
- * @RequestMapping("${api.endpoints.base-v1}")
- * public class ExampleController {
- *     private final ApiEndpointProperties endpoints;
+ * @RequestMapping("${api.endpoints.base-v1}${api.endpoints.upload-session.base}")
+ * public class UploadSessionController {
  *
- *     @GetMapping("${api.endpoints.example.base}")
- *     public ResponseEntity<?> searchExamples() { ... }
+ *     @PostMapping("${api.endpoints.upload-session.single-init}")
+ *     public ResponseEntity<?> initSingleUpload() { ... }
  * }
  * }</pre>
  *
- * @author windsurf
+ * @author development-team
  * @since 1.0.0
  */
 @Component
@@ -43,91 +42,40 @@ public class ApiEndpointProperties {
     /** API v1 베이스 경로 (기본값: /api/v1) */
     private String baseV1 = "/api/v1";
 
-    /** Example 도메인 엔드포인트 설정 */
-    private ExampleEndpoints example = new ExampleEndpoints();
-
     /** Upload Session 도메인 엔드포인트 설정 */
     private UploadSessionEndpoints uploadSession = new UploadSessionEndpoints();
 
-    /** Example 도메인 엔드포인트 경로 */
-    public static class ExampleEndpoints {
-        /** Example 기본 경로 (기본값: /examples) */
-        private String base = "/examples";
+    /** File Asset 도메인 엔드포인트 설정 */
+    private FileAssetEndpoints fileAsset = new FileAssetEndpoints();
 
-        /** Example ID 조회 경로 (기본값: /{id}) */
-        private String byId = "/{id}";
-
-        /** Example 관리자 검색 경로 (기본값: /admin/examples/search) */
-        private String adminSearch = "/admin/examples/search";
-
-        public String getBase() {
-            return base;
-        }
-
-        public void setBase(String base) {
-            this.base = base;
-        }
-
-        public String getById() {
-            return byId;
-        }
-
-        public void setById(String byId) {
-            this.byId = byId;
-        }
-
-        public String getAdminSearch() {
-            return adminSearch;
-        }
-
-        public void setAdminSearch(String adminSearch) {
-            this.adminSearch = adminSearch;
-        }
-    }
-
-    public String getBaseV1() {
-        return baseV1;
-    }
-
-    public void setBaseV1(String baseV1) {
-        this.baseV1 = baseV1;
-    }
-
-    public ExampleEndpoints getExample() {
-        return example;
-    }
-
-    public void setExample(ExampleEndpoints example) {
-        this.example = example;
-    }
-
-    public UploadSessionEndpoints getUploadSession() {
-        return uploadSession;
-    }
-
-    public void setUploadSession(UploadSessionEndpoints uploadSession) {
-        this.uploadSession = uploadSession;
-    }
+    /** External Download 도메인 엔드포인트 설정 */
+    private ExternalDownloadEndpoints externalDownload = new ExternalDownloadEndpoints();
 
     /** Upload Session 도메인 엔드포인트 경로 */
     public static class UploadSessionEndpoints {
         /** Upload Session 기본 경로 (기본값: /upload-sessions) */
         private String base = "/upload-sessions";
 
-        /** 단일 업로드 경로 (기본값: /single) */
-        private String single = "/single";
+        /** 단일 업로드 초기화 경로 (기본값: /single) */
+        private String singleInit = "/single";
 
-        /** Multipart 업로드 경로 (기본값: /multipart) */
-        private String multipart = "/multipart";
+        /** 단일 업로드 완료 경로 (기본값: /{sessionId}/single/complete) */
+        private String singleComplete = "/{sessionId}/single/complete";
 
-        /** 완료 경로 (기본값: /complete) */
-        private String complete = "/complete";
+        /** Multipart 업로드 초기화 경로 (기본값: /multipart) */
+        private String multipartInit = "/multipart";
 
-        /** Parts 경로 (기본값: /parts) */
-        private String parts = "/parts";
+        /** Multipart 업로드 완료 경로 (기본값: /{sessionId}/multipart/complete) */
+        private String multipartComplete = "/{sessionId}/multipart/complete";
 
-        /** 취소 경로 (기본값: /cancel) */
-        private String cancel = "/cancel";
+        /** Part 업로드 완료 경로 (기본값: /{sessionId}/parts) */
+        private String parts = "/{sessionId}/parts";
+
+        /** 세션 취소 경로 (기본값: /{sessionId}/cancel) */
+        private String cancel = "/{sessionId}/cancel";
+
+        /** 세션 ID 조회 경로 (기본값: /{sessionId}) */
+        private String byId = "/{sessionId}";
 
         public String getBase() {
             return base;
@@ -137,28 +85,36 @@ public class ApiEndpointProperties {
             this.base = base;
         }
 
-        public String getSingle() {
-            return single;
+        public String getSingleInit() {
+            return singleInit;
         }
 
-        public void setSingle(String single) {
-            this.single = single;
+        public void setSingleInit(String singleInit) {
+            this.singleInit = singleInit;
         }
 
-        public String getMultipart() {
-            return multipart;
+        public String getSingleComplete() {
+            return singleComplete;
         }
 
-        public void setMultipart(String multipart) {
-            this.multipart = multipart;
+        public void setSingleComplete(String singleComplete) {
+            this.singleComplete = singleComplete;
         }
 
-        public String getComplete() {
-            return complete;
+        public String getMultipartInit() {
+            return multipartInit;
         }
 
-        public void setComplete(String complete) {
-            this.complete = complete;
+        public void setMultipartInit(String multipartInit) {
+            this.multipartInit = multipartInit;
+        }
+
+        public String getMultipartComplete() {
+            return multipartComplete;
+        }
+
+        public void setMultipartComplete(String multipartComplete) {
+            this.multipartComplete = multipartComplete;
         }
 
         public String getParts() {
@@ -176,5 +132,128 @@ public class ApiEndpointProperties {
         public void setCancel(String cancel) {
             this.cancel = cancel;
         }
+
+        public String getById() {
+            return byId;
+        }
+
+        public void setById(String byId) {
+            this.byId = byId;
+        }
+    }
+
+    /** File Asset 도메인 엔드포인트 경로 */
+    public static class FileAssetEndpoints {
+        /** File Asset 기본 경로 (기본값: /file-assets) */
+        private String base = "/file-assets";
+
+        /** ID 조회 경로 (기본값: /{id}) */
+        private String byId = "/{id}";
+
+        /** 삭제 경로 (기본값: /{id}/delete) */
+        private String delete = "/{id}/delete";
+
+        /** 다운로드 URL 생성 경로 (기본값: /{id}/download-url) */
+        private String downloadUrl = "/{id}/download-url";
+
+        /** 일괄 다운로드 URL 생성 경로 (기본값: /batch-download-url) */
+        private String batchDownloadUrl = "/batch-download-url";
+
+        public String getBase() {
+            return base;
+        }
+
+        public void setBase(String base) {
+            this.base = base;
+        }
+
+        public String getById() {
+            return byId;
+        }
+
+        public void setById(String byId) {
+            this.byId = byId;
+        }
+
+        public String getDelete() {
+            return delete;
+        }
+
+        public void setDelete(String delete) {
+            this.delete = delete;
+        }
+
+        public String getDownloadUrl() {
+            return downloadUrl;
+        }
+
+        public void setDownloadUrl(String downloadUrl) {
+            this.downloadUrl = downloadUrl;
+        }
+
+        public String getBatchDownloadUrl() {
+            return batchDownloadUrl;
+        }
+
+        public void setBatchDownloadUrl(String batchDownloadUrl) {
+            this.batchDownloadUrl = batchDownloadUrl;
+        }
+    }
+
+    /** External Download 도메인 엔드포인트 경로 */
+    public static class ExternalDownloadEndpoints {
+        /** External Download 기본 경로 (기본값: /external-downloads) */
+        private String base = "/external-downloads";
+
+        /** ID 조회 경로 (기본값: /{id}) */
+        private String byId = "/{id}";
+
+        public String getBase() {
+            return base;
+        }
+
+        public void setBase(String base) {
+            this.base = base;
+        }
+
+        public String getById() {
+            return byId;
+        }
+
+        public void setById(String byId) {
+            this.byId = byId;
+        }
+    }
+
+    public String getBaseV1() {
+        return baseV1;
+    }
+
+    public void setBaseV1(String baseV1) {
+        this.baseV1 = baseV1;
+    }
+
+    public UploadSessionEndpoints getUploadSession() {
+        return uploadSession;
+    }
+
+    public void setUploadSession(UploadSessionEndpoints uploadSession) {
+        this.uploadSession = uploadSession;
+    }
+
+    public FileAssetEndpoints getFileAsset() {
+        return fileAsset;
+    }
+
+    public void setFileAsset(FileAssetEndpoints fileAsset) {
+        this.fileAsset = fileAsset;
+    }
+
+    public ExternalDownloadEndpoints getExternalDownload() {
+        return externalDownload;
+    }
+
+    public void setExternalDownload(ExternalDownloadEndpoints externalDownload) {
+        this.externalDownload = externalDownload;
     }
 }

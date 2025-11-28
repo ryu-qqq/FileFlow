@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("${api.endpoints.base-v1}/upload-sessions")
+@RequestMapping("${api.endpoints.base-v1}${api.endpoints.upload-session.base}")
 @Validated
 public class UploadSessionQueryController {
 
@@ -72,7 +72,7 @@ public class UploadSessionQueryController {
      * @param sessionId 세션 ID
      * @return 업로드 세션 상세 정보 (200 OK)
      */
-    @GetMapping("/{sessionId}")
+    @GetMapping("${api.endpoints.upload-session.by-id}")
     public ResponseEntity<ApiResponse<UploadSessionDetailApiResponse>> getUploadSession(
             @PathVariable @NotBlank String sessionId) {
 
