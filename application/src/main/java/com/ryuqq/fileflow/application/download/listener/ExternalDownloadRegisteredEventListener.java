@@ -8,6 +8,7 @@ import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -26,8 +27,11 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *   <li>발행 성공 시 Outbox 상태 업데이트 (markAsPublished)
  *   <li>발행 실패 시 로그 기록 (재시도 스케줄러에서 처리)
  * </ol>
+ *
+ * <p><strong>활성화 조건</strong>: {@code sqs.publish.enabled=true}
  */
 @Component
+@ConditionalOnProperty(name = "sqs.publish.enabled", havingValue = "true")
 public class ExternalDownloadRegisteredEventListener {
 
     private static final Logger log =
