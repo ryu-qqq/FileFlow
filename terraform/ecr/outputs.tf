@@ -22,7 +22,4 @@ output "scheduler_repository_arn" {
   value       = module.ecr_scheduler.repository_arn
 }
 
-output "kms_key_arn" {
-  description = "KMS key ARN for ECR encryption"
-  value       = aws_kms_key.ecr.arn
-}
+# KMS key output removed - encryption disabled to prevent ECR replacement
