@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.application.download.manager;
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadMessage;
 import com.ryuqq.fileflow.application.download.port.out.client.SqsPublishPort;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,8 +17,11 @@ import org.springframework.stereotype.Component;
  *   <li>도메인 이벤트로부터 SQS 메시지 생성
  *   <li>SQS 발행 포트를 통한 메시지 발행
  * </ul>
+ *
+ * <p><strong>활성화 조건</strong>: {@code sqs.publish.enabled=true}
  */
 @Component
+@ConditionalOnProperty(name = "sqs.publish.enabled", havingValue = "true")
 public class ExternalDownloadMessageManager {
 
     private final SqsPublishPort sqsPublishPort;
