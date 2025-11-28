@@ -32,10 +32,9 @@ ENV OTEL_AGENT_OPTS="-javaagent:/app/aws-opentelemetry-agent.jar"
 # OpenTelemetry configuration (can be overridden by ECS Task Definition)
 ENV OTEL_SERVICE_NAME="fileflow-scheduler"
 ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
-# Disable OTLP exporters until OTel Collector is deployed
-# TODO: Enable when OTel Collector sidecar is added to ECS Task Definition
-ENV OTEL_METRICS_EXPORTER="none"
-ENV OTEL_TRACES_EXPORTER="none"
+# OTLP Exporters - ECS Task에 otel-collector sidecar 배포됨
+ENV OTEL_METRICS_EXPORTER="otlp"
+ENV OTEL_TRACES_EXPORTER="otlp"
 ENV OTEL_LOGS_EXPORTER="none"
 ENV OTEL_PROPAGATORS="xray,tracecontext,baggage"
 ENV OTEL_RESOURCE_ATTRIBUTES="service.namespace=fileflow"
