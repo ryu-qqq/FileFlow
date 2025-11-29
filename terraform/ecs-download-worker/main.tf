@@ -363,7 +363,7 @@ module "adot_sidecar" {
   amp_workspace_arn         = local.amp_workspace_arn
   amp_remote_write_endpoint = local.amp_remote_write_url
   log_group_name            = module.download_worker_logs.log_group_name
-  app_port                  = 8080
+  app_port                  = 8082  # Worker management port
   cluster_name              = data.aws_ecs_cluster.main.cluster_name
   environment               = var.environment
   config_version            = "20251128"  # Cache busting for OTEL config with OTLP receiver
@@ -442,7 +442,8 @@ module "download_worker_service" {
     }
   ]
 
-  # Health Check (Spring Boot Actuator)
+  # Health Check (Spring Boot Actuator on management port 8082)
+  # Management server runs on separate port for health checks and metrics
   health_check_command      = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
   health_check_start_period = 180 # Worker needs more time to initialize Redis, SQS, S3 connections
 
