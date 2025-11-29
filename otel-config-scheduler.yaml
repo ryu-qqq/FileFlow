@@ -46,7 +46,7 @@ processors:
 
   memory_limiter:
     check_interval: 5s
-    limit_mib: 410
+    limit_mib: 512
     spike_limit_mib: 128
 
   resource:
@@ -94,6 +94,9 @@ exporters:
       initial_interval: 5s
       max_interval: 30s
       max_elapsed_time: 300s
+
+  debug:
+    verbosity: basic
 
 extensions:
   sigv4auth:
