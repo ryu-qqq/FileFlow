@@ -8,7 +8,8 @@ version: 3
 
 automerge: false
 delete_source_branch_on_merge: false
-parallel_plan: true
+# Disable parallel plan to prevent plugin cache conflicts
+parallel_plan: false
 parallel_apply: false
 
 projects:
@@ -16,12 +17,44 @@ projects:
   # Container Registry
   # ============================================================================
 
-  # ECR Repository for Docker images
-  - name: ecr-prod
+  # ECR repositories for web-api, scheduler, and download-worker
+  - name: fileflow-ecr-prod
     dir: terraform/ecr
     workspace: default
     autoplan:
-      when_modified: ["*.tf", "*.tfvars"]
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      enabled: true
+
+  # ============================================================================
+  # Core Infrastructure
+  # ============================================================================
+
+  # ECS Cluster (dedicated for fileflow)
+  - name: fileflow-ecs-cluster-prod
+    dir: terraform/ecs-cluster
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      enabled: true
+
+  # ElastiCache (Redis)
+  - name: fileflow-elasticache-prod
+    dir: terraform/elasticache
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      enabled: true
+
+  # ============================================================================
+  # Queue
+  # ============================================================================
+
+  # SQS for asynchronous download tasks
+  - name: fileflow-sqs-prod
+    dir: terraform/sqs
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
       enabled: true
 
   # ============================================================================
@@ -29,9 +62,37 @@ projects:
   # ============================================================================
 
   # S3 Bucket for file uploads
-  - name: s3-prod
+  - name: fileflow-s3-prod
     dir: terraform/s3
     workspace: default
     autoplan:
-      when_modified: ["*.tf", "*.tfvars"]
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      enabled: true
+
+  # ============================================================================
+  # Application Infrastructure
+  # ============================================================================
+
+  # ECS Service for web-api (ALB + Auto Scaling)
+  - name: fileflow-ecs-web-api-prod
+    dir: terraform/ecs-web-api
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      enabled: true
+
+  # ECS Service for scheduler (No ALB, desired=1)
+  - name: fileflow-ecs-scheduler-prod
+    dir: terraform/ecs-scheduler
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
+      enabled: true
+
+  # ECS Service for download-worker (SQS-based, No ALB)
+  - name: fileflow-ecs-download-worker-prod
+    dir: terraform/ecs-download-worker
+    workspace: default
+    autoplan:
+      when_modified: ["*.tf", "*.tfvars", "../*.tf"]
       enabled: true

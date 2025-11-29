@@ -397,6 +397,33 @@ module "web_api_task_role" {
             Resource = "*"
           },
           {
+            Sid    = "CloudWatchLogsAccess"
+            Effect = "Allow"
+            Action = [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:DescribeLogStreams"
+            ]
+            Resource = [
+              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel:*",
+              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/fileflow/otel-collector:*"
+            ]
+          },
+          {
+            Sid    = "CloudWatchMetricsAccess"
+            Effect = "Allow"
+            Action = [
+              "cloudwatch:PutMetricData"
+            ]
+            Resource = "*"
+            Condition = {
+              StringEquals = {
+                "cloudwatch:namespace" = "FileFlow"
+              }
+            }
+          },
+          {
             Sid    = "S3ConfigAccess"
             Effect = "Allow"
             Action = [
@@ -433,6 +460,7 @@ module "adot_sidecar" {
   app_port                  = 8080
   cluster_name              = data.aws_ecs_cluster.main.cluster_name
   environment               = var.environment
+  config_version            = "20251128"  # Cache busting for OTEL config with OTLP receiver
 }
 
 # ========================================

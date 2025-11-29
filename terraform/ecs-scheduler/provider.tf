@@ -58,13 +58,13 @@ variable "aws_region" {
 variable "scheduler_cpu" {
   description = "CPU units for scheduler task"
   type        = number
-  default     = 256
+  default     = 512  # Increased from 256 to prevent OOM
 }
 
 variable "scheduler_memory" {
   description = "Memory for scheduler task"
   type        = number
-  default     = 512
+  default     = 1024  # Increased from 512 to prevent OOM
 }
 
 variable "image_tag" {
