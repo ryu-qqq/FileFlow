@@ -70,7 +70,7 @@ variable "scheduler_memory" {
 variable "image_tag" {
   description = "Docker image tag to deploy (CI/CD sets this value)"
   type        = string
-  default     = "scheduler-82-377de0d"
+  default     = "scheduler-92-f08d571"
 }
 
 # ========================================
