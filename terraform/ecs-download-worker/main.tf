@@ -442,6 +442,10 @@ module "download_worker_service" {
     }
   ]
 
+  # Health Check (Spring Boot Actuator)
+  health_check_command      = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
+  health_check_start_period = 180 # Worker needs more time to initialize Redis, SQS, S3 connections
+
   # Custom Log Configuration (using KMS-encrypted log group)
   log_configuration = {
     log_driver = "awslogs"
