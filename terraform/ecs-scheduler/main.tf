@@ -413,6 +413,10 @@ module "scheduler_service" {
     }
   ]
 
+  # Health Check (Spring Boot Actuator)
+  health_check_command      = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+  health_check_start_period = 180 # Scheduler needs more time to initialize Redis, DB connections
+
   # Custom Log Configuration (using KMS-encrypted log group)
   log_configuration = {
     log_driver = "awslogs"
