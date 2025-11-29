@@ -33,19 +33,18 @@ ENV OTEL_AGENT_OPTS="-javaagent:/app/aws-opentelemetry-agent.jar"
 ENV OTEL_SERVICE_NAME="fileflow-scheduler"
 ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 ENV OTEL_EXPORTER_OTLP_PROTOCOL="grpc"
-# OTLP Exporters - ECS Task에 otel-collector sidecar 배포됨
-ENV OTEL_METRICS_EXPORTER="otlp"
+ENV OTEL_EXPORTER_OTLP_TIMEOUT="10000"
+ENV OTEL_EXPERIMENTAL_EXPORTER_OTLP_RETRY_ENABLED="true"
+# Metrics: ADOT Collector가 Prometheus로 PULL (중복 방지)
+ENV OTEL_METRICS_EXPORTER="none"
+# Traces: Java Agent가 OTLP로 PUSH
 ENV OTEL_TRACES_EXPORTER="otlp"
 ENV OTEL_LOGS_EXPORTER="none"
 ENV OTEL_PROPAGATORS="xray,tracecontext,baggage"
-ENV OTEL_RESOURCE_ATTRIBUTES="service.namespace=fileflow"
+ENV OTEL_RESOURCE_ATTRIBUTES="service.namespace=fileflow,deployment.environment=prod"
 
 # Expose management port
 EXPOSE 8081
-
-# Health check (management endpoint only)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1
 
 # Run the application with OTel agent
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS $OTEL_AGENT_OPTS -jar app.jar"]
