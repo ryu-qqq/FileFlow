@@ -33,12 +33,15 @@ ENV OTEL_AGENT_OPTS="-javaagent:/app/aws-opentelemetry-agent.jar"
 ENV OTEL_SERVICE_NAME="fileflow-web-api"
 ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 ENV OTEL_EXPORTER_OTLP_PROTOCOL="grpc"
-# OTLP Exporters - ECS Task에 otel-collector sidecar 배포됨
-ENV OTEL_METRICS_EXPORTER="otlp"
+ENV OTEL_EXPORTER_OTLP_TIMEOUT="10000"
+ENV OTEL_EXPERIMENTAL_EXPORTER_OTLP_RETRY_ENABLED="true"
+# Metrics: ADOT Collector가 Prometheus로 PULL (중복 방지)
+ENV OTEL_METRICS_EXPORTER="none"
+# Traces: Java Agent가 OTLP로 PUSH
 ENV OTEL_TRACES_EXPORTER="otlp"
 ENV OTEL_LOGS_EXPORTER="none"
 ENV OTEL_PROPAGATORS="xray,tracecontext,baggage"
-ENV OTEL_RESOURCE_ATTRIBUTES="service.namespace=fileflow"
+ENV OTEL_RESOURCE_ATTRIBUTES="service.namespace=fileflow,deployment.environment=prod"
 
 # Expose port
 EXPOSE 8080
