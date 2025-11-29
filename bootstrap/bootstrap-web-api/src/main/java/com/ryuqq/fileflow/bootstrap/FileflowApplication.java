@@ -8,7 +8,11 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @SpringBootApplication(
         scanBasePackages = "com.ryuqq.fileflow",
         exclude = {UserDetailsServiceAutoConfiguration.class})
-@ConfigurationPropertiesScan(basePackages = "com.ryuqq.fileflow")
+@ConfigurationPropertiesScan(basePackages = {
+        "com.ryuqq.fileflow.adapter.in.rest.config.properties",
+        "com.ryuqq.fileflow.adapter.out.persistence.config.properties",
+        "com.ryuqq.fileflow.adapter.out.aws.sqs.config"
+})
 public class FileflowApplication {
 
     public static void main(String[] args) {

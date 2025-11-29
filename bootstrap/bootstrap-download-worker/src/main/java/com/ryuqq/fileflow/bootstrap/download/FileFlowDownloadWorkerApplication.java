@@ -26,7 +26,10 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
  * </ul>
  */
 @SpringBootApplication(scanBasePackages = "com.ryuqq.fileflow")
-@ConfigurationPropertiesScan(basePackages = "com.ryuqq.fileflow")
+@ConfigurationPropertiesScan(basePackages = {
+        "com.ryuqq.fileflow.adapter.in.sqs.config",
+        "com.ryuqq.fileflow.adapter.out.persistence.config.properties"
+})
 public class FileFlowDownloadWorkerApplication {
 
     public static void main(String[] args) {
