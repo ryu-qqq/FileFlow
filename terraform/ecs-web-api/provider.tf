@@ -76,7 +76,7 @@ variable "web_api_desired_count" {
 variable "image_tag" {
   description = "Docker image tag to deploy (CI/CD sets this value)"
   type        = string
-  default     = "web-api-82-377de0d"
+  default     = "web-api-92-f08d571"
 }
 
 # ========================================
