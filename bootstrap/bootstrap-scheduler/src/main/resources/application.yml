@@ -9,6 +9,10 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod}
 
+  # Disable main web server but keep management endpoints
+  main:
+    web-application-type: none
+
   # Exclude Redisson auto-configuration (use custom RedissonConfig)
   autoconfigure:
     exclude:
@@ -25,9 +29,6 @@ spring:
 redisson:
   enabled: ${REDISSON_ENABLED:true}
 
-server:
-  port: ${SERVER_PORT:8081}
-
 # ===============================================
 # Scheduler Configuration
 # ===============================================
@@ -43,6 +44,11 @@ logging:
     com.ryuqq.fileflow: ${LOG_LEVEL:DEBUG}
 
 management:
+  # Run management server on separate port (8081)
+  # This allows health checks and metrics without main application endpoints
+  server:
+    port: ${SERVER_PORT:8081}
+
   endpoints:
     web:
       exposure:

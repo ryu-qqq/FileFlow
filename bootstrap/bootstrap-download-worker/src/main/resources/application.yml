@@ -9,7 +9,9 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod}
 
-  # Disable web server (SQS listener only, no Tomcat needed)
+  # Disable main web server but keep management endpoints
+  # web-application-type: none disables main web server only
+  # Management server continues to run on separate port
   main:
     web-application-type: none
 
@@ -43,6 +45,11 @@ logging:
     io.awspring.cloud.sqs: ${SQS_LOG_LEVEL:INFO}
 
 management:
+  # Run management server on separate port (8082)
+  # This allows health checks and metrics without main application endpoints
+  server:
+    port: 8082
+
   endpoints:
     web:
       exposure:
