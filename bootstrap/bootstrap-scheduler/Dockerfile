@@ -46,9 +46,5 @@ ENV OTEL_RESOURCE_ATTRIBUTES="service.namespace=fileflow,deployment.environment=
 # Expose management port
 EXPOSE 8081
 
-# Health check (management endpoint only)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1
-
 # Run the application with OTel agent
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS $OTEL_AGENT_OPTS -jar app.jar"]
