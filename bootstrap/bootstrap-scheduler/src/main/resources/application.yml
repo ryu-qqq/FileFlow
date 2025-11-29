@@ -48,7 +48,6 @@ management:
   # This allows health checks and metrics without main application endpoints
   server:
     port: ${SERVER_PORT:8081}
-    shutdown: graceful
 
   endpoints:
     web:
