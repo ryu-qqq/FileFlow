@@ -160,11 +160,11 @@ module "ecs_security_group" {
 
   custom_ingress_rules = [
     {
-      from_port       = 8080
-      to_port         = 8080
-      protocol        = "tcp"
-      security_groups = [aws_security_group.alb.id]
-      description     = "From ALB only"
+      from_port                 = 8080
+      to_port                   = 8080
+      protocol                  = "tcp"
+      source_security_group_id  = aws_security_group.alb.id
+      description               = "From ALB only"
     }
   ]
 
