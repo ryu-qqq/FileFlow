@@ -76,7 +76,7 @@ variable "worker_desired_count" {
 variable "image_tag" {
   description = "Docker image tag to deploy (CI/CD sets this value)"
   type        = string
-  default     = "download-worker-82-377de0d"
+  default     = "download-worker-92-f08d571"
 }
 
 # ========================================
