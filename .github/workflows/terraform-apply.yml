@@ -1,13 +1,7 @@
 name: Terraform Apply
 
 on:
-  workflow_dispatch:  # 수동 트리거 허용
-  push:
-    branches:
-      - main
-    paths:
-      - 'terraform/**'
-      - '.github/workflows/terraform-*.yml'
+  workflow_dispatch:  # 수동 트리거만 허용 (Atlantis가 PR 기반 IaC 변경 담당)
 
 permissions:
   contents: read
