@@ -25,7 +25,16 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
  *   <li>com.ryuqq.fileflow - 전체 패키지 스캔
  * </ul>
  */
-@SpringBootApplication(scanBasePackages = "com.ryuqq.fileflow")
+@SpringBootApplication(
+        scanBasePackages = {
+                "com.ryuqq.fileflow.bootstrap",
+                "com.ryuqq.fileflow.adapter.in.sqs",
+                "com.ryuqq.fileflow.adapter.out.persistence",
+                "com.ryuqq.fileflow.adapter.out.aws.s3",
+                "com.ryuqq.fileflow.adapter.out.redis",
+                "com.ryuqq.fileflow.application",
+                "com.ryuqq.fileflow.domain"
+        })
 @ConfigurationPropertiesScan(basePackages = {
         "com.ryuqq.fileflow.adapter.in.sqs.config",
         "com.ryuqq.fileflow.adapter.out.persistence.config.properties"

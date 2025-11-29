@@ -25,7 +25,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * </ul>
  */
 @EnableScheduling
-@SpringBootApplication(scanBasePackages = "com.ryuqq.fileflow")
+@SpringBootApplication(
+        scanBasePackages = {
+                "com.ryuqq.fileflow.bootstrap",
+                "com.ryuqq.fileflow.adapter.out.persistence",
+                "com.ryuqq.fileflow.adapter.out.aws.s3",
+                "com.ryuqq.fileflow.adapter.out.aws.sqs",
+                "com.ryuqq.fileflow.adapter.out.redis",
+                "com.ryuqq.fileflow.application",
+                "com.ryuqq.fileflow.domain"
+        })
 @ConfigurationPropertiesScan(basePackages = {
         "com.ryuqq.fileflow.adapter.out.persistence.config.properties",
         "com.ryuqq.fileflow.adapter.out.aws.sqs.config"
