@@ -12,20 +12,6 @@ delete_source_branch_on_merge: false
 parallel_plan: false
 parallel_apply: false
 
-# ============================================================================
-# Workflow: Backend reconfiguration support
-# ============================================================================
-workflows:
-  default:
-    plan:
-      steps:
-        - init:
-            extra_args: ["-reconfigure"]
-        - plan
-    apply:
-      steps:
-        - apply
-
 projects:
   # ============================================================================
   # Container Registry
