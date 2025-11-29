@@ -134,7 +134,7 @@ jobs:
   # ============================================================================
   notify:
     name: Deployment Notification
-    needs: [build-web-api, build-download-worker, build-scheduler, deploy-web-api, deploy-download-worker, deploy-scheduler]
+    needs: [deploy-web-api, deploy-download-worker, deploy-scheduler]
     if: always()
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-notify-slack.yml@main
     with:
@@ -143,9 +143,9 @@ jobs:
       status: ${{ (needs.deploy-web-api.result == 'success' && needs.deploy-download-worker.result == 'success' && needs.deploy-scheduler.result == 'success') && 'success' || 'failure' }}
       components: |
         [
-          {"name": "web-api", "status": "${{ needs.deploy-web-api.result }}", "image": "${{ needs.build-web-api.outputs.image-tag || 'N/A' }}"},
-          {"name": "download-worker", "status": "${{ needs.deploy-download-worker.result }}", "image": "${{ needs.build-download-worker.outputs.image-tag || 'N/A' }}"},
-          {"name": "scheduler", "status": "${{ needs.deploy-scheduler.result }}", "image": "${{ needs.build-scheduler.outputs.image-tag || 'N/A' }}"}
+          {"name": "web-api", "status": "${{ needs.deploy-web-api.result }}"},
+          {"name": "download-worker", "status": "${{ needs.deploy-download-worker.result }}"},
+          {"name": "scheduler", "status": "${{ needs.deploy-scheduler.result }}"}
         ]
       mention-on-failure: "@here"
     secrets:

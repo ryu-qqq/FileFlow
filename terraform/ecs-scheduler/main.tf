@@ -342,7 +342,7 @@ module "adot_sidecar" {
   amp_workspace_arn         = local.amp_workspace_arn
   amp_remote_write_endpoint = local.amp_remote_write_url
   log_group_name            = module.scheduler_logs.log_group_name
-  app_port                  = 8080
+  app_port                  = 8081  # Scheduler management port
   cluster_name              = data.aws_ecs_cluster.main.cluster_name
   environment               = var.environment
   config_version            = "20251128"  # Cache busting for OTEL config with OTLP receiver
