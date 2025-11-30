@@ -519,7 +519,7 @@ module "ecs_service" {
   health_check_interval      = 30
   health_check_timeout       = 5
   health_check_retries       = 3
-  health_check_start_period  = 300
+  health_check_start_period  = 120
 
   # Logging
   log_configuration = {

@@ -345,7 +345,7 @@ module "adot_sidecar" {
   app_port                  = 8081  # Scheduler management port
   cluster_name              = data.aws_ecs_cluster.main.cluster_name
   environment               = var.environment
-  config_version            = "20251128"  # Cache busting for OTEL config with OTLP receiver
+  config_version            = "20251130"  # Cache busting for OTEL config with APP_PORT env var
 }
 
 # ========================================
@@ -378,6 +378,10 @@ module "scheduler_service" {
     {
       name  = "SPRING_PROFILES_ACTIVE"
       value = var.environment
+    },
+    {
+      name  = "APP_PORT"
+      value = "8081"
     },
     {
       name  = "DB_HOST"
@@ -415,7 +419,7 @@ module "scheduler_service" {
 
   # Health Check (Spring Boot Actuator)
   health_check_command      = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
-  health_check_start_period = 300 # Scheduler needs more time to initialize Redis, DB connections
+  health_check_start_period = 120 # Scheduler needs time to initialize Redis, DB connections
 
   # Custom Log Configuration (using KMS-encrypted log group)
   log_configuration = {
