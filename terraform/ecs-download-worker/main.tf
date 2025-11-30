@@ -379,7 +379,7 @@ module "download_worker_service" {
   cluster_id      = data.aws_ecs_cluster.main.arn
   container_name  = "download-worker"
   container_image = "${data.aws_ecr_repository.download_worker.repository_url}:${var.image_tag}"
-  container_port  = 8080  # Required by module, but no actual port exposure
+  container_port  = 8082  # Management port for health checks
 
   cpu    = var.worker_cpu
   memory = var.worker_memory

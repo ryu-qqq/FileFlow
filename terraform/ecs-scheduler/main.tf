@@ -358,7 +358,7 @@ module "scheduler_service" {
   cluster_id      = data.aws_ecs_cluster.main.arn
   container_name  = "scheduler"
   container_image = "${data.aws_ecr_repository.scheduler.repository_url}:${var.image_tag}"
-  container_port  = 8080  # Required by module, but no actual port exposure
+  container_port  = 8081  # Management port for health checks
 
   cpu    = var.scheduler_cpu
   memory = var.scheduler_memory
