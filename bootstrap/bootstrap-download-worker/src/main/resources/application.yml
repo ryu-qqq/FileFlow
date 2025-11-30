@@ -9,11 +9,8 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod}
 
-  # Disable main web server but keep management endpoints
-  # web-application-type: none disables main web server only
-  # Management server continues to run on separate port
-  main:
-    web-application-type: none
+    # Management server runs on separate port (8082)
+    # Main web server is automatically disabled when only management port is configured
 
   # Exclude Redisson auto-configuration (use custom RedissonConfig)
   autoconfigure:
@@ -45,8 +42,7 @@ logging:
     io.awspring.cloud.sqs: ${SQS_LOG_LEVEL:INFO}
 
 management:
-  # Run management server on separate port (8082)
-  # This allows health checks and metrics without main application endpoints
+  # Management 전용 포트 (경량 웹 서버)
   server:
     port: 8082
     shutdown: graceful
@@ -55,10 +51,10 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
-      base-path: /actuator
+      # base-path 설정 없음 (기본값 사용)
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: always  # ← 항상 표시
       probes:
         enabled: true
     prometheus:
