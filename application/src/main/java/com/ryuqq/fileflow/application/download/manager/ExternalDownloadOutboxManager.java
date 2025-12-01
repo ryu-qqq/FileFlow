@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.application.download.manager;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.download.port.out.command.ExternalDownloadOutboxPersistencePort;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
 import org.springframework.stereotype.Component;

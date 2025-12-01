@@ -626,6 +626,7 @@ class FindUploadSessionQueryAdapterTest {
         Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
+        LocalDateTime now = LocalDateTime.now(fixedClock);
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.fromString(sessionId)),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -636,11 +637,12 @@ class FindUploadSessionQueryAdapterTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
                 ExpirationTime.of(LocalDateTime.now(fixedClock).plusMinutes(15)),
-                LocalDateTime.now(fixedClock),
+                now,
                 SessionStatus.ACTIVE,
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/..."),
                 null,
                 null,
+                now,
                 0L,
                 fixedClock);
     }

@@ -81,6 +81,10 @@ module "redis" {
     {
       name  = "maxmemory-policy"
       value = "allkeys-lru"
+    },
+    {
+      name  = "notify-keyspace-events"
+      value = "Ex"  # E: Keyevent events, x: Expired events (TTL 만료 이벤트)
     }
   ]
 

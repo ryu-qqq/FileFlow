@@ -62,10 +62,20 @@ public class ExpireUploadSessionService implements ExpireUploadSessionUseCase {
                         .orElseThrow(() -> new SessionNotFoundException(command.sessionId()));
 
         // 2. 세션 타입에 맞는 전략으로 만료 처리
+        return expire(session);
+    }
+
+    @Override
+    public ExpireUploadSessionResponse execute(UploadSession session) {
+        return expire(session);
+    }
+
+    private ExpireUploadSessionResponse expire(UploadSession session) {
+        // 1. 세션 타입에 맞는 전략으로 만료 처리
         ExpireStrategy<UploadSession> strategy = expireStrategyProvider.getStrategy(session);
         strategy.expire(session);
 
-        // 3. RDB 저장 (타입에 따라 분기)
+        // 2. RDB 저장 (타입에 따라 분기)
         UploadSession expiredSession;
         if (session instanceof SingleUploadSession singleSession) {
             expiredSession = uploadSessionManager.save(singleSession);
@@ -75,7 +85,7 @@ public class ExpireUploadSessionService implements ExpireUploadSessionUseCase {
             throw new IllegalStateException("지원하지 않는 세션 타입: " + session.getClass().getName());
         }
 
-        // 4. Response 변환
+        // 3. Response 변환
         return ExpireUploadSessionResponse.of(
                 expiredSession.getId().value().toString(),
                 expiredSession.getStatus().name(),

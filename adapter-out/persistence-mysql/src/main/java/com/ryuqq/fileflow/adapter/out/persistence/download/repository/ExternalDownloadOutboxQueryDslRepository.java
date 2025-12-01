@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownlo
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.QExternalDownloadOutboxJpaEntity;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -27,11 +28,11 @@ public class ExternalDownloadOutboxQueryDslRepository {
     /**
      * ExternalDownloadId로 Outbox를 조회한다.
      *
-     * @param externalDownloadId 외부 다운로드 ID
+     * @param externalDownloadId 외부 다운로드 ID (UUID)
      * @return ExternalDownloadOutboxJpaEntity Optional
      */
     public Optional<ExternalDownloadOutboxJpaEntity> findByExternalDownloadId(
-            Long externalDownloadId) {
+            UUID externalDownloadId) {
         ExternalDownloadOutboxJpaEntity result =
                 queryFactory
                         .selectFrom(outbox)

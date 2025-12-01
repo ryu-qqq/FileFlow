@@ -1,7 +1,6 @@
 package com.ryuqq.fileflow.application.session.scheduler;
 
 import com.ryuqq.fileflow.application.common.metrics.SchedulerMetrics;
-import com.ryuqq.fileflow.application.session.dto.command.ExpireUploadSessionCommand;
 import com.ryuqq.fileflow.application.session.port.in.command.ExpireUploadSessionUseCase;
 import com.ryuqq.fileflow.application.session.port.out.query.FindUploadSessionQueryPort;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
@@ -78,9 +77,7 @@ public class SingleUploadSessionExpirationScheduler {
             while (!expiredSessions.isEmpty()) {
                 for (SingleUploadSession session : expiredSessions) {
                     try {
-                        ExpireUploadSessionCommand command =
-                                ExpireUploadSessionCommand.of(session.getIdValue());
-                        expireUploadSessionUseCase.execute(command);
+                        expireUploadSessionUseCase.execute(session);
                         totalExpired++;
                         log.debug("Expired single upload session: {}", session.getIdValue());
                     } catch (Exception e) {

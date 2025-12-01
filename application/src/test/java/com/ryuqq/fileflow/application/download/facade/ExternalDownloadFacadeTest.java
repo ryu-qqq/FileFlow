@@ -52,8 +52,10 @@ class ExternalDownloadFacadeTest {
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.defaultOutbox();
             ExternalDownloadBundle bundle = new ExternalDownloadBundle(download, outbox);
 
-            ExternalDownloadId downloadId = ExternalDownloadId.of(1L);
-            ExternalDownloadOutboxId outboxId = ExternalDownloadOutboxId.of(1L);
+            ExternalDownloadId downloadId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
+            ExternalDownloadOutboxId outboxId =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
 
             given(externalDownloadManager.save(download)).willReturn(downloadId);
             given(externalDownloadOutboxManager.save(outbox)).willReturn(outboxId);
@@ -82,8 +84,10 @@ class ExternalDownloadFacadeTest {
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.defaultOutbox();
             ExternalDownloadBundle bundle = new ExternalDownloadBundle(download, outbox);
 
-            ExternalDownloadId downloadId = ExternalDownloadId.of(1L);
-            ExternalDownloadOutboxId outboxId = ExternalDownloadOutboxId.of(1L);
+            ExternalDownloadId downloadId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
+            ExternalDownloadOutboxId outboxId =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
 
             given(externalDownloadManager.save(download)).willReturn(downloadId);
             given(externalDownloadOutboxManager.save(outbox)).willReturn(outboxId);

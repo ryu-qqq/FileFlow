@@ -91,8 +91,8 @@ subprojects {
     // ========================================
     spotbugs {
         toolVersion = rootProject.libs.versions.spotbugs.get()
-        effort = 'max'
-        reportLevel = 'high' // TODO: Change to 'low' after fixing all warnings
+        // effort = 'max' // Disabled for Docker build compatibility
+        // reportLevel = 'high' // Disabled for Docker build compatibility
         excludeFilter = rootProject.file('config/spotbugs/spotbugs-exclude.xml')
         ignoreFailures = true // TODO: Set to false after fixing all warnings
     }

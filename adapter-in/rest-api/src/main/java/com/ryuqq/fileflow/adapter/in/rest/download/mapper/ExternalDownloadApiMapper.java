@@ -34,11 +34,11 @@ public class ExternalDownloadApiMapper {
     /**
      * 조회용 Query를 생성합니다.
      *
-     * @param id ExternalDownload ID
+     * @param id ExternalDownload ID (UUID 문자열)
      * @param tenantId 테넌트 ID
      * @return GetExternalDownloadQuery
      */
-    public GetExternalDownloadQuery toQuery(Long id, long tenantId) {
+    public GetExternalDownloadQuery toQuery(String id, long tenantId) {
         return new GetExternalDownloadQuery(id, tenantId);
     }
 

@@ -1,9 +1,12 @@
 package com.ryuqq.fileflow.domain.asset.vo;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import java.util.UUID;
 
 /**
  * FileAsset 식별자 VO.
+ *
+ * <p>UUID v7 (Time-Ordered) 사용으로 시간 기반 정렬 및 DB 인덱스 효율성 제공.
  *
  * @param value UUID 값
  */
@@ -16,12 +19,12 @@ public record FileAssetId(UUID value) {
     }
 
     /**
-     * 신규 FileAsset ID 생성 (UUID 랜덤 생성).
+     * 신규 FileAsset ID 생성 (UUID v7 - Time-Ordered).
      *
      * @return 신규 FileAssetId
      */
     public static FileAssetId forNew() {
-        return new FileAssetId(UUID.randomUUID());
+        return new FileAssetId(UuidCreator.getTimeOrderedEpoch());
     }
 
     /**

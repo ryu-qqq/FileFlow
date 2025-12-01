@@ -13,6 +13,8 @@ import com.ryuqq.fileflow.domain.session.vo.S3UploadId;
 import com.ryuqq.fileflow.domain.session.vo.S3UploadMetadata;
 import java.time.Duration;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +42,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UploadSessionFacade {
 
+    private static final Logger log = LoggerFactory.getLogger(UploadSessionFacade.class);
     private static final Duration SINGLE_UPLOAD_TTL = Duration.ofMinutes(15);
     private static final Duration MULTIPART_UPLOAD_TTL = Duration.ofHours(24);
     private static final Duration PART_URL_EXPIRATION = Duration.ofHours(24);
@@ -201,18 +204,32 @@ public class UploadSessionFacade {
      *
      * <p>세션 저장 후 도메인에서 생성된 이벤트를 발행합니다.
      *
+     * <p><strong>캐시 삭제</strong>: 완료된 세션은 Redis에서 즉시 삭제하여 불필요한 TTL 만료 이벤트를 방지합니다.
+     *
      * @param session 완료 처리된 세션
      * @return 저장된 세션
      */
     public SingleUploadSession saveAndPublishEvents(SingleUploadSession session) {
         // 1. 이벤트 추출 (저장 전에 추출)
         List<FileUploadCompletedEvent> events = session.pollDomainEvents();
+        log.debug(
+                "Extracted {} domain events from session: {}", events.size(), session.getIdValue());
 
         // 2. 세션 저장
         SingleUploadSession savedSession = uploadSessionManager.save(session);
 
-        // 3. 이벤트 발행
+        // 3. Redis 캐시 삭제 (완료된 세션은 불필요한 만료 이벤트 방지)
+        if (session.isCompleted()) {
+            uploadSessionCacheManager.deleteSingleUploadSession(session.getId());
+        }
+
+        // 4. 이벤트 발행
         for (FileUploadCompletedEvent event : events) {
+            log.info(
+                    "Publishing FileUploadCompletedEvent: sessionId={}, bucket={}, key={}",
+                    event.sessionId().getValue(),
+                    event.bucket().bucketName(),
+                    event.s3Key().key());
             eventPublisher.publishEvent(event);
         }
 

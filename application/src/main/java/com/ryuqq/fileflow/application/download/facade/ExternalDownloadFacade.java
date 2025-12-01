@@ -6,6 +6,8 @@ import com.ryuqq.fileflow.application.download.manager.ExternalDownloadOutboxMan
 import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Component
 public class ExternalDownloadFacade {
+
+    private static final Logger log = LoggerFactory.getLogger(ExternalDownloadFacade.class);
 
     private final ExternalDownloadManager externalDownloadManager;
     private final ExternalDownloadOutboxManager externalDownloadOutboxManager;
@@ -65,20 +69,32 @@ public class ExternalDownloadFacade {
     public ExternalDownloadId saveAndPublishEvent(ExternalDownloadBundle bundle) {
         ExternalDownload download = bundle.download();
 
-        // 1. ExternalDownload 저장
+        log.info("ExternalDownload 저장 및 이벤트 발행 시작: sourceUrl={}", download.getSourceUrl().value());
+
+        // 1. ExternalDownload 저장 (ID 할당)
         ExternalDownloadId savedId = externalDownloadManager.save(download);
+        log.debug("ExternalDownload 저장 완료: downloadId={}", savedId.value());
 
         // 2. Outbox 저장
         externalDownloadOutboxManager.save(bundle.outbox());
+        log.debug("Outbox 저장 완료: downloadId={}", savedId.value());
 
-        // 3. 도메인 이벤트 발행
+        // 3. 도메인 이벤트 발행 (Assembler에서 이미 등록된 이벤트)
+        int eventCount = download.getDomainEvents().size();
+        log.info("도메인 이벤트 발행 시작: downloadId={}, eventCount={}", savedId.value(), eventCount);
+
         for (DomainEvent event : download.getDomainEvents()) {
+            log.info(
+                    "Publishing event: type={}, downloadId={}",
+                    event.getClass().getSimpleName(),
+                    savedId.value());
             eventPublisher.publishEvent(event);
         }
 
-        // 4. 도메인 이벤트 클리어
+        // 5. 도메인 이벤트 클리어
         download.clearDomainEvents();
 
+        log.info("ExternalDownload 저장 및 이벤트 발행 완료: downloadId={}", savedId.value());
         return savedId;
     }
 }

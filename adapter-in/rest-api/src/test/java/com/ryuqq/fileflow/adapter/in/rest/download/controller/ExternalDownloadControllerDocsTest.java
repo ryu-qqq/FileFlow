@@ -71,7 +71,8 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
                         "https://example.com/image.jpg", "product-images");
 
         ExternalDownloadResponse response =
-                new ExternalDownloadResponse(1L, "PENDING", Instant.now());
+                new ExternalDownloadResponse(
+                        "00000000-0000-0000-0000-000000000001", "PENDING", Instant.now());
 
         given(requestExternalDownloadUseCase.execute(any())).willReturn(response);
 
@@ -106,7 +107,7 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
     @DisplayName("GET /api/v1/external-downloads/{id} - 외부 다운로드 상태 조회 API 문서")
     void getExternalDownload() throws Exception {
         // given
-        Long downloadId = 1L;
+        String downloadId = "00000000-0000-0000-0000-000000000001";
 
         ExternalDownloadDetailResponse response =
                 new ExternalDownloadDetailResponse(

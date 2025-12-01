@@ -8,7 +8,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.download.assembler.ExternalDownloadAssembler;
 import com.ryuqq.fileflow.application.download.dto.DownloadResult;
 import com.ryuqq.fileflow.application.download.dto.response.S3UploadResponse;
@@ -16,6 +15,7 @@ import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
 import com.ryuqq.fileflow.application.download.port.out.client.HttpDownloadPort;
 import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.application.session.port.out.client.S3ClientPort;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
@@ -76,7 +76,7 @@ class ExternalDownloadProcessingFacadeTest {
         @DisplayName("외부 다운로드 전체 프로세스가 정상적으로 실행된다")
         void shouldProcessSuccessfully() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             ExternalDownload download = ExternalDownloadFixture.withId(downloadId).build();
 
             byte[] content = "test-image-content".getBytes();
@@ -127,7 +127,7 @@ class ExternalDownloadProcessingFacadeTest {
         @DisplayName("1단계: ExternalDownload를 조회하고 PROCESSING 상태로 전환한다")
         void shouldStartProcessing() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             ExternalDownload download =
                     ExternalDownloadFixture.withId(downloadId)
                             .status(ExternalDownloadStatus.PENDING)
@@ -168,7 +168,7 @@ class ExternalDownloadProcessingFacadeTest {
         @DisplayName("존재하지 않는 ExternalDownload 조회 시 예외가 발생한다")
         void shouldThrowExceptionWhenDownloadNotFound() {
             // given
-            Long downloadId = 999L;
+            String downloadId = "00000000-0000-0000-0000-000000000999";
             given(queryPort.findById(ExternalDownloadId.of(downloadId)))
                     .willReturn(Optional.empty());
 
@@ -185,7 +185,7 @@ class ExternalDownloadProcessingFacadeTest {
         @DisplayName("5단계: 완료 처리 시 도메인 이벤트가 발행되고 클리어된다")
         void shouldPublishEventAndClearAfterCompletion() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             ExternalDownload download = ExternalDownloadFixture.withId(downloadId).build();
 
             byte[] content = "image-data".getBytes();
@@ -220,7 +220,7 @@ class ExternalDownloadProcessingFacadeTest {
         @DisplayName("2-4단계: HTTP 다운로드 및 S3 업로드가 순차적으로 실행된다")
         void shouldExecuteDownloadAndUploadSequentially() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             ExternalDownload download = ExternalDownloadFixture.withId(downloadId).build();
 
             byte[] content = "test-bytes".getBytes();

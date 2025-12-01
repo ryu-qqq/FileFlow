@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ class ExternalDownloadJpaEntityTest {
         @DisplayName("모든 필드가 올바르게 설정된다")
         void shouldSetAllFieldsCorrectly() {
             // given
-            Long id = 1L;
+            UUID id = UUID.randomUUID();
             String sourceUrl = "https://example.com/file.jpg";
             Long tenantId = 100L;
             Long organizationId = 200L;
@@ -105,7 +106,7 @@ class ExternalDownloadJpaEntityTest {
             // when
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
-                            1L,
+                            UUID.randomUUID(),
                             "https://example.com/processing.jpg",
                             100L,
                             200L,
@@ -135,7 +136,7 @@ class ExternalDownloadJpaEntityTest {
             // when
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
-                            1L,
+                            UUID.randomUUID(),
                             "https://example.com/failed.jpg",
                             100L,
                             200L,
@@ -169,7 +170,7 @@ class ExternalDownloadJpaEntityTest {
             ExternalDownloadJpaEntity entity = createEntity(now);
 
             // then
-            assertThat(entity.getId()).isEqualTo(1L);
+            assertThat(entity.getId()).isNotNull();
             assertThat(entity.getSourceUrl()).isEqualTo("https://example.com/file.jpg");
             assertThat(entity.getTenantId()).isEqualTo(100L);
             assertThat(entity.getOrganizationId()).isEqualTo(200L);
@@ -187,7 +188,7 @@ class ExternalDownloadJpaEntityTest {
             String webhookUrl = "https://callback.example.com/webhook";
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
-                            1L,
+                            UUID.randomUUID(),
                             "https://example.com/file.jpg",
                             100L,
                             200L,
@@ -213,7 +214,7 @@ class ExternalDownloadJpaEntityTest {
             String fileAssetId = "file-asset-uuid-123";
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
-                            1L,
+                            UUID.randomUUID(),
                             "https://example.com/file.jpg",
                             100L,
                             200L,
@@ -237,7 +238,7 @@ class ExternalDownloadJpaEntityTest {
 
     private ExternalDownloadJpaEntity createEntity(LocalDateTime timestamp) {
         return ExternalDownloadJpaEntity.of(
-                1L,
+                UUID.randomUUID(),
                 "https://example.com/file.jpg",
                 100L,
                 200L,

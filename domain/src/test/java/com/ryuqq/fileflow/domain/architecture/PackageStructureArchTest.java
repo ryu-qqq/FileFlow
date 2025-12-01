@@ -285,7 +285,8 @@ class PackageStructureArchTest {
                                 "com.ryuqq.fileflow.domain.(*)..", // 같은 BC는 허용
                                 "java..",
                                 "jakarta.annotation..",
-                                "edu.umd.cs.findbugs.annotations..") // SpotBugs 어노테이션 허용
+                                "edu.umd.cs.findbugs.annotations..", // SpotBugs 어노테이션 허용
+                                "com.github.f4b6a3.uuid..") // UUID 생성 라이브러리 허용
                         .because(
                                 "Bounded Context는 다른 Bounded Context 내부에 직접 의존하지 않아야 합니다\n"
                                     + "통신 방법:\n"

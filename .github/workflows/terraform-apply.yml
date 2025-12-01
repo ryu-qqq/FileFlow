@@ -1,7 +1,24 @@
 name: Terraform Apply
 
 on:
-  workflow_dispatch:  # 수동 트리거만 허용 (Atlantis가 PR 기반 IaC 변경 담당)
+  workflow_dispatch:  # 수동 트리거 허용
+  workflow_call:      # 다른 워크플로우에서 호출 가능
+    inputs:
+      web-api-image-tag:
+        description: 'Web API Docker image tag (e.g., web-api-92-f08d571)'
+        required: false
+        type: string
+      download-worker-image-tag:
+        description: 'Download Worker Docker image tag'
+        required: false
+        type: string
+      scheduler-image-tag:
+        description: 'Scheduler Docker image tag'
+        required: false
+        type: string
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
 
 permissions:
   contents: read
@@ -148,9 +165,25 @@ jobs:
         run: |
           echo "🚀 Applying Terraform for ${{ matrix.module.name }}..."
 
-          # 항상 새로운 plan 생성 (이전 실패로 인한 incomplete plan 방지)
+          # Image Tag 변수 설정 (Build & Deploy 워크플로우에서 전달됨)
+          EXTRA_VARS=""
+
+          if [ "${{ matrix.module.name }}" == "ecs-web-api" ] && [ -n "${{ inputs.web-api-image-tag }}" ]; then
+            echo "📦 Using Web API image tag: ${{ inputs.web-api-image-tag }}"
+            EXTRA_VARS="-var=image_tag=${{ inputs.web-api-image-tag }}"
+          elif [ "${{ matrix.module.name }}" == "ecs-download-worker" ] && [ -n "${{ inputs.download-worker-image-tag }}" ]; then
+            echo "📦 Using Download Worker image tag: ${{ inputs.download-worker-image-tag }}"
+            EXTRA_VARS="-var=image_tag=${{ inputs.download-worker-image-tag }}"
+          elif [ "${{ matrix.module.name }}" == "ecs-scheduler" ] && [ -n "${{ inputs.scheduler-image-tag }}" ]; then
+            echo "📦 Using Scheduler image tag: ${{ inputs.scheduler-image-tag }}"
+            EXTRA_VARS="-var=image_tag=${{ inputs.scheduler-image-tag }}"
+          else
+            echo "ℹ️  No image tag provided for ${{ matrix.module.name }}, using default from provider.tf"
+          fi
+
+          # Terraform Plan with optional image_tag variable
           echo "📋 Generating fresh terraform plan..."
-          terraform plan -out=tfplan
+          terraform plan $EXTRA_VARS -out=tfplan
 
           terraform apply -auto-approve -no-color tfplan
           echo "✅ Apply completed for ${{ matrix.module.name }}"

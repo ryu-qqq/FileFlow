@@ -66,6 +66,7 @@ public class SingleUploadSession implements UploadSession {
     private PresignedUrl presignedUrl;
     private ETag etag;
     private LocalDateTime completedAt;
+    private LocalDateTime updatedAt;
     private Long version;
 
     // 도메인 이벤트
@@ -113,6 +114,7 @@ public class SingleUploadSession implements UploadSession {
                 null, // presignedUrl: PREPARING 상태에서는 null
                 null, // etag
                 null, // completedAt
+                now, // updatedAt: 생성 시각과 동일
                 null, // version: 신규 생성 시 null
                 clock);
     }
@@ -134,6 +136,7 @@ public class SingleUploadSession implements UploadSession {
      * @param presignedUrl Presigned URL (선택적)
      * @param etag ETag (선택적)
      * @param completedAt 완료 시각 (선택적)
+     * @param updatedAt 수정 시각 (선택적)
      * @param version 낙관락 버전 (선택적)
      * @param clock 시간 소스
      * @return SingleUploadSession
@@ -154,6 +157,7 @@ public class SingleUploadSession implements UploadSession {
             PresignedUrl presignedUrl,
             ETag etag,
             LocalDateTime completedAt,
+            LocalDateTime updatedAt,
             Long version,
             Clock clock) {
         if (id == null) {
@@ -174,6 +178,7 @@ public class SingleUploadSession implements UploadSession {
                 presignedUrl,
                 etag,
                 completedAt,
+                updatedAt,
                 version,
                 clock);
     }
@@ -195,6 +200,7 @@ public class SingleUploadSession implements UploadSession {
      * @param presignedUrl Presigned URL (선택적)
      * @param etag ETag (선택적)
      * @param completedAt 완료 시각 (선택적)
+     * @param updatedAt 수정 시각 (선택적)
      * @param version 낙관락 버전 (선택적)
      * @param clock 시간 소스
      * @return SingleUploadSession
@@ -215,6 +221,7 @@ public class SingleUploadSession implements UploadSession {
             PresignedUrl presignedUrl,
             ETag etag,
             LocalDateTime completedAt,
+            LocalDateTime updatedAt,
             Long version,
             Clock clock) {
         return of(
@@ -232,6 +239,7 @@ public class SingleUploadSession implements UploadSession {
                 presignedUrl,
                 etag,
                 completedAt,
+                updatedAt,
                 version,
                 clock);
     }
@@ -252,6 +260,7 @@ public class SingleUploadSession implements UploadSession {
             PresignedUrl presignedUrl,
             ETag etag,
             LocalDateTime completedAt,
+            LocalDateTime updatedAt,
             Long version,
             Clock clock) {
         this.id = id;
@@ -268,6 +277,7 @@ public class SingleUploadSession implements UploadSession {
         this.presignedUrl = presignedUrl;
         this.etag = etag;
         this.completedAt = completedAt;
+        this.updatedAt = updatedAt != null ? updatedAt : createdAt;
         this.version = version;
         this.clock = clock;
     }
@@ -290,6 +300,7 @@ public class SingleUploadSession implements UploadSession {
 
         this.presignedUrl = presignedUrl;
         this.status = SessionStatus.ACTIVE;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -327,6 +338,7 @@ public class SingleUploadSession implements UploadSession {
         this.status = SessionStatus.COMPLETED;
         this.etag = clientETag;
         this.completedAt = LocalDateTime.now(clock);
+        this.updatedAt = this.completedAt;
 
         // 도메인 이벤트 생성
         domainEvents.add(
@@ -363,6 +375,7 @@ public class SingleUploadSession implements UploadSession {
     public void expire() {
         validateStatusTransition(SessionStatus.EXPIRED);
         this.status = SessionStatus.EXPIRED;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /**
@@ -373,6 +386,7 @@ public class SingleUploadSession implements UploadSession {
     public void fail() {
         validateStatusTransition(SessionStatus.FAILED);
         this.status = SessionStatus.FAILED;
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     // ==================== private 검증 메서드 ====================
@@ -495,24 +509,22 @@ public class SingleUploadSession implements UploadSession {
     /**
      * Presigned URL을 반환합니다.
      *
-     * <p><strong>도메인 규칙</strong>: 만료된 세션의 Presigned URL은 사용할 수 없음
+     * <p>단순 조회용 Getter입니다. 만료 검증은 비즈니스 로직에서 수행하세요.
      *
      * @return Presigned URL
-     * @throws SessionExpiredException 세션이 만료된 경우
      */
     public PresignedUrl getPresignedUrl() {
-        validateNotExpired();
         return presignedUrl;
     }
 
     /**
      * Presigned URL 문자열 값을 반환합니다 (Law of Demeter).
      *
+     * <p>단순 조회용 Getter입니다. 만료 검증은 비즈니스 로직에서 수행하세요.
+     *
      * @return Presigned URL 문자열
-     * @throws SessionExpiredException 세션이 만료된 경우
      */
     public String getPresignedUrlValue() {
-        validateNotExpired();
         return presignedUrl != null ? presignedUrl.value() : null;
     }
 
@@ -526,6 +538,10 @@ public class SingleUploadSession implements UploadSession {
 
     public LocalDateTime getCompletedAt() {
         return completedAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
     /**

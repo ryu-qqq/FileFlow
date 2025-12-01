@@ -9,4 +9,4 @@ import java.time.Instant;
  * @param status 현재 상태
  * @param createdAt 생성 시간
  */
-public record ExternalDownloadApiResponse(Long id, String status, Instant createdAt) {}
+public record ExternalDownloadApiResponse(String id, String status, Instant createdAt) {}

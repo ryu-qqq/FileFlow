@@ -62,7 +62,7 @@ public final class ExternalDownloadFixture {
     /** PENDING 상태의 ExternalDownload 생성 (ID 있음). */
     public static ExternalDownload pendingExternalDownload() {
         return ExternalDownload.of(
-                ExternalDownloadId.of(1L),
+                ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 1L,
                 100L,
@@ -80,7 +80,7 @@ public final class ExternalDownloadFixture {
     /** PROCESSING 상태의 ExternalDownload 생성. */
     public static ExternalDownload processingExternalDownload() {
         return ExternalDownload.of(
-                ExternalDownloadId.of(2L),
+                ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.png"),
                 1L,
                 100L,
@@ -98,7 +98,7 @@ public final class ExternalDownloadFixture {
     /** COMPLETED 상태의 ExternalDownload 생성. */
     public static ExternalDownload completedExternalDownload() {
         return ExternalDownload.of(
-                ExternalDownloadId.of(3L),
+                ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.gif"),
                 1L,
                 100L,
@@ -116,7 +116,7 @@ public final class ExternalDownloadFixture {
     /** FAILED 상태의 ExternalDownload 생성. */
     public static ExternalDownload failedExternalDownload() {
         return ExternalDownload.of(
-                ExternalDownloadId.of(4L),
+                ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.webp"),
                 1L,
                 100L,
@@ -134,7 +134,7 @@ public final class ExternalDownloadFixture {
     /** Webhook URL을 포함한 ExternalDownload 생성. */
     public static ExternalDownload externalDownloadWithWebhook() {
         return ExternalDownload.of(
-                ExternalDownloadId.of(5L),
+                ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 1L,
                 100L,
@@ -179,7 +179,7 @@ public final class ExternalDownloadFixture {
     }
 
     /** Builder 패턴으로 ExternalDownload 생성. */
-    public static Builder withId(Long id) {
+    public static Builder withId(String id) {
         return new Builder().id(id);
     }
 
@@ -192,7 +192,7 @@ public final class ExternalDownloadFixture {
     public static final class Builder {
         private static final String DEFAULT_FILE_ASSET_ID = "550e8400-e29b-41d4-a716-446655440000";
 
-        private Long id;
+        private String id;
         private String sourceUrl = "https://example.com/image.jpg";
         private long tenantId = 1L;
         private long organizationId = 100L;
@@ -206,7 +206,7 @@ public final class ExternalDownloadFixture {
 
         private Builder() {}
 
-        public Builder id(Long id) {
+        public Builder id(String id) {
             this.id = id;
             return this;
         }

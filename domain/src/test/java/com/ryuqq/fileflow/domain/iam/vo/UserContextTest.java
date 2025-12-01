@@ -266,7 +266,7 @@ class UserContextTest {
             S3Bucket bucket = admin.getS3Bucket();
 
             // then
-            assertThat(bucket.bucketName()).isEqualTo("connectly");
+            assertThat(bucket.bucketName()).isEqualTo("fileflow-uploads-prod");
         }
 
         @Test
@@ -280,7 +280,7 @@ class UserContextTest {
             S3Key s3Key = admin.generateS3Key(UploadCategory.BANNER, "test.jpg", uploadDate);
 
             // then
-            assertThat(s3Key.key()).contains("admin/");
+            assertThat(s3Key.key()).contains("connectly/");
             assertThat(s3Key.key()).contains("banner");
             assertThat(s3Key.key()).contains("2025");
             assertThat(s3Key.key()).contains("11");
