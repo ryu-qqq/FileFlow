@@ -345,6 +345,10 @@ public class MultipartUploadSession implements UploadSession {
         return id;
     }
 
+    public String getIdValue() {
+        return id.getValue();
+    }
+
     public UserContext getUserContext() {
         return userContext;
     }

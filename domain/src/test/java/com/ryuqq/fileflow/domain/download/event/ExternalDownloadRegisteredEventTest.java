@@ -16,7 +16,8 @@ import org.junit.jupiter.api.Test;
 @DisplayName("ExternalDownloadRegisteredEvent 단위 테스트")
 class ExternalDownloadRegisteredEventTest {
 
-    private static final ExternalDownloadId DOWNLOAD_ID = ExternalDownloadId.of(1L);
+    private static final ExternalDownloadId DOWNLOAD_ID =
+            ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
     private static final SourceUrl SOURCE_URL = SourceUrl.of("https://example.com/image.jpg");
     private static final long TENANT_ID = 1L;
     private static final long ORGANIZATION_ID = 100L;

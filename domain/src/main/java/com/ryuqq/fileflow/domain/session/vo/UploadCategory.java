@@ -78,7 +78,16 @@ public enum UploadCategory {
             }
         }
 
-        throw new IllegalArgumentException("유효하지 않은 업로드 카테고리: " + path);
+        // 가능한 값 목록 생성
+        String validValues =
+                String.join(
+                        ", ",
+                        java.util.Arrays.stream(values())
+                                .map(UploadCategory::name)
+                                .toArray(String[]::new));
+
+        throw new IllegalArgumentException(
+                "유효하지 않은 업로드 카테고리입니다. 입력값: '" + path + "', 가능한 값: " + validValues);
     }
 
     /**

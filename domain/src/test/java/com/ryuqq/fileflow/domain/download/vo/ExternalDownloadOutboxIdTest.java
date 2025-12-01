@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.domain.download.vo;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,44 +21,42 @@ class ExternalDownloadOutboxIdTest {
             ExternalDownloadOutboxId id = ExternalDownloadOutboxId.forNew();
 
             // then
-            assertThat(id.value()).isNull();
-            assertThat(id.isNew()).isTrue();
+            assertThat(id.value()).isNotNull();
+            assertThat(id.isNew()).isFalse(); // UUID는 항상 값이 있으므로 false
         }
 
         @Test
         @DisplayName("of()로 기존 ID를 재구성할 수 있다")
         void of_ShouldReconstituteId() {
             // given
-            Long value = 1L;
+            String value = "00000000-0000-0000-0000-000000000100";
 
             // when
             ExternalDownloadOutboxId id = ExternalDownloadOutboxId.of(value);
 
             // then
-            assertThat(id.value()).isEqualTo(1L);
+            assertThat(id.value().toString()).isEqualTo(value);
             assertThat(id.isNew()).isFalse();
         }
 
         @Test
         @DisplayName("of()에 null을 전달하면 예외가 발생한다")
         void of_WithNull_ShouldThrowException() {
-            // given & when & then
-            assertThatThrownBy(() -> ExternalDownloadOutboxId.of(null))
+            // given
+            UUID nullValue = null;
+
+            // when & then
+            assertThatThrownBy(() -> ExternalDownloadOutboxId.of(nullValue))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("ExternalDownloadOutboxId");
         }
 
         @Test
-        @DisplayName("of()에 0 이하의 값을 전달하면 예외가 발생한다")
-        void of_WithZeroOrNegative_ShouldThrowException() {
+        @DisplayName("of()에 잘못된 UUID 형식을 전달하면 예외가 발생한다")
+        void of_WithInvalidFormat_ShouldThrowException() {
             // given & when & then
-            assertThatThrownBy(() -> ExternalDownloadOutboxId.of(0L))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("1 이상");
-
-            assertThatThrownBy(() -> ExternalDownloadOutboxId.of(-1L))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("1 이상");
+            assertThatThrownBy(() -> ExternalDownloadOutboxId.of("invalid-uuid"))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -69,8 +68,10 @@ class ExternalDownloadOutboxIdTest {
         @DisplayName("같은 값의 ExternalDownloadOutboxId는 동등하다")
         void sameValue_ShouldBeEqual() {
             // given
-            ExternalDownloadOutboxId id1 = ExternalDownloadOutboxId.of(1L);
-            ExternalDownloadOutboxId id2 = ExternalDownloadOutboxId.of(1L);
+            ExternalDownloadOutboxId id1 =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
+            ExternalDownloadOutboxId id2 =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
 
             // when & then
             assertThat(id1).isEqualTo(id2);
@@ -81,8 +82,10 @@ class ExternalDownloadOutboxIdTest {
         @DisplayName("다른 값의 ExternalDownloadOutboxId는 동등하지 않다")
         void differentValue_ShouldNotBeEqual() {
             // given
-            ExternalDownloadOutboxId id1 = ExternalDownloadOutboxId.of(1L);
-            ExternalDownloadOutboxId id2 = ExternalDownloadOutboxId.of(2L);
+            ExternalDownloadOutboxId id1 =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
+            ExternalDownloadOutboxId id2 =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000002");
 
             // when & then
             assertThat(id1).isNotEqualTo(id2);

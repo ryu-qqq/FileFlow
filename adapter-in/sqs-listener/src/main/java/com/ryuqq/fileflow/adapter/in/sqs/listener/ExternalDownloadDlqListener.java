@@ -78,7 +78,7 @@ public class ExternalDownloadDlqListener {
     public void handleMessage(
             @Payload ExternalDownloadMessage payload, Acknowledgement acknowledgement) {
 
-        Long downloadId = payload.externalDownloadId();
+        String downloadId = payload.externalDownloadId();
         long startTime = System.currentTimeMillis();
 
         log.warn(
@@ -104,7 +104,7 @@ public class ExternalDownloadDlqListener {
     }
 
     /** 성공 처리. */
-    private void handleSuccess(Long downloadId, long startTime) {
+    private void handleSuccess(String downloadId, long startTime) {
         long duration = System.currentTimeMillis() - startTime;
         metrics.recordProcessed();
         metrics.recordDuration(duration);
@@ -116,7 +116,7 @@ public class ExternalDownloadDlqListener {
     }
 
     /** 에러 처리. */
-    private void handleError(Long downloadId, long startTime, Exception e) {
+    private void handleError(String downloadId, long startTime, Exception e) {
         long duration = System.currentTimeMillis() - startTime;
         metrics.recordError();
         metrics.recordDuration(duration);

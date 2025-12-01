@@ -3,9 +3,9 @@ package com.ryuqq.fileflow.application.download.assembler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadBundle;
 import com.ryuqq.fileflow.application.download.dto.command.RequestExternalDownloadCommand;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
@@ -136,7 +136,7 @@ class ExternalDownloadAssemblerTest {
             assertThat(result.getWebhookUrl()).isNull();
             assertThat(result.getStatus()).isEqualTo(ExternalDownloadStatus.PENDING);
             assertThat(result.getRetryCountValue()).isZero();
-            assertThat(result.getId().isNew()).isTrue();
+            assertThat(result.getId().value()).isNotNull(); // UUID는 항상 값이 있음
         }
 
         @Test

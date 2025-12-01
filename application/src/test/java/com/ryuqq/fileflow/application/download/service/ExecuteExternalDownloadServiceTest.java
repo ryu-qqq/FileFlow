@@ -30,7 +30,7 @@ class ExecuteExternalDownloadServiceTest {
         @DisplayName("정상적으로 다운로드를 실행한다")
         void shouldExecuteDownloadSuccessfully() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             ExecuteExternalDownloadCommand command = new ExecuteExternalDownloadCommand(downloadId);
 
             // when
@@ -44,7 +44,7 @@ class ExecuteExternalDownloadServiceTest {
         @DisplayName("Command의 externalDownloadId로 Facade를 호출한다")
         void shouldCallFacadeWithDownloadId() {
             // given
-            Long downloadId = 999L;
+            String downloadId = "00000000-0000-0000-0000-0000000003e7";
             ExecuteExternalDownloadCommand command = new ExecuteExternalDownloadCommand(downloadId);
 
             // when
@@ -58,7 +58,7 @@ class ExecuteExternalDownloadServiceTest {
         @DisplayName("Facade에서 예외 발생 시 예외를 전파한다")
         void shouldPropagateExceptionFromFacade() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             ExecuteExternalDownloadCommand command = new ExecuteExternalDownloadCommand(downloadId);
 
             RuntimeException exception = new RuntimeException("Download failed");
@@ -76,7 +76,7 @@ class ExecuteExternalDownloadServiceTest {
         @DisplayName("IllegalStateException 발생 시 예외를 전파한다")
         void shouldPropagateIllegalStateException() {
             // given
-            Long downloadId = 999L;
+            String downloadId = "00000000-0000-0000-0000-0000000003e7";
             ExecuteExternalDownloadCommand command = new ExecuteExternalDownloadCommand(downloadId);
 
             IllegalStateException exception =
@@ -93,9 +93,12 @@ class ExecuteExternalDownloadServiceTest {
         @DisplayName("여러 다운로드를 순차적으로 실행할 수 있다")
         void shouldExecuteMultipleDownloadsSequentially() {
             // given
-            ExecuteExternalDownloadCommand command1 = new ExecuteExternalDownloadCommand(1L);
-            ExecuteExternalDownloadCommand command2 = new ExecuteExternalDownloadCommand(2L);
-            ExecuteExternalDownloadCommand command3 = new ExecuteExternalDownloadCommand(3L);
+            ExecuteExternalDownloadCommand command1 =
+                    new ExecuteExternalDownloadCommand("00000000-0000-0000-0000-000000000001");
+            ExecuteExternalDownloadCommand command2 =
+                    new ExecuteExternalDownloadCommand("00000000-0000-0000-0000-000000000002");
+            ExecuteExternalDownloadCommand command3 =
+                    new ExecuteExternalDownloadCommand("00000000-0000-0000-0000-000000000003");
 
             // when
             service.execute(command1);
@@ -103,9 +106,9 @@ class ExecuteExternalDownloadServiceTest {
             service.execute(command3);
 
             // then
-            verify(facade).process(1L);
-            verify(facade).process(2L);
-            verify(facade).process(3L);
+            verify(facade).process("00000000-0000-0000-0000-000000000001");
+            verify(facade).process("00000000-0000-0000-0000-000000000002");
+            verify(facade).process("00000000-0000-0000-0000-000000000003");
         }
     }
 }

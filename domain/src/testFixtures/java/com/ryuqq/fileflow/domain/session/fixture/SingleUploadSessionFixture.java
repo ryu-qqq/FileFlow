@@ -71,6 +71,7 @@ public class SingleUploadSessionFixture {
 
     /** 영속화된 SingleUploadSession Fixture (reconstitute) */
     public static SingleUploadSession existingSingleUploadSession() {
+        LocalDateTime createdAt = LocalDateTime.now().minusMinutes(5);
         return SingleUploadSession.reconstitute(
                 UploadSessionIdFixture.fixedUploadSessionId(),
                 IdempotencyKeyFixture.fixedIdempotencyKey(),
@@ -81,11 +82,12 @@ public class SingleUploadSessionFixture {
                 S3BucketFixture.defaultS3Bucket(),
                 S3KeyFixture.defaultS3Key(),
                 ExpirationTimeFixture.defaultExpirationTime(),
-                LocalDateTime.now().minusMinutes(5),
+                createdAt,
                 SessionStatus.ACTIVE,
                 PresignedUrlFixture.defaultPresignedUrl(),
                 null,
                 null,
+                createdAt, // updatedAt
                 1L,
                 ClockFixture.defaultClock());
     }

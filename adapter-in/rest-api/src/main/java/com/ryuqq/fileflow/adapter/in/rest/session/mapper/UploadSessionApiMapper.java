@@ -67,7 +67,8 @@ public class UploadSessionApiMapper {
                 request.tenantId(),
                 request.organizationId(),
                 request.userId(),
-                request.userEmail());
+                request.userEmail(),
+                request.uploadCategory());
     }
 
     /**

@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,21 +34,22 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("Domain을 Entity로 변환할 수 있다")
         void shouldConvertDomainToEntity() {
             // given
-            ExternalDownloadOutbox domain = createDomainWithId(1L);
+            UUID id = UUID.randomUUID();
+            ExternalDownloadOutbox domain = createDomainWithId(id);
 
             // when
             ExternalDownloadOutboxJpaEntity entity = mapper.toEntity(domain);
 
             // then
-            assertThat(entity.getId()).isEqualTo(1L);
+            assertThat(entity.getId()).isEqualTo(id);
             assertThat(entity.getExternalDownloadId())
                     .isEqualTo(domain.getExternalDownloadId().value());
             assertThat(entity.getPublished()).isEqualTo(domain.isPublished());
         }
 
         @Test
-        @DisplayName("신규 Domain(ID가 new)인 경우 Entity ID는 null이다")
-        void shouldHaveNullIdForNewDomain() {
+        @DisplayName("신규 Domain도 UUID를 가지므로 Entity ID가 설정된다")
+        void shouldHaveIdForNewDomain() {
             // given
             ExternalDownloadOutbox domain = createNewDomain();
 
@@ -55,17 +57,19 @@ class ExternalDownloadOutboxJpaMapperTest {
             ExternalDownloadOutboxJpaEntity entity = mapper.toEntity(domain);
 
             // then
-            assertThat(entity.getId()).isNull();
+            assertThat(entity.getId()).isNotNull(); // UUID는 항상 값이 있음
         }
 
         @Test
         @DisplayName("미발행 상태의 Domain을 Entity로 변환할 수 있다")
         void shouldConvertUnpublishedDomain() {
             // given
+            UUID outboxId = UUID.randomUUID();
+            UUID downloadId = UUID.randomUUID();
             ExternalDownloadOutbox domain =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(1L),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadOutboxId.of(outboxId),
+                            ExternalDownloadId.of(downloadId),
                             false,
                             null,
                             Instant.now());
@@ -82,11 +86,13 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("발행 완료 상태의 Domain을 Entity로 변환할 수 있다")
         void shouldConvertPublishedDomain() {
             // given
+            UUID outboxId = UUID.randomUUID();
+            UUID downloadId = UUID.randomUUID();
             Instant publishedAt = Instant.now();
             ExternalDownloadOutbox domain =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(1L),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadOutboxId.of(outboxId),
+                            ExternalDownloadId.of(downloadId),
                             true,
                             publishedAt,
                             Instant.now());
@@ -103,11 +109,13 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("Instant를 LocalDateTime(UTC)으로 변환한다")
         void shouldConvertInstantToLocalDateTime() {
             // given
+            UUID outboxId = UUID.randomUUID();
+            UUID downloadId = UUID.randomUUID();
             Instant createdAt = Instant.parse("2025-11-26T12:00:00Z");
             ExternalDownloadOutbox domain =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(1L),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadOutboxId.of(outboxId),
+                            ExternalDownloadId.of(downloadId),
                             false,
                             null,
                             createdAt);
@@ -129,7 +137,7 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("Entity를 Domain으로 변환할 수 있다")
         void shouldConvertEntityToDomain() {
             // given
-            ExternalDownloadOutboxJpaEntity entity = createEntity(1L, false);
+            ExternalDownloadOutboxJpaEntity entity = createEntity(UUID.randomUUID(), false);
 
             // when
             ExternalDownloadOutbox domain = mapper.toDomain(entity);
@@ -145,7 +153,7 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("미발행 상태의 Entity를 Domain으로 변환할 수 있다")
         void shouldConvertUnpublishedEntity() {
             // given
-            ExternalDownloadOutboxJpaEntity entity = createEntity(1L, false);
+            ExternalDownloadOutboxJpaEntity entity = createEntity(UUID.randomUUID(), false);
 
             // when
             ExternalDownloadOutbox domain = mapper.toDomain(entity);
@@ -159,7 +167,7 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("발행 완료 상태의 Entity를 Domain으로 변환할 수 있다")
         void shouldConvertPublishedEntity() {
             // given
-            ExternalDownloadOutboxJpaEntity entity = createEntity(1L, true);
+            ExternalDownloadOutboxJpaEntity entity = createEntity(UUID.randomUUID(), true);
 
             // when
             ExternalDownloadOutbox domain = mapper.toDomain(entity);
@@ -173,9 +181,12 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("LocalDateTime을 Instant(UTC)로 변환한다")
         void shouldConvertLocalDateTimeToInstant() {
             // given
+            UUID outboxId = UUID.randomUUID();
+            UUID downloadId = UUID.randomUUID();
             LocalDateTime createdAt = LocalDateTime.of(2025, 11, 26, 12, 0, 0);
             ExternalDownloadOutboxJpaEntity entity =
-                    ExternalDownloadOutboxJpaEntity.of(1L, 100L, false, null, createdAt, createdAt);
+                    ExternalDownloadOutboxJpaEntity.of(
+                            outboxId, downloadId, false, null, createdAt, createdAt);
 
             // when
             ExternalDownloadOutbox domain = mapper.toDomain(entity);
@@ -194,7 +205,7 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("Domain → Entity → Domain 변환 시 데이터가 보존된다")
         void shouldPreserveDataInRoundTrip() {
             // given
-            ExternalDownloadOutbox original = createDomainWithId(1L);
+            ExternalDownloadOutbox original = createDomainWithId(UUID.randomUUID());
 
             // when
             ExternalDownloadOutboxJpaEntity entity = mapper.toEntity(original);
@@ -211,10 +222,12 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("미발행 상태의 양방향 변환이 보존된다")
         void shouldPreserveUnpublishedStateInRoundTrip() {
             // given
+            UUID outboxId = UUID.randomUUID();
+            UUID downloadId = UUID.randomUUID();
             ExternalDownloadOutbox original =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(1L),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadOutboxId.of(outboxId),
+                            ExternalDownloadId.of(downloadId),
                             false,
                             null,
                             Instant.now());
@@ -232,11 +245,13 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("발행 완료 상태의 양방향 변환이 보존된다")
         void shouldPreservePublishedStateInRoundTrip() {
             // given
+            UUID outboxId = UUID.randomUUID();
+            UUID downloadId = UUID.randomUUID();
             Instant publishedAt = Instant.now();
             ExternalDownloadOutbox original =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(1L),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadOutboxId.of(outboxId),
+                            ExternalDownloadId.of(downloadId),
                             true,
                             publishedAt,
                             Instant.now());
@@ -254,11 +269,13 @@ class ExternalDownloadOutboxJpaMapperTest {
         @DisplayName("시간 정보가 양방향 변환에서 보존된다")
         void shouldPreserveTimeInRoundTrip() {
             // given
+            UUID outboxId = UUID.randomUUID();
+            UUID downloadId = UUID.randomUUID();
             Instant createdAt = Instant.parse("2025-11-26T12:00:00Z");
             ExternalDownloadOutbox original =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(1L),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadOutboxId.of(outboxId),
+                            ExternalDownloadId.of(downloadId),
                             false,
                             null,
                             createdAt);
@@ -276,27 +293,30 @@ class ExternalDownloadOutboxJpaMapperTest {
 
     // ==================== Helper Methods ====================
 
-    private ExternalDownloadOutbox createDomainWithId(Long id) {
+    private ExternalDownloadOutbox createDomainWithId(UUID id) {
+        UUID downloadId = UUID.randomUUID();
         return ExternalDownloadOutbox.of(
                 ExternalDownloadOutboxId.of(id),
-                ExternalDownloadId.of(100L),
+                ExternalDownloadId.of(downloadId),
                 false,
                 null,
                 Instant.now());
     }
 
     private ExternalDownloadOutbox createNewDomain() {
+        UUID downloadId = UUID.randomUUID();
         return ExternalDownloadOutbox.of(
                 ExternalDownloadOutboxId.forNew(),
-                ExternalDownloadId.of(100L),
+                ExternalDownloadId.of(downloadId),
                 false,
                 null,
                 Instant.now());
     }
 
-    private ExternalDownloadOutboxJpaEntity createEntity(Long id, boolean published) {
+    private ExternalDownloadOutboxJpaEntity createEntity(UUID id, boolean published) {
+        UUID downloadId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime publishedAt = published ? now : null;
-        return ExternalDownloadOutboxJpaEntity.of(id, 100L, published, publishedAt, now, now);
+        return ExternalDownloadOutboxJpaEntity.of(id, downloadId, published, publishedAt, now, now);
     }
 }

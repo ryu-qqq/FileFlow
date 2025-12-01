@@ -60,6 +60,10 @@ langfuse/tests/__pycache__/
 .pipeline-metrics/metrics.jsonl
 .pipeline-metrics/report.md
 .env
+.env.aws
+local-dev/.env.local
+local-dev/.env.aws
+local-dev/test-files/
 
 # Terraform
 **/.terraform/

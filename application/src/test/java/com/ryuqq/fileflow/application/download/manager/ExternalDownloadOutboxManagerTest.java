@@ -5,8 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.download.port.out.command.ExternalDownloadOutboxPersistencePort;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadOutboxFixture;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
@@ -44,7 +44,8 @@ class ExternalDownloadOutboxManagerTest {
         void shouldSaveAndReturnId() {
             // given
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
-            ExternalDownloadOutboxId expectedId = ExternalDownloadOutboxId.of(1L);
+            ExternalDownloadOutboxId expectedId =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
 
             given(persistencePort.persist(outbox)).willReturn(expectedId);
 
@@ -61,7 +62,8 @@ class ExternalDownloadOutboxManagerTest {
         void shouldSaveNewOutbox() {
             // given
             ExternalDownloadOutbox newOutbox = ExternalDownloadOutboxFixture.defaultOutbox();
-            ExternalDownloadOutboxId generatedId = ExternalDownloadOutboxId.of(999L);
+            ExternalDownloadOutboxId generatedId =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-0000000003e7");
 
             given(persistencePort.persist(any(ExternalDownloadOutbox.class)))
                     .willReturn(generatedId);
@@ -71,7 +73,7 @@ class ExternalDownloadOutboxManagerTest {
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.value()).isEqualTo(999L);
+            assertThat(result.getValue()).isEqualTo("00000000-0000-0000-0000-0000000003e7");
             verify(persistencePort).persist(newOutbox);
         }
     }

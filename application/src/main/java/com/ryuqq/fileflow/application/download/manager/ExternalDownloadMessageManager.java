@@ -43,7 +43,7 @@ public class ExternalDownloadMessageManager {
 
     private ExternalDownloadMessage toMessage(ExternalDownloadRegisteredEvent event) {
         return new ExternalDownloadMessage(
-                event.downloadId().value(),
+                event.downloadId().value().toString(),
                 event.sourceUrl().value(),
                 event.tenantId(),
                 event.organizationId());

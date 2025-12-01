@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSessionJpaEntity;
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
@@ -251,6 +251,7 @@ class SingleUploadSessionJpaMapperTest {
         Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
+        LocalDateTime now = LocalDateTime.now();
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.randomUUID()),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -261,11 +262,12 @@ class SingleUploadSessionJpaMapperTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
                 ExpirationTime.of(LocalDateTime.now().plusMinutes(15)),
-                LocalDateTime.now(),
+                now,
                 status,
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/..."),
                 null,
                 null,
+                now,
                 0L,
                 fixedClock);
     }
@@ -275,6 +277,7 @@ class SingleUploadSessionJpaMapperTest {
         Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
+        LocalDateTime now = LocalDateTime.now();
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.randomUUID()),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -285,11 +288,12 @@ class SingleUploadSessionJpaMapperTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
                 ExpirationTime.of(LocalDateTime.now().plusMinutes(15)),
-                LocalDateTime.now(),
+                now,
                 SessionStatus.PREPARING,
                 null,
                 null,
                 null,
+                now,
                 null,
                 fixedClock);
     }
@@ -299,6 +303,7 @@ class SingleUploadSessionJpaMapperTest {
         Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
+        LocalDateTime now = LocalDateTime.now();
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.randomUUID()),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -309,11 +314,12 @@ class SingleUploadSessionJpaMapperTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
                 ExpirationTime.of(LocalDateTime.now().plusMinutes(15)),
-                LocalDateTime.now(),
+                now,
                 SessionStatus.COMPLETED,
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/..."),
                 ETag.of("\"abc123\""),
-                LocalDateTime.now(),
+                now,
+                now,
                 1L,
                 fixedClock);
     }

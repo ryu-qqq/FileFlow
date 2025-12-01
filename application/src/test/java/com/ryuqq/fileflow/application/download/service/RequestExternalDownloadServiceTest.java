@@ -57,7 +57,8 @@ class RequestExternalDownloadServiceTest {
             ExternalDownload download = ExternalDownloadFixture.pendingDownload();
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
             ExternalDownloadBundle bundle = new ExternalDownloadBundle(download, outbox);
-            ExternalDownloadId savedId = ExternalDownloadId.of(1L);
+            ExternalDownloadId savedId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
 
             given(assembler.toBundle(command)).willReturn(bundle);
             given(facade.saveAndPublishEvent(bundle)).willReturn(savedId);
@@ -66,7 +67,7 @@ class RequestExternalDownloadServiceTest {
             ExternalDownloadResponse response = service.execute(command);
 
             // then
-            assertThat(response.id()).isEqualTo(1L);
+            assertThat(response.id()).isEqualTo("00000000-0000-0000-0000-000000000001");
             assertThat(response.status()).isEqualTo(ExternalDownloadStatus.PENDING.name());
             assertThat(response.createdAt()).isEqualTo(download.getCreatedAt());
 
@@ -85,7 +86,8 @@ class RequestExternalDownloadServiceTest {
             ExternalDownload download = ExternalDownloadFixture.pendingDownloadWithWebhook();
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
             ExternalDownloadBundle bundle = new ExternalDownloadBundle(download, outbox);
-            ExternalDownloadId savedId = ExternalDownloadId.of(1L);
+            ExternalDownloadId savedId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
 
             given(assembler.toBundle(command)).willReturn(bundle);
             given(facade.saveAndPublishEvent(bundle)).willReturn(savedId);

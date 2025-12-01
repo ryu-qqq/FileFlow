@@ -27,7 +27,8 @@ class ExternalDownloadFileCreatedEventTest {
         @DisplayName("of 팩토리 메서드로 이벤트를 생성할 수 있다")
         void of_WithValidParameters_ShouldCreateEvent() {
             // given
-            ExternalDownloadId downloadId = ExternalDownloadId.of(1L);
+            ExternalDownloadId downloadId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/image.jpg");
             FileName fileName = FileName.of("image.jpg");
             FileSize fileSize = FileSize.of(1024L);
@@ -75,7 +76,8 @@ class ExternalDownloadFileCreatedEventTest {
         @DisplayName("record 생성자로 직접 이벤트를 생성할 수 있다")
         void constructor_WithValidParameters_ShouldCreateEvent() {
             // given
-            ExternalDownloadId downloadId = ExternalDownloadId.of(1L);
+            ExternalDownloadId downloadId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/video.mp4");
             FileName fileName = FileName.of("video.mp4");
             FileSize fileSize = FileSize.of(5000L);
@@ -154,7 +156,7 @@ class ExternalDownloadFileCreatedEventTest {
             ExternalDownloadFileCreatedEvent event1 = createTestEvent(completedAt);
             ExternalDownloadFileCreatedEvent event2 =
                     ExternalDownloadFileCreatedEvent.of(
-                            ExternalDownloadId.of(999L),
+                            ExternalDownloadId.of("00000000-0000-0000-0000-000000000002"),
                             SourceUrl.of("https://example.com/image.jpg"),
                             FileName.of("image.jpg"),
                             FileSize.of(1024L),
@@ -174,7 +176,7 @@ class ExternalDownloadFileCreatedEventTest {
 
     private ExternalDownloadFileCreatedEvent createTestEvent(LocalDateTime completedAt) {
         return ExternalDownloadFileCreatedEvent.of(
-                ExternalDownloadId.of(1L),
+                ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                 SourceUrl.of("https://example.com/image.jpg"),
                 FileName.of("image.jpg"),
                 FileSize.of(1024L),

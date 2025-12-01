@@ -38,7 +38,8 @@ class ExternalDownloadFileCreatedEventListenerTest {
         @DisplayName("파일 생성 이벤트 수신 시 FileAsset을 생성하고 저장한다")
         void shouldCreateAndPersistFileAsset() {
             // given
-            ExternalDownloadFileCreatedEvent event = createEvent(1L, "test-image.jpg");
+            ExternalDownloadFileCreatedEvent event =
+                    createEvent("00000000-0000-0000-0000-000000000001", "test-image.jpg");
 
             // when
             listener.handle(event);
@@ -51,9 +52,12 @@ class ExternalDownloadFileCreatedEventListenerTest {
         @DisplayName("여러 파일 생성 이벤트를 순차적으로 처리할 수 있다")
         void shouldHandleMultipleEventsSequentially() {
             // given
-            ExternalDownloadFileCreatedEvent event1 = createEvent(1L, "image1.jpg");
-            ExternalDownloadFileCreatedEvent event2 = createEvent(2L, "image2.png");
-            ExternalDownloadFileCreatedEvent event3 = createEvent(3L, "document.pdf");
+            ExternalDownloadFileCreatedEvent event1 =
+                    createEvent("00000000-0000-0000-0000-000000000001", "image1.jpg");
+            ExternalDownloadFileCreatedEvent event2 =
+                    createEvent("00000000-0000-0000-0000-000000000002", "image2.png");
+            ExternalDownloadFileCreatedEvent event3 =
+                    createEvent("00000000-0000-0000-0000-000000000003", "document.pdf");
 
             // when
             listener.handle(event1);
@@ -83,7 +87,8 @@ class ExternalDownloadFileCreatedEventListenerTest {
         @DisplayName("PNG 파일 생성 이벤트도 정상 처리된다")
         void shouldHandlePngFileEvent() {
             // given
-            ExternalDownloadFileCreatedEvent event = createEvent(10L, "logo.png");
+            ExternalDownloadFileCreatedEvent event =
+                    createEvent("00000000-0000-0000-0000-00000000000a", "logo.png");
 
             // when
             listener.handle(event);
@@ -98,7 +103,7 @@ class ExternalDownloadFileCreatedEventListenerTest {
             // given
             ExternalDownloadFileCreatedEvent event =
                     ExternalDownloadFileCreatedEvent.of(
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadId.forNew(),
                             SourceUrl.of("https://example.com/large-video.mp4"),
                             FileName.of("large-video.mp4"),
                             FileSize.of(1024L * 1024L * 500L), // 500MB
@@ -121,7 +126,7 @@ class ExternalDownloadFileCreatedEventListenerTest {
 
     // ==================== Helper Methods ====================
 
-    private ExternalDownloadFileCreatedEvent createEvent(Long downloadId, String fileName) {
+    private ExternalDownloadFileCreatedEvent createEvent(String downloadId, String fileName) {
         return ExternalDownloadFileCreatedEvent.of(
                 ExternalDownloadId.of(downloadId),
                 SourceUrl.of("https://example.com/" + fileName),
@@ -139,7 +144,7 @@ class ExternalDownloadFileCreatedEventListenerTest {
 
     private ExternalDownloadFileCreatedEvent createDetailedEvent() {
         return ExternalDownloadFileCreatedEvent.of(
-                ExternalDownloadId.of(999L),
+                ExternalDownloadId.forNew(),
                 SourceUrl.of("https://example.com/detailed-test.jpg"),
                 FileName.of("detailed-test.jpg"),
                 FileSize.of(2048L * 1024L), // 2MB

@@ -17,6 +17,7 @@ import jakarta.validation.constraints.Positive;
  * @param organizationId 조직 ID
  * @param userId 사용자 ID (Customer 전용, null 가능)
  * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
+ * @param uploadCategory 업로드 카테고리 (Admin/Seller 필수, Customer는 null)
  * @author development-team
  * @since 1.0.0
  */
@@ -29,4 +30,5 @@ public record InitSingleUploadApiRequest(
         @NotNull(message = "조직 ID는 필수입니다") @Positive(message = "조직 ID는 양수여야 합니다")
                 Long organizationId,
         Long userId,
-        String userEmail) {}
+        String userEmail,
+        String uploadCategory) {}

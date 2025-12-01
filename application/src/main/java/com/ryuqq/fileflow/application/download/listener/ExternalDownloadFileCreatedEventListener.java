@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -30,9 +32,12 @@ public class ExternalDownloadFileCreatedEventListener {
      *
      * <p>원본 트랜잭션 커밋 후 실행됩니다.
      *
+     * <p><strong>트랜잭션 전파</strong>: REQUIRES_NEW를 사용하여 독립적인 트랜잭션에서 실행됩니다.
+     *
      * @param event 외부 다운로드 파일 생성 이벤트
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handle(ExternalDownloadFileCreatedEvent event) {
         log.info(
                 "외부 다운로드 파일 생성 이벤트 처리 시작: downloadId={}, fileName={}",

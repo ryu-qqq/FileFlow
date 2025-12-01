@@ -1,10 +1,10 @@
 package com.ryuqq.fileflow.application.download.service;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
 import com.ryuqq.fileflow.application.download.port.in.command.MarkExternalDownloadAsFailedUseCase;
 import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import java.time.Clock;
@@ -52,7 +52,7 @@ public class MarkExternalDownloadAsFailedService implements MarkExternalDownload
     }
 
     @Override
-    public void markAsFailed(Long externalDownloadId, String errorMessage) {
+    public void markAsFailed(String externalDownloadId, String errorMessage) {
         Clock clock = clockHolder.getClock();
 
         // 1. ExternalDownload 조회

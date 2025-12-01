@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.session.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSessionJpaEntity;
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
@@ -95,6 +95,7 @@ public class SingleUploadSessionJpaMapper {
                 entity.getPresignedUrl() != null ? PresignedUrl.of(entity.getPresignedUrl()) : null,
                 entity.getEtag() != null ? ETag.of(entity.getEtag()) : null,
                 entity.getCompletedAt(),
+                entity.getUpdatedAt(),
                 entity.getVersion(),
                 clockHolder.getClock());
     }

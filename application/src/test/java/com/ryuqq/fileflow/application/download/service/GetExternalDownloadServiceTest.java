@@ -39,19 +39,25 @@ class GetExternalDownloadServiceTest {
         @DisplayName("존재하는 ExternalDownload 조회 시 상세 정보가 반환된다")
         void execute_WithExistingId_ShouldReturnDetailResponse() {
             // given
-            GetExternalDownloadQuery query = new GetExternalDownloadQuery(1L, 100L);
+            GetExternalDownloadQuery query =
+                    new GetExternalDownloadQuery("00000000-0000-0000-0000-000000000001", 100L);
 
             ExternalDownload externalDownload =
-                    ExternalDownloadFixture.withId(1L).tenantId(100L).build();
+                    ExternalDownloadFixture.withId("00000000-0000-0000-0000-000000000001")
+                            .tenantId(100L)
+                            .build();
 
-            given(externalDownloadQueryPort.findByIdAndTenantId(ExternalDownloadId.of(1L), 100L))
+            given(
+                            externalDownloadQueryPort.findByIdAndTenantId(
+                                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                                    100L))
                     .willReturn(Optional.of(externalDownload));
 
             // when
             ExternalDownloadDetailResponse response = service.execute(query);
 
             // then
-            assertThat(response.id()).isEqualTo(1L);
+            assertThat(response.id()).isEqualTo("00000000-0000-0000-0000-000000000001");
             assertThat(response.sourceUrl()).isEqualTo(externalDownload.getSourceUrl().value());
             assertThat(response.status()).isEqualTo(externalDownload.getStatus().name());
             assertThat(response.retryCount()).isEqualTo(externalDownload.getRetryCountValue());
@@ -62,15 +68,19 @@ class GetExternalDownloadServiceTest {
         @DisplayName("webhookUrl이 있는 ExternalDownload 조회 시 응답에 포함된다")
         void execute_WithWebhookUrl_ShouldIncludeWebhookUrl() {
             // given
-            GetExternalDownloadQuery query = new GetExternalDownloadQuery(1L, 100L);
+            GetExternalDownloadQuery query =
+                    new GetExternalDownloadQuery("00000000-0000-0000-0000-000000000001", 100L);
 
             ExternalDownload externalDownload =
-                    ExternalDownloadFixture.withId(1L)
+                    ExternalDownloadFixture.withId("00000000-0000-0000-0000-000000000001")
                             .tenantId(100L)
                             .webhookUrl("https://callback.example.com/webhook")
                             .build();
 
-            given(externalDownloadQueryPort.findByIdAndTenantId(ExternalDownloadId.of(1L), 100L))
+            given(
+                            externalDownloadQueryPort.findByIdAndTenantId(
+                                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                                    100L))
                     .willReturn(Optional.of(externalDownload));
 
             // when
@@ -84,12 +94,19 @@ class GetExternalDownloadServiceTest {
         @DisplayName("완료된 ExternalDownload 조회 시 fileAssetId가 포함된다")
         void execute_WithCompletedStatus_ShouldIncludeFileAssetId() {
             // given
-            GetExternalDownloadQuery query = new GetExternalDownloadQuery(1L, 100L);
+            GetExternalDownloadQuery query =
+                    new GetExternalDownloadQuery("00000000-0000-0000-0000-000000000001", 100L);
 
             ExternalDownload externalDownload =
-                    ExternalDownloadFixture.withId(1L).tenantId(100L).completed().build();
+                    ExternalDownloadFixture.withId("00000000-0000-0000-0000-000000000001")
+                            .tenantId(100L)
+                            .completed()
+                            .build();
 
-            given(externalDownloadQueryPort.findByIdAndTenantId(ExternalDownloadId.of(1L), 100L))
+            given(
+                            externalDownloadQueryPort.findByIdAndTenantId(
+                                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                                    100L))
                     .willReturn(Optional.of(externalDownload));
 
             // when
@@ -104,15 +121,19 @@ class GetExternalDownloadServiceTest {
         @DisplayName("실패한 ExternalDownload 조회 시 errorMessage가 포함된다")
         void execute_WithFailedStatus_ShouldIncludeErrorMessage() {
             // given
-            GetExternalDownloadQuery query = new GetExternalDownloadQuery(1L, 100L);
+            GetExternalDownloadQuery query =
+                    new GetExternalDownloadQuery("00000000-0000-0000-0000-000000000001", 100L);
 
             ExternalDownload externalDownload =
-                    ExternalDownloadFixture.withId(1L)
+                    ExternalDownloadFixture.withId("00000000-0000-0000-0000-000000000001")
                             .tenantId(100L)
                             .failed("다운로드 실패: timeout")
                             .build();
 
-            given(externalDownloadQueryPort.findByIdAndTenantId(ExternalDownloadId.of(1L), 100L))
+            given(
+                            externalDownloadQueryPort.findByIdAndTenantId(
+                                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                                    100L))
                     .willReturn(Optional.of(externalDownload));
 
             // when
@@ -127,24 +148,32 @@ class GetExternalDownloadServiceTest {
         @DisplayName("존재하지 않는 ExternalDownload 조회 시 예외가 발생한다")
         void execute_WithNonExistingId_ShouldThrowException() {
             // given
-            GetExternalDownloadQuery query = new GetExternalDownloadQuery(999L, 100L);
+            GetExternalDownloadQuery query =
+                    new GetExternalDownloadQuery("00000000-0000-0000-0000-0000000003e7", 100L);
 
-            given(externalDownloadQueryPort.findByIdAndTenantId(ExternalDownloadId.of(999L), 100L))
+            given(
+                            externalDownloadQueryPort.findByIdAndTenantId(
+                                    ExternalDownloadId.of("00000000-0000-0000-0000-0000000003e7"),
+                                    100L))
                     .willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> service.execute(query))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("999");
+                    .hasMessageContaining("0000000003e7");
         }
 
         @Test
         @DisplayName("다른 테넌트의 ExternalDownload 조회 시 예외가 발생한다")
         void execute_WithDifferentTenantId_ShouldThrowException() {
             // given
-            GetExternalDownloadQuery query = new GetExternalDownloadQuery(1L, 200L);
+            GetExternalDownloadQuery query =
+                    new GetExternalDownloadQuery("00000000-0000-0000-0000-000000000001", 200L);
 
-            given(externalDownloadQueryPort.findByIdAndTenantId(ExternalDownloadId.of(1L), 200L))
+            given(
+                            externalDownloadQueryPort.findByIdAndTenantId(
+                                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                                    200L))
                     .willReturn(Optional.empty());
 
             // when & then

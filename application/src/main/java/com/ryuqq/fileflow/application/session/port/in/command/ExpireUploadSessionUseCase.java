@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.application.session.port.in.command;
 
 import com.ryuqq.fileflow.application.session.dto.command.ExpireUploadSessionCommand;
 import com.ryuqq.fileflow.application.session.dto.response.ExpireUploadSessionResponse;
+import com.ryuqq.fileflow.domain.session.aggregate.UploadSession;
 
 /**
  * 업로드 세션 만료 처리 UseCase.
@@ -26,4 +27,6 @@ public interface ExpireUploadSessionUseCase {
      * @return 만료된 세션 정보
      */
     ExpireUploadSessionResponse execute(ExpireUploadSessionCommand command);
+
+    <T extends UploadSession> ExpireUploadSessionResponse execute(T command);
 }

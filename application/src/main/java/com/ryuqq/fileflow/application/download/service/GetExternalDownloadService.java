@@ -41,7 +41,7 @@ public class GetExternalDownloadService implements GetExternalDownloadUseCase {
 
     private ExternalDownloadDetailResponse toDetailResponse(ExternalDownload externalDownload) {
         return new ExternalDownloadDetailResponse(
-                externalDownload.getId().value(),
+                externalDownload.getId().value().toString(),
                 externalDownload.getSourceUrl().value(),
                 externalDownload.getStatus().name(),
                 externalDownload.getFileAssetId() != null
