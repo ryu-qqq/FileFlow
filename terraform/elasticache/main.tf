@@ -125,7 +125,7 @@ resource "aws_ssm_parameter" "redis_endpoint" {
   name        = "/${var.project_name}/elasticache/redis-endpoint"
   description = "FileFlow Redis endpoint"
   type        = "String"
-  value       = module.redis.primary_endpoint_address
+  value       = module.redis.endpoint_address
 
   tags = {
     Name        = "${var.project_name}-redis-endpoint"
