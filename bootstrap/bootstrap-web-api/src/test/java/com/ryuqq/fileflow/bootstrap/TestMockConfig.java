@@ -108,6 +108,18 @@ public class TestMockConfig {
             public void persist(MultipartUploadSession session, Duration ttl) {
                 // No-op
             }
+
+            @Override
+            public void deleteSingleUploadSession(
+                    com.ryuqq.fileflow.domain.session.vo.UploadSessionId sessionId) {
+                // No-op
+            }
+
+            @Override
+            public void deleteMultipartUploadSession(
+                    com.ryuqq.fileflow.domain.session.vo.UploadSessionId sessionId) {
+                // No-op
+            }
         };
     }
 }

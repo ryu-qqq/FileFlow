@@ -47,7 +47,7 @@ public class RequestExternalDownloadService implements RequestExternalDownloadUs
 
         // 3. 응답 반환
         return new ExternalDownloadResponse(
-                savedId.value(),
+                savedId.value().toString(),
                 bundle.download().getStatus().name(),
                 bundle.download().getCreatedAt());
     }

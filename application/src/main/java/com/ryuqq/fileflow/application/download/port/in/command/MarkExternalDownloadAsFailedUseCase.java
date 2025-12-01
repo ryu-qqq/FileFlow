@@ -20,8 +20,8 @@ public interface MarkExternalDownloadAsFailedUseCase {
     /**
      * ExternalDownload를 최종 실패 상태로 변경합니다.
      *
-     * @param externalDownloadId ExternalDownload ID
+     * @param externalDownloadId ExternalDownload ID (UUID 문자열)
      * @param errorMessage 에러 메시지
      */
-    void markAsFailed(Long externalDownloadId, String errorMessage);
+    void markAsFailed(String externalDownloadId, String errorMessage);
 }

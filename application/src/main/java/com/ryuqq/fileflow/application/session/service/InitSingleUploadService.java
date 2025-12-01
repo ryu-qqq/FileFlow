@@ -7,6 +7,9 @@ import com.ryuqq.fileflow.application.session.facade.UploadSessionFacade;
 import com.ryuqq.fileflow.application.session.port.in.command.InitSingleUploadUseCase;
 import com.ryuqq.fileflow.application.session.port.out.query.FindUploadSessionQueryPort;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,6 +40,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class InitSingleUploadService implements InitSingleUploadUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(InitSingleUploadService.class);
+
     private final SingleUploadAssembler singleUploadAssembler;
     private final FindUploadSessionQueryPort findUploadSessionQueryPort;
     private final UploadSessionFacade uploadSessionFacade;
@@ -56,15 +61,45 @@ public class InitSingleUploadService implements InitSingleUploadUseCase {
         SingleUploadSession newSession = singleUploadAssembler.toDomain(command);
 
         // 2. 멱등성 키로 기존 세션 조회, 없으면 신규 생성
-        SingleUploadSession session =
-                findUploadSessionQueryPort
-                        .findSingleUploadByIdempotencyKey(newSession.getIdempotencyKey())
-                        .orElseGet(
-                                () ->
-                                        uploadSessionFacade.createAndActivateSingleUpload(
-                                                newSession));
+        SingleUploadSession session = findOrCreateSession(newSession);
 
         // 3. Response 변환 (getPresignedUrl 호출 시 만료 검증 자동 수행)
         return singleUploadAssembler.toResponse(session);
+    }
+
+    /**
+     * IdempotencyKey로 기존 세션 조회, 없으면 신규 생성.
+     *
+     * <p><strong>동시성 처리</strong>:
+     *
+     * <ul>
+     *   <li>DB에 (organization_id, idempotency_key) Unique 제약 존재
+     *   <li>동시 요청 시 한쪽만 INSERT 성공, 나머지는 DataIntegrityViolationException
+     *   <li>예외 발생 시 기존 세션 재조회하여 반환 (멱등성 보장)
+     * </ul>
+     */
+    private SingleUploadSession findOrCreateSession(SingleUploadSession newSession) {
+        return findUploadSessionQueryPort
+                .findSingleUploadByIdempotencyKey(newSession.getIdempotencyKey())
+                .orElseGet(() -> createSessionWithConcurrencyHandling(newSession));
+    }
+
+    private SingleUploadSession createSessionWithConcurrencyHandling(
+            SingleUploadSession newSession) {
+        try {
+            return uploadSessionFacade.createAndActivateSingleUpload(newSession);
+        } catch (DataIntegrityViolationException e) {
+            // 동시 요청으로 인한 중복 키 예외 → 기존 세션 재조회
+            log.info(
+                    "Concurrent request detected for idempotencyKey: {}, fetching existing session",
+                    newSession.getIdempotencyKey().getValue());
+            return findUploadSessionQueryPort
+                    .findSingleUploadByIdempotencyKey(newSession.getIdempotencyKey())
+                    .orElseThrow(
+                            () ->
+                                    new IllegalStateException(
+                                            "Session should exist after"
+                                                    + " DataIntegrityViolationException"));
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.ryuqq.fileflow.application.download.facade;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.download.assembler.ExternalDownloadAssembler;
 import com.ryuqq.fileflow.application.download.dto.DownloadResult;
 import com.ryuqq.fileflow.application.download.dto.response.S3UploadResponse;
@@ -8,6 +7,7 @@ import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
 import com.ryuqq.fileflow.application.download.port.out.client.HttpDownloadPort;
 import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.application.session.port.out.client.S3ClientPort;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
@@ -77,9 +77,9 @@ public class ExternalDownloadProcessingFacade {
     /**
      * 외부 다운로드 전체 프로세스를 실행합니다.
      *
-     * @param downloadId 외부 다운로드 ID
+     * @param downloadId 외부 다운로드 ID (UUID 문자열)
      */
-    public void process(Long downloadId) {
+    public void process(String downloadId) {
         Clock clock = clockHolder.getClock();
 
         // 1단계: ExternalDownload 조회 및 처리 시작 (트랜잭션)
@@ -117,7 +117,7 @@ public class ExternalDownloadProcessingFacade {
      * @param clock 시간 소스
      * @return ExternalDownload
      */
-    private ExternalDownload startProcessing(Long downloadId, Clock clock) {
+    private ExternalDownload startProcessing(String downloadId, Clock clock) {
         ExternalDownload download =
                 queryPort
                         .findById(ExternalDownloadId.of(downloadId))

@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.session.vo;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import java.util.UUID;
 
 /**
@@ -8,8 +9,16 @@ import java.util.UUID;
  * <p><strong>생성 패턴</strong>:
  *
  * <ul>
- *   <li>{@code generate()} - UUID 기반 신규 ID 생성
+ *   <li>{@code forNew()} - UUID v7 기반 신규 ID 생성 (시간 기반 정렬 가능)
  *   <li>{@code of(UUID value)} - 값 기반 생성
+ * </ul>
+ *
+ * <p><strong>UUID v7 특징</strong>:
+ *
+ * <ul>
+ *   <li>앞 48비트: Unix timestamp (밀리초) - 시간 순서 보장
+ *   <li>뒤 80비트: 랜덤 값 - 충돌 방지
+ *   <li>DB 인덱스 효율성 향상 (B-Tree 인덱스에 최적화)
  * </ul>
  *
  * @param value UUID 값
@@ -24,12 +33,12 @@ public record UploadSessionId(UUID value) {
     }
 
     /**
-     * 신규 세션 ID 생성 (UUID 랜덤 생성).
+     * 신규 세션 ID 생성 (UUID v7 - 시간 기반 정렬 가능).
      *
      * @return 신규 UploadSessionId
      */
     public static UploadSessionId forNew() {
-        return new UploadSessionId(UUID.randomUUID());
+        return new UploadSessionId(UuidCreator.getTimeOrderedEpoch());
     }
 
     /**

@@ -16,6 +16,7 @@ package com.ryuqq.fileflow.application.session.dto.command;
  *   <li>organizationId: 양수
  *   <li>userId: 양수 (Customer), null 가능 (Admin/Seller는 email 사용)
  *   <li>userEmail: null 가능 (Customer는 userId 사용)
+ *   <li>uploadCategory: Admin/Seller 필수, Customer는 null
  * </ul>
  *
  * @param idempotencyKey 멱등성 키 (클라이언트 제공 UUID)
@@ -26,6 +27,7 @@ package com.ryuqq.fileflow.application.session.dto.command;
  * @param organizationId 조직 ID
  * @param userId 사용자 ID (Customer 전용, null 가능)
  * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
+ * @param uploadCategory 업로드 카테고리 (Admin/Seller 필수, Customer는 null)
  */
 public record InitSingleUploadCommand(
         String idempotencyKey,
@@ -35,7 +37,8 @@ public record InitSingleUploadCommand(
         long tenantId,
         long organizationId,
         Long userId,
-        String userEmail) {
+        String userEmail,
+        String uploadCategory) {
 
     /**
      * 값 기반 생성.
@@ -48,6 +51,7 @@ public record InitSingleUploadCommand(
      * @param organizationId 조직 ID
      * @param userId 사용자 ID (null 가능)
      * @param userEmail 사용자 이메일 (null 가능)
+     * @param uploadCategory 업로드 카테고리 (null 가능)
      * @return InitSingleUploadCommand
      */
     public static InitSingleUploadCommand of(
@@ -58,7 +62,8 @@ public record InitSingleUploadCommand(
             long tenantId,
             long organizationId,
             Long userId,
-            String userEmail) {
+            String userEmail,
+            String uploadCategory) {
         return new InitSingleUploadCommand(
                 idempotencyKey,
                 fileName,
@@ -67,6 +72,7 @@ public record InitSingleUploadCommand(
                 tenantId,
                 organizationId,
                 userId,
-                userEmail);
+                userEmail,
+                uploadCategory);
     }
 }

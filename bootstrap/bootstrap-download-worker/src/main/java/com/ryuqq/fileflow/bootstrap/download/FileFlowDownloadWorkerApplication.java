@@ -27,19 +27,20 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
  */
 @SpringBootApplication(
         scanBasePackages = {
-                "com.ryuqq.fileflow.bootstrap",
-                "com.ryuqq.fileflow.adapter.in.sqs",
-                "com.ryuqq.fileflow.adapter.out.persistence",
-                "com.ryuqq.fileflow.adapter.out.aws.s3",
-                "com.ryuqq.fileflow.adapter.out.http",
-                "com.ryuqq.fileflow.adapter.out.redis",
-                "com.ryuqq.fileflow.application",
-                "com.ryuqq.fileflow.domain"
+            "com.ryuqq.fileflow.bootstrap",
+            "com.ryuqq.fileflow.adapter.in.sqs",
+            "com.ryuqq.fileflow.adapter.out.persistence",
+            "com.ryuqq.fileflow.adapter.out.aws.s3",
+            "com.ryuqq.fileflow.adapter.out.http",
+            "com.ryuqq.fileflow.adapter.out.redis",
+            "com.ryuqq.fileflow.application",
+            "com.ryuqq.fileflow.domain"
         })
-@ConfigurationPropertiesScan(basePackages = {
-        "com.ryuqq.fileflow.adapter.in.sqs.config",
-        "com.ryuqq.fileflow.adapter.out.persistence.config.properties"
-})
+@ConfigurationPropertiesScan(
+        basePackages = {
+            "com.ryuqq.fileflow.adapter.in.sqs.config",
+            "com.ryuqq.fileflow.adapter.out.persistence.config.properties"
+        })
 public class FileFlowDownloadWorkerApplication {
 
     public static void main(String[] args) {

@@ -6,26 +6,26 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * ExternalDownload JPA Entity.
  *
  * <p>외부 다운로드 요청 정보를 저장합니다.
+ *
+ * <p>ID는 UUID v7 (Time-Ordered) 사용.
  */
 @Entity
 @Table(name = "external_download")
 public class ExternalDownloadJpaEntity extends BaseAuditEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
-    private Long id;
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
 
     @Column(name = "source_url", nullable = false, length = 2048)
     private String sourceUrl;
@@ -67,7 +67,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
     }
 
     private ExternalDownloadJpaEntity(
-            Long id,
+            UUID id,
             String sourceUrl,
             Long tenantId,
             Long organizationId,
@@ -97,7 +97,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
     }
 
     public static ExternalDownloadJpaEntity of(
-            Long id,
+            UUID id,
             String sourceUrl,
             Long tenantId,
             Long organizationId,
@@ -128,7 +128,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
                 updatedAt);
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

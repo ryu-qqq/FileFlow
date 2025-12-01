@@ -347,9 +347,35 @@ public class ExternalDownload {
                 id, sourceUrl, tenantId, organizationId, webhookUrl, createdAt);
     }
 
+    /**
+     * 등록 이벤트를 생성하고 도메인 이벤트로 등록합니다.
+     *
+     * <p><strong>호출 시점</strong>: 저장 후 호출 권장 (UUID v7은 생성 시점에 이미 할당됨).
+     *
+     * <p><strong>사용 예</strong>:
+     *
+     * <pre>{@code
+     * ExternalDownload download = ExternalDownload.forNew(...); // UUID v7 생성
+     * ExternalDownloadId savedId = repository.save(download);
+     * download.publishRegisteredEvent(); // 이벤트 등록
+     * }</pre>
+     */
+    public void publishRegisteredEvent() {
+        registerEvent(createRegisteredEvent());
+    }
+
     // ========================================
     // 도메인 이벤트 관리
     // ========================================
+
+    /**
+     * 도메인 이벤트 초기화.
+     *
+     * <p>이벤트 발행 완료 후 호출하여 중복 발행을 방지합니다.
+     */
+    public void clearDomainEvents() {
+        domainEvents.clear();
+    }
 
     /**
      * 도메인 이벤트 등록.
@@ -374,27 +400,16 @@ public class ExternalDownload {
         return Collections.unmodifiableList(domainEvents);
     }
 
-    /**
-     * 도메인 이벤트 초기화.
-     *
-     * <p>이벤트 발행 완료 후 호출하여 중복 발행을 방지합니다.
-     */
-    public void clearDomainEvents() {
-        this.domainEvents.clear();
-    }
-
-    /**
-     * ID 값 조회.
-     *
-     * @return ID의 Long 값
-     */
-    public Long getIdValue() {
-        return id.value();
-    }
-
+    // ========================================
     // Getters
+    // ========================================
+
     public ExternalDownloadId getId() {
         return id;
+    }
+
+    public UUID getIdValue() {
+        return id.value();
     }
 
     public SourceUrl getSourceUrl() {

@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -45,7 +46,7 @@ class ExternalDownloadOutboxQueryAdapterTest {
         @DisplayName("ExternalDownloadId로 조회 시 존재하면 Domain을 반환한다")
         void shouldReturnDomainWhenExists() {
             // given
-            Long downloadId = 100L;
+            UUID downloadId = UUID.randomUUID();
             ExternalDownloadId externalDownloadId = ExternalDownloadId.of(downloadId);
             ExternalDownloadOutboxJpaEntity entity = createEntity(1L, downloadId);
             ExternalDownloadOutbox domain = createDomain(1L, downloadId);
@@ -69,7 +70,7 @@ class ExternalDownloadOutboxQueryAdapterTest {
         @DisplayName("ExternalDownloadId로 조회 시 존재하지 않으면 빈 Optional을 반환한다")
         void shouldReturnEmptyWhenNotExists() {
             // given
-            Long downloadId = 999L;
+            UUID downloadId = UUID.randomUUID();
             ExternalDownloadId externalDownloadId = ExternalDownloadId.of(downloadId);
 
             given(queryDslRepository.findByExternalDownloadId(downloadId))
@@ -88,7 +89,7 @@ class ExternalDownloadOutboxQueryAdapterTest {
         @DisplayName("Repository와 Mapper를 순차적으로 호출한다")
         void shouldCallRepositoryThenMapper() {
             // given
-            Long downloadId = 100L;
+            UUID downloadId = UUID.randomUUID();
             ExternalDownloadId externalDownloadId = ExternalDownloadId.of(downloadId);
             ExternalDownloadOutboxJpaEntity entity = createEntity(1L, downloadId);
             ExternalDownloadOutbox domain = createDomain(1L, downloadId);
@@ -115,11 +116,20 @@ class ExternalDownloadOutboxQueryAdapterTest {
         void shouldReturnUnpublishedOutboxes() {
             // given
             int limit = 10;
+            UUID downloadId1 = UUID.randomUUID();
+            UUID downloadId2 = UUID.randomUUID();
+            UUID downloadId3 = UUID.randomUUID();
             List<ExternalDownloadOutboxJpaEntity> entities =
-                    List.of(createEntity(1L, 100L), createEntity(2L, 200L), createEntity(3L, 300L));
+                    List.of(
+                            createEntity(1L, downloadId1),
+                            createEntity(2L, downloadId2),
+                            createEntity(3L, downloadId3));
 
             List<ExternalDownloadOutbox> domains =
-                    List.of(createDomain(1L, 100L), createDomain(2L, 200L), createDomain(3L, 300L));
+                    List.of(
+                            createDomain(1L, downloadId1),
+                            createDomain(2L, downloadId2),
+                            createDomain(3L, downloadId3));
 
             given(queryDslRepository.findUnpublished(limit)).willReturn(entities);
             given(mapper.toDomain(entities.get(0))).willReturn(domains.get(0));
@@ -170,11 +180,13 @@ class ExternalDownloadOutboxQueryAdapterTest {
         void shouldConvertEachEntityToDomain() {
             // given
             int limit = 2;
+            UUID downloadId1 = UUID.randomUUID();
+            UUID downloadId2 = UUID.randomUUID();
             List<ExternalDownloadOutboxJpaEntity> entities =
-                    List.of(createEntity(1L, 100L), createEntity(2L, 200L));
+                    List.of(createEntity(1L, downloadId1), createEntity(2L, downloadId2));
 
             List<ExternalDownloadOutbox> domains =
-                    List.of(createDomain(1L, 100L), createDomain(2L, 200L));
+                    List.of(createDomain(1L, downloadId1), createDomain(2L, downloadId2));
 
             given(queryDslRepository.findUnpublished(limit)).willReturn(entities);
             given(mapper.toDomain(entities.get(0))).willReturn(domains.get(0));
@@ -192,16 +204,18 @@ class ExternalDownloadOutboxQueryAdapterTest {
 
     // ==================== Helper Methods ====================
 
-    private ExternalDownloadOutbox createDomain(Long id, Long downloadId) {
+    private ExternalDownloadOutbox createDomain(Long outboxId, UUID downloadId) {
+        UUID id = outboxId != null ? UUID.randomUUID() : null;
         return ExternalDownloadOutbox.of(
-                ExternalDownloadOutboxId.of(id),
+                id != null ? ExternalDownloadOutboxId.of(id) : ExternalDownloadOutboxId.forNew(),
                 ExternalDownloadId.of(downloadId),
                 false,
                 null,
                 Instant.now());
     }
 
-    private ExternalDownloadOutboxJpaEntity createEntity(Long id, Long downloadId) {
+    private ExternalDownloadOutboxJpaEntity createEntity(Long outboxId, UUID downloadId) {
+        UUID id = outboxId != null ? UUID.randomUUID() : null;
         LocalDateTime now = LocalDateTime.now();
         return ExternalDownloadOutboxJpaEntity.of(id, downloadId, false, null, now, now);
     }

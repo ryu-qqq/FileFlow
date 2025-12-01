@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.CompletedPartJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.MultipartUploadSessionJpaEntity;
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;

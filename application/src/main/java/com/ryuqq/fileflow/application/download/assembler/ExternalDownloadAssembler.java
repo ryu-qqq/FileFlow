@@ -1,10 +1,10 @@
 package com.ryuqq.fileflow.application.download.assembler;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.download.dto.DownloadResult;
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadBundle;
 import com.ryuqq.fileflow.application.download.dto.command.RequestExternalDownloadCommand;
 import com.ryuqq.fileflow.application.download.dto.response.S3UploadResponse;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
@@ -59,10 +59,10 @@ public class ExternalDownloadAssembler {
         // ExternalDownload 생성
         ExternalDownload download = createExternalDownload(command, clock);
 
-        // 등록 이벤트 추가
+        // 등록 이벤트 생성 및 등록
         download.registerEvent(download.createRegisteredEvent());
 
-        // Outbox 생성
+        // Outbox 생성 (download.getId()는 이미 생성된 상태)
         ExternalDownloadOutbox outbox = ExternalDownloadOutbox.forNew(download.getId(), clock);
 
         return new ExternalDownloadBundle(download, outbox);

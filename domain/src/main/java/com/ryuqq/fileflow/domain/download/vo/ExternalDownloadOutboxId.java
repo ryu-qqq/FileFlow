@@ -1,50 +1,71 @@
 package com.ryuqq.fileflow.domain.download.vo;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 외부 다운로드 Outbox ID Value Object.
  *
+ * <p>UUID v7 (Time-Ordered) 사용으로 시간 기반 정렬 및 DB 인덱스 효율성 제공.
+ *
  * <p><strong>생성 규칙</strong>:
  *
  * <ul>
- *   <li>{@link #forNew()}: 신규 생성 시 (ID null)
- *   <li>{@link #of(Long)}: 조회/재구성 시 (ID 필수, 1 이상)
+ *   <li>{@link #forNew()}: 신규 생성 시 (UUID v7 자동 생성)
+ *   <li>{@link #of(UUID)}: 조회/재구성 시
  * </ul>
  */
-public record ExternalDownloadOutboxId(Long value) {
+public record ExternalDownloadOutboxId(UUID value) {
 
-    /**
-     * 신규 ExternalDownloadOutboxId 생성 (ID null).
-     *
-     * @return value가 null인 ExternalDownloadOutboxId
-     */
-    public static ExternalDownloadOutboxId forNew() {
-        return new ExternalDownloadOutboxId(null);
+    public ExternalDownloadOutboxId {
+        Objects.requireNonNull(value, "ExternalDownloadOutboxId value must not be null");
     }
 
     /**
-     * 기존 ExternalDownloadOutboxId 재구성.
+     * 신규 ExternalDownloadOutboxId 생성 (UUID v7 - Time-Ordered).
      *
-     * @param value ID 값 (null 불가, 1 이상)
-     * @return value가 설정된 ExternalDownloadOutboxId
-     * @throws NullPointerException value가 null인 경우
-     * @throws IllegalArgumentException value가 1 미만인 경우
+     * @return 신규 ExternalDownloadOutboxId
      */
-    public static ExternalDownloadOutboxId of(Long value) {
-        Objects.requireNonNull(value, "ExternalDownloadOutboxId value must not be null");
-        if (value < 1) {
-            throw new IllegalArgumentException("ExternalDownloadOutboxId는 1 이상이어야 합니다: " + value);
-        }
+    public static ExternalDownloadOutboxId forNew() {
+        return new ExternalDownloadOutboxId(UuidCreator.getTimeOrderedEpoch());
+    }
+
+    /**
+     * UUID 기반 생성 (조회/재구성용).
+     *
+     * @param value UUID 값
+     * @return ExternalDownloadOutboxId
+     */
+    public static ExternalDownloadOutboxId of(UUID value) {
         return new ExternalDownloadOutboxId(value);
     }
 
     /**
-     * 신규 ID 여부 확인.
+     * String 기반 생성 (조회/재구성용).
      *
-     * @return value가 null이면 true
+     * @param value UUID 문자열
+     * @return ExternalDownloadOutboxId
+     */
+    public static ExternalDownloadOutboxId of(String value) {
+        return new ExternalDownloadOutboxId(UUID.fromString(value));
+    }
+
+    /**
+     * 신규 ID 여부 확인 (항상 false, UUID는 생성 시 값 필수).
+     *
+     * @return 항상 false
      */
     public boolean isNew() {
-        return value == null;
+        return false;
+    }
+
+    /**
+     * UUID 문자열 반환.
+     *
+     * @return UUID 문자열
+     */
+    public String getValue() {
+        return value.toString();
     }
 }

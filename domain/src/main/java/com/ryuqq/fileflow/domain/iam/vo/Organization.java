@@ -132,10 +132,15 @@ public record Organization(long id, String name, String namespace, UserRole role
     /**
      * S3 버킷명을 반환한다.
      *
-     * @return S3 버킷명 (예: "connectly", "setof")
+     * <p>모든 조직이 동일한 버킷을 사용하며, namespace는 경로의 첫 번째 세그먼트로 사용됩니다.
+     *
+     * @return S3 버킷명 (환경 변수로 주입 필요, 기본값: "fileflow-uploads-prod")
+     * @deprecated 환경 변수에서 버킷명을 가져와야 함. 이 메서드는 하드코딩된 값을 반환하므로 사용하지 말 것.
      */
+    @Deprecated
     public String getS3BucketName() {
-        return namespace;
+        // TODO: 환경 변수에서 주입받도록 수정 필요
+        return "fileflow-uploads-prod";
     }
 
     /**
@@ -144,20 +149,20 @@ public record Organization(long id, String name, String namespace, UserRole role
      * <p>경로 구조:
      *
      * <ul>
-     *   <li>Admin: "admin/"
-     *   <li>Seller: "seller-{organizationId}/"
-     *   <li>Customer: "customer/"
+     *   <li>Admin: "connectly/"
+     *   <li>Seller: "setof/seller-{organizationId}/"
+     *   <li>Customer: "setof/customer/"
      * </ul>
      *
-     * @return S3 경로 prefix
+     * @return S3 경로 prefix (namespace 포함)
      */
     public String getS3PathPrefix() {
         if (isAdmin()) {
-            return "admin/";
+            return namespace + "/"; // "connectly/"
         } else if (isSeller()) {
-            return "seller-" + id + "/";
+            return namespace + "/seller-" + id + "/"; // "setof/seller-123/"
         } else {
-            return "customer/";
+            return namespace + "/customer/"; // "setof/customer/"
         }
     }
 

@@ -1,11 +1,11 @@
 package com.ryuqq.fileflow.application.session.assembler;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.session.dto.command.InitSingleUploadCommand;
 import com.ryuqq.fileflow.application.session.dto.response.CancelUploadSessionResponse;
 import com.ryuqq.fileflow.application.session.dto.response.CompleteSingleUploadResponse;
 import com.ryuqq.fileflow.application.session.dto.response.ExpireUploadSessionResponse;
 import com.ryuqq.fileflow.application.session.dto.response.InitSingleUploadResponse;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
@@ -15,6 +15,7 @@ import com.ryuqq.fileflow.domain.session.vo.FileSize;
 import com.ryuqq.fileflow.domain.session.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
+import com.ryuqq.fileflow.domain.session.vo.UploadCategory;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -59,10 +60,16 @@ public class SingleUploadAssembler {
         FileSize fileSize = FileSize.of(command.fileSize());
         ContentType contentType = ContentType.of(command.contentType());
 
+        // uploadCategory 변환 (String → Enum)
+        // Customer는 uploadCategory를 전달하지 않음 (null), Admin/Seller는 필수
+        UploadCategory uploadCategory = null;
+        if (command.uploadCategory() != null && !command.uploadCategory().isBlank()) {
+            uploadCategory = UploadCategory.fromPath(command.uploadCategory());
+        }
+
         // S3 경로 생성 (UserContext 기반)
         S3Bucket bucket = userContext.getS3Bucket();
-        S3Key s3Key =
-                userContext.generateS3KeyToday(null, command.fileName()); // Customer는 category null
+        S3Key s3Key = userContext.generateS3KeyToday(uploadCategory, command.fileName());
 
         // 만료 시각 계산 (15분 후)
         LocalDateTime expiresAt = LocalDateTime.now(clock).plus(SINGLE_UPLOAD_EXPIRATION);

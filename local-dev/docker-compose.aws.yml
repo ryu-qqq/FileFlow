@@ -1,0 +1,164 @@
+version: '3.8'
+
+# ===============================================
+# AWS 리소스 연결용 로컬 개발 환경
+# ===============================================
+# 사용법:
+# 1. AWS SSM Session Manager로 포트 포워딩 설정
+# 2. docker-compose -f docker-compose.aws.yml up -d
+# ===============================================
+
+services:
+  # ===============================================
+  # Application Services (AWS 리소스 연결)
+  # ===============================================
+
+  web-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile.local
+      args:
+        MODULE_NAME: bootstrap-web-api
+    container_name: fileflow-web-api-aws
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      
+      # Database (AWS RDS via SSM Port Forwarding)
+      # SSM으로 localhost:13307 -> RDS:3306 포워딩 필요
+      DB_HOST: host.docker.internal
+      DB_PORT: 13307
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Redis (AWS ElastiCache via SSM Port Forwarding)
+      # SSM으로 localhost:16380 -> ElastiCache:6379 포워딩 필요
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 16380
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDISSON_ENABLED: "true"
+      
+      # AWS Credentials (실제 AWS 리소스 접근)
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+      
+      # S3
+      AWS_S3_BUCKET: ${S3_BUCKET}
+      
+      # SQS (실제 AWS SQS 사용)
+      SPRING_CLOUD_AWS_SQS_ENABLED: "true"
+      SQS_EXTERNAL_DOWNLOAD_QUEUE_URL: ${SQS_EXTERNAL_DOWNLOAD_QUEUE_URL}
+      SQS_EXTERNAL_DOWNLOAD_DLQ_URL: ${SQS_EXTERNAL_DOWNLOAD_DLQ_URL}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL}
+      
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ..
+      dockerfile: Dockerfile.local
+      args:
+        MODULE_NAME: bootstrap-scheduler
+    container_name: fileflow-scheduler-aws
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8081
+      
+      # Database (AWS RDS via SSM Port Forwarding)
+      DB_HOST: host.docker.internal
+      DB_PORT: 13307
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Redis (AWS ElastiCache via SSM Port Forwarding)
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 16380
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDISSON_ENABLED: "true"
+      
+      # Scheduler
+      SCHEDULER_SESSION_EXPIRATION_ENABLED: "true"
+      SCHEDULER_OUTBOX_RETRY_ENABLED: "true"
+      
+      # AWS Credentials
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+      
+      # S3
+      AWS_S3_BUCKET: ${S3_BUCKET}
+
+      # SQS
+      SPRING_CLOUD_AWS_SQS_ENABLED: "true"
+      SQS_EXTERNAL_DOWNLOAD_QUEUE_URL: ${SQS_EXTERNAL_DOWNLOAD_QUEUE_URL}
+      SQS_EXTERNAL_DOWNLOAD_DLQ_URL: ${SQS_EXTERNAL_DOWNLOAD_DLQ_URL}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL}
+
+    ports:
+      - "8081:8081"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  download-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.local
+      args:
+        MODULE_NAME: bootstrap-download-worker
+    container_name: fileflow-download-worker-aws
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Database (AWS RDS via SSM Port Forwarding)
+      DB_HOST: host.docker.internal
+      DB_PORT: 13307
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Redis (AWS ElastiCache via SSM Port Forwarding)
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 16380
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDISSON_ENABLED: "true"
+      
+      # Worker
+      WORKER_DOWNLOAD_ENABLED: "true"
+      
+      # AWS Credentials
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+      
+      # S3
+      AWS_S3_BUCKET: ${S3_BUCKET}
+      
+      # SQS (실제 AWS SQS 사용)
+      SPRING_CLOUD_AWS_SQS_ENABLED: "true"
+      SQS_EXTERNAL_DOWNLOAD_QUEUE_URL: ${SQS_EXTERNAL_DOWNLOAD_QUEUE_URL}
+      SQS_EXTERNAL_DOWNLOAD_DLQ_URL: ${SQS_EXTERNAL_DOWNLOAD_DLQ_URL}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL}
+      SQS_LOG_LEVEL: INFO
+      
+    ports:
+      - "8082:8082"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

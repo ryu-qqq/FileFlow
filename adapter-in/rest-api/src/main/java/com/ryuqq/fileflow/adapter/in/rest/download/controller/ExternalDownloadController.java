@@ -101,7 +101,7 @@ public class ExternalDownloadController {
      */
     @GetMapping("${api.endpoints.external-download.by-id}")
     public ResponseEntity<ApiResponse<ExternalDownloadDetailApiResponse>> getExternalDownload(
-            @PathVariable Long id) {
+            @PathVariable String id) {
 
         UserContext userContext = UserContextHolder.getRequired();
         long tenantId = userContext.tenant().id();

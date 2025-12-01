@@ -16,6 +16,7 @@ import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -47,7 +48,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("ID로 조회 시 존재하면 Domain을 반환한다")
         void shouldReturnDomainWhenExists() {
             // given
-            Long id = 1L;
+            UUID id = UUID.randomUUID();
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
             ExternalDownload domain = createDomain(id);
@@ -69,7 +70,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("ID로 조회 시 존재하지 않으면 빈 Optional을 반환한다")
         void shouldReturnEmptyWhenNotExists() {
             // given
-            Long id = 999L;
+            UUID id = UUID.randomUUID();
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
 
             given(queryDslRepository.findById(id)).willReturn(Optional.empty());
@@ -86,7 +87,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("Repository와 Mapper를 순차적으로 호출한다")
         void shouldCallRepositoryThenMapper() {
             // given
-            Long id = 1L;
+            UUID id = UUID.randomUUID();
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
             ExternalDownload domain = createDomain(id);
@@ -111,7 +112,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("ID와 TenantId로 조회 시 존재하면 Domain을 반환한다")
         void shouldReturnDomainWhenExists() {
             // given
-            Long id = 1L;
+            UUID id = UUID.randomUUID();
             Long tenantId = 100L;
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
@@ -133,7 +134,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("TenantId가 다르면 빈 Optional을 반환한다")
         void shouldReturnEmptyWhenTenantMismatch() {
             // given
-            Long id = 1L;
+            UUID id = UUID.randomUUID();
             Long wrongTenantId = 999L;
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
 
@@ -152,7 +153,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("ID와 TenantId 모두 일치해야 조회된다")
         void shouldRequireBothIdAndTenantIdMatch() {
             // given
-            Long id = 1L;
+            UUID id = UUID.randomUUID();
             Long tenantId = 100L;
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
@@ -179,7 +180,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("존재하면 true를 반환한다")
         void shouldReturnTrueWhenExists() {
             // given
-            Long id = 1L;
+            UUID id = UUID.randomUUID();
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
 
             given(queryDslRepository.existsById(id)).willReturn(true);
@@ -196,7 +197,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("존재하지 않으면 false를 반환한다")
         void shouldReturnFalseWhenNotExists() {
             // given
-            Long id = 999L;
+            UUID id = UUID.randomUUID();
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
 
             given(queryDslRepository.existsById(id)).willReturn(false);
@@ -213,7 +214,7 @@ class ExternalDownloadQueryAdapterTest {
         @DisplayName("Repository의 existsById를 직접 호출한다")
         void shouldCallRepositoryExistsById() {
             // given
-            Long id = 42L;
+            UUID id = UUID.randomUUID();
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
 
             given(queryDslRepository.existsById(id)).willReturn(true);
@@ -228,7 +229,7 @@ class ExternalDownloadQueryAdapterTest {
 
     // ==================== Helper Methods ====================
 
-    private ExternalDownload createDomain(Long id) {
+    private ExternalDownload createDomain(UUID id) {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
                 SourceUrl.of("https://example.com/file.jpg"),
@@ -245,7 +246,7 @@ class ExternalDownloadQueryAdapterTest {
                 Instant.now());
     }
 
-    private ExternalDownloadJpaEntity createEntity(Long id) {
+    private ExternalDownloadJpaEntity createEntity(UUID id) {
         LocalDateTime now = LocalDateTime.now();
         return ExternalDownloadJpaEntity.of(
                 id,

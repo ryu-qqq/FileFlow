@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.ryuqq.fileflow.adapter.out.persistence.asset.entity.FileAssetJpaEntity;
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;

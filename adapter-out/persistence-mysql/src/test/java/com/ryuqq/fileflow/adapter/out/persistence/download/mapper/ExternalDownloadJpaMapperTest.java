@@ -14,6 +14,7 @@ import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,13 +39,14 @@ class ExternalDownloadJpaMapperTest {
         @DisplayName("Domain을 Entity로 변환할 수 있다")
         void shouldConvertDomainToEntity() {
             // given
-            ExternalDownload domain = createDomainWithId(1L);
+            UUID id = UUID.randomUUID();
+            ExternalDownload domain = createDomainWithId(id);
 
             // when
             ExternalDownloadJpaEntity entity = mapper.toEntity(domain);
 
             // then
-            assertThat(entity.getId()).isEqualTo(1L);
+            assertThat(entity.getId()).isEqualTo(id);
             assertThat(entity.getSourceUrl()).isEqualTo(domain.getSourceUrl().value());
             assertThat(entity.getTenantId()).isEqualTo(domain.getTenantId());
             assertThat(entity.getOrganizationId()).isEqualTo(domain.getOrganizationId());
@@ -55,8 +57,8 @@ class ExternalDownloadJpaMapperTest {
         }
 
         @Test
-        @DisplayName("신규 Domain(ID가 new)인 경우 Entity ID는 null이다")
-        void shouldHaveNullIdForNewDomain() {
+        @DisplayName("신규 Domain도 UUID를 가지므로 Entity ID가 설정된다")
+        void shouldHaveIdForNewDomain() {
             // given
             ExternalDownload domain = createNewDomain();
 
@@ -64,7 +66,7 @@ class ExternalDownloadJpaMapperTest {
             ExternalDownloadJpaEntity entity = mapper.toEntity(domain);
 
             // then
-            assertThat(entity.getId()).isNull();
+            assertThat(entity.getId()).isNotNull(); // UUID는 항상 값이 있음
         }
 
         @Test
@@ -84,7 +86,7 @@ class ExternalDownloadJpaMapperTest {
         @DisplayName("FileAssetId가 null인 경우도 처리된다")
         void shouldHandleNullFileAssetId() {
             // given
-            ExternalDownload domain = createDomainWithId(1L);
+            ExternalDownload domain = createDomainWithId(UUID.randomUUID());
 
             // when
             ExternalDownloadJpaEntity entity = mapper.toEntity(domain);
@@ -100,7 +102,7 @@ class ExternalDownloadJpaMapperTest {
             Instant instant = Instant.parse("2025-11-26T12:00:00Z");
             ExternalDownload domain =
                     ExternalDownload.of(
-                            ExternalDownloadId.of(1L),
+                            ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
                             100L,
                             200L,
@@ -132,7 +134,7 @@ class ExternalDownloadJpaMapperTest {
         @DisplayName("Entity를 Domain으로 변환할 수 있다")
         void shouldConvertEntityToDomain() {
             // given
-            ExternalDownloadJpaEntity entity = createEntity(1L);
+            ExternalDownloadJpaEntity entity = createEntity(UUID.randomUUID());
 
             // when
             ExternalDownload domain = mapper.toDomain(entity);
@@ -180,7 +182,7 @@ class ExternalDownloadJpaMapperTest {
             LocalDateTime localDateTime = LocalDateTime.of(2025, 11, 26, 12, 0, 0);
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
-                            1L,
+                            UUID.randomUUID(),
                             "https://example.com/file.jpg",
                             100L,
                             200L,
@@ -213,7 +215,7 @@ class ExternalDownloadJpaMapperTest {
         @DisplayName("Domain → Entity → Domain 변환 시 데이터가 보존된다")
         void shouldPreserveDataInRoundTrip() {
             // given
-            ExternalDownload original = createDomainWithId(1L);
+            ExternalDownload original = createDomainWithId(UUID.randomUUID());
 
             // when
             ExternalDownloadJpaEntity entity = mapper.toEntity(original);
@@ -234,7 +236,7 @@ class ExternalDownloadJpaMapperTest {
             FileAssetId fileAssetId = FileAssetId.of("550e8400-e29b-41d4-a716-446655440000");
             ExternalDownload original =
                     ExternalDownload.of(
-                            ExternalDownloadId.of(1L),
+                            ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
                             100L,
                             200L,
@@ -264,7 +266,7 @@ class ExternalDownloadJpaMapperTest {
             // given
             ExternalDownload original =
                     ExternalDownload.of(
-                            ExternalDownloadId.of(1L),
+                            ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
                             100L,
                             200L,
@@ -291,7 +293,7 @@ class ExternalDownloadJpaMapperTest {
 
     // ==================== Helper Methods ====================
 
-    private ExternalDownload createDomainWithId(Long id) {
+    private ExternalDownload createDomainWithId(UUID id) {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
                 SourceUrl.of("https://example.com/file.jpg"),
@@ -327,7 +329,7 @@ class ExternalDownloadJpaMapperTest {
 
     private ExternalDownload createDomainWithoutWebhook() {
         return ExternalDownload.of(
-                ExternalDownloadId.of(1L),
+                ExternalDownloadId.of(UUID.randomUUID()),
                 SourceUrl.of("https://example.com/file.jpg"),
                 100L,
                 200L,
@@ -342,7 +344,7 @@ class ExternalDownloadJpaMapperTest {
                 Instant.now());
     }
 
-    private ExternalDownloadJpaEntity createEntity(Long id) {
+    private ExternalDownloadJpaEntity createEntity(UUID id) {
         LocalDateTime now = LocalDateTime.now();
         return ExternalDownloadJpaEntity.of(
                 id,
@@ -364,7 +366,7 @@ class ExternalDownloadJpaMapperTest {
     private ExternalDownloadJpaEntity createEntityWithoutFileAsset() {
         LocalDateTime now = LocalDateTime.now();
         return ExternalDownloadJpaEntity.of(
-                1L,
+                UUID.randomUUID(),
                 "https://example.com/file.jpg",
                 100L,
                 200L,
@@ -383,7 +385,7 @@ class ExternalDownloadJpaMapperTest {
     private ExternalDownloadJpaEntity createEntityWithoutWebhook() {
         LocalDateTime now = LocalDateTime.now();
         return ExternalDownloadJpaEntity.of(
-                1L,
+                UUID.randomUUID(),
                 "https://example.com/file.jpg",
                 100L,
                 200L,

@@ -237,47 +237,47 @@ class OrganizationTest {
     class S3PathTest {
 
         @Test
-        @DisplayName("getS3BucketName은 네임스페이스를 반환한다")
-        void getS3BucketName_ShouldReturnNamespace() {
+        @DisplayName("getS3BucketName은 fileflow-uploads-prod를 반환한다")
+        void getS3BucketName_ShouldReturnFileflowUploadsProd() {
             // given
             Organization admin = Organization.admin();
             Organization seller = Organization.seller(1L, "Company");
             Organization customer = Organization.customer();
 
-            // then
-            assertThat(admin.getS3BucketName()).isEqualTo("connectly");
-            assertThat(seller.getS3BucketName()).isEqualTo("setof");
-            assertThat(customer.getS3BucketName()).isEqualTo("setof");
+            // then - 모든 조직이 동일한 버킷 사용
+            assertThat(admin.getS3BucketName()).isEqualTo("fileflow-uploads-prod");
+            assertThat(seller.getS3BucketName()).isEqualTo("fileflow-uploads-prod");
+            assertThat(customer.getS3BucketName()).isEqualTo("fileflow-uploads-prod");
         }
 
         @Test
-        @DisplayName("Admin 조직의 S3 경로 prefix는 admin/이다")
+        @DisplayName("Admin 조직의 S3 경로 prefix는 connectly/이다")
         void getS3PathPrefix_Admin_ShouldReturnAdminPrefix() {
             // given
             Organization org = Organization.admin();
 
             // then
-            assertThat(org.getS3PathPrefix()).isEqualTo("admin/");
+            assertThat(org.getS3PathPrefix()).isEqualTo("connectly/");
         }
 
         @Test
-        @DisplayName("Seller 조직의 S3 경로 prefix는 seller-{id}/이다")
+        @DisplayName("Seller 조직의 S3 경로 prefix는 setof/seller-{id}/이다")
         void getS3PathPrefix_Seller_ShouldReturnSellerPrefix() {
             // given
             Organization org = Organization.seller(100L, "Company");
 
             // then
-            assertThat(org.getS3PathPrefix()).isEqualTo("seller-100/");
+            assertThat(org.getS3PathPrefix()).isEqualTo("setof/seller-100/");
         }
 
         @Test
-        @DisplayName("Customer 조직의 S3 경로 prefix는 customer/이다")
+        @DisplayName("Customer 조직의 S3 경로 prefix는 setof/customer/이다")
         void getS3PathPrefix_Customer_ShouldReturnCustomerPrefix() {
             // given
             Organization org = Organization.customer();
 
             // then
-            assertThat(org.getS3PathPrefix()).isEqualTo("customer/");
+            assertThat(org.getS3PathPrefix()).isEqualTo("setof/customer/");
         }
     }
 

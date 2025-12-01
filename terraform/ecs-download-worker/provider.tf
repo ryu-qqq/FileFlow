@@ -74,9 +74,14 @@ variable "worker_desired_count" {
 }
 
 variable "image_tag" {
-  description = "Docker image tag to deploy (CI/CD sets this value)"
+  description = "Docker image tag to deploy. Auto-set by GitHub Actions build-and-deploy.yml. Format: {component}-{build-number}-{git-sha}"
   type        = string
-  default     = "download-worker-92-f08d571"
+  default     = "download-worker-92-f08d571"  # Fallback only - GitHub Actions will override this
+
+  validation {
+    condition     = can(regex("^download-worker-[0-9]+-[a-f0-9]+$", var.image_tag))
+    error_message = "Image tag must follow format: download-worker-{build-number}-{git-sha} (e.g., download-worker-92-f08d571)"
+  }
 }
 
 # ========================================

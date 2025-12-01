@@ -158,7 +158,7 @@ public class ExternalDownloadOutBoxRetryScheduler {
 
     private ExternalDownloadMessage toMessage(ExternalDownload download) {
         return new ExternalDownloadMessage(
-                download.getId().value(),
+                download.getId().value().toString(),
                 download.getSourceUrl().value(),
                 download.getTenantId(),
                 download.getOrganizationId());

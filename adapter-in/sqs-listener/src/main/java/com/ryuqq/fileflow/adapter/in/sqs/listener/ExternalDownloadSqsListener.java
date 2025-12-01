@@ -89,7 +89,7 @@ public class ExternalDownloadSqsListener {
     public void handleMessage(
             @Payload ExternalDownloadMessage payload, Acknowledgement acknowledgement) {
 
-        Long downloadId = payload.externalDownloadId();
+        String downloadId = payload.externalDownloadId();
         long startTime = System.currentTimeMillis();
 
         log.info("[ExternalDownload] 메시지 수신: id={}, sourceUrl={}", downloadId, payload.sourceUrl());
@@ -106,7 +106,7 @@ public class ExternalDownloadSqsListener {
     private void processWithLock(
             ExternalDownloadMessage payload,
             Acknowledgement acknowledgement,
-            Long downloadId,
+            String downloadId,
             long startTime) {
 
         long lockStartTime = System.currentTimeMillis();
@@ -141,7 +141,7 @@ public class ExternalDownloadSqsListener {
     }
 
     /** 락 획득 실패 시 처리. */
-    private void handleLockSkipped(Acknowledgement acknowledgement, Long downloadId) {
+    private void handleLockSkipped(Acknowledgement acknowledgement, String downloadId) {
         acknowledgement.acknowledge();
         metrics.recordLockSkipped();
 
@@ -150,7 +150,7 @@ public class ExternalDownloadSqsListener {
 
     /** 성공 처리. */
     private void handleSuccess(
-            Acknowledgement acknowledgement, Long downloadId, long startTime, long lockDuration) {
+            Acknowledgement acknowledgement, String downloadId, long startTime, long lockDuration) {
 
         acknowledgement.acknowledge();
 
@@ -171,7 +171,7 @@ public class ExternalDownloadSqsListener {
      *
      * <p>ACK를 전송하지 않아 SQS가 재시도하도록 합니다. 3회 실패 시 DLQ로 이동됩니다.
      */
-    private void handleException(Long downloadId, long startTime, Exception e) {
+    private void handleException(String downloadId, long startTime, Exception e) {
         long totalDuration = System.currentTimeMillis() - startTime;
         metrics.recordFailure();
         metrics.recordDownloadDuration(totalDuration);

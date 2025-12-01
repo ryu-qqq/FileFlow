@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.adapter.out.persistence.asset.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.asset.entity.FileAssetJpaEntity;
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;

@@ -4,6 +4,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownloadJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.QExternalDownloadJpaEntity;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -26,10 +27,10 @@ public class ExternalDownloadQueryDslRepository {
     /**
      * ID로 ExternalDownload를 조회한다.
      *
-     * @param id ExternalDownload ID
+     * @param id ExternalDownload ID (UUID)
      * @return ExternalDownloadJpaEntity Optional
      */
-    public Optional<ExternalDownloadJpaEntity> findById(Long id) {
+    public Optional<ExternalDownloadJpaEntity> findById(UUID id) {
         ExternalDownloadJpaEntity result =
                 queryFactory.selectFrom(download).where(download.id.eq(id)).fetchOne();
         return Optional.ofNullable(result);
@@ -38,11 +39,11 @@ public class ExternalDownloadQueryDslRepository {
     /**
      * ID와 테넌트 ID로 ExternalDownload를 조회한다.
      *
-     * @param id ExternalDownload ID
+     * @param id ExternalDownload ID (UUID)
      * @param tenantId 테넌트 ID
      * @return ExternalDownloadJpaEntity Optional
      */
-    public Optional<ExternalDownloadJpaEntity> findByIdAndTenantId(Long id, Long tenantId) {
+    public Optional<ExternalDownloadJpaEntity> findByIdAndTenantId(UUID id, Long tenantId) {
         ExternalDownloadJpaEntity result =
                 queryFactory
                         .selectFrom(download)
@@ -54,10 +55,10 @@ public class ExternalDownloadQueryDslRepository {
     /**
      * ID로 존재 여부를 확인한다.
      *
-     * @param id ExternalDownload ID
+     * @param id ExternalDownload ID (UUID)
      * @return 존재 여부
      */
-    public boolean existsById(Long id) {
+    public boolean existsById(UUID id) {
         Integer result =
                 queryFactory.selectOne().from(download).where(download.id.eq(id)).fetchFirst();
         return result != null;

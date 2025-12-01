@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,7 @@ class ExternalDownloadTest {
                             FIXED_CLOCK);
 
             // then
-            assertThat(download.getId().isNew()).isTrue();
+            assertThat(download.getId().isNew()).isFalse(); // UUID는 항상 값이 있음
             assertThat(download.getSourceUrl()).isEqualTo(sourceUrl);
             assertThat(download.getTenantId()).isEqualTo(tenantId);
             assertThat(download.getOrganizationId()).isEqualTo(organizationId);
@@ -92,7 +93,7 @@ class ExternalDownloadTest {
         @DisplayName("of()로 기존 ExternalDownload를 재구성할 수 있다")
         void of_ShouldReconstituteExternalDownload() {
             // given
-            ExternalDownloadId id = ExternalDownloadId.of(1L);
+            ExternalDownloadId id = ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/image.jpg");
             long tenantId = 1L;
             long organizationId = 100L;
@@ -235,7 +236,7 @@ class ExternalDownloadTest {
             // given
             ExternalDownload download =
                     ExternalDownload.of(
-                            ExternalDownloadId.of(1L),
+                            ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                             SourceUrl.of("https://example.com/image.jpg"),
                             1L,
                             100L,
@@ -306,7 +307,7 @@ class ExternalDownloadTest {
             // given
             ExternalDownload download =
                     ExternalDownload.of(
-                            ExternalDownloadId.of(1L),
+                            ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                             SourceUrl.of("https://example.com/image.jpg"),
                             1L,
                             100L,
@@ -353,12 +354,14 @@ class ExternalDownloadTest {
         }
 
         @Test
-        @DisplayName("getIdValue()는 ID의 Long 값을 반환한다")
-        void getIdValue_ShouldReturnLongValue() {
+        @DisplayName("getIdValue()는 ID의 UUID 값을 반환한다")
+        void getIdValue_ShouldReturnUuidValue() {
             // given
+            String uuidString = "00000000-0000-0000-0000-000000000001";
+            UUID expectedUuid = UUID.fromString(uuidString);
             ExternalDownload download =
                     ExternalDownload.of(
-                            ExternalDownloadId.of(123L),
+                            ExternalDownloadId.of(uuidString),
                             SourceUrl.of("https://example.com/image.jpg"),
                             1L,
                             100L,
@@ -373,7 +376,7 @@ class ExternalDownloadTest {
                             Instant.now());
 
             // when & then
-            assertThat(download.getIdValue()).isEqualTo(123L);
+            assertThat(download.getIdValue()).isEqualTo(expectedUuid);
         }
 
         @Test
@@ -510,7 +513,7 @@ class ExternalDownloadTest {
 
     private ExternalDownload createProcessingDownload() {
         return ExternalDownload.of(
-                ExternalDownloadId.of(1L),
+                ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                 SourceUrl.of("https://example.com/image.jpg"),
                 1L,
                 100L,

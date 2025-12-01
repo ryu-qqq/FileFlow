@@ -1,0 +1,202 @@
+version: '3.8'
+
+services:
+  # ===============================================
+  # Infrastructure Services
+  # ===============================================
+  
+  mysql:
+    image: mysql:8.0
+    container_name: fileflow-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fileflow
+      MYSQL_USER: fileflow
+      MYSQL_PASSWORD: fileflow
+    ports:
+      - "13306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fileflow-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: fileflow-redis
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fileflow-network
+
+  # ===============================================
+  # Application Services
+  # ===============================================
+
+  web-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile.local
+      args:
+        MODULE_NAME: bootstrap-web-api
+    container_name: fileflow-web-api
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      
+      # Database
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: fileflow
+      DB_USER: root
+      DB_PASSWORD: root
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDISSON_ENABLED: "true"
+      
+      # Logging
+      LOG_LEVEL: DEBUG
+      
+      # AWS (LocalStack or Disabled for local)
+      AWS_REGION: ap-northeast-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fileflow-network
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ..
+      dockerfile: Dockerfile.local
+      args:
+        MODULE_NAME: bootstrap-scheduler
+    container_name: fileflow-scheduler
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8081
+      
+      # Database
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: fileflow
+      DB_USER: root
+      DB_PASSWORD: root
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDISSON_ENABLED: "true"
+      
+      # Scheduler
+      SCHEDULER_SESSION_EXPIRATION_ENABLED: "true"
+      SCHEDULER_OUTBOX_RETRY_ENABLED: "true"
+      
+      # Logging
+      LOG_LEVEL: DEBUG
+      
+      # AWS (LocalStack or Disabled for local)
+      AWS_REGION: ap-northeast-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fileflow-network
+    restart: unless-stopped
+
+  download-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.local
+      args:
+        MODULE_NAME: bootstrap-download-worker
+    container_name: fileflow-download-worker
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Database
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: fileflow
+      DB_USER: root
+      DB_PASSWORD: root
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDISSON_ENABLED: "true"
+      
+      # Worker
+      WORKER_DOWNLOAD_ENABLED: "false"
+      
+      # Logging
+      LOG_LEVEL: DEBUG
+      SQS_LOG_LEVEL: INFO
+      
+      # AWS (LocalStack or Disabled for local)
+      AWS_REGION: ap-northeast-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      
+      # Disable SQS for local development
+      SPRING_CLOUD_AWS_SQS_ENABLED: "false"
+      
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fileflow-network
+    restart: unless-stopped
+
+# ===============================================
+# Networks
+# ===============================================
+networks:
+  fileflow-network:
+    driver: bridge
+
+# ===============================================
+# Volumes
+# ===============================================
+volumes:
+  mysql_data:
+  redis_data:

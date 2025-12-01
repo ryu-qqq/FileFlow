@@ -43,7 +43,8 @@ class ExternalDownloadRegisteredEventListenerTest {
         @DisplayName("이벤트 수신 시 SQS 메시지 발행 및 Outbox 상태 업데이트")
         void shouldPublishMessageAndUpdateOutbox() {
             // given
-            ExternalDownloadRegisteredEvent event = createEvent(1L);
+            ExternalDownloadRegisteredEvent event =
+                    createEvent("00000000-0000-0000-0000-000000000001");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
             given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
@@ -63,7 +64,8 @@ class ExternalDownloadRegisteredEventListenerTest {
         @DisplayName("SQS 발행 성공 시 Outbox를 published 상태로 변경")
         void shouldMarkOutboxAsPublishedOnSuccess() {
             // given
-            ExternalDownloadRegisteredEvent event = createEvent(2L);
+            ExternalDownloadRegisteredEvent event =
+                    createEvent("00000000-0000-0000-0000-000000000002");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
             given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
@@ -82,7 +84,8 @@ class ExternalDownloadRegisteredEventListenerTest {
         @DisplayName("SQS 발행 실패 시 (false 반환) Outbox를 failed 상태로 변경")
         void shouldMarkOutboxAsFailedOnPublishFailure() {
             // given
-            ExternalDownloadRegisteredEvent event = createEvent(3L);
+            ExternalDownloadRegisteredEvent event =
+                    createEvent("00000000-0000-0000-0000-000000000003");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
             given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
@@ -101,7 +104,8 @@ class ExternalDownloadRegisteredEventListenerTest {
         @DisplayName("SQS 발행 중 예외 발생 시 Outbox를 failed 상태로 변경")
         void shouldMarkOutboxAsFailedOnException() {
             // given
-            ExternalDownloadRegisteredEvent event = createEvent(4L);
+            ExternalDownloadRegisteredEvent event =
+                    createEvent("00000000-0000-0000-0000-000000000004");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
             given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
@@ -121,7 +125,8 @@ class ExternalDownloadRegisteredEventListenerTest {
         @DisplayName("Outbox가 존재하지 않으면 처리를 중단한다")
         void shouldStopProcessingWhenOutboxNotFound() {
             // given
-            ExternalDownloadRegisteredEvent event = createEvent(999L);
+            ExternalDownloadRegisteredEvent event =
+                    createEvent("00000000-0000-0000-0000-0000000003e7");
 
             given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
                     .willReturn(Optional.empty());
@@ -140,7 +145,8 @@ class ExternalDownloadRegisteredEventListenerTest {
         @DisplayName("이벤트 처리 시 Outbox 조회가 먼저 수행된다")
         void shouldQueryOutboxBeforePublishing() {
             // given
-            ExternalDownloadRegisteredEvent event = createEvent(1L);
+            ExternalDownloadRegisteredEvent event =
+                    createEvent("00000000-0000-0000-0000-000000000001");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
             given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
@@ -159,8 +165,10 @@ class ExternalDownloadRegisteredEventListenerTest {
         @DisplayName("여러 이벤트를 순차적으로 처리할 수 있다")
         void shouldHandleMultipleEventsSequentially() {
             // given
-            ExternalDownloadRegisteredEvent event1 = createEvent(1L);
-            ExternalDownloadRegisteredEvent event2 = createEvent(2L);
+            ExternalDownloadRegisteredEvent event1 =
+                    createEvent("00000000-0000-0000-0000-000000000001");
+            ExternalDownloadRegisteredEvent event2 =
+                    createEvent("00000000-0000-0000-0000-000000000002");
             ExternalDownloadOutbox outbox1 = ExternalDownloadOutboxFixture.unpublishedOutbox();
             ExternalDownloadOutbox outbox2 = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
@@ -185,7 +193,7 @@ class ExternalDownloadRegisteredEventListenerTest {
 
     // ==================== Helper Methods ====================
 
-    private ExternalDownloadRegisteredEvent createEvent(Long downloadId) {
+    private ExternalDownloadRegisteredEvent createEvent(String downloadId) {
         return ExternalDownloadRegisteredEvent.of(
                 ExternalDownloadId.of(downloadId),
                 SourceUrl.of("https://example.com/file" + downloadId + ".jpg"),

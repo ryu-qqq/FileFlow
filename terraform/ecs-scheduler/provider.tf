@@ -68,9 +68,14 @@ variable "scheduler_memory" {
 }
 
 variable "image_tag" {
-  description = "Docker image tag to deploy (CI/CD sets this value)"
+  description = "Docker image tag to deploy. Auto-set by GitHub Actions build-and-deploy.yml. Format: {component}-{build-number}-{git-sha}"
   type        = string
-  default     = "scheduler-92-f08d571"
+  default     = "scheduler-92-f08d571"  # Fallback only - GitHub Actions will override this
+
+  validation {
+    condition     = can(regex("^scheduler-[0-9]+-[a-f0-9]+$", var.image_tag))
+    error_message = "Image tag must follow format: scheduler-{build-number}-{git-sha} (e.g., scheduler-92-f08d571)"
+  }
 }
 
 # ========================================

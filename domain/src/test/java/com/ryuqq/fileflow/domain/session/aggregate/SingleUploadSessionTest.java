@@ -7,9 +7,9 @@ import com.ryuqq.fileflow.domain.iam.fixture.UserContextFixture;
 import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
 import com.ryuqq.fileflow.domain.session.exception.ETagMismatchException;
 import com.ryuqq.fileflow.domain.session.exception.InvalidSessionStatusException;
-import com.ryuqq.fileflow.domain.session.exception.SessionExpiredException;
 import com.ryuqq.fileflow.domain.session.fixture.*;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -40,6 +40,11 @@ class SingleUploadSessionTest {
         @DisplayName("of()로 생성 시 ID가 null이면 예외가 발생한다")
         void of_WithNullId_ShouldThrowException() {
             // given & when & then
+            LocalDateTime now =
+                    ClockFixture.defaultClock()
+                            .instant()
+                            .atZone(ClockFixture.defaultClock().getZone())
+                            .toLocalDateTime();
             assertThatThrownBy(
                             () ->
                                     SingleUploadSession.of(
@@ -52,14 +57,12 @@ class SingleUploadSessionTest {
                                             S3BucketFixture.defaultS3Bucket(),
                                             S3KeyFixture.defaultS3Key(),
                                             ExpirationTimeFixture.defaultExpirationTime(),
-                                            ClockFixture.defaultClock()
-                                                    .instant()
-                                                    .atZone(ClockFixture.defaultClock().getZone())
-                                                    .toLocalDateTime(),
+                                            now,
                                             SessionStatus.PREPARING,
                                             null,
                                             null,
                                             null,
+                                            now, // updatedAt
                                             null,
                                             ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -241,13 +244,13 @@ class SingleUploadSessionTest {
             SingleUploadSession session = SingleUploadSessionFixture.activeSingleUploadSession();
 
             // when & then
-            assertThatCode(() -> session.getPresignedUrl()).doesNotThrowAnyException();
+            assertThatCode(session::getPresignedUrl).doesNotThrowAnyException();
             assertThat(session.getPresignedUrl()).isNotNull();
         }
 
         @Test
-        @DisplayName("만료된 세션은 Presigned URL 조회 시 예외가 발생한다")
-        void getPresignedUrl_WithExpiredSession_ShouldThrowException() {
+        @DisplayName("만료된 세션도 Presigned URL을 조회할 수 있다 (Getter는 검증하지 않음)")
+        void getPresignedUrl_WithExpiredSession_ShouldReturnValue() {
             // given
             SingleUploadSession session =
                     SingleUploadSession.forNew(
@@ -263,8 +266,8 @@ class SingleUploadSessionTest {
             session.activate(PresignedUrlFixture.defaultPresignedUrl());
 
             // when & then
-            assertThatThrownBy(session::getPresignedUrl)
-                    .isInstanceOf(SessionExpiredException.class);
+            assertThatCode(session::getPresignedUrl).doesNotThrowAnyException();
+            assertThat(session.getPresignedUrl()).isNotNull();
         }
 
         @Test

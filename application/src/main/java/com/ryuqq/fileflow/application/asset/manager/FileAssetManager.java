@@ -6,6 +6,8 @@ import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Component
 public class FileAssetManager {
+
+    private static final Logger log = LoggerFactory.getLogger(FileAssetManager.class);
 
     private final FileAssetAssembler fileAssetAssembler;
     private final FileAssetPersistencePort fileAssetPersistencePort;
@@ -34,8 +38,15 @@ public class FileAssetManager {
      */
     @Transactional
     public void createAndPersist(FileUploadCompletedEvent event) {
+        log.info("Creating FileAsset from event: sessionId={}", event.sessionId().getValue());
         FileAsset fileAsset = fileAssetAssembler.toFileAsset(event);
-        fileAssetPersistencePort.persist(fileAsset);
+        log.info(
+                "FileAsset domain object created: fileName={}, size={}",
+                fileAsset.getFileName().name(),
+                fileAsset.getFileSize().size());
+
+        FileAssetId savedId = fileAssetPersistencePort.persist(fileAsset);
+        log.info("FileAsset persisted to DB: fileAssetId={}", savedId.value());
     }
 
     /**

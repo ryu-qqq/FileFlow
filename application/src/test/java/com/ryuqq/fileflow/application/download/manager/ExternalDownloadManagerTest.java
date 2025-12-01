@@ -29,7 +29,8 @@ class ExternalDownloadManagerTest {
     void shouldSaveAndReturnId() {
         // given
         ExternalDownload download = ExternalDownloadFixture.pendingExternalDownload();
-        ExternalDownloadId expectedId = ExternalDownloadId.of(1L);
+        ExternalDownloadId expectedId =
+                ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
 
         given(persistencePort.persist(download)).willReturn(expectedId);
 
@@ -46,7 +47,8 @@ class ExternalDownloadManagerTest {
     void shouldSaveNewExternalDownload() {
         // given
         ExternalDownload newDownload = ExternalDownloadFixture.pendingDownload();
-        ExternalDownloadId generatedId = ExternalDownloadId.of(999L);
+        ExternalDownloadId generatedId =
+                ExternalDownloadId.of("00000000-0000-0000-0000-0000000003e7");
 
         given(persistencePort.persist(any(ExternalDownload.class))).willReturn(generatedId);
 
@@ -55,7 +57,7 @@ class ExternalDownloadManagerTest {
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.value()).isEqualTo(999L);
+        assertThat(result.getValue()).isEqualTo("00000000-0000-0000-0000-0000000003e7");
         verify(persistencePort).persist(newDownload);
     }
 
@@ -64,7 +66,8 @@ class ExternalDownloadManagerTest {
     void shouldSaveProcessingExternalDownload() {
         // given
         ExternalDownload processingDownload = ExternalDownloadFixture.processingExternalDownload();
-        ExternalDownloadId expectedId = ExternalDownloadId.of(2L);
+        ExternalDownloadId expectedId =
+                ExternalDownloadId.of("00000000-0000-0000-0000-000000000002");
 
         given(persistencePort.persist(processingDownload)).willReturn(expectedId);
 

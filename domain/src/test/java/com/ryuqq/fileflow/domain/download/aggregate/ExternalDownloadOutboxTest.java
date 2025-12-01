@@ -7,6 +7,7 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,14 +26,15 @@ class ExternalDownloadOutboxTest {
         @DisplayName("forNew()로 신규 ExternalDownloadOutbox를 생성할 수 있다")
         void forNew_ShouldCreateNewOutbox() {
             // given
-            ExternalDownloadId externalDownloadId = ExternalDownloadId.of(1L);
+            ExternalDownloadId externalDownloadId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
 
             // when
             ExternalDownloadOutbox outbox =
                     ExternalDownloadOutbox.forNew(externalDownloadId, FIXED_CLOCK);
 
             // then
-            assertThat(outbox.getId().isNew()).isTrue();
+            assertThat(outbox.getId().isNew()).isFalse(); // UUID는 항상 값이 있음
             assertThat(outbox.getExternalDownloadId()).isEqualTo(externalDownloadId);
             assertThat(outbox.isPublished()).isFalse();
             assertThat(outbox.getPublishedAt()).isNull();
@@ -52,8 +54,10 @@ class ExternalDownloadOutboxTest {
         @DisplayName("of()로 기존 ExternalDownloadOutbox를 재구성할 수 있다")
         void of_ShouldReconstituteOutbox() {
             // given
-            ExternalDownloadOutboxId id = ExternalDownloadOutboxId.of(1L);
-            ExternalDownloadId externalDownloadId = ExternalDownloadId.of(10L);
+            ExternalDownloadOutboxId id =
+                    ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
+            ExternalDownloadId externalDownloadId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
             boolean published = true;
             Instant publishedAt = Instant.parse("2025-11-26T11:00:00Z");
             Instant createdAt = Instant.parse("2025-11-26T10:00:00Z");
@@ -78,7 +82,8 @@ class ExternalDownloadOutboxTest {
             assertThatThrownBy(
                             () ->
                                     ExternalDownloadOutbox.of(
-                                            ExternalDownloadOutboxId.of(1L),
+                                            ExternalDownloadOutboxId.of(
+                                                    "00000000-0000-0000-0000-000000000001"),
                                             null,
                                             false,
                                             null,
@@ -97,7 +102,9 @@ class ExternalDownloadOutboxTest {
         void markAsPublished_ShouldSetPublishedAndPublishedAt() {
             // given
             ExternalDownloadOutbox outbox =
-                    ExternalDownloadOutbox.forNew(ExternalDownloadId.of(1L), FIXED_CLOCK);
+                    ExternalDownloadOutbox.forNew(
+                            ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                            FIXED_CLOCK);
 
             // when
             outbox.markAsPublished(FIXED_CLOCK);
@@ -113,8 +120,8 @@ class ExternalDownloadOutboxTest {
             // given
             ExternalDownloadOutbox outbox =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(1L),
-                            ExternalDownloadId.of(1L),
+                            ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001"),
+                            ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                             true,
                             Instant.parse("2025-11-26T11:00:00Z"),
                             Instant.parse("2025-11-26T10:00:00Z"));
@@ -131,35 +138,39 @@ class ExternalDownloadOutboxTest {
     class IdValueTest {
 
         @Test
-        @DisplayName("getIdValue()는 ID의 Long 값을 반환한다")
-        void getIdValue_ShouldReturnLongValue() {
+        @DisplayName("getIdValue()는 ID의 UUID 값을 반환한다")
+        void getIdValue_ShouldReturnUuidValue() {
             // given
+            String outboxIdString = "00000000-0000-0000-0000-000000000001";
+            UUID expectedUuid = UUID.fromString(outboxIdString);
             ExternalDownloadOutbox outbox =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(123L),
-                            ExternalDownloadId.of(1L),
+                            ExternalDownloadOutboxId.of(outboxIdString),
+                            ExternalDownloadId.of("00000000-0000-0000-0000-000000000002"),
                             false,
                             null,
                             Instant.now());
 
             // when & then
-            assertThat(outbox.getIdValue()).isEqualTo(123L);
+            assertThat(outbox.getIdValue()).isEqualTo(expectedUuid);
         }
 
         @Test
-        @DisplayName("getExternalDownloadIdValue()는 ExternalDownloadId의 Long 값을 반환한다")
-        void getExternalDownloadIdValue_ShouldReturnLongValue() {
+        @DisplayName("getExternalDownloadIdValue()는 ExternalDownloadId의 UUID 값을 반환한다")
+        void getExternalDownloadIdValue_ShouldReturnUuidValue() {
             // given
+            String downloadIdString = "00000000-0000-0000-0000-000000000002";
+            UUID expectedUuid = UUID.fromString(downloadIdString);
             ExternalDownloadOutbox outbox =
                     ExternalDownloadOutbox.of(
-                            ExternalDownloadOutboxId.of(1L),
-                            ExternalDownloadId.of(456L),
+                            ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001"),
+                            ExternalDownloadId.of(downloadIdString),
                             false,
                             null,
                             Instant.now());
 
             // when & then
-            assertThat(outbox.getExternalDownloadIdValue()).isEqualTo(456L);
+            assertThat(outbox.getExternalDownloadIdValue()).isEqualTo(expectedUuid);
         }
     }
 }

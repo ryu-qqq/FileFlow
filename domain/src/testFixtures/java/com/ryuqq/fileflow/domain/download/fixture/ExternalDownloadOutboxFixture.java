@@ -17,14 +17,15 @@ public final class ExternalDownloadOutboxFixture {
 
     /** 기본 ExternalDownloadOutbox 생성 (미발행 상태). */
     public static ExternalDownloadOutbox defaultOutbox() {
-        return ExternalDownloadOutbox.forNew(ExternalDownloadId.of(1L), FIXED_CLOCK);
+        return ExternalDownloadOutbox.forNew(
+                ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"), FIXED_CLOCK);
     }
 
     /** 미발행 ExternalDownloadOutbox 생성 (ID 있음). */
     public static ExternalDownloadOutbox unpublishedOutbox() {
         return ExternalDownloadOutbox.of(
-                ExternalDownloadOutboxId.of(1L),
-                ExternalDownloadId.of(1L),
+                ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001"),
+                ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                 false,
                 null,
                 Instant.parse("2025-11-26T10:00:00Z"));
@@ -33,8 +34,8 @@ public final class ExternalDownloadOutboxFixture {
     /** 발행 완료된 ExternalDownloadOutbox 생성. */
     public static ExternalDownloadOutbox publishedOutbox() {
         return ExternalDownloadOutbox.of(
-                ExternalDownloadOutboxId.of(2L),
-                ExternalDownloadId.of(2L),
+                ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000002"),
+                ExternalDownloadId.of("00000000-0000-0000-0000-000000000002"),
                 true,
                 Instant.parse("2025-11-26T11:00:00Z"),
                 Instant.parse("2025-11-26T10:00:00Z"));

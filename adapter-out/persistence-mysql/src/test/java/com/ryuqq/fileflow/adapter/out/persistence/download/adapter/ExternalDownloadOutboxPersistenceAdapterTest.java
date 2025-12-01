@@ -13,6 +13,7 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -45,7 +46,8 @@ class ExternalDownloadOutboxPersistenceAdapterTest {
         void shouldConvertAndSaveAndReturnId() {
             // given
             ExternalDownloadOutbox domain = createDomain();
-            ExternalDownloadOutboxJpaEntity entity = createEntity(1L);
+            UUID expectedId = UUID.randomUUID();
+            ExternalDownloadOutboxJpaEntity entity = createEntity(expectedId);
 
             given(mapper.toEntity(domain)).willReturn(entity);
             given(jpaRepository.save(entity)).willReturn(entity);
@@ -54,7 +56,7 @@ class ExternalDownloadOutboxPersistenceAdapterTest {
             ExternalDownloadOutboxId result = adapter.persist(domain);
 
             // then
-            assertThat(result.value()).isEqualTo(1L);
+            assertThat(result.value()).isEqualTo(expectedId);
             verify(mapper).toEntity(domain);
             verify(jpaRepository).save(entity);
         }
@@ -64,7 +66,7 @@ class ExternalDownloadOutboxPersistenceAdapterTest {
         void shouldCallMapperToEntity() {
             // given
             ExternalDownloadOutbox domain = createDomain();
-            ExternalDownloadOutboxJpaEntity entity = createEntity(1L);
+            ExternalDownloadOutboxJpaEntity entity = createEntity(UUID.randomUUID());
 
             given(mapper.toEntity(domain)).willReturn(entity);
             given(jpaRepository.save(any())).willReturn(entity);
@@ -81,7 +83,7 @@ class ExternalDownloadOutboxPersistenceAdapterTest {
         void shouldCallRepositorySave() {
             // given
             ExternalDownloadOutbox domain = createDomain();
-            ExternalDownloadOutboxJpaEntity entity = createEntity(1L);
+            ExternalDownloadOutboxJpaEntity entity = createEntity(UUID.randomUUID());
 
             given(mapper.toEntity(domain)).willReturn(entity);
             given(jpaRepository.save(entity)).willReturn(entity);
@@ -97,16 +99,18 @@ class ExternalDownloadOutboxPersistenceAdapterTest {
         @DisplayName("신규 Outbox 저장 시 생성된 ID를 반환한다")
         void shouldReturnGeneratedIdForNewOutbox() {
             // given
+            UUID downloadId = UUID.randomUUID();
             ExternalDownloadOutbox newOutbox =
                     ExternalDownloadOutbox.of(
                             ExternalDownloadOutboxId.forNew(),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadId.of(downloadId),
                             false,
                             null,
                             Instant.now());
 
+            UUID generatedId = UUID.randomUUID();
             ExternalDownloadOutboxJpaEntity entityWithoutId = createEntity(null);
-            ExternalDownloadOutboxJpaEntity savedEntity = createEntity(999L);
+            ExternalDownloadOutboxJpaEntity savedEntity = createEntity(generatedId);
 
             given(mapper.toEntity(newOutbox)).willReturn(entityWithoutId);
             given(jpaRepository.save(entityWithoutId)).willReturn(savedEntity);
@@ -115,18 +119,19 @@ class ExternalDownloadOutboxPersistenceAdapterTest {
             ExternalDownloadOutboxId result = adapter.persist(newOutbox);
 
             // then
-            assertThat(result.value()).isEqualTo(999L);
+            assertThat(result.value()).isEqualTo(generatedId);
         }
 
         @Test
         @DisplayName("기존 Outbox 업데이트 시 동일한 ID를 반환한다")
         void shouldReturnSameIdForExistingOutbox() {
             // given
-            Long existingId = 42L;
+            UUID existingId = UUID.randomUUID();
+            UUID downloadId = UUID.randomUUID();
             ExternalDownloadOutbox existingOutbox =
                     ExternalDownloadOutbox.of(
                             ExternalDownloadOutboxId.of(existingId),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadId.of(downloadId),
                             true,
                             Instant.now(),
                             Instant.now());
@@ -147,15 +152,16 @@ class ExternalDownloadOutboxPersistenceAdapterTest {
         @DisplayName("미발행 상태의 Outbox를 저장할 수 있다")
         void shouldPersistUnpublishedOutbox() {
             // given
+            UUID downloadId = UUID.randomUUID();
             ExternalDownloadOutbox unpublishedOutbox =
                     ExternalDownloadOutbox.of(
                             ExternalDownloadOutboxId.forNew(),
-                            ExternalDownloadId.of(100L),
+                            ExternalDownloadId.of(downloadId),
                             false,
                             null,
                             Instant.now());
 
-            ExternalDownloadOutboxJpaEntity entity = createEntity(1L);
+            ExternalDownloadOutboxJpaEntity entity = createEntity(UUID.randomUUID());
 
             given(mapper.toEntity(unpublishedOutbox)).willReturn(entity);
             given(jpaRepository.save(entity)).willReturn(entity);
@@ -173,16 +179,18 @@ class ExternalDownloadOutboxPersistenceAdapterTest {
     // ==================== Helper Methods ====================
 
     private ExternalDownloadOutbox createDomain() {
+        UUID downloadId = UUID.randomUUID();
         return ExternalDownloadOutbox.of(
                 ExternalDownloadOutboxId.forNew(),
-                ExternalDownloadId.of(100L),
+                ExternalDownloadId.of(downloadId),
                 false,
                 null,
                 Instant.now());
     }
 
-    private ExternalDownloadOutboxJpaEntity createEntity(Long id) {
+    private ExternalDownloadOutboxJpaEntity createEntity(UUID outboxId) {
+        UUID downloadId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
-        return ExternalDownloadOutboxJpaEntity.of(id, 100L, false, null, now, now);
+        return ExternalDownloadOutboxJpaEntity.of(outboxId, downloadId, false, null, now, now);
     }
 }

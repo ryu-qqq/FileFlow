@@ -1,7 +1,6 @@
 package com.ryuqq.fileflow.application.session.scheduler;
 
 import com.ryuqq.fileflow.application.common.metrics.SchedulerMetrics;
-import com.ryuqq.fileflow.application.session.dto.command.ExpireUploadSessionCommand;
 import com.ryuqq.fileflow.application.session.port.in.command.ExpireUploadSessionUseCase;
 import com.ryuqq.fileflow.application.session.port.out.query.FindUploadSessionQueryPort;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
@@ -79,18 +78,15 @@ public class MultipartUploadSessionExpirationScheduler {
             while (!expiredSessions.isEmpty()) {
                 for (MultipartUploadSession session : expiredSessions) {
                     try {
-                        ExpireUploadSessionCommand command =
-                                ExpireUploadSessionCommand.of(session.getId().value().toString());
-                        expireUploadSessionUseCase.execute(command);
+
+                        expireUploadSessionUseCase.execute(session);
                         totalExpired++;
-                        log.debug(
-                                "Expired multipart upload session: {}",
-                                session.getId().value().toString());
+                        log.debug("Expired multipart upload session: {}", session.getIdValue());
                     } catch (Exception e) {
                         totalFailed++;
                         log.warn(
                                 "Failed to expire multipart upload session: {}. Reason: {}",
-                                session.getId().value().toString(),
+                                session.getIdValue(),
                                 e.getMessage());
                     }
                 }

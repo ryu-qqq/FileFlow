@@ -16,7 +16,7 @@ import java.time.Instant;
  * @param updatedAt 수정 시간
  */
 public record ExternalDownloadDetailResponse(
-        Long id,
+        String id,
         String sourceUrl,
         String status,
         String fileAssetId,

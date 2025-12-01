@@ -5,9 +5,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.ryuqq.fileflow.application.common.util.ClockHolder;
 import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
 import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
+import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
@@ -53,7 +53,7 @@ class MarkExternalDownloadAsFailedServiceTest {
         @DisplayName("PROCESSING 상태의 다운로드를 FAILED로 변경하고 저장한다")
         void shouldMarkProcessingDownloadAsFailed() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             String errorMessage = "Connection timeout";
 
             ExternalDownload download =
@@ -76,7 +76,7 @@ class MarkExternalDownloadAsFailedServiceTest {
         @DisplayName("존재하지 않는 다운로드 ID인 경우 저장하지 않는다")
         void shouldNotSaveWhenDownloadNotFound() {
             // given
-            Long downloadId = 999L;
+            String downloadId = "00000000-0000-0000-0000-0000000003e7";
             String errorMessage = "Some error";
 
             given(queryPort.findById(ExternalDownloadId.of(downloadId)))
@@ -94,7 +94,7 @@ class MarkExternalDownloadAsFailedServiceTest {
         @DisplayName("이미 COMPLETED 상태인 경우 저장하지 않는다")
         void shouldNotSaveWhenAlreadyCompleted() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             String errorMessage = "Error after completion";
 
             ExternalDownload download =
@@ -117,7 +117,7 @@ class MarkExternalDownloadAsFailedServiceTest {
         @DisplayName("이미 FAILED 상태인 경우 저장하지 않는다")
         void shouldNotSaveWhenAlreadyFailed() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             String errorMessage = "Second failure";
 
             ExternalDownload download =
@@ -141,7 +141,7 @@ class MarkExternalDownloadAsFailedServiceTest {
         @DisplayName("PENDING 상태에서도 FAILED로 변경할 수 있다")
         void shouldMarkPendingDownloadAsFailed() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             String errorMessage = "Validation failed";
 
             ExternalDownload download =
@@ -164,7 +164,7 @@ class MarkExternalDownloadAsFailedServiceTest {
         @DisplayName("에러 메시지와 함께 실패 처리된다")
         void shouldSaveWithErrorMessage() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             String errorMessage = "Network error: Connection refused";
 
             ExternalDownload download =
@@ -186,7 +186,7 @@ class MarkExternalDownloadAsFailedServiceTest {
         @DisplayName("Clock의 현재 시간을 사용하여 실패 처리한다")
         void shouldUseClockForFailedTime() {
             // given
-            Long downloadId = 1L;
+            String downloadId = "00000000-0000-0000-0000-000000000001";
             String errorMessage = "Timeout error";
 
             ExternalDownload download =

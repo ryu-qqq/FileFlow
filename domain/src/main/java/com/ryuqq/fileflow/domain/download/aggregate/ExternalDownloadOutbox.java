@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 외부 다운로드 Outbox Aggregate.
@@ -96,18 +97,18 @@ public class ExternalDownloadOutbox {
     /**
      * ID 값 조회.
      *
-     * @return ID의 Long 값
+     * @return ID의 UUID 값
      */
-    public Long getIdValue() {
+    public UUID getIdValue() {
         return id.value();
     }
 
     /**
      * ExternalDownloadId 값 조회.
      *
-     * @return ExternalDownloadId의 Long 값
+     * @return ExternalDownloadId의 UUID 값
      */
-    public Long getExternalDownloadIdValue() {
+    public UUID getExternalDownloadIdValue() {
         return externalDownloadId.value();
     }
 
