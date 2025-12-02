@@ -128,4 +128,13 @@ public enum UploadCategory {
     public boolean isHtml() {
         return this == HTML;
     }
+
+    /**
+     * 이미지 처리(리사이징 등)가 필요한 카테고리인지 확인한다.
+     *
+     * @return BANNER, PRODUCT_IMAGE, HTML이면 true
+     */
+    public boolean requiresImageProcessing() {
+        return this == BANNER || this == PRODUCT_IMAGE || this == HTML;
+    }
 }
