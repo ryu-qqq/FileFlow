@@ -49,6 +49,15 @@ public record ProcessedFileAssetId(UUID value) {
     }
 
     /**
+     * ID가 신규인지 확인 (항상 false, 생성 시 값이 필수).
+     *
+     * @return 항상 false (null 허용하지 않음)
+     */
+    public boolean isNew() {
+        return false; // Record 생성 시 null 검증으로 항상 값이 존재
+    }
+
+    /**
      * UUID 문자열을 반환한다.
      *
      * @return UUID 문자열
