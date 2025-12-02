@@ -40,7 +40,7 @@
 ### 2️⃣ ContentType 확장 - isHtml() 메서드 (Cycle 2)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldReturnTrueForHtmlContentType()` 작성
+- [x] `shouldReturnTrueForHtmlContentType()` 작성 (🔄 진행 중)
 - [ ] `shouldReturnTrueForXhtmlContentType()` 작성
 - [ ] `shouldReturnFalseForNonHtmlContentType()` 작성
 - [ ] 테스트 실행 → 컴파일 에러 확인 (메서드 없음)

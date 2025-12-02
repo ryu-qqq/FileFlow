@@ -279,6 +279,35 @@ class ContentTypeTest {
             assertThat(ContentType.fromExtension("htm").type()).isEqualTo("text/html");
             assertThat(ContentType.fromExtension("xhtml").type()).isEqualTo("application/xhtml+xml");
         }
+
+        @Test
+        @DisplayName("text/html 타입은 isHtml()이 true를 반환한다")
+        void shouldReturnTrueForHtmlContentType() {
+            // given
+            ContentType htmlType = ContentType.of("text/html");
+
+            // when & then
+            assertThat(htmlType.isHtml()).isTrue();
+        }
+
+        @Test
+        @DisplayName("application/xhtml+xml 타입은 isHtml()이 true를 반환한다")
+        void shouldReturnTrueForXhtmlContentType() {
+            // given
+            ContentType xhtmlType = ContentType.of("application/xhtml+xml");
+
+            // when & then
+            assertThat(xhtmlType.isHtml()).isTrue();
+        }
+
+        @Test
+        @DisplayName("HTML이 아닌 타입은 isHtml()이 false를 반환한다")
+        void shouldReturnFalseForNonHtmlContentType() {
+            // given & when & then
+            assertThat(ContentType.of("image/jpeg").isHtml()).isFalse();
+            assertThat(ContentType.of("application/pdf").isHtml()).isFalse();
+            assertThat(ContentType.of("video/mp4").isHtml()).isFalse();
+        }
     }
 
     @Nested
