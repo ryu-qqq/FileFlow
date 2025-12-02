@@ -3,21 +3,35 @@ package com.ryuqq.fileflow.domain.asset.vo;
 /**
  * 이미지 변형 정보.
  *
+ * <p>이미지 처리 시 생성되는 변형 이미지의 타입과 파일명 접미사를 정의한다.
+ *
+ * <p><strong>사용 예시</strong>:
+ *
+ * <ul>
+ *   <li>product.jpg → product_large.jpg (LARGE)
+ *   <li>product.jpg → product_medium.jpg (MEDIUM)
+ *   <li>product.jpg → product_thumb.jpg (THUMBNAIL)
+ * </ul>
+ *
  * @param type   변형 타입 (ORIGINAL, LARGE, MEDIUM, THUMBNAIL)
  * @param suffix 파일명에 추가될 접미사 (예: "_large", "_thumb")
  */
 public record ImageVariant(ImageVariantType type, String suffix) {
 
+    // ========================================
+    // 표준 상수 정의
+    // ========================================
+
     /** 원본 이미지 (리사이징 없음). */
     public static final ImageVariant ORIGINAL = new ImageVariant(ImageVariantType.ORIGINAL, "");
 
-    /** 대형 이미지. */
+    /** 대형 이미지 (상세 보기용). */
     public static final ImageVariant LARGE = new ImageVariant(ImageVariantType.LARGE, "_large");
 
-    /** 중형 이미지. */
+    /** 중형 이미지 (목록 보기용). */
     public static final ImageVariant MEDIUM = new ImageVariant(ImageVariantType.MEDIUM, "_medium");
 
-    /** 썸네일 이미지. */
+    /** 썸네일 이미지 (미리보기용). */
     public static final ImageVariant THUMBNAIL = new ImageVariant(ImageVariantType.THUMBNAIL, "_thumb");
 
     /** Compact Constructor (검증 로직). */
