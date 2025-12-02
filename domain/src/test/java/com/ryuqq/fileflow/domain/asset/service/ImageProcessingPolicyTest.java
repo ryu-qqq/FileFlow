@@ -2,8 +2,11 @@ package com.ryuqq.fileflow.domain.asset.service;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.ryuqq.fileflow.domain.asset.vo.ImageVariant;
+import com.ryuqq.fileflow.domain.asset.vo.ImageVariantType;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.UploadCategory;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -149,6 +152,37 @@ class ImageProcessingPolicyTest {
 
             // when & then
             assertThat(policy.shouldProcess(pdfType, banner)).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("getVariantsToGenerate() 테스트")
+    class GetVariantsToGenerateTest {
+
+        @Test
+        @DisplayName("LARGE, MEDIUM, THUMBNAIL 변형을 반환한다")
+        void shouldReturnLargeMediumThumbnailVariants() {
+            // when
+            List<ImageVariant> variants = policy.getVariantsToGenerate();
+
+            // then
+            assertThat(variants).hasSize(3);
+            assertThat(variants).extracting(ImageVariant::type)
+                    .containsExactlyInAnyOrder(
+                            ImageVariantType.LARGE,
+                            ImageVariantType.MEDIUM,
+                            ImageVariantType.THUMBNAIL);
+        }
+
+        @Test
+        @DisplayName("ORIGINAL은 변형 목록에 포함되지 않는다")
+        void shouldNotIncludeOriginalInVariants() {
+            // when
+            List<ImageVariant> variants = policy.getVariantsToGenerate();
+
+            // then
+            assertThat(variants).extracting(ImageVariant::type)
+                    .doesNotContain(ImageVariantType.ORIGINAL);
         }
     }
 }

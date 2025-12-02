@@ -14,195 +14,196 @@
 
 ## 📋 TDD 사이클 체크리스트
 
-### 1️⃣ FileAssetStatusHistoryId Value Object (Cycle 1)
+### 1️⃣ FileAssetStatusHistoryId Value Object (Cycle 1) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileAssetStatusHistoryIdTest.java` 생성
-- [ ] `shouldGenerateValidUuid()` 작성
-- [ ] `shouldCreateFromValidString()` 작성
-- [ ] `shouldThrowWhenValueIsNull()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: FileAssetStatusHistoryId VO 테스트 추가 (Red)`
+- [x] `FileAssetStatusHistoryIdTest.java` 생성
+- [x] `shouldGenerateValidUuid()` 작성
+- [x] `shouldCreateFromValidString()` 작성
+- [x] `shouldThrowWhenValueIsNull()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: FileAssetStatusHistoryId VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileAssetStatusHistoryId.java` 생성 (Java Record)
-- [ ] `generate()`, `of(String)` 정적 메서드
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: FileAssetStatusHistoryId VO 구현 (Green)`
+- [x] `FileAssetStatusHistoryId.java` 생성 (Java Record)
+- [x] `forNew()`, `of(String)` 정적 메서드
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: FileAssetStatusHistoryId VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 기존 ID 패턴과 일관성 확인
-- [ ] 커밋: `struct: FileAssetStatusHistoryId 패턴 일관성 (Refactor)`
+- [x] 기존 ID 패턴과 일관성 확인 (변경 불필요 - 패턴 동일)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 ---
 
-### 2️⃣ FileAssetStatusHistory Aggregate (Cycle 2)
+### 2️⃣ FileAssetStatusHistory Aggregate (Cycle 2) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileAssetStatusHistoryTest.java` 생성
-- [ ] `shouldCreateWithForNew()` 작성
-- [ ] `shouldCreateWithForSystemChange()` 작성
-- [ ] `shouldCreateWithForN8nChange()` 작성
-- [ ] `shouldReconstitute()` 작성
-- [ ] `shouldReturnTrueForIsFailure()` 작성
-- [ ] `shouldReturnTrueForIsInitialCreation()` 작성
-- [ ] `shouldReturnTrueForExceedsSla()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: FileAssetStatusHistory Aggregate 테스트 추가 (Red)`
+- [x] `FileAssetStatusHistoryTest.java` 생성
+- [x] `shouldCreateWithForNew()` 작성
+- [x] `shouldCreateWithForSystemChange()` 작성
+- [x] `shouldCreateWithForN8nChange()` 작성
+- [x] `shouldReconstitute()` 작성
+- [x] `shouldReturnTrueForIsFailure()` 작성
+- [x] `shouldReturnTrueForIsInitialCreation()` 작성
+- [x] `shouldReturnTrueForExceedsSla()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: FileAssetStatusHistory Aggregate 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileAssetStatusHistory.java` 생성 (Plain Java)
-- [ ] Private 생성자
-- [ ] `forNew()` - 일반 생성
-- [ ] `forSystemChange()` - 시스템 변경용 편의 메서드
-- [ ] `forN8nChange()` - n8n 변경용 편의 메서드
-- [ ] `reconstitute()` - DB 복원용
-- [ ] 비즈니스 메서드: `isFailure()`, `isInitialCreation()`, `exceedsSla()`
-- [ ] Getter 메서드 (Lombok 금지)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: FileAssetStatusHistory Aggregate 구현 (Green)`
+- [x] `FileAssetStatusHistory.java` 생성 (Plain Java)
+- [x] Private 생성자
+- [x] `forNew()` - 일반 생성
+- [x] `forSystemChange()` - 시스템 변경용 편의 메서드
+- [x] `forN8nChange()` - n8n 변경용 편의 메서드
+- [x] `reconstitute()` - DB 복원용
+- [x] 비즈니스 메서드: `isFailure()`, `isInitialCreation()`, `exceedsSla()`
+- [x] Getter 메서드 (Lombok 금지)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: FileAssetStatusHistory Aggregate 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 필드 순서 정리
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: FileAssetStatusHistory 구조 정리 (Refactor)`
+- [x] 필드 순서 정리 (변경 불필요 - 이미 정리됨)
+- [x] 테스트 여전히 통과 확인
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileAssetStatusHistoryFixture.java` 생성
-- [ ] `aStatusHistory()`, `aFailedHistory()` 메서드 추가
-- [ ] 커밋: `test: FileAssetStatusHistoryFixture 정리 (Tidy)`
+- [x] `FileAssetStatusHistoryFixture.java` 생성
+- [x] `aStatusHistory()`, `aFailedHistory()` 메서드 추가
+- [x] 커밋: `test: FileAssetStatusHistoryFixture 추가 (Tidy)`
 
 ---
 
-### 3️⃣ FileProcessingOutboxId Value Object (Cycle 3)
+### 3️⃣ FileProcessingOutboxId Value Object (Cycle 3) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileProcessingOutboxIdTest.java` 생성
-- [ ] `shouldGenerateValidUuid()` 작성
-- [ ] `shouldCreateFromValidString()` 작성
-- [ ] `shouldThrowWhenValueIsNull()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: FileProcessingOutboxId VO 테스트 추가 (Red)`
+- [x] `FileProcessingOutboxIdTest.java` 생성
+- [x] `shouldGenerateValidUuid()` 작성
+- [x] `shouldCreateFromValidString()` 작성
+- [x] `shouldThrowWhenValueIsNull()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: FileProcessingOutboxId VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileProcessingOutboxId.java` 생성 (Java Record)
-- [ ] `generate()`, `of(String)` 정적 메서드
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: FileProcessingOutboxId VO 구현 (Green)`
+- [x] `FileProcessingOutboxId.java` 생성 (Java Record)
+- [x] `forNew()`, `of(String)` 정적 메서드
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: FileProcessingOutboxId VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ID 패턴 일관성 확인
-- [ ] 커밋: `struct: FileProcessingOutboxId 패턴 일관성 (Refactor)`
+- [x] ID 패턴 일관성 확인 (변경 불필요 - 패턴 동일)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 ---
 
-### 4️⃣ OutboxStatus Enum (Cycle 4)
+### 4️⃣ OutboxStatus Enum (Cycle 4) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `OutboxStatusTest.java` 생성
-- [ ] `shouldHavePendingStatus()` 작성
-- [ ] `shouldHaveSentStatus()` 작성
-- [ ] `shouldHaveFailedStatus()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: OutboxStatus enum 테스트 추가 (Red)`
+- [x] `OutboxStatusTest.java` 생성
+- [x] `shouldHavePendingStatus()` 작성
+- [x] `shouldHaveSentStatus()` 작성
+- [x] `shouldHaveFailedStatus()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: OutboxStatus enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `OutboxStatus.java` 생성 (Enum)
-- [ ] PENDING, SENT, FAILED 정의
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: OutboxStatus enum 구현 (Green)`
+- [x] `OutboxStatus.java` 생성 (Enum)
+- [x] PENDING, SENT, FAILED 정의
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: OutboxStatus enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] 커밋: `struct: OutboxStatus Javadoc 추가 (Refactor)`
+- [x] Javadoc 추가 (Green 단계에서 완료)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 ---
 
-### 5️⃣ FileProcessingOutbox Aggregate - 기본 생성 (Cycle 5)
+### 5️⃣ FileProcessingOutbox Aggregate - 기본 생성 (Cycle 5) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileProcessingOutboxTest.java` 생성
-- [ ] `shouldCreateWithForProcessRequest()` 작성
-- [ ] `shouldCreateWithForStatusChange()` 작성
-- [ ] `shouldCreateWithForRetryRequest()` 작성
-- [ ] `shouldReconstitute()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: FileProcessingOutbox 생성 테스트 추가 (Red)`
+- [x] `FileProcessingOutboxTest.java` 생성
+- [x] `shouldCreateWithForProcessRequest()` 작성
+- [x] `shouldCreateWithForStatusChange()` 작성
+- [x] `shouldCreateWithForRetryRequest()` 작성
+- [x] `shouldReconstitute()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: FileProcessingOutbox 생성 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileProcessingOutbox.java` 생성 (Plain Java)
-- [ ] Private 생성자
-- [ ] `forProcessRequest()` - 가공 요청용
-- [ ] `forStatusChange()` - 상태 변경 알림용
-- [ ] `forRetryRequest()` - 재처리 요청용
-- [ ] `reconstitute()` - DB 복원용
-- [ ] Getter 메서드 (Lombok 금지)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: FileProcessingOutbox 기본 구현 (Green)`
+- [x] `FileProcessingOutbox.java` 생성 (Plain Java)
+- [x] Private 생성자
+- [x] `forProcessRequest()` - 가공 요청용
+- [x] `forStatusChange()` - 상태 변경 알림용
+- [x] `forRetryRequest()` - 재처리 요청용
+- [x] `reconstitute()` - DB 복원용
+- [x] Getter 메서드 (Lombok 금지)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: FileProcessingOutbox 기본 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 필드 순서 정리
-- [ ] 커밋: `struct: FileProcessingOutbox 구조 정리 (Refactor)`
+- [x] 필드 순서 정리 (변경 불필요 - 이미 정리됨)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 ---
 
-### 6️⃣ FileProcessingOutbox - 상태 변경 메서드 (Cycle 6)
+### 6️⃣ FileProcessingOutbox - 상태 변경 메서드 (Cycle 6) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldMarkAsSent()` 작성
-- [ ] `shouldMarkAsFailed()` 작성
-- [ ] `shouldIncrementRetryCountOnFailed()` 작성
-- [ ] `shouldReturnTrueForCanRetryWhenPendingAndBelowMax()` 작성
-- [ ] `shouldReturnFalseForCanRetryWhenExhausted()` 작성
-- [ ] `shouldReturnTrueForIsExhausted()` 작성
-- [ ] `shouldReturnTrueForIsSent()` 작성
-- [ ] 테스트 실행 → 실패 확인
-- [ ] 커밋: `test: FileProcessingOutbox 상태 변경 테스트 추가 (Red)`
+- [x] `shouldMarkAsSent()` 작성
+- [x] `shouldMarkAsFailed()` 작성
+- [x] `shouldIncrementRetryCountOnFailed()` 작성
+- [x] `shouldReturnTrueForCanRetryWhenPendingAndBelowMax()` 작성
+- [x] `shouldReturnFalseForCanRetryWhenExhausted()` 작성
+- [x] `shouldReturnTrueForIsExhausted()` 작성
+- [x] `shouldReturnTrueForIsSent()` 작성
+- [x] 테스트 실행 → 실패 확인
+- [x] 커밋: `test: FileProcessingOutbox 상태 변경 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `markAsSent()` 메서드 추가
-- [ ] `markAsFailed(String errorMessage)` 메서드 추가
-- [ ] `canRetry()` 메서드 추가
-- [ ] `isExhausted()` 메서드 추가
-- [ ] `isSent()` 메서드 추가
-- [ ] MAX_RETRY_COUNT 상수 (3)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: FileProcessingOutbox 상태 변경 메서드 구현 (Green)`
+- [x] `markAsSent()` 메서드 추가
+- [x] `markAsFailed(String errorMessage)` 메서드 추가
+- [x] `canRetry()` 메서드 추가
+- [x] `isExhausted()` 메서드 추가
+- [x] `isSent()` 메서드 추가
+- [x] MAX_RETRY_COUNT 상수 (3)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: FileProcessingOutbox 상태 변경 메서드 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Tell Don't Ask 원칙 검증
-- [ ] 커밋: `struct: FileProcessingOutbox Tell Don't Ask 적용 (Refactor)`
+- [x] Tell Don't Ask 원칙 검증 (이미 준수 - 변경 불필요)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileProcessingOutboxFixture.java` 생성
-- [ ] `aPendingOutbox()`, `aSentOutbox()`, `aFailedOutbox()` 메서드
-- [ ] 커밋: `test: FileProcessingOutboxFixture 정리 (Tidy)`
+- [x] `FileProcessingOutboxFixture.java` 생성
+- [x] `aPendingOutbox()`, `aSentOutbox()`, `aFailedOutbox()` 메서드
+- [x] 커밋: `test: FileProcessingOutboxFixture 정리 (Tidy)`
 
 ---
 
-### 7️⃣ ImageProcessingPolicy Domain Service - shouldProcess (Cycle 7)
+### 7️⃣ ImageProcessingPolicy Domain Service - shouldProcess (Cycle 7) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ImageProcessingPolicyTest.java` 생성
-- [ ] `shouldReturnTrueForImageContentType()` 작성
-- [ ] `shouldReturnFalseForNonImageContentType()` 작성
-- [ ] `shouldReturnTrueForBannerCategory()` 작성
-- [ ] `shouldReturnTrueForProductImageCategory()` 작성
-- [ ] `shouldReturnTrueForHtmlCategory()` 작성
-- [ ] `shouldReturnFalseForExcelCategory()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ImageProcessingPolicy.shouldProcess 테스트 추가 (Red)`
+- [x] `ImageProcessingPolicyTest.java` 생성
+- [x] `shouldReturnTrueForImageContentType()` 작성
+- [x] `shouldReturnFalseForNonImageContentType()` 작성
+- [x] `shouldReturnTrueForBannerCategory()` 작성
+- [x] `shouldReturnTrueForProductImageCategory()` 작성
+- [x] `shouldReturnTrueForHtmlCategory()` 작성
+- [x] `shouldReturnFalseForExcelCategory()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ImageProcessingPolicy.shouldProcess 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ImageProcessingPolicy.java` 생성 (Domain Service)
-- [ ] `shouldProcess(ContentType)` 메서드
-- [ ] `shouldProcess(UploadCategory)` 메서드
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ImageProcessingPolicy.shouldProcess 구현 (Green)`
+- [x] `ImageProcessingPolicy.java` 생성 (Domain Service)
+- [x] `shouldProcess(ContentType)` 메서드
+- [x] `shouldProcess(UploadCategory)` 메서드
+- [x] `shouldProcess(ContentType, UploadCategory)` 복합 조건 메서드 추가
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ImageProcessingPolicy.shouldProcess 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 메서드 오버로딩 정리
-- [ ] 커밋: `struct: ImageProcessingPolicy 메서드 정리 (Refactor)`
+- [x] 메서드 오버로딩 정리 (변경 불필요 - 이미 정리됨)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 ---
 
