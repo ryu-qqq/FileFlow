@@ -19,6 +19,10 @@ import java.util.Set;
  */
 public record ContentType(String type) {
 
+    // HTML MIME 타입 상수
+    private static final String MIME_TEXT_HTML = "text/html";
+    private static final String MIME_APPLICATION_XHTML = "application/xhtml+xml";
+
     // 허용된 MIME 타입 (확장 가능)
     private static final Set<String> ALLOWED_MIME_TYPES =
             Set.of(
@@ -50,8 +54,8 @@ public record ContentType(String type) {
                     "text/plain",
                     "text/csv",
                     // HTML
-                    "text/html",
-                    "application/xhtml+xml",
+                    MIME_TEXT_HTML,
+                    MIME_APPLICATION_XHTML,
                     // Archive
                     "application/zip",
                     "application/x-rar-compressed",
@@ -83,9 +87,9 @@ public record ContentType(String type) {
                             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
                     Map.entry("txt", "text/plain"),
                     Map.entry("csv", "text/csv"),
-                    Map.entry("html", "text/html"),
-                    Map.entry("htm", "text/html"),
-                    Map.entry("xhtml", "application/xhtml+xml"),
+                    Map.entry("html", MIME_TEXT_HTML),
+                    Map.entry("htm", MIME_TEXT_HTML),
+                    Map.entry("xhtml", MIME_APPLICATION_XHTML),
                     Map.entry("zip", "application/zip"));
 
     /** Compact Constructor (검증 로직). */
@@ -161,7 +165,7 @@ public record ContentType(String type) {
      * @return HTML 타입이면 true (text/html 또는 application/xhtml+xml)
      */
     public boolean isHtml() {
-        return type.equals("text/html") || type.equals("application/xhtml+xml");
+        return type.equals(MIME_TEXT_HTML) || type.equals(MIME_APPLICATION_XHTML);
     }
 
     /**

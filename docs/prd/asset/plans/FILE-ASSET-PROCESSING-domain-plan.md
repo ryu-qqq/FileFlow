@@ -50,12 +50,12 @@
 - [x] `ContentType.java`에 `isHtml()` 메서드 추가
 - [x] text/html 또는 application/xhtml+xml이면 true 반환
 - [x] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ContentType.isHtml() 구현 (Green)`
+- [x] 커밋: `feat: ContentType.isHtml() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] HTML 관련 MIME 타입 상수로 추출
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ContentType HTML MIME 타입 상수화 (Refactor)`
+- [x] HTML 관련 MIME 타입 상수로 추출 (MIME_TEXT_HTML, MIME_APPLICATION_XHTML)
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: ContentType HTML MIME 타입 상수화 (Refactor)`
 
 ---
 
