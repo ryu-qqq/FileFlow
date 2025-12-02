@@ -2,6 +2,8 @@ package com.ryuqq.fileflow.domain.asset.service;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.ryuqq.fileflow.domain.asset.vo.ImageFormat;
+import com.ryuqq.fileflow.domain.asset.vo.ImageFormatType;
 import com.ryuqq.fileflow.domain.asset.vo.ImageVariant;
 import com.ryuqq.fileflow.domain.asset.vo.ImageVariantType;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
@@ -183,6 +185,49 @@ class ImageProcessingPolicyTest {
             // then
             assertThat(variants).extracting(ImageVariant::type)
                     .doesNotContain(ImageVariantType.ORIGINAL);
+        }
+    }
+
+    @Nested
+    @DisplayName("getFormatsToGenerate(String) 테스트")
+    class GetFormatsToGenerateTest {
+
+        @Test
+        @DisplayName("JPG 확장자면 WEBP와 JPEG 포맷을 반환한다")
+        void shouldReturnWebpAndJpegForJpgExtension() {
+            // when
+            List<ImageFormat> formats = policy.getFormatsToGenerate("jpg");
+
+            // then
+            assertThat(formats).hasSize(2);
+            assertThat(formats).extracting(ImageFormat::type)
+                    .containsExactly(ImageFormatType.WEBP, ImageFormatType.JPEG);
+        }
+
+        @Test
+        @DisplayName("PNG 확장자면 WEBP와 PNG 포맷을 반환한다")
+        void shouldReturnWebpAndPngForPngExtension() {
+            // when
+            List<ImageFormat> formats = policy.getFormatsToGenerate("png");
+
+            // then
+            assertThat(formats).hasSize(2);
+            assertThat(formats).extracting(ImageFormat::type)
+                    .containsExactly(ImageFormatType.WEBP, ImageFormatType.PNG);
+        }
+
+        @Test
+        @DisplayName("WEBP는 항상 첫 번째로 포함된다")
+        void shouldAlwaysIncludeWebpAsFirstFormat() {
+            // when
+            List<ImageFormat> jpgFormats = policy.getFormatsToGenerate("jpg");
+            List<ImageFormat> pngFormats = policy.getFormatsToGenerate("png");
+            List<ImageFormat> jpegFormats = policy.getFormatsToGenerate("jpeg");
+
+            // then
+            assertThat(jpgFormats.get(0).type()).isEqualTo(ImageFormatType.WEBP);
+            assertThat(pngFormats.get(0).type()).isEqualTo(ImageFormatType.WEBP);
+            assertThat(jpegFormats.get(0).type()).isEqualTo(ImageFormatType.WEBP);
         }
     }
 }

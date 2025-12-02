@@ -207,23 +207,23 @@
 
 ---
 
-### 8️⃣ ImageProcessingPolicy - getVariantsToGenerate (Cycle 8)
+### 8️⃣ ImageProcessingPolicy - getVariantsToGenerate (Cycle 8) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldReturnLargeMediumThumbnailVariants()` 작성
-- [ ] `shouldNotIncludeOriginalInVariants()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ImageProcessingPolicy.getVariantsToGenerate 테스트 추가 (Red)`
+- [x] `shouldReturnLargeMediumThumbnailVariants()` 작성
+- [x] `shouldNotIncludeOriginalInVariants()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ImageProcessingPolicy.getVariantsToGenerate 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `getVariantsToGenerate()` 메서드 추가
-- [ ] LARGE, MEDIUM, THUMBNAIL 반환 (ORIGINAL 제외)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ImageProcessingPolicy.getVariantsToGenerate 구현 (Green)`
+- [x] `getVariantsToGenerate()` 메서드 추가
+- [x] LARGE, MEDIUM, THUMBNAIL 반환 (ORIGINAL 제외)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ImageProcessingPolicy.getVariantsToGenerate 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 불변 List 반환 확인
-- [ ] 커밋: `struct: getVariantsToGenerate 불변 List 반환 (Refactor)`
+- [x] 불변 List 반환 확인 (List.of()는 이미 불변 - 변경 불필요)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 ---
 
