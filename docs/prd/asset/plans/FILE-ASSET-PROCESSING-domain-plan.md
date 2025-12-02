@@ -17,7 +17,7 @@
 ### 1️⃣ ContentType 확장 - HTML/XHTML 타입 추가 (Cycle 1)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ContentTypeTest.java`에 테스트 메서드 추가
+- [x] `ContentTypeTest.java`에 테스트 메서드 추가 (🔄 진행 중)
 - [ ] `shouldRecognizeHtmlMimeType()` 작성 - text/html 인식
 - [ ] `shouldRecognizeXhtmlMimeType()` 작성 - application/xhtml+xml 인식
 - [ ] `shouldMapHtmlExtensionToMimeType()` 작성 - .html, .htm 확장자 매핑

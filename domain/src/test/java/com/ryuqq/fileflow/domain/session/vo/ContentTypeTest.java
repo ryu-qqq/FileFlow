@@ -242,6 +242,46 @@ class ContentTypeTest {
     }
 
     @Nested
+    @DisplayName("HTML/XHTML 타입 테스트")
+    class HtmlTypeTest {
+
+        @Test
+        @DisplayName("text/html MIME 타입을 인식할 수 있다")
+        void shouldRecognizeHtmlMimeType() {
+            // given
+            String htmlMimeType = "text/html";
+
+            // when
+            ContentType contentType = ContentType.of(htmlMimeType);
+
+            // then
+            assertThat(contentType.type()).isEqualTo(htmlMimeType);
+        }
+
+        @Test
+        @DisplayName("application/xhtml+xml MIME 타입을 인식할 수 있다")
+        void shouldRecognizeXhtmlMimeType() {
+            // given
+            String xhtmlMimeType = "application/xhtml+xml";
+
+            // when
+            ContentType contentType = ContentType.of(xhtmlMimeType);
+
+            // then
+            assertThat(contentType.type()).isEqualTo(xhtmlMimeType);
+        }
+
+        @Test
+        @DisplayName("html, htm, xhtml 확장자를 MIME 타입으로 매핑할 수 있다")
+        void shouldMapHtmlExtensionToMimeType() {
+            // when & then
+            assertThat(ContentType.fromExtension("html").type()).isEqualTo("text/html");
+            assertThat(ContentType.fromExtension("htm").type()).isEqualTo("text/html");
+            assertThat(ContentType.fromExtension("xhtml").type()).isEqualTo("application/xhtml+xml");
+        }
+    }
+
+    @Nested
     @DisplayName("Fixture 테스트")
     class FixtureTest {
 
