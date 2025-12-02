@@ -62,7 +62,7 @@
 ### 3️⃣ ContentType 확장 - isExcel() 메서드 (Cycle 3)
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldReturnTrueForXlsContentType()` 작성
+- [x] `shouldReturnTrueForXlsContentType()` 작성 (🔄 진행 중)
 - [ ] `shouldReturnTrueForXlsxContentType()` 작성
 - [ ] `shouldReturnFalseForNonExcelContentType()` 작성
 - [ ] 테스트 실행 → 컴파일 에러 확인

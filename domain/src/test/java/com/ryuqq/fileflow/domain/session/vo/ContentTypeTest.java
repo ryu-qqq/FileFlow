@@ -311,6 +311,42 @@ class ContentTypeTest {
     }
 
     @Nested
+    @DisplayName("Excel 타입 테스트")
+    class ExcelTypeTest {
+
+        @Test
+        @DisplayName("application/vnd.ms-excel(xls) 타입은 isExcel()이 true를 반환한다")
+        void shouldReturnTrueForXlsContentType() {
+            // given
+            ContentType xlsType = ContentType.of("application/vnd.ms-excel");
+
+            // when & then
+            assertThat(xlsType.isExcel()).isTrue();
+        }
+
+        @Test
+        @DisplayName("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet(xlsx) 타입은 isExcel()이 true를 반환한다")
+        void shouldReturnTrueForXlsxContentType() {
+            // given
+            ContentType xlsxType =
+                    ContentType.of(
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            // when & then
+            assertThat(xlsxType.isExcel()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Excel이 아닌 타입은 isExcel()이 false를 반환한다")
+        void shouldReturnFalseForNonExcelContentType() {
+            // given & when & then
+            assertThat(ContentType.of("image/jpeg").isExcel()).isFalse();
+            assertThat(ContentType.of("application/pdf").isExcel()).isFalse();
+            assertThat(ContentType.of("text/html").isExcel()).isFalse();
+        }
+    }
+
+    @Nested
     @DisplayName("Fixture 테스트")
     class FixtureTest {
 
