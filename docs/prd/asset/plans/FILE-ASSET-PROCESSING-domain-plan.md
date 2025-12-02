@@ -40,16 +40,16 @@
 ### 2️⃣ ContentType 확장 - isHtml() 메서드 (Cycle 2)
 
 #### 🔴 Red: 테스트 작성
-- [x] `shouldReturnTrueForHtmlContentType()` 작성 (🔄 진행 중)
-- [ ] `shouldReturnTrueForXhtmlContentType()` 작성
-- [ ] `shouldReturnFalseForNonHtmlContentType()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인 (메서드 없음)
-- [ ] 커밋: `test: ContentType.isHtml() 테스트 추가 (Red)`
+- [x] `shouldReturnTrueForHtmlContentType()` 작성
+- [x] `shouldReturnTrueForXhtmlContentType()` 작성
+- [x] `shouldReturnFalseForNonHtmlContentType()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인 (메서드 없음)
+- [x] 커밋: `test: ContentType.isHtml() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ContentType.java`에 `isHtml()` 메서드 추가
-- [ ] text/html 또는 application/xhtml+xml이면 true 반환
-- [ ] 테스트 실행 → 통과 확인
+- [x] `ContentType.java`에 `isHtml()` 메서드 추가
+- [x] text/html 또는 application/xhtml+xml이면 true 반환
+- [x] 테스트 실행 → 통과 확인
 - [ ] 커밋: `feat: ContentType.isHtml() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링

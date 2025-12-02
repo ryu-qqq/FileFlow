@@ -156,6 +156,15 @@ public record ContentType(String type) {
     }
 
     /**
+     * HTML 타입인지 확인한다.
+     *
+     * @return HTML 타입이면 true (text/html 또는 application/xhtml+xml)
+     */
+    public boolean isHtml() {
+        return type.equals("text/html") || type.equals("application/xhtml+xml");
+    }
+
+    /**
      * 비디오 타입인지 확인한다.
      *
      * @return 비디오 타입이면 true
