@@ -207,11 +207,22 @@ public class FileAsset {
 
     // ==================== 비즈니스 메서드 ====================
 
-    /** 가공 처리 시작. */
-    public void startProcessing() {
+    /**
+     * 가공 처리 가능 여부 검증.
+     *
+     * <p>PENDING 상태에서만 가공을 시작할 수 있습니다.
+     *
+     * @throws IllegalStateException PENDING 상태가 아닌 경우
+     */
+    public void validateCanProcess() {
         if (this.status != FileAssetStatus.PENDING) {
             throw new IllegalStateException("PENDING 상태에서만 가공을 시작할 수 있습니다. 현재: " + this.status);
         }
+    }
+
+    /** 가공 처리 시작. */
+    public void startProcessing() {
+        validateCanProcess();
         this.status = FileAssetStatus.PROCESSING;
     }
 
