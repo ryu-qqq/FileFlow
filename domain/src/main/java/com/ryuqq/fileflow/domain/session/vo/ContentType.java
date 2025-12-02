@@ -209,6 +209,18 @@ public record ContentType(String type) {
                 || type.equals("application/x-7z-compressed");
     }
 
+
+    /**
+     * Excel 타입인지 확인한다.
+     *
+     * @return Excel 타입이면 true (xls 또는 xlsx)
+     */
+    public boolean isExcel() {
+        return type.equals("application/vnd.ms-excel")
+                || type.equals(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
     /**
      * 카테고리를 반환한다.
      *
