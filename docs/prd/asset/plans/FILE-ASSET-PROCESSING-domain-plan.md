@@ -2,7 +2,7 @@
 
 > **Jira Issue**: [KAN-337](https://ryuqqq.atlassian.net/browse/KAN-337)
 > **Epic**: [KAN-336](https://ryuqqq.atlassian.net/browse/KAN-336)
-> **Status**: 🔄 진행 중 (In Progress)
+> **Status**: ✅ 완료 (TDD 사이클 12/12 완료, TestFixture는 추후 진행)
 > **Started**: 2025-12-02
 
 **PRD**: docs/prd/file-asset-processing.md
@@ -59,202 +59,202 @@
 
 ---
 
-### 3️⃣ ContentType 확장 - isExcel() 메서드 (Cycle 3)
+### 3️⃣ ContentType 확장 - isExcel() 메서드 (Cycle 3) ✅
 
 #### 🔴 Red: 테스트 작성
-- [x] `shouldReturnTrueForXlsContentType()` 작성 (🔄 진행 중)
-- [ ] `shouldReturnTrueForXlsxContentType()` 작성
-- [ ] `shouldReturnFalseForNonExcelContentType()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ContentType.isExcel() 테스트 추가 (Red)`
+- [x] `shouldReturnTrueForXlsContentType()` 작성
+- [x] `shouldReturnTrueForXlsxContentType()` 작성
+- [x] `shouldReturnFalseForNonExcelContentType()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ContentType.isExcel() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ContentType.java`에 `isExcel()` 메서드 추가
-- [ ] xls, xlsx MIME 타입 체크
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ContentType.isExcel() 구현 (Green)`
+- [x] `ContentType.java`에 `isExcel()` 메서드 추가
+- [x] xls, xlsx MIME 타입 체크
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ContentType.isExcel() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Excel MIME 타입 상수로 추출
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ContentType Excel MIME 타입 상수화 (Refactor)`
+- [x] Excel MIME 타입 상수로 추출 (MIME_EXCEL_XLS, MIME_EXCEL_XLSX)
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: ContentType Excel MIME 타입 상수화 (Refactor)`
 
 ---
 
-### 4️⃣ UploadCategory 확장 - HTML 카테고리 (Cycle 4)
+### 4️⃣ UploadCategory 확장 - HTML 카테고리 (Cycle 4) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `UploadCategoryTest.java`에 테스트 추가
-- [ ] `shouldHaveHtmlCategory()` 작성
-- [ ] `shouldReturnTrueForHtmlCategory()` 작성 (isHtml 메서드)
-- [ ] 테스트 실행 → 실패 확인
-- [ ] 커밋: `test: UploadCategory HTML 카테고리 테스트 추가 (Red)`
+- [x] `UploadCategoryTest.java`에 테스트 추가
+- [x] `shouldHaveHtmlCategory()` 작성
+- [x] `shouldReturnTrueForHtmlCategory()` 작성 (isHtml 메서드)
+- [x] 테스트 실행 → 실패 확인
+- [x] 커밋: `test: UploadCategory HTML 카테고리 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `UploadCategory.java`에 `HTML("html", "HTML 문서")` 추가
-- [ ] `isHtml()` 메서드 추가
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: UploadCategory HTML 카테고리 추가 (Green)`
+- [x] `UploadCategory.java`에 `HTML("html", "HTML 문서")` 추가
+- [x] `isHtml()` 메서드 추가
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: UploadCategory HTML 카테고리 추가 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 카테고리 순서 정리 (알파벳순 또는 논리순)
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: UploadCategory 정리 (Refactor)`
+- [x] 카테고리 순서 검토 (enum 순서 변경은 호환성 이슈로 스킵)
+- [x] 테스트 여전히 통과 확인
+- [x] 리팩토링 불필요 (코드 이미 깔끔함)
 
 ---
 
-### 5️⃣ UploadCategory - requiresImageProcessing() 메서드 (Cycle 5)
+### 5️⃣ UploadCategory - requiresImageProcessing() 메서드 (Cycle 5) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldRequireImageProcessingForBanner()` 작성
-- [ ] `shouldRequireImageProcessingForProductImage()` 작성
-- [ ] `shouldRequireImageProcessingForHtml()` 작성
-- [ ] `shouldNotRequireImageProcessingForExcel()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: UploadCategory.requiresImageProcessing() 테스트 추가 (Red)`
+- [x] `shouldRequireImageProcessingForBanner()` 작성
+- [x] `shouldRequireImageProcessingForProductImage()` 작성
+- [x] `shouldRequireImageProcessingForHtml()` 작성
+- [x] `shouldNotRequireImageProcessingForExcel()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: UploadCategory.requiresImageProcessing() 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `requiresImageProcessing()` 메서드 추가
-- [ ] BANNER, PRODUCT_IMAGE, HTML이면 true
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: UploadCategory.requiresImageProcessing() 구현 (Green)`
+- [x] `requiresImageProcessing()` 메서드 추가
+- [x] BANNER, PRODUCT_IMAGE, HTML이면 true
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: UploadCategory.requiresImageProcessing() 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Set 기반 검사로 변경 (성능 최적화)
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: requiresImageProcessing Set 기반으로 변경 (Refactor)`
+- [x] Set 기반 검사로 변경 (IMAGE_PROCESSING_REQUIRED 상수)
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: requiresImageProcessing Set 기반으로 변경 (Refactor)`
 
 ---
 
-### 6️⃣ FileAssetStatus 확장 - 신규 상태 추가 (Cycle 6)
+### 6️⃣ FileAssetStatus 확장 - 신규 상태 추가 (Cycle 6) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileAssetStatusTest.java`에 테스트 추가
-- [ ] `shouldHaveResizedStatus()` 작성
-- [ ] `shouldHaveN8nProcessingStatus()` 작성
-- [ ] `shouldHaveN8nCompletedStatus()` 작성
-- [ ] 테스트 실행 → 실패 확인
-- [ ] 커밋: `test: FileAssetStatus 신규 상태 테스트 추가 (Red)`
+- [x] `FileAssetStatusTest.java`에 테스트 추가
+- [x] `shouldHaveResizedStatus()` 작성
+- [x] `shouldHaveN8nProcessingStatus()` 작성
+- [x] `shouldHaveN8nCompletedStatus()` 작성
+- [x] 테스트 실행 → 실패 확인
+- [x] 커밋: `test: FileAssetStatus 신규 상태 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileAssetStatus.java`에 RESIZED, N8N_PROCESSING, N8N_COMPLETED 추가
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: FileAssetStatus 신규 상태 추가 (Green)`
+- [x] `FileAssetStatus.java`에 RESIZED, N8N_PROCESSING, N8N_COMPLETED 추가
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: FileAssetStatus 신규 상태 추가 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 상태 순서를 전환 흐름에 맞게 정렬
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: FileAssetStatus 상태 순서 정리 (Refactor)`
+- [x] 상태 순서 검토 (ordinal 변경은 DB 호환성 이슈로 스킵)
+- [x] 테스트 여전히 통과 확인
+- [x] 리팩토링 불필요 (신규 상태는 끝에 추가하여 기존 호환성 유지)
 
 ---
 
-### 7️⃣ ImageVariantType Enum (Cycle 7)
+### 7️⃣ ImageVariantType Enum (Cycle 7) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ImageVariantTypeTest.java` 생성
-- [ ] `shouldHaveOriginalType()` 작성
-- [ ] `shouldHaveLargeType()` 작성
-- [ ] `shouldHaveMediumType()` 작성
-- [ ] `shouldHaveThumbnailType()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ImageVariantType enum 테스트 추가 (Red)`
+- [x] `ImageVariantTypeTest.java` 생성
+- [x] `shouldHaveOriginalType()` 작성
+- [x] `shouldHaveLargeType()` 작성
+- [x] `shouldHaveMediumType()` 작성
+- [x] `shouldHaveThumbnailType()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ImageVariantType enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ImageVariantType.java` 생성 (Enum)
-- [ ] ORIGINAL, LARGE, MEDIUM, THUMBNAIL 정의
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ImageVariantType enum 구현 (Green)`
+- [x] `ImageVariantType.java` 생성 (Enum)
+- [x] ORIGINAL, LARGE, MEDIUM, THUMBNAIL 정의
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ImageVariantType enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ImageVariantType Javadoc 추가 (Refactor)`
+- [x] Javadoc 추가
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: ImageVariantType Javadoc 추가 (Refactor)`
 
 ---
 
-### 8️⃣ ImageVariant Value Object (Cycle 8)
+### 8️⃣ ImageVariant Value Object (Cycle 8) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ImageVariantTest.java` 생성
-- [ ] `shouldCreateImageVariantWithValidData()` 작성
-- [ ] `shouldThrowWhenTypeIsNull()` 작성
-- [ ] `shouldThrowWhenSuffixIsNull()` 작성
-- [ ] `shouldReturnTrueForRequiresResizeWhenNotOriginal()` 작성
-- [ ] `shouldReturnFalseForRequiresResizeWhenOriginal()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ImageVariant VO 테스트 추가 (Red)`
+- [x] `ImageVariantTest.java` 생성
+- [x] `shouldCreateImageVariantWithValidData()` 작성
+- [x] `shouldThrowWhenTypeIsNull()` 작성
+- [x] `shouldThrowWhenSuffixIsNull()` 작성
+- [x] `shouldReturnTrueForRequiresResizeWhenNotOriginal()` 작성
+- [x] `shouldReturnFalseForRequiresResizeWhenOriginal()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ImageVariant VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ImageVariant.java` 생성 (Java Record)
-- [ ] Compact Constructor (검증 로직)
-- [ ] 정적 팩토리 메서드 `of()` 추가
-- [ ] 표준 사이즈 상수 (ORIGINAL, LARGE, MEDIUM, THUMBNAIL)
-- [ ] `requiresResize()` 메서드 추가
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ImageVariant VO 구현 (Green)`
+- [x] `ImageVariant.java` 생성 (Java Record)
+- [x] Compact Constructor (검증 로직)
+- [x] 정적 팩토리 메서드 `of()` 추가
+- [x] 표준 사이즈 상수 (ORIGINAL, LARGE, MEDIUM, THUMBNAIL)
+- [x] `requiresResize()` 메서드 추가
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ImageVariant VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 상수 정의 순서 정리
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ImageVariant 상수 정리 (Refactor)`
+- [x] 상수 정의 순서 정리 (Javadoc 및 섹션 구분 추가)
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: ImageVariant Javadoc 및 상수 정리 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `ImageVariantFixture.java` 생성
+- [ ] `ImageVariantFixture.java` 생성 (추후 진행)
 - [ ] `anOriginalVariant()`, `aLargeVariant()` 등 메서드 추가
 - [ ] 테스트를 Fixture 사용하도록 리팩토링
 - [ ] 커밋: `test: ImageVariantFixture 정리 (Tidy)`
 
 ---
 
-### 9️⃣ ImageFormatType Enum (Cycle 9)
+### 9️⃣ ImageFormatType Enum (Cycle 9) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ImageFormatTypeTest.java` 생성
-- [ ] `shouldHaveWebpType()` 작성
-- [ ] `shouldHaveJpegType()` 작성
-- [ ] `shouldHavePngType()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ImageFormatType enum 테스트 추가 (Red)`
+- [x] `ImageFormatTypeTest.java` 생성
+- [x] `shouldHaveWebpType()` 작성
+- [x] `shouldHaveJpegType()` 작성
+- [x] `shouldHavePngType()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ImageFormatType enum 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ImageFormatType.java` 생성 (Enum)
-- [ ] WEBP, JPEG, PNG 정의
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ImageFormatType enum 구현 (Green)`
+- [x] `ImageFormatType.java` 생성 (Enum)
+- [x] WEBP, JPEG, PNG 정의
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ImageFormatType enum 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] Javadoc 추가
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ImageFormatType Javadoc 추가 (Refactor)`
+- [x] Javadoc 추가
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: ImageFormatType Javadoc 추가 (Refactor)`
 
 ---
 
-### 🔟 ImageFormat Value Object (Cycle 10)
+### 🔟 ImageFormat Value Object (Cycle 10) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ImageFormatTest.java` 생성
-- [ ] `shouldCreateImageFormatWithValidData()` 작성
-- [ ] `shouldThrowWhenTypeIsNull()` 작성
-- [ ] `shouldThrowWhenExtensionIsBlank()` 작성
-- [ ] `shouldThrowWhenMimeTypeIsBlank()` 작성
-- [ ] `shouldReturnPngFromPngExtension()` 작성 (fromOriginal 테스트)
-- [ ] `shouldReturnJpegFromJpgExtension()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ImageFormat VO 테스트 추가 (Red)`
+- [x] `ImageFormatTest.java` 생성
+- [x] `shouldCreateImageFormatWithValidData()` 작성
+- [x] `shouldThrowWhenTypeIsNull()` 작성
+- [x] `shouldThrowWhenExtensionIsBlank()` 작성
+- [x] `shouldThrowWhenMimeTypeIsBlank()` 작성
+- [x] `shouldReturnPngFromPngExtension()` 작성 (fromOriginal 테스트)
+- [x] `shouldReturnJpegFromJpgExtension()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ImageFormat VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ImageFormat.java` 생성 (Java Record)
-- [ ] Compact Constructor (검증 로직)
-- [ ] 정적 팩토리 메서드 `of()` 추가
-- [ ] 표준 포맷 상수 (WEBP, JPEG, PNG)
-- [ ] `fromOriginal()` 메서드 추가 (PNG면 PNG, 그 외 JPEG)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ImageFormat VO 구현 (Green)`
+- [x] `ImageFormat.java` 생성 (Java Record)
+- [x] Compact Constructor (검증 로직)
+- [x] 정적 팩토리 메서드 `of()` 추가
+- [x] 표준 포맷 상수 (WEBP, JPEG, PNG)
+- [x] `fromOriginal()` 메서드 추가 (PNG면 PNG, 그 외 JPEG)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ImageFormat VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 상수 정의 정리
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ImageFormat 상수 정리 (Refactor)`
+- [x] 상수 정의 정리
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: ImageFormat Javadoc 및 상수 정리 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] `ImageFormatFixture.java` 생성
@@ -264,63 +264,64 @@
 
 ---
 
-### 1️⃣1️⃣ ProcessedFileAssetId Value Object (Cycle 11)
+### 1️⃣1️⃣ ProcessedFileAssetId Value Object (Cycle 11) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ProcessedFileAssetIdTest.java` 생성
-- [ ] `shouldGenerateValidUuid()` 작성
-- [ ] `shouldCreateFromValidString()` 작성
-- [ ] `shouldThrowWhenValueIsNull()` 작성
-- [ ] `shouldThrowWhenValueIsBlank()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ProcessedFileAssetId VO 테스트 추가 (Red)`
+- [x] `ProcessedFileAssetIdTest.java` 생성
+- [x] `shouldGenerateValidUuid()` 작성 (forNew_ShouldCreateNewId)
+- [x] `shouldCreateFromValidString()` 작성 (of_WithStringUUID)
+- [x] `shouldThrowWhenValueIsNull()` 작성
+- [x] `shouldThrowWhenValueIsBlank()` 작성 (null UUID 테스트로 변경)
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ProcessedFileAssetId VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ProcessedFileAssetId.java` 생성 (Java Record)
-- [ ] `generate()` 정적 메서드 (UUID 생성)
-- [ ] `of(String)` 정적 팩토리 메서드
-- [ ] `getValue()` 메서드 (value 반환)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ProcessedFileAssetId VO 구현 (Green)`
+- [x] `ProcessedFileAssetId.java` 생성 (Java Record)
+- [x] `forNew()` 정적 메서드 (UUID v7 생성)
+- [x] `of(UUID)`, `of(String)` 정적 팩토리 메서드
+- [x] `getValue()` 메서드 (value 반환)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ProcessedFileAssetId VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 기존 FileAssetId 패턴과 일관성 확인
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ProcessedFileAssetId 패턴 일관성 확보 (Refactor)`
+- [x] 기존 FileAssetId 패턴과 일관성 확인
+- [x] Javadoc 추가
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: ProcessedFileAssetId Javadoc 추가 (Refactor)`
 
 ---
 
-### 1️⃣2️⃣ ProcessedFileAsset Aggregate Root (Cycle 12)
+### 1️⃣2️⃣ ProcessedFileAsset Aggregate Root (Cycle 12) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `ProcessedFileAssetTest.java` 생성
-- [ ] `shouldCreateProcessedFileAssetWithForNew()` 작성
-- [ ] `shouldCreateHtmlExtractedImageWithForHtmlExtractedImage()` 작성
-- [ ] `shouldReconstitute()` 작성
-- [ ] `shouldReturnTrueForHasParentAssetWhenParentExists()` 작성
-- [ ] `shouldReturnFalseForHasParentAssetWhenNoParent()` 작성
-- [ ] `shouldReturnTrueForIsOriginalVariantWhenOriginal()` 작성
-- [ ] `shouldReturnTrueForIsWebpFormatWhenWebp()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ProcessedFileAsset Aggregate 테스트 추가 (Red)`
+- [x] `ProcessedFileAssetTest.java` 생성
+- [x] `shouldCreateProcessedFileAssetWithForNew()` 작성
+- [x] `shouldCreateHtmlExtractedImageWithForHtmlExtractedImage()` 작성
+- [x] `shouldReconstitute()` 작성
+- [x] `shouldReturnTrueForHasParentAssetWhenParentExists()` 작성
+- [x] `shouldReturnFalseForHasParentAssetWhenNoParent()` 작성
+- [x] `shouldReturnTrueForIsOriginalVariantWhenOriginal()` 작성
+- [x] `shouldReturnTrueForIsWebpFormatWhenWebp()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ProcessedFileAsset Aggregate 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `ProcessedFileAsset.java` 생성 (Plain Java, Lombok 금지)
-- [ ] Private 생성자
-- [ ] `forNew()` 정적 팩토리 메서드
-- [ ] `forHtmlExtractedImage()` 정적 팩토리 메서드
-- [ ] `reconstitute()` 정적 팩토리 메서드
-- [ ] 비즈니스 메서드: `hasParentAsset()`, `isOriginalVariant()`, `isWebpFormat()`
-- [ ] Getter 메서드 (Lombok 금지)
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ProcessedFileAsset Aggregate 구현 (Green)`
+- [x] `ProcessedFileAsset.java` 생성 (Plain Java, Lombok 금지)
+- [x] Private 생성자
+- [x] `forNew()` 정적 팩토리 메서드
+- [x] `forHtmlExtractedImage()` 정적 팩토리 메서드
+- [x] `reconstitute()` 정적 팩토리 메서드
+- [x] 비즈니스 메서드: `hasParentAsset()`, `isOriginalVariant()`, `isWebpFormat()`
+- [x] Getter 메서드 (Lombok 금지)
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ProcessedFileAsset Aggregate 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 필드 순서 정리 (식별정보 → 가공정보 → 메타데이터 → S3 → 소유자 → 시간)
-- [ ] Law of Demeter 준수 확인
-- [ ] Tell Don't Ask 원칙 준수 확인
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ProcessedFileAsset 구조 정리 (Refactor)`
+- [x] 필드 순서 정리 (식별정보 → 가공정보 → 메타데이터 → S3 → 소유자 → 시간)
+- [x] Law of Demeter 준수 확인
+- [x] Tell Don't Ask 원칙 준수 확인
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `struct: ProcessedFileAsset Javadoc 추가 (Refactor)`
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] `ProcessedFileAssetFixture.java` 생성
