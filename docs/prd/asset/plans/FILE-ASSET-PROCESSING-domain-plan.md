@@ -27,13 +27,13 @@
 #### 🟢 Green: 최소 구현
 - [x] `ContentType.java` ALLOWED_MIME_TYPES에 HTML 타입 추가
 - [x] EXTENSION_TO_MIME에 html, htm, xhtml 매핑 추가
-- [x] 테스트 실행 → 통과 확인 (🔄 진행 중)
-- [ ] 커밋: `feat: ContentType HTML/XHTML 타입 지원 (Green)`
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ContentType HTML/XHTML 타입 지원 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 중복 상수 정리
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `struct: ContentType HTML 타입 상수 정리 (Refactor)`
+- [x] 중복 상수 정리 (정리할 중복 없음 - 스킵)
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: N/A (변경 없음)
 
 ---
 
