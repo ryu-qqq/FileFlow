@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.domain.session.vo;
 
+import java.util.Set;
+
 /**
  * 파일 업로드 카테고리 정의.
  *
@@ -36,6 +38,10 @@ public enum UploadCategory {
 
     /** HTML 문서 (웹 페이지, 상세 설명 등). */
     HTML("html", "HTML 문서");
+
+    /** 이미지 처리가 필요한 카테고리 집합. */
+    private static final Set<UploadCategory> IMAGE_PROCESSING_REQUIRED =
+            Set.of(BANNER, PRODUCT_IMAGE, HTML);
 
     private final String path;
     private final String description;
@@ -135,6 +141,6 @@ public enum UploadCategory {
      * @return BANNER, PRODUCT_IMAGE, HTML이면 true
      */
     public boolean requiresImageProcessing() {
-        return this == BANNER || this == PRODUCT_IMAGE || this == HTML;
+        return IMAGE_PROCESSING_REQUIRED.contains(this);
     }
 }
