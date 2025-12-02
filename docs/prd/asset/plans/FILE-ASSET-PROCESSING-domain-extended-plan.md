@@ -252,47 +252,45 @@
 
 ---
 
-### 🔟 FileAsset Aggregate 확장 - 상태 전환 메서드 (Cycle 10)
+### 🔟 FileAsset Aggregate 확장 - 상태 전환 메서드 (Cycle 10) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `FileAssetTest.java`에 테스트 추가
-- [ ] `shouldValidateCanProcessWhenPending()` 작성
-- [ ] `shouldThrowWhenValidateCanProcessButNotPending()` 작성
-- [ ] `shouldStartProcessing()` 작성 - PENDING → PROCESSING
-- [ ] `shouldCompleteProcessing()` 작성 - PROCESSING → RESIZED
-- [ ] `shouldRequestProcessing()` 작성 - UPLOADED → PENDING
-- [ ] 테스트 실행 → 컴파일 에러/실패 확인
-- [ ] 커밋: `test: FileAsset 상태 전환 메서드 테스트 추가 (Red)`
+- [x] `FileAssetTest.java`에 테스트 추가
+- [x] `shouldValidateCanProcessWhenPending()` 작성
+- [x] `shouldThrowWhenValidateCanProcessButNotPending()` 작성
+- [x] `shouldStartProcessing()` - 이미 존재 (기존 테스트 유지)
+- [x] `shouldCompleteProcessing()` - 이미 존재 (기존 테스트 유지)
+- [x] `shouldRequestProcessing()` - UPLOADED 상태 없음, 제외
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: FileAsset.validateCanProcess 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `FileAsset.java`에 메서드 추가
-- [ ] `validateCanProcess()` - PENDING 상태 검증
-- [ ] `startProcessing()` - PROCESSING으로 전환
-- [ ] `completeProcessing()` - RESIZED로 전환
-- [ ] `requestProcessing()` - PENDING으로 전환
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: FileAsset 상태 전환 메서드 구현 (Green)`
+- [x] `FileAsset.java`에 메서드 추가
+- [x] `validateCanProcess()` - PENDING 상태 검증
+- [x] `startProcessing()` - validateCanProcess() 재사용하도록 수정
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: FileAsset.validateCanProcess 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 상태 전환 검증 로직 정리
-- [ ] 커밋: `struct: FileAsset 상태 전환 로직 정리 (Refactor)`
+- [x] startProcessing()에서 validateCanProcess() 재사용 (Green에서 완료)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `FileAssetFixture.java` 업데이트 (신규 상태 지원)
-- [ ] 커밋: `test: FileAssetFixture 상태 지원 업데이트 (Tidy)`
+- [x] FileAssetFixture - 기존 상태 지원 충분
+- [x] Fixture 업데이트 불필요 (Tidy 커밋 생략)
 
 ---
 
 ## ✅ 완료 조건
 
-- [ ] 모든 TDD 사이클 완료 (체크박스 모두 ✅)
-- [ ] 모든 테스트 통과 (`./gradlew :domain:test`)
-- [ ] ArchUnit 테스트 통과
-- [ ] Zero-Tolerance 규칙 준수:
-  - [ ] Lombok 금지 (Plain Java)
-  - [ ] Law of Demeter (Getter 체이닝 금지)
-  - [ ] Tell Don't Ask (행위 중심 메서드)
-- [ ] TestFixture 모두 정리
+- [x] 모든 TDD 사이클 완료 (체크박스 모두 ✅)
+- [x] 모든 테스트 통과 (`./gradlew :domain:test`)
+- [x] ArchUnit 테스트 통과
+- [x] Zero-Tolerance 규칙 준수:
+  - [x] Lombok 금지 (Plain Java)
+  - [x] Law of Demeter (Getter 체이닝 금지)
+  - [x] Tell Don't Ask (행위 중심 메서드)
+- [x] TestFixture 모두 정리
 
 ---
 
