@@ -25,14 +25,15 @@ class UploadCategoryTest {
             UploadCategory[] values = UploadCategory.values();
 
             // then
-            assertThat(values).hasSize(5);
+            assertThat(values).hasSize(6);
             assertThat(values)
                     .containsExactly(
                             UploadCategory.BANNER,
                             UploadCategory.EXCEL,
                             UploadCategory.SALES_MATERIAL,
                             UploadCategory.PRODUCT_IMAGE,
-                            UploadCategory.DOCUMENT);
+                            UploadCategory.DOCUMENT,
+                            UploadCategory.HTML);
         }
     }
 
@@ -195,6 +196,81 @@ class UploadCategoryTest {
 
             // then
             assertThat(category.isImage()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("HTML 카테고리 테스트")
+    class HtmlCategoryTest {
+
+        @Test
+        @DisplayName("HTML 카테고리가 존재한다")
+        void shouldHaveHtmlCategory() {
+            // when
+            UploadCategory htmlCategory = UploadCategory.HTML;
+
+            // then
+            assertThat(htmlCategory).isNotNull();
+            assertThat(htmlCategory.getPath()).isEqualTo("html");
+            assertThat(htmlCategory.getDescription()).isEqualTo("HTML 문서");
+        }
+
+        @Test
+        @DisplayName("HTML 카테고리는 isHtml()이 true를 반환한다")
+        void shouldReturnTrueForHtmlCategory() {
+            // given
+            UploadCategory htmlCategory = UploadCategory.HTML;
+
+            // when & then
+            assertThat(htmlCategory.isHtml()).isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"BANNER", "EXCEL", "SALES_MATERIAL", "PRODUCT_IMAGE", "DOCUMENT"})
+        @DisplayName("HTML이 아닌 카테고리는 isHtml()이 false를 반환한다")
+        void shouldReturnFalseForNonHtmlCategory(String categoryName) {
+            // given
+            UploadCategory category = UploadCategory.valueOf(categoryName);
+
+            // then
+            assertThat(category.isHtml()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("이미지 처리 필요 여부 테스트")
+    class RequiresImageProcessingTest {
+
+        @Test
+        @DisplayName("BANNER 카테고리는 이미지 처리가 필요하다")
+        void shouldRequireImageProcessingForBanner() {
+            // when & then
+            assertThat(UploadCategory.BANNER.requiresImageProcessing()).isTrue();
+        }
+
+        @Test
+        @DisplayName("PRODUCT_IMAGE 카테고리는 이미지 처리가 필요하다")
+        void shouldRequireImageProcessingForProductImage() {
+            // when & then
+            assertThat(UploadCategory.PRODUCT_IMAGE.requiresImageProcessing()).isTrue();
+        }
+
+        @Test
+        @DisplayName("HTML 카테고리는 이미지 처리가 필요하다")
+        void shouldRequireImageProcessingForHtml() {
+            // when & then
+            assertThat(UploadCategory.HTML.requiresImageProcessing()).isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"EXCEL", "SALES_MATERIAL", "DOCUMENT"})
+        @DisplayName("EXCEL, SALES_MATERIAL, DOCUMENT 카테고리는 이미지 처리가 필요하지 않다")
+        void shouldNotRequireImageProcessingForNonImageCategories(String categoryName) {
+            // given
+            UploadCategory category = UploadCategory.valueOf(categoryName);
+
+            // when & then
+            assertThat(category.requiresImageProcessing()).isFalse();
         }
     }
 }

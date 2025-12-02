@@ -242,6 +242,111 @@ class ContentTypeTest {
     }
 
     @Nested
+    @DisplayName("HTML/XHTML 타입 테스트")
+    class HtmlTypeTest {
+
+        @Test
+        @DisplayName("text/html MIME 타입을 인식할 수 있다")
+        void shouldRecognizeHtmlMimeType() {
+            // given
+            String htmlMimeType = "text/html";
+
+            // when
+            ContentType contentType = ContentType.of(htmlMimeType);
+
+            // then
+            assertThat(contentType.type()).isEqualTo(htmlMimeType);
+        }
+
+        @Test
+        @DisplayName("application/xhtml+xml MIME 타입을 인식할 수 있다")
+        void shouldRecognizeXhtmlMimeType() {
+            // given
+            String xhtmlMimeType = "application/xhtml+xml";
+
+            // when
+            ContentType contentType = ContentType.of(xhtmlMimeType);
+
+            // then
+            assertThat(contentType.type()).isEqualTo(xhtmlMimeType);
+        }
+
+        @Test
+        @DisplayName("html, htm, xhtml 확장자를 MIME 타입으로 매핑할 수 있다")
+        void shouldMapHtmlExtensionToMimeType() {
+            // when & then
+            assertThat(ContentType.fromExtension("html").type()).isEqualTo("text/html");
+            assertThat(ContentType.fromExtension("htm").type()).isEqualTo("text/html");
+            assertThat(ContentType.fromExtension("xhtml").type()).isEqualTo("application/xhtml+xml");
+        }
+
+        @Test
+        @DisplayName("text/html 타입은 isHtml()이 true를 반환한다")
+        void shouldReturnTrueForHtmlContentType() {
+            // given
+            ContentType htmlType = ContentType.of("text/html");
+
+            // when & then
+            assertThat(htmlType.isHtml()).isTrue();
+        }
+
+        @Test
+        @DisplayName("application/xhtml+xml 타입은 isHtml()이 true를 반환한다")
+        void shouldReturnTrueForXhtmlContentType() {
+            // given
+            ContentType xhtmlType = ContentType.of("application/xhtml+xml");
+
+            // when & then
+            assertThat(xhtmlType.isHtml()).isTrue();
+        }
+
+        @Test
+        @DisplayName("HTML이 아닌 타입은 isHtml()이 false를 반환한다")
+        void shouldReturnFalseForNonHtmlContentType() {
+            // given & when & then
+            assertThat(ContentType.of("image/jpeg").isHtml()).isFalse();
+            assertThat(ContentType.of("application/pdf").isHtml()).isFalse();
+            assertThat(ContentType.of("video/mp4").isHtml()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("Excel 타입 테스트")
+    class ExcelTypeTest {
+
+        @Test
+        @DisplayName("application/vnd.ms-excel(xls) 타입은 isExcel()이 true를 반환한다")
+        void shouldReturnTrueForXlsContentType() {
+            // given
+            ContentType xlsType = ContentType.of("application/vnd.ms-excel");
+
+            // when & then
+            assertThat(xlsType.isExcel()).isTrue();
+        }
+
+        @Test
+        @DisplayName("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet(xlsx) 타입은 isExcel()이 true를 반환한다")
+        void shouldReturnTrueForXlsxContentType() {
+            // given
+            ContentType xlsxType =
+                    ContentType.of(
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            // when & then
+            assertThat(xlsxType.isExcel()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Excel이 아닌 타입은 isExcel()이 false를 반환한다")
+        void shouldReturnFalseForNonExcelContentType() {
+            // given & when & then
+            assertThat(ContentType.of("image/jpeg").isExcel()).isFalse();
+            assertThat(ContentType.of("application/pdf").isExcel()).isFalse();
+            assertThat(ContentType.of("text/html").isExcel()).isFalse();
+        }
+    }
+
+    @Nested
     @DisplayName("Fixture 테스트")
     class FixtureTest {
 
