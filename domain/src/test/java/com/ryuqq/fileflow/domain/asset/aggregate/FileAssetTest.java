@@ -86,6 +86,38 @@ class FileAssetTest {
     }
 
     @Nested
+    @DisplayName("가공 처리 가능 검증 테스트")
+    class ValidateCanProcessTest {
+
+        @Test
+        @DisplayName("PENDING 상태면 검증을 통과한다")
+        void shouldValidateCanProcessWhenPending() {
+            // given
+            FileAsset asset = FileAssetFixture.defaultFileAsset();
+
+            // when & then (예외 없이 통과)
+            assertThatCode(asset::validateCanProcess).doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("PENDING이 아닌 상태면 예외가 발생한다")
+        void shouldThrowWhenValidateCanProcessButNotPending() {
+            // given
+            FileAsset processingAsset = FileAssetFixture.processingFileAsset();
+            FileAsset completedAsset = FileAssetFixture.completedFileAsset();
+
+            // when & then
+            assertThatThrownBy(processingAsset::validateCanProcess)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("PENDING 상태에서만 가공을 시작할 수 있습니다");
+
+            assertThatThrownBy(completedAsset::validateCanProcess)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("PENDING 상태에서만 가공을 시작할 수 있습니다");
+        }
+    }
+
+    @Nested
     @DisplayName("가공 처리 시작 테스트")
     class StartProcessingTest {
 

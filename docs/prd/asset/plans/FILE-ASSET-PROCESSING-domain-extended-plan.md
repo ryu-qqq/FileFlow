@@ -227,28 +227,28 @@
 
 ---
 
-### 9️⃣ ImageProcessingPolicy - getFormatsToGenerate (Cycle 9)
+### 9️⃣ ImageProcessingPolicy - getFormatsToGenerate (Cycle 9) ✅
 
 #### 🔴 Red: 테스트 작성
-- [ ] `shouldReturnWebpAndJpegForJpgExtension()` 작성
-- [ ] `shouldReturnWebpAndPngForPngExtension()` 작성
-- [ ] `shouldAlwaysIncludeWebpFormat()` 작성
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: ImageProcessingPolicy.getFormatsToGenerate 테스트 추가 (Red)`
+- [x] `shouldReturnWebpAndJpegForJpgExtension()` 작성
+- [x] `shouldReturnWebpAndPngForPngExtension()` 작성
+- [x] `shouldAlwaysIncludeWebpAsFirstFormat()` 작성
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: ImageProcessingPolicy.getFormatsToGenerate 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `getFormatsToGenerate(String originalExtension)` 메서드 추가
-- [ ] WebP + 원본 폴백 (JPEG 또는 PNG) 반환
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `feat: ImageProcessingPolicy.getFormatsToGenerate 구현 (Green)`
+- [x] `getFormatsToGenerate(String originalExtension)` 메서드 추가
+- [x] WebP + 원본 폴백 (JPEG 또는 PNG) 반환
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `feat: ImageProcessingPolicy.getFormatsToGenerate 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] ImageFormat.fromOriginal 활용
-- [ ] 커밋: `struct: getFormatsToGenerate ImageFormat 활용 (Refactor)`
+- [x] ImageFormat.fromOriginal 활용 (Green 단계에서 이미 적용)
+- [x] 리팩토링 불필요 (struct: 커밋 생략)
 
 #### 🧹 Tidy: TestFixture 정리
-- [ ] `ImageProcessingPolicyFixture.java` 또는 직접 인스턴스 사용
-- [ ] 커밋: `test: ImageProcessingPolicy 테스트 정리 (Tidy)`
+- [x] ImageProcessingPolicy는 stateless Domain Service로 직접 인스턴스 사용
+- [x] Fixture 불필요 (Tidy 커밋 생략)
 
 ---
 
