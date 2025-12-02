@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.asset.service;
 
+import com.ryuqq.fileflow.domain.asset.vo.ImageFormat;
 import com.ryuqq.fileflow.domain.asset.vo.ImageVariant;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.UploadCategory;
@@ -61,5 +62,23 @@ public class ImageProcessingPolicy {
      */
     public List<ImageVariant> getVariantsToGenerate() {
         return List.of(ImageVariant.LARGE, ImageVariant.MEDIUM, ImageVariant.THUMBNAIL);
+    }
+
+    /**
+     * 생성할 이미지 포맷 목록 반환.
+     *
+     * <p>WebP를 기본 포맷으로 하고, 원본 확장자에 따른 폴백 포맷을 함께 반환합니다.
+     *
+     * <ul>
+     *   <li>PNG 확장자 → [WEBP, PNG]
+     *   <li>JPG/JPEG/기타 → [WEBP, JPEG]
+     * </ul>
+     *
+     * @param originalExtension 원본 파일 확장자
+     * @return 생성할 이미지 포맷 목록 (불변)
+     */
+    public List<ImageFormat> getFormatsToGenerate(String originalExtension) {
+        ImageFormat fallbackFormat = ImageFormat.fromOriginal(originalExtension);
+        return List.of(ImageFormat.WEBP, fallbackFormat);
     }
 }
