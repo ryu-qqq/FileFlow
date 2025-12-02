@@ -49,6 +49,9 @@ public record ContentType(String type) {
                     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
                     "text/plain",
                     "text/csv",
+                    // HTML
+                    "text/html",
+                    "application/xhtml+xml",
                     // Archive
                     "application/zip",
                     "application/x-rar-compressed",
@@ -80,6 +83,9 @@ public record ContentType(String type) {
                             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
                     Map.entry("txt", "text/plain"),
                     Map.entry("csv", "text/csv"),
+                    Map.entry("html", "text/html"),
+                    Map.entry("htm", "text/html"),
+                    Map.entry("xhtml", "application/xhtml+xml"),
                     Map.entry("zip", "application/zip"));
 
     /** Compact Constructor (검증 로직). */
