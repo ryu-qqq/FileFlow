@@ -23,6 +23,11 @@ public record ContentType(String type) {
     private static final String MIME_TEXT_HTML = "text/html";
     private static final String MIME_APPLICATION_XHTML = "application/xhtml+xml";
 
+    // Excel MIME 타입 상수
+    private static final String MIME_EXCEL_XLS = "application/vnd.ms-excel";
+    private static final String MIME_EXCEL_XLSX =
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
     // 허용된 MIME 타입 (확장 가능)
     private static final Set<String> ALLOWED_MIME_TYPES =
             Set.of(
@@ -47,8 +52,8 @@ public record ContentType(String type) {
                     "application/pdf",
                     "application/msword",
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    "application/vnd.ms-excel",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    MIME_EXCEL_XLS,
+                    MIME_EXCEL_XLSX,
                     "application/vnd.ms-powerpoint",
                     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
                     "text/plain",
@@ -216,9 +221,7 @@ public record ContentType(String type) {
      * @return Excel 타입이면 true (xls 또는 xlsx)
      */
     public boolean isExcel() {
-        return type.equals("application/vnd.ms-excel")
-                || type.equals(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        return type.equals(MIME_EXCEL_XLS) || type.equals(MIME_EXCEL_XLSX);
     }
 
     /**
