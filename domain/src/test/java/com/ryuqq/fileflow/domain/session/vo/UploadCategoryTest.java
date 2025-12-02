@@ -197,4 +197,42 @@ class UploadCategoryTest {
             assertThat(category.isImage()).isFalse();
         }
     }
+
+    @Nested
+    @DisplayName("HTML 카테고리 테스트")
+    class HtmlCategoryTest {
+
+        @Test
+        @DisplayName("HTML 카테고리가 존재한다")
+        void shouldHaveHtmlCategory() {
+            // when
+            UploadCategory htmlCategory = UploadCategory.HTML;
+
+            // then
+            assertThat(htmlCategory).isNotNull();
+            assertThat(htmlCategory.getPath()).isEqualTo("html");
+            assertThat(htmlCategory.getDescription()).isEqualTo("HTML 문서");
+        }
+
+        @Test
+        @DisplayName("HTML 카테고리는 isHtml()이 true를 반환한다")
+        void shouldReturnTrueForHtmlCategory() {
+            // given
+            UploadCategory htmlCategory = UploadCategory.HTML;
+
+            // when & then
+            assertThat(htmlCategory.isHtml()).isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"BANNER", "EXCEL", "SALES_MATERIAL", "PRODUCT_IMAGE", "DOCUMENT"})
+        @DisplayName("HTML이 아닌 카테고리는 isHtml()이 false를 반환한다")
+        void shouldReturnFalseForNonHtmlCategory(String categoryName) {
+            // given
+            UploadCategory category = UploadCategory.valueOf(categoryName);
+
+            // then
+            assertThat(category.isHtml()).isFalse();
+        }
+    }
 }
