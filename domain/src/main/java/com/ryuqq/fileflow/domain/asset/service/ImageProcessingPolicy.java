@@ -1,0 +1,52 @@
+package com.ryuqq.fileflow.domain.asset.service;
+
+import com.ryuqq.fileflow.domain.session.vo.ContentType;
+import com.ryuqq.fileflow.domain.session.vo.UploadCategory;
+
+/**
+ * 이미지 처리 정책 Domain Service.
+ *
+ * <p>파일이 이미지 처리(리사이징, 포맷 변환 등)가 필요한지 판단합니다.
+ *
+ * <ul>
+ *   <li>Content-Type 기반 판단: 이미지 타입만 처리
+ *   <li>UploadCategory 기반 판단: BANNER, PRODUCT_IMAGE, HTML만 처리
+ *   <li>복합 조건: 둘 다 충족해야 처리
+ * </ul>
+ *
+ * @author development-team
+ * @since 1.0.0
+ */
+public class ImageProcessingPolicy {
+
+    /**
+     * Content-Type 기반 이미지 처리 필요 여부 확인.
+     *
+     * @param contentType Content-Type
+     * @return 이미지 타입이면 true
+     */
+    public boolean shouldProcess(ContentType contentType) {
+        return contentType.isImage();
+    }
+
+    /**
+     * UploadCategory 기반 이미지 처리 필요 여부 확인.
+     *
+     * @param category 업로드 카테고리
+     * @return 이미지 처리가 필요한 카테고리면 true
+     */
+    public boolean shouldProcess(UploadCategory category) {
+        return category.requiresImageProcessing();
+    }
+
+    /**
+     * Content-Type과 UploadCategory 모두 기반 이미지 처리 필요 여부 확인.
+     *
+     * @param contentType Content-Type
+     * @param category 업로드 카테고리
+     * @return 둘 다 조건을 충족하면 true
+     */
+    public boolean shouldProcess(ContentType contentType, UploadCategory category) {
+        return shouldProcess(contentType) && shouldProcess(category);
+    }
+}
