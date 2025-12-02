@@ -25,14 +25,15 @@ class UploadCategoryTest {
             UploadCategory[] values = UploadCategory.values();
 
             // then
-            assertThat(values).hasSize(5);
+            assertThat(values).hasSize(6);
             assertThat(values)
                     .containsExactly(
                             UploadCategory.BANNER,
                             UploadCategory.EXCEL,
                             UploadCategory.SALES_MATERIAL,
                             UploadCategory.PRODUCT_IMAGE,
-                            UploadCategory.DOCUMENT);
+                            UploadCategory.DOCUMENT,
+                            UploadCategory.HTML);
         }
     }
 

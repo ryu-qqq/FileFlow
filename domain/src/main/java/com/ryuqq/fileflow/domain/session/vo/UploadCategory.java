@@ -32,7 +32,10 @@ public enum UploadCategory {
     PRODUCT_IMAGE("product", "상품 이미지"),
 
     /** 일반 문서 (계약서, 공지사항 등). */
-    DOCUMENT("document", "문서");
+    DOCUMENT("document", "문서"),
+
+    /** HTML 문서 (웹 페이지, 상세 설명 등). */
+    HTML("html", "HTML 문서");
 
     private final String path;
     private final String description;
@@ -115,5 +118,14 @@ public enum UploadCategory {
      */
     public boolean isImage() {
         return this == BANNER || this == PRODUCT_IMAGE;
+    }
+
+    /**
+     * HTML 문서 카테고리인지 확인한다.
+     *
+     * @return HTML이면 true
+     */
+    public boolean isHtml() {
+        return this == HTML;
     }
 }
