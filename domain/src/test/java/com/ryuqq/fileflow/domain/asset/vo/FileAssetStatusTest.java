@@ -20,14 +20,17 @@ class FileAssetStatusTest {
             FileAssetStatus[] values = FileAssetStatus.values();
 
             // then
-            assertThat(values).hasSize(5);
+            assertThat(values).hasSize(8);
             assertThat(values)
                     .containsExactly(
                             FileAssetStatus.PENDING,
                             FileAssetStatus.PROCESSING,
                             FileAssetStatus.COMPLETED,
                             FileAssetStatus.FAILED,
-                            FileAssetStatus.DELETED);
+                            FileAssetStatus.DELETED,
+                            FileAssetStatus.RESIZED,
+                            FileAssetStatus.N8N_PROCESSING,
+                            FileAssetStatus.N8N_COMPLETED);
         }
 
         @Test
