@@ -161,6 +161,59 @@ public class FileProcessingOutbox {
                 id, fileAssetId, eventType, payload, status, retryCount, errorMessage, createdAt, processedAt);
     }
 
+    // ===== 상태 변경 메서드 =====
+
+    /** 최대 재시도 횟수. */
+    private static final int MAX_RETRY_COUNT = 3;
+
+    /**
+     * 발송 완료로 상태 변경.
+     */
+    public void markAsSent() {
+        this.status = OutboxStatus.SENT;
+        this.processedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 발송 실패로 상태 변경.
+     *
+     * @param errorMessage 에러 메시지
+     */
+    public void markAsFailed(String errorMessage) {
+        this.status = OutboxStatus.FAILED;
+        this.errorMessage = errorMessage;
+        this.retryCount++;
+    }
+
+    // ===== 비즈니스 메서드 =====
+
+    /**
+     * 재시도 가능 여부 확인.
+     *
+     * @return 재시도 가능하면 true
+     */
+    public boolean canRetry() {
+        return status != OutboxStatus.SENT && retryCount < MAX_RETRY_COUNT;
+    }
+
+    /**
+     * 재시도 횟수 소진 여부 확인.
+     *
+     * @return 재시도 횟수가 최대에 도달하면 true
+     */
+    public boolean isExhausted() {
+        return retryCount >= MAX_RETRY_COUNT;
+    }
+
+    /**
+     * 발송 완료 여부 확인.
+     *
+     * @return SENT 상태이면 true
+     */
+    public boolean isSent() {
+        return status == OutboxStatus.SENT;
+    }
+
     // ===== Private Helper =====
 
     private void validateNotNull(Object value, String fieldName) {
