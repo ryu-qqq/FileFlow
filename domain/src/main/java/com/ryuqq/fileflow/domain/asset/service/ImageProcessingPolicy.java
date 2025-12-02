@@ -1,7 +1,9 @@
 package com.ryuqq.fileflow.domain.asset.service;
 
+import com.ryuqq.fileflow.domain.asset.vo.ImageVariant;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.UploadCategory;
+import java.util.List;
 
 /**
  * 이미지 처리 정책 Domain Service.
@@ -48,5 +50,16 @@ public class ImageProcessingPolicy {
      */
     public boolean shouldProcess(ContentType contentType, UploadCategory category) {
         return shouldProcess(contentType) && shouldProcess(category);
+    }
+
+    /**
+     * 생성할 이미지 변형 목록 반환.
+     *
+     * <p>ORIGINAL을 제외한 리사이징 대상 변형(LARGE, MEDIUM, THUMBNAIL)을 반환합니다.
+     *
+     * @return 생성할 이미지 변형 목록 (불변)
+     */
+    public List<ImageVariant> getVariantsToGenerate() {
+        return List.of(ImageVariant.LARGE, ImageVariant.MEDIUM, ImageVariant.THUMBNAIL);
     }
 }
