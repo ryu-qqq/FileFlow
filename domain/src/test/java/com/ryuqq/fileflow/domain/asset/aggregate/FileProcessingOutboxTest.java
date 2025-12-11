@@ -2,8 +2,12 @@ package com.ryuqq.fileflow.domain.asset.aggregate;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileProcessingOutboxId;
 import com.ryuqq.fileflow.domain.asset.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.fixture.ClockFixture;
+import java.time.Clock;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,10 +16,13 @@ import org.junit.jupiter.api.Test;
  * FileProcessingOutbox Aggregate 단위 테스트.
  *
  * <p>Cycle 5: 기본 생성 팩토리 메서드 테스트
+ *
  * <p>Cycle 6: 상태 변경 메서드 테스트
  */
 @DisplayName("FileProcessingOutbox Aggregate 단위 테스트")
 class FileProcessingOutboxTest {
+
+    private static final Clock CLOCK = ClockFixture.defaultClock();
 
     @Nested
     @DisplayName("forProcessRequest 팩토리 메서드 테스트")
@@ -25,13 +32,13 @@ class FileProcessingOutboxTest {
         @DisplayName("가공 요청용 Outbox를 생성할 수 있다")
         void shouldCreateWithForProcessRequest() {
             // given
-            Long fileAssetId = 1L;
+            FileAssetId fileAssetId = FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
             String eventType = "PROCESS_REQUEST";
-            String payload = "{\"fileAssetId\":1}";
+            String payload = "{\"fileAssetId\":\"550e8400-e29b-41d4-a716-446655440001\"}";
 
             // when
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    fileAssetId, eventType, payload);
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(fileAssetId, eventType, payload, CLOCK);
 
             // then
             assertThat(outbox).isNotNull();
@@ -53,14 +60,16 @@ class FileProcessingOutboxTest {
         @DisplayName("상태 변경 알림용 Outbox를 생성할 수 있다")
         void shouldCreateWithForStatusChange() {
             // given
-            Long fileAssetId = 2L;
+            FileAssetId fileAssetId = FileAssetId.of("550e8400-e29b-41d4-a716-446655440002");
             String fromStatus = "PENDING";
             String toStatus = "PROCESSING";
-            String payload = "{\"fileAssetId\":2,\"from\":\"PENDING\",\"to\":\"PROCESSING\"}";
+            String payload =
+                    "{\"fileAssetId\":\"550e8400-e29b-41d4-a716-446655440002\",\"from\":\"PENDING\",\"to\":\"PROCESSING\"}";
 
             // when
-            FileProcessingOutbox outbox = FileProcessingOutbox.forStatusChange(
-                    fileAssetId, fromStatus, toStatus, payload);
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forStatusChange(
+                            fileAssetId, fromStatus, toStatus, payload, CLOCK);
 
             // then
             assertThat(outbox).isNotNull();
@@ -81,13 +90,14 @@ class FileProcessingOutboxTest {
         @DisplayName("재처리 요청용 Outbox를 생성할 수 있다")
         void shouldCreateWithForRetryRequest() {
             // given
-            Long fileAssetId = 3L;
+            FileAssetId fileAssetId = FileAssetId.of("550e8400-e29b-41d4-a716-446655440003");
             String reason = "Processing failed, retry requested";
-            String payload = "{\"fileAssetId\":3,\"reason\":\"retry\"}";
+            String payload =
+                    "{\"fileAssetId\":\"550e8400-e29b-41d4-a716-446655440003\",\"reason\":\"retry\"}";
 
             // when
-            FileProcessingOutbox outbox = FileProcessingOutbox.forRetryRequest(
-                    fileAssetId, reason, payload);
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forRetryRequest(fileAssetId, reason, payload, CLOCK);
 
             // then
             assertThat(outbox).isNotNull();
@@ -109,18 +119,27 @@ class FileProcessingOutboxTest {
         void shouldReconstitute() {
             // given
             FileProcessingOutboxId id = FileProcessingOutboxId.forNew();
-            Long fileAssetId = 4L;
+            FileAssetId fileAssetId = FileAssetId.of("550e8400-e29b-41d4-a716-446655440004");
             String eventType = "PROCESS_REQUEST";
-            String payload = "{\"fileAssetId\":4}";
+            String payload = "{\"fileAssetId\":\"550e8400-e29b-41d4-a716-446655440004\"}";
             OutboxStatus status = OutboxStatus.SENT;
             int retryCount = 2;
             String errorMessage = "Previous error";
-            java.time.LocalDateTime createdAt = java.time.LocalDateTime.of(2025, 1, 1, 10, 0, 0);
-            java.time.LocalDateTime processedAt = java.time.LocalDateTime.of(2025, 1, 1, 10, 5, 0);
+            Instant createdAt = Instant.parse("2025-01-01T10:00:00Z");
+            Instant processedAt = Instant.parse("2025-01-01T10:05:00Z");
 
             // when
-            FileProcessingOutbox outbox = FileProcessingOutbox.reconstitute(
-                    id, fileAssetId, eventType, payload, status, retryCount, errorMessage, createdAt, processedAt);
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.reconstitute(
+                            id,
+                            fileAssetId,
+                            eventType,
+                            payload,
+                            status,
+                            retryCount,
+                            errorMessage,
+                            createdAt,
+                            processedAt);
 
             // then
             assertThat(outbox).isNotNull();
@@ -144,11 +163,13 @@ class FileProcessingOutboxTest {
         @DisplayName("fileAssetId가 null이면 예외가 발생한다")
         void shouldThrowWhenFileAssetIdIsNull() {
             // given
-            Long nullFileAssetId = null;
+            FileAssetId nullFileAssetId = null;
 
             // when & then
-            assertThatThrownBy(() -> FileProcessingOutbox.forProcessRequest(
-                    nullFileAssetId, "PROCESS_REQUEST", "{}"))
+            assertThatThrownBy(
+                            () ->
+                                    FileProcessingOutbox.forProcessRequest(
+                                            nullFileAssetId, "PROCESS_REQUEST", "{}", CLOCK))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("FileAssetId");
         }
@@ -157,11 +178,14 @@ class FileProcessingOutboxTest {
         @DisplayName("eventType이 null이면 예외가 발생한다")
         void shouldThrowWhenEventTypeIsNull() {
             // given
+            FileAssetId fileAssetId = FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
             String nullEventType = null;
 
             // when & then
-            assertThatThrownBy(() -> FileProcessingOutbox.forProcessRequest(
-                    1L, nullEventType, "{}"))
+            assertThatThrownBy(
+                            () ->
+                                    FileProcessingOutbox.forProcessRequest(
+                                            fileAssetId, nullEventType, "{}", CLOCK))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("EventType");
         }
@@ -170,11 +194,14 @@ class FileProcessingOutboxTest {
         @DisplayName("payload가 null이면 예외가 발생한다")
         void shouldThrowWhenPayloadIsNull() {
             // given
+            FileAssetId fileAssetId = FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
             String nullPayload = null;
 
             // when & then
-            assertThatThrownBy(() -> FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", nullPayload))
+            assertThatThrownBy(
+                            () ->
+                                    FileProcessingOutbox.forProcessRequest(
+                                            fileAssetId, "PROCESS_REQUEST", nullPayload, CLOCK))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Payload");
         }
@@ -186,15 +213,19 @@ class FileProcessingOutboxTest {
     @DisplayName("markAsSent 메서드 테스트")
     class MarkAsSentTest {
 
+        private static final FileAssetId TEST_FILE_ASSET_ID =
+                FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
+
         @Test
         @DisplayName("PENDING 상태를 SENT로 변경할 수 있다")
         void shouldMarkAsSent() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
 
             // when
-            outbox.markAsSent();
+            outbox.markAsSent(CLOCK);
 
             // then
             assertThat(outbox.getStatus()).isEqualTo(OutboxStatus.SENT);
@@ -205,9 +236,10 @@ class FileProcessingOutboxTest {
         @DisplayName("isSent()가 SENT 상태일 때 true를 반환한다")
         void shouldReturnTrueForIsSent() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
-            outbox.markAsSent();
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
+            outbox.markAsSent(CLOCK);
 
             // when & then
             assertThat(outbox.isSent()).isTrue();
@@ -217,8 +249,9 @@ class FileProcessingOutboxTest {
         @DisplayName("isSent()가 PENDING 상태일 때 false를 반환한다")
         void shouldReturnFalseForIsSentWhenPending() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
 
             // when & then
             assertThat(outbox.isSent()).isFalse();
@@ -229,12 +262,16 @@ class FileProcessingOutboxTest {
     @DisplayName("markAsFailed 메서드 테스트")
     class MarkAsFailedTest {
 
+        private static final FileAssetId TEST_FILE_ASSET_ID =
+                FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
+
         @Test
         @DisplayName("PENDING 상태를 FAILED로 변경할 수 있다")
         void shouldMarkAsFailed() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
             String errorMessage = "Connection timeout";
 
             // when
@@ -249,8 +286,9 @@ class FileProcessingOutboxTest {
         @DisplayName("실패 시 retryCount가 증가한다")
         void shouldIncrementRetryCountOnFailed() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
 
             // when
             outbox.markAsFailed("Error 1");
@@ -263,8 +301,9 @@ class FileProcessingOutboxTest {
         @DisplayName("여러 번 실패 시 retryCount가 누적된다")
         void shouldAccumulateRetryCountOnMultipleFailed() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
 
             // when
             outbox.markAsFailed("Error 1");
@@ -280,12 +319,16 @@ class FileProcessingOutboxTest {
     @DisplayName("canRetry 메서드 테스트")
     class CanRetryTest {
 
+        private static final FileAssetId TEST_FILE_ASSET_ID =
+                FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
+
         @Test
         @DisplayName("PENDING 상태이고 재시도 횟수가 최대 미만이면 true를 반환한다")
         void shouldReturnTrueForCanRetryWhenPendingAndBelowMax() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
 
             // when & then
             assertThat(outbox.canRetry()).isTrue();
@@ -295,8 +338,9 @@ class FileProcessingOutboxTest {
         @DisplayName("FAILED 상태이고 재시도 횟수가 최대 미만이면 true를 반환한다")
         void shouldReturnTrueForCanRetryWhenFailedAndBelowMax() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
             outbox.markAsFailed("Error");
 
             // when & then
@@ -307,8 +351,9 @@ class FileProcessingOutboxTest {
         @DisplayName("재시도 횟수가 최대에 도달하면 false를 반환한다")
         void shouldReturnFalseForCanRetryWhenExhausted() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
             outbox.markAsFailed("Error 1");
             outbox.markAsFailed("Error 2");
             outbox.markAsFailed("Error 3");
@@ -321,9 +366,10 @@ class FileProcessingOutboxTest {
         @DisplayName("SENT 상태이면 false를 반환한다")
         void shouldReturnFalseForCanRetryWhenSent() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
-            outbox.markAsSent();
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
+            outbox.markAsSent(CLOCK);
 
             // when & then
             assertThat(outbox.canRetry()).isFalse();
@@ -334,12 +380,16 @@ class FileProcessingOutboxTest {
     @DisplayName("isExhausted 메서드 테스트")
     class IsExhaustedTest {
 
+        private static final FileAssetId TEST_FILE_ASSET_ID =
+                FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
+
         @Test
         @DisplayName("재시도 횟수가 최대에 도달하면 true를 반환한다")
         void shouldReturnTrueForIsExhausted() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
             outbox.markAsFailed("Error 1");
             outbox.markAsFailed("Error 2");
             outbox.markAsFailed("Error 3");
@@ -352,8 +402,9 @@ class FileProcessingOutboxTest {
         @DisplayName("재시도 횟수가 최대 미만이면 false를 반환한다")
         void shouldReturnFalseForIsExhaustedWhenBelowMax() {
             // given
-            FileProcessingOutbox outbox = FileProcessingOutbox.forProcessRequest(
-                    1L, "PROCESS_REQUEST", "{}");
+            FileProcessingOutbox outbox =
+                    FileProcessingOutbox.forProcessRequest(
+                            TEST_FILE_ASSET_ID, "PROCESS_REQUEST", "{}", CLOCK);
             outbox.markAsFailed("Error 1");
 
             // when & then

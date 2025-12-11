@@ -165,6 +165,17 @@ public record ContentType(String type) {
     }
 
     /**
+     * 래스터 이미지인지 확인한다.
+     *
+     * <p>리사이징 가능한 비트맵 이미지만 true를 반환합니다. SVG 등 벡터 이미지는 제외됩니다.
+     *
+     * @return 래스터 이미지이면 true (SVG 제외)
+     */
+    public boolean isRasterImage() {
+        return isImage() && !type.equals("image/svg+xml");
+    }
+
+    /**
      * HTML 타입인지 확인한다.
      *
      * @return HTML 타입이면 true (text/html 또는 application/xhtml+xml)
@@ -213,7 +224,6 @@ public record ContentType(String type) {
                 || type.equals("application/x-rar-compressed")
                 || type.equals("application/x-7z-compressed");
     }
-
 
     /**
      * Excel 타입인지 확인한다.

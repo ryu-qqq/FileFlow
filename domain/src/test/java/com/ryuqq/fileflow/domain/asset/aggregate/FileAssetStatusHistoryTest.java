@@ -2,23 +2,25 @@ package com.ryuqq.fileflow.domain.asset.aggregate;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatusHistoryId;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.ryuqq.fileflow.domain.common.fixture.ClockFixture;
+import java.time.Clock;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * FileAssetStatusHistory Aggregate 단위 테스트.
- */
+/** FileAssetStatusHistory Aggregate 단위 테스트. */
 @DisplayName("FileAssetStatusHistory Aggregate 단위 테스트")
 class FileAssetStatusHistoryTest {
 
-    private static final Long FILE_ASSET_ID = 1L;
+    private static final FileAssetId FILE_ASSET_ID =
+            FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
     private static final String TEST_MESSAGE = "테스트 메시지";
     private static final Long DURATION_MILLIS = 1000L;
+    private static final Clock CLOCK = ClockFixture.defaultClock();
 
     @Nested
     @DisplayName("생성 테스트")
@@ -28,14 +30,16 @@ class FileAssetStatusHistoryTest {
         @DisplayName("forNew()로 새로운 상태 히스토리를 생성할 수 있다")
         void shouldCreateWithForNew() {
             // given & when
-            FileAssetStatusHistory history = FileAssetStatusHistory.forNew(
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PENDING,
-                    FileAssetStatus.PROCESSING,
-                    TEST_MESSAGE,
-                    "system",
-                    "SYSTEM",
-                    DURATION_MILLIS);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forNew(
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PENDING,
+                            FileAssetStatus.PROCESSING,
+                            TEST_MESSAGE,
+                            "system",
+                            "SYSTEM",
+                            DURATION_MILLIS,
+                            CLOCK);
 
             // then
             assertThat(history).isNotNull();
@@ -54,12 +58,14 @@ class FileAssetStatusHistoryTest {
         @DisplayName("forSystemChange()로 시스템 변경 히스토리를 생성할 수 있다")
         void shouldCreateWithForSystemChange() {
             // given & when
-            FileAssetStatusHistory history = FileAssetStatusHistory.forSystemChange(
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PENDING,
-                    FileAssetStatus.PROCESSING,
-                    TEST_MESSAGE,
-                    DURATION_MILLIS);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forSystemChange(
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PENDING,
+                            FileAssetStatus.PROCESSING,
+                            TEST_MESSAGE,
+                            DURATION_MILLIS,
+                            CLOCK);
 
             // then
             assertThat(history).isNotNull();
@@ -71,12 +77,14 @@ class FileAssetStatusHistoryTest {
         @DisplayName("forN8nChange()로 n8n 변경 히스토리를 생성할 수 있다")
         void shouldCreateWithForN8nChange() {
             // given & when
-            FileAssetStatusHistory history = FileAssetStatusHistory.forN8nChange(
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PROCESSING,
-                    FileAssetStatus.N8N_PROCESSING,
-                    TEST_MESSAGE,
-                    DURATION_MILLIS);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forN8nChange(
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PROCESSING,
+                            FileAssetStatus.N8N_PROCESSING,
+                            TEST_MESSAGE,
+                            DURATION_MILLIS,
+                            CLOCK);
 
             // then
             assertThat(history).isNotNull();
@@ -89,19 +97,20 @@ class FileAssetStatusHistoryTest {
         void shouldReconstitute() {
             // given
             FileAssetStatusHistoryId id = FileAssetStatusHistoryId.forNew();
-            LocalDateTime changedAt = LocalDateTime.of(2025, 12, 2, 10, 0, 0);
+            Instant changedAt = Instant.parse("2025-12-02T10:00:00Z");
 
             // when
-            FileAssetStatusHistory history = FileAssetStatusHistory.reconstitute(
-                    id,
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PENDING,
-                    FileAssetStatus.PROCESSING,
-                    TEST_MESSAGE,
-                    "system",
-                    "SYSTEM",
-                    changedAt,
-                    DURATION_MILLIS);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.reconstitute(
+                            id,
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PENDING,
+                            FileAssetStatus.PROCESSING,
+                            TEST_MESSAGE,
+                            "system",
+                            "SYSTEM",
+                            changedAt,
+                            DURATION_MILLIS);
 
             // then
             assertThat(history).isNotNull();
@@ -119,12 +128,14 @@ class FileAssetStatusHistoryTest {
         @DisplayName("isFailure()는 FAILED 상태일 때 true를 반환한다")
         void shouldReturnTrueForIsFailure() {
             // given
-            FileAssetStatusHistory history = FileAssetStatusHistory.forSystemChange(
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PROCESSING,
-                    FileAssetStatus.FAILED,
-                    "처리 실패",
-                    DURATION_MILLIS);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forSystemChange(
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PROCESSING,
+                            FileAssetStatus.FAILED,
+                            "처리 실패",
+                            DURATION_MILLIS,
+                            CLOCK);
 
             // when & then
             assertThat(history.isFailure()).isTrue();
@@ -134,12 +145,14 @@ class FileAssetStatusHistoryTest {
         @DisplayName("isFailure()는 FAILED가 아닌 상태일 때 false를 반환한다")
         void shouldReturnFalseForIsFailureWhenNotFailed() {
             // given
-            FileAssetStatusHistory history = FileAssetStatusHistory.forSystemChange(
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PENDING,
-                    FileAssetStatus.PROCESSING,
-                    TEST_MESSAGE,
-                    DURATION_MILLIS);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forSystemChange(
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PENDING,
+                            FileAssetStatus.PROCESSING,
+                            TEST_MESSAGE,
+                            DURATION_MILLIS,
+                            CLOCK);
 
             // when & then
             assertThat(history.isFailure()).isFalse();
@@ -149,14 +162,16 @@ class FileAssetStatusHistoryTest {
         @DisplayName("isInitialCreation()는 fromStatus가 null일 때 true를 반환한다")
         void shouldReturnTrueForIsInitialCreation() {
             // given
-            FileAssetStatusHistory history = FileAssetStatusHistory.forNew(
-                    FILE_ASSET_ID,
-                    null, // 최초 생성 시 fromStatus는 null
-                    FileAssetStatus.PENDING,
-                    "파일 생성됨",
-                    "system",
-                    "SYSTEM",
-                    null);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forNew(
+                            FILE_ASSET_ID,
+                            null, // 최초 생성 시 fromStatus는 null
+                            FileAssetStatus.PENDING,
+                            "파일 생성됨",
+                            "system",
+                            "SYSTEM",
+                            null,
+                            CLOCK);
 
             // when & then
             assertThat(history.isInitialCreation()).isTrue();
@@ -166,12 +181,14 @@ class FileAssetStatusHistoryTest {
         @DisplayName("isInitialCreation()는 fromStatus가 있을 때 false를 반환한다")
         void shouldReturnFalseForIsInitialCreationWhenFromStatusExists() {
             // given
-            FileAssetStatusHistory history = FileAssetStatusHistory.forSystemChange(
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PENDING,
-                    FileAssetStatus.PROCESSING,
-                    TEST_MESSAGE,
-                    DURATION_MILLIS);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forSystemChange(
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PENDING,
+                            FileAssetStatus.PROCESSING,
+                            TEST_MESSAGE,
+                            DURATION_MILLIS,
+                            CLOCK);
 
             // when & then
             assertThat(history.isInitialCreation()).isFalse();
@@ -184,12 +201,14 @@ class FileAssetStatusHistoryTest {
             long slaMillis = 5000L; // 5초 SLA
             long actualDuration = 6000L; // 6초 소요
 
-            FileAssetStatusHistory history = FileAssetStatusHistory.forSystemChange(
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PENDING,
-                    FileAssetStatus.PROCESSING,
-                    TEST_MESSAGE,
-                    actualDuration);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forSystemChange(
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PENDING,
+                            FileAssetStatus.PROCESSING,
+                            TEST_MESSAGE,
+                            actualDuration,
+                            CLOCK);
 
             // when & then
             assertThat(history.exceedsSla(slaMillis)).isTrue();
@@ -202,12 +221,14 @@ class FileAssetStatusHistoryTest {
             long slaMillis = 5000L; // 5초 SLA
             long actualDuration = 3000L; // 3초 소요
 
-            FileAssetStatusHistory history = FileAssetStatusHistory.forSystemChange(
-                    FILE_ASSET_ID,
-                    FileAssetStatus.PENDING,
-                    FileAssetStatus.PROCESSING,
-                    TEST_MESSAGE,
-                    actualDuration);
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forSystemChange(
+                            FILE_ASSET_ID,
+                            FileAssetStatus.PENDING,
+                            FileAssetStatus.PROCESSING,
+                            TEST_MESSAGE,
+                            actualDuration,
+                            CLOCK);
 
             // when & then
             assertThat(history.exceedsSla(slaMillis)).isFalse();
@@ -217,14 +238,16 @@ class FileAssetStatusHistoryTest {
         @DisplayName("exceedsSla()는 durationMillis가 null일 때 false를 반환한다")
         void shouldReturnFalseForExceedsSlaWhenDurationIsNull() {
             // given
-            FileAssetStatusHistory history = FileAssetStatusHistory.forNew(
-                    FILE_ASSET_ID,
-                    null,
-                    FileAssetStatus.PENDING,
-                    "파일 생성됨",
-                    "system",
-                    "SYSTEM",
-                    null); // durationMillis null
+            FileAssetStatusHistory history =
+                    FileAssetStatusHistory.forNew(
+                            FILE_ASSET_ID,
+                            null,
+                            FileAssetStatus.PENDING,
+                            "파일 생성됨",
+                            "system",
+                            "SYSTEM",
+                            null, // durationMillis null
+                            CLOCK);
 
             // when & then
             assertThat(history.exceedsSla(5000L)).isFalse();

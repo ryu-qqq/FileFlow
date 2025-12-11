@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
-import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -19,15 +20,16 @@ import java.util.List;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "Multipart 업로드 완료 응답")
 public record CompleteMultipartUploadApiResponse(
-        String sessionId,
-        String status,
-        String bucket,
-        String key,
-        String uploadId,
-        int totalParts,
-        List<CompletedPartInfoApiResponse> completedParts,
-        LocalDateTime completedAt) {
+        @Schema(description = "세션 ID", example = "session-123") String sessionId,
+        @Schema(description = "세션 상태", example = "COMPLETED") String status,
+        @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
+        @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key,
+        @Schema(description = "S3 Multipart Upload ID", example = "upload-456") String uploadId,
+        @Schema(description = "전체 Part 개수", example = "5") int totalParts,
+        @Schema(description = "완료된 Part 목록") List<CompletedPartInfoApiResponse> completedParts,
+        @Schema(description = "완료 시각") Instant completedAt) {
 
     /**
      * 완료된 Part 정보 API Response.
@@ -37,8 +39,12 @@ public record CompleteMultipartUploadApiResponse(
      * @param size Part 크기 (바이트)
      * @param uploadedAt 업로드 시각 (UTC)
      */
+    @Schema(description = "완료된 Part 정보")
     public record CompletedPartInfoApiResponse(
-            int partNumber, String etag, long size, LocalDateTime uploadedAt) {
+            @Schema(description = "Part 번호 (1-based)", example = "1") int partNumber,
+            @Schema(description = "Part ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"") String etag,
+            @Schema(description = "Part 크기 (bytes)", example = "5242880") long size,
+            @Schema(description = "업로드 시각") Instant uploadedAt) {
 
         /**
          * 값 기반 생성.
@@ -50,7 +56,7 @@ public record CompleteMultipartUploadApiResponse(
          * @return CompletedPartInfoApiResponse
          */
         public static CompletedPartInfoApiResponse of(
-                int partNumber, String etag, long size, LocalDateTime uploadedAt) {
+                int partNumber, String etag, long size, Instant uploadedAt) {
             return new CompletedPartInfoApiResponse(partNumber, etag, size, uploadedAt);
         }
     }
@@ -76,7 +82,7 @@ public record CompleteMultipartUploadApiResponse(
             String uploadId,
             int totalParts,
             List<CompletedPartInfoApiResponse> completedParts,
-            LocalDateTime completedAt) {
+            Instant completedAt) {
         return new CompleteMultipartUploadApiResponse(
                 sessionId, status, bucket, key, uploadId, totalParts, completedParts, completedAt);
     }

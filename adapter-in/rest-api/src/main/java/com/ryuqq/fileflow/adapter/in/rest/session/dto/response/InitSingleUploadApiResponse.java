@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
-import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 
 /**
  * 단일 파일 업로드 세션 초기화 API Response.
@@ -15,8 +16,13 @@ import java.time.LocalDateTime;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "단일 업로드 세션 초기화 응답")
 public record InitSingleUploadApiResponse(
-        String sessionId, String presignedUrl, LocalDateTime expiresAt, String bucket, String key) {
+        @Schema(description = "세션 ID", example = "session-123") String sessionId,
+        @Schema(description = "Presigned URL (15분 유효)", example = "https://s3.amazonaws.com/...") String presignedUrl,
+        @Schema(description = "세션 만료 시각") Instant expiresAt,
+        @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
+        @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key) {
 
     /**
      * 값 기반 생성.
@@ -29,11 +35,7 @@ public record InitSingleUploadApiResponse(
      * @return InitSingleUploadApiResponse
      */
     public static InitSingleUploadApiResponse of(
-            String sessionId,
-            String presignedUrl,
-            LocalDateTime expiresAt,
-            String bucket,
-            String key) {
+            String sessionId, String presignedUrl, Instant expiresAt, String bucket, String key) {
         return new InitSingleUploadApiResponse(sessionId, presignedUrl, expiresAt, bucket, key);
     }
 }

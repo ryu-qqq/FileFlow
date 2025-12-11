@@ -1,9 +1,11 @@
 package com.ryuqq.fileflow.domain.asset.fixture;
 
 import com.ryuqq.fileflow.domain.asset.aggregate.FileProcessingOutbox;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileProcessingOutboxId;
 import com.ryuqq.fileflow.domain.asset.vo.OutboxStatus;
-import java.time.LocalDateTime;
+import com.ryuqq.fileflow.domain.common.fixture.ClockFixture;
+import java.time.Instant;
 
 /**
  * FileProcessingOutbox Aggregate Test Fixture.
@@ -17,8 +19,10 @@ public class FileProcessingOutboxFixture {
         throw new AssertionError("Utility class");
     }
 
-    private static final Long DEFAULT_FILE_ASSET_ID = 1L;
-    private static final String DEFAULT_PAYLOAD = "{\"fileAssetId\":1}";
+    private static final FileAssetId DEFAULT_FILE_ASSET_ID =
+            FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
+    private static final String DEFAULT_PAYLOAD =
+            "{\"fileAssetId\":\"550e8400-e29b-41d4-a716-446655440001\"}";
 
     /**
      * PENDING 상태의 Outbox.
@@ -27,7 +31,10 @@ public class FileProcessingOutboxFixture {
      */
     public static FileProcessingOutbox aPendingOutbox() {
         return FileProcessingOutbox.forProcessRequest(
-                DEFAULT_FILE_ASSET_ID, "PROCESS_REQUEST", DEFAULT_PAYLOAD);
+                DEFAULT_FILE_ASSET_ID,
+                "PROCESS_REQUEST",
+                DEFAULT_PAYLOAD,
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -37,8 +44,12 @@ public class FileProcessingOutboxFixture {
      */
     public static FileProcessingOutbox aSentOutbox() {
         FileProcessingOutbox outbox =
-                FileProcessingOutbox.forProcessRequest(DEFAULT_FILE_ASSET_ID, "PROCESS_REQUEST", DEFAULT_PAYLOAD);
-        outbox.markAsSent();
+                FileProcessingOutbox.forProcessRequest(
+                        DEFAULT_FILE_ASSET_ID,
+                        "PROCESS_REQUEST",
+                        DEFAULT_PAYLOAD,
+                        ClockFixture.defaultClock());
+        outbox.markAsSent(ClockFixture.defaultClock());
         return outbox;
     }
 
@@ -49,7 +60,11 @@ public class FileProcessingOutboxFixture {
      */
     public static FileProcessingOutbox aFailedOutbox() {
         FileProcessingOutbox outbox =
-                FileProcessingOutbox.forProcessRequest(DEFAULT_FILE_ASSET_ID, "PROCESS_REQUEST", DEFAULT_PAYLOAD);
+                FileProcessingOutbox.forProcessRequest(
+                        DEFAULT_FILE_ASSET_ID,
+                        "PROCESS_REQUEST",
+                        DEFAULT_PAYLOAD,
+                        ClockFixture.defaultClock());
         outbox.markAsFailed("Connection timeout");
         return outbox;
     }
@@ -61,7 +76,11 @@ public class FileProcessingOutboxFixture {
      */
     public static FileProcessingOutbox anExhaustedOutbox() {
         FileProcessingOutbox outbox =
-                FileProcessingOutbox.forProcessRequest(DEFAULT_FILE_ASSET_ID, "PROCESS_REQUEST", DEFAULT_PAYLOAD);
+                FileProcessingOutbox.forProcessRequest(
+                        DEFAULT_FILE_ASSET_ID,
+                        "PROCESS_REQUEST",
+                        DEFAULT_PAYLOAD,
+                        ClockFixture.defaultClock());
         outbox.markAsFailed("Error 1");
         outbox.markAsFailed("Error 2");
         outbox.markAsFailed("Error 3");
@@ -78,7 +97,8 @@ public class FileProcessingOutboxFixture {
                 DEFAULT_FILE_ASSET_ID,
                 "PENDING",
                 "PROCESSING",
-                "{\"fileAssetId\":1,\"from\":\"PENDING\",\"to\":\"PROCESSING\"}");
+                "{\"fileAssetId\":\"550e8400-e29b-41d4-a716-446655440001\",\"from\":\"PENDING\",\"to\":\"PROCESSING\"}",
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -88,7 +108,10 @@ public class FileProcessingOutboxFixture {
      */
     public static FileProcessingOutbox aRetryRequestOutbox() {
         return FileProcessingOutbox.forRetryRequest(
-                DEFAULT_FILE_ASSET_ID, "Processing failed", "{\"fileAssetId\":1,\"reason\":\"retry\"}");
+                DEFAULT_FILE_ASSET_ID,
+                "Processing failed",
+                "{\"fileAssetId\":\"550e8400-e29b-41d4-a716-446655440001\",\"reason\":\"retry\"}",
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -97,9 +120,12 @@ public class FileProcessingOutboxFixture {
      * @param fileAssetId 파일 에셋 ID
      * @return FileProcessingOutbox
      */
-    public static FileProcessingOutbox anOutboxWithFileAssetId(Long fileAssetId) {
+    public static FileProcessingOutbox anOutboxWithFileAssetId(FileAssetId fileAssetId) {
         return FileProcessingOutbox.forProcessRequest(
-                fileAssetId, "PROCESS_REQUEST", "{\"fileAssetId\":" + fileAssetId + "}");
+                fileAssetId,
+                "PROCESS_REQUEST",
+                "{\"fileAssetId\":\"" + fileAssetId.getValue() + "\"}",
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -116,7 +142,7 @@ public class FileProcessingOutboxFixture {
                 OutboxStatus.PENDING,
                 0,
                 null,
-                LocalDateTime.of(2025, 12, 2, 10, 0, 0),
+                Instant.parse("2025-12-02T10:00:00Z"),
                 null);
     }
 }

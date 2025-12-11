@@ -3,7 +3,7 @@
 // ========================================
 // Outbound adapter for database operations (JPA + QueryDSL)
 // Implements repository ports from domain layer
-// Technology: Spring Data JPA + QueryDSL + PostgreSQL
+// Technology: Spring Data JPA + QueryDSL + MySQL
 // NO Lombok allowed
 // ========================================
 
@@ -50,10 +50,15 @@ dependencies {
     // Test Dependencies
     // ========================================
     testImplementation libs.spring.boot.starter.test
+    testImplementation libs.testcontainers.mysql
     testImplementation libs.testcontainers.junit
 
     // ArchUnit for architecture validation
     testImplementation libs.archunit.junit5
+
+
+    // YAML parsing for config validation tests
+    testImplementation libs.snakeyaml
 
     // ========================================
     // Test Fixtures Dependencies

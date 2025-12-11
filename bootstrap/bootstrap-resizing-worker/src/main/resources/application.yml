@@ -1,0 +1,85 @@
+# ===============================================
+# FileFlow Resizing Worker Bootstrap Configuration
+# ===============================================
+
+spring:
+  application:
+    name: fileflow-resizing-worker
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
+
+  # Exclude Redisson auto-configuration (use custom RedissonConfig)
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+
+  config:
+    import:
+      - classpath:persistence.yml
+      - classpath:redis.yml
+      - classpath:s3.yml
+      - classpath:sqs-listener.yml
+
+# Enable Redisson for Redis operations
+redisson:
+  enabled: ${REDISSON_ENABLED:true}
+
+# ===============================================
+# Resizing Worker Configuration
+# ===============================================
+fileflow:
+  resizing:
+    worker:
+      # 스레드 풀 크기 (기본값: CPU 코어 수)
+      pool-size: ${RESIZING_WORKER_POOL_SIZE:8}
+      # 작업 큐 용량
+      queue-capacity: ${RESIZING_WORKER_QUEUE_CAPACITY:100}
+      # 스레드 이름 접두사
+      thread-name-prefix: resizing-worker-
+      # 종료 대기 시간 (초)
+      await-termination-seconds: ${RESIZING_WORKER_AWAIT_TERMINATION:60}
+
+worker:
+  resizing:
+    enabled: ${WORKER_RESIZING_ENABLED:true}
+
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: ${LOG_LEVEL:DEBUG}
+    io.awspring.cloud.sqs: ${SQS_LOG_LEVEL:INFO}
+
+management:
+  # Management 전용 포트 (경량 웹 서버)
+  server:
+    port: 8083
+    shutdown: graceful
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
+
+  # Prometheus 메트릭 태그 (서비스 구분용)
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${SPRING_PROFILES_ACTIVE:prod}
+    enable:
+      hikaricp: true
+      jvm: true
+      process: true
+      system: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99

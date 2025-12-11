@@ -1,13 +1,11 @@
 package com.ryuqq.fileflow.adapter.out.persistence.architecture.entity;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
-import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchCondition;
@@ -21,6 +19,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -28,23 +27,18 @@ import org.junit.jupiter.api.Test;
  *
  * <p>entity-guide.md의 핵심 규칙을 ArchUnit으로 검증합니다.
  *
- * <p><strong>검증 규칙:</strong>
+ * <p><strong>검증 규칙 그룹:</strong>
  *
  * <ul>
- *   <li>규칙 1: @Entity 어노테이션 필수
- *   <li>규칙 2: Lombok 사용 금지
- *   <li>규칙 3: JPA 관계 어노테이션 금지 (Long FK 전략)
- *   <li>규칙 4: Setter 메서드 금지
- *   <li>규칙 5: 비즈니스 로직 금지
- *   <li>규칙 6: protected 기본 생성자 필수
- *   <li>규칙 7: private 전체 필드 생성자 필수
- *   <li>규칙 8: public static of() 메서드 필수
- *   <li>규칙 9: Getter만 제공 (public 메서드는 getter 또는 of()만)
- *   <li>규칙 10: Entity 네이밍 규칙 (*JpaEntity)
+ *   <li>Lombok 금지 (6개 규칙)
+ *   <li>JPA 관계 어노테이션 금지 (4개 규칙)
+ *   <li>메서드 패턴 규칙 (2개 규칙)
+ *   <li>생성자 및 팩토리 규칙 (4개 규칙)
  * </ul>
  *
  * @author Development Team
  * @since 1.0.0
+ * @version 2.0.0
  */
 @DisplayName("JPA Entity 아키텍처 규칙 검증 (Zero-Tolerance)")
 class JpaEntityArchTest {
@@ -54,9 +48,7 @@ class JpaEntityArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses =
-                new ClassFileImporter()
-                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+        allClasses = new ClassFileImporter().importPackages("com.ryuqq.adapter.out.persistence");
 
         entityClasses =
                 allClasses.that(
@@ -65,314 +57,369 @@ class JpaEntityArchTest {
                                 javaClass -> javaClass.isAnnotatedWith(Entity.class)));
     }
 
-    /**
-     * 규칙 1: @Entity 어노테이션 필수
-     *
-     * <p>JpaEntity로 끝나는 클래스는 @Entity 어노테이션이 필수입니다.
-     *
-     * <p>Note: entity 패키지 내 *JpaEntity 클래스만 검증 (Mapper, Fixture 등 제외)
-     */
-    @Test
-    @DisplayName("규칙 1: @Entity 어노테이션 필수")
-    void jpaEntity_MustBeAnnotatedWithEntity() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .haveSimpleNameEndingWith("JpaEntity")
-                        .and()
-                        .resideInAPackage("..entity..")
-                        .and()
-                        .haveSimpleNameNotContaining("Mapper")
-                        .and()
-                        .haveSimpleNameNotContaining("Fixture")
-                        .and()
-                        .haveSimpleNameNotStartingWith("Q") // QueryDSL Q타입 제외
-                        .should()
-                        .beAnnotatedWith(Entity.class)
-                        .because("JPA Entity 클래스는 @Entity 어노테이션이 필수입니다");
+    // ===== 1. Lombok 금지 규칙 =====
 
-        rule.check(allClasses);
+    @Nested
+    @DisplayName("Lombok 금지 규칙")
+    class LombokProhibitionRules {
+
+        @Test
+        @DisplayName("@Data 어노테이션 금지")
+        void jpaEntity_MustNotUseLombok_Data() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith("lombok.Data")
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("@Getter 어노테이션 금지")
+        void jpaEntity_MustNotUseLombok_Getter() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith("lombok.Getter")
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("@Setter 어노테이션 금지")
+        void jpaEntity_MustNotUseLombok_Setter() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith("lombok.Setter")
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("@Builder 어노테이션 금지")
+        void jpaEntity_MustNotUseLombok_Builder() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith("lombok.Builder")
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("@AllArgsConstructor 어노테이션 금지")
+        void jpaEntity_MustNotUseLombok_AllArgsConstructor() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith("lombok.AllArgsConstructor")
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("@NoArgsConstructor 어노테이션 금지")
+        void jpaEntity_MustNotUseLombok_NoArgsConstructor() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith("lombok.NoArgsConstructor")
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+
+            rule.check(entityClasses);
+        }
     }
 
-    @Test
-    @DisplayName("규칙 2: Lombok 사용 금지 - @Data")
-    void jpaEntity_MustNotUseLombok_Data() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .notBeAnnotatedWith("lombok.Data")
-                        .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+    // ===== 2. JPA 관계 어노테이션 금지 규칙 =====
 
-        rule.check(entityClasses);
+    @Nested
+    @DisplayName("JPA 관계 어노테이션 금지 규칙 (Long FK 전략)")
+    class JpaRelationshipProhibitionRules {
+
+        @Test
+        @DisplayName("@ManyToOne 어노테이션 금지")
+        void jpaEntity_MustNotUseJpaRelationship_ManyToOne() {
+            ArchRule rule =
+                    fields().that()
+                            .areDeclaredInClassesThat()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith(ManyToOne.class)
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 관계 어노테이션 사용이 금지됩니다 (Long FK 전략 사용)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("@OneToMany 어노테이션 금지")
+        void jpaEntity_MustNotUseJpaRelationship_OneToMany() {
+            ArchRule rule =
+                    fields().that()
+                            .areDeclaredInClassesThat()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith(OneToMany.class)
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 관계 어노테이션 사용이 금지됩니다 (Long FK 전략 사용)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("@OneToOne 어노테이션 금지")
+        void jpaEntity_MustNotUseJpaRelationship_OneToOne() {
+            ArchRule rule =
+                    fields().that()
+                            .areDeclaredInClassesThat()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith(OneToOne.class)
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 관계 어노테이션 사용이 금지됩니다 (Long FK 전략 사용)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("@ManyToMany 어노테이션 금지")
+        void jpaEntity_MustNotUseJpaRelationship_ManyToMany() {
+            ArchRule rule =
+                    fields().that()
+                            .areDeclaredInClassesThat()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .notBeAnnotatedWith(ManyToMany.class)
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 관계 어노테이션 사용이 금지됩니다 (Long FK 전략 사용)");
+
+            rule.check(entityClasses);
+        }
     }
 
-    @Test
-    @DisplayName("규칙 2: Lombok 사용 금지 - @Getter")
-    void jpaEntity_MustNotUseLombok_Getter() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .notBeAnnotatedWith("lombok.Getter")
-                        .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+    // ===== 3. 메서드 패턴 규칙 =====
 
-        rule.check(entityClasses);
+    @Nested
+    @DisplayName("메서드 패턴 규칙")
+    class MethodPatternRules {
+
+        @Test
+        @DisplayName("Setter 메서드 금지")
+        void jpaEntity_MustNotHaveSetterMethods() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should(notHaveSetterMethods())
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 Setter 메서드가 금지됩니다 (불변성 보장)");
+
+            rule.check(entityClasses);
+        }
+
+        @Test
+        @DisplayName("비즈니스 로직 메서드 금지")
+        void jpaEntity_MustNotHaveBusinessLogicMethods() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should(notHaveBusinessLogicMethods())
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 비즈니스 로직이 금지됩니다 (Domain Layer에서 처리)");
+
+            rule.check(entityClasses);
+        }
     }
 
-    @Test
-    @DisplayName("규칙 2: Lombok 사용 금지 - @Setter")
-    void jpaEntity_MustNotUseLombok_Setter() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .notBeAnnotatedWith("lombok.Setter")
-                        .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+    // ===== 4. 생성자 및 팩토리 규칙 =====
 
-        rule.check(entityClasses);
-    }
+    @Nested
+    @DisplayName("생성자 및 팩토리 규칙")
+    class ConstructorAndFactoryRules {
 
-    @Test
-    @DisplayName("규칙 2: Lombok 사용 금지 - @Builder")
-    void jpaEntity_MustNotUseLombok_Builder() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .notBeAnnotatedWith("lombok.Builder")
-                        .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+        @Test
+        @DisplayName("@Entity 어노테이션 필수")
+        void jpaEntity_MustBeAnnotatedWithEntity() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("JpaEntity")
+                            .should()
+                            .beAnnotatedWith(Entity.class)
+                            .allowEmptyShould(true)
+                            .because("JPA Entity 클래스는 @Entity 어노테이션이 필수입니다");
 
-        rule.check(entityClasses);
-    }
+            rule.check(allClasses);
+        }
 
-    @Test
-    @DisplayName("규칙 2: Lombok 사용 금지 - @AllArgsConstructor")
-    void jpaEntity_MustNotUseLombok_AllArgsConstructor() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .notBeAnnotatedWith("lombok.AllArgsConstructor")
-                        .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+        @Test
+        @DisplayName("protected 또는 public 기본 생성자 필수")
+        void jpaEntity_MustHaveProtectedOrPublicNoArgsConstructor() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should(haveProtectedOrPublicNoArgsConstructor())
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 JPA 스펙을 위해 protected 또는 public 기본 생성자가 필수입니다");
 
-        rule.check(entityClasses);
-    }
+            rule.check(entityClasses);
+        }
 
-    @Test
-    @DisplayName("규칙 2: Lombok 사용 금지 - @NoArgsConstructor")
-    void jpaEntity_MustNotUseLombok_NoArgsConstructor() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .notBeAnnotatedWith("lombok.NoArgsConstructor")
-                        .because("JPA Entity는 Lombok 사용이 금지됩니다 (Plain Java 사용)");
+        @Test
+        @DisplayName("private 전체 필드 생성자 필수")
+        void jpaEntity_MustHavePrivateAllArgsConstructor() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should(havePrivateConstructorWithParameters())
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 무분별한 생성 방지를 위해 private 생성자가 필수입니다");
 
-        rule.check(entityClasses);
-    }
+            rule.check(entityClasses);
+        }
 
-    @Test
-    @DisplayName("규칙 3: JPA 관계 어노테이션 금지 - @ManyToOne")
-    void jpaEntity_MustNotUseJpaRelationship_ManyToOne() {
-        ArchRule rule =
-                noFields()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .beAnnotatedWith(ManyToOne.class)
-                        .because("JPA Entity는 관계 어노테이션 사용이 금지됩니다 (Long FK 전략 사용)");
+        @Test
+        @DisplayName("public static of() 메서드 필수")
+        void jpaEntity_MustHavePublicStaticOfMethod() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should(havePublicStaticOfMethod())
+                            .allowEmptyShould(true)
+                            .because("JPA Entity는 Mapper 전용 of() 스태틱 메서드가 필수입니다");
 
-        rule.check(entityClasses);
-    }
+            rule.check(entityClasses);
+        }
 
-    @Test
-    @DisplayName("규칙 3: JPA 관계 어노테이션 금지 - @OneToMany")
-    void jpaEntity_MustNotUseJpaRelationship_OneToMany() {
-        ArchRule rule =
-                noFields()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .beAnnotatedWith(OneToMany.class)
-                        .because("JPA Entity는 관계 어노테이션 사용이 금지됩니다 (Long FK 전략 사용)");
+        @Test
+        @DisplayName("Entity 네이밍 규칙 (*JpaEntity)")
+        void jpaEntity_MustFollowNamingConvention() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAnnotatedWith(Entity.class)
+                            .should()
+                            .haveSimpleNameEndingWith("JpaEntity")
+                            .allowEmptyShould(true)
+                            .because("JPA Entity 클래스는 *JpaEntity 네이밍 규칙을 따라야 합니다");
 
-        rule.check(entityClasses);
-    }
-
-    @Test
-    @DisplayName("규칙 3: JPA 관계 어노테이션 금지 - @OneToOne")
-    void jpaEntity_MustNotUseJpaRelationship_OneToOne() {
-        ArchRule rule =
-                noFields()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .beAnnotatedWith(OneToOne.class)
-                        .because("JPA Entity는 관계 어노테이션 사용이 금지됩니다 (Long FK 전략 사용)");
-
-        rule.check(entityClasses);
-    }
-
-    @Test
-    @DisplayName("규칙 3: JPA 관계 어노테이션 금지 - @ManyToMany")
-    void jpaEntity_MustNotUseJpaRelationship_ManyToMany() {
-        ArchRule rule =
-                noFields()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .beAnnotatedWith(ManyToMany.class)
-                        .because("JPA Entity는 관계 어노테이션 사용이 금지됩니다 (Long FK 전략 사용)");
-
-        rule.check(entityClasses);
-    }
-
-    /**
-     * 규칙 4: Setter 메서드 금지
-     *
-     * <p>JPA Entity는 불변성 보장을 위해 Setter가 금지됩니다.
-     *
-     * <ul>
-     *   <li>❌ setId(), setName() 등 Setter 메서드
-     *   <li>✅ Getter만 제공
-     * </ul>
-     *
-     * <p>Note: Setter가 없는 경우도 정상이므로 allowEmptyShould(true) 적용
-     */
-    @Test
-    @DisplayName("규칙 4: Setter 메서드 금지")
-    void jpaEntity_MustNotHaveSetterMethods() {
-        ArchRule rule =
-                methods()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .areAnnotatedWith(Entity.class)
-                        .and()
-                        .arePublic()
-                        .and()
-                        .haveNameMatching("set[A-Z].*")
-                        .should(notExist())
-                        .because("JPA Entity는 Setter 메서드가 금지됩니다 (Getter만 제공)");
-
-        rule.allowEmptyShould(true).check(entityClasses);
-    }
-
-    /**
-     * 규칙 5: 비즈니스 로직 금지 (특정 메서드 패턴)
-     *
-     * <p>JPA Entity는 순수 데이터 저장소 역할만 합니다.
-     *
-     * <ul>
-     *   <li>❌ approve*, cancel*, complete* 등 비즈니스 메서드
-     *   <li>✅ Getter, of() 등 데이터 접근 메서드만
-     * </ul>
-     *
-     * <p>Note: 비즈니스 로직 메서드가 없는 경우도 정상이므로 allowEmptyShould(true) 적용
-     */
-    @Test
-    @DisplayName("규칙 5: 비즈니스 로직 금지 (특정 메서드 패턴)")
-    void jpaEntity_MustNotHaveBusinessLogicMethods() {
-        ArchRule rule =
-                methods()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .areAnnotatedWith(Entity.class)
-                        .and()
-                        .arePublic()
-                        .and()
-                        .haveNameMatching(
-                                "(approve|cancel|complete|activate|deactivate|validate|calculate).*")
-                        .should(notExist())
-                        .because("JPA Entity는 비즈니스 로직이 금지됩니다 (Domain Layer에서 처리)");
-
-        rule.allowEmptyShould(true).check(entityClasses);
-    }
-
-    @Test
-    @DisplayName("규칙 6: protected 기본 생성자 필수")
-    void jpaEntity_MustHaveProtectedNoArgsConstructor() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should(haveProtectedNoArgsConstructor())
-                        .because("JPA Entity는 JPA 스펙을 위해 protected 기본 생성자가 필수입니다");
-
-        rule.check(entityClasses);
-    }
-
-    @Test
-    @DisplayName("규칙 7: private 전체 필드 생성자 필수")
-    void jpaEntity_MustHavePrivateAllArgsConstructor() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should(havePrivateConstructorWithParameters())
-                        .because("JPA Entity는 무분별한 생성 방지를 위해 private 생성자가 필수입니다");
-
-        rule.check(entityClasses);
-    }
-
-    @Test
-    @DisplayName("규칙 8: public static of() 메서드 필수")
-    void jpaEntity_MustHavePublicStaticOfMethod() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should(havePublicStaticOfMethod())
-                        .because("JPA Entity는 Mapper 전용 of() 스태틱 메서드가 필수입니다");
-
-        rule.check(entityClasses);
-    }
-
-    @Test
-    @DisplayName("규칙 10: Entity 네이밍 규칙 (*JpaEntity)")
-    void jpaEntity_MustFollowNamingConvention() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areAnnotatedWith(Entity.class)
-                        .should()
-                        .haveSimpleNameEndingWith("JpaEntity")
-                        .because("JPA Entity 클래스는 *JpaEntity 네이밍 규칙을 따라야 합니다");
-
-        rule.check(entityClasses);
+            rule.check(entityClasses);
+        }
     }
 
     // ===== 커스텀 ArchCondition =====
 
-    /** protected 기본 생성자 존재 검증 */
-    private static ArchCondition<JavaClass> haveProtectedNoArgsConstructor() {
-        return new ArchCondition<>("have protected no-args constructor") {
+    /**
+     * Setter 메서드가 없어야 함을 검증
+     *
+     * <p>setXxx() 패턴의 public 메서드를 검출합니다.
+     */
+    private static ArchCondition<JavaClass> notHaveSetterMethods() {
+        return new ArchCondition<>("not have setter methods") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                boolean hasProtectedNoArgsConstructor =
+                javaClass.getMethods().stream()
+                        .filter(method -> method.getModifiers().contains(JavaModifier.PUBLIC))
+                        .filter(method -> method.getName().matches("set[A-Z].*"))
+                        .filter(method -> method.getRawParameterTypes().size() == 1)
+                        .forEach(
+                                method -> {
+                                    String message =
+                                            String.format(
+                                                    "클래스 %s가 setter 메서드 %s()를 가지고 있습니다 (Setter 금지)",
+                                                    javaClass.getSimpleName(), method.getName());
+                                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                                });
+            }
+        };
+    }
+
+    /**
+     * 비즈니스 로직 메서드가 없어야 함을 검증
+     *
+     * <p>approve, cancel, complete 등의 비즈니스 동작 메서드를 검출합니다.
+     */
+    private static ArchCondition<JavaClass> notHaveBusinessLogicMethods() {
+        return new ArchCondition<>("not have business logic methods") {
+            private static final String BUSINESS_METHOD_PATTERN =
+                    "(approve|cancel|complete|activate|deactivate|validate|calculate|process|execute|perform).*";
+
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                javaClass.getMethods().stream()
+                        .filter(method -> method.getModifiers().contains(JavaModifier.PUBLIC))
+                        .filter(method -> !method.getModifiers().contains(JavaModifier.STATIC))
+                        .filter(method -> method.getName().matches(BUSINESS_METHOD_PATTERN))
+                        .forEach(
+                                method -> {
+                                    String message =
+                                            String.format(
+                                                    "클래스 %s가 비즈니스 로직 메서드 %s()를 가지고 있습니다 (비즈니스 로직은"
+                                                            + " Domain Layer에서 처리)",
+                                                    javaClass.getSimpleName(), method.getName());
+                                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                                });
+            }
+        };
+    }
+
+    /**
+     * protected 또는 public 기본 생성자 존재 검증
+     *
+     * <p>JPA 스펙 준수를 위해 파라미터 없는 생성자가 필요합니다.
+     */
+    private static ArchCondition<JavaClass> haveProtectedOrPublicNoArgsConstructor() {
+        return new ArchCondition<>("have protected or public no-args constructor") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                boolean hasValidNoArgsConstructor =
                         javaClass.getConstructors().stream()
                                 .anyMatch(
                                         constructor ->
-                                                constructor
-                                                                .getModifiers()
-                                                                .contains(JavaModifier.PROTECTED)
-                                                        && constructor.getParameters().isEmpty());
+                                                constructor.getParameters().isEmpty()
+                                                        && (constructor
+                                                                        .getModifiers()
+                                                                        .contains(
+                                                                                JavaModifier
+                                                                                        .PROTECTED)
+                                                                || constructor
+                                                                        .getModifiers()
+                                                                        .contains(
+                                                                                JavaModifier
+                                                                                        .PUBLIC)));
 
-                if (!hasProtectedNoArgsConstructor) {
+                if (!hasValidNoArgsConstructor) {
                     String message =
                             String.format(
-                                    "Class %s does not have a protected no-args constructor"
-                                            + " (required by JPA spec)",
+                                    "클래스 %s가 protected 또는 public 기본 생성자를 가지고 있지 않습니다 (JPA 스펙 필수)",
                                     javaClass.getName());
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
@@ -380,7 +427,11 @@ class JpaEntityArchTest {
         };
     }
 
-    /** private 파라미터 있는 생성자 존재 검증 */
+    /**
+     * private 파라미터 있는 생성자 존재 검증
+     *
+     * <p>무분별한 인스턴스 생성을 방지합니다.
+     */
     private static ArchCondition<JavaClass> havePrivateConstructorWithParameters() {
         return new ArchCondition<>("have private constructor with parameters") {
             @Override
@@ -397,8 +448,7 @@ class JpaEntityArchTest {
                 if (!hasPrivateConstructor) {
                     String message =
                             String.format(
-                                    "Class %s does not have a private constructor with parameters"
-                                            + " (required to prevent direct instantiation)",
+                                    "클래스 %s가 private 파라미터 생성자를 가지고 있지 않습니다 (무분별한 생성 방지 필수)",
                                     javaClass.getName());
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
@@ -406,7 +456,11 @@ class JpaEntityArchTest {
         };
     }
 
-    /** public static of() 메서드 존재 검증 */
+    /**
+     * public static of() 메서드 존재 검증
+     *
+     * <p>Mapper에서 Entity 생성 시 사용하는 팩토리 메서드입니다.
+     */
     private static ArchCondition<JavaClass> havePublicStaticOfMethod() {
         return new ArchCondition<>("have public static of() method") {
             @Override
@@ -424,25 +478,11 @@ class JpaEntityArchTest {
                 if (!hasOfMethod) {
                     String message =
                             String.format(
-                                    "Class %s does not have a public static of() method (required"
-                                            + " for Mapper creation pattern)",
+                                    "클래스 %s가 public static of() 메서드를 가지고 있지 않습니다 (Mapper 전용 팩토리 메서드"
+                                            + " 필수)",
                                     javaClass.getName());
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
-            }
-        };
-    }
-
-    /** 메서드가 존재하지 않아야 함을 검증하는 ArchCondition */
-    private static ArchCondition<JavaMethod> notExist() {
-        return new ArchCondition<>("not exist") {
-            @Override
-            public void check(JavaMethod method, ConditionEvents events) {
-                String message =
-                        String.format(
-                                "Method %s.%s() should not exist",
-                                method.getOwner().getSimpleName(), method.getName());
-                events.add(SimpleConditionEvent.violated(method, message));
             }
         };
     }

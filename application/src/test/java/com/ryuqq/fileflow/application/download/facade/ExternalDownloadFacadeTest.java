@@ -5,12 +5,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.inOrder;
 
+import com.ryuqq.fileflow.application.common.config.TransactionEventRegistry;
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadBundle;
-import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
-import com.ryuqq.fileflow.application.download.manager.ExternalDownloadOutboxManager;
+import com.ryuqq.fileflow.application.download.manager.command.ExternalDownloadOutboxTransactionManager;
+import com.ryuqq.fileflow.application.download.manager.command.ExternalDownloadTransactionManager;
+import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
-import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadOutboxFixture;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
@@ -23,17 +24,16 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ExternalDownloadFacade 테스트")
 class ExternalDownloadFacadeTest {
 
-    @Mock private ExternalDownloadManager externalDownloadManager;
+    @Mock private ExternalDownloadTransactionManager externalDownloadTransactionManager;
 
-    @Mock private ExternalDownloadOutboxManager externalDownloadOutboxManager;
+    @Mock private ExternalDownloadOutboxTransactionManager outboxTransactionManager;
 
-    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private TransactionEventRegistry transactionEventRegistry;
 
     @InjectMocks private ExternalDownloadFacade facade;
 
@@ -57,8 +57,8 @@ class ExternalDownloadFacadeTest {
             ExternalDownloadOutboxId outboxId =
                     ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
 
-            given(externalDownloadManager.save(download)).willReturn(downloadId);
-            given(externalDownloadOutboxManager.save(outbox)).willReturn(outboxId);
+            given(externalDownloadTransactionManager.persist(download)).willReturn(downloadId);
+            given(outboxTransactionManager.persist(outbox)).willReturn(outboxId);
 
             // when
             ExternalDownloadId result = facade.saveAndPublishEvent(bundle);
@@ -67,10 +67,13 @@ class ExternalDownloadFacadeTest {
             assertThat(result).isEqualTo(downloadId);
 
             InOrder inOrder =
-                    inOrder(externalDownloadManager, externalDownloadOutboxManager, eventPublisher);
-            inOrder.verify(externalDownloadManager).save(download);
-            inOrder.verify(externalDownloadOutboxManager).save(outbox);
-            inOrder.verify(eventPublisher).publishEvent(any(ExternalDownloadRegisteredEvent.class));
+                    inOrder(
+                            externalDownloadTransactionManager,
+                            outboxTransactionManager,
+                            transactionEventRegistry);
+            inOrder.verify(externalDownloadTransactionManager).persist(download);
+            inOrder.verify(outboxTransactionManager).persist(outbox);
+            inOrder.verify(transactionEventRegistry).registerForPublish(any(DomainEvent.class));
         }
 
         @Test
@@ -89,8 +92,8 @@ class ExternalDownloadFacadeTest {
             ExternalDownloadOutboxId outboxId =
                     ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
 
-            given(externalDownloadManager.save(download)).willReturn(downloadId);
-            given(externalDownloadOutboxManager.save(outbox)).willReturn(outboxId);
+            given(externalDownloadTransactionManager.persist(download)).willReturn(downloadId);
+            given(outboxTransactionManager.persist(outbox)).willReturn(outboxId);
 
             // when
             facade.saveAndPublishEvent(bundle);

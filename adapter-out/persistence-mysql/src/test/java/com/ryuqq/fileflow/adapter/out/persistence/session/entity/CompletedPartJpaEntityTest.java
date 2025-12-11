@@ -2,7 +2,9 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,9 +20,9 @@ class CompletedPartJpaEntityTest {
         @DisplayName("모든 필드로 신규 Entity를 생성할 수 있다")
         void of_WithAllFields_ShouldCreateEntity() {
             // given
-            LocalDateTime uploadedAt = LocalDateTime.of(2025, 11, 26, 11, 0);
-            LocalDateTime createdAt = LocalDateTime.of(2025, 11, 26, 10, 0);
-            LocalDateTime updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5);
+            Instant uploadedAt = LocalDateTime.of(2025, 11, 26, 11, 0).toInstant(ZoneOffset.UTC);
+            Instant createdAt = LocalDateTime.of(2025, 11, 26, 10, 0).toInstant(ZoneOffset.UTC);
+            Instant updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5).toInstant(ZoneOffset.UTC);
 
             // when
             CompletedPartJpaEntity entity =
@@ -80,9 +82,9 @@ class CompletedPartJpaEntityTest {
         void reconstitute_WithId_ShouldReconstituteEntity() {
             // given
             Long id = 123L;
-            LocalDateTime uploadedAt = LocalDateTime.of(2025, 11, 26, 11, 0);
-            LocalDateTime createdAt = LocalDateTime.of(2025, 11, 26, 10, 0);
-            LocalDateTime updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5);
+            Instant uploadedAt = LocalDateTime.of(2025, 11, 26, 11, 0).toInstant(ZoneOffset.UTC);
+            Instant createdAt = LocalDateTime.of(2025, 11, 26, 10, 0).toInstant(ZoneOffset.UTC);
+            Instant updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5).toInstant(ZoneOffset.UTC);
 
             // when
             CompletedPartJpaEntity entity =
@@ -114,7 +116,7 @@ class CompletedPartJpaEntityTest {
         @DisplayName("of와 reconstitute의 차이는 id 포함 여부이다")
         void reconstitute_DifferenceFromOf_ShouldBeIdPresence() {
             // given
-            LocalDateTime now = LocalDateTime.now();
+            Instant now = Instant.now();
 
             // when
             CompletedPartJpaEntity newEntity =
@@ -236,7 +238,8 @@ class CompletedPartJpaEntityTest {
         @DisplayName("업로드 시각을 저장할 수 있다")
         void of_WithUploadedAt_ShouldCreateEntity() {
             // given
-            LocalDateTime uploadedAt = LocalDateTime.of(2025, 11, 26, 15, 30, 45);
+            Instant uploadedAt =
+                    LocalDateTime.of(2025, 11, 26, 15, 30, 45).toInstant(ZoneOffset.UTC);
 
             // when
             CompletedPartJpaEntity entity = createEntityWithUploadedAt(uploadedAt);
@@ -254,20 +257,13 @@ class CompletedPartJpaEntityTest {
         @DisplayName("BaseAuditEntity의 감사 필드를 상속받는다")
         void inheritance_ShouldProvideAuditFields() {
             // given
-            LocalDateTime createdAt = LocalDateTime.of(2025, 1, 1, 0, 0);
-            LocalDateTime updatedAt = LocalDateTime.of(2025, 6, 1, 12, 0);
+            Instant createdAt = LocalDateTime.of(2025, 1, 1, 0, 0).toInstant(ZoneOffset.UTC);
+            Instant updatedAt = LocalDateTime.of(2025, 6, 1, 12, 0).toInstant(ZoneOffset.UTC);
 
             // when
             CompletedPartJpaEntity entity =
                     CompletedPartJpaEntity.of(
-                            "session",
-                            1,
-                            "url",
-                            "etag",
-                            100L,
-                            LocalDateTime.now(),
-                            createdAt,
-                            updatedAt);
+                            "session", 1, "url", "etag", 100L, Instant.now(), createdAt, updatedAt);
 
             // then
             assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
@@ -278,7 +274,7 @@ class CompletedPartJpaEntityTest {
     // ==================== Helper Methods ====================
 
     private CompletedPartJpaEntity createEntityWithPartNumber(int partNumber) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return CompletedPartJpaEntity.of(
                 "session-id",
                 partNumber,
@@ -291,7 +287,7 @@ class CompletedPartJpaEntityTest {
     }
 
     private CompletedPartJpaEntity createEntityWithSize(long size) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return CompletedPartJpaEntity.of(
                 "session-id",
                 1,
@@ -304,7 +300,7 @@ class CompletedPartJpaEntityTest {
     }
 
     private CompletedPartJpaEntity createEntityWithEtag(String etag) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return CompletedPartJpaEntity.of(
                 "session-id",
                 1,
@@ -317,13 +313,13 @@ class CompletedPartJpaEntityTest {
     }
 
     private CompletedPartJpaEntity createEntityWithPresignedUrl(String presignedUrl) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return CompletedPartJpaEntity.of(
                 "session-id", 1, presignedUrl, "\"etag\"", 5 * 1024 * 1024L, now, now, now);
     }
 
-    private CompletedPartJpaEntity createEntityWithUploadedAt(LocalDateTime uploadedAt) {
-        LocalDateTime now = LocalDateTime.now();
+    private CompletedPartJpaEntity createEntityWithUploadedAt(Instant uploadedAt) {
+        Instant now = Instant.now();
         return CompletedPartJpaEntity.of(
                 "session-id",
                 1,

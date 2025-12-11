@@ -17,10 +17,8 @@ import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetsUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.application.common.dto.response.PageResponse;
-import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
-import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,13 +72,13 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                         "example.jpg",
                         1024000L,
                         "image/jpeg",
-                        FileCategory.IMAGE,
+                        "IMAGE",
                         "bucket",
                         "path/example.jpg",
                         "etag-abc123",
-                        FileAssetStatus.COMPLETED,
-                        LocalDateTime.now(),
-                        LocalDateTime.now());
+                        "COMPLETED",
+                        Instant.now(),
+                        Instant.now());
 
         given(getFileAssetUseCase.execute(any())).willReturn(response);
 
@@ -126,26 +124,26 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                                 "example1.jpg",
                                 1024000L,
                                 "image/jpeg",
-                                FileCategory.IMAGE,
+                                "IMAGE",
                                 "bucket",
                                 "path/example1.jpg",
                                 "etag-abc123",
-                                FileAssetStatus.COMPLETED,
-                                LocalDateTime.now(),
-                                LocalDateTime.now()),
+                                "COMPLETED",
+                                Instant.now(),
+                                Instant.now()),
                         new FileAssetResponse(
                                 "asset-456",
                                 "session-456",
                                 "example2.png",
                                 2048000L,
                                 "image/png",
-                                FileCategory.IMAGE,
+                                "IMAGE",
                                 "bucket",
                                 "path/example2.png",
                                 "etag-def456",
-                                FileAssetStatus.COMPLETED,
-                                LocalDateTime.now(),
-                                LocalDateTime.now()));
+                                "COMPLETED",
+                                Instant.now(),
+                                Instant.now()));
 
         PageResponse<FileAssetResponse> response =
                 new PageResponse<>(content, 0, 10, 2, 1, true, false);

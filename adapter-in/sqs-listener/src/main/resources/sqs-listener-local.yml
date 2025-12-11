@@ -31,14 +31,20 @@ aws:
       # Create queues in LocalStack:
       # awslocal sqs create-queue --queue-name external-download-queue
       # awslocal sqs create-queue --queue-name external-download-dlq
+      # awslocal sqs create-queue --queue-name file-processing-queue
+      # awslocal sqs create-queue --queue-name file-processing-dlq
       external-download-queue-url: http://localhost:4566/000000000000/external-download-queue
       external-download-dlq-url: http://localhost:4566/000000000000/external-download-dlq
+      file-processing-queue-url: http://localhost:4566/000000000000/file-processing-queue
+      file-processing-dlq-url: http://localhost:4566/000000000000/file-processing-dlq
 
       # ========================================
       # Feature Toggles (Local)
       # ========================================
       external-download-listener-enabled: true
       external-download-dlq-listener-enabled: true
+      file-processing-listener-enabled: true
+      file-processing-dlq-listener-enabled: true
 
 logging:
   level:

@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * FileAssetStatusHistoryId 단위 테스트.
- */
+/** FileAssetStatusHistoryId 단위 테스트. */
 @DisplayName("FileAssetStatusHistoryId 단위 테스트")
 class FileAssetStatusHistoryIdTest {
 

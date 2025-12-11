@@ -7,11 +7,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * 사용자 컨텍스트 Value Object (토큰 기반).
+ * 사용자 컨텍스트 Value Object (헤더 기반).
  *
- * <p><strong>토큰 정보 구조</strong>:
+ * <p><strong>헤더 정보 구조</strong>:
  *
  * <ul>
+ *   <li>X-Tenant-Id: 테넌트 ID (UUIDv7)
+ *   <li>X-Organization-Id: 조직 ID (UUIDv7, Seller만)
+ *   <li>X-User-Id: 사용자 ID (UUIDv7, Customer만)
  *   <li>ADMIN: email (이메일 주소)
  *   <li>SELLER: email (이메일 주소) + organizationId (입점사 ID)
  *   <li>CUSTOMER: userId (손님 ID)
@@ -23,16 +26,16 @@ import java.time.format.DateTimeFormatter;
  *   <li>테넌트는 항상 존재해야 한다.
  *   <li>조직은 항상 존재해야 한다.
  *   <li>Admin/Seller는 email이 필수이다.
- *   <li>Customer는 userId가 필수이다.
+ *   <li>Customer는 userId가 필수이다 (UUIDv7).
  *   <li>S3 경로는 조직/역할/날짜/카테고리 기반으로 자동 생성된다.
  * </ul>
  *
  * @param tenant 테넌트 정보
  * @param organization 조직 정보
  * @param email 이메일 주소 (Admin/Seller 전용, Customer는 null)
- * @param userId 사용자 ID (Customer 전용, Admin/Seller는 null)
+ * @param userId 사용자 ID (Customer 전용, Admin/Seller는 null) - UUIDv7 기반
  */
-public record UserContext(Tenant tenant, Organization organization, String email, Long userId) {
+public record UserContext(Tenant tenant, Organization organization, String email, UserId userId) {
 
     /** Compact Constructor (검증 로직). */
     public UserContext {
@@ -65,13 +68,13 @@ public record UserContext(Tenant tenant, Organization organization, String email
     /**
      * Seller 사용자 컨텍스트 생성.
      *
-     * @param organizationId 입점사 조직 ID
+     * @param organizationId 입점사 조직 ID (UUIDv7)
      * @param companyName 입점사명
      * @param email 판매자 이메일
      * @return Seller UserContext
      * @throws IllegalArgumentException 검증 실패 시
      */
-    public static UserContext seller(long organizationId, String companyName, String email) {
+    public static UserContext seller(OrganizationId organizationId, String companyName, String email) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Seller 이메일은 null이거나 빈 문자열일 수 없습니다.");
         }
@@ -82,13 +85,13 @@ public record UserContext(Tenant tenant, Organization organization, String email
     /**
      * Customer 사용자 컨텍스트 생성.
      *
-     * @param userId 손님 사용자 ID
+     * @param userId 손님 사용자 ID (UUIDv7)
      * @return Customer UserContext
-     * @throws IllegalArgumentException userId가 null이거나 0 이하인 경우
+     * @throws IllegalArgumentException userId가 null인 경우
      */
-    public static UserContext customer(long userId) {
-        if (userId <= 0) {
-            throw new IllegalArgumentException("Customer userId는 1 이상이어야 합니다: " + userId);
+    public static UserContext customer(UserId userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("Customer userId는 null일 수 없습니다.");
         }
         return new UserContext(Tenant.connectly(), Organization.customer(), null, userId);
     }
@@ -103,7 +106,7 @@ public record UserContext(Tenant tenant, Organization organization, String email
      * @return UserContext
      */
     public static UserContext of(
-            Tenant tenant, Organization organization, String email, Long userId) {
+            Tenant tenant, Organization organization, String email, UserId userId) {
         return new UserContext(tenant, organization, email, userId);
     }
 
@@ -158,9 +161,9 @@ public record UserContext(Tenant tenant, Organization organization, String email
      * <p>경로 구조:
      *
      * <ul>
-     *   <li>Admin: admin/{category}/{yyyy}/{MM}/{filename}
-     *   <li>Seller: seller-{organizationId}/{category}/{yyyy}/{MM}/{filename}
-     *   <li>Customer: customer/{yyyy}/{MM}/{filename} (카테고리 없음)
+     *   <li>Admin: connectly/{category}/{yyyy}/{MM}/{filename}
+     *   <li>Seller: setof/seller-{organizationId}/{category}/{yyyy}/{MM}/{filename}
+     *   <li>Customer: setof/customer/{yyyy}/{MM}/{filename} (카테고리 없음)
      * </ul>
      *
      * @param uploadCategory 업로드 카테고리 (Admin/Seller 전용, Customer는 null)
@@ -181,10 +184,7 @@ public record UserContext(Tenant tenant, Organization organization, String email
         String year = uploadDate.format(DateTimeFormatter.ofPattern("yyyy"));
         String month = uploadDate.format(DateTimeFormatter.ofPattern("MM"));
 
-        String basePath =
-                organization
-                        .getS3PathPrefix(); // Admin: "admin/", Seller: "seller-{orgId}/", Customer:
-        // "customer/"
+        String basePath = organization.getS3PathPrefix();
 
         // Admin/Seller: 카테고리 필수
         if (isAdmin() || isSeller()) {
@@ -193,7 +193,7 @@ public record UserContext(Tenant tenant, Organization organization, String email
             }
             return S3Key.fromSegments(basePath + uploadCategory.getPath(), year, month, fileName);
         } else {
-            // Customer: 카테고리 불필요, customer/{yyyy}/{MM}/{filename}
+            // Customer: 카테고리 불필요, setof/customer/{yyyy}/{MM}/{filename}
             return S3Key.fromSegments(basePath + year, month, fileName);
         }
     }
@@ -218,17 +218,28 @@ public record UserContext(Tenant tenant, Organization organization, String email
         if (isAdmin() || isSeller()) {
             return email;
         } else {
-            return "user-" + userId;
+            return "user-" + userId.value();
         }
     }
 
     /**
      * 조직 ID를 반환한다.
      *
-     * @return 조직 ID
+     * <p>Admin/Customer는 OrganizationId가 null이므로 null을 반환할 수 있다.
+     *
+     * @return 조직 ID (nullable)
      */
-    public long getOrganizationId() {
+    public OrganizationId getOrganizationId() {
         return organization.id();
+    }
+
+    /**
+     * 테넌트 ID를 반환한다.
+     *
+     * @return 테넌트 ID
+     */
+    public TenantId getTenantId() {
+        return tenant.id();
     }
 
     /**
@@ -239,7 +250,7 @@ public record UserContext(Tenant tenant, Organization organization, String email
      * @param userId 사용자 ID (선택적)
      * @throws IllegalArgumentException 검증 실패 시
      */
-    private static void validateRequiredFields(UserRole role, String email, Long userId) {
+    private static void validateRequiredFields(UserRole role, String email, UserId userId) {
         if (role == UserRole.ADMIN || role == UserRole.SELLER) {
             // Admin/Seller는 email 필수
             if (email == null || email.isBlank()) {
@@ -250,8 +261,8 @@ public record UserContext(Tenant tenant, Organization organization, String email
             }
         } else if (role == UserRole.DEFAULT) {
             // Customer는 userId 필수
-            if (userId == null || userId <= 0) {
-                throw new IllegalArgumentException("DEFAULT 사용자는 userId가 필수이며 1 이상이어야 합니다.");
+            if (userId == null) {
+                throw new IllegalArgumentException("DEFAULT 사용자는 userId가 필수입니다.");
             }
             if (email != null && !email.isBlank()) {
                 throw new IllegalArgumentException("DEFAULT 사용자는 email을 가질 수 없습니다.");

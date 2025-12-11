@@ -21,7 +21,7 @@ public class IncompletePartsException extends DomainException {
      */
     public IncompletePartsException(int completedCount, int totalParts) {
         super(
-                SessionErrorCode.INCOMPLETE_PARTS.getCode(),
+                SessionErrorCode.INCOMPLETE_PARTS,
                 String.format("모든 Part가 완료되지 않았습니다. (완료: %d/%d)", completedCount, totalParts));
     }
 }

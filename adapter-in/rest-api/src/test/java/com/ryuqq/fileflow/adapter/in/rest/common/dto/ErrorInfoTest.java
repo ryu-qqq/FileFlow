@@ -10,106 +10,136 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("ErrorInfo 단위 테스트")
+/**
+ * ErrorInfo 단위 테스트
+ *
+ * <p>에러 정보 DTO의 생성 및 유효성 검증을 테스트합니다.
+ *
+ * @author development-team
+ * @since 1.0.0
+ */
+@DisplayName("ErrorInfo 테스트")
 class ErrorInfoTest {
 
     @Nested
-    @DisplayName("생성 테스트")
-    class CreateTest {
+    @DisplayName("생성자 검증")
+    class Constructor {
 
         @Test
-        @DisplayName("유효한 값으로 ErrorInfo를 생성할 수 있다")
-        void constructor_WithValidParams_ShouldCreateErrorInfo() {
-            // given
-            String errorCode = "USER_NOT_FOUND";
-            String message = "사용자를 찾을 수 없습니다";
-
+        @DisplayName("유효한 값으로 ErrorInfo 생성")
+        void shouldCreateWithValidValues() {
             // when
-            ErrorInfo errorInfo = new ErrorInfo(errorCode, message);
+            ErrorInfo errorInfo = new ErrorInfo("TEST_ERROR", "테스트 에러 메시지");
 
             // then
-            assertThat(errorInfo.errorCode()).isEqualTo(errorCode);
-            assertThat(errorInfo.message()).isEqualTo(message);
+            assertThat(errorInfo.errorCode()).isEqualTo("TEST_ERROR");
+            assertThat(errorInfo.message()).isEqualTo("테스트 에러 메시지");
         }
-
-        @Test
-        @DisplayName("다양한 에러 코드 형식으로 생성할 수 있다")
-        void constructor_WithVariousErrorCodeFormats_ShouldCreateErrorInfo() {
-            // given & when
-            ErrorInfo snakeCase = new ErrorInfo("USER_NOT_FOUND", "에러 메시지");
-            ErrorInfo kebabCase = new ErrorInfo("user-not-found", "에러 메시지");
-            ErrorInfo camelCase = new ErrorInfo("userNotFound", "에러 메시지");
-
-            // then
-            assertThat(snakeCase.errorCode()).isEqualTo("USER_NOT_FOUND");
-            assertThat(kebabCase.errorCode()).isEqualTo("user-not-found");
-            assertThat(camelCase.errorCode()).isEqualTo("userNotFound");
-        }
-    }
-
-    @Nested
-    @DisplayName("검증 테스트")
-    class ValidationTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        @ValueSource(strings = {"   "})
-        @DisplayName("errorCode가 null이거나 빈 문자열이면 예외가 발생한다")
-        void constructor_WithInvalidErrorCode_ShouldThrowException(String invalidCode) {
+        @ValueSource(strings = {"   ", "\t", "\n"})
+        @DisplayName("errorCode가 null 또는 빈 문자열이면 예외 발생")
+        void shouldThrowExceptionWhenErrorCodeInvalid(String invalidCode) {
             // when & then
             assertThatThrownBy(() -> new ErrorInfo(invalidCode, "메시지"))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("errorCode는 필수입니다");
+                    .hasMessage("errorCode는 필수입니다");
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        @ValueSource(strings = {"   "})
-        @DisplayName("message가 null이거나 빈 문자열이면 예외가 발생한다")
-        void constructor_WithInvalidMessage_ShouldThrowException(String invalidMessage) {
+        @ValueSource(strings = {"   ", "\t", "\n"})
+        @DisplayName("message가 null 또는 빈 문자열이면 예외 발생")
+        void shouldThrowExceptionWhenMessageInvalid(String invalidMessage) {
             // when & then
-            assertThatThrownBy(() -> new ErrorInfo("ERROR_CODE", invalidMessage))
+            assertThatThrownBy(() -> new ErrorInfo("TEST_ERROR", invalidMessage))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("message는 필수입니다");
+                    .hasMessage("message는 필수입니다");
         }
     }
 
     @Nested
-    @DisplayName("동등성 테스트")
-    class EqualityTest {
+    @DisplayName("에러 코드 규칙")
+    class ErrorCodeRules {
 
         @Test
-        @DisplayName("같은 값을 가진 ErrorInfo는 동등하다")
-        void equals_WithSameValues_ShouldBeEqual() {
-            // given
-            ErrorInfo error1 = new ErrorInfo("TEST_ERROR", "테스트 에러");
-            ErrorInfo error2 = new ErrorInfo("TEST_ERROR", "테스트 에러");
+        @DisplayName("대문자 스네이크 케이스 에러 코드")
+        void shouldAcceptUpperSnakeCaseErrorCode() {
+            // when
+            ErrorInfo errorInfo = new ErrorInfo("USER_NOT_FOUND", "사용자를 찾을 수 없습니다");
 
-            // when & then
-            assertThat(error1).isEqualTo(error2);
-            assertThat(error1.hashCode()).isEqualTo(error2.hashCode());
+            // then
+            assertThat(errorInfo.errorCode()).isEqualTo("USER_NOT_FOUND");
         }
 
         @Test
-        @DisplayName("다른 errorCode를 가진 ErrorInfo는 동등하지 않다")
-        void equals_WithDifferentErrorCode_ShouldNotBeEqual() {
-            // given
-            ErrorInfo error1 = new ErrorInfo("ERROR_1", "메시지");
-            ErrorInfo error2 = new ErrorInfo("ERROR_2", "메시지");
+        @DisplayName("도메인_상황_상태 형식의 에러 코드")
+        void shouldAcceptDomainStatusErrorCode() {
+            // when
+            ErrorInfo errorInfo = new ErrorInfo("ORDER_INVALID_STATUS", "주문 상태가 유효하지 않습니다");
 
-            // when & then
-            assertThat(error1).isNotEqualTo(error2);
+            // then
+            assertThat(errorInfo.errorCode()).isEqualTo("ORDER_INVALID_STATUS");
+        }
+    }
+
+    @Nested
+    @DisplayName("Record 특성 검증")
+    class RecordCharacteristics {
+
+        @Test
+        @DisplayName("동일한 값을 가진 ErrorInfo는 equals로 동등")
+        void shouldBeEqualWhenSameValues() {
+            // given
+            ErrorInfo errorInfo1 = new ErrorInfo("TEST_ERROR", "테스트 메시지");
+            ErrorInfo errorInfo2 = new ErrorInfo("TEST_ERROR", "테스트 메시지");
+
+            // then
+            assertThat(errorInfo1).isEqualTo(errorInfo2);
+            assertThat(errorInfo1.hashCode()).isEqualTo(errorInfo2.hashCode());
         }
 
         @Test
-        @DisplayName("다른 message를 가진 ErrorInfo는 동등하지 않다")
-        void equals_WithDifferentMessage_ShouldNotBeEqual() {
+        @DisplayName("다른 값을 가진 ErrorInfo는 equals로 다름")
+        void shouldNotBeEqualWhenDifferentValues() {
             // given
-            ErrorInfo error1 = new ErrorInfo("ERROR", "메시지1");
-            ErrorInfo error2 = new ErrorInfo("ERROR", "메시지2");
+            ErrorInfo errorInfo1 = new ErrorInfo("ERROR_1", "메시지 1");
+            ErrorInfo errorInfo2 = new ErrorInfo("ERROR_2", "메시지 2");
 
-            // when & then
-            assertThat(error1).isNotEqualTo(error2);
+            // then
+            assertThat(errorInfo1).isNotEqualTo(errorInfo2);
+        }
+
+        @Test
+        @DisplayName("toString 호출 시 모든 필드 포함")
+        void shouldIncludeAllFieldsInToString() {
+            // given
+            ErrorInfo errorInfo = new ErrorInfo("TEST_ERROR", "테스트 메시지");
+
+            // when
+            String result = errorInfo.toString();
+
+            // then
+            assertThat(result).contains("errorCode=TEST_ERROR");
+            assertThat(result).contains("message=테스트 메시지");
+        }
+    }
+
+    @Nested
+    @DisplayName("불변성 검증")
+    class Immutability {
+
+        @Test
+        @DisplayName("ErrorInfo는 불변 객체")
+        void shouldBeImmutable() {
+            // given
+            ErrorInfo errorInfo = new ErrorInfo("TEST_ERROR", "테스트 메시지");
+
+            // then
+            // Record는 기본적으로 불변이므로 setter가 없음
+            assertThat(errorInfo.errorCode()).isEqualTo("TEST_ERROR");
+            assertThat(errorInfo.message()).isEqualTo("테스트 메시지");
         }
     }
 }

@@ -13,6 +13,10 @@ import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResp
 import com.ryuqq.fileflow.application.download.port.in.command.RequestExternalDownloadUseCase;
 import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownloadUseCase;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +43,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author development-team
  * @since 1.0.0
  */
+@Tag(name = "External Download", description = "외부 URL 다운로드 API")
 @RestController
 @RequestMapping("${api.endpoints.base-v1}${api.endpoints.external-download.base}")
 @Validated
@@ -72,13 +77,18 @@ public class ExternalDownloadController {
      * @param request 외부 다운로드 요청 DTO
      * @return 생성된 ExternalDownload ID 및 상태 (201 Created)
      */
+    @Operation(summary = "외부 다운로드 요청", description = "외부 URL에서 이미지를 다운로드하여 S3에 업로드하는 비동기 요청을 생성합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "요청 생성 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
     @PostMapping
     public ResponseEntity<ApiResponse<ExternalDownloadApiResponse>> requestExternalDownload(
             @RequestBody @Valid RequestExternalDownloadApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
-        long tenantId = userContext.tenant().id();
-        long organizationId = userContext.getOrganizationId();
+        String tenantId = userContext.tenant().id().value();
+        String organizationId = userContext.getOrganizationId().value();
 
         RequestExternalDownloadCommand command =
                 externalDownloadApiMapper.toCommand(request, tenantId, organizationId);
@@ -99,12 +109,18 @@ public class ExternalDownloadController {
      * @param id ExternalDownload ID
      * @return 외부 다운로드 상세 정보 (200 OK)
      */
+    @Operation(summary = "외부 다운로드 상태 조회", description = "외부 다운로드 요청의 현재 상태를 조회합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "외부 다운로드를 찾을 수 없음")
+    })
     @GetMapping("${api.endpoints.external-download.by-id}")
     public ResponseEntity<ApiResponse<ExternalDownloadDetailApiResponse>> getExternalDownload(
+            @Parameter(description = "외부 다운로드 ID", required = true, example = "download-123")
             @PathVariable String id) {
 
         UserContext userContext = UserContextHolder.getRequired();
-        long tenantId = userContext.tenant().id();
+        String tenantId = userContext.tenant().id().value();
 
         GetExternalDownloadQuery query = externalDownloadApiMapper.toQuery(id, tenantId);
 

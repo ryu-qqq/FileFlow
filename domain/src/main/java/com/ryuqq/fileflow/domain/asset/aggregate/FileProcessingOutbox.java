@@ -1,8 +1,10 @@
 package com.ryuqq.fileflow.domain.asset.aggregate;
 
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileProcessingOutboxId;
 import com.ryuqq.fileflow.domain.asset.vo.OutboxStatus;
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 
 /**
  * FileProcessingOutbox Aggregate.
@@ -22,7 +24,7 @@ public class FileProcessingOutbox {
 
     // ===== 식별 정보 =====
     private final FileProcessingOutboxId id;
-    private final Long fileAssetId;
+    private final FileAssetId fileAssetId;
 
     // ===== 메시지 정보 =====
     private final String eventType;
@@ -34,19 +36,19 @@ public class FileProcessingOutbox {
     private String errorMessage;
 
     // ===== 시간 정보 =====
-    private final LocalDateTime createdAt;
-    private LocalDateTime processedAt;
+    private final Instant createdAt;
+    private Instant processedAt;
 
     private FileProcessingOutbox(
             FileProcessingOutboxId id,
-            Long fileAssetId,
+            FileAssetId fileAssetId,
             String eventType,
             String payload,
             OutboxStatus status,
             int retryCount,
             String errorMessage,
-            LocalDateTime createdAt,
-            LocalDateTime processedAt) {
+            Instant createdAt,
+            Instant processedAt) {
         validateNotNull(id, "FileProcessingOutboxId");
         validateNotNull(fileAssetId, "FileAssetId");
         validateNotNull(eventType, "EventType");
@@ -73,10 +75,11 @@ public class FileProcessingOutbox {
      * @param fileAssetId 파일 에셋 ID
      * @param eventType 이벤트 타입
      * @param payload JSON 페이로드
+     * @param clock 시간 소스
      * @return FileProcessingOutbox
      */
     public static FileProcessingOutbox forProcessRequest(
-            Long fileAssetId, String eventType, String payload) {
+            FileAssetId fileAssetId, String eventType, String payload, Clock clock) {
         return new FileProcessingOutbox(
                 FileProcessingOutboxId.forNew(),
                 fileAssetId,
@@ -85,7 +88,7 @@ public class FileProcessingOutbox {
                 OutboxStatus.PENDING,
                 0,
                 null,
-                LocalDateTime.now(),
+                clock.instant(),
                 null);
     }
 
@@ -96,10 +99,15 @@ public class FileProcessingOutbox {
      * @param fromStatus 이전 상태
      * @param toStatus 새 상태
      * @param payload JSON 페이로드
+     * @param clock 시간 소스
      * @return FileProcessingOutbox
      */
     public static FileProcessingOutbox forStatusChange(
-            Long fileAssetId, String fromStatus, String toStatus, String payload) {
+            FileAssetId fileAssetId,
+            String fromStatus,
+            String toStatus,
+            String payload,
+            Clock clock) {
         return new FileProcessingOutbox(
                 FileProcessingOutboxId.forNew(),
                 fileAssetId,
@@ -108,7 +116,7 @@ public class FileProcessingOutbox {
                 OutboxStatus.PENDING,
                 0,
                 null,
-                LocalDateTime.now(),
+                clock.instant(),
                 null);
     }
 
@@ -118,9 +126,11 @@ public class FileProcessingOutbox {
      * @param fileAssetId 파일 에셋 ID
      * @param reason 재처리 사유
      * @param payload JSON 페이로드
+     * @param clock 시간 소스
      * @return FileProcessingOutbox
      */
-    public static FileProcessingOutbox forRetryRequest(Long fileAssetId, String reason, String payload) {
+    public static FileProcessingOutbox forRetryRequest(
+            FileAssetId fileAssetId, String reason, String payload, Clock clock) {
         return new FileProcessingOutbox(
                 FileProcessingOutboxId.forNew(),
                 fileAssetId,
@@ -129,7 +139,7 @@ public class FileProcessingOutbox {
                 OutboxStatus.PENDING,
                 0,
                 null,
-                LocalDateTime.now(),
+                clock.instant(),
                 null);
     }
 
@@ -149,29 +159,39 @@ public class FileProcessingOutbox {
      */
     public static FileProcessingOutbox reconstitute(
             FileProcessingOutboxId id,
-            Long fileAssetId,
+            FileAssetId fileAssetId,
             String eventType,
             String payload,
             OutboxStatus status,
             int retryCount,
             String errorMessage,
-            LocalDateTime createdAt,
-            LocalDateTime processedAt) {
+            Instant createdAt,
+            Instant processedAt) {
         return new FileProcessingOutbox(
-                id, fileAssetId, eventType, payload, status, retryCount, errorMessage, createdAt, processedAt);
+                id,
+                fileAssetId,
+                eventType,
+                payload,
+                status,
+                retryCount,
+                errorMessage,
+                createdAt,
+                processedAt);
     }
 
     // ===== 상태 변경 메서드 =====
 
     /** 최대 재시도 횟수. */
-    private static final int MAX_RETRY_COUNT = 3;
+    public static final int MAX_RETRY_COUNT = 3;
 
     /**
      * 발송 완료로 상태 변경.
+     *
+     * @param clock 시간 소스
      */
-    public void markAsSent() {
+    public void markAsSent(Clock clock) {
         this.status = OutboxStatus.SENT;
-        this.processedAt = LocalDateTime.now();
+        this.processedAt = clock.instant();
     }
 
     /**
@@ -228,7 +248,7 @@ public class FileProcessingOutbox {
         return id;
     }
 
-    public Long getFileAssetId() {
+    public FileAssetId getFileAssetId() {
         return fileAssetId;
     }
 
@@ -252,11 +272,11 @@ public class FileProcessingOutbox {
         return errorMessage;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getProcessedAt() {
+    public Instant getProcessedAt() {
         return processedAt;
     }
 }

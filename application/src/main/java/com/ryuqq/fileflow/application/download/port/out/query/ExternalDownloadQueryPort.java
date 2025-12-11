@@ -23,10 +23,10 @@ public interface ExternalDownloadQueryPort {
      * ID와 테넌트 ID로 ExternalDownload 조회.
      *
      * @param id ExternalDownload ID (Value Object)
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return ExternalDownload Domain (없으면 empty)
      */
-    Optional<ExternalDownload> findByIdAndTenantId(ExternalDownloadId id, long tenantId);
+    Optional<ExternalDownload> findByIdAndTenantId(ExternalDownloadId id, String tenantId);
 
     /**
      * ID 존재 여부 확인.

@@ -35,28 +35,10 @@ api:
     base-url: about:blank
     use-about-blank: true
 
----
-# ===============================================
-# Production Profile
-# ===============================================
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-api:
-  error:
-    include-stacktrace: false
-
----
-# ===============================================
-# Test Profile
-# ===============================================
-spring:
-  config:
-    activate:
-      on-profile: test
-
-api:
-  error:
-    include-stacktrace: true
+# Common Security Settings
+security:
+  gateway:
+    user-id-header: X-User-Id
+    user-roles-header: X-User-Roles
+    tenant-id-header: X-Tenant-Id
+    organization-id-header: X-Organization-Id

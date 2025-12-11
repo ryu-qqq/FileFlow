@@ -6,11 +6,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadMessage;
-import com.ryuqq.fileflow.application.download.port.out.client.SqsPublishPort;
+import com.ryuqq.fileflow.application.download.port.out.client.ExternalDownloadSqsPublishPort;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,7 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("ExternalDownloadMessageManager 테스트")
 class ExternalDownloadMessageManagerTest {
 
-    @Mock private SqsPublishPort sqsPublishPort;
+    @Mock private ExternalDownloadSqsPublishPort externalDownloadSqsPublishPort;
 
     @InjectMocks private ExternalDownloadMessageManager manager;
 
@@ -42,14 +44,15 @@ class ExternalDownloadMessageManagerTest {
                             "00000000-0000-0000-0000-000000000001",
                             "https://example.com/image.jpg");
 
-            given(sqsPublishPort.publish(any(ExternalDownloadMessage.class))).willReturn(true);
+            given(externalDownloadSqsPublishPort.publish(any(ExternalDownloadMessage.class)))
+                    .willReturn(true);
 
             // when
             boolean result = manager.publishFromEvent(event);
 
             // then
             assertThat(result).isTrue();
-            verify(sqsPublishPort).publish(any(ExternalDownloadMessage.class));
+            verify(externalDownloadSqsPublishPort).publish(any(ExternalDownloadMessage.class));
         }
 
         @Test
@@ -60,7 +63,8 @@ class ExternalDownloadMessageManagerTest {
                     createEvent(
                             "00000000-0000-0000-0000-000000000002", "https://example.com/test.png");
 
-            given(sqsPublishPort.publish(any(ExternalDownloadMessage.class))).willReturn(true);
+            given(externalDownloadSqsPublishPort.publish(any(ExternalDownloadMessage.class)))
+                    .willReturn(true);
 
             // when
             boolean result = manager.publishFromEvent(event);
@@ -77,7 +81,8 @@ class ExternalDownloadMessageManagerTest {
                     createEvent(
                             "00000000-0000-0000-0000-000000000003", "https://example.com/fail.jpg");
 
-            given(sqsPublishPort.publish(any(ExternalDownloadMessage.class))).willReturn(false);
+            given(externalDownloadSqsPublishPort.publish(any(ExternalDownloadMessage.class)))
+                    .willReturn(false);
 
             // when
             boolean result = manager.publishFromEvent(event);
@@ -92,19 +97,20 @@ class ExternalDownloadMessageManagerTest {
             // given
             String downloadId = "00000000-0000-0000-0000-000000000064";
             String sourceUrl = "https://example.com/convert-test.jpg";
-            long tenantId = 1L;
-            long organizationId = 200L;
+            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String organizationId = "01912345-6789-7abc-def0-123456789200";
 
             ExternalDownloadRegisteredEvent event =
                     ExternalDownloadRegisteredEvent.of(
                             ExternalDownloadId.of(downloadId),
                             SourceUrl.of(sourceUrl),
-                            tenantId,
-                            organizationId,
+                            TenantId.of(tenantId),
+                            OrganizationId.of(organizationId),
                             null,
                             Instant.now());
 
-            given(sqsPublishPort.publish(any(ExternalDownloadMessage.class))).willReturn(true);
+            given(externalDownloadSqsPublishPort.publish(any(ExternalDownloadMessage.class)))
+                    .willReturn(true);
 
             // when
             manager.publishFromEvent(event);
@@ -112,7 +118,7 @@ class ExternalDownloadMessageManagerTest {
             // then
             ArgumentCaptor<ExternalDownloadMessage> captor =
                     ArgumentCaptor.forClass(ExternalDownloadMessage.class);
-            verify(sqsPublishPort).publish(captor.capture());
+            verify(externalDownloadSqsPublishPort).publish(captor.capture());
 
             ExternalDownloadMessage message = captor.getValue();
             assertThat(message.externalDownloadId()).isEqualTo(downloadId);
@@ -129,19 +135,20 @@ class ExternalDownloadMessageManagerTest {
                     ExternalDownloadRegisteredEvent.of(
                             ExternalDownloadId.of("00000000-0000-0000-0000-000000000005"),
                             SourceUrl.of("https://example.com/webhook-test.jpg"),
-                            1L,
-                            100L,
+                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
                             WebhookUrl.of("https://callback.example.com/webhook"),
                             Instant.now());
 
-            given(sqsPublishPort.publish(any(ExternalDownloadMessage.class))).willReturn(true);
+            given(externalDownloadSqsPublishPort.publish(any(ExternalDownloadMessage.class)))
+                    .willReturn(true);
 
             // when
             boolean result = manager.publishFromEvent(event);
 
             // then
             assertThat(result).isTrue();
-            verify(sqsPublishPort).publish(any(ExternalDownloadMessage.class));
+            verify(externalDownloadSqsPublishPort).publish(any(ExternalDownloadMessage.class));
         }
     }
 
@@ -149,8 +156,8 @@ class ExternalDownloadMessageManagerTest {
         return ExternalDownloadRegisteredEvent.of(
                 ExternalDownloadId.of(downloadId),
                 SourceUrl.of(sourceUrl),
-                1L,
-                100L,
+                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
                 null,
                 Instant.now());
     }

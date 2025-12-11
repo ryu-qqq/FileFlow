@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.architecture;
 
+import static com.ryuqq.fileflow.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.Test;
  * <p><strong>검증 규칙:</strong>
  *
  * <ul>
- *   <li>규칙 1: Package 구조 검증 (controller, dto, mapper, error)
+ *   <li>규칙 1: Package 구조 검증 (controller, dto, mapper, error, config, filter, auth)
  *   <li>규칙 2: Bounded Context별 패키지 구조 검증
  *   <li>규칙 3: Common 패키지 구조 검증
  *   <li>규칙 4: DTO 패키지 분리 (command/query/response)
@@ -56,7 +57,7 @@ class RestApiLayerArchTest {
         classes =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                        .importPackages("com.ryuqq.fileflow.adapter.in.rest");
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /** 규칙 1: Package 구조 검증 (controller, dto, mapper, error) */
@@ -73,8 +74,6 @@ class RestApiLayerArchTest {
                         .haveSimpleNameNotEndingWith("Test")
                         .and()
                         .haveSimpleNameNotEndingWith("TestSupport")
-                        .and()
-                        .haveSimpleNameNotStartingWith("Test") // Test 전용 클래스 제외
                         .should()
                         .resideInAnyPackage(
                                 "..controller..",
@@ -82,10 +81,11 @@ class RestApiLayerArchTest {
                                 "..mapper..",
                                 "..error..",
                                 "..config..",
-                                "..filter..")
+                                "..filter..",
+                                "..auth..")
                         .because(
-                                "REST API Layer는 controller, dto, mapper, error, config, filter"
-                                        + " 패키지로 구성되어야 합니다");
+                                "REST API Layer는 controller, dto, mapper, error, config, filter,"
+                                        + " auth 패키지로 구성되어야 합니다");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -95,16 +95,14 @@ class RestApiLayerArchTest {
     @DisplayName("[권장] Bounded Context는 controller/dto/mapper/error 하위 패키지를 가져야 한다")
     void boundedContext_ShouldHaveStandardSubPackages() {
         // Note: 이 규칙은 템플릿 프로젝트에서는 검증하지 않음 (실제 BC 구현 시 적용)
+        // auth 패키지는 Cross-Cutting Concern으로 BC 규칙 적용 제외
         ArchRule rule =
                 classes()
                         .that()
                         .resideInAPackage("..adapter.in.rest..")
                         .and()
-                        .resideOutsideOfPackages("..common..", "..config..", "..architecture..")
-                        .and()
-                        .haveSimpleNameNotEndingWith("Test")
-                        .and()
-                        .haveSimpleNameNotStartingWith("Test") // Test 전용 클래스 제외
+                        .resideOutsideOfPackages(
+                                "..common..", "..config..", "..auth..", "..architecture..")
                         .should()
                         .resideInAnyPackage("..controller..", "..dto..", "..mapper..", "..error..")
                         .because("Bounded Context는 controller, dto, mapper, error 패키지로 구성되어야 합니다");
@@ -161,7 +159,7 @@ class RestApiLayerArchTest {
         rule.allowEmptyShould(true).check(classes);
     }
 
-    /** 규칙 5: REST API Layer는 Application Layer Port 의존 필수 (유틸리티 컨트롤러 제외) */
+    /** 규칙 5: REST API Layer는 Application Layer Port 의존 필수 */
     @Test
     @DisplayName("[필수] Controller는 Application Layer Port를 의존해야 한다")
     void controller_MustDependOnApplicationPorts() {
@@ -174,11 +172,13 @@ class RestApiLayerArchTest {
                         .and()
                         .haveSimpleNameNotContaining("GlobalExceptionHandler")
                         .and()
-                        .haveSimpleNameNotContaining("ApiDocsController")
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("..application..port..")
-                        .because("Controller는 Application Layer의 UseCase Port를 의존해야 합니다");
+                        .because(
+                                "Controller는 Application Layer의 UseCase Port를 의존해야 합니다"
+                                        + " (ApiDocsController 제외)");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -186,8 +186,8 @@ class RestApiLayerArchTest {
     /**
      * 규칙 6: REST API Layer는 Domain Layer 직접 의존 금지 (Aggregate/Service만)
      *
-     * <p>Domain의 Value Object(enum, VO)는 데이터 표현 목적으로 허용됩니다. Domain Aggregate, Service, Repository
-     * 등의 핵심 로직 클래스만 의존 금지합니다.
+     * <p>Domain의 Value Object(enum, VO), IAM 패키지는 데이터 표현/인증 목적으로 허용됩니다. Domain Aggregate,
+     * Service, Repository 등의 핵심 로직 클래스만 의존 금지합니다.
      */
     @Test
     @DisplayName("[금지] REST API Layer는 Domain Aggregate/Service를 직접 의존하지 않아야 한다")
@@ -205,11 +205,11 @@ class RestApiLayerArchTest {
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage(
-                                "com.ryuqq.fileflow.domain..aggregate..",
-                                "com.ryuqq.fileflow.domain..service..")
+                                DOMAIN + "..aggregate..",
+                                DOMAIN + "..service..")
                         .because(
                                 "REST API Layer는 Domain Aggregate/Service를 직접 의존하면 안 됩니다"
-                                        + " (Domain VO/enum은 허용)");
+                                        + " (Domain VO/enum, IAM 패키지는 허용)");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -226,7 +226,7 @@ class RestApiLayerArchTest {
                         .haveSimpleNameContaining("GlobalExceptionHandler")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..exception..")
+                        .resideInAPackage(DOMAIN_EXCEPTION_ALL)
                         .because("GlobalExceptionHandler는 Domain Exception을 처리하기 위해 의존해야 합니다");
 
         rule.allowEmptyShould(true).check(classes);
@@ -244,7 +244,7 @@ class RestApiLayerArchTest {
                         .and()
                         .arePublic()
                         .should()
-                        .haveRawReturnType("com.ryuqq.fileflow.domain..")
+                        .haveRawReturnType(DOMAIN_ALL)
                         .because("Controller는 Domain 객체를 직접 반환하면 안 되며 API DTO로 변환해야 합니다");
 
         rule.allowEmptyShould(true).check(classes);
@@ -264,7 +264,7 @@ class RestApiLayerArchTest {
                         .haveSimpleNameNotContaining("Error")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAnyPackage(DOMAIN_ALL)
                         .because(
                                 "Mapper는 Application DTO만 사용하며 Domain 직접 의존은 금지됩니다 (ErrorMapper"
                                         + " 제외)");
@@ -322,10 +322,12 @@ class RestApiLayerArchTest {
                         .and()
                         .resideInAPackage("..adapter.in.rest..")
                         .and()
+                        .resideOutsideOfPackage("..auth..")
+                        .and()
                         .areNotNestedClasses()
                         .should()
                         .resideInAPackage("..config.properties..")
-                        .because("Properties 클래스는 config.properties 패키지에 위치해야 합니다");
+                        .because("Properties 클래스는 config.properties 패키지에 위치해야 합니다 (auth 패키지 제외)");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -340,13 +342,17 @@ class RestApiLayerArchTest {
                         .resideInAPackage("..controller..")
                         .and()
                         .haveSimpleNameEndingWith("Controller")
+                        .and()
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
                         .should()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RestController.class)
                         .orShould()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RestControllerAdvice.class)
-                        .because("Controller는 @RestController 또는 @RestControllerAdvice를 사용해야 합니다");
+                        .because(
+                                "Controller는 @RestController 또는 @RestControllerAdvice를 사용해야 합니다"
+                                        + " (ApiDocsController 제외)");
 
         ArchRule mapperRule =
                 classes()

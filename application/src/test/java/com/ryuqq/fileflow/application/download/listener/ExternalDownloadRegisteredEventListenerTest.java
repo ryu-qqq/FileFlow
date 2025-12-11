@@ -5,14 +5,17 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.ryuqq.fileflow.application.download.factory.command.ExternalDownloadCommandFactory;
 import com.ryuqq.fileflow.application.download.manager.ExternalDownloadMessageManager;
-import com.ryuqq.fileflow.application.download.manager.ExternalDownloadOutboxManager;
-import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadOutboxQueryPort;
+import com.ryuqq.fileflow.application.download.manager.command.ExternalDownloadOutboxTransactionManager;
+import com.ryuqq.fileflow.application.download.manager.query.ExternalDownloadOutboxReadManager;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadOutboxFixture;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -27,11 +30,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("ExternalDownloadRegisteredEventListener 테스트")
 class ExternalDownloadRegisteredEventListenerTest {
 
-    @Mock private ExternalDownloadOutboxQueryPort outboxQueryPort;
+    @Mock private ExternalDownloadOutboxReadManager outboxReadManager;
 
-    @Mock private ExternalDownloadOutboxManager outboxManager;
+    @Mock private ExternalDownloadOutboxTransactionManager outboxTransactionManager;
 
     @Mock private ExternalDownloadMessageManager messageManager;
+
+    @Mock private ExternalDownloadCommandFactory commandFactory;
 
     @InjectMocks private ExternalDownloadRegisteredEventListener listener;
 
@@ -47,7 +52,7 @@ class ExternalDownloadRegisteredEventListenerTest {
                     createEvent("00000000-0000-0000-0000-000000000001");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
-            given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
+            given(outboxReadManager.findByExternalDownloadId(event.downloadId()))
                     .willReturn(Optional.of(outbox));
             given(messageManager.publishFromEvent(event)).willReturn(true);
 
@@ -55,9 +60,10 @@ class ExternalDownloadRegisteredEventListenerTest {
             listener.handleExternalDownloadRegistered(event);
 
             // then
-            verify(outboxQueryPort).findByExternalDownloadId(event.downloadId());
+            verify(outboxReadManager).findByExternalDownloadId(event.downloadId());
             verify(messageManager).publishFromEvent(event);
-            verify(outboxManager).markAsPublished(outbox);
+            verify(commandFactory).markAsPublished(outbox);
+            verify(outboxTransactionManager).persist(outbox);
         }
 
         @Test
@@ -68,7 +74,7 @@ class ExternalDownloadRegisteredEventListenerTest {
                     createEvent("00000000-0000-0000-0000-000000000002");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
-            given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
+            given(outboxReadManager.findByExternalDownloadId(event.downloadId()))
                     .willReturn(Optional.of(outbox));
             given(messageManager.publishFromEvent(event)).willReturn(true);
 
@@ -76,39 +82,39 @@ class ExternalDownloadRegisteredEventListenerTest {
             listener.handleExternalDownloadRegistered(event);
 
             // then
-            verify(outboxManager).markAsPublished(outbox);
-            verify(outboxManager, never()).markAsFailed(any());
+            verify(commandFactory).markAsPublished(outbox);
+            verify(outboxTransactionManager).persist(outbox);
         }
 
         @Test
-        @DisplayName("SQS 발행 실패 시 (false 반환) Outbox를 failed 상태로 변경")
-        void shouldMarkOutboxAsFailedOnPublishFailure() {
+        @DisplayName("SQS 발행 실패 시 (false 반환) 상태 변경 없이 재시도 대기")
+        void shouldKeepUnpublishedOnPublishFailure() {
             // given
             ExternalDownloadRegisteredEvent event =
                     createEvent("00000000-0000-0000-0000-000000000003");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
-            given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
+            given(outboxReadManager.findByExternalDownloadId(event.downloadId()))
                     .willReturn(Optional.of(outbox));
             given(messageManager.publishFromEvent(event)).willReturn(false);
 
             // when
             listener.handleExternalDownloadRegistered(event);
 
-            // then
-            verify(outboxManager).markAsFailed(outbox);
-            verify(outboxManager, never()).markAsPublished(any());
+            // then - 발행 실패 시 상태 변경 없이 재시도 스케줄러에서 처리
+            verify(commandFactory, never()).markAsPublished(any());
+            verify(outboxTransactionManager, never()).persist(any());
         }
 
         @Test
-        @DisplayName("SQS 발행 중 예외 발생 시 Outbox를 failed 상태로 변경")
-        void shouldMarkOutboxAsFailedOnException() {
+        @DisplayName("SQS 발행 중 예외 발생 시 상태 변경 없이 재시도 대기")
+        void shouldKeepUnpublishedOnException() {
             // given
             ExternalDownloadRegisteredEvent event =
                     createEvent("00000000-0000-0000-0000-000000000004");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
-            given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
+            given(outboxReadManager.findByExternalDownloadId(event.downloadId()))
                     .willReturn(Optional.of(outbox));
             given(messageManager.publishFromEvent(event))
                     .willThrow(new RuntimeException("SQS connection failed"));
@@ -116,9 +122,9 @@ class ExternalDownloadRegisteredEventListenerTest {
             // when
             listener.handleExternalDownloadRegistered(event);
 
-            // then
-            verify(outboxManager).markAsFailed(outbox);
-            verify(outboxManager, never()).markAsPublished(any());
+            // then - 예외 발생 시 상태 변경 없이 재시도 스케줄러에서 처리
+            verify(commandFactory, never()).markAsPublished(any());
+            verify(outboxTransactionManager, never()).persist(any());
         }
 
         @Test
@@ -128,17 +134,17 @@ class ExternalDownloadRegisteredEventListenerTest {
             ExternalDownloadRegisteredEvent event =
                     createEvent("00000000-0000-0000-0000-0000000003e7");
 
-            given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
+            given(outboxReadManager.findByExternalDownloadId(event.downloadId()))
                     .willReturn(Optional.empty());
 
             // when
             listener.handleExternalDownloadRegistered(event);
 
             // then
-            verify(outboxQueryPort).findByExternalDownloadId(event.downloadId());
+            verify(outboxReadManager).findByExternalDownloadId(event.downloadId());
             verify(messageManager, never()).publishFromEvent(any());
-            verify(outboxManager, never()).markAsPublished(any());
-            verify(outboxManager, never()).markAsFailed(any());
+            verify(commandFactory, never()).markAsPublished(any());
+            verify(outboxTransactionManager, never()).persist(any());
         }
 
         @Test
@@ -149,7 +155,7 @@ class ExternalDownloadRegisteredEventListenerTest {
                     createEvent("00000000-0000-0000-0000-000000000001");
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
-            given(outboxQueryPort.findByExternalDownloadId(event.downloadId()))
+            given(outboxReadManager.findByExternalDownloadId(event.downloadId()))
                     .willReturn(Optional.of(outbox));
             given(messageManager.publishFromEvent(event)).willReturn(true);
 
@@ -157,7 +163,7 @@ class ExternalDownloadRegisteredEventListenerTest {
             listener.handleExternalDownloadRegistered(event);
 
             // then
-            verify(outboxQueryPort).findByExternalDownloadId(event.downloadId());
+            verify(outboxReadManager).findByExternalDownloadId(event.downloadId());
             verify(messageManager).publishFromEvent(event);
         }
 
@@ -172,9 +178,9 @@ class ExternalDownloadRegisteredEventListenerTest {
             ExternalDownloadOutbox outbox1 = ExternalDownloadOutboxFixture.unpublishedOutbox();
             ExternalDownloadOutbox outbox2 = ExternalDownloadOutboxFixture.unpublishedOutbox();
 
-            given(outboxQueryPort.findByExternalDownloadId(event1.downloadId()))
+            given(outboxReadManager.findByExternalDownloadId(event1.downloadId()))
                     .willReturn(Optional.of(outbox1));
-            given(outboxQueryPort.findByExternalDownloadId(event2.downloadId()))
+            given(outboxReadManager.findByExternalDownloadId(event2.downloadId()))
                     .willReturn(Optional.of(outbox2));
             given(messageManager.publishFromEvent(event1)).willReturn(true);
             given(messageManager.publishFromEvent(event2)).willReturn(true);
@@ -186,8 +192,10 @@ class ExternalDownloadRegisteredEventListenerTest {
             // then
             verify(messageManager).publishFromEvent(event1);
             verify(messageManager).publishFromEvent(event2);
-            verify(outboxManager).markAsPublished(outbox1);
-            verify(outboxManager).markAsPublished(outbox2);
+            verify(commandFactory).markAsPublished(outbox1);
+            verify(commandFactory).markAsPublished(outbox2);
+            verify(outboxTransactionManager).persist(outbox1);
+            verify(outboxTransactionManager).persist(outbox2);
         }
     }
 
@@ -197,8 +205,8 @@ class ExternalDownloadRegisteredEventListenerTest {
         return ExternalDownloadRegisteredEvent.of(
                 ExternalDownloadId.of(downloadId),
                 SourceUrl.of("https://example.com/file" + downloadId + ".jpg"),
-                1L,
-                100L,
+                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
                 null,
                 Instant.now());
     }

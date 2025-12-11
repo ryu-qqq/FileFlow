@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.download.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,9 +22,9 @@ class ExternalDownloadOutboxJpaEntityTest {
             UUID id = UUID.randomUUID();
             UUID externalDownloadId = UUID.randomUUID();
             Boolean published = false;
-            LocalDateTime publishedAt = null;
-            LocalDateTime createdAt = LocalDateTime.now();
-            LocalDateTime updatedAt = LocalDateTime.now();
+            Instant publishedAt = null;
+            Instant createdAt = Instant.now();
+            Instant updatedAt = Instant.now();
 
             // when
             ExternalDownloadOutboxJpaEntity entity =
@@ -43,7 +43,7 @@ class ExternalDownloadOutboxJpaEntityTest {
         void shouldCreateUnpublishedOutbox() {
             // given
             UUID externalDownloadId = UUID.randomUUID();
-            LocalDateTime now = LocalDateTime.now();
+            Instant now = Instant.now();
 
             // when
             ExternalDownloadOutboxJpaEntity entity =
@@ -63,9 +63,9 @@ class ExternalDownloadOutboxJpaEntityTest {
             // given
             UUID id = UUID.randomUUID();
             UUID externalDownloadId = UUID.randomUUID();
-            LocalDateTime publishedAt = LocalDateTime.now();
-            LocalDateTime createdAt = publishedAt.minusMinutes(5);
-            LocalDateTime updatedAt = publishedAt;
+            Instant publishedAt = Instant.now();
+            Instant createdAt = publishedAt.minusSeconds(300);
+            Instant updatedAt = publishedAt;
 
             // when
             ExternalDownloadOutboxJpaEntity entity =
@@ -86,12 +86,7 @@ class ExternalDownloadOutboxJpaEntityTest {
             UUID externalDownloadId = UUID.randomUUID();
             ExternalDownloadOutboxJpaEntity entity =
                     ExternalDownloadOutboxJpaEntity.of(
-                            null,
-                            externalDownloadId,
-                            false,
-                            null,
-                            LocalDateTime.now(),
-                            LocalDateTime.now());
+                            null, externalDownloadId, false, null, Instant.now(), Instant.now());
 
             // then
             assertThat(entity.getId()).isNull();
@@ -109,7 +104,7 @@ class ExternalDownloadOutboxJpaEntityTest {
             UUID id = UUID.randomUUID();
             UUID externalDownloadId = UUID.randomUUID();
             Boolean published = false;
-            LocalDateTime now = LocalDateTime.now();
+            Instant now = Instant.now();
 
             ExternalDownloadOutboxJpaEntity entity =
                     ExternalDownloadOutboxJpaEntity.of(
@@ -128,14 +123,14 @@ class ExternalDownloadOutboxJpaEntityTest {
             // given
             UUID id = UUID.randomUUID();
             UUID externalDownloadId = UUID.randomUUID();
-            LocalDateTime publishedAt = LocalDateTime.now();
+            Instant publishedAt = Instant.now();
             ExternalDownloadOutboxJpaEntity entity =
                     ExternalDownloadOutboxJpaEntity.of(
                             id,
                             externalDownloadId,
                             true,
                             publishedAt,
-                            publishedAt.minusMinutes(5),
+                            publishedAt.minusSeconds(300),
                             publishedAt);
 
             // then
@@ -151,12 +146,7 @@ class ExternalDownloadOutboxJpaEntityTest {
             UUID externalDownloadId = UUID.randomUUID();
             ExternalDownloadOutboxJpaEntity entity =
                     ExternalDownloadOutboxJpaEntity.of(
-                            id,
-                            externalDownloadId,
-                            false,
-                            null,
-                            LocalDateTime.now(),
-                            LocalDateTime.now());
+                            id, externalDownloadId, false, null, Instant.now(), Instant.now());
 
             // then
             assertThat(entity.getExternalDownloadId()).isEqualTo(externalDownloadId);
@@ -173,7 +163,7 @@ class ExternalDownloadOutboxJpaEntityTest {
             // given - 미발행 상태
             UUID id = UUID.randomUUID();
             UUID externalDownloadId = UUID.randomUUID();
-            LocalDateTime createdAt = LocalDateTime.now();
+            Instant createdAt = Instant.now();
             ExternalDownloadOutboxJpaEntity unpublished =
                     ExternalDownloadOutboxJpaEntity.of(
                             id, externalDownloadId, false, null, createdAt, createdAt);
@@ -182,7 +172,7 @@ class ExternalDownloadOutboxJpaEntityTest {
             assertThat(unpublished.getPublishedAt()).isNull();
 
             // when - 발행 완료 상태로 재생성
-            LocalDateTime publishedAt = createdAt.plusMinutes(1);
+            Instant publishedAt = createdAt.plusSeconds(60);
             ExternalDownloadOutboxJpaEntity published =
                     ExternalDownloadOutboxJpaEntity.of(
                             id, externalDownloadId, true, publishedAt, createdAt, publishedAt);

@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
-import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -19,15 +20,16 @@ import java.util.List;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "Multipart 업로드 세션 초기화 응답")
 public record InitMultipartUploadApiResponse(
-        String sessionId,
-        String uploadId,
-        int totalParts,
-        long partSize,
-        LocalDateTime expiresAt,
-        String bucket,
-        String key,
-        List<PartInfoApiResponse> parts) {
+        @Schema(description = "세션 ID", example = "session-123") String sessionId,
+        @Schema(description = "S3 Multipart Upload ID", example = "upload-456") String uploadId,
+        @Schema(description = "전체 Part 개수", example = "5") int totalParts,
+        @Schema(description = "각 Part 크기 (bytes)", example = "5242880") long partSize,
+        @Schema(description = "세션 만료 시각") Instant expiresAt,
+        @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
+        @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key,
+        @Schema(description = "Part 정보 목록") List<PartInfoApiResponse> parts) {
 
     /**
      * Part 정보 API Response.
@@ -35,7 +37,10 @@ public record InitMultipartUploadApiResponse(
      * @param partNumber Part 번호 (1-based)
      * @param presignedUrl Presigned URL
      */
-    public record PartInfoApiResponse(int partNumber, String presignedUrl) {
+    @Schema(description = "Part 정보")
+    public record PartInfoApiResponse(
+            @Schema(description = "Part 번호 (1-based)", example = "1") int partNumber,
+            @Schema(description = "Presigned URL", example = "https://s3.amazonaws.com/...") String presignedUrl) {
 
         /**
          * 값 기반 생성.
@@ -67,7 +72,7 @@ public record InitMultipartUploadApiResponse(
             String uploadId,
             int totalParts,
             long partSize,
-            LocalDateTime expiresAt,
+            Instant expiresAt,
             String bucket,
             String key,
             List<PartInfoApiResponse> parts) {

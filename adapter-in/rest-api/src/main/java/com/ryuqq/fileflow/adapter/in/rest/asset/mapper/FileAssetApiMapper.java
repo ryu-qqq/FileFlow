@@ -35,11 +35,12 @@ public class FileAssetApiMapper {
      * 단건 조회 Query 변환.
      *
      * @param id 파일 자산 ID
-     * @param organizationId 조직 ID
-     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return GetFileAssetQuery
      */
-    public GetFileAssetQuery toGetFileAssetQuery(String id, long organizationId, long tenantId) {
+    public GetFileAssetQuery toGetFileAssetQuery(
+            String id, String organizationId, String tenantId) {
         return GetFileAssetQuery.of(id, organizationId, tenantId);
     }
 
@@ -47,17 +48,20 @@ public class FileAssetApiMapper {
      * 목록 조회 Query 변환.
      *
      * @param request 검색 API Request
-     * @param organizationId 조직 ID
-     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return ListFileAssetsQuery
      */
     public ListFileAssetsQuery toListFileAssetsQuery(
-            FileAssetSearchApiRequest request, long organizationId, long tenantId) {
+            FileAssetSearchApiRequest request, String organizationId, String tenantId) {
+        String status = request.status() != null ? request.status().name() : null;
+        String category = request.category() != null ? request.category().name() : null;
+
         return ListFileAssetsQuery.of(
                 organizationId,
                 tenantId,
-                request.status(),
-                request.category(),
+                status,
+                category,
                 request.page(),
                 request.size());
     }
@@ -89,15 +93,15 @@ public class FileAssetApiMapper {
      *
      * @param fileAssetId 파일 자산 ID
      * @param request 삭제 API Request
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열)
      * @return DeleteFileAssetCommand
      */
     public DeleteFileAssetCommand toDeleteFileAssetCommand(
             String fileAssetId,
             DeleteFileAssetApiRequest request,
-            long tenantId,
-            long organizationId) {
+            String tenantId,
+            String organizationId) {
         return DeleteFileAssetCommand.of(
                 fileAssetId, tenantId, organizationId, request != null ? request.reason() : null);
     }
@@ -117,15 +121,15 @@ public class FileAssetApiMapper {
      *
      * @param fileAssetId 파일 자산 ID
      * @param request API Request
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열)
      * @return GenerateDownloadUrlCommand
      */
     public GenerateDownloadUrlCommand toGenerateDownloadUrlCommand(
             String fileAssetId,
             GenerateDownloadUrlApiRequest request,
-            long tenantId,
-            long organizationId) {
+            String tenantId,
+            String organizationId) {
         int expirationMinutes = request != null ? request.expirationMinutes() : 60;
         return GenerateDownloadUrlCommand.of(
                 fileAssetId, tenantId, organizationId, expirationMinutes);
@@ -135,12 +139,12 @@ public class FileAssetApiMapper {
      * Batch Download URL 생성 Command 변환.
      *
      * @param request API Request
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열)
      * @return BatchGenerateDownloadUrlCommand
      */
     public BatchGenerateDownloadUrlCommand toBatchGenerateDownloadUrlCommand(
-            BatchGenerateDownloadUrlApiRequest request, long tenantId, long organizationId) {
+            BatchGenerateDownloadUrlApiRequest request, String tenantId, String organizationId) {
         return BatchGenerateDownloadUrlCommand.of(
                 request.fileAssetIds(), tenantId, organizationId, request.expirationMinutes());
     }

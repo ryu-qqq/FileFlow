@@ -13,6 +13,10 @@ import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetsUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.application.common.dto.response.PageResponse;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author development-team
  * @since 1.0.0
  */
+@Tag(name = "FileAsset Query", description = "파일 자산 조회 API")
 @RestController
 @RequestMapping("${api.endpoints.base-v1}${api.endpoints.file-asset.base}")
 @Validated
@@ -69,13 +74,19 @@ public class FileAssetQueryController {
      * @param id 파일 자산 ID
      * @return 파일 자산 상세 정보 (200 OK)
      */
+    @Operation(summary = "파일 자산 단건 조회", description = "파일 자산의 상세 정보를 조회합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "파일 자산을 찾을 수 없음")
+    })
     @GetMapping("${api.endpoints.file-asset.by-id}")
     public ResponseEntity<ApiResponse<FileAssetApiResponse>> getFileAsset(
+            @Parameter(description = "파일 자산 ID", required = true, example = "asset-123")
             @PathVariable @NotBlank String id) {
 
         UserContext userContext = UserContextHolder.getRequired();
-        long organizationId = userContext.getOrganizationId();
-        long tenantId = userContext.tenant().id();
+        String organizationId = userContext.getOrganizationId().value();
+        String tenantId = userContext.tenant().id().value();
 
         GetFileAssetQuery query =
                 fileAssetApiMapper.toGetFileAssetQuery(id, organizationId, tenantId);
@@ -93,13 +104,17 @@ public class FileAssetQueryController {
      * @param request 검색 조건
      * @return 파일 자산 목록 (200 OK)
      */
+    @Operation(summary = "파일 자산 목록 조회", description = "파일 자산 목록을 조회합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping
     public ResponseEntity<ApiResponse<PageApiResponse<FileAssetApiResponse>>> getFileAssets(
             @Valid @ModelAttribute FileAssetSearchApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
-        long organizationId = userContext.getOrganizationId();
-        long tenantId = userContext.tenant().id();
+        String organizationId = userContext.getOrganizationId().value();
+        String tenantId = userContext.tenant().id().value();
 
         ListFileAssetsQuery query =
                 fileAssetApiMapper.toListFileAssetsQuery(request, organizationId, tenantId);

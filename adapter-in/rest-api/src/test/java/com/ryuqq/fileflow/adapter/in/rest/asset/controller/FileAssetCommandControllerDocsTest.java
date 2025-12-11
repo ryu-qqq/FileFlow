@@ -25,7 +25,8 @@ import com.ryuqq.fileflow.application.asset.port.in.command.DeleteFileAssetUseCa
 import com.ryuqq.fileflow.application.asset.port.in.command.GenerateDownloadUrlUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,8 +76,7 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
         String fileAssetId = "asset-123";
         DeleteFileAssetApiRequest request = new DeleteFileAssetApiRequest("더 이상 필요하지 않음");
 
-        DeleteFileAssetResponse response =
-                new DeleteFileAssetResponse(fileAssetId, LocalDateTime.now());
+        DeleteFileAssetResponse response = new DeleteFileAssetResponse(fileAssetId, Instant.now());
 
         given(deleteFileAssetUseCase.execute(any())).willReturn(response);
 
@@ -120,7 +120,7 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
                         "example.jpg",
                         "image/jpeg",
                         1024000L,
-                        LocalDateTime.now().plusHours(1));
+                        Instant.now().plus(Duration.ofHours(1)));
 
         given(generateDownloadUrlUseCase.execute(any())).willReturn(response);
 
@@ -171,14 +171,14 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
                                         "file1.jpg",
                                         "image/jpeg",
                                         1024000L,
-                                        LocalDateTime.now().plusHours(1)),
+                                        Instant.now().plus(Duration.ofHours(1))),
                                 new DownloadUrlResponse(
                                         "asset-456",
                                         "https://s3.amazonaws.com/bucket/file2.jpg?signature=...",
                                         "file2.jpg",
                                         "image/jpeg",
                                         2048000L,
-                                        LocalDateTime.now().plusHours(1))),
+                                        Instant.now().plus(Duration.ofHours(1)))),
                         2,
                         0,
                         List.of());

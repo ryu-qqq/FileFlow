@@ -210,7 +210,7 @@ ExternalDownload SQS 메시지를 처리하는 Worker 구현 계획서.
   // 변경 전
   import com.ryuqq.crawlinghub.application.common.port.out.lock.DistributedLockPort;
   // 변경 후
-  import com.ryuqq.fileflow.application.common.port.out.lock.DistributedLockPort;
+  import com.ryuqq.fileflow.application.common.port.out.DistributedLockPort;
   ```
 
 #### 1.2 UseCase 생성

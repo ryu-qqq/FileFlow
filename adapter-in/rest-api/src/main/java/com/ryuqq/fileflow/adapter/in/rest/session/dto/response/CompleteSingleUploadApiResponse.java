@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
-import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 
 /**
  * 단일 파일 업로드 완료 API Response.
@@ -16,13 +17,14 @@ import java.time.LocalDateTime;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "단일 업로드 완료 응답")
 public record CompleteSingleUploadApiResponse(
-        String sessionId,
-        String status,
-        String bucket,
-        String key,
-        String etag,
-        LocalDateTime completedAt) {
+        @Schema(description = "세션 ID", example = "session-123") String sessionId,
+        @Schema(description = "세션 상태", example = "COMPLETED") String status,
+        @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
+        @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key,
+        @Schema(description = "S3 ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"") String etag,
+        @Schema(description = "완료 시각") Instant completedAt) {
 
     /**
      * 값 기반 생성.
@@ -41,7 +43,7 @@ public record CompleteSingleUploadApiResponse(
             String bucket,
             String key,
             String etag,
-            LocalDateTime completedAt) {
+            Instant completedAt) {
         return new CompleteSingleUploadApiResponse(
                 sessionId, status, bucket, key, etag, completedAt);
     }

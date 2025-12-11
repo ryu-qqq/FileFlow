@@ -6,8 +6,6 @@ import com.ryuqq.fileflow.domain.common.exception.DomainException;
 public class FileAssetNotFoundException extends DomainException {
 
     public FileAssetNotFoundException(String fileAssetId) {
-        super(
-                FileAssetErrorCode.FILE_ASSET_NOT_FOUND.getCode(),
-                "FileAsset not found: " + fileAssetId);
+        super(FileAssetErrorCode.FILE_ASSET_NOT_FOUND, "FileAsset not found: " + fileAssetId);
     }
 }

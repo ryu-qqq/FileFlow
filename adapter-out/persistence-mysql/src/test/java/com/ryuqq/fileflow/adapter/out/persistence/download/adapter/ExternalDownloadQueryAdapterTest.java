@@ -12,9 +12,10 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -113,7 +114,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldReturnDomainWhenExists() {
             // given
             UUID id = UUID.randomUUID();
-            Long tenantId = 100L;
+            String tenantId = "01912345-6789-7abc-def0-123456789001";
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
             ExternalDownload domain = createDomain(id);
@@ -135,7 +136,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldReturnEmptyWhenTenantMismatch() {
             // given
             UUID id = UUID.randomUUID();
-            Long wrongTenantId = 999L;
+            String wrongTenantId = "01912345-6789-7abc-def0-999999999999";
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
 
             given(queryDslRepository.findByIdAndTenantId(id, wrongTenantId))
@@ -154,7 +155,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldRequireBothIdAndTenantIdMatch() {
             // given
             UUID id = UUID.randomUUID();
-            Long tenantId = 100L;
+            String tenantId = "01912345-6789-7abc-def0-123456789001";
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
             ExternalDownload domain = createDomain(id);
@@ -233,8 +234,8 @@ class ExternalDownloadQueryAdapterTest {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
                 SourceUrl.of("https://example.com/file.jpg"),
-                100L,
-                200L,
+                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -247,12 +248,12 @@ class ExternalDownloadQueryAdapterTest {
     }
 
     private ExternalDownloadJpaEntity createEntity(UUID id) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 id,
                 "https://example.com/file.jpg",
-                100L,
-                200L,
+                "01912345-6789-7abc-def0-123456789001",
+                "01912345-6789-7abc-def0-123456789002",
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

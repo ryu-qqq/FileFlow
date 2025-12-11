@@ -1,14 +1,10 @@
 package com.ryuqq.fileflow.domain.iam.vo;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Tenant 단위 테스트")
 class TenantTest {
@@ -18,45 +14,53 @@ class TenantTest {
     class CreateTest {
 
         @Test
-        @DisplayName("정적 팩토리 메서드로 생성할 수 있다")
-        void of_WithValidParams_ShouldCreateTenant() {
+        @DisplayName("유효한 값으로 Tenant를 생성할 수 있다")
+        void validValues_ShouldCreateTenant() {
             // given
-            long id = 1L;
-            String name = "Test Tenant";
+            TenantId tenantId = TenantId.generate();
 
             // when
-            Tenant tenant = Tenant.of(id, name);
+            Tenant tenant = new Tenant(tenantId, "TestTenant");
 
             // then
-            assertThat(tenant).isNotNull();
-            assertThat(tenant.id()).isEqualTo(id);
-            assertThat(tenant.name()).isEqualTo(name);
+            assertThat(tenant.id()).isEqualTo(tenantId);
+            assertThat(tenant.name()).isEqualTo("TestTenant");
         }
 
         @Test
-        @DisplayName("레코드 생성자로 생성할 수 있다")
-        void constructor_WithValidParams_ShouldCreateTenant() {
+        @DisplayName("of 메서드로 Tenant를 생성할 수 있다")
+        void of_ShouldCreateTenant() {
             // given
-            long id = 100L;
-            String name = "Another Tenant";
+            TenantId tenantId = TenantId.generate();
 
             // when
-            Tenant tenant = new Tenant(id, name);
+            Tenant tenant = Tenant.of(tenantId, "AnotherTenant");
 
             // then
-            assertThat(tenant.id()).isEqualTo(id);
-            assertThat(tenant.name()).isEqualTo(name);
+            assertThat(tenant.id()).isEqualTo(tenantId);
+            assertThat(tenant.name()).isEqualTo("AnotherTenant");
         }
 
         @Test
-        @DisplayName("Connectly 테넌트를 생성할 수 있다")
-        void connectly_ShouldCreateConnectlyTenant() {
+        @DisplayName("connectly 팩토리 메서드로 기본 테넌트를 생성할 수 있다")
+        void connectly_ShouldCreateDefaultTenant() {
             // when
             Tenant tenant = Tenant.connectly();
 
             // then
-            assertThat(tenant.id()).isEqualTo(1L);
+            assertThat(tenant.id()).isNotNull();
             assertThat(tenant.name()).isEqualTo("Connectly");
+        }
+
+        @Test
+        @DisplayName("create 팩토리 메서드로 새로운 테넌트를 생성할 수 있다")
+        void create_ShouldCreateNewTenant() {
+            // when
+            Tenant tenant = Tenant.create("NewTenant");
+
+            // then
+            assertThat(tenant.id()).isNotNull();
+            assertThat(tenant.name()).isEqualTo("NewTenant");
         }
     }
 
@@ -64,23 +68,46 @@ class TenantTest {
     @DisplayName("검증 테스트")
     class ValidationTest {
 
-        @ParameterizedTest
-        @ValueSource(longs = {0, -1, -100})
-        @DisplayName("테넌트 ID가 1 미만이면 예외가 발생한다")
-        void constructor_WithInvalidId_ShouldThrowException(long invalidId) {
-            // when & then
-            assertThatThrownBy(() -> Tenant.of(invalidId, "Test"))
+        @Test
+        @DisplayName("ID가 null이면 예외가 발생한다")
+        void nullId_ShouldThrowException() {
+            assertThatThrownBy(() -> new Tenant(null, "Test"))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("테넌트 ID는 1 이상이어야 합니다");
+                    .hasMessageContaining("테넌트 ID는 null일 수 없습니다");
         }
 
-        @ParameterizedTest
-        @NullAndEmptySource
-        @ValueSource(strings = {"   "})
-        @DisplayName("테넌트명이 null이거나 빈 문자열이면 예외가 발생한다")
-        void constructor_WithInvalidName_ShouldThrowException(String invalidName) {
+        @Test
+        @DisplayName("이름이 null이면 예외가 발생한다")
+        void nullName_ShouldThrowException() {
+            // given
+            TenantId tenantId = TenantId.generate();
+
             // when & then
-            assertThatThrownBy(() -> Tenant.of(1L, invalidName))
+            assertThatThrownBy(() -> new Tenant(tenantId, null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("테넌트명은 null이거나 빈 문자열일 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("이름이 빈 문자열이면 예외가 발생한다")
+        void emptyName_ShouldThrowException() {
+            // given
+            TenantId tenantId = TenantId.generate();
+
+            // when & then
+            assertThatThrownBy(() -> new Tenant(tenantId, ""))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("테넌트명은 null이거나 빈 문자열일 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("이름이 공백 문자열이면 예외가 발생한다")
+        void blankName_ShouldThrowException() {
+            // given
+            TenantId tenantId = TenantId.generate();
+
+            // when & then
+            assertThatThrownBy(() -> new Tenant(tenantId, "   "))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("테넌트명은 null이거나 빈 문자열일 수 없습니다");
         }
@@ -91,92 +118,75 @@ class TenantTest {
     class IsConnectlyTest {
 
         @Test
-        @DisplayName("Connectly 테넌트인지 확인할 수 있다")
-        void isConnectly_WithConnectlyTenant_ShouldReturnTrue() {
+        @DisplayName("Connectly 테넌트는 true를 반환한다")
+        void connectlyTenant_ShouldReturnTrue() {
             // given
             Tenant tenant = Tenant.connectly();
 
-            // when & then
+            // then
             assertThat(tenant.isConnectly()).isTrue();
         }
 
         @Test
-        @DisplayName("id가 1이고 name이 Connectly가 아니면 false를 반환한다")
-        void isConnectly_WithDifferentName_ShouldReturnFalse() {
+        @DisplayName("다른 테넌트는 false를 반환한다")
+        void otherTenant_ShouldReturnFalse() {
             // given
-            Tenant tenant = Tenant.of(1L, "Other");
+            Tenant tenant = Tenant.create("OtherTenant");
 
-            // when & then
+            // then
             assertThat(tenant.isConnectly()).isFalse();
         }
 
         @Test
-        @DisplayName("id가 1이 아니면 false를 반환한다")
-        void isConnectly_WithDifferentId_ShouldReturnFalse() {
+        @DisplayName("이름이 다르면 false를 반환한다")
+        void differentName_ShouldReturnFalse() {
             // given
-            Tenant tenant = Tenant.of(2L, "Connectly");
+            TenantId tenantId = TenantId.generate();
+            Tenant tenant = new Tenant(tenantId, "NotConnectly");
 
-            // when & then
+            // then
             assertThat(tenant.isConnectly()).isFalse();
         }
     }
 
     @Nested
-    @DisplayName("동등성 테스트")
+    @DisplayName("레코드 동등성 테스트")
     class EqualityTest {
 
         @Test
         @DisplayName("같은 값을 가진 Tenant는 동등하다")
-        void equals_WithSameValues_ShouldBeEqual() {
+        void sameValues_ShouldBeEqual() {
             // given
-            Tenant tenant1 = Tenant.of(1L, "Test");
-            Tenant tenant2 = Tenant.of(1L, "Test");
+            TenantId tenantId = TenantId.generate();
+            Tenant tenant1 = new Tenant(tenantId, "Test");
+            Tenant tenant2 = new Tenant(tenantId, "Test");
 
-            // when & then
+            // then
             assertThat(tenant1).isEqualTo(tenant2);
             assertThat(tenant1.hashCode()).isEqualTo(tenant2.hashCode());
         }
 
         @Test
-        @DisplayName("다른 id를 가진 Tenant는 동등하지 않다")
-        void equals_WithDifferentId_ShouldNotBeEqual() {
+        @DisplayName("다른 이름을 가진 Tenant는 동등하지 않다")
+        void differentName_ShouldNotBeEqual() {
             // given
-            Tenant tenant1 = Tenant.of(1L, "Test");
-            Tenant tenant2 = Tenant.of(2L, "Test");
-
-            // when & then
-            assertThat(tenant1).isNotEqualTo(tenant2);
-        }
-
-        @Test
-        @DisplayName("다른 name을 가진 Tenant는 동등하지 않다")
-        void equals_WithDifferentName_ShouldNotBeEqual() {
-            // given
-            Tenant tenant1 = Tenant.of(1L, "Test1");
-            Tenant tenant2 = Tenant.of(1L, "Test2");
-
-            // when & then
-            assertThat(tenant1).isNotEqualTo(tenant2);
-        }
-    }
-
-    @Nested
-    @DisplayName("toString 테스트")
-    class ToStringTest {
-
-        @Test
-        @DisplayName("toString은 모든 필드 정보를 포함한다")
-        void toString_ShouldContainAllFields() {
-            // given
-            Tenant tenant = Tenant.of(1L, "Connectly");
-
-            // when
-            String result = tenant.toString();
+            TenantId tenantId = TenantId.generate();
+            Tenant tenant1 = new Tenant(tenantId, "Test1");
+            Tenant tenant2 = new Tenant(tenantId, "Test2");
 
             // then
-            assertThat(result).contains("Tenant");
-            assertThat(result).contains("id=1");
-            assertThat(result).contains("Connectly");
+            assertThat(tenant1).isNotEqualTo(tenant2);
+        }
+
+        @Test
+        @DisplayName("다른 ID를 가진 Tenant는 동등하지 않다")
+        void differentId_ShouldNotBeEqual() {
+            // given
+            Tenant tenant1 = new Tenant(TenantId.generate(), "Test");
+            Tenant tenant2 = new Tenant(TenantId.generate(), "Test");
+
+            // then
+            assertThat(tenant1).isNotEqualTo(tenant2);
         }
     }
 }

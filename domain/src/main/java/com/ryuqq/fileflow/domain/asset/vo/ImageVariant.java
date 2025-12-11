@@ -13,7 +13,7 @@ package com.ryuqq.fileflow.domain.asset.vo;
  *   <li>product.jpg → product_thumb.jpg (THUMBNAIL)
  * </ul>
  *
- * @param type   변형 타입 (ORIGINAL, LARGE, MEDIUM, THUMBNAIL)
+ * @param type 변형 타입 (ORIGINAL, LARGE, MEDIUM, THUMBNAIL)
  * @param suffix 파일명에 추가될 접미사 (예: "_large", "_thumb")
  */
 public record ImageVariant(ImageVariantType type, String suffix) {
@@ -32,7 +32,8 @@ public record ImageVariant(ImageVariantType type, String suffix) {
     public static final ImageVariant MEDIUM = new ImageVariant(ImageVariantType.MEDIUM, "_medium");
 
     /** 썸네일 이미지 (미리보기용). */
-    public static final ImageVariant THUMBNAIL = new ImageVariant(ImageVariantType.THUMBNAIL, "_thumb");
+    public static final ImageVariant THUMBNAIL =
+            new ImageVariant(ImageVariantType.THUMBNAIL, "_thumb");
 
     /** Compact Constructor (검증 로직). */
     public ImageVariant {
@@ -47,7 +48,7 @@ public record ImageVariant(ImageVariantType type, String suffix) {
     /**
      * 정적 팩토리 메서드.
      *
-     * @param type   변형 타입
+     * @param type 변형 타입
      * @param suffix 파일명 접미사
      * @return ImageVariant
      */

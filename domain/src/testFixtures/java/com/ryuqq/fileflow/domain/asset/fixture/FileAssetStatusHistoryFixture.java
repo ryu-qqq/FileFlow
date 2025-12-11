@@ -1,9 +1,11 @@
 package com.ryuqq.fileflow.domain.asset.fixture;
 
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAssetStatusHistory;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatusHistoryId;
-import java.time.LocalDateTime;
+import com.ryuqq.fileflow.domain.common.fixture.ClockFixture;
+import java.time.Instant;
 
 /**
  * FileAssetStatusHistory Aggregate Test Fixture.
@@ -17,7 +19,8 @@ public class FileAssetStatusHistoryFixture {
         throw new AssertionError("Utility class");
     }
 
-    private static final Long DEFAULT_FILE_ASSET_ID = 1L;
+    private static final FileAssetId DEFAULT_FILE_ASSET_ID =
+            FileAssetId.of("550e8400-e29b-41d4-a716-446655440001");
     private static final Long DEFAULT_DURATION_MILLIS = 1000L;
 
     /**
@@ -31,7 +34,8 @@ public class FileAssetStatusHistoryFixture {
                 FileAssetStatus.PENDING,
                 FileAssetStatus.PROCESSING,
                 "처리 시작",
-                DEFAULT_DURATION_MILLIS);
+                DEFAULT_DURATION_MILLIS,
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -45,7 +49,8 @@ public class FileAssetStatusHistoryFixture {
                 FileAssetStatus.PROCESSING,
                 FileAssetStatus.FAILED,
                 "처리 실패: 파일 손상",
-                DEFAULT_DURATION_MILLIS);
+                DEFAULT_DURATION_MILLIS,
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -55,7 +60,14 @@ public class FileAssetStatusHistoryFixture {
      */
     public static FileAssetStatusHistory anInitialHistory() {
         return FileAssetStatusHistory.forNew(
-                DEFAULT_FILE_ASSET_ID, null, FileAssetStatus.PENDING, "파일 생성됨", "system", "SYSTEM", null);
+                DEFAULT_FILE_ASSET_ID,
+                null,
+                FileAssetStatus.PENDING,
+                "파일 생성됨",
+                "system",
+                "SYSTEM",
+                null,
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -69,7 +81,8 @@ public class FileAssetStatusHistoryFixture {
                 FileAssetStatus.PROCESSING,
                 FileAssetStatus.COMPLETED,
                 "처리 완료",
-                DEFAULT_DURATION_MILLIS);
+                DEFAULT_DURATION_MILLIS,
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -83,7 +96,8 @@ public class FileAssetStatusHistoryFixture {
                 FileAssetStatus.PROCESSING,
                 FileAssetStatus.N8N_PROCESSING,
                 "n8n 워크플로우 시작",
-                DEFAULT_DURATION_MILLIS);
+                DEFAULT_DURATION_MILLIS,
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -98,7 +112,8 @@ public class FileAssetStatusHistoryFixture {
                 FileAssetStatus.PENDING,
                 FileAssetStatus.PROCESSING,
                 "처리 시작 (지연)",
-                durationMillis);
+                durationMillis,
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -107,13 +122,14 @@ public class FileAssetStatusHistoryFixture {
      * @param fileAssetId 파일 에셋 ID
      * @return FileAssetStatusHistory
      */
-    public static FileAssetStatusHistory aHistoryWithFileAssetId(Long fileAssetId) {
+    public static FileAssetStatusHistory aHistoryWithFileAssetId(FileAssetId fileAssetId) {
         return FileAssetStatusHistory.forSystemChange(
                 fileAssetId,
                 FileAssetStatus.PENDING,
                 FileAssetStatus.PROCESSING,
                 "처리 시작",
-                DEFAULT_DURATION_MILLIS);
+                DEFAULT_DURATION_MILLIS,
+                ClockFixture.defaultClock());
     }
 
     /**
@@ -123,14 +139,14 @@ public class FileAssetStatusHistoryFixture {
      */
     public static FileAssetStatusHistory anExistingHistory() {
         return FileAssetStatusHistory.reconstitute(
-                FileAssetStatusHistoryId.of("550e8400-e29b-41d4-a716-446655440001"),
+                FileAssetStatusHistoryId.of("550e8400-e29b-41d4-a716-446655440002"),
                 DEFAULT_FILE_ASSET_ID,
                 FileAssetStatus.PENDING,
                 FileAssetStatus.PROCESSING,
                 "처리 시작",
                 "system",
                 "SYSTEM",
-                LocalDateTime.of(2025, 12, 2, 10, 0, 0),
+                Instant.parse("2025-12-02T10:00:00Z"),
                 DEFAULT_DURATION_MILLIS);
     }
 }

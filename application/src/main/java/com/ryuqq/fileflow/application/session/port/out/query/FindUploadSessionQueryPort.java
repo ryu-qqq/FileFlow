@@ -79,10 +79,10 @@ public interface FindUploadSessionQueryPort {
      * <p>테넌트 스코프를 적용하여 세션을 조회합니다.
      *
      * @param sessionId 세션 ID
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return 조회된 세션 (없으면 Optional.empty())
      */
-    Optional<UploadSession> findByIdAndTenantId(UploadSessionId sessionId, Long tenantId);
+    Optional<UploadSession> findByIdAndTenantId(UploadSessionId sessionId, String tenantId);
 
     /**
      * 검색 조건에 맞는 업로드 세션 목록을 조회합니다.

@@ -1,12 +1,12 @@
 package com.ryuqq.fileflow.adapter.out.persistence.session.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSessionJpaEntity;
-import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.iam.vo.UserRole;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
@@ -21,32 +21,21 @@ import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @DisplayName("SingleUploadSessionJpaMapper 단위 테스트")
-@ExtendWith(MockitoExtension.class)
 class SingleUploadSessionJpaMapperTest {
 
-    @Mock private ClockHolder clockHolder;
-
     private SingleUploadSessionJpaMapper mapper;
-    private Clock fixedClock;
 
     @BeforeEach
     void setUp() {
-        mapper = new SingleUploadSessionJpaMapper(clockHolder);
-        fixedClock = Clock.fixed(Instant.parse("2025-11-26T10:00:00Z"), ZoneId.of("UTC"));
+        mapper = new SingleUploadSessionJpaMapper();
     }
 
     @Nested
@@ -66,10 +55,10 @@ class SingleUploadSessionJpaMapperTest {
             assertThat(entity.getId()).isEqualTo(domain.getId().getValue());
             assertThat(entity.getIdempotencyKey()).isEqualTo(domain.getIdempotencyKey().getValue());
             assertThat(entity.getUserId()).isNull();
-            assertThat(entity.getOrganizationId()).isEqualTo(100L);
+            assertThat(entity.getOrganizationId()).isEqualTo("01912345-6789-7abc-def0-123456789100");
             assertThat(entity.getOrganizationName()).isEqualTo("Test Org");
             assertThat(entity.getOrganizationNamespace()).isEqualTo("setof");
-            assertThat(entity.getTenantId()).isEqualTo(1L);
+            assertThat(entity.getTenantId()).isEqualTo("01912345-6789-7abc-def0-123456789001");
             assertThat(entity.getTenantName()).isEqualTo("Connectly");
             assertThat(entity.getUserRole()).isEqualTo("SELLER");
             assertThat(entity.getEmail()).isEqualTo("seller@test.com");
@@ -118,7 +107,6 @@ class SingleUploadSessionJpaMapperTest {
         @DisplayName("Entity를 Domain으로 변환할 수 있다")
         void toDomain_WithValidEntity_ShouldConvertToDomain() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             SingleUploadSessionJpaEntity entity = createEntity(SessionStatus.ACTIVE);
 
             // when
@@ -139,7 +127,6 @@ class SingleUploadSessionJpaMapperTest {
         @DisplayName("UserContext가 올바르게 복원된다")
         void toDomain_ShouldReconstructUserContext() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             SingleUploadSessionJpaEntity entity = createEntity(SessionStatus.ACTIVE);
 
             // when
@@ -160,7 +147,6 @@ class SingleUploadSessionJpaMapperTest {
         @DisplayName("Presigned URL이 null인 Entity도 변환할 수 있다")
         void toDomain_WithNullPresignedUrl_ShouldConvertWithNull() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             SingleUploadSessionJpaEntity entity = createEntityWithNullPresignedUrl();
 
             // when
@@ -174,7 +160,6 @@ class SingleUploadSessionJpaMapperTest {
         @DisplayName("ETag가 null인 Entity도 변환할 수 있다")
         void toDomain_WithNullEtag_ShouldConvertWithNull() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             SingleUploadSessionJpaEntity entity = createEntity(SessionStatus.ACTIVE);
 
             // when
@@ -188,7 +173,6 @@ class SingleUploadSessionJpaMapperTest {
         @DisplayName("완료된 Entity는 ETag와 completedAt이 복원된다")
         void toDomain_WithCompletedEntity_ShouldReconstructEtagAndCompletedAt() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             SingleUploadSessionJpaEntity entity = createCompletedEntity();
 
             // when
@@ -205,7 +189,6 @@ class SingleUploadSessionJpaMapperTest {
         @DisplayName("버전 정보가 복원된다")
         void toDomain_ShouldReconstructVersion() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             SingleUploadSessionJpaEntity entity = createEntityWithVersion(5L);
 
             // when
@@ -224,7 +207,6 @@ class SingleUploadSessionJpaMapperTest {
         @DisplayName("Domain → Entity → Domain 변환 시 데이터가 보존된다")
         void roundTrip_ShouldPreserveData() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             SingleUploadSession original = createDomain(SessionStatus.ACTIVE);
 
             // when
@@ -247,11 +229,11 @@ class SingleUploadSessionJpaMapperTest {
     // ==================== Helper Methods ====================
 
     private SingleUploadSession createDomain(SessionStatus status) {
-        Tenant tenant = Tenant.of(1L, "Connectly");
-        Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
+        Tenant tenant = Tenant.of(TenantId.of("01912345-6789-7abc-def0-123456789001"), "Connectly");
+        Organization organization = Organization.of(OrganizationId.of("01912345-6789-7abc-def0-123456789100"), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.randomUUID()),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -261,23 +243,22 @@ class SingleUploadSessionJpaMapperTest {
                 ContentType.of("application/pdf"),
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
-                ExpirationTime.of(LocalDateTime.now().plusMinutes(15)),
+                ExpirationTime.of(Instant.now().plus(java.time.Duration.ofMinutes(15))),
                 now,
                 status,
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/..."),
                 null,
                 null,
                 now,
-                0L,
-                fixedClock);
+                0L);
     }
 
     private SingleUploadSession createDomainWithoutPresignedUrl() {
-        Tenant tenant = Tenant.of(1L, "Connectly");
-        Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
+        Tenant tenant = Tenant.of(TenantId.of("01912345-6789-7abc-def0-123456789001"), "Connectly");
+        Organization organization = Organization.of(OrganizationId.of("01912345-6789-7abc-def0-123456789100"), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.randomUUID()),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -287,23 +268,22 @@ class SingleUploadSessionJpaMapperTest {
                 ContentType.of("application/pdf"),
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
-                ExpirationTime.of(LocalDateTime.now().plusMinutes(15)),
+                ExpirationTime.of(Instant.now().plus(java.time.Duration.ofMinutes(15))),
                 now,
                 SessionStatus.PREPARING,
                 null,
                 null,
                 null,
                 now,
-                null,
-                fixedClock);
+                null);
     }
 
     private SingleUploadSession createCompletedDomain() {
-        Tenant tenant = Tenant.of(1L, "Connectly");
-        Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
+        Tenant tenant = Tenant.of(TenantId.of("01912345-6789-7abc-def0-123456789001"), "Connectly");
+        Organization organization = Organization.of(OrganizationId.of("01912345-6789-7abc-def0-123456789100"), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.randomUUID()),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -313,29 +293,28 @@ class SingleUploadSessionJpaMapperTest {
                 ContentType.of("application/pdf"),
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
-                ExpirationTime.of(LocalDateTime.now().plusMinutes(15)),
+                ExpirationTime.of(Instant.now().plus(java.time.Duration.ofMinutes(15))),
                 now,
                 SessionStatus.COMPLETED,
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/..."),
                 ETag.of("\"abc123\""),
                 now,
                 now,
-                1L,
-                fixedClock);
+                1L);
     }
 
     private SingleUploadSessionJpaEntity createEntity(SessionStatus status) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusMinutes(15);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofMinutes(15));
 
         return SingleUploadSessionJpaEntity.of(
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(),
                 null,
-                100L,
+                "01912345-6789-7abc-def0-123456789100",
                 "Test Org",
                 "setof",
-                1L,
+                "01912345-6789-7abc-def0-123456789001",
                 "Connectly",
                 "SELLER",
                 "seller@test.com",
@@ -355,17 +334,17 @@ class SingleUploadSessionJpaMapperTest {
     }
 
     private SingleUploadSessionJpaEntity createEntityWithNullPresignedUrl() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusMinutes(15);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofMinutes(15));
 
         return SingleUploadSessionJpaEntity.of(
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(),
                 null,
-                100L,
+                "01912345-6789-7abc-def0-123456789100",
                 "Test Org",
                 "setof",
-                1L,
+                "01912345-6789-7abc-def0-123456789001",
                 "Connectly",
                 "SELLER",
                 "seller@test.com",
@@ -385,18 +364,18 @@ class SingleUploadSessionJpaMapperTest {
     }
 
     private SingleUploadSessionJpaEntity createCompletedEntity() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusMinutes(15);
-        LocalDateTime completedAt = now.plusMinutes(10);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofMinutes(15));
+        Instant completedAt = now.plus(java.time.Duration.ofMinutes(10));
 
         return SingleUploadSessionJpaEntity.of(
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(),
                 null,
-                100L,
+                "01912345-6789-7abc-def0-123456789100",
                 "Test Org",
                 "setof",
-                1L,
+                "01912345-6789-7abc-def0-123456789001",
                 "Connectly",
                 "SELLER",
                 "seller@test.com",
@@ -416,17 +395,17 @@ class SingleUploadSessionJpaMapperTest {
     }
 
     private SingleUploadSessionJpaEntity createEntityWithVersion(Long version) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusMinutes(15);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofMinutes(15));
 
         return SingleUploadSessionJpaEntity.of(
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString(),
                 null,
-                100L,
+                "01912345-6789-7abc-def0-123456789100",
                 "Test Org",
                 "setof",
-                1L,
+                "01912345-6789-7abc-def0-123456789001",
                 "Connectly",
                 "SELLER",
                 "seller@test.com",

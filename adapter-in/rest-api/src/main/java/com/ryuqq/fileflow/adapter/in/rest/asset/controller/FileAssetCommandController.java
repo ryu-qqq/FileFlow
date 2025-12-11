@@ -19,6 +19,10 @@ import com.ryuqq.fileflow.application.asset.port.in.command.DeleteFileAssetUseCa
 import com.ryuqq.fileflow.application.asset.port.in.command.GenerateDownloadUrlUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +59,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author development-team
  * @since 1.0.0
  */
+@Tag(name = "FileAsset Command", description = "파일 자산 상태 변경 API")
 @RestController
 @RequestMapping("${api.endpoints.base-v1}${api.endpoints.file-asset.base}")
 @Validated
@@ -93,14 +98,20 @@ public class FileAssetCommandController {
      * @param request 삭제 요청 (삭제 사유 선택적)
      * @return 삭제 결과 (200 OK)
      */
+    @Operation(summary = "파일 자산 삭제", description = "파일 자산을 논리적으로 삭제합니다. S3 객체는 유지됩니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "삭제 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "파일 자산을 찾을 수 없음")
+    })
     @PatchMapping("${api.endpoints.file-asset.delete}")
     public ResponseEntity<ApiResponse<DeleteFileAssetApiResponse>> deleteFileAsset(
+            @Parameter(description = "파일 자산 ID", required = true, example = "asset-123")
             @PathVariable @NotBlank String id,
             @Valid @RequestBody(required = false) DeleteFileAssetApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
-        long tenantId = userContext.tenant().id();
-        long organizationId = userContext.getOrganizationId();
+        String tenantId = userContext.tenant().id().value();
+        String organizationId = userContext.getOrganizationId().value();
 
         DeleteFileAssetCommand command =
                 fileAssetApiMapper.toDeleteFileAssetCommand(id, request, tenantId, organizationId);
@@ -122,14 +133,20 @@ public class FileAssetCommandController {
      * @param request URL 생성 요청 (유효 기간 설정 선택적)
      * @return Download URL 정보 (200 OK)
      */
+    @Operation(summary = "다운로드 URL 생성", description = "파일 다운로드를 위한 Presigned URL을 생성합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 생성 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "파일 자산을 찾을 수 없음")
+    })
     @PostMapping("${api.endpoints.file-asset.download-url}")
     public ResponseEntity<ApiResponse<DownloadUrlApiResponse>> generateDownloadUrl(
+            @Parameter(description = "파일 자산 ID", required = true, example = "asset-123")
             @PathVariable @NotBlank String id,
             @Valid @RequestBody(required = false) GenerateDownloadUrlApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
-        long tenantId = userContext.tenant().id();
-        long organizationId = userContext.getOrganizationId();
+        String tenantId = userContext.tenant().id().value();
+        String organizationId = userContext.getOrganizationId().value();
 
         GenerateDownloadUrlCommand command =
                 fileAssetApiMapper.toGenerateDownloadUrlCommand(
@@ -151,13 +168,18 @@ public class FileAssetCommandController {
      * @param request 일괄 URL 생성 요청
      * @return Download URL 목록 및 실패 정보 (200 OK)
      */
+    @Operation(summary = "다운로드 URL 일괄 생성", description = "여러 파일에 대한 다운로드 URL을 일괄 생성합니다. 최대 100개까지 요청 가능합니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 일괄 생성 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
     @PostMapping("${api.endpoints.file-asset.batch-download-url}")
     public ResponseEntity<ApiResponse<BatchDownloadUrlApiResponse>> batchGenerateDownloadUrl(
             @Valid @RequestBody BatchGenerateDownloadUrlApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
-        long tenantId = userContext.tenant().id();
-        long organizationId = userContext.getOrganizationId();
+        String tenantId = userContext.tenant().id().value();
+        String organizationId = userContext.getOrganizationId().value();
 
         BatchGenerateDownloadUrlCommand command =
                 fileAssetApiMapper.toBatchGenerateDownloadUrlCommand(

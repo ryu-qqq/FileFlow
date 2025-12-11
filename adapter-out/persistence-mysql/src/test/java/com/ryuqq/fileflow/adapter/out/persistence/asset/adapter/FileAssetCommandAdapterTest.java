@@ -11,6 +11,9 @@ import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
@@ -20,7 +23,6 @@ import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,21 +120,21 @@ class FileAssetCommandAdapterTest {
                 FileSize.of(1024 * 1024L),
                 ContentType.of("image/jpeg"),
                 FileCategory.IMAGE,
+                null, // ImageDimension
                 S3Bucket.of("test-bucket"),
                 S3Key.of("assets/test-file.jpg"),
                 ETag.of("\"etag-123\""),
-                1L,
-                100L,
-                1L,
+                UserId.of("01912345-6789-7abc-def0-123456789200"),
+                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
+                TenantId.of("01912345-6789-7abc-def0-123456789001"),
                 FileAssetStatus.COMPLETED,
-                LocalDateTime.now(fixedClock),
+                Instant.now(fixedClock),
                 null,
-                null,
-                fixedClock);
+                null);
     }
 
     private FileAssetJpaEntity createEntity(String id) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 id,
                 "11111111-1111-1111-1111-111111111111",
@@ -140,12 +142,14 @@ class FileAssetCommandAdapterTest {
                 1024 * 1024L,
                 "image/jpeg",
                 FileCategory.IMAGE,
+                null, // imageWidth
+                null, // imageHeight
                 "test-bucket",
                 "assets/test-file.jpg",
                 "\"etag-123\"",
-                1L,
-                100L,
-                1L,
+                "01912345-6789-7abc-def0-123456789001", // tenantId
+                "01912345-6789-7abc-def0-123456789100", // organizationId
+                "01912345-6789-7abc-def0-123456789200", // userId
                 FileAssetStatus.COMPLETED,
                 null,
                 null,

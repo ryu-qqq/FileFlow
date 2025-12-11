@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.session.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 단일 파일 업로드 완료 Response.
@@ -20,7 +20,7 @@ public record CompleteSingleUploadResponse(
         String bucket,
         String key,
         String etag,
-        LocalDateTime completedAt) {
+        Instant completedAt) {
 
     /**
      * 값 기반 생성.
@@ -39,7 +39,7 @@ public record CompleteSingleUploadResponse(
             String bucket,
             String key,
             String etag,
-            LocalDateTime completedAt) {
+            Instant completedAt) {
         return new CompleteSingleUploadResponse(sessionId, status, bucket, key, etag, completedAt);
     }
 }

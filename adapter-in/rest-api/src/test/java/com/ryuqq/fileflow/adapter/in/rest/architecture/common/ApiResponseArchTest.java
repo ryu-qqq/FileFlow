@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.architecture.common;
 
+import static com.ryuqq.fileflow.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -53,7 +54,7 @@ class ApiResponseArchTest {
         classes =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                        .importPackages("com.ryuqq.fileflow.adapter.in.rest");
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /**

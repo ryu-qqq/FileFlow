@@ -169,7 +169,8 @@ class ImageProcessingPolicyTest {
 
             // then
             assertThat(variants).hasSize(3);
-            assertThat(variants).extracting(ImageVariant::type)
+            assertThat(variants)
+                    .extracting(ImageVariant::type)
                     .containsExactlyInAnyOrder(
                             ImageVariantType.LARGE,
                             ImageVariantType.MEDIUM,
@@ -183,7 +184,8 @@ class ImageProcessingPolicyTest {
             List<ImageVariant> variants = policy.getVariantsToGenerate();
 
             // then
-            assertThat(variants).extracting(ImageVariant::type)
+            assertThat(variants)
+                    .extracting(ImageVariant::type)
                     .doesNotContain(ImageVariantType.ORIGINAL);
         }
     }
@@ -200,7 +202,8 @@ class ImageProcessingPolicyTest {
 
             // then
             assertThat(formats).hasSize(2);
-            assertThat(formats).extracting(ImageFormat::type)
+            assertThat(formats)
+                    .extracting(ImageFormat::type)
                     .containsExactly(ImageFormatType.WEBP, ImageFormatType.JPEG);
         }
 
@@ -212,7 +215,8 @@ class ImageProcessingPolicyTest {
 
             // then
             assertThat(formats).hasSize(2);
-            assertThat(formats).extracting(ImageFormat::type)
+            assertThat(formats)
+                    .extracting(ImageFormat::type)
                     .containsExactly(ImageFormatType.WEBP, ImageFormatType.PNG);
         }
 

@@ -2,10 +2,12 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.CompletedPartJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.MultipartUploadSessionJpaEntity;
-import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.iam.vo.UserRole;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
@@ -22,7 +24,6 @@ import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.S3UploadId;
 import com.ryuqq.fileflow.domain.session.vo.TotalParts;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -34,12 +35,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class MultipartUploadSessionJpaMapper {
 
-    private final ClockHolder clockHolder;
-
-    public MultipartUploadSessionJpaMapper(ClockHolder clockHolder) {
-        this.clockHolder = clockHolder;
-    }
-
     /**
      * Domain → JPA Entity 변환.
      *
@@ -47,16 +42,15 @@ public class MultipartUploadSessionJpaMapper {
      * @return MultipartUploadSessionJpaEntity
      */
     public MultipartUploadSessionJpaEntity toEntity(MultipartUploadSession domain) {
-        LocalDateTime now = LocalDateTime.now();
         UserContext userContext = domain.getUserContext();
 
         return MultipartUploadSessionJpaEntity.of(
                 domain.getId().getValue(),
-                userContext.userId(),
-                userContext.organization().id(),
+                userContext.userId() != null ? userContext.userId().value() : null,
+                userContext.organization().id() != null ? userContext.organization().id().value() : null,
                 userContext.organization().name(),
                 userContext.organization().namespace(),
-                userContext.tenant().id(),
+                userContext.tenant().id().value(),
                 userContext.tenant().name(),
                 userContext.getRole().name(),
                 userContext.email(),
@@ -74,7 +68,7 @@ public class MultipartUploadSessionJpaMapper {
                 domain.getCompletedAt(),
                 domain.getVersion(),
                 domain.getCreatedAt(),
-                now);
+                domain.getCreatedAt());
     }
 
     /**
@@ -85,9 +79,8 @@ public class MultipartUploadSessionJpaMapper {
      * @return CompletedPartJpaEntity
      */
     public CompletedPartJpaEntity toPartEntity(String sessionId, CompletedPart domain) {
-        LocalDateTime now = LocalDateTime.now();
-
         // id가 있으면 reconstitute (업데이트), 없으면 of (신규 생성)
+        // createdAt/updatedAt은 uploadedAt을 사용
         if (domain.getId() != null) {
             return CompletedPartJpaEntity.reconstitute(
                     domain.getId(),
@@ -97,8 +90,8 @@ public class MultipartUploadSessionJpaMapper {
                     domain.getETagValue(),
                     domain.getSize(),
                     domain.getUploadedAt(),
-                    now,
-                    now);
+                    domain.getUploadedAt(),
+                    domain.getUploadedAt());
         }
 
         return CompletedPartJpaEntity.of(
@@ -108,8 +101,8 @@ public class MultipartUploadSessionJpaMapper {
                 domain.getETagValue(),
                 domain.getSize(),
                 domain.getUploadedAt(),
-                now,
-                now);
+                domain.getUploadedAt(),
+                domain.getUploadedAt());
     }
 
     /**
@@ -138,8 +131,7 @@ public class MultipartUploadSessionJpaMapper {
                 entity.getCreatedAt(),
                 entity.getStatus(),
                 entity.getCompletedAt(),
-                entity.getVersion(),
-                clockHolder.getClock());
+                entity.getVersion());
     }
 
     /**
@@ -156,20 +148,23 @@ public class MultipartUploadSessionJpaMapper {
                 PresignedUrl.of(entity.getPresignedUrl()),
                 ETag.of(entity.getEtag()),
                 entity.getSize(),
-                entity.getUploadedAt(),
-                clockHolder.getClock());
+                entity.getUploadedAt());
     }
 
     private UserContext reconstructUserContext(MultipartUploadSessionJpaEntity entity) {
         UserRole role = UserRole.valueOf(entity.getUserRole());
-        Tenant tenant = Tenant.of(entity.getTenantId(), entity.getTenantName());
+        TenantId tenantId = TenantId.of(entity.getTenantId());
+        Tenant tenant = Tenant.of(tenantId, entity.getTenantName());
+        OrganizationId organizationId =
+                entity.getOrganizationId() != null ? OrganizationId.of(entity.getOrganizationId()) : null;
         Organization organization =
                 Organization.of(
-                        entity.getOrganizationId(),
+                        organizationId,
                         entity.getOrganizationName(),
                         entity.getOrganizationNamespace(),
                         role);
+        UserId userId = entity.getUserId() != null ? UserId.of(entity.getUserId()) : null;
 
-        return UserContext.of(tenant, organization, entity.getEmail(), entity.getUserId());
+        return UserContext.of(tenant, organization, entity.getEmail(), userId);
     }
 }

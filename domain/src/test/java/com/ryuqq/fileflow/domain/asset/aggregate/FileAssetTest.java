@@ -5,7 +5,11 @@ import static org.assertj.core.api.Assertions.*;
 import com.ryuqq.fileflow.domain.asset.fixture.*;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.asset.vo.ImageDimension;
 import com.ryuqq.fileflow.domain.common.fixture.ClockFixture;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.fixture.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -64,24 +68,50 @@ class FileAssetTest {
         @Test
         @DisplayName("필수 필드가 null이면 예외가 발생한다")
         void constructor_WithNullFields_ShouldThrowException() {
-            // given & when & then
+            // given & when & then - fileName이 null인 경우
             assertThatThrownBy(
                             () ->
                                     FileAsset.forNew(
-                                            null, // sessionId
-                                            FileNameFixture.defaultFileName(),
+                                            UploadSessionIdFixture.fixedUploadSessionId(),
+                                            null, // fileName
                                             FileSizeFixture.defaultFileSize(),
                                             ContentTypeFixture.defaultContentType(),
                                             FileCategory.IMAGE,
+                                            null, // ImageDimension (nullable)
                                             S3BucketFixture.defaultS3Bucket(),
                                             S3KeyFixture.defaultS3Key(),
                                             ETagFixture.defaultETag(),
-                                            1000L,
-                                            1L,
-                                            1L,
+                                            UserId.generate(),
+                                            OrganizationId.generate(),
+                                            TenantId.generate(),
                                             ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("null일 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("sessionId가 null이어도 ExternalDownload 경우에는 허용된다")
+        void constructor_WithNullSessionId_ShouldBeAllowedForExternalDownload() {
+            // given & when - sessionId가 null인 경우 (ExternalDownload)
+            FileAsset asset =
+                    FileAsset.forNew(
+                            null, // sessionId (ExternalDownload의 경우 null 허용)
+                            FileNameFixture.defaultFileName(),
+                            FileSizeFixture.defaultFileSize(),
+                            ContentTypeFixture.defaultContentType(),
+                            FileCategory.IMAGE,
+                            null,
+                            S3BucketFixture.defaultS3Bucket(),
+                            S3KeyFixture.defaultS3Key(),
+                            ETagFixture.defaultETag(),
+                            null, // userId (ExternalDownload의 경우 null)
+                            OrganizationId.generate(),
+                            TenantId.generate(),
+                            ClockFixture.defaultClock());
+
+            // then
+            assertThat(asset).isNotNull();
+            assertThat(asset.getSessionId()).isNull();
         }
     }
 
@@ -158,7 +188,7 @@ class FileAssetTest {
             FileAsset asset = FileAssetFixture.processingFileAsset();
 
             // when
-            asset.completeProcessing();
+            asset.completeProcessing(ClockFixture.defaultClock());
 
             // then
             assertThat(asset.getStatus()).isEqualTo(FileAssetStatus.COMPLETED);
@@ -172,7 +202,7 @@ class FileAssetTest {
             FileAsset asset = FileAssetFixture.defaultFileAsset();
 
             // when
-            asset.completeProcessing();
+            asset.completeProcessing(ClockFixture.defaultClock());
 
             // then
             assertThat(asset.getStatus()).isEqualTo(FileAssetStatus.COMPLETED);
@@ -186,7 +216,7 @@ class FileAssetTest {
             FileAsset asset = FileAssetFixture.completedFileAsset();
 
             // when & then
-            assertThatThrownBy(asset::completeProcessing)
+            assertThatThrownBy(() -> asset.completeProcessing(ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("PENDING 또는 PROCESSING 상태에서만 완료할 수 있습니다");
         }
@@ -204,8 +234,8 @@ class FileAssetTest {
             FileAsset processingAsset = FileAssetFixture.processingFileAsset();
 
             // when
-            pendingAsset.failProcessing();
-            processingAsset.failProcessing();
+            pendingAsset.failProcessing(ClockFixture.defaultClock());
+            processingAsset.failProcessing(ClockFixture.defaultClock());
 
             // then
             assertThat(pendingAsset.getStatus()).isEqualTo(FileAssetStatus.FAILED);
@@ -226,7 +256,7 @@ class FileAssetTest {
             FileAsset asset = FileAssetFixture.defaultFileAsset();
 
             // when
-            asset.delete();
+            asset.delete(ClockFixture.defaultClock());
 
             // then
             assertThat(asset.getStatus()).isEqualTo(FileAssetStatus.DELETED);
@@ -240,7 +270,7 @@ class FileAssetTest {
             FileAsset asset = FileAssetFixture.processingFileAsset();
 
             // when
-            asset.delete();
+            asset.delete(ClockFixture.defaultClock());
 
             // then
             assertThat(asset.getStatus()).isEqualTo(FileAssetStatus.DELETED);
@@ -254,7 +284,7 @@ class FileAssetTest {
             FileAsset asset = FileAssetFixture.completedFileAsset();
 
             // when
-            asset.delete();
+            asset.delete(ClockFixture.defaultClock());
 
             // then
             assertThat(asset.getStatus()).isEqualTo(FileAssetStatus.DELETED);
@@ -266,10 +296,10 @@ class FileAssetTest {
         void delete_FromFailed_ShouldSucceed() {
             // given
             FileAsset asset = FileAssetFixture.defaultFileAsset();
-            asset.failProcessing();
+            asset.failProcessing(ClockFixture.defaultClock());
 
             // when
-            asset.delete();
+            asset.delete(ClockFixture.defaultClock());
 
             // then
             assertThat(asset.getStatus()).isEqualTo(FileAssetStatus.DELETED);
@@ -283,7 +313,7 @@ class FileAssetTest {
             FileAsset asset = FileAssetFixture.deletedFileAsset();
 
             // when & then
-            assertThatThrownBy(asset::delete)
+            assertThatThrownBy(() -> asset.delete(ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("이미 삭제된 FileAsset입니다");
         }
@@ -344,16 +374,61 @@ class FileAssetTest {
                             FileSizeFixture.defaultFileSize(),
                             ContentTypeFixture.defaultContentType(),
                             FileCategory.IMAGE,
+                            null, // ImageDimension (nullable)
                             S3BucketFixture.defaultS3Bucket(),
                             S3KeyFixture.defaultS3Key(),
                             ETagFixture.defaultETag(),
                             null, // userId can be null
-                            1L,
-                            1L,
+                            OrganizationId.generate(),
+                            TenantId.generate(),
                             ClockFixture.defaultClock());
 
             // when & then
             assertThat(asset.getUserId()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("Dimension 업데이트 테스트")
+    class UpdateDimensionTest {
+
+        @Test
+        @DisplayName("dimension이 null인 FileAsset에 dimension을 업데이트할 수 있다")
+        void updateDimension_WhenNullDimension_ShouldUpdate() {
+            // given
+            FileAsset asset = FileAssetFixture.defaultFileAsset(); // dimension이 null인 상태
+
+            // when
+            asset.updateDimension(ImageDimension.of(1920, 1080));
+
+            // then
+            assertThat(asset.hasImageDimension()).isTrue();
+            assertThat(asset.getWidth()).isEqualTo(1920);
+            assertThat(asset.getHeight()).isEqualTo(1080);
+        }
+
+        @Test
+        @DisplayName("이미 dimension이 있는 FileAsset은 업데이트하면 예외가 발생한다")
+        void updateDimension_WhenAlreadyHasDimension_ShouldThrowException() {
+            // given
+            FileAsset asset = FileAssetFixture.existingFileAsset(); // dimension이 있는 상태
+
+            // when & then
+            assertThatThrownBy(() -> asset.updateDimension(ImageDimension.of(800, 600)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("이미 dimension이 설정되어 있습니다");
+        }
+
+        @Test
+        @DisplayName("null dimension으로 업데이트하면 예외가 발생한다")
+        void updateDimension_WithNullDimension_ShouldThrowException() {
+            // given
+            FileAsset asset = FileAssetFixture.defaultFileAsset();
+
+            // when & then
+            assertThatThrownBy(() -> asset.updateDimension(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("dimension은 null일 수 없습니다");
         }
     }
 }

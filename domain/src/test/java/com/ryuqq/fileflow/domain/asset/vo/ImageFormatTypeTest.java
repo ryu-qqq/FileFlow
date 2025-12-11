@@ -23,9 +23,7 @@ class ImageFormatTypeTest {
             assertThat(values).hasSize(3);
             assertThat(values)
                     .containsExactly(
-                            ImageFormatType.WEBP,
-                            ImageFormatType.JPEG,
-                            ImageFormatType.PNG);
+                            ImageFormatType.WEBP, ImageFormatType.JPEG, ImageFormatType.PNG);
         }
 
         @Test

@@ -20,6 +20,7 @@ include 'adapter-out:persistence-redis'
 include 'adapter-out:aws-s3'
 include 'adapter-out:aws-sqs'
 include 'adapter-out:http-client'
+include 'adapter-out:image-processor'
 
 // ========================================
 // Bootstrap Modules (Runnable Applications)
@@ -27,6 +28,7 @@ include 'adapter-out:http-client'
 include 'bootstrap:bootstrap-web-api'
 include 'bootstrap:bootstrap-scheduler'
 include 'bootstrap:bootstrap-download-worker'
+include 'bootstrap:bootstrap-resizing-worker'
 
 // ========================================
 // Project Structure
@@ -42,7 +44,9 @@ project(':adapter-out:persistence-redis').projectDir = file('adapter-out/persist
 project(':adapter-out:aws-s3').projectDir = file('adapter-out/aws-s3')
 project(':adapter-out:aws-sqs').projectDir = file('adapter-out/aws-sqs')
 project(':adapter-out:http-client').projectDir = file('adapter-out/http-client')
+project(':adapter-out:image-processor').projectDir = file('adapter-out/image-processor')
 
 project(':bootstrap:bootstrap-web-api').projectDir = file('bootstrap/bootstrap-web-api')
 project(':bootstrap:bootstrap-scheduler').projectDir = file('bootstrap/bootstrap-scheduler')
 project(':bootstrap:bootstrap-download-worker').projectDir = file('bootstrap/bootstrap-download-worker')
+project(':bootstrap:bootstrap-resizing-worker').projectDir = file('bootstrap/bootstrap-resizing-worker')

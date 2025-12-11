@@ -1,8 +1,11 @@
 package com.ryuqq.fileflow.application.download.listener;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.ryuqq.fileflow.application.asset.manager.FileAssetManager;
+import com.ryuqq.fileflow.application.asset.facade.FileAssetCreationFacade;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
@@ -13,7 +16,10 @@ import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
-import java.time.LocalDateTime;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import java.time.Instant;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,9 +32,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("ExternalDownloadFileCreatedEventListener 테스트")
 class ExternalDownloadFileCreatedEventListenerTest {
 
-    @Mock private FileAssetManager fileAssetManager;
+    @Mock private FileAssetCreationFacade fileAssetCreationFacade;
 
     @InjectMocks private ExternalDownloadFileCreatedEventListener listener;
+
+    @BeforeEach
+    void setUp() {
+        when(fileAssetCreationFacade.createWithOutbox(any(ExternalDownloadFileCreatedEvent.class)))
+                .thenReturn(FileAssetId.of("550e8400-e29b-41d4-a716-446655440099"));
+    }
 
     @Nested
     @DisplayName("handle 메서드")
@@ -45,7 +57,7 @@ class ExternalDownloadFileCreatedEventListenerTest {
             listener.handle(event);
 
             // then
-            verify(fileAssetManager).createAndPersist(event);
+            verify(fileAssetCreationFacade).createWithOutbox(event);
         }
 
         @Test
@@ -65,14 +77,14 @@ class ExternalDownloadFileCreatedEventListenerTest {
             listener.handle(event3);
 
             // then
-            verify(fileAssetManager).createAndPersist(event1);
-            verify(fileAssetManager).createAndPersist(event2);
-            verify(fileAssetManager).createAndPersist(event3);
+            verify(fileAssetCreationFacade).createWithOutbox(event1);
+            verify(fileAssetCreationFacade).createWithOutbox(event2);
+            verify(fileAssetCreationFacade).createWithOutbox(event3);
         }
 
         @Test
-        @DisplayName("이벤트에 포함된 모든 정보가 FileAssetManager에 전달된다")
-        void shouldPassAllEventInformationToManager() {
+        @DisplayName("이벤트에 포함된 모든 정보가 FileAssetCreationFacade에 전달된다")
+        void shouldPassAllEventInformationToFacade() {
             // given
             ExternalDownloadFileCreatedEvent event = createDetailedEvent();
 
@@ -80,7 +92,7 @@ class ExternalDownloadFileCreatedEventListenerTest {
             listener.handle(event);
 
             // then
-            verify(fileAssetManager).createAndPersist(event);
+            verify(fileAssetCreationFacade).createWithOutbox(event);
         }
 
         @Test
@@ -94,7 +106,7 @@ class ExternalDownloadFileCreatedEventListenerTest {
             listener.handle(event);
 
             // then
-            verify(fileAssetManager).createAndPersist(event);
+            verify(fileAssetCreationFacade).createWithOutbox(event);
         }
 
         @Test
@@ -112,15 +124,15 @@ class ExternalDownloadFileCreatedEventListenerTest {
                             S3Bucket.of("test-bucket"),
                             S3Key.of("downloads/2025/11/26/large-video.mp4"),
                             ETag.of("etag-large-file-123"),
-                            100L,
-                            1L,
-                            LocalDateTime.now());
+                            OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
+                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            Instant.now());
 
             // when
             listener.handle(event);
 
             // then
-            verify(fileAssetManager).createAndPersist(event);
+            verify(fileAssetCreationFacade).createWithOutbox(event);
         }
     }
 
@@ -137,9 +149,9 @@ class ExternalDownloadFileCreatedEventListenerTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("downloads/2025/11/26/" + fileName),
                 ETag.of("etag-" + downloadId),
-                100L,
-                1L,
-                LocalDateTime.now());
+                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
+                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                Instant.now());
     }
 
     private ExternalDownloadFileCreatedEvent createDetailedEvent() {
@@ -153,8 +165,8 @@ class ExternalDownloadFileCreatedEventListenerTest {
                 S3Bucket.of("production-bucket"),
                 S3Key.of("downloads/2025/11/26/detailed-test.jpg"),
                 ETag.of("etag-detailed-999"),
-                200L,
-                1L,
-                LocalDateTime.now());
+                OrganizationId.of("01912345-6789-7abc-def0-123456789200"),
+                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                Instant.now());
     }
 }

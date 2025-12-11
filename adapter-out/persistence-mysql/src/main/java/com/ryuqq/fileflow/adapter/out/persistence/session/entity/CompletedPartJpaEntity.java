@@ -7,7 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * CompletedPart JPA Entity.
@@ -49,7 +49,7 @@ public class CompletedPartJpaEntity extends BaseAuditEntity {
     private Long size;
 
     @Column(name = "uploaded_at", nullable = false)
-    private LocalDateTime uploadedAt;
+    private Instant uploadedAt;
 
     /** JPA 스펙 요구 기본 생성자 */
     protected CompletedPartJpaEntity() {
@@ -63,9 +63,9 @@ public class CompletedPartJpaEntity extends BaseAuditEntity {
             String presignedUrl,
             String etag,
             Long size,
-            LocalDateTime uploadedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant uploadedAt,
+            Instant createdAt,
+            Instant updatedAt) {
         super(createdAt, updatedAt);
         this.sessionId = sessionId;
         this.partNumber = partNumber;
@@ -83,9 +83,9 @@ public class CompletedPartJpaEntity extends BaseAuditEntity {
             String presignedUrl,
             String etag,
             Long size,
-            LocalDateTime uploadedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant uploadedAt,
+            Instant createdAt,
+            Instant updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
         this.sessionId = sessionId;
@@ -107,9 +107,9 @@ public class CompletedPartJpaEntity extends BaseAuditEntity {
             String presignedUrl,
             String etag,
             Long size,
-            LocalDateTime uploadedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant uploadedAt,
+            Instant createdAt,
+            Instant updatedAt) {
         return new CompletedPartJpaEntity(
                 sessionId, partNumber, presignedUrl, etag, size, uploadedAt, createdAt, updatedAt);
     }
@@ -126,9 +126,9 @@ public class CompletedPartJpaEntity extends BaseAuditEntity {
             String presignedUrl,
             String etag,
             Long size,
-            LocalDateTime uploadedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant uploadedAt,
+            Instant createdAt,
+            Instant updatedAt) {
         return new CompletedPartJpaEntity(
                 id,
                 sessionId,
@@ -167,7 +167,7 @@ public class CompletedPartJpaEntity extends BaseAuditEntity {
         return size;
     }
 
-    public LocalDateTime getUploadedAt() {
+    public Instant getUploadedAt() {
         return uploadedAt;
     }
 }

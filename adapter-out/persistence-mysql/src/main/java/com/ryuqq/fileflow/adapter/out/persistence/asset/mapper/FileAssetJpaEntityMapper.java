@@ -3,7 +3,10 @@ package com.ryuqq.fileflow.adapter.out.persistence.asset.mapper;
 import com.ryuqq.fileflow.adapter.out.persistence.asset.entity.FileAssetJpaEntity;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
-import com.ryuqq.fileflow.domain.common.util.ClockHolder;
+import com.ryuqq.fileflow.domain.asset.vo.ImageDimension;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
@@ -22,12 +25,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileAssetJpaEntityMapper {
 
-    private final ClockHolder clockHolder;
-
-    public FileAssetJpaEntityMapper(ClockHolder clockHolder) {
-        this.clockHolder = clockHolder;
-    }
-
     /**
      * Domain → JPA Entity 변환.
      *
@@ -35,6 +32,9 @@ public class FileAssetJpaEntityMapper {
      * @return FileAssetJpaEntity
      */
     public FileAssetJpaEntity toEntity(FileAsset domain) {
+        Integer imageWidth = domain.getDimension() != null ? domain.getDimension().width() : null;
+        Integer imageHeight = domain.getDimension() != null ? domain.getDimension().height() : null;
+
         return FileAssetJpaEntity.of(
                 domain.getIdValue(),
                 domain.getSessionIdValue(),
@@ -42,17 +42,23 @@ public class FileAssetJpaEntityMapper {
                 domain.getFileSizeValue(),
                 domain.getContentTypeValue(),
                 domain.getCategory(),
+                imageWidth,
+                imageHeight,
                 domain.getBucketValue(),
                 domain.getS3KeyValue(),
                 domain.getEtagValue(),
-                domain.getUserId(),
-                domain.getOrganizationId(),
-                domain.getTenantId(),
+                toUserIdValue(domain.getUserId()),
+                domain.getOrganizationId().value(),
+                domain.getTenantId().value(),
                 domain.getStatus(),
                 domain.getProcessedAt(),
                 domain.getDeletedAt(),
                 domain.getCreatedAt(),
                 domain.getCreatedAt());
+    }
+
+    private String toUserIdValue(UserId userId) {
+        return userId != null ? userId.value() : null;
     }
 
     /**
@@ -62,6 +68,9 @@ public class FileAssetJpaEntityMapper {
      * @return FileAsset Domain Aggregate
      */
     public FileAsset toDomain(FileAssetJpaEntity entity) {
+        ImageDimension dimension =
+                toImageDimension(entity.getImageWidth(), entity.getImageHeight());
+
         return FileAsset.reconstitute(
                 FileAssetId.of(entity.getId()),
                 UploadSessionId.of(UUID.fromString(entity.getSessionId())),
@@ -69,16 +78,34 @@ public class FileAssetJpaEntityMapper {
                 FileSize.of(entity.getFileSize()),
                 ContentType.of(entity.getContentType()),
                 entity.getCategory(),
+                dimension,
                 S3Bucket.of(entity.getBucket()),
                 S3Key.of(entity.getS3Key()),
                 ETag.of(entity.getEtag()),
-                entity.getUserId(),
-                entity.getOrganizationId(),
-                entity.getTenantId(),
+                toUserId(entity.getUserId()),
+                OrganizationId.of(entity.getOrganizationId()),
+                TenantId.of(entity.getTenantId()),
                 entity.getStatus(),
                 entity.getCreatedAt(),
                 entity.getProcessedAt(),
-                entity.getDeletedAt(),
-                clockHolder.getClock());
+                entity.getDeletedAt());
+    }
+
+    private UserId toUserId(String userId) {
+        return userId != null ? UserId.of(userId) : null;
+    }
+
+    /**
+     * width, height로부터 ImageDimension을 생성합니다.
+     *
+     * @param width 이미지 너비 (nullable)
+     * @param height 이미지 높이 (nullable)
+     * @return ImageDimension 또는 null
+     */
+    private ImageDimension toImageDimension(Integer width, Integer height) {
+        if (width == null || height == null) {
+            return null;
+        }
+        return ImageDimension.of(width, height);
     }
 }

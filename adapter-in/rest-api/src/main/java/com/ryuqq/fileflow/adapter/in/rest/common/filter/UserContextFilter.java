@@ -3,8 +3,10 @@ package com.ryuqq.fileflow.adapter.in.rest.common.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.iam.vo.UserRole;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -103,7 +105,7 @@ public class UserContextFilter extends OncePerRequestFilter {
 
             // MDC 설정
             MDC.put(MDC_USER_ID, userContext.getUserIdentifier());
-            MDC.put(MDC_ORGANIZATION_ID, String.valueOf(userContext.getOrganizationId()));
+            MDC.put(MDC_ORGANIZATION_ID, userContext.getOrganizationId().value());
             MDC.put(MDC_ROLE, userContext.getRole().name());
 
             log.debug("UserContext 설정 완료: {}", userContext.getUserIdentifier());
@@ -231,11 +233,10 @@ public class UserContextFilter extends OncePerRequestFilter {
      * @return UserContext
      */
     private UserContext createUserContext(Map<String, Object> claims) {
-        // 필수 필드 추출
-        Long tenantId = extractLong(claims, "tenantId");
-        Long organizationId = extractLong(claims, "organizationId");
+        // 필수 필드 추출 (UUIDv7 String)
+        String organizationIdStr = extractRequiredString(claims, "organizationId");
         String organizationName =
-                extractString(claims, "organizationName", "Organization-" + organizationId);
+                extractString(claims, "organizationName", "Organization-" + organizationIdStr);
         String roleStr = extractString(claims, "role", "DEFAULT");
         UserRole role = UserRole.valueOf(roleStr.toUpperCase());
 
@@ -243,11 +244,13 @@ public class UserContextFilter extends OncePerRequestFilter {
         Tenant tenant = Tenant.connectly();
 
         // Organization 생성
+        OrganizationId organizationId = OrganizationId.of(organizationIdStr);
         Organization organization = createOrganization(organizationId, organizationName, role);
 
         // Role에 따른 UserContext 생성
         String email = extractString(claims, "email", null);
-        Long userId = extractLongOrNull(claims, "userId");
+        String userIdStr = extractString(claims, "userId", null);
+        UserId userId = userIdStr != null ? UserId.of(userIdStr) : null;
 
         return UserContext.of(tenant, organization, email, userId);
     }
@@ -255,13 +258,13 @@ public class UserContextFilter extends OncePerRequestFilter {
     /**
      * Role에 따른 Organization을 생성합니다.
      *
-     * @param organizationId 조직 ID
+     * @param organizationId 조직 ID (UUIDv7 VO)
      * @param organizationName 조직명
      * @param role 사용자 역할
      * @return Organization
      */
     private Organization createOrganization(
-            Long organizationId, String organizationName, UserRole role) {
+            OrganizationId organizationId, String organizationName, UserRole role) {
         return switch (role) {
             case ADMIN -> Organization.admin();
             case SELLER -> Organization.seller(organizationId, organizationName);
@@ -270,40 +273,19 @@ public class UserContextFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Claims에서 Long 값을 추출합니다.
+     * Claims에서 필수 String 값을 추출합니다.
      *
      * @param claims JWT claims
      * @param key 키
-     * @return Long 값
-     * @throws IllegalArgumentException 키가 없거나 변환 실패 시
+     * @return String 값
+     * @throws IllegalArgumentException 키가 없을 경우
      */
-    private Long extractLong(Map<String, Object> claims, String key) {
+    private String extractRequiredString(Map<String, Object> claims, String key) {
         Object value = claims.get(key);
         if (value == null) {
             throw new IllegalArgumentException("JWT에 필수 필드가 없습니다: " + key);
         }
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
-        }
-        return Long.parseLong(value.toString());
-    }
-
-    /**
-     * Claims에서 Long 값을 추출합니다 (nullable).
-     *
-     * @param claims JWT claims
-     * @param key 키
-     * @return Long 값 또는 null
-     */
-    private Long extractLongOrNull(Map<String, Object> claims, String key) {
-        Object value = claims.get(key);
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
-        }
-        return Long.parseLong(value.toString());
+        return value.toString();
     }
 
     /**

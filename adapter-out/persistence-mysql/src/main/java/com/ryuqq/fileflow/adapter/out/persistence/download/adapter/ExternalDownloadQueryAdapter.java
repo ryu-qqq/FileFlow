@@ -32,7 +32,7 @@ public class ExternalDownloadQueryAdapter implements ExternalDownloadQueryPort {
     }
 
     @Override
-    public Optional<ExternalDownload> findByIdAndTenantId(ExternalDownloadId id, long tenantId) {
+    public Optional<ExternalDownload> findByIdAndTenantId(ExternalDownloadId id, String tenantId) {
         return queryDslRepository.findByIdAndTenantId(id.value(), tenantId).map(mapper::toDomain);
     }
 

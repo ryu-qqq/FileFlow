@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.application.session.strategy;
 
-import com.ryuqq.fileflow.application.session.manager.UploadSessionManager;
-import com.ryuqq.fileflow.application.session.port.out.client.S3ClientPort;
+import com.ryuqq.fileflow.application.session.factory.command.UploadSessionCommandFactory;
+import com.ryuqq.fileflow.application.session.port.out.client.SessionS3ClientPort;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import org.springframework.stereotype.Component;
 
@@ -23,28 +23,28 @@ import org.springframework.stereotype.Component;
  *   <li>Multipart Upload는 Complete 전까지 Part들이 S3에 임시 저장됨
  *   <li>정리하지 않으면 S3 스토리지 비용이 누적됨
  * </ul>
+ *
+ * <p><strong>영속화 책임</strong>: Service에서 처리 (Strategy는 비즈니스 로직만 담당)
  */
 @Component
 public class MultipartUploadExpireStrategy implements ExpireStrategy<MultipartUploadSession> {
 
-    private final UploadSessionManager uploadSessionManager;
-    private final S3ClientPort s3ClientPort;
+    private final SessionS3ClientPort sessionS3ClientPort;
+    private final UploadSessionCommandFactory commandFactory;
 
     public MultipartUploadExpireStrategy(
-            UploadSessionManager uploadSessionManager, S3ClientPort s3ClientPort) {
-        this.uploadSessionManager = uploadSessionManager;
-        this.s3ClientPort = s3ClientPort;
+            SessionS3ClientPort sessionS3ClientPort, UploadSessionCommandFactory commandFactory) {
+        this.sessionS3ClientPort = sessionS3ClientPort;
+        this.commandFactory = commandFactory;
     }
 
     @Override
     public void expire(MultipartUploadSession session) {
         // 1. Domain 만료 처리
-        session.expire();
+        session.expire(commandFactory.getClock());
 
-        // 2. S3 Part 정리
-        s3ClientPort.abortMultipartUpload(
+        // 2. S3 Part 정리 (비즈니스 요구사항: 만료 시 임시 Part 삭제)
+        sessionS3ClientPort.abortMultipartUpload(
                 session.getBucket(), session.getS3Key(), session.getS3UploadIdValue());
-
-        uploadSessionManager.save(session);
     }
 }

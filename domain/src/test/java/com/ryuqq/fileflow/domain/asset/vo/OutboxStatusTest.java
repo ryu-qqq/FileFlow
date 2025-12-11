@@ -5,9 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * OutboxStatus Enum 단위 테스트.
- */
+/** OutboxStatus Enum 단위 테스트. */
 @DisplayName("OutboxStatus Enum 단위 테스트")
 class OutboxStatusTest {
 
@@ -52,7 +50,8 @@ class OutboxStatusTest {
 
         // then
         assertThat(statuses).hasSize(3);
-        assertThat(statuses).containsExactlyInAnyOrder(
-                OutboxStatus.PENDING, OutboxStatus.SENT, OutboxStatus.FAILED);
+        assertThat(statuses)
+                .containsExactlyInAnyOrder(
+                        OutboxStatus.PENDING, OutboxStatus.SENT, OutboxStatus.FAILED);
     }
 }

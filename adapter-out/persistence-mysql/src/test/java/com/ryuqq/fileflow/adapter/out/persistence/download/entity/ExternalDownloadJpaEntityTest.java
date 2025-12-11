@@ -3,7 +3,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.download.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,8 +22,8 @@ class ExternalDownloadJpaEntityTest {
             // given
             UUID id = UUID.randomUUID();
             String sourceUrl = "https://example.com/file.jpg";
-            Long tenantId = 100L;
-            Long organizationId = 200L;
+            String tenantId = "01912345-6789-7abc-def0-123456789100";
+            String organizationId = "01912345-6789-7abc-def0-123456789200";
             String s3Bucket = "test-bucket";
             String s3PathPrefix = "downloads/";
             ExternalDownloadStatus status = ExternalDownloadStatus.PENDING;
@@ -32,7 +32,7 @@ class ExternalDownloadJpaEntityTest {
             String errorMessage = null;
             String webhookUrl = "https://webhook.example.com/callback";
             Long version = 0L;
-            LocalDateTime now = LocalDateTime.now();
+            Instant now = Instant.now();
 
             // when
             ExternalDownloadJpaEntity entity =
@@ -75,8 +75,8 @@ class ExternalDownloadJpaEntityTest {
                     ExternalDownloadJpaEntity.of(
                             null,
                             "https://example.com/file.jpg",
-                            100L,
-                            200L,
+                            "01912345-6789-7abc-def0-123456789100",
+                            "01912345-6789-7abc-def0-123456789200",
                             "bucket",
                             "prefix/",
                             ExternalDownloadStatus.PENDING,
@@ -85,8 +85,8 @@ class ExternalDownloadJpaEntityTest {
                             null,
                             null,
                             null,
-                            LocalDateTime.now(),
-                            LocalDateTime.now());
+                            Instant.now(),
+                            Instant.now());
 
             // then
             assertThat(entity.getId()).isNull();
@@ -101,15 +101,15 @@ class ExternalDownloadJpaEntityTest {
         void shouldCreateWithProcessingStatus() {
             // given
             ExternalDownloadStatus status = ExternalDownloadStatus.PROCESSING;
-            LocalDateTime now = LocalDateTime.now();
+            Instant now = Instant.now();
 
             // when
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/processing.jpg",
-                            100L,
-                            200L,
+                            "01912345-6789-7abc-def0-123456789100",
+                            "01912345-6789-7abc-def0-123456789200",
                             "bucket",
                             "prefix/",
                             status,
@@ -131,15 +131,15 @@ class ExternalDownloadJpaEntityTest {
         void shouldCreateWithFailedStatusAndErrorMessage() {
             // given
             String errorMessage = "Connection timeout after 3 retries";
-            LocalDateTime now = LocalDateTime.now();
+            Instant now = Instant.now();
 
             // when
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/failed.jpg",
-                            100L,
-                            200L,
+                            "01912345-6789-7abc-def0-123456789100",
+                            "01912345-6789-7abc-def0-123456789200",
                             "bucket",
                             "prefix/",
                             ExternalDownloadStatus.FAILED,
@@ -166,14 +166,14 @@ class ExternalDownloadJpaEntityTest {
         @DisplayName("모든 getter가 올바른 값을 반환한다")
         void shouldReturnCorrectValues() {
             // given
-            LocalDateTime now = LocalDateTime.now();
+            Instant now = Instant.now();
             ExternalDownloadJpaEntity entity = createEntity(now);
 
             // then
             assertThat(entity.getId()).isNotNull();
             assertThat(entity.getSourceUrl()).isEqualTo("https://example.com/file.jpg");
-            assertThat(entity.getTenantId()).isEqualTo(100L);
-            assertThat(entity.getOrganizationId()).isEqualTo(200L);
+            assertThat(entity.getTenantId()).isEqualTo("01912345-6789-7abc-def0-123456789100");
+            assertThat(entity.getOrganizationId()).isEqualTo("01912345-6789-7abc-def0-123456789200");
             assertThat(entity.getS3Bucket()).isEqualTo("test-bucket");
             assertThat(entity.getS3PathPrefix()).isEqualTo("downloads/");
             assertThat(entity.getStatus()).isEqualTo(ExternalDownloadStatus.PENDING);
@@ -190,8 +190,8 @@ class ExternalDownloadJpaEntityTest {
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/file.jpg",
-                            100L,
-                            200L,
+                            "01912345-6789-7abc-def0-123456789100",
+                            "01912345-6789-7abc-def0-123456789200",
                             "bucket",
                             "prefix/",
                             ExternalDownloadStatus.PENDING,
@@ -200,8 +200,8 @@ class ExternalDownloadJpaEntityTest {
                             null,
                             webhookUrl,
                             0L,
-                            LocalDateTime.now(),
-                            LocalDateTime.now());
+                            Instant.now(),
+                            Instant.now());
 
             // then
             assertThat(entity.getWebhookUrl()).isEqualTo(webhookUrl);
@@ -216,8 +216,8 @@ class ExternalDownloadJpaEntityTest {
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/file.jpg",
-                            100L,
-                            200L,
+                            "01912345-6789-7abc-def0-123456789100",
+                            "01912345-6789-7abc-def0-123456789200",
                             "bucket",
                             "prefix/",
                             ExternalDownloadStatus.COMPLETED,
@@ -226,8 +226,8 @@ class ExternalDownloadJpaEntityTest {
                             null,
                             null,
                             0L,
-                            LocalDateTime.now(),
-                            LocalDateTime.now());
+                            Instant.now(),
+                            Instant.now());
 
             // then
             assertThat(entity.getFileAssetId()).isEqualTo(fileAssetId);
@@ -236,12 +236,12 @@ class ExternalDownloadJpaEntityTest {
 
     // ==================== Helper Methods ====================
 
-    private ExternalDownloadJpaEntity createEntity(LocalDateTime timestamp) {
+    private ExternalDownloadJpaEntity createEntity(Instant timestamp) {
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
                 "https://example.com/file.jpg",
-                100L,
-                200L,
+                "01912345-6789-7abc-def0-123456789100",
+                "01912345-6789-7abc-def0-123456789200",
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

@@ -4,21 +4,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.ImageFormat;
-import com.ryuqq.fileflow.domain.asset.vo.ImageFormatType;
 import com.ryuqq.fileflow.domain.asset.vo.ImageVariant;
-import com.ryuqq.fileflow.domain.asset.vo.ImageVariantType;
 import com.ryuqq.fileflow.domain.asset.vo.ProcessedFileAssetId;
+import com.ryuqq.fileflow.domain.common.fixture.ClockFixture;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("ProcessedFileAsset 단위 테스트")
 class ProcessedFileAssetTest {
+
+    private static final Clock CLOCK = ClockFixture.defaultClock();
 
     @Nested
     @DisplayName("forNew 테스트")
@@ -33,28 +38,26 @@ class ProcessedFileAssetTest {
             ImageFormat format = ImageFormat.WEBP;
             FileName fileName = FileName.of("product_large.webp");
             FileSize fileSize = FileSize.of(50000L);
-            Integer width = 1200;
-            Integer height = 800;
             S3Bucket bucket = S3Bucket.of("test-bucket");
             S3Key s3Key = S3Key.of("processed/product_large.webp");
-            Long userId = 1L;
-            Long organizationId = 100L;
-            Long tenantId = 1000L;
+            UserId userId = UserId.of("01912345-6789-7abc-def0-123456789001");
+            OrganizationId organizationId = OrganizationId.of("01912345-6789-7abc-def0-123456789100");
+            TenantId tenantId = TenantId.of("01912345-6789-7abc-def0-123456781000");
 
             // when
-            ProcessedFileAsset asset = ProcessedFileAsset.forNew(
-                    originalAssetId,
-                    variant,
-                    format,
-                    fileName,
-                    fileSize,
-                    width,
-                    height,
-                    bucket,
-                    s3Key,
-                    userId,
-                    organizationId,
-                    tenantId);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.forNew(
+                            originalAssetId,
+                            variant,
+                            format,
+                            fileName,
+                            fileSize,
+                            bucket,
+                            s3Key,
+                            userId,
+                            organizationId,
+                            tenantId,
+                            CLOCK);
 
             // then
             assertThat(asset.getId()).isNotNull();
@@ -64,8 +67,6 @@ class ProcessedFileAssetTest {
             assertThat(asset.getFormat()).isEqualTo(format);
             assertThat(asset.getFileName()).isEqualTo(fileName);
             assertThat(asset.getFileSize()).isEqualTo(fileSize);
-            assertThat(asset.getWidth()).isEqualTo(width);
-            assertThat(asset.getHeight()).isEqualTo(height);
             assertThat(asset.getBucket()).isEqualTo(bucket);
             assertThat(asset.getS3Key()).isEqualTo(s3Key);
             assertThat(asset.getUserId()).isEqualTo(userId);
@@ -89,29 +90,27 @@ class ProcessedFileAssetTest {
             ImageFormat format = ImageFormat.JPEG;
             FileName fileName = FileName.of("html_image_medium.jpg");
             FileSize fileSize = FileSize.of(30000L);
-            Integer width = 600;
-            Integer height = 400;
             S3Bucket bucket = S3Bucket.of("test-bucket");
             S3Key s3Key = S3Key.of("processed/html_image_medium.jpg");
-            Long userId = 1L;
-            Long organizationId = 100L;
-            Long tenantId = 1000L;
+            UserId userId = UserId.of("01912345-6789-7abc-def0-123456789001");
+            OrganizationId organizationId = OrganizationId.of("01912345-6789-7abc-def0-123456789100");
+            TenantId tenantId = TenantId.of("01912345-6789-7abc-def0-123456781000");
 
             // when
-            ProcessedFileAsset asset = ProcessedFileAsset.forHtmlExtractedImage(
-                    parentAssetId,
-                    originalAssetId,
-                    variant,
-                    format,
-                    fileName,
-                    fileSize,
-                    width,
-                    height,
-                    bucket,
-                    s3Key,
-                    userId,
-                    organizationId,
-                    tenantId);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.forHtmlExtractedImage(
+                            parentAssetId,
+                            originalAssetId,
+                            variant,
+                            format,
+                            fileName,
+                            fileSize,
+                            bucket,
+                            s3Key,
+                            userId,
+                            organizationId,
+                            tenantId,
+                            CLOCK);
 
             // then
             assertThat(asset.getId()).isNotNull();
@@ -119,6 +118,7 @@ class ProcessedFileAssetTest {
             assertThat(asset.getParentAssetId()).isEqualTo(parentAssetId);
             assertThat(asset.getVariant()).isEqualTo(variant);
             assertThat(asset.getFormat()).isEqualTo(format);
+            assertThat(asset.getFileSize()).isEqualTo(fileSize);
         }
     }
 
@@ -137,37 +137,35 @@ class ProcessedFileAssetTest {
             ImageFormat format = ImageFormat.PNG;
             FileName fileName = FileName.of("product_thumb.png");
             FileSize fileSize = FileSize.of(10000L);
-            Integer width = 200;
-            Integer height = 150;
             S3Bucket bucket = S3Bucket.of("test-bucket");
             S3Key s3Key = S3Key.of("processed/product_thumb.png");
-            Long userId = 1L;
-            Long organizationId = 100L;
-            Long tenantId = 1000L;
-            LocalDateTime createdAt = LocalDateTime.of(2025, 12, 1, 10, 0);
+            UserId userId = UserId.of("01912345-6789-7abc-def0-123456789001");
+            OrganizationId organizationId = OrganizationId.of("01912345-6789-7abc-def0-123456789100");
+            TenantId tenantId = TenantId.of("01912345-6789-7abc-def0-123456781000");
+            Instant createdAt = Instant.parse("2025-12-01T10:00:00Z");
 
             // when
-            ProcessedFileAsset asset = ProcessedFileAsset.reconstitute(
-                    id,
-                    originalAssetId,
-                    parentAssetId,
-                    variant,
-                    format,
-                    fileName,
-                    fileSize,
-                    width,
-                    height,
-                    bucket,
-                    s3Key,
-                    userId,
-                    organizationId,
-                    tenantId,
-                    createdAt);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.reconstitute(
+                            id,
+                            originalAssetId,
+                            parentAssetId,
+                            variant,
+                            format,
+                            fileName,
+                            fileSize,
+                            bucket,
+                            s3Key,
+                            userId,
+                            organizationId,
+                            tenantId,
+                            createdAt);
 
             // then
             assertThat(asset.getId()).isEqualTo(id);
             assertThat(asset.getOriginalAssetId()).isEqualTo(originalAssetId);
             assertThat(asset.getParentAssetId()).isEqualTo(parentAssetId);
+            assertThat(asset.getFileSize()).isEqualTo(fileSize);
             assertThat(asset.getCreatedAt()).isEqualTo(createdAt);
         }
     }
@@ -182,20 +180,20 @@ class ProcessedFileAssetTest {
             // given
             FileAssetId parentAssetId = FileAssetId.forNew();
             FileAssetId originalAssetId = FileAssetId.forNew();
-            ProcessedFileAsset asset = ProcessedFileAsset.forHtmlExtractedImage(
-                    parentAssetId,
-                    originalAssetId,
-                    ImageVariant.LARGE,
-                    ImageFormat.WEBP,
-                    FileName.of("test.webp"),
-                    FileSize.of(1000L),
-                    100,
-                    100,
-                    S3Bucket.of("bucket"),
-                    S3Key.of("key"),
-                    1L,
-                    1L,
-                    1L);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.forHtmlExtractedImage(
+                            parentAssetId,
+                            originalAssetId,
+                            ImageVariant.LARGE,
+                            ImageFormat.WEBP,
+                            FileName.of("test.webp"),
+                            FileSize.of(1000L),
+                            S3Bucket.of("bucket"),
+                            S3Key.of("key"),
+                            UserId.of("01912345-6789-7abc-def0-123456789001"),
+                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
+                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            CLOCK);
 
             // when & then
             assertThat(asset.hasParentAsset()).isTrue();
@@ -205,19 +203,19 @@ class ProcessedFileAssetTest {
         @DisplayName("부모 에셋이 없으면 false를 반환한다")
         void shouldReturnFalseForHasParentAssetWhenNoParent() {
             // given
-            ProcessedFileAsset asset = ProcessedFileAsset.forNew(
-                    FileAssetId.forNew(),
-                    ImageVariant.LARGE,
-                    ImageFormat.WEBP,
-                    FileName.of("test.webp"),
-                    FileSize.of(1000L),
-                    100,
-                    100,
-                    S3Bucket.of("bucket"),
-                    S3Key.of("key"),
-                    1L,
-                    1L,
-                    1L);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.forNew(
+                            FileAssetId.forNew(),
+                            ImageVariant.LARGE,
+                            ImageFormat.WEBP,
+                            FileName.of("test.webp"),
+                            FileSize.of(1000L),
+                            S3Bucket.of("bucket"),
+                            S3Key.of("key"),
+                            UserId.of("01912345-6789-7abc-def0-123456789001"),
+                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
+                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            CLOCK);
 
             // when & then
             assertThat(asset.hasParentAsset()).isFalse();
@@ -232,19 +230,19 @@ class ProcessedFileAssetTest {
         @DisplayName("ORIGINAL 버전이면 true를 반환한다")
         void shouldReturnTrueForIsOriginalVariantWhenOriginal() {
             // given
-            ProcessedFileAsset asset = ProcessedFileAsset.forNew(
-                    FileAssetId.forNew(),
-                    ImageVariant.ORIGINAL,
-                    ImageFormat.JPEG,
-                    FileName.of("test.jpg"),
-                    FileSize.of(1000L),
-                    100,
-                    100,
-                    S3Bucket.of("bucket"),
-                    S3Key.of("key"),
-                    1L,
-                    1L,
-                    1L);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.forNew(
+                            FileAssetId.forNew(),
+                            ImageVariant.ORIGINAL,
+                            ImageFormat.JPEG,
+                            FileName.of("test.jpg"),
+                            FileSize.of(1000L),
+                            S3Bucket.of("bucket"),
+                            S3Key.of("key"),
+                            UserId.of("01912345-6789-7abc-def0-123456789001"),
+                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
+                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            CLOCK);
 
             // when & then
             assertThat(asset.isOriginalVariant()).isTrue();
@@ -254,19 +252,19 @@ class ProcessedFileAssetTest {
         @DisplayName("ORIGINAL이 아닌 버전이면 false를 반환한다")
         void shouldReturnFalseForIsOriginalVariantWhenNotOriginal() {
             // given
-            ProcessedFileAsset asset = ProcessedFileAsset.forNew(
-                    FileAssetId.forNew(),
-                    ImageVariant.LARGE,
-                    ImageFormat.JPEG,
-                    FileName.of("test_large.jpg"),
-                    FileSize.of(1000L),
-                    100,
-                    100,
-                    S3Bucket.of("bucket"),
-                    S3Key.of("key"),
-                    1L,
-                    1L,
-                    1L);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.forNew(
+                            FileAssetId.forNew(),
+                            ImageVariant.LARGE,
+                            ImageFormat.JPEG,
+                            FileName.of("test_large.jpg"),
+                            FileSize.of(1000L),
+                            S3Bucket.of("bucket"),
+                            S3Key.of("key"),
+                            UserId.of("01912345-6789-7abc-def0-123456789001"),
+                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
+                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            CLOCK);
 
             // when & then
             assertThat(asset.isOriginalVariant()).isFalse();
@@ -281,19 +279,19 @@ class ProcessedFileAssetTest {
         @DisplayName("WebP 포맷이면 true를 반환한다")
         void shouldReturnTrueForIsWebpFormatWhenWebp() {
             // given
-            ProcessedFileAsset asset = ProcessedFileAsset.forNew(
-                    FileAssetId.forNew(),
-                    ImageVariant.LARGE,
-                    ImageFormat.WEBP,
-                    FileName.of("test.webp"),
-                    FileSize.of(1000L),
-                    100,
-                    100,
-                    S3Bucket.of("bucket"),
-                    S3Key.of("key"),
-                    1L,
-                    1L,
-                    1L);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.forNew(
+                            FileAssetId.forNew(),
+                            ImageVariant.LARGE,
+                            ImageFormat.WEBP,
+                            FileName.of("test.webp"),
+                            FileSize.of(1000L),
+                            S3Bucket.of("bucket"),
+                            S3Key.of("key"),
+                            UserId.of("01912345-6789-7abc-def0-123456789001"),
+                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
+                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            CLOCK);
 
             // when & then
             assertThat(asset.isWebpFormat()).isTrue();
@@ -303,19 +301,19 @@ class ProcessedFileAssetTest {
         @DisplayName("WebP가 아닌 포맷이면 false를 반환한다")
         void shouldReturnFalseForIsWebpFormatWhenNotWebp() {
             // given
-            ProcessedFileAsset asset = ProcessedFileAsset.forNew(
-                    FileAssetId.forNew(),
-                    ImageVariant.LARGE,
-                    ImageFormat.JPEG,
-                    FileName.of("test.jpg"),
-                    FileSize.of(1000L),
-                    100,
-                    100,
-                    S3Bucket.of("bucket"),
-                    S3Key.of("key"),
-                    1L,
-                    1L,
-                    1L);
+            ProcessedFileAsset asset =
+                    ProcessedFileAsset.forNew(
+                            FileAssetId.forNew(),
+                            ImageVariant.LARGE,
+                            ImageFormat.JPEG,
+                            FileName.of("test.jpg"),
+                            FileSize.of(1000L),
+                            S3Bucket.of("bucket"),
+                            S3Key.of("key"),
+                            UserId.of("01912345-6789-7abc-def0-123456789001"),
+                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
+                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            CLOCK);
 
             // when & then
             assertThat(asset.isWebpFormat()).isFalse();

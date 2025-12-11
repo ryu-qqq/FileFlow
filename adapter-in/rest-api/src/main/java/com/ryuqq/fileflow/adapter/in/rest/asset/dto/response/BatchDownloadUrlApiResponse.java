@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.asset.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 /**
@@ -14,11 +15,12 @@ import java.util.List;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "다운로드 URL 일괄 생성 응답")
 public record BatchDownloadUrlApiResponse(
-        List<DownloadUrlApiResponse> downloadUrls,
-        int successCount,
-        int failureCount,
-        List<FailedDownloadUrl> failures) {
+        @Schema(description = "생성된 Download URL 목록") List<DownloadUrlApiResponse> downloadUrls,
+        @Schema(description = "성공 건수", example = "5") int successCount,
+        @Schema(description = "실패 건수", example = "1") int failureCount,
+        @Schema(description = "실패한 파일 자산 목록") List<FailedDownloadUrl> failures) {
 
     /**
      * 성공한 URL 목록으로 응답 생성.
@@ -50,7 +52,11 @@ public record BatchDownloadUrlApiResponse(
      * @param errorCode 에러 코드
      * @param errorMessage 에러 메시지
      */
-    public record FailedDownloadUrl(String fileAssetId, String errorCode, String errorMessage) {
+    @Schema(description = "실패한 다운로드 URL 정보")
+    public record FailedDownloadUrl(
+            @Schema(description = "파일 자산 ID", example = "asset-123") String fileAssetId,
+            @Schema(description = "에러 코드", example = "NOT_FOUND") String errorCode,
+            @Schema(description = "에러 메시지", example = "파일 자산을 찾을 수 없습니다") String errorMessage) {
 
         /**
          * 값 기반 생성.

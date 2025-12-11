@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.common;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,8 +53,8 @@ import org.springframework.web.context.WebApplicationContext;
  *
  * @author development-team
  * @since 1.0.0
- * @see org.springframework.restdocs.RestDocumentationExtension
- * @see org.springframework.test.web.servlet.MockMvc
+ * @see RestDocumentationExtension
+ * @see MockMvc
  */
 @ExtendWith(RestDocumentationExtension.class)
 public abstract class RestDocsTestSupport {

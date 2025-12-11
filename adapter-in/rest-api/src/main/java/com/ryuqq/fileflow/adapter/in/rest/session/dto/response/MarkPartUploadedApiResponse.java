@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
-import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 
 /**
  * Part 업로드 완료 표시 API Response.
@@ -21,8 +22,12 @@ import java.time.LocalDateTime;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "Part 업로드 완료 응답")
 public record MarkPartUploadedApiResponse(
-        String sessionId, int partNumber, String etag, LocalDateTime uploadedAt) {
+        @Schema(description = "세션 ID", example = "session-123") String sessionId,
+        @Schema(description = "Part 번호 (1-based)", example = "1") int partNumber,
+        @Schema(description = "Part ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"") String etag,
+        @Schema(description = "업로드 시각") Instant uploadedAt) {
 
     /**
      * 값 기반 생성.
@@ -34,7 +39,7 @@ public record MarkPartUploadedApiResponse(
      * @return MarkPartUploadedApiResponse
      */
     public static MarkPartUploadedApiResponse of(
-            String sessionId, int partNumber, String etag, LocalDateTime uploadedAt) {
+            String sessionId, int partNumber, String etag, Instant uploadedAt) {
         return new MarkPartUploadedApiResponse(sessionId, partNumber, etag, uploadedAt);
     }
 }

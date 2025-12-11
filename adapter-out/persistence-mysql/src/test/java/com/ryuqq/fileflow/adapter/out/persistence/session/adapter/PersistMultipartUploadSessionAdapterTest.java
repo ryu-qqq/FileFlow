@@ -8,7 +8,9 @@ import com.ryuqq.fileflow.adapter.out.persistence.session.entity.MultipartUpload
 import com.ryuqq.fileflow.adapter.out.persistence.session.mapper.MultipartUploadSessionJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.session.repository.MultipartUploadSessionJpaRepository;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.iam.vo.UserRole;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
@@ -23,10 +25,7 @@ import com.ryuqq.fileflow.domain.session.vo.S3UploadId;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.TotalParts;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,12 +44,11 @@ class PersistMultipartUploadSessionAdapterTest {
     @Mock private MultipartUploadSessionJpaMapper mapper;
 
     private PersistMultipartUploadSessionAdapter adapter;
-    private Clock fixedClock;
+    private static final Instant FIXED_INSTANT = Instant.parse("2025-11-26T10:00:00Z");
 
     @BeforeEach
     void setUp() {
         adapter = new PersistMultipartUploadSessionAdapter(sessionRepository, mapper);
-        fixedClock = Clock.fixed(Instant.parse("2025-11-26T10:00:00Z"), ZoneId.of("UTC"));
     }
 
     @Nested
@@ -138,9 +136,12 @@ class PersistMultipartUploadSessionAdapterTest {
     // ==================== Helper Methods ====================
 
     private MultipartUploadSession createSession(String sessionId) {
-        Tenant tenant = Tenant.of(1L, "Connectly");
+        String tenantId = "01912345-6789-7abc-def0-123456789001";
+        String organizationId = "01912345-6789-7abc-def0-123456789000";
+
+        Tenant tenant = Tenant.of(TenantId.of(tenantId), "Connectly");
         Organization organization =
-                Organization.of(0L, "Connectly Org", "connectly", UserRole.ADMIN);
+                Organization.of(OrganizationId.of(organizationId), "Connectly Org", "connectly", UserRole.ADMIN);
         UserContext userContext = UserContext.of(tenant, organization, "admin@test.com", null);
 
         return MultipartUploadSession.reconstitute(
@@ -154,25 +155,27 @@ class PersistMultipartUploadSessionAdapterTest {
                 S3UploadId.of("s3-upload-id-xyz"),
                 TotalParts.of(10),
                 PartSize.of(50 * 1024 * 1024L),
-                ExpirationTime.of(LocalDateTime.now(fixedClock).plusDays(1)),
-                LocalDateTime.now(fixedClock),
+                ExpirationTime.of(FIXED_INSTANT.plus(java.time.Duration.ofDays(1))),
+                FIXED_INSTANT,
                 SessionStatus.ACTIVE,
                 null,
-                0L,
-                fixedClock);
+                0L);
     }
 
     private MultipartUploadSessionJpaEntity createEntity(String sessionId) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusDays(1);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofDays(1));
+
+        String tenantId = "01912345-6789-7abc-def0-123456789001";
+        String organizationId = "01912345-6789-7abc-def0-123456789000";
 
         return MultipartUploadSessionJpaEntity.of(
                 sessionId,
-                1L,
-                0L,
+                tenantId,
+                organizationId,
                 "Connectly Org",
                 "connectly",
-                1L,
+                tenantId,
                 "Connectly",
                 "ADMIN",
                 "admin@test.com",

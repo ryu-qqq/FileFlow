@@ -23,11 +23,22 @@ public class SqsPublishProperties {
     /** ExternalDownload 큐 URL. */
     private String externalDownloadQueueUrl;
 
+    /** FileProcessing 큐 URL. */
+    private String fileProcessingQueueUrl;
+
     public String getExternalDownloadQueueUrl() {
         return externalDownloadQueueUrl;
     }
 
     public void setExternalDownloadQueueUrl(String externalDownloadQueueUrl) {
         this.externalDownloadQueueUrl = externalDownloadQueueUrl;
+    }
+
+    public String getFileProcessingQueueUrl() {
+        return fileProcessingQueueUrl;
+    }
+
+    public void setFileProcessingQueueUrl(String fileProcessingQueueUrl) {
+        this.fileProcessingQueueUrl = fileProcessingQueueUrl;
     }
 }

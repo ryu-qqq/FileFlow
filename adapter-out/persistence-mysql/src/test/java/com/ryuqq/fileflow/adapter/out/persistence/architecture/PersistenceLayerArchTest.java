@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.architecture;
 
+import static com.ryuqq.fileflow.adapter.out.persistence.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -40,9 +41,7 @@ class PersistenceLayerArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses =
-                new ClassFileImporter()
-                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+        allClasses = new ClassFileImporter().importPackages(PERSISTENCE);
     }
 
     /** 규칙 1: Package 구조 검증 */
@@ -54,7 +53,7 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameEndingWith("Adapter")
                         .should()
-                        .resideInAPackage("..adapter..")
+                        .resideInAPackage(ADAPTER_PATTERN)
                         .because("Adapter 클래스는 adapter 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -68,7 +67,7 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameEndingWith("JpaEntity")
                         .should()
-                        .resideInAPackage("..entity..")
+                        .resideInAPackage(ENTITY_PATTERN)
                         .because("JPA Entity 클래스는 entity 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -82,7 +81,7 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameContaining("Repository")
                         .should()
-                        .resideInAPackage("..repository..")
+                        .resideInAPackage(REPOSITORY_PATTERN)
                         .because("Repository 인터페이스/클래스는 repository 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -96,7 +95,7 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameEndingWith("Mapper")
                         .should()
-                        .resideInAPackage("..mapper..")
+                        .resideInAPackage(MAPPER_PATTERN)
                         .because("Mapper 클래스는 mapper 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -111,9 +110,17 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameEndingWith("CommandAdapter")
                         .should()
-                        .dependOnClassesThat()
-                        .haveSimpleNameEndingWith("Port")
-                        .because("CommandAdapter는 Port 인터페이스를 구현해야 합니다");
+                        .implement(
+                                com.tngtech.archunit.base.DescribedPredicate.describe(
+                                        "CommandPort interface",
+                                        javaClass ->
+                                                javaClass.getAllRawInterfaces().stream()
+                                                        .anyMatch(
+                                                                i ->
+                                                                        i.getSimpleName()
+                                                                                .endsWith(
+                                                                                        "CommandPort"))))
+                        .because("CommandAdapter는 CommandPort 인터페이스를 구현해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -128,9 +135,20 @@ class PersistenceLayerArchTest {
                         .and()
                         .haveSimpleNameNotContaining("Lock")
                         .should()
-                        .dependOnClassesThat()
-                        .haveSimpleNameEndingWith("Port")
-                        .because("QueryAdapter는 Port 인터페이스를 구현해야 합니다");
+                        .implement(
+                                com.tngtech.archunit.base.DescribedPredicate.describe(
+                                        "QueryPort interface",
+                                        javaClass ->
+                                                javaClass.getAllRawInterfaces().stream()
+                                                        .anyMatch(
+                                                                i ->
+                                                                        i.getSimpleName()
+                                                                                        .endsWith(
+                                                                                                "QueryPort")
+                                                                                && !i.getSimpleName()
+                                                                                        .contains(
+                                                                                                "Lock"))))
+                        .because("QueryAdapter는 QueryPort 인터페이스를 구현해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -143,30 +161,39 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameEndingWith("LockQueryAdapter")
                         .should()
-                        .dependOnClassesThat()
-                        .haveSimpleNameEndingWith("Port")
-                        .because("LockQueryAdapter는 Port 인터페이스를 구현해야 합니다");
+                        .implement(
+                                com.tngtech.archunit.base.DescribedPredicate.describe(
+                                        "LockQueryPort interface",
+                                        javaClass ->
+                                                javaClass.getAllRawInterfaces().stream()
+                                                        .anyMatch(
+                                                                i ->
+                                                                        i.getSimpleName()
+                                                                                .endsWith(
+                                                                                        "LockQueryPort"))))
+                        .because("LockQueryAdapter는 LockQueryPort 인터페이스를 구현해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /**
-     * 규칙 3: JPA Entity와 Domain 분리 검증
-     *
-     * <p>JPA Entity는 Domain Aggregate/Entity를 직접 의존하면 안 됩니다. 단, Domain의 Value Object(Enum 등)는
-     * 허용됩니다.
-     */
+    /** 규칙 3: JPA Entity와 Domain 분리 검증 (Enum은 허용) */
     @Test
-    @DisplayName("[필수] JPA Entity는 Domain Layer를 의존하지 않아야 한다")
-    void persistence_JpaEntityMustNotDependOnDomain() {
+    @DisplayName("[필수] JPA Entity는 Domain Layer의 Enum만 의존할 수 있다")
+    void persistence_JpaEntityCanOnlyDependOnDomainEnums() {
         ArchRule rule =
                 noClasses()
                         .that()
                         .haveSimpleNameEndingWith("JpaEntity")
                         .should()
-                        .dependOnClassesThat()
-                        .resideInAnyPackage("..domain..aggregate..")
-                        .because("JPA Entity는 Domain Aggregate에 의존하면 안 됩니다 (Value Object는 허용)");
+                        .dependOnClassesThat(
+                                com.tngtech.archunit.base.DescribedPredicate.describe(
+                                        "Domain Layer classes that are not enums",
+                                        javaClass ->
+                                                javaClass.getPackageName().contains(".domain.")
+                                                        && !javaClass.isEnum()))
+                        .because(
+                                "JPA Entity는 Domain Layer의 Enum만 의존할 수 있습니다 "
+                                        + "(VO, Entity 등 다른 Domain 클래스 의존 금지)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -180,7 +207,7 @@ class PersistenceLayerArchTest {
                         .haveSimpleNameEndingWith("JpaEntity")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..application..")
+                        .resideInAnyPackage(APPLICATION_ALL)
                         .because("JPA Entity는 Application Layer에 의존하면 안 됩니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -192,7 +219,7 @@ class PersistenceLayerArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAnyPackage("..domain..")
+                        .resideInAnyPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .haveSimpleNameEndingWith("JpaEntity")
@@ -201,67 +228,45 @@ class PersistenceLayerArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /**
-     * 규칙 5: Application Layer Service/UseCase 의존 금지
-     *
-     * <p>Persistence Layer는 Application Layer의 Service/UseCase를 의존하면 안 됩니다. 단, Port 인터페이스와 DTO는 의존
-     * 가능합니다.
-     */
+    /** 규칙 5: Application Layer 의존 금지 */
     @Test
     @DisplayName("[금지] Persistence Layer는 Application Layer를 직접 의존하지 않아야 한다")
     void persistence_MustNotDependOnApplicationLayer() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAnyPackage("..adapter.out.persistence..")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
+                        .resideInAnyPackage(PERSISTENCE_ALL)
                         .should()
                         .dependOnClassesThat()
-                        .haveSimpleNameEndingWith("UseCase")
-                        .orShould()
-                        .dependOnClassesThat()
-                        .haveSimpleNameEndingWith("Service")
+                        .resideInAnyPackage(APPLICATION_ALL)
                         .because(
-                                "Persistence Layer는 Application Layer의 UseCase/Service를 직접 의존하면 안"
-                                        + " 됩니다");
+                                "Persistence Layer는 Application Layer를 직접 의존하면 안 됩니다 (Port를 통해서만"
+                                        + " 접근)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /**
-     * 규칙 6: Domain Layer Aggregate 의존 금지 (Adapter 제외)
-     *
-     * <p>Repository/Entity는 Domain Aggregate를 직접 의존하면 안 됩니다. 단, Mapper는 Domain과 Entity 간 변환을 담당하므로
-     * Domain 의존이 허용됩니다. Value Object(Enum 등)는 모든 곳에서 허용됩니다.
-     */
+    /** 규칙 6: Domain Layer 의존 금지 (Adapter 제외) */
     @Test
     @DisplayName("[금지] Repository/Entity/Mapper는 Domain Layer를 직접 의존하지 않아야 한다")
     void persistence_RepositoryEntityMapperMustNotDependOnDomain() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAnyPackage("..repository..")
+                        .resideInAnyPackage(REPOSITORY_PATTERN, ENTITY_PATTERN, MAPPER_PATTERN)
                         .and()
-                        .resideOutsideOfPackages("..architecture..") // 테스트 제외
+                        .resideOutsideOfPackages(ARCHITECTURE_PATTERN) // 테스트 제외
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("com.ryuqq.fileflow.domain..aggregate..")
-                        .because("Repository는 Domain Aggregate를 직접 의존하면 안 됩니다 (Value Object는 허용)");
+                        .resideInAnyPackage(DOMAIN_ALL)
+                        .because(
+                                "Repository/Entity/Mapper는 Domain Layer를 직접 의존하면 안 됩니다 (Adapter만"
+                                        + " Domain 접근 가능)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /**
-     * 규칙 7: Adapter 네이밍 규칙
-     *
-     * <p>Adapter는 역할을 명확히 하는 네이밍을 사용해야 합니다.
-     *
-     * <ul>
-     *   <li>✅ *CommandAdapter, *QueryAdapter, *LockQueryAdapter
-     *   <li>✅ *Adapter (다양한 패턴 허용)
-     * </ul>
-     */
+    /** 규칙 7: Adapter 네이밍 규칙 */
     @Test
     @DisplayName("[필수] Adapter는 *CommandAdapter 또는 *QueryAdapter 네이밍 규칙을 따라야 한다")
     void persistence_AdaptersMustFollowNamingConvention() {
@@ -274,8 +279,12 @@ class PersistenceLayerArchTest {
                         .and()
                         .haveSimpleNameNotContaining("Test")
                         .should()
-                        .resideInAPackage("..adapter..")
-                        .because("Adapter는 adapter 패키지에 위치해야 합니다");
+                        .haveSimpleNameEndingWith("CommandAdapter")
+                        .orShould()
+                        .haveSimpleNameEndingWith("QueryAdapter")
+                        .orShould()
+                        .haveSimpleNameEndingWith("LockQueryAdapter")
+                        .because("Adapter는 *CommandAdapter 또는 *QueryAdapter 네이밍 규칙을 따라야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -287,7 +296,7 @@ class PersistenceLayerArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("..repository..")
+                        .resideInAPackage(REPOSITORY_PATTERN)
                         .and()
                         .haveSimpleNameNotContaining("Test")
                         .should()

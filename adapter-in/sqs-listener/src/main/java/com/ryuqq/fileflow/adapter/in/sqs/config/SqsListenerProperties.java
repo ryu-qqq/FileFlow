@@ -34,6 +34,18 @@ public class SqsListenerProperties {
     /** ExternalDownload DLQ 리스너 활성화 여부. */
     private boolean externalDownloadDlqListenerEnabled = true;
 
+    /** FileProcessing 큐 URL. */
+    private String fileProcessingQueueUrl;
+
+    /** FileProcessing DLQ URL. */
+    private String fileProcessingDlqUrl;
+
+    /** FileProcessing 리스너 활성화 여부. */
+    private boolean fileProcessingListenerEnabled = true;
+
+    /** FileProcessing DLQ 리스너 활성화 여부. */
+    private boolean fileProcessingDlqListenerEnabled = true;
+
     public String getExternalDownloadQueueUrl() {
         return externalDownloadQueueUrl;
     }
@@ -64,5 +76,37 @@ public class SqsListenerProperties {
 
     public void setExternalDownloadDlqListenerEnabled(boolean externalDownloadDlqListenerEnabled) {
         this.externalDownloadDlqListenerEnabled = externalDownloadDlqListenerEnabled;
+    }
+
+    public String getFileProcessingQueueUrl() {
+        return fileProcessingQueueUrl;
+    }
+
+    public void setFileProcessingQueueUrl(String fileProcessingQueueUrl) {
+        this.fileProcessingQueueUrl = fileProcessingQueueUrl;
+    }
+
+    public boolean isFileProcessingListenerEnabled() {
+        return fileProcessingListenerEnabled;
+    }
+
+    public void setFileProcessingListenerEnabled(boolean fileProcessingListenerEnabled) {
+        this.fileProcessingListenerEnabled = fileProcessingListenerEnabled;
+    }
+
+    public String getFileProcessingDlqUrl() {
+        return fileProcessingDlqUrl;
+    }
+
+    public void setFileProcessingDlqUrl(String fileProcessingDlqUrl) {
+        this.fileProcessingDlqUrl = fileProcessingDlqUrl;
+    }
+
+    public boolean isFileProcessingDlqListenerEnabled() {
+        return fileProcessingDlqListenerEnabled;
+    }
+
+    public void setFileProcessingDlqListenerEnabled(boolean fileProcessingDlqListenerEnabled) {
+        this.fileProcessingDlqListenerEnabled = fileProcessingDlqListenerEnabled;
     }
 }

@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.common.lock;
 
-import com.ryuqq.fileflow.application.common.port.out.lock.DistributedLockPort;
+import com.ryuqq.fileflow.application.common.port.out.DistributedLockPort;
+import com.ryuqq.fileflow.domain.common.vo.LockKey;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import org.springframework.stereotype.Component;
@@ -47,13 +48,25 @@ public class DistributedLockExecutor {
      * @return 작업 결과 또는 락 획득 실패 시 null
      */
     public <T> T executeWithLock(LockType lockType, Object identifier, Supplier<T> action) {
-        String lockKey = lockType.createKey(identifier);
-        return lockPort.executeWithLock(
-                lockKey,
-                lockType.getWaitTimeMs(),
-                lockType.getLeaseTimeMs(),
-                TimeUnit.MILLISECONDS,
-                action);
+        LockKey lockKey = createLockKey(lockType, identifier);
+        boolean acquired =
+                lockPort.tryLock(
+                        lockKey,
+                        lockType.getWaitTimeMs(),
+                        lockType.getLeaseTimeMs(),
+                        TimeUnit.MILLISECONDS);
+
+        if (!acquired) {
+            return null;
+        }
+
+        try {
+            return action.get();
+        } finally {
+            if (lockPort.isHeldByCurrentThread(lockKey)) {
+                lockPort.unlock(lockKey);
+            }
+        }
     }
 
     /**
@@ -65,13 +78,26 @@ public class DistributedLockExecutor {
      * @return 락 획득 및 작업 실행 성공 여부
      */
     public boolean executeWithLock(LockType lockType, Object identifier, Runnable action) {
-        String lockKey = lockType.createKey(identifier);
-        return lockPort.executeWithLock(
-                lockKey,
-                lockType.getWaitTimeMs(),
-                lockType.getLeaseTimeMs(),
-                TimeUnit.MILLISECONDS,
-                action);
+        LockKey lockKey = createLockKey(lockType, identifier);
+        boolean acquired =
+                lockPort.tryLock(
+                        lockKey,
+                        lockType.getWaitTimeMs(),
+                        lockType.getLeaseTimeMs(),
+                        TimeUnit.MILLISECONDS);
+
+        if (!acquired) {
+            return false;
+        }
+
+        try {
+            action.run();
+            return true;
+        } finally {
+            if (lockPort.isHeldByCurrentThread(lockKey)) {
+                lockPort.unlock(lockKey);
+            }
+        }
     }
 
     /**
@@ -85,13 +111,7 @@ public class DistributedLockExecutor {
      * @return 락 획득 및 작업 실행 성공 여부
      */
     public boolean tryExecuteWithLock(LockType lockType, Object identifier, Runnable action) {
-        String lockKey = lockType.createKey(identifier);
-        return lockPort.executeWithLock(
-                lockKey,
-                lockType.getWaitTimeMs(),
-                lockType.getLeaseTimeMs(),
-                TimeUnit.MILLISECONDS,
-                action);
+        return executeWithLock(lockType, identifier, action);
     }
 
     /**
@@ -102,7 +122,21 @@ public class DistributedLockExecutor {
      * @return 락 잠금 여부
      */
     public boolean isLocked(LockType lockType, Object identifier) {
-        String lockKey = lockType.createKey(identifier);
+        LockKey lockKey = createLockKey(lockType, identifier);
         return lockPort.isLocked(lockKey);
+    }
+
+    private LockKey createLockKey(LockType lockType, Object identifier) {
+        String keyValue = lockType.createKey(identifier);
+        return new SimpleLockKey(keyValue);
+    }
+
+    /** LockType 기반 간단한 LockKey 구현체 */
+    private record SimpleLockKey(String keyValue) implements LockKey {
+
+        @Override
+        public String value() {
+            return keyValue;
+        }
     }
 }

@@ -7,9 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * FileProcessingOutboxId 단위 테스트.
- */
+/** FileProcessingOutboxId 단위 테스트. */
 @DisplayName("FileProcessingOutboxId 단위 테스트")
 class FileProcessingOutboxIdTest {
 

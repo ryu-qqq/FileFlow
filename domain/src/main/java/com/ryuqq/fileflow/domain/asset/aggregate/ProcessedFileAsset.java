@@ -6,30 +6,43 @@ import com.ryuqq.fileflow.domain.asset.vo.ImageFormatType;
 import com.ryuqq.fileflow.domain.asset.vo.ImageVariant;
 import com.ryuqq.fileflow.domain.asset.vo.ImageVariantType;
 import com.ryuqq.fileflow.domain.asset.vo.ProcessedFileAssetId;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 
 /**
  * 처리된 파일 에셋 Aggregate Root.
  *
- * <p>원본 이미지를 리사이징/포맷 변환하여 생성된 파일 에셋을 표현합니다.
- * HTML에서 추출된 이미지의 경우 parentAssetId를 통해 부모 관계를 추적합니다.
+ * <p>원본 이미지를 리사이징/포맷 변환하여 생성된 파일 에셋을 표현합니다. HTML에서 추출된 이미지의 경우 parentAssetId를 통해 부모 관계를 추적합니다.
+ *
+ * <p><strong>설계 결정:</strong>
+ *
+ * <ul>
+ *   <li>dimension (이미지 크기): 저장하지 않음 - ImageVariant 스펙에서 결정됨
+ *   <li>colorSpace (색 공간): 저장하지 않음 - 가공 시 항상 RGB로 변환됨
+ *   <li>fileSize만 저장 - 압축 결과에 따라 실제 크기가 달라짐
+ * </ul>
  *
  * <h3>팩토리 메서드</h3>
+ *
  * <ul>
- *   <li>{@link #forNew} - 일반 이미지 처리 결과 생성</li>
- *   <li>{@link #forHtmlExtractedImage} - HTML에서 추출된 이미지 생성</li>
- *   <li>{@link #reconstitute} - 영속성에서 복원</li>
+ *   <li>{@link #forNew} - 일반 이미지 처리 결과 생성
+ *   <li>{@link #forHtmlExtractedImage} - HTML에서 추출된 이미지 생성
+ *   <li>{@link #reconstitute} - 영속성에서 복원
  * </ul>
  *
  * <h3>비즈니스 메서드</h3>
+ *
  * <ul>
- *   <li>{@link #hasParentAsset()} - 부모 에셋 존재 여부</li>
- *   <li>{@link #isOriginalVariant()} - ORIGINAL 버전 여부</li>
- *   <li>{@link #isWebpFormat()} - WebP 포맷 여부</li>
+ *   <li>{@link #hasParentAsset()} - 부모 에셋 존재 여부
+ *   <li>{@link #isOriginalVariant()} - ORIGINAL 버전 여부
+ *   <li>{@link #isWebpFormat()} - WebP 포맷 여부
  * </ul>
  */
 public class ProcessedFileAsset {
@@ -43,17 +56,15 @@ public class ProcessedFileAsset {
 
     private final FileName fileName;
     private final FileSize fileSize;
-    private final Integer width;
-    private final Integer height;
 
     private final S3Bucket bucket;
     private final S3Key s3Key;
 
-    private final Long userId;
-    private final Long organizationId;
-    private final Long tenantId;
+    private final UserId userId;
+    private final OrganizationId organizationId;
+    private final TenantId tenantId;
 
-    private final LocalDateTime createdAt;
+    private final Instant createdAt;
 
     private ProcessedFileAsset(
             ProcessedFileAssetId id,
@@ -63,14 +74,12 @@ public class ProcessedFileAsset {
             ImageFormat format,
             FileName fileName,
             FileSize fileSize,
-            Integer width,
-            Integer height,
             S3Bucket bucket,
             S3Key s3Key,
-            Long userId,
-            Long organizationId,
-            Long tenantId,
-            LocalDateTime createdAt) {
+            UserId userId,
+            OrganizationId organizationId,
+            TenantId tenantId,
+            Instant createdAt) {
         this.id = id;
         this.originalAssetId = originalAssetId;
         this.parentAssetId = parentAssetId;
@@ -78,8 +87,6 @@ public class ProcessedFileAsset {
         this.format = format;
         this.fileName = fileName;
         this.fileSize = fileSize;
-        this.width = width;
-        this.height = height;
         this.bucket = bucket;
         this.s3Key = s3Key;
         this.userId = userId;
@@ -91,18 +98,24 @@ public class ProcessedFileAsset {
     /**
      * 신규 처리된 파일 에셋을 생성한다.
      *
+     * <p>dimension과 colorSpace는 저장하지 않습니다:
+     *
+     * <ul>
+     *   <li>dimension: ImageVariant 스펙에서 결정됨 (ORIGINAL 제외)
+     *   <li>colorSpace: 가공 시 항상 RGB로 변환됨
+     * </ul>
+     *
      * @param originalAssetId 원본 에셋 ID
-     * @param variant         이미지 변형 정보 (크기)
-     * @param format          이미지 포맷 정보
-     * @param fileName        파일명
-     * @param fileSize        파일 크기
-     * @param width           이미지 너비 (픽셀)
-     * @param height          이미지 높이 (픽셀)
-     * @param bucket          S3 버킷명
-     * @param s3Key           S3 키
-     * @param userId          사용자 ID
-     * @param organizationId  조직 ID
-     * @param tenantId        테넌트 ID
+     * @param variant 이미지 변형 정보 (크기)
+     * @param format 이미지 포맷 정보
+     * @param fileName 파일명
+     * @param fileSize 파일 크기 (압축 결과에 따라 달라짐)
+     * @param bucket S3 버킷명
+     * @param s3Key S3 키
+     * @param userId 사용자 ID
+     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID
+     * @param clock 시간 소스
      * @return 신규 ProcessedFileAsset
      */
     public static ProcessedFileAsset forNew(
@@ -111,13 +124,12 @@ public class ProcessedFileAsset {
             ImageFormat format,
             FileName fileName,
             FileSize fileSize,
-            Integer width,
-            Integer height,
             S3Bucket bucket,
             S3Key s3Key,
-            Long userId,
-            Long organizationId,
-            Long tenantId) {
+            UserId userId,
+            OrganizationId organizationId,
+            TenantId tenantId,
+            Clock clock) {
         return new ProcessedFileAsset(
                 ProcessedFileAssetId.forNew(),
                 originalAssetId,
@@ -126,14 +138,12 @@ public class ProcessedFileAsset {
                 format,
                 fileName,
                 fileSize,
-                width,
-                height,
                 bucket,
                 s3Key,
                 userId,
                 organizationId,
                 tenantId,
-                LocalDateTime.now());
+                clock.instant());
     }
 
     /**
@@ -141,19 +151,18 @@ public class ProcessedFileAsset {
      *
      * <p>HTML 파일에서 추출된 이미지는 parentAssetId로 부모(HTML 파일)를 참조합니다.
      *
-     * @param parentAssetId   부모 에셋 ID (HTML 파일)
+     * @param parentAssetId 부모 에셋 ID (HTML 파일)
      * @param originalAssetId 원본 에셋 ID
-     * @param variant         이미지 변형 정보 (크기)
-     * @param format          이미지 포맷 정보
-     * @param fileName        파일명
-     * @param fileSize        파일 크기
-     * @param width           이미지 너비 (픽셀)
-     * @param height          이미지 높이 (픽셀)
-     * @param bucket          S3 버킷명
-     * @param s3Key           S3 키
-     * @param userId          사용자 ID
-     * @param organizationId  조직 ID
-     * @param tenantId        테넌트 ID
+     * @param variant 이미지 변형 정보 (크기)
+     * @param format 이미지 포맷 정보
+     * @param fileName 파일명
+     * @param fileSize 파일 크기 (압축 결과에 따라 달라짐)
+     * @param bucket S3 버킷명
+     * @param s3Key S3 키
+     * @param userId 사용자 ID
+     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID
+     * @param clock 시간 소스
      * @return HTML 추출 이미지용 ProcessedFileAsset
      */
     public static ProcessedFileAsset forHtmlExtractedImage(
@@ -163,13 +172,12 @@ public class ProcessedFileAsset {
             ImageFormat format,
             FileName fileName,
             FileSize fileSize,
-            Integer width,
-            Integer height,
             S3Bucket bucket,
             S3Key s3Key,
-            Long userId,
-            Long organizationId,
-            Long tenantId) {
+            UserId userId,
+            OrganizationId organizationId,
+            TenantId tenantId,
+            Clock clock) {
         return new ProcessedFileAsset(
                 ProcessedFileAssetId.forNew(),
                 originalAssetId,
@@ -178,34 +186,30 @@ public class ProcessedFileAsset {
                 format,
                 fileName,
                 fileSize,
-                width,
-                height,
                 bucket,
                 s3Key,
                 userId,
                 organizationId,
                 tenantId,
-                LocalDateTime.now());
+                clock.instant());
     }
 
     /**
      * 영속성에서 ProcessedFileAsset을 복원한다.
      *
-     * @param id              에셋 ID
+     * @param id 에셋 ID
      * @param originalAssetId 원본 에셋 ID
-     * @param parentAssetId   부모 에셋 ID (nullable)
-     * @param variant         이미지 변형 정보
-     * @param format          이미지 포맷 정보
-     * @param fileName        파일명
-     * @param fileSize        파일 크기
-     * @param width           이미지 너비
-     * @param height          이미지 높이
-     * @param bucket          S3 버킷명
-     * @param s3Key           S3 키
-     * @param userId          사용자 ID
-     * @param organizationId  조직 ID
-     * @param tenantId        테넌트 ID
-     * @param createdAt       생성 일시
+     * @param parentAssetId 부모 에셋 ID (nullable)
+     * @param variant 이미지 변형 정보
+     * @param format 이미지 포맷 정보
+     * @param fileName 파일명
+     * @param fileSize 파일 크기
+     * @param bucket S3 버킷명
+     * @param s3Key S3 키
+     * @param userId 사용자 ID
+     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID
+     * @param createdAt 생성 일시
      * @return 복원된 ProcessedFileAsset
      */
     public static ProcessedFileAsset reconstitute(
@@ -216,14 +220,12 @@ public class ProcessedFileAsset {
             ImageFormat format,
             FileName fileName,
             FileSize fileSize,
-            Integer width,
-            Integer height,
             S3Bucket bucket,
             S3Key s3Key,
-            Long userId,
-            Long organizationId,
-            Long tenantId,
-            LocalDateTime createdAt) {
+            UserId userId,
+            OrganizationId organizationId,
+            TenantId tenantId,
+            Instant createdAt) {
         return new ProcessedFileAsset(
                 id,
                 originalAssetId,
@@ -232,8 +234,6 @@ public class ProcessedFileAsset {
                 format,
                 fileName,
                 fileSize,
-                width,
-                height,
                 bucket,
                 s3Key,
                 userId,
@@ -299,14 +299,6 @@ public class ProcessedFileAsset {
         return fileSize;
     }
 
-    public Integer getWidth() {
-        return width;
-    }
-
-    public Integer getHeight() {
-        return height;
-    }
-
     public S3Bucket getBucket() {
         return bucket;
     }
@@ -315,19 +307,19 @@ public class ProcessedFileAsset {
         return s3Key;
     }
 
-    public Long getUserId() {
+    public UserId getUserId() {
         return userId;
     }
 
-    public Long getOrganizationId() {
+    public OrganizationId getOrganizationId() {
         return organizationId;
     }
 
-    public Long getTenantId() {
+    public TenantId getTenantId() {
         return tenantId;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 }

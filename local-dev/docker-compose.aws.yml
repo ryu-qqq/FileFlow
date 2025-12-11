@@ -156,9 +156,60 @@ services:
       # Logging
       LOG_LEVEL: ${LOG_LEVEL}
       SQS_LOG_LEVEL: INFO
-      
+
     ports:
       - "8082:8082"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  resizing-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.local
+      args:
+        MODULE_NAME: bootstrap-resizing-worker
+    container_name: fileflow-resizing-worker-aws
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8083
+
+      # Database (AWS RDS via SSM Port Forwarding)
+      DB_HOST: host.docker.internal
+      DB_PORT: 13307
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # Redis (AWS ElastiCache via SSM Port Forwarding)
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 16380
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDISSON_ENABLED: "true"
+
+      # Worker
+      WORKER_RESIZING_ENABLED: "true"
+
+      # AWS Credentials
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+
+      # S3
+      AWS_S3_BUCKET: ${S3_BUCKET}
+
+      # SQS (File Processing Queue)
+      SPRING_CLOUD_AWS_SQS_ENABLED: "true"
+      SQS_FILE_PROCESSING_QUEUE_URL: ${SQS_FILE_PROCESSING_QUEUE_URL}
+      SQS_FILE_PROCESSING_DLQ_URL: ${SQS_FILE_PROCESSING_DLQ_URL}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL}
+      SQS_LOG_LEVEL: INFO
+
+    ports:
+      - "8083:8083"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

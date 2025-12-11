@@ -6,9 +6,9 @@ import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,8 +19,8 @@ class ExternalDownloadRegisteredEventTest {
     private static final ExternalDownloadId DOWNLOAD_ID =
             ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
     private static final SourceUrl SOURCE_URL = SourceUrl.of("https://example.com/image.jpg");
-    private static final long TENANT_ID = 1L;
-    private static final long ORGANIZATION_ID = 100L;
+    private static final TenantId TENANT_ID = TenantId.generate();
+    private static final OrganizationId ORGANIZATION_ID = OrganizationId.generate();
     private static final Instant OCCURRED_AT = Instant.parse("2025-11-26T12:00:00Z");
 
     @Nested
@@ -30,26 +30,30 @@ class ExternalDownloadRegisteredEventTest {
         @Test
         @DisplayName("of 팩토리 메서드로 모든 필드가 채워진 이벤트를 생성할 수 있다")
         void of_WithValidValues_ShouldCreateEvent() {
+            // given
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
+
             // when
             ExternalDownloadRegisteredEvent event =
                     ExternalDownloadRegisteredEvent.of(
-                            DOWNLOAD_ID, SOURCE_URL, TENANT_ID, ORGANIZATION_ID, null, OCCURRED_AT);
+                            DOWNLOAD_ID, SOURCE_URL, tenantId, organizationId, null, OCCURRED_AT);
 
             // then
-            LocalDateTime expectedLocalDateTime =
-                    LocalDateTime.ofInstant(OCCURRED_AT, ZoneId.systemDefault());
             assertThat(event.downloadId()).isEqualTo(DOWNLOAD_ID);
             assertThat(event.sourceUrl()).isEqualTo(SOURCE_URL);
-            assertThat(event.tenantId()).isEqualTo(TENANT_ID);
-            assertThat(event.organizationId()).isEqualTo(ORGANIZATION_ID);
+            assertThat(event.tenantId()).isEqualTo(tenantId);
+            assertThat(event.organizationId()).isEqualTo(organizationId);
             assertThat(event.webhookUrl()).isNull();
-            assertThat(event.occurredAt()).isEqualTo(expectedLocalDateTime);
+            assertThat(event.occurredAt()).isEqualTo(OCCURRED_AT);
         }
 
         @Test
         @DisplayName("webhookUrl이 있는 이벤트를 생성할 수 있다")
         void of_WithWebhookUrl_ShouldCreateEvent() {
             // given
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
             WebhookUrl webhookUrl = WebhookUrl.of("https://callback.example.com/webhook");
 
             // when
@@ -57,8 +61,8 @@ class ExternalDownloadRegisteredEventTest {
                     ExternalDownloadRegisteredEvent.of(
                             DOWNLOAD_ID,
                             SOURCE_URL,
-                            TENANT_ID,
-                            ORGANIZATION_ID,
+                            tenantId,
+                            organizationId,
                             webhookUrl,
                             OCCURRED_AT);
 
@@ -74,10 +78,14 @@ class ExternalDownloadRegisteredEventTest {
         @Test
         @DisplayName("ExternalDownloadRegisteredEvent는 DomainEvent를 구현한다")
         void shouldImplementDomainEvent() {
+            // given
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
+
             // when
             ExternalDownloadRegisteredEvent event =
                     ExternalDownloadRegisteredEvent.of(
-                            DOWNLOAD_ID, SOURCE_URL, TENANT_ID, ORGANIZATION_ID, null, OCCURRED_AT);
+                            DOWNLOAD_ID, SOURCE_URL, tenantId, organizationId, null, OCCURRED_AT);
 
             // then
             assertThat(event).isInstanceOf(DomainEvent.class);
@@ -92,13 +100,16 @@ class ExternalDownloadRegisteredEventTest {
         @DisplayName("같은 값을 가진 이벤트는 동등하다")
         void equals_WithSameValues_ShouldBeEqual() {
             // given
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
+
             ExternalDownloadRegisteredEvent event1 =
                     ExternalDownloadRegisteredEvent.of(
-                            DOWNLOAD_ID, SOURCE_URL, TENANT_ID, ORGANIZATION_ID, null, OCCURRED_AT);
+                            DOWNLOAD_ID, SOURCE_URL, tenantId, organizationId, null, OCCURRED_AT);
 
             ExternalDownloadRegisteredEvent event2 =
                     ExternalDownloadRegisteredEvent.of(
-                            DOWNLOAD_ID, SOURCE_URL, TENANT_ID, ORGANIZATION_ID, null, OCCURRED_AT);
+                            DOWNLOAD_ID, SOURCE_URL, tenantId, organizationId, null, OCCURRED_AT);
 
             // then
             assertThat(event1).isEqualTo(event2);

@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.architecture;
 
+import static com.ryuqq.fileflow.adapter.out.persistence.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -52,9 +53,7 @@ class FlywayMigrationArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses =
-                new ClassFileImporter()
-                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+        allClasses = new ClassFileImporter().importPackages(PERSISTENCE);
     }
 
     /** 규칙 1: FlywayConfig 클래스는 @Configuration 필수 */
@@ -66,7 +65,7 @@ class FlywayMigrationArchTest {
                         .that()
                         .haveSimpleNameContaining("FlywayConfig")
                         .and()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
                         .beAnnotatedWith(org.springframework.context.annotation.Configuration.class)
                         .because("Flyway 설정 클래스는 @Configuration 어노테이션이 필수입니다");
@@ -83,7 +82,7 @@ class FlywayMigrationArchTest {
                         .that()
                         .haveSimpleNameContaining("FlywayConfig")
                         .should()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .because("Flyway 설정 클래스는 config 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -145,7 +144,7 @@ class FlywayMigrationArchTest {
                         .haveSimpleNameContaining("FlywayConfig")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..entity..", "..repository..")
+                        .resideInAnyPackage(ENTITY_PATTERN, REPOSITORY_PATTERN)
                         .because("FlywayConfig는 순수 설정 클래스로 Entity/Repository를 의존하면 안 됩니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -160,7 +159,7 @@ class FlywayMigrationArchTest {
                         .that()
                         .haveSimpleNameContaining("Flyway")
                         .and()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("org.flywaydb..")
@@ -182,7 +181,7 @@ class FlywayMigrationArchTest {
                         .haveSimpleNameContaining("FlywayConfig")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..domain..", "..application..")
+                        .resideInAnyPackage(DOMAIN_ALL, APPLICATION_ALL)
                         .because(
                                 "FlywayConfig는 Infrastructure Layer 설정으로 Domain/Application을 의존하면 안"
                                         + " 됩니다");

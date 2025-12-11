@@ -134,7 +134,7 @@ public static ExampleJpaEntity of(
     return new ExampleJpaEntity(id, message, status, createdAt, updatedAt);
 }
 
-// ✅ 생성자는 private (여기저기 생성 방지)
+// ✅ 전체 필드 생성자는 private (무분별한 생성 방지)
 private ExampleJpaEntity(
     Long id,
     String message,
@@ -142,7 +142,7 @@ private ExampleJpaEntity(
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {
-    super(createdAt, updatedAt);
+    super(createdAt, updatedAt);  // 부모 클래스 필드 초기화
     this.id = id;
     this.message = message;
     this.status = status;
@@ -155,18 +155,36 @@ private ExampleJpaEntity(
 - 생성 로직의 일관성 보장
 
 ### 원칙 6: protected 기본 생성자 (JPA 스펙)
+
+**⚠️ 기본 생성자 vs 전체 필드 생성자 구분:**
+
+| 생성자 유형 | 접근 제어자 | super() 호출 | 용도 |
+|------------|-----------|-------------|------|
+| **기본 생성자** (파라미터 없음) | `protected` | 선택적 | JPA 프록시 생성용 |
+| **전체 필드 생성자** (파라미터 있음) | `private` | **필수** | 실제 인스턴스 생성용 |
+
 ```java
-// ✅ JPA 기본 생성자 (빈 상태, 아무것도 넣지 않음)
+// ✅ JPA 기본 생성자 (protected, 빈 상태 유지)
 protected ExampleJpaEntity() {
+    // 비워두거나 super()만 호출 가능
 }
 
-// ❌ super() 호출 금지
+// ✅ 상속 시 super() 호출도 허용 (SoftDeletableEntity 패턴)
 protected ExampleJpaEntity() {
-    super();  // 금지!
+    super();  // BaseAuditEntity/SoftDeletableEntity 상속 시 허용
+}
+
+// ✅ 전체 필드 생성자에서는 super(필드들) 필수
+private ExampleJpaEntity(Long id, String message, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    super(createdAt, updatedAt);  // 부모 필드 초기화 필수!
+    this.id = id;
+    this.message = message;
 }
 ```
 
-**이유**: JPA 프록시 생성을 위해 필수이지만, 실제 사용하지 않으므로 빈 상태로 유지
+**핵심 규칙**:
+- 기본 생성자: JPA 프록시 생성용, 빈 상태 또는 `super()` 호출
+- 전체 필드 생성자: 부모 클래스 상속 시 `super(필드들)` 호출 필수
 
 ### 원칙 7: BaseAuditEntity/SoftDeletableEntity 활용
 
@@ -842,5 +860,5 @@ JPA Entity 작성 시:
 ---
 
 **작성자**: Development Team
-**최종 수정일**: 2025-11-12
-**버전**: 1.0.0
+**최종 수정일**: 2025-12-04
+**버전**: 1.1.0

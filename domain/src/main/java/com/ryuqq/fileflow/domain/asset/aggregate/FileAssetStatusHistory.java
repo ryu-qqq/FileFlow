@@ -1,8 +1,10 @@
 package com.ryuqq.fileflow.domain.asset.aggregate;
 
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatusHistoryId;
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 
 /**
  * FileAssetStatusHistory Aggregate.
@@ -22,7 +24,7 @@ public class FileAssetStatusHistory {
 
     // ===== 식별 정보 =====
     private final FileAssetStatusHistoryId id;
-    private final Long fileAssetId;
+    private final FileAssetId fileAssetId;
 
     // ===== 상태 변경 정보 =====
     private final FileAssetStatus fromStatus;
@@ -34,18 +36,18 @@ public class FileAssetStatusHistory {
     private final String actorType;
 
     // ===== 시간 정보 =====
-    private final LocalDateTime changedAt;
+    private final Instant changedAt;
     private final Long durationMillis;
 
     private FileAssetStatusHistory(
             FileAssetStatusHistoryId id,
-            Long fileAssetId,
+            FileAssetId fileAssetId,
             FileAssetStatus fromStatus,
             FileAssetStatus toStatus,
             String message,
             String actor,
             String actorType,
-            LocalDateTime changedAt,
+            Instant changedAt,
             Long durationMillis) {
         validateNotNull(id, "FileAssetStatusHistoryId");
         validateNotNull(fileAssetId, "FileAssetId");
@@ -75,16 +77,18 @@ public class FileAssetStatusHistory {
      * @param actor 변경 주체
      * @param actorType 변경 주체 타입
      * @param durationMillis 이전 상태에서 소요된 시간
+     * @param clock 시간 소스
      * @return FileAssetStatusHistory
      */
     public static FileAssetStatusHistory forNew(
-            Long fileAssetId,
+            FileAssetId fileAssetId,
             FileAssetStatus fromStatus,
             FileAssetStatus toStatus,
             String message,
             String actor,
             String actorType,
-            Long durationMillis) {
+            Long durationMillis,
+            Clock clock) {
         return new FileAssetStatusHistory(
                 FileAssetStatusHistoryId.forNew(),
                 fileAssetId,
@@ -93,7 +97,7 @@ public class FileAssetStatusHistory {
                 message,
                 actor,
                 actorType,
-                LocalDateTime.now(),
+                clock.instant(),
                 durationMillis);
     }
 
@@ -105,15 +109,25 @@ public class FileAssetStatusHistory {
      * @param toStatus 변경된 상태
      * @param message 상태 메시지
      * @param durationMillis 이전 상태에서 소요된 시간
+     * @param clock 시간 소스
      * @return FileAssetStatusHistory
      */
     public static FileAssetStatusHistory forSystemChange(
-            Long fileAssetId,
+            FileAssetId fileAssetId,
             FileAssetStatus fromStatus,
             FileAssetStatus toStatus,
             String message,
-            Long durationMillis) {
-        return forNew(fileAssetId, fromStatus, toStatus, message, "system", "SYSTEM", durationMillis);
+            Long durationMillis,
+            Clock clock) {
+        return forNew(
+                fileAssetId,
+                fromStatus,
+                toStatus,
+                message,
+                "system",
+                "SYSTEM",
+                durationMillis,
+                clock);
     }
 
     /**
@@ -124,15 +138,18 @@ public class FileAssetStatusHistory {
      * @param toStatus 변경된 상태
      * @param message 상태 메시지
      * @param durationMillis 이전 상태에서 소요된 시간
+     * @param clock 시간 소스
      * @return FileAssetStatusHistory
      */
     public static FileAssetStatusHistory forN8nChange(
-            Long fileAssetId,
+            FileAssetId fileAssetId,
             FileAssetStatus fromStatus,
             FileAssetStatus toStatus,
             String message,
-            Long durationMillis) {
-        return forNew(fileAssetId, fromStatus, toStatus, message, "n8n", "N8N", durationMillis);
+            Long durationMillis,
+            Clock clock) {
+        return forNew(
+                fileAssetId, fromStatus, toStatus, message, "n8n", "N8N", durationMillis, clock);
     }
 
     /**
@@ -151,16 +168,24 @@ public class FileAssetStatusHistory {
      */
     public static FileAssetStatusHistory reconstitute(
             FileAssetStatusHistoryId id,
-            Long fileAssetId,
+            FileAssetId fileAssetId,
             FileAssetStatus fromStatus,
             FileAssetStatus toStatus,
             String message,
             String actor,
             String actorType,
-            LocalDateTime changedAt,
+            Instant changedAt,
             Long durationMillis) {
         return new FileAssetStatusHistory(
-                id, fileAssetId, fromStatus, toStatus, message, actor, actorType, changedAt, durationMillis);
+                id,
+                fileAssetId,
+                fromStatus,
+                toStatus,
+                message,
+                actor,
+                actorType,
+                changedAt,
+                durationMillis);
     }
 
     // ===== 비즈니스 메서드 =====
@@ -207,7 +232,7 @@ public class FileAssetStatusHistory {
         return id;
     }
 
-    public Long getFileAssetId() {
+    public FileAssetId getFileAssetId() {
         return fileAssetId;
     }
 
@@ -231,7 +256,7 @@ public class FileAssetStatusHistory {
         return actorType;
     }
 
-    public LocalDateTime getChangedAt() {
+    public Instant getChangedAt() {
         return changedAt;
     }
 

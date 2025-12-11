@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 @DisplayName("UploadSessionSearchCriteria 단위 테스트")
 class UploadSessionSearchCriteriaTest {
 
-    private static final Long TENANT_ID = 10L;
-    private static final Long ORGANIZATION_ID = 20L;
+    private static final String TENANT_ID = "01912345-6789-7abc-def0-123456789010";
+    private static final String ORGANIZATION_ID = "01912345-6789-7abc-def0-123456789020";
     private static final SessionStatus STATUS = SessionStatus.ACTIVE;
     private static final String UPLOAD_TYPE = "MULTIPART";
     private static final long OFFSET = 0L;
@@ -141,8 +141,8 @@ class UploadSessionSearchCriteriaTest {
             String result = criteria.toString();
 
             // then
-            assertThat(result).contains(String.valueOf(TENANT_ID));
-            assertThat(result).contains(String.valueOf(ORGANIZATION_ID));
+            assertThat(result).contains(TENANT_ID);
+            assertThat(result).contains(ORGANIZATION_ID);
             assertThat(result).contains(STATUS.name());
             assertThat(result).contains(UPLOAD_TYPE);
         }

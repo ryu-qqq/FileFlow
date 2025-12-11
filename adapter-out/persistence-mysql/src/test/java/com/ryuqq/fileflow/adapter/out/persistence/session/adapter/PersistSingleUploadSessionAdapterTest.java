@@ -8,7 +8,9 @@ import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSes
 import com.ryuqq.fileflow.adapter.out.persistence.session.mapper.SingleUploadSessionJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.session.repository.SingleUploadSessionJpaRepository;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.iam.vo.UserRole;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
@@ -22,10 +24,7 @@ import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,12 +43,11 @@ class PersistSingleUploadSessionAdapterTest {
     @Mock private SingleUploadSessionJpaMapper mapper;
 
     private PersistSingleUploadSessionAdapter adapter;
-    private Clock fixedClock;
+    private static final Instant FIXED_INSTANT = Instant.parse("2025-11-26T10:00:00Z");
 
     @BeforeEach
     void setUp() {
         adapter = new PersistSingleUploadSessionAdapter(repository, mapper);
-        fixedClock = Clock.fixed(Instant.parse("2025-11-26T10:00:00Z"), ZoneId.of("UTC"));
     }
 
     @Nested
@@ -137,11 +135,13 @@ class PersistSingleUploadSessionAdapterTest {
     // ==================== Helper Methods ====================
 
     private SingleUploadSession createSession(String sessionId) {
-        Tenant tenant = Tenant.of(1L, "Connectly");
-        Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
+        String tenantId = "01912345-6789-7abc-def0-123456789001";
+        String organizationId = "01912345-6789-7abc-def0-123456789100";
+
+        Tenant tenant = Tenant.of(TenantId.of(tenantId), "Connectly");
+        Organization organization = Organization.of(OrganizationId.of(organizationId), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
-        LocalDateTime now = LocalDateTime.now(fixedClock);
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.fromString(sessionId)),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -151,29 +151,31 @@ class PersistSingleUploadSessionAdapterTest {
                 ContentType.of("application/pdf"),
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
-                ExpirationTime.of(LocalDateTime.now(fixedClock).plusMinutes(15)),
-                now,
+                ExpirationTime.of(FIXED_INSTANT.plus(java.time.Duration.ofMinutes(15))),
+                FIXED_INSTANT,
                 SessionStatus.ACTIVE,
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/..."),
                 null,
                 null,
-                now,
-                0L,
-                fixedClock);
+                FIXED_INSTANT,
+                0L);
     }
 
     private SingleUploadSessionJpaEntity createEntity(String sessionId) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusMinutes(15);
+        String tenantId = "01912345-6789-7abc-def0-123456789001";
+        String organizationId = "01912345-6789-7abc-def0-123456789100";
+
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofMinutes(15));
 
         return SingleUploadSessionJpaEntity.of(
                 sessionId,
                 UUID.randomUUID().toString(),
                 null,
-                100L,
+                organizationId,
                 "Test Org",
                 "setof",
-                1L,
+                tenantId,
                 "Connectly",
                 "SELLER",
                 "seller@test.com",

@@ -277,7 +277,8 @@ class ContentTypeTest {
             // when & then
             assertThat(ContentType.fromExtension("html").type()).isEqualTo("text/html");
             assertThat(ContentType.fromExtension("htm").type()).isEqualTo("text/html");
-            assertThat(ContentType.fromExtension("xhtml").type()).isEqualTo("application/xhtml+xml");
+            assertThat(ContentType.fromExtension("xhtml").type())
+                    .isEqualTo("application/xhtml+xml");
         }
 
         @Test
@@ -325,7 +326,9 @@ class ContentTypeTest {
         }
 
         @Test
-        @DisplayName("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet(xlsx) 타입은 isExcel()이 true를 반환한다")
+        @DisplayName(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet(xlsx) 타입은"
+                        + " isExcel()이 true를 반환한다")
         void shouldReturnTrueForXlsxContentType() {
             // given
             ContentType xlsxType =

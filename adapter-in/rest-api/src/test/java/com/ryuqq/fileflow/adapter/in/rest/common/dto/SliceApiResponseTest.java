@@ -1,199 +1,259 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ryuqq.fileflow.application.common.dto.response.SliceResponse;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("SliceApiResponse 단위 테스트")
+/**
+ * SliceApiResponse 단위 테스트
+ *
+ * <p>슬라이스 조회 REST API 응답 DTO의 생성 및 변환을 검증합니다.
+ *
+ * @author development-team
+ * @since 1.0.0
+ */
+@DisplayName("SliceApiResponse 테스트")
 class SliceApiResponseTest {
 
     @Nested
-    @DisplayName("생성 테스트")
-    class CreateTest {
+    @DisplayName("생성자")
+    class Constructor {
 
         @Test
-        @DisplayName("모든 필드를 가진 SliceApiResponse를 생성할 수 있다")
-        void constructor_WithAllFields_ShouldCreateResponse() {
+        @DisplayName("모든 필드를 포함하는 SliceApiResponse 생성")
+        void shouldCreateWithAllFields() {
             // given
             List<String> content = List.of("item1", "item2", "item3");
-            int size = 20;
-            boolean hasNext = true;
-            String nextCursor = "cursor-abc123";
 
             // when
             SliceApiResponse<String> response =
-                    new SliceApiResponse<>(content, size, hasNext, nextCursor);
+                    new SliceApiResponse<>(content, 20, true, "cursor-xyz");
 
             // then
             assertThat(response.content()).hasSize(3);
-            assertThat(response.size()).isEqualTo(size);
+            assertThat(response.size()).isEqualTo(20);
             assertThat(response.hasNext()).isTrue();
-            assertThat(response.nextCursor()).isEqualTo(nextCursor);
+            assertThat(response.nextCursor()).isEqualTo("cursor-xyz");
         }
 
         @Test
-        @DisplayName("다음 페이지가 없으면 hasNext는 false이다")
-        void constructor_WithoutNextPage_ShouldHaveNextFalse() {
+        @DisplayName("nextCursor가 null인 SliceApiResponse 생성")
+        void shouldCreateWithNullCursor() {
             // given
-            List<String> content = List.of("item1", "item2");
-
-            // when
-            SliceApiResponse<String> response = new SliceApiResponse<>(content, 20, false, null);
-
-            // then
-            assertThat(response.hasNext()).isFalse();
-            assertThat(response.nextCursor()).isNull();
-        }
-
-        @Test
-        @DisplayName("빈 콘텐츠로도 SliceApiResponse를 생성할 수 있다")
-        void constructor_WithEmptyContent_ShouldCreateResponse() {
-            // given
-            List<String> content = List.of();
-
-            // when
-            SliceApiResponse<String> response = new SliceApiResponse<>(content, 20, false, null);
-
-            // then
-            assertThat(response.content()).isEmpty();
-            assertThat(response.hasNext()).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("불변성 테스트")
-    class ImmutabilityTest {
-
-        @Test
-        @DisplayName("content는 불변 복사본으로 저장된다")
-        void content_ShouldBeImmutableCopy() {
-            // given
-            List<String> originalContent = new java.util.ArrayList<>();
-            originalContent.add("item1");
-            originalContent.add("item2");
+            List<String> content = List.of("item1");
 
             // when
             SliceApiResponse<String> response =
-                    new SliceApiResponse<>(originalContent, 20, false, null);
+                    new SliceApiResponse<>(content, 20, false, null);
 
-            // then - 원본 변경해도 response의 content는 영향 없음
-            originalContent.add("item3");
+            // then
+            assertThat(response.nextCursor()).isNull();
+            assertThat(response.hasNext()).isFalse();
+        }
+
+        @Test
+        @DisplayName("content는 방어적 복사로 불변성 보장")
+        void shouldDefensivelyCopyContent() {
+            // given
+            List<String> original = new ArrayList<>(List.of("item1", "item2"));
+
+            // when
+            SliceApiResponse<String> response =
+                    new SliceApiResponse<>(original, 20, false, null);
+            original.add("item3");
+
+            // then
             assertThat(response.content()).hasSize(2);
+            assertThat(original).hasSize(3);
+        }
+
+        @Test
+        @DisplayName("반환된 content는 수정 불가")
+        void shouldReturnUnmodifiableContent() {
+            // given
+            SliceApiResponse<String> response =
+                    new SliceApiResponse<>(List.of("item1"), 20, false, null);
+
+            // when & then
+            assertThatThrownBy(() -> response.content().add("item2"))
+                    .isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
     @Nested
-    @DisplayName("from 메서드 테스트")
-    class FromMethodTest {
+    @DisplayName("from - SliceResponse 변환")
+    class FromSliceResponse {
 
         @Test
-        @DisplayName("SliceResponse로부터 SliceApiResponse를 생성할 수 있다")
-        void from_WithSliceResponse_ShouldCreateSliceApiResponse() {
+        @DisplayName("SliceResponse를 SliceApiResponse로 변환")
+        void shouldConvertFromSliceResponse() {
             // given
-            List<String> content = List.of("item1", "item2");
             SliceResponse<String> appResponse =
-                    new SliceResponse<>(content, 10, true, "next-cursor-xyz");
+                    SliceResponse.of(List.of("item1", "item2"), 20, true, "next-cursor");
 
             // when
             SliceApiResponse<String> apiResponse = SliceApiResponse.from(appResponse);
 
             // then
-            assertThat(apiResponse.content()).isEqualTo(content);
-            assertThat(apiResponse.size()).isEqualTo(10);
+            assertThat(apiResponse.content()).containsExactly("item1", "item2");
+            assertThat(apiResponse.size()).isEqualTo(20);
             assertThat(apiResponse.hasNext()).isTrue();
-            assertThat(apiResponse.nextCursor()).isEqualTo("next-cursor-xyz");
+            assertThat(apiResponse.nextCursor()).isEqualTo("next-cursor");
         }
 
         @Test
-        @DisplayName("매퍼 함수와 함께 SliceResponse로부터 변환할 수 있다")
-        void from_WithMapper_ShouldTransformContent() {
+        @DisplayName("hasNext=false인 SliceResponse 변환")
+        void shouldConvertSliceResponseWithNoNext() {
             // given
-            record SourceDto(int id, String name) {}
-            record TargetDto(String formattedName) {}
-
-            List<SourceDto> sourceContent =
-                    List.of(new SourceDto(1, "Alpha"), new SourceDto(2, "Beta"));
-
-            SliceResponse<SourceDto> appResponse =
-                    new SliceResponse<>(sourceContent, 10, true, "cursor-123");
+            SliceResponse<String> appResponse =
+                    SliceResponse.of(List.of("item1"), 20, false, null);
 
             // when
-            SliceApiResponse<TargetDto> apiResponse =
-                    SliceApiResponse.from(appResponse, src -> new TargetDto("Item: " + src.name()));
+            SliceApiResponse<String> apiResponse = SliceApiResponse.from(appResponse);
+
+            // then
+            assertThat(apiResponse.hasNext()).isFalse();
+            assertThat(apiResponse.nextCursor()).isNull();
+        }
+
+        @Test
+        @DisplayName("빈 SliceResponse를 변환")
+        void shouldConvertEmptySliceResponse() {
+            // given
+            SliceResponse<String> appResponse = SliceResponse.empty(20);
+
+            // when
+            SliceApiResponse<String> apiResponse = SliceApiResponse.from(appResponse);
+
+            // then
+            assertThat(apiResponse.content()).isEmpty();
+            assertThat(apiResponse.size()).isEqualTo(20);
+            assertThat(apiResponse.hasNext()).isFalse();
+            assertThat(apiResponse.nextCursor()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("from with mapper - 매퍼 함수 적용")
+    class FromWithMapper {
+
+        @Test
+        @DisplayName("매퍼 함수를 적용하여 변환")
+        void shouldApplyMapperFunction() {
+            // given
+            record AppDto(Long id, String name) {}
+            record ApiDto(Long id, String displayName) {}
+
+            SliceResponse<AppDto> appResponse =
+                    SliceResponse.of(
+                            List.of(new AppDto(1L, "이름1"), new AppDto(2L, "이름2")),
+                            20,
+                            true,
+                            "cursor-123");
+
+            // when
+            SliceApiResponse<ApiDto> apiResponse =
+                    SliceApiResponse.from(
+                            appResponse, dto -> new ApiDto(dto.id(), "[표시] " + dto.name()));
 
             // then
             assertThat(apiResponse.content()).hasSize(2);
-            assertThat(apiResponse.content().get(0).formattedName()).isEqualTo("Item: Alpha");
-            assertThat(apiResponse.content().get(1).formattedName()).isEqualTo("Item: Beta");
-            assertThat(apiResponse.hasNext()).isTrue();
+            assertThat(apiResponse.content().get(0).displayName()).isEqualTo("[표시] 이름1");
+            assertThat(apiResponse.content().get(1).displayName()).isEqualTo("[표시] 이름2");
             assertThat(apiResponse.nextCursor()).isEqualTo("cursor-123");
         }
-    }
-
-    @Nested
-    @DisplayName("커서 테스트")
-    class CursorTest {
 
         @Test
-        @DisplayName("다음 페이지가 있으면 nextCursor가 존재한다")
-        void hasNext_WithCursor_ShouldReturnCursor() {
+        @DisplayName("빈 SliceResponse에 매퍼 함수 적용")
+        void shouldApplyMapperToEmptySliceResponse() {
+            // given
+            SliceResponse<String> appResponse = SliceResponse.empty(20);
+
             // when
-            SliceApiResponse<String> response =
-                    new SliceApiResponse<>(List.of("item"), 10, true, "abc123");
+            SliceApiResponse<Integer> apiResponse =
+                    SliceApiResponse.from(appResponse, String::length);
 
             // then
-            assertThat(response.hasNext()).isTrue();
-            assertThat(response.nextCursor()).isEqualTo("abc123");
-        }
-
-        @Test
-        @DisplayName("마지막 슬라이스면 nextCursor는 null이다")
-        void lastSlice_ShouldHaveNullCursor() {
-            // when
-            SliceApiResponse<String> response =
-                    new SliceApiResponse<>(List.of("item"), 10, false, null);
-
-            // then
-            assertThat(response.hasNext()).isFalse();
-            assertThat(response.nextCursor()).isNull();
+            assertThat(apiResponse.content()).isEmpty();
+            assertThat(apiResponse.hasNext()).isFalse();
         }
     }
 
     @Nested
-    @DisplayName("동등성 테스트")
-    class EqualityTest {
+    @DisplayName("무한 스크롤 시나리오")
+    class InfiniteScrollScenario {
 
         @Test
-        @DisplayName("같은 값을 가진 SliceApiResponse는 동등하다")
-        void equals_WithSameValues_ShouldBeEqual() {
+        @DisplayName("첫 슬라이스 - 다음 페이지 있음")
+        void shouldHaveNextForFirstSlice() {
+            // given
+            SliceResponse<String> appResponse =
+                    SliceResponse.of(List.of("item1", "item2"), 20, true, "cursor-1");
+
+            // when
+            SliceApiResponse<String> apiResponse = SliceApiResponse.from(appResponse);
+
+            // then
+            assertThat(apiResponse.hasNext()).isTrue();
+            assertThat(apiResponse.nextCursor()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("마지막 슬라이스 - 다음 페이지 없음")
+        void shouldNotHaveNextForLastSlice() {
+            // given
+            SliceResponse<String> appResponse =
+                    SliceResponse.of(List.of("lastItem"), 20, false);
+
+            // when
+            SliceApiResponse<String> apiResponse = SliceApiResponse.from(appResponse);
+
+            // then
+            assertThat(apiResponse.hasNext()).isFalse();
+            assertThat(apiResponse.nextCursor()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("Record 특성 검증")
+    class RecordCharacteristics {
+
+        @Test
+        @DisplayName("동일한 값을 가진 SliceApiResponse는 equals로 동등")
+        void shouldBeEqualWhenSameValues() {
             // given
             List<String> content = List.of("item1", "item2");
             SliceApiResponse<String> response1 =
-                    new SliceApiResponse<>(content, 10, true, "cursor");
+                    new SliceApiResponse<>(content, 20, true, "cursor");
             SliceApiResponse<String> response2 =
-                    new SliceApiResponse<>(content, 10, true, "cursor");
+                    new SliceApiResponse<>(content, 20, true, "cursor");
 
-            // when & then
+            // then
             assertThat(response1).isEqualTo(response2);
             assertThat(response1.hashCode()).isEqualTo(response2.hashCode());
         }
 
         @Test
-        @DisplayName("다른 커서를 가진 SliceApiResponse는 동등하지 않다")
-        void equals_WithDifferentCursor_ShouldNotBeEqual() {
+        @DisplayName("toString 호출 시 모든 필드 포함")
+        void shouldIncludeAllFieldsInToString() {
             // given
-            List<String> content = List.of("item");
-            SliceApiResponse<String> response1 =
-                    new SliceApiResponse<>(content, 10, true, "cursor1");
-            SliceApiResponse<String> response2 =
-                    new SliceApiResponse<>(content, 10, true, "cursor2");
+            SliceApiResponse<String> response =
+                    new SliceApiResponse<>(List.of("item1"), 20, true, "cursor-abc");
 
-            // when & then
-            assertThat(response1).isNotEqualTo(response2);
+            // when
+            String result = response.toString();
+
+            // then
+            assertThat(result).contains("content=");
+            assertThat(result).contains("size=20");
+            assertThat(result).contains("hasNext=true");
+            assertThat(result).contains("nextCursor=cursor-abc");
         }
     }
 }

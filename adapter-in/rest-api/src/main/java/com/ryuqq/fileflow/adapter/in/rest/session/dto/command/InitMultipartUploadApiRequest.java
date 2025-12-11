@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.command;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -20,13 +21,19 @@ import jakarta.validation.constraints.Positive;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "Multipart 업로드 세션 초기화 요청")
 public record InitMultipartUploadApiRequest(
+        @Schema(description = "파일명 (확장자 포함)", example = "large-file.zip", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "파일명은 필수입니다") String fileName,
+        @Schema(description = "파일 크기 (bytes)", example = "104857600", requiredMode = Schema.RequiredMode.REQUIRED)
         @Positive(message = "파일 크기는 양수여야 합니다") long fileSize,
+        @Schema(description = "Content-Type (MIME 타입)", example = "application/zip", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "Content-Type은 필수입니다") String contentType,
+        @Schema(description = "각 Part 크기 (bytes, 기본: 5MB)", example = "5242880", requiredMode = Schema.RequiredMode.REQUIRED)
         @Positive(message = "Part 크기는 양수여야 합니다") long partSize,
+        @Schema(description = "테넌트 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "테넌트 ID는 필수입니다") @Positive(message = "테넌트 ID는 양수여야 합니다") Long tenantId,
-        @NotNull(message = "조직 ID는 필수입니다") @Positive(message = "조직 ID는 양수여야 합니다")
-                Long organizationId,
-        Long userId,
-        String userEmail) {}
+        @Schema(description = "조직 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotNull(message = "조직 ID는 필수입니다") @Positive(message = "조직 ID는 양수여야 합니다") Long organizationId,
+        @Schema(description = "사용자 ID (Customer 전용)", example = "12345", nullable = true) Long userId,
+        @Schema(description = "사용자 이메일 (Admin/Seller 전용)", example = "user@example.com", nullable = true) String userEmail) {}

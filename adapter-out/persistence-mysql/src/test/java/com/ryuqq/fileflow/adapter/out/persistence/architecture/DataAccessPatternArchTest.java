@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.architecture;
 
+import static com.ryuqq.fileflow.adapter.out.persistence.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -46,9 +47,7 @@ class DataAccessPatternArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses =
-                new ClassFileImporter()
-                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+        allClasses = new ClassFileImporter().importPackages(PERSISTENCE);
     }
 
     /** 규칙 1: QueryDslRepository는 JPAQueryFactory 필드 필수 */
@@ -89,7 +88,7 @@ class DataAccessPatternArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 3: QueryAdapter는 Query Repository 의존 필수 */
+    /** 규칙 3: QueryAdapter는 QueryDslRepository 의존 필수 */
     @Test
     @DisplayName("[필수] QueryAdapter는 QueryDslRepository를 의존해야 한다")
     void queryAdapter_MustDependOnQueryDslRepository() {
@@ -101,8 +100,8 @@ class DataAccessPatternArchTest {
                         .haveSimpleNameNotContaining("Lock")
                         .should()
                         .dependOnClassesThat()
-                        .haveSimpleNameContaining("Repository")
-                        .because("QueryAdapter는 Repository를 의존해야 합니다 (CQRS Query 패턴)");
+                        .haveSimpleNameEndingWith("QueryDslRepository")
+                        .because("QueryAdapter는 QueryDslRepository를 의존해야 합니다 (CQRS Query 패턴)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -231,16 +230,7 @@ class DataAccessPatternArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /**
-     * 규칙 10: QueryDslRepository는 조회 메서드만 허용
-     *
-     * <p>CQRS Query 패턴에 따라 조회 메서드만 가져야 합니다.
-     *
-     * <ul>
-     *   <li>✅ find*, count*, exists* 패턴의 조회 메서드
-     *   <li>❌ save, delete, update 등 Command 메서드
-     * </ul>
-     */
+    /** 규칙 10: QueryDslRepository는 정확히 4개 표준 메서드만 허용 */
     @Test
     @DisplayName("[필수] QueryDslRepository는 표준 메서드만 허용한다")
     void queryDslRepository_MustOnlyHaveStandardMethods() {
@@ -248,17 +238,22 @@ class DataAccessPatternArchTest {
                 methods()
                         .that()
                         .areDeclaredInClassesThat()
-                        .haveSimpleNameContaining("QueryRepository")
-                        .or()
-                        .areDeclaredInClassesThat()
-                        .haveSimpleNameContaining("QueryDslRepository")
+                        .haveSimpleNameEndingWith("QueryDslRepository")
                         .and()
                         .arePublic()
                         .and()
                         .areNotStatic()
                         .should()
-                        .haveNameMatching("(find|count|exists|get).*")
-                        .because("QueryRepository는 조회 메서드만 허용합니다 (find, count, exists, get 패턴)");
+                        .haveName("findById")
+                        .orShould()
+                        .haveName("existsById")
+                        .orShould()
+                        .haveName("findByCriteria")
+                        .orShould()
+                        .haveName("countByCriteria")
+                        .because(
+                                "QueryDslRepository는 4개 표준 메서드만 허용합니다 (findById, existsById,"
+                                        + " findByCriteria, countByCriteria)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -290,7 +285,7 @@ class DataAccessPatternArchTest {
                         .that()
                         .haveSimpleNameEndingWith("Config")
                         .and()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
                         .beAnnotatedWith(org.springframework.context.annotation.Configuration.class)
                         .because("Config 클래스는 @Configuration 어노테이션이 필수입니다");
