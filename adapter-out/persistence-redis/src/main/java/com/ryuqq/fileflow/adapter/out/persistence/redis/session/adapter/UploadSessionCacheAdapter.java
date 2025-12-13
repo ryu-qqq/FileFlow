@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  * <p><strong>활성화 조건</strong>: {@code redisson.enabled=true}
  */
 @Component
-@ConditionalOnProperty(name = "redisson.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
 public class UploadSessionCacheAdapter implements UploadSessionCachePersistencePort {
 
     private static final String SINGLE_UPLOAD_KEY_PREFIX = "cache::single-upload::";
