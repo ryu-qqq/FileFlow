@@ -19,9 +19,11 @@ import java.time.Instant;
 @Schema(description = "외부 다운로드 상세 응답")
 public record ExternalDownloadDetailApiResponse(
         @Schema(description = "외부 다운로드 ID", example = "download-123") String id,
-        @Schema(description = "외부 이미지 URL", example = "https://example.com/image.jpg") String sourceUrl,
+        @Schema(description = "외부 이미지 URL", example = "https://example.com/image.jpg")
+                String sourceUrl,
         @Schema(description = "현재 상태", example = "COMPLETED") String status,
-        @Schema(description = "생성된 FileAsset ID", example = "asset-456", nullable = true) String fileAssetId,
+        @Schema(description = "생성된 FileAsset ID", example = "asset-456", nullable = true)
+                String fileAssetId,
         @Schema(description = "에러 메시지", nullable = true) String errorMessage,
         @Schema(description = "재시도 횟수", example = "0") int retryCount,
         @Schema(description = "콜백 URL", nullable = true) String webhookUrl,

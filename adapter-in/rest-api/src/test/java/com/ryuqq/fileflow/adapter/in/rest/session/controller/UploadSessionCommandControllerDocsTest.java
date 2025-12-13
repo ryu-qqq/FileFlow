@@ -75,7 +75,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
     @MockitoBean private CancelUploadSessionUseCase cancelUploadSessionUseCase;
 
     @Test
-    @DisplayName("POST /api/v1/upload-sessions/single - 단일 업로드 세션 초기화 API 문서")
+    @DisplayName("POST /api/v1/file/upload-sessions/single - 단일 업로드 세션 초기화 API 문서")
     void initSingleUpload() throws Exception {
         // given
         InitSingleUploadApiRequest request =
@@ -102,7 +102,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        post("/api/v1/upload-sessions/single")
+                        post("/api/v1/file/upload-sessions/single")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -144,7 +144,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("POST /api/v1/upload-sessions/multipart - Multipart 업로드 세션 초기화 API 문서")
+    @DisplayName("POST /api/v1/file/upload-sessions/multipart - Multipart 업로드 세션 초기화 API 문서")
     void initMultipartUpload() throws Exception {
         // given
         InitMultipartUploadApiRequest request =
@@ -180,7 +180,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        post("/api/v1/upload-sessions/multipart")
+                        post("/api/v1/file/upload-sessions/multipart")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -210,8 +210,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.sessionId").description("세션 ID"),
                                         fieldWithPath("data.uploadId")
                                                 .description("S3 Multipart Upload ID"),
-                                        fieldWithPath("data.totalParts")
-                                                .description("전체 Part 개수"),
+                                        fieldWithPath("data.totalParts").description("전체 Part 개수"),
                                         fieldWithPath("data.partSize")
                                                 .description("각 Part 크기 (bytes)"),
                                         fieldWithPath("data.expiresAt")
@@ -229,7 +228,8 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/upload-sessions/{sessionId}/single/complete - 단일 업로드 완료 API 문서")
+    @DisplayName(
+            "PATCH /api/v1/file/upload-sessions/{sessionId}/single/complete - 단일 업로드 완료 API 문서")
     void completeSingleUpload() throws Exception {
         // given
         String sessionId = "session-123";
@@ -249,7 +249,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        patch("/api/v1/upload-sessions/{sessionId}/single/complete", sessionId)
+                        patch("/api/v1/file/upload-sessions/{sessionId}/single/complete", sessionId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -260,8 +260,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                 preprocessResponse(prettyPrint()),
                                 pathParameters(
                                         parameterWithName("sessionId").description("업로드 세션 ID")),
-                                requestFields(
-                                        fieldWithPath("etag").description("S3가 반환한 ETag")),
+                                requestFields(fieldWithPath("etag").description("S3가 반환한 ETag")),
                                 responseFields(
                                         fieldWithPath("success").description("성공 여부"),
                                         fieldWithPath("data").description("응답 데이터"),
@@ -278,7 +277,9 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/upload-sessions/{sessionId}/multipart/complete - Multipart 업로드 완료 API 문서")
+    @DisplayName(
+            "PATCH /api/v1/file/upload-sessions/{sessionId}/multipart/complete - Multipart 업로드 완료"
+                    + " API 문서")
     void completeMultipartUpload() throws Exception {
         // given
         String sessionId = "session-456";
@@ -311,7 +312,9 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        patch("/api/v1/upload-sessions/{sessionId}/multipart/complete", sessionId)
+                        patch(
+                                        "/api/v1/file/upload-sessions/{sessionId}/multipart/complete",
+                                        sessionId)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(
@@ -331,8 +334,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.key").description("S3 객체 키"),
                                         fieldWithPath("data.uploadId")
                                                 .description("S3 Multipart Upload ID"),
-                                        fieldWithPath("data.totalParts")
-                                                .description("전체 Part 개수"),
+                                        fieldWithPath("data.totalParts").description("전체 Part 개수"),
                                         fieldWithPath("data.completedParts")
                                                 .description("완료된 Part 목록"),
                                         fieldWithPath("data.completedParts[].partNumber")
@@ -350,7 +352,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/upload-sessions/{sessionId}/parts - Part 업로드 완료 표시 API 문서")
+    @DisplayName("PATCH /api/v1/file/upload-sessions/{sessionId}/parts - Part 업로드 완료 표시 API 문서")
     void markPartUploaded() throws Exception {
         // given
         String sessionId = "session-456";
@@ -365,7 +367,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        patch("/api/v1/upload-sessions/{sessionId}/parts", sessionId)
+                        patch("/api/v1/file/upload-sessions/{sessionId}/parts", sessionId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -394,7 +396,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/upload-sessions/{sessionId}/cancel - 업로드 세션 취소 API 문서")
+    @DisplayName("PATCH /api/v1/file/upload-sessions/{sessionId}/cancel - 업로드 세션 취소 API 문서")
     void cancelUploadSession() throws Exception {
         // given
         String sessionId = "session-123";
@@ -407,7 +409,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        patch("/api/v1/upload-sessions/{sessionId}/cancel", sessionId)
+                        patch("/api/v1/file/upload-sessions/{sessionId}/cancel", sessionId)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(

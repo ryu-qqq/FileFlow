@@ -31,6 +31,11 @@ class FileAssetJpaEntityMapperTest {
 
     private FileAssetJpaEntityMapper mapper;
 
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_USER_ID = UserId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+
     @BeforeEach
     void setUp() {
         mapper = new FileAssetJpaEntityMapper();
@@ -59,7 +64,8 @@ class FileAssetJpaEntityMapperTest {
             assertThat(entity.getBucket()).isEqualTo(domain.getBucketValue());
             assertThat(entity.getS3Key()).isEqualTo(domain.getS3KeyValue());
             assertThat(entity.getEtag()).isEqualTo(domain.getEtagValue());
-            assertThat(entity.getUserId()).isEqualTo(domain.getUserId() != null ? domain.getUserId().value() : null);
+            assertThat(entity.getUserId())
+                    .isEqualTo(domain.getUserId() != null ? domain.getUserId().value() : null);
             assertThat(entity.getOrganizationId()).isEqualTo(domain.getOrganizationId().value());
             assertThat(entity.getTenantId()).isEqualTo(domain.getTenantId().value());
             assertThat(entity.getStatus()).isEqualTo(domain.getStatus());
@@ -144,7 +150,8 @@ class FileAssetJpaEntityMapperTest {
             assertThat(domain.getBucketValue()).isEqualTo(entity.getBucket());
             assertThat(domain.getS3KeyValue()).isEqualTo(entity.getS3Key());
             assertThat(domain.getEtagValue()).isEqualTo(entity.getEtag());
-            assertThat(domain.getUserId() != null ? domain.getUserId().value() : null).isEqualTo(entity.getUserId());
+            assertThat(domain.getUserId() != null ? domain.getUserId().value() : null)
+                    .isEqualTo(entity.getUserId());
             assertThat(domain.getOrganizationId().value()).isEqualTo(entity.getOrganizationId());
             assertThat(domain.getTenantId().value()).isEqualTo(entity.getTenantId());
             assertThat(domain.getStatus()).isEqualTo(entity.getStatus());
@@ -231,7 +238,8 @@ class FileAssetJpaEntityMapperTest {
             assertThat(restored.getS3KeyValue()).isEqualTo(original.getS3KeyValue());
             assertThat(restored.getEtagValue()).isEqualTo(original.getEtagValue());
             assertThat(restored.getUserId()).isEqualTo(original.getUserId());
-            assertThat(restored.getOrganizationId().value()).isEqualTo(original.getOrganizationId().value());
+            assertThat(restored.getOrganizationId().value())
+                    .isEqualTo(original.getOrganizationId().value());
             assertThat(restored.getTenantId().value()).isEqualTo(original.getTenantId().value());
             assertThat(restored.getStatus()).isEqualTo(original.getStatus());
         }
@@ -338,9 +346,9 @@ class FileAssetJpaEntityMapperTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
                 ETag.of("\"abc123\""),
-                UserId.of("01912345-6789-7abc-def0-123456789200"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                UserId.of(TEST_USER_ID),
+                OrganizationId.of(TEST_ORG_ID),
+                TenantId.of(TEST_TENANT_ID),
                 status,
                 now,
                 processedAt,
@@ -361,9 +369,9 @@ class FileAssetJpaEntityMapperTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/file.txt"),
                 ETag.of("\"abc123\""),
-                UserId.of("01912345-6789-7abc-def0-123456789200"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                UserId.of(TEST_USER_ID),
+                OrganizationId.of(TEST_ORG_ID),
+                TenantId.of(TEST_TENANT_ID),
                 FileAssetStatus.PENDING,
                 now,
                 null,
@@ -385,8 +393,8 @@ class FileAssetJpaEntityMapperTest {
                 S3Key.of("uploads/document.pdf"),
                 ETag.of("\"abc123\""),
                 null,
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                OrganizationId.of(TEST_ORG_ID),
+                TenantId.of(TEST_TENANT_ID),
                 FileAssetStatus.PENDING,
                 now,
                 null,
@@ -408,9 +416,9 @@ class FileAssetJpaEntityMapperTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
                 ETag.of("\"abc123\""),
-                UserId.of("01912345-6789-7abc-def0-123456789200"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                UserId.of(TEST_USER_ID),
+                OrganizationId.of(TEST_ORG_ID),
+                TenantId.of(TEST_TENANT_ID),
                 FileAssetStatus.COMPLETED,
                 createdAt,
                 now,
@@ -432,9 +440,9 @@ class FileAssetJpaEntityMapperTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/" + fileName),
                 ETag.of("\"abc123\""),
-                UserId.of("01912345-6789-7abc-def0-123456789200"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                UserId.of(TEST_USER_ID),
+                OrganizationId.of(TEST_ORG_ID),
+                TenantId.of(TEST_TENANT_ID),
                 FileAssetStatus.PENDING,
                 now,
                 null,
@@ -461,9 +469,9 @@ class FileAssetJpaEntityMapperTest {
                 "test-bucket",
                 "uploads/document.pdf",
                 "\"abc123\"",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 status,
                 processedAt,
                 deletedAt,
@@ -486,9 +494,9 @@ class FileAssetJpaEntityMapperTest {
                 "test-bucket",
                 "uploads/file.txt",
                 "\"abc123\"",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.PENDING,
                 null,
                 null,
@@ -512,8 +520,8 @@ class FileAssetJpaEntityMapperTest {
                 "uploads/document.pdf",
                 "\"abc123\"",
                 null,
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.PENDING,
                 null,
                 null,
@@ -537,9 +545,9 @@ class FileAssetJpaEntityMapperTest {
                 "test-bucket",
                 "uploads/document.pdf",
                 "\"abc123\"",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,

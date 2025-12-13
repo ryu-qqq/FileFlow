@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.controller;
 
+import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.command.CompleteSingleUploadApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.command.InitMultipartUploadApiRequest;
@@ -38,6 +39,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,12 +56,12 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>제공하는 API:
  *
  * <ul>
- *   <li>POST /api/v1/upload-sessions/single - 단일 파일 업로드 세션 초기화
- *   <li>POST /api/v1/upload-sessions/multipart - Multipart 업로드 세션 초기화
- *   <li>PATCH /api/v1/upload-sessions/{sessionId}/single/complete - 단일 업로드 완료
- *   <li>PATCH /api/v1/upload-sessions/{sessionId}/multipart/complete - Multipart 업로드 완료
- *   <li>PATCH /api/v1/upload-sessions/{sessionId}/parts - Part 업로드 완료 표시
- *   <li>PATCH /api/v1/upload-sessions/{sessionId}/cancel - 업로드 세션 취소
+ *   <li>POST /api/v1/file/upload-sessions/single - 단일 파일 업로드 세션 초기화
+ *   <li>POST /api/v1/file/upload-sessions/multipart - Multipart 업로드 세션 초기화
+ *   <li>PATCH /api/v1/file/upload-sessions/{sessionId}/single/complete - 단일 업로드 완료
+ *   <li>PATCH /api/v1/file/upload-sessions/{sessionId}/multipart/complete - Multipart 업로드 완료
+ *   <li>PATCH /api/v1/file/upload-sessions/{sessionId}/parts - Part 업로드 완료 표시
+ *   <li>PATCH /api/v1/file/upload-sessions/{sessionId}/cancel - 업로드 세션 취소
  * </ul>
  *
  * @author development-team
@@ -67,7 +69,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "Upload Session Command", description = "업로드 세션 상태 변경 API")
 @RestController
-@RequestMapping("${api.endpoints.base-v1}${api.endpoints.upload-session.base}")
+@RequestMapping(ApiPaths.UploadSession.BASE)
 @Validated
 public class UploadSessionCommandController {
 
@@ -113,12 +115,19 @@ public class UploadSessionCommandController {
      * @param request 단일 업로드 초기화 요청 DTO
      * @return 세션 정보 및 Presigned URL (201 Created)
      */
-    @Operation(summary = "단일 업로드 세션 초기화", description = "단일 파일 업로드를 위한 세션을 초기화하고 Presigned URL을 발급합니다.")
+    @Operation(
+            summary = "단일 업로드 세션 초기화",
+            description = "단일 파일 업로드를 위한 세션을 초기화하고 Presigned URL을 발급합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "세션 생성 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "201",
+                description = "세션 생성 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "잘못된 요청")
     })
-    @PostMapping("${api.endpoints.upload-session.single-init}")
+    @PreAuthorize("@access.canWrite()")
+    @PostMapping(ApiPaths.UploadSession.SINGLE_INIT)
     public ResponseEntity<ApiResponse<InitSingleUploadApiResponse>> initSingleUpload(
             @RequestBody @Valid InitSingleUploadApiRequest request) {
 
@@ -138,12 +147,19 @@ public class UploadSessionCommandController {
      * @param request Multipart 업로드 초기화 요청 DTO
      * @return 세션 정보 및 Part별 Presigned URL (201 Created)
      */
-    @Operation(summary = "Multipart 업로드 세션 초기화", description = "대용량 파일 업로드를 위한 Multipart 세션을 초기화합니다.")
+    @Operation(
+            summary = "Multipart 업로드 세션 초기화",
+            description = "대용량 파일 업로드를 위한 Multipart 세션을 초기화합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "세션 생성 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "201",
+                description = "세션 생성 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "잘못된 요청")
     })
-    @PostMapping("${api.endpoints.upload-session.multipart-init}")
+    @PreAuthorize("@access.canWrite()")
+    @PostMapping(ApiPaths.UploadSession.MULTIPART_INIT)
     public ResponseEntity<ApiResponse<InitMultipartUploadApiResponse>> initMultipartUpload(
             @RequestBody @Valid InitMultipartUploadApiRequest request) {
 
@@ -167,13 +183,20 @@ public class UploadSessionCommandController {
      */
     @Operation(summary = "단일 업로드 완료", description = "단일 파일 업로드를 완료 처리합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "완료 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "완료 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "세션을 찾을 수 없음")
     })
-    @PatchMapping("${api.endpoints.upload-session.single-complete}")
+    @PreAuthorize("@access.canWrite()")
+    @PatchMapping(ApiPaths.UploadSession.SINGLE_COMPLETE)
     public ResponseEntity<ApiResponse<CompleteSingleUploadApiResponse>> completeSingleUpload(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
-            @PathVariable @NotBlank String sessionId,
+                    @PathVariable
+                    @NotBlank
+                    String sessionId,
             @RequestBody @Valid CompleteSingleUploadApiRequest request) {
 
         CompleteSingleUploadCommand command =
@@ -195,13 +218,20 @@ public class UploadSessionCommandController {
      */
     @Operation(summary = "Multipart 업로드 완료", description = "Multipart 업로드를 완료 처리합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "완료 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "완료 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "세션을 찾을 수 없음")
     })
-    @PatchMapping("${api.endpoints.upload-session.multipart-complete}")
+    @PreAuthorize("@access.canWrite()")
+    @PatchMapping(ApiPaths.UploadSession.MULTIPART_COMPLETE)
     public ResponseEntity<ApiResponse<CompleteMultipartUploadApiResponse>> completeMultipartUpload(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
-            @PathVariable @NotBlank String sessionId) {
+                    @PathVariable
+                    @NotBlank
+                    String sessionId) {
 
         CompleteMultipartUploadCommand command =
                 uploadSessionApiMapper.toCompleteMultipartUploadCommand(sessionId);
@@ -224,13 +254,20 @@ public class UploadSessionCommandController {
      */
     @Operation(summary = "Part 업로드 완료 표시", description = "Multipart 업로드의 개별 Part 업로드 완료를 표시합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "표시 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "표시 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "세션을 찾을 수 없음")
     })
-    @PatchMapping("${api.endpoints.upload-session.parts}")
+    @PreAuthorize("@access.canWrite()")
+    @PatchMapping(ApiPaths.UploadSession.PARTS)
     public ResponseEntity<ApiResponse<MarkPartUploadedApiResponse>> markPartUploaded(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
-            @PathVariable @NotBlank String sessionId,
+                    @PathVariable
+                    @NotBlank
+                    String sessionId,
             @RequestBody @Valid MarkPartUploadedApiRequest request) {
 
         MarkPartUploadedCommand command =
@@ -252,13 +289,20 @@ public class UploadSessionCommandController {
      */
     @Operation(summary = "업로드 세션 취소", description = "진행 중인 업로드 세션을 취소합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "취소 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "취소 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "세션을 찾을 수 없음")
     })
-    @PatchMapping("${api.endpoints.upload-session.cancel}")
+    @PreAuthorize("@access.canWrite()")
+    @PatchMapping(ApiPaths.UploadSession.CANCEL)
     public ResponseEntity<ApiResponse<CancelUploadSessionApiResponse>> cancelUploadSession(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
-            @PathVariable @NotBlank String sessionId) {
+                    @PathVariable
+                    @NotBlank
+                    String sessionId) {
 
         CancelUploadSessionCommand command =
                 uploadSessionApiMapper.toCancelUploadSessionCommand(sessionId);

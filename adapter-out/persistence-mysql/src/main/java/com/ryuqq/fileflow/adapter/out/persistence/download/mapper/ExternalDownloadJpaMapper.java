@@ -55,7 +55,9 @@ public class ExternalDownloadJpaMapper {
                 ExternalDownloadId.of(entity.getId()),
                 SourceUrl.of(entity.getSourceUrl()),
                 TenantId.of(entity.getTenantId()),
-                entity.getOrganizationId() != null ? OrganizationId.of(entity.getOrganizationId()) : null,
+                entity.getOrganizationId() != null
+                        ? OrganizationId.of(entity.getOrganizationId())
+                        : null,
                 S3Bucket.of(entity.getS3Bucket()),
                 entity.getS3PathPrefix(),
                 entity.getStatus(),

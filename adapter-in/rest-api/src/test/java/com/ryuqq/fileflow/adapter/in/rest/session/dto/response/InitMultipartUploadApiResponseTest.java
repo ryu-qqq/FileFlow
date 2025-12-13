@@ -44,7 +44,14 @@ class InitMultipartUploadApiResponseTest {
             // when
             InitMultipartUploadApiResponse response =
                     new InitMultipartUploadApiResponse(
-                            sessionId, uploadId, totalParts, partSize, expiresAt, bucket, key, parts);
+                            sessionId,
+                            uploadId,
+                            totalParts,
+                            partSize,
+                            expiresAt,
+                            bucket,
+                            key,
+                            parts);
 
             // then
             assertThat(response.sessionId()).isEqualTo(sessionId);
@@ -62,7 +69,9 @@ class InitMultipartUploadApiResponseTest {
         void create_WithOfMethod_ShouldSucceed() {
             // given
             List<PartInfoApiResponse> parts =
-                    List.of(PartInfoApiResponse.of(1, "https://url1"), PartInfoApiResponse.of(2, "https://url2"));
+                    List.of(
+                            PartInfoApiResponse.of(1, "https://url1"),
+                            PartInfoApiResponse.of(2, "https://url2"));
 
             // when
             InitMultipartUploadApiResponse response =

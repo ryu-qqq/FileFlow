@@ -123,8 +123,7 @@ class GenerateDownloadUrlApiRequestTest {
 
             // then
             assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage())
-                    .contains("최소 1분 이상");
+            assertThat(violations.iterator().next().getMessage()).contains("최소 1분 이상");
         }
 
         @Test
@@ -139,8 +138,7 @@ class GenerateDownloadUrlApiRequestTest {
 
             // then
             assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage())
-                    .contains("최대 1440분");
+            assertThat(violations.iterator().next().getMessage()).contains("최대 1440분");
         }
     }
 

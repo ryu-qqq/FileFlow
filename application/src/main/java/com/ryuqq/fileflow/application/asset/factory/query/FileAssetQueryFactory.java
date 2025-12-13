@@ -9,8 +9,7 @@ import org.springframework.stereotype.Component;
 /**
  * FileAsset Query Factory.
  *
- * <p>Query DTO를 Domain Criteria VO로 변환합니다.
- * String → Domain Enum 변환은 이 Factory에서 처리합니다.
+ * <p>Query DTO를 Domain Criteria VO로 변환합니다. String → Domain Enum 변환은 이 Factory에서 처리합니다.
  *
  * <p><strong>책임:</strong>
  *
@@ -38,12 +37,10 @@ public class FileAssetQueryFactory {
      * @return FileAssetCriteria
      */
     public FileAssetCriteria createCriteria(ListFileAssetsQuery query) {
-        FileAssetStatus status = query.status() != null
-                ? FileAssetStatus.valueOf(query.status())
-                : null;
-        FileCategory category = query.category() != null
-                ? FileCategory.valueOf(query.category())
-                : null;
+        FileAssetStatus status =
+                query.status() != null ? FileAssetStatus.valueOf(query.status()) : null;
+        FileCategory category =
+                query.category() != null ? FileCategory.valueOf(query.category()) : null;
 
         return FileAssetCriteria.of(
                 query.organizationId(),

@@ -5,8 +5,8 @@ import java.time.Instant;
 /**
  * FileAsset 응답 DTO.
  *
- * <p>REST API Layer와의 결합도를 낮추기 위해 String 기반으로 설계.
- * Domain Enum → String 변환은 Application Layer 내부에서 처리.
+ * <p>REST API Layer와의 결합도를 낮추기 위해 String 기반으로 설계. Domain Enum → String 변환은 Application Layer 내부에서
+ * 처리.
  *
  * @param id 파일 자산 ID
  * @param sessionId 업로드 세션 ID

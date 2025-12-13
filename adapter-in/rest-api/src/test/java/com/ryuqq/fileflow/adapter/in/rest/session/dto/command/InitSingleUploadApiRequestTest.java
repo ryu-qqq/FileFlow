@@ -109,7 +109,8 @@ class InitSingleUploadApiRequestTest {
             InitSingleUploadApiRequest request = createValidRequest();
 
             // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isEmpty();
@@ -123,14 +124,24 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            idempotencyKey, "file.txt", 1024L, "text/plain", 1L, 1L, null, null, null);
+                            idempotencyKey,
+                            "file.txt",
+                            1024L,
+                            "text/plain",
+                            1L,
+                            1L,
+                            null,
+                            null,
+                            null);
 
             // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
-            assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("idempotencyKey"));
+            assertThat(violations)
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("idempotencyKey"));
         }
 
         @ParameterizedTest
@@ -144,7 +155,8 @@ class InitSingleUploadApiRequestTest {
                             "key", fileName, 1024L, "text/plain", 1L, 1L, null, null, null);
 
             // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
@@ -161,7 +173,8 @@ class InitSingleUploadApiRequestTest {
                             "key", "file.txt", fileSize, "text/plain", 1L, 1L, null, null, null);
 
             // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
@@ -179,11 +192,13 @@ class InitSingleUploadApiRequestTest {
                             "key", "file.txt", 1024L, contentType, 1L, 1L, null, null, null);
 
             // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
-            assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("contentType"));
+            assertThat(violations)
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("contentType"));
         }
 
         @Test
@@ -195,7 +210,8 @@ class InitSingleUploadApiRequestTest {
                             "key", "file.txt", 1024L, "text/plain", null, 1L, null, null, null);
 
             // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
@@ -212,7 +228,8 @@ class InitSingleUploadApiRequestTest {
                             "key", "file.txt", 1024L, "text/plain", tenantId, 1L, null, null, null);
 
             // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
@@ -228,11 +245,13 @@ class InitSingleUploadApiRequestTest {
                             "key", "file.txt", 1024L, "text/plain", 1L, null, null, null, null);
 
             // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
-            assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("organizationId"));
+            assertThat(violations)
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("organizationId"));
         }
     }
 
@@ -246,10 +265,26 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request1 =
                     new InitSingleUploadApiRequest(
-                            "key", "file.txt", 1024L, "text/plain", 1L, 1L, 100L, "email", "PRODUCT");
+                            "key",
+                            "file.txt",
+                            1024L,
+                            "text/plain",
+                            1L,
+                            1L,
+                            100L,
+                            "email",
+                            "PRODUCT");
             InitSingleUploadApiRequest request2 =
                     new InitSingleUploadApiRequest(
-                            "key", "file.txt", 1024L, "text/plain", 1L, 1L, 100L, "email", "PRODUCT");
+                            "key",
+                            "file.txt",
+                            1024L,
+                            "text/plain",
+                            1L,
+                            1L,
+                            100L,
+                            "email",
+                            "PRODUCT");
 
             // when & then
             assertThat(request1).isEqualTo(request2);

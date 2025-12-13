@@ -43,7 +43,9 @@ public class SingleUploadSessionJpaMapper {
                 domain.getId().getValue(),
                 domain.getIdempotencyKey().getValue(),
                 userContext.userId() != null ? userContext.userId().value() : null,
-                userContext.organization().id() != null ? userContext.organization().id().value() : null,
+                userContext.organization().id() != null
+                        ? userContext.organization().id().value()
+                        : null,
                 userContext.organization().name(),
                 userContext.organization().namespace(),
                 userContext.tenant().id().value(),
@@ -98,7 +100,9 @@ public class SingleUploadSessionJpaMapper {
         TenantId tenantId = TenantId.of(entity.getTenantId());
         Tenant tenant = Tenant.of(tenantId, entity.getTenantName());
         OrganizationId organizationId =
-                entity.getOrganizationId() != null ? OrganizationId.of(entity.getOrganizationId()) : null;
+                entity.getOrganizationId() != null
+                        ? OrganizationId.of(entity.getOrganizationId())
+                        : null;
         Organization organization =
                 Organization.of(
                         organizationId,

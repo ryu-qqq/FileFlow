@@ -3,6 +3,8 @@ package com.ryuqq.fileflow.adapter.out.persistence.download.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +13,9 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("ExternalDownloadJpaEntity 단위 테스트")
 class ExternalDownloadJpaEntityTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     @Nested
     @DisplayName("of 팩토리 메서드")
@@ -22,8 +27,8 @@ class ExternalDownloadJpaEntityTest {
             // given
             UUID id = UUID.randomUUID();
             String sourceUrl = "https://example.com/file.jpg";
-            String tenantId = "01912345-6789-7abc-def0-123456789100";
-            String organizationId = "01912345-6789-7abc-def0-123456789200";
+            String tenantId = TEST_ORG_ID;
+            String organizationId = TEST_USER_ID;
             String s3Bucket = "test-bucket";
             String s3PathPrefix = "downloads/";
             ExternalDownloadStatus status = ExternalDownloadStatus.PENDING;
@@ -75,8 +80,8 @@ class ExternalDownloadJpaEntityTest {
                     ExternalDownloadJpaEntity.of(
                             null,
                             "https://example.com/file.jpg",
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789200",
+                            TEST_ORG_ID,
+                            TEST_USER_ID,
                             "bucket",
                             "prefix/",
                             ExternalDownloadStatus.PENDING,
@@ -108,8 +113,8 @@ class ExternalDownloadJpaEntityTest {
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/processing.jpg",
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789200",
+                            TEST_ORG_ID,
+                            TEST_USER_ID,
                             "bucket",
                             "prefix/",
                             status,
@@ -138,8 +143,8 @@ class ExternalDownloadJpaEntityTest {
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/failed.jpg",
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789200",
+                            TEST_ORG_ID,
+                            TEST_USER_ID,
                             "bucket",
                             "prefix/",
                             ExternalDownloadStatus.FAILED,
@@ -172,8 +177,8 @@ class ExternalDownloadJpaEntityTest {
             // then
             assertThat(entity.getId()).isNotNull();
             assertThat(entity.getSourceUrl()).isEqualTo("https://example.com/file.jpg");
-            assertThat(entity.getTenantId()).isEqualTo("01912345-6789-7abc-def0-123456789100");
-            assertThat(entity.getOrganizationId()).isEqualTo("01912345-6789-7abc-def0-123456789200");
+            assertThat(entity.getTenantId()).isEqualTo(TEST_ORG_ID);
+            assertThat(entity.getOrganizationId()).isEqualTo(TEST_USER_ID);
             assertThat(entity.getS3Bucket()).isEqualTo("test-bucket");
             assertThat(entity.getS3PathPrefix()).isEqualTo("downloads/");
             assertThat(entity.getStatus()).isEqualTo(ExternalDownloadStatus.PENDING);
@@ -190,8 +195,8 @@ class ExternalDownloadJpaEntityTest {
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/file.jpg",
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789200",
+                            TEST_ORG_ID,
+                            TEST_USER_ID,
                             "bucket",
                             "prefix/",
                             ExternalDownloadStatus.PENDING,
@@ -216,8 +221,8 @@ class ExternalDownloadJpaEntityTest {
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/file.jpg",
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789200",
+                            TEST_ORG_ID,
+                            TEST_USER_ID,
                             "bucket",
                             "prefix/",
                             ExternalDownloadStatus.COMPLETED,
@@ -240,8 +245,8 @@ class ExternalDownloadJpaEntityTest {
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
                 "https://example.com/file.jpg",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789200",
+                TEST_ORG_ID,
+                TEST_USER_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

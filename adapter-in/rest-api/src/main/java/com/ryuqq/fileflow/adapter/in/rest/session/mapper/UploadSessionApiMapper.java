@@ -282,12 +282,7 @@ public class UploadSessionApiMapper {
         String status = request.status() != null ? request.status().name() : null;
 
         return ListUploadSessionsQuery.of(
-                tenantId,
-                organizationId,
-                status,
-                uploadType,
-                request.page(),
-                request.size());
+                tenantId, organizationId, status, uploadType, request.page(), request.size());
     }
 
     // ========== Application Response → Query API Response 변환 ==========

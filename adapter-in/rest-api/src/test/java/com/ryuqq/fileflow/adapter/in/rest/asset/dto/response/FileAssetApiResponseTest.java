@@ -172,8 +172,7 @@ class FileAssetApiResponseTest {
         @DisplayName("이미지 컨텐츠 타입으로 응답을 생성할 수 있다")
         void create_WithImageContentType_ShouldSucceed() {
             // when
-            FileAssetApiResponse response =
-                    createResponse("image.png", "image/png", "IMAGE");
+            FileAssetApiResponse response = createResponse("image.png", "image/png", "IMAGE");
 
             // then
             assertThat(response.contentType()).isEqualTo("image/png");
@@ -184,8 +183,7 @@ class FileAssetApiResponseTest {
         @DisplayName("비디오 컨텐츠 타입으로 응답을 생성할 수 있다")
         void create_WithVideoContentType_ShouldSucceed() {
             // when
-            FileAssetApiResponse response =
-                    createResponse("video.mp4", "video/mp4", "VIDEO");
+            FileAssetApiResponse response = createResponse("video.mp4", "video/mp4", "VIDEO");
 
             // then
             assertThat(response.contentType()).isEqualTo("video/mp4");
@@ -196,8 +194,7 @@ class FileAssetApiResponseTest {
         @DisplayName("오디오 컨텐츠 타입으로 응답을 생성할 수 있다")
         void create_WithAudioContentType_ShouldSucceed() {
             // when
-            FileAssetApiResponse response =
-                    createResponse("audio.mp3", "audio/mpeg", "AUDIO");
+            FileAssetApiResponse response = createResponse("audio.mp3", "audio/mpeg", "AUDIO");
 
             // then
             assertThat(response.contentType()).isEqualTo("audio/mpeg");

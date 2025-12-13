@@ -99,8 +99,7 @@ class BatchGenerateDownloadUrlApiRequestTest {
 
             // then
             assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage())
-                    .contains("필수");
+            assertThat(violations.iterator().next().getMessage()).contains("필수");
         }
 
         @Test
@@ -150,8 +149,7 @@ class BatchGenerateDownloadUrlApiRequestTest {
 
             // then
             assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage())
-                    .contains("최대 100개");
+            assertThat(violations.iterator().next().getMessage()).contains("최대 100개");
         }
 
         @Test

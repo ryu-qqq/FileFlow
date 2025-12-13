@@ -9,6 +9,9 @@ import com.ryuqq.fileflow.application.download.dto.command.RequestExternalDownlo
 import com.ryuqq.fileflow.application.download.dto.query.GetExternalDownloadQuery;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadDetailResponse;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +26,10 @@ import org.junit.jupiter.api.Test;
  */
 @DisplayName("ExternalDownloadApiMapper 단위 테스트")
 class ExternalDownloadApiMapperTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     private ExternalDownloadApiMapper mapper;
 
@@ -42,11 +49,12 @@ class ExternalDownloadApiMapperTest {
             RequestExternalDownloadApiRequest request =
                     new RequestExternalDownloadApiRequest(
                             "https://example.com/image.jpg", "https://webhook.com/notify");
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
-            RequestExternalDownloadCommand command = mapper.toCommand(request, tenantId, organizationId);
+            RequestExternalDownloadCommand command =
+                    mapper.toCommand(request, tenantId, organizationId);
 
             // then
             assertThat(command.sourceUrl()).isEqualTo("https://example.com/image.jpg");
@@ -61,11 +69,12 @@ class ExternalDownloadApiMapperTest {
             // given
             RequestExternalDownloadApiRequest request =
                     new RequestExternalDownloadApiRequest("https://example.com/image.jpg", null);
-            String tenantId = "01912345-6789-7abc-def0-123456789002";
-            String organizationId = "01912345-6789-7abc-def0-123456789200";
+            String tenantId = TEST_ORG_ID;
+            String organizationId = TEST_USER_ID;
 
             // when
-            RequestExternalDownloadCommand command = mapper.toCommand(request, tenantId, organizationId);
+            RequestExternalDownloadCommand command =
+                    mapper.toCommand(request, tenantId, organizationId);
 
             // then
             assertThat(command.sourceUrl()).isEqualTo("https://example.com/image.jpg");
@@ -82,7 +91,7 @@ class ExternalDownloadApiMapperTest {
         void toQuery_WithIdAndTenantId_ShouldSucceed() {
             // given
             String id = "download-123";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
 
             // when
             GetExternalDownloadQuery query = mapper.toQuery(id, tenantId);

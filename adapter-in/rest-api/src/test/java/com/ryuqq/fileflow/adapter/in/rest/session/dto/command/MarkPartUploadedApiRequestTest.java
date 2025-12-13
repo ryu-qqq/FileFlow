@@ -45,7 +45,8 @@ class MarkPartUploadedApiRequestTest {
             long size = 5242880L;
 
             // when
-            MarkPartUploadedApiRequest request = new MarkPartUploadedApiRequest(partNumber, etag, size);
+            MarkPartUploadedApiRequest request =
+                    new MarkPartUploadedApiRequest(partNumber, etag, size);
 
             // then
             assertThat(request.partNumber()).isEqualTo(partNumber);
@@ -66,7 +67,8 @@ class MarkPartUploadedApiRequestTest {
                     new MarkPartUploadedApiRequest(1, "\"etag\"", 5242880L);
 
             // when
-            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isEmpty();
@@ -81,11 +83,13 @@ class MarkPartUploadedApiRequestTest {
                     new MarkPartUploadedApiRequest(partNumber, "\"etag\"", 5242880L);
 
             // when
-            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
-            assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("partNumber"));
+            assertThat(violations)
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("partNumber"));
         }
 
         @ParameterizedTest
@@ -97,7 +101,8 @@ class MarkPartUploadedApiRequestTest {
             MarkPartUploadedApiRequest request = new MarkPartUploadedApiRequest(1, etag, 5242880L);
 
             // when
-            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
@@ -109,10 +114,12 @@ class MarkPartUploadedApiRequestTest {
         @DisplayName("Part 크기가 양수가 아니면 검증에 실패한다")
         void validate_WithNonPositiveSize_ShouldFail(long size) {
             // given
-            MarkPartUploadedApiRequest request = new MarkPartUploadedApiRequest(1, "\"etag\"", size);
+            MarkPartUploadedApiRequest request =
+                    new MarkPartUploadedApiRequest(1, "\"etag\"", size);
 
             // when
-            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
@@ -126,16 +133,15 @@ class MarkPartUploadedApiRequestTest {
             MarkPartUploadedApiRequest request = new MarkPartUploadedApiRequest(0, "", 0L);
 
             // when
-            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<MarkPartUploadedApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).hasSize(3);
             assertThat(violations)
                     .extracting(ConstraintViolation::getMessage)
                     .containsExactlyInAnyOrder(
-                            "Part 번호는 양수여야 합니다",
-                            "ETag는 필수입니다",
-                            "Part 크기는 양수여야 합니다");
+                            "Part 번호는 양수여야 합니다", "ETag는 필수입니다", "Part 크기는 양수여야 합니다");
         }
     }
 
@@ -236,7 +242,8 @@ class MarkPartUploadedApiRequestTest {
             String md5Etag = "\"d41d8cd98f00b204e9800998ecf8427e\"";
 
             // when
-            MarkPartUploadedApiRequest request = new MarkPartUploadedApiRequest(1, md5Etag, 5242880L);
+            MarkPartUploadedApiRequest request =
+                    new MarkPartUploadedApiRequest(1, md5Etag, 5242880L);
 
             // then
             assertThat(request.etag()).hasSize(34); // 32 hex chars + 2 quotes

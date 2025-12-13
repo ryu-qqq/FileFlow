@@ -19,7 +19,8 @@ public record FileAssetSearchApiRequest(
         @Schema(description = "상태 필터", nullable = true) FileAssetStatusFilter status,
         @Schema(description = "카테고리 필터", nullable = true) FileCategoryFilter category,
         @Schema(description = "페이지 번호 (0부터 시작)", example = "0") @Min(0) Integer page,
-        @Schema(description = "페이지 크기 (기본값 20, 최대 100)", example = "20") @Min(1) @Max(100) Integer size) {
+        @Schema(description = "페이지 크기 (기본값 20, 최대 100)", example = "20") @Min(1) @Max(100)
+                Integer size) {
 
     public FileAssetSearchApiRequest {
         if (page == null) {

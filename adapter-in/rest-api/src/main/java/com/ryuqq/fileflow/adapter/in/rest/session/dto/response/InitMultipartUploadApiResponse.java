@@ -40,7 +40,8 @@ public record InitMultipartUploadApiResponse(
     @Schema(description = "Part 정보")
     public record PartInfoApiResponse(
             @Schema(description = "Part 번호 (1-based)", example = "1") int partNumber,
-            @Schema(description = "Presigned URL", example = "https://s3.amazonaws.com/...") String presignedUrl) {
+            @Schema(description = "Presigned URL", example = "https://s3.amazonaws.com/...")
+                    String presignedUrl) {
 
         /**
          * 값 기반 생성.

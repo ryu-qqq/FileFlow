@@ -26,7 +26,8 @@ import java.time.Instant;
 public record MarkPartUploadedApiResponse(
         @Schema(description = "세션 ID", example = "session-123") String sessionId,
         @Schema(description = "Part 번호 (1-based)", example = "1") int partNumber,
-        @Schema(description = "Part ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"") String etag,
+        @Schema(description = "Part ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"")
+                String etag,
         @Schema(description = "업로드 시각") Instant uploadedAt) {
 
     /**

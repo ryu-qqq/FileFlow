@@ -33,6 +33,8 @@ import com.ryuqq.fileflow.application.session.dto.response.InitSingleUploadRespo
 import com.ryuqq.fileflow.application.session.dto.response.MarkPartUploadedResponse;
 import com.ryuqq.fileflow.application.session.dto.response.UploadSessionDetailResponse;
 import com.ryuqq.fileflow.application.session.dto.response.UploadSessionResponse;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -43,6 +45,9 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("UploadSessionApiMapper 단위 테스트")
 class UploadSessionApiMapperTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     private UploadSessionApiMapper mapper;
 
@@ -202,8 +207,7 @@ class UploadSessionApiMapperTest {
                     new MarkPartUploadedApiRequest(3, "\"part-etag-abc\"", 5242880L);
 
             // when
-            MarkPartUploadedCommand command =
-                    mapper.toMarkPartUploadedCommand(sessionId, request);
+            MarkPartUploadedCommand command = mapper.toMarkPartUploadedCommand(sessionId, request);
 
             // then
             assertThat(command.sessionId()).isEqualTo("session-789");
@@ -442,7 +446,10 @@ class UploadSessionApiMapperTest {
             // given
             CancelUploadSessionResponse response =
                     CancelUploadSessionResponse.of(
-                            "session-cancel-123", "CANCELLED", "fileflow-bucket", "uploads/cancelled-file.jpg");
+                            "session-cancel-123",
+                            "CANCELLED",
+                            "fileflow-bucket",
+                            "uploads/cancelled-file.jpg");
 
             // when
             CancelUploadSessionApiResponse apiResponse =
@@ -465,7 +472,7 @@ class UploadSessionApiMapperTest {
         void toGetUploadSessionQuery_ShouldCreateQuery() {
             // given
             String sessionId = "session-query-123";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
 
             // when
             GetUploadSessionQuery query = mapper.toGetUploadSessionQuery(sessionId, tenantId);
@@ -487,8 +494,8 @@ class UploadSessionApiMapperTest {
             UploadSessionSearchApiRequest request =
                     new UploadSessionSearchApiRequest(
                             SessionStatusFilter.COMPLETED, UploadTypeFilter.SINGLE, 0, 20);
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             ListUploadSessionsQuery query =
@@ -509,8 +516,8 @@ class UploadSessionApiMapperTest {
             // given
             UploadSessionSearchApiRequest request =
                     new UploadSessionSearchApiRequest(null, null, null, null);
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             ListUploadSessionsQuery query =
@@ -533,7 +540,8 @@ class UploadSessionApiMapperTest {
                     new UploadSessionSearchApiRequest(SessionStatusFilter.IN_PROGRESS, null, 1, 10);
 
             // when
-            ListUploadSessionsQuery query = mapper.toListUploadSessionsQuery(request, "01912345-6789-7abc-def0-123456789001", "01912345-6789-7abc-def0-123456789100");
+            ListUploadSessionsQuery query =
+                    mapper.toListUploadSessionsQuery(request, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
             assertThat(query.status()).isEqualTo("IN_PROGRESS");
@@ -550,7 +558,8 @@ class UploadSessionApiMapperTest {
                     new UploadSessionSearchApiRequest(null, UploadTypeFilter.MULTIPART, 2, 50);
 
             // when
-            ListUploadSessionsQuery query = mapper.toListUploadSessionsQuery(request, "01912345-6789-7abc-def0-123456789001", "01912345-6789-7abc-def0-123456789100");
+            ListUploadSessionsQuery query =
+                    mapper.toListUploadSessionsQuery(request, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
             assertThat(query.status()).isNull();

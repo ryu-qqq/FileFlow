@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.controller;
 
+import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -33,10 +34,8 @@ public class ApiDocsController {
      * @return API 문서 HTML
      */
     @Operation(summary = "API 문서 조회", description = "Spring REST Docs로 생성된 API 문서를 반환합니다.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "문서 조회 성공")
-    })
-    @GetMapping(value = "/docs", produces = MediaType.TEXT_HTML_VALUE)
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "문서 조회 성공")})
+    @GetMapping(value = ApiPaths.Docs.BASE, produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<Resource> getApiDocs() {
         Resource resource = new ClassPathResource("static/docs/index.html");
         return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(resource);

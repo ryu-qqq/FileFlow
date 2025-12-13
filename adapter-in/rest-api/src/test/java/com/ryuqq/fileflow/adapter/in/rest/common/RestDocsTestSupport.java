@@ -4,6 +4,10 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ryuqq.fileflow.application.common.context.UserContextHolder;
+import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +77,13 @@ public abstract class RestDocsTestSupport {
      */
     @Autowired protected ObjectMapper objectMapper;
 
+    /** 테스트용 전체 권한 목록 (모든 파일 API 권한 포함) */
+    private static final List<String> ALL_PERMISSIONS =
+            List.of("file:read", "file:write", "file:delete", "file:download");
+
+    /** 테스트용 Admin 역할 */
+    private static final List<String> ADMIN_ROLES = List.of("SUPER_ADMIN", "ADMIN");
+
     /**
      * MockMvc 초기화 및 REST Docs 설정
      *
@@ -84,6 +95,7 @@ public abstract class RestDocsTestSupport {
      *   <li>REST Docs Configuration 적용
      *   <li>Request/Response Pretty Print 활성화
      *   <li>웹 애플리케이션 컨텍스트 연결
+     *   <li>테스트용 UserContext 설정 (@PreAuthorize 통과용)
      * </ul>
      *
      * @param webApplicationContext 웹 애플리케이션 컨텍스트
@@ -101,5 +113,20 @@ public abstract class RestDocsTestSupport {
                                         .withRequestDefaults(prettyPrint())
                                         .withResponseDefaults(prettyPrint()))
                         .build();
+
+        // @PreAuthorize 통과를 위한 테스트용 UserContext 설정
+        UserContext testUserContext =
+                UserContext.admin("test-admin@test.com", ADMIN_ROLES, ALL_PERMISSIONS);
+        UserContextHolder.set(testUserContext);
+    }
+
+    /**
+     * 테스트 종료 후 UserContext 정리
+     *
+     * <p>ThreadLocal 메모리 누수 방지를 위해 UserContext를 정리합니다.
+     */
+    @AfterEach
+    void tearDown() {
+        UserContextHolder.clear();
     }
 }

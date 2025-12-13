@@ -25,6 +25,11 @@ class ProcessedFileAssetTest {
 
     private static final Clock CLOCK = ClockFixture.defaultClock();
 
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final UserId TEST_USER_ID = UserId.generate();
+    private static final OrganizationId TEST_ORG_ID = OrganizationId.generate();
+    private static final TenantId TEST_TENANT_ID = TenantId.generate();
+
     @Nested
     @DisplayName("forNew 테스트")
     class ForNewTest {
@@ -40,9 +45,9 @@ class ProcessedFileAssetTest {
             FileSize fileSize = FileSize.of(50000L);
             S3Bucket bucket = S3Bucket.of("test-bucket");
             S3Key s3Key = S3Key.of("processed/product_large.webp");
-            UserId userId = UserId.of("01912345-6789-7abc-def0-123456789001");
-            OrganizationId organizationId = OrganizationId.of("01912345-6789-7abc-def0-123456789100");
-            TenantId tenantId = TenantId.of("01912345-6789-7abc-def0-123456781000");
+            UserId userId = TEST_USER_ID;
+            OrganizationId organizationId = TEST_ORG_ID;
+            TenantId tenantId = TEST_TENANT_ID;
 
             // when
             ProcessedFileAsset asset =
@@ -92,9 +97,9 @@ class ProcessedFileAssetTest {
             FileSize fileSize = FileSize.of(30000L);
             S3Bucket bucket = S3Bucket.of("test-bucket");
             S3Key s3Key = S3Key.of("processed/html_image_medium.jpg");
-            UserId userId = UserId.of("01912345-6789-7abc-def0-123456789001");
-            OrganizationId organizationId = OrganizationId.of("01912345-6789-7abc-def0-123456789100");
-            TenantId tenantId = TenantId.of("01912345-6789-7abc-def0-123456781000");
+            UserId userId = TEST_USER_ID;
+            OrganizationId organizationId = TEST_ORG_ID;
+            TenantId tenantId = TEST_TENANT_ID;
 
             // when
             ProcessedFileAsset asset =
@@ -139,9 +144,9 @@ class ProcessedFileAssetTest {
             FileSize fileSize = FileSize.of(10000L);
             S3Bucket bucket = S3Bucket.of("test-bucket");
             S3Key s3Key = S3Key.of("processed/product_thumb.png");
-            UserId userId = UserId.of("01912345-6789-7abc-def0-123456789001");
-            OrganizationId organizationId = OrganizationId.of("01912345-6789-7abc-def0-123456789100");
-            TenantId tenantId = TenantId.of("01912345-6789-7abc-def0-123456781000");
+            UserId userId = TEST_USER_ID;
+            OrganizationId organizationId = TEST_ORG_ID;
+            TenantId tenantId = TEST_TENANT_ID;
             Instant createdAt = Instant.parse("2025-12-01T10:00:00Z");
 
             // when
@@ -190,9 +195,9 @@ class ProcessedFileAssetTest {
                             FileSize.of(1000L),
                             S3Bucket.of("bucket"),
                             S3Key.of("key"),
-                            UserId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
                             CLOCK);
 
             // when & then
@@ -212,9 +217,9 @@ class ProcessedFileAssetTest {
                             FileSize.of(1000L),
                             S3Bucket.of("bucket"),
                             S3Key.of("key"),
-                            UserId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
                             CLOCK);
 
             // when & then
@@ -239,9 +244,9 @@ class ProcessedFileAssetTest {
                             FileSize.of(1000L),
                             S3Bucket.of("bucket"),
                             S3Key.of("key"),
-                            UserId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
                             CLOCK);
 
             // when & then
@@ -261,9 +266,9 @@ class ProcessedFileAssetTest {
                             FileSize.of(1000L),
                             S3Bucket.of("bucket"),
                             S3Key.of("key"),
-                            UserId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
                             CLOCK);
 
             // when & then
@@ -288,9 +293,9 @@ class ProcessedFileAssetTest {
                             FileSize.of(1000L),
                             S3Bucket.of("bucket"),
                             S3Key.of("key"),
-                            UserId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
                             CLOCK);
 
             // when & then
@@ -310,9 +315,9 @@ class ProcessedFileAssetTest {
                             FileSize.of(1000L),
                             S3Bucket.of("bucket"),
                             S3Key.of("key"),
-                            UserId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789001"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
                             CLOCK);
 
             // when & then

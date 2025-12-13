@@ -12,9 +12,16 @@ import jakarta.validation.constraints.Size;
  */
 @Schema(description = "외부 다운로드 요청")
 public record RequestExternalDownloadApiRequest(
-        @Schema(description = "다운로드할 외부 이미지 URL", example = "https://example.com/image.jpg", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotBlank(message = "sourceUrl은 필수입니다")
+        @Schema(
+                        description = "다운로드할 외부 이미지 URL",
+                        example = "https://example.com/image.jpg",
+                        requiredMode = Schema.RequiredMode.REQUIRED)
+                @NotBlank(message = "sourceUrl은 필수입니다")
                 @Size(max = 2048, message = "sourceUrl은 2048자를 초과할 수 없습니다")
                 String sourceUrl,
-        @Schema(description = "콜백 웹훅 URL", example = "https://myservice.com/webhook", nullable = true)
-        @Size(max = 2048, message = "webhookUrl은 2048자를 초과할 수 없습니다") String webhookUrl) {}
+        @Schema(
+                        description = "콜백 웹훅 URL",
+                        example = "https://myservice.com/webhook",
+                        nullable = true)
+                @Size(max = 2048, message = "webhookUrl은 2048자를 초과할 수 없습니다")
+                String webhookUrl) {}

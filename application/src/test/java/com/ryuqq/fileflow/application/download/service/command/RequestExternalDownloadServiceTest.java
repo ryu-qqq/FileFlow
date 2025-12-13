@@ -14,6 +14,8 @@ import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadOutboxFixture;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,10 +27,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("RequestExternalDownloadService 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class RequestExternalDownloadServiceTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     private static final String SOURCE_URL = "https://example.com/image.jpg";
-    private static final String TENANT_ID = "01912345-6789-7abc-def0-123456789001";
-    private static final String ORGANIZATION_ID = "01912345-6789-7abc-def0-123456789100";
+    private static final String TENANT_ID = TEST_TENANT_ID;
+    private static final String ORGANIZATION_ID = TEST_ORG_ID;
     private static final String WEBHOOK_URL = "https://callback.example.com/webhook";
 
     @Mock private ExternalDownloadCommandFactory commandFactory;

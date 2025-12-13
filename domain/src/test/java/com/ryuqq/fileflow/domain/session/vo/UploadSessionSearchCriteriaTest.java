@@ -2,15 +2,17 @@ package com.ryuqq.fileflow.domain.session.vo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("UploadSessionSearchCriteria 단위 테스트")
 class UploadSessionSearchCriteriaTest {
-
-    private static final String TENANT_ID = "01912345-6789-7abc-def0-123456789010";
-    private static final String ORGANIZATION_ID = "01912345-6789-7abc-def0-123456789020";
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TENANT_ID = TenantId.generate().value();
+    private static final String ORGANIZATION_ID = OrganizationId.generate().value();
     private static final SessionStatus STATUS = SessionStatus.ACTIVE;
     private static final String UPLOAD_TYPE = "MULTIPART";
     private static final long OFFSET = 0L;

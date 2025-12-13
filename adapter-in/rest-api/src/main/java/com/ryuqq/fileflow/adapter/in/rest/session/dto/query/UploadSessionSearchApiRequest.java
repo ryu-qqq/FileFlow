@@ -19,11 +19,13 @@ import jakarta.validation.constraints.Min;
 @Schema(description = "업로드 세션 검색 요청")
 public record UploadSessionSearchApiRequest(
         @Schema(description = "세션 상태 필터", nullable = true) SessionStatusFilter status,
-        @Schema(description = "업로드 타입 필터 (SINGLE/MULTIPART)", nullable = true) UploadTypeFilter uploadType,
+        @Schema(description = "업로드 타입 필터 (SINGLE/MULTIPART)", nullable = true)
+                UploadTypeFilter uploadType,
         @Schema(description = "페이지 번호 (0부터 시작)", example = "0")
-        @Min(value = 0, message = "페이지 번호는 0 이상이어야 합니다") Integer page,
+                @Min(value = 0, message = "페이지 번호는 0 이상이어야 합니다")
+                Integer page,
         @Schema(description = "페이지 크기 (기본값 20, 최대 100)", example = "20")
-        @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다")
+                @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다")
                 @Max(value = 100, message = "페이지 크기는 100 이하여야 합니다")
                 Integer size) {
 

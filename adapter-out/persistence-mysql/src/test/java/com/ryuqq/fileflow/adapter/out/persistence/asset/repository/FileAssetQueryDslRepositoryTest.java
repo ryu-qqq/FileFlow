@@ -13,6 +13,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.asset.entity.FileAssetJpaEntity;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("FileAssetQueryDslRepository 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class FileAssetQueryDslRepositoryTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @Mock private JPAQueryFactory queryFactory;
 
@@ -50,8 +55,8 @@ class FileAssetQueryDslRepositoryTest {
         void findById_WithValidParams_ShouldReturnEntity() {
             // given
             String id = "asset-123";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
             FileAssetJpaEntity entity = createEntity(id, organizationId, tenantId);
 
             when(queryFactory.selectFrom(fileAssetJpaEntity)).thenReturn(jpaQuery);
@@ -77,10 +82,8 @@ class FileAssetQueryDslRepositoryTest {
             when(jpaQuery.fetchOne()).thenReturn(null);
 
             // when
-            Optional<FileAssetJpaEntity> result = repository.findById(
-                    "not-exist",
-                    "01912345-6789-7abc-def0-123456789100",
-                    "01912345-6789-7abc-def0-123456789001");
+            Optional<FileAssetJpaEntity> result =
+                    repository.findById("not-exist", TEST_ORG_ID, TEST_TENANT_ID);
 
             // then
             assertThat(result).isEmpty();
@@ -95,8 +98,8 @@ class FileAssetQueryDslRepositoryTest {
         @DisplayName("조건에 맞는 FileAsset 목록을 조회할 수 있다")
         void findByCriteria_WithConditions_ShouldReturnEntities() {
             // given
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
             FileAssetStatus status = FileAssetStatus.COMPLETED;
             FileCategory category = FileCategory.IMAGE;
             long offset = 0;
@@ -138,10 +141,7 @@ class FileAssetQueryDslRepositoryTest {
 
             // when
             List<FileAssetJpaEntity> result =
-                    repository.findByCriteria(
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789001",
-                            null, null, 0, 10);
+                    repository.findByCriteria(TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10);
 
             // then
             assertThat(result).isEmpty();
@@ -151,10 +151,8 @@ class FileAssetQueryDslRepositoryTest {
         @DisplayName("status와 category가 null이면 필터링 없이 조회한다")
         void findByCriteria_WithNullFilters_ShouldNotFilter() {
             // given
-            List<FileAssetJpaEntity> entities = List.of(createEntity(
-                    "asset-1",
-                    "01912345-6789-7abc-def0-123456789100",
-                    "01912345-6789-7abc-def0-123456789001"));
+            List<FileAssetJpaEntity> entities =
+                    List.of(createEntity("asset-1", TEST_ORG_ID, TEST_TENANT_ID));
 
             when(queryFactory.selectFrom(fileAssetJpaEntity)).thenReturn(jpaQuery);
             when(jpaQuery.where(any(Predicate[].class))).thenReturn(jpaQuery);
@@ -165,10 +163,7 @@ class FileAssetQueryDslRepositoryTest {
 
             // when
             List<FileAssetJpaEntity> result =
-                    repository.findByCriteria(
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789001",
-                            null, null, 0, 10);
+                    repository.findByCriteria(TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10);
 
             // then
             assertThat(result).hasSize(1);
@@ -183,8 +178,8 @@ class FileAssetQueryDslRepositoryTest {
         @DisplayName("조건에 맞는 FileAsset 개수를 반환한다")
         void countByCriteria_WithConditions_ShouldReturnCount() {
             // given
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
             FileAssetStatus status = FileAssetStatus.COMPLETED;
             FileCategory category = FileCategory.IMAGE;
 
@@ -210,10 +205,7 @@ class FileAssetQueryDslRepositoryTest {
             when(countQuery.fetchOne()).thenReturn(null);
 
             // when
-            long result = repository.countByCriteria(
-                    "01912345-6789-7abc-def0-123456789100",
-                    "01912345-6789-7abc-def0-123456789001",
-                    null, null);
+            long result = repository.countByCriteria(TEST_ORG_ID, TEST_TENANT_ID, null, null);
 
             // then
             assertThat(result).isEqualTo(0L);
@@ -231,9 +223,10 @@ class FileAssetQueryDslRepositoryTest {
             // when
             long result =
                     repository.countByCriteria(
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789001",
-                            FileAssetStatus.PENDING, FileCategory.VIDEO);
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
+                            FileAssetStatus.PENDING,
+                            FileCategory.VIDEO);
 
             // then
             assertThat(result).isEqualTo(0L);
@@ -256,7 +249,7 @@ class FileAssetQueryDslRepositoryTest {
                 "test-bucket",
                 "assets/test-file.jpg",
                 "\"etag-123\"",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 organizationId,
                 tenantId,
                 FileAssetStatus.COMPLETED,

@@ -9,7 +9,9 @@ import com.ryuqq.fileflow.application.download.manager.query.ExternalDownloadRea
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,9 +24,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("GetExternalDownloadService 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class GetExternalDownloadServiceTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
-    private static final String TENANT_ID = "01912345-6789-7abc-def0-123456789100";
-    private static final String DIFFERENT_TENANT_ID = "01912345-6789-7abc-def0-123456789200";
+    private static final String TENANT_ID = TEST_ORG_ID;
+    private static final String DIFFERENT_TENANT_ID = TEST_USER_ID;
 
     @Mock private ExternalDownloadReadManager externalDownloadReadManager;
 
@@ -172,7 +177,8 @@ class GetExternalDownloadServiceTest {
         void execute_WithDifferentTenantId_ShouldThrowException() {
             // given
             GetExternalDownloadQuery query =
-                    new GetExternalDownloadQuery("00000000-0000-0000-0000-000000000001", DIFFERENT_TENANT_ID);
+                    new GetExternalDownloadQuery(
+                            "00000000-0000-0000-0000-000000000001", DIFFERENT_TENANT_ID);
 
             given(
                             externalDownloadReadManager.findByIdAndTenantId(

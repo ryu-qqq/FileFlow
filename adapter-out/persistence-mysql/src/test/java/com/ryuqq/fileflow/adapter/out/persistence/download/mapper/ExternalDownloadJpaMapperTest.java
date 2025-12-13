@@ -22,6 +22,9 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("ExternalDownloadJpaMapper 단위 테스트")
 class ExternalDownloadJpaMapperTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     private ExternalDownloadJpaMapper mapper;
 
@@ -47,8 +50,8 @@ class ExternalDownloadJpaMapperTest {
             // then
             assertThat(entity.getId()).isEqualTo(id);
             assertThat(entity.getSourceUrl()).isEqualTo(domain.getSourceUrl().value());
-            assertThat(entity.getTenantId()).isEqualTo(domain.getTenantId());
-            assertThat(entity.getOrganizationId()).isEqualTo(domain.getOrganizationId());
+            assertThat(entity.getTenantId()).isEqualTo(domain.getTenantId().value());
+            assertThat(entity.getOrganizationId()).isEqualTo(domain.getOrganizationId().value());
             assertThat(entity.getS3Bucket()).isEqualTo(domain.getS3Bucket().bucketName());
             assertThat(entity.getS3PathPrefix()).isEqualTo(domain.getS3PathPrefix());
             assertThat(entity.getStatus()).isEqualTo(domain.getStatus());
@@ -103,8 +106,8 @@ class ExternalDownloadJpaMapperTest {
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PENDING,
@@ -140,8 +143,8 @@ class ExternalDownloadJpaMapperTest {
             // then
             assertThat(domain.getId().value()).isEqualTo(entity.getId());
             assertThat(domain.getSourceUrl().value()).isEqualTo(entity.getSourceUrl());
-            assertThat(domain.getTenantId()).isEqualTo(entity.getTenantId());
-            assertThat(domain.getOrganizationId()).isEqualTo(entity.getOrganizationId());
+            assertThat(domain.getTenantId().value()).isEqualTo(entity.getTenantId());
+            assertThat(domain.getOrganizationId().value()).isEqualTo(entity.getOrganizationId());
             assertThat(domain.getS3Bucket().bucketName()).isEqualTo(entity.getS3Bucket());
             assertThat(domain.getS3PathPrefix()).isEqualTo(entity.getS3PathPrefix());
             assertThat(domain.getStatus()).isEqualTo(entity.getStatus());
@@ -178,8 +181,8 @@ class ExternalDownloadJpaMapperTest {
         void shouldConvertInstantToDomain() {
             // given
             Instant instant = Instant.parse("2025-11-26T12:00:00Z");
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789002";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
@@ -237,8 +240,8 @@ class ExternalDownloadJpaMapperTest {
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PROCESSING,
@@ -267,8 +270,8 @@ class ExternalDownloadJpaMapperTest {
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PENDING,
@@ -296,8 +299,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
                 SourceUrl.of("https://example.com/file.jpg"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -313,8 +316,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownload.of(
                 ExternalDownloadId.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -330,8 +333,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownload.of(
                 ExternalDownloadId.of(UUID.randomUUID()),
                 SourceUrl.of("https://example.com/file.jpg"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -348,8 +351,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownloadJpaEntity.of(
                 id,
                 "https://example.com/file.jpg",
-                "01912345-6789-7abc-def0-123456789001",
-                "01912345-6789-7abc-def0-123456789002",
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -367,8 +370,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
                 "https://example.com/file.jpg",
-                "01912345-6789-7abc-def0-123456789001",
-                "01912345-6789-7abc-def0-123456789002",
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -386,8 +389,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
                 "https://example.com/file.jpg",
-                "01912345-6789-7abc-def0-123456789001",
-                "01912345-6789-7abc-def0-123456789002",
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

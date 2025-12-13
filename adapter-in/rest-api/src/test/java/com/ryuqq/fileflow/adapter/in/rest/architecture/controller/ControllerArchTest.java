@@ -208,8 +208,8 @@ class ControllerArchTest {
     /**
      * 규칙 9: Domain Aggregate/Service 직접 의존 금지
      *
-     * <p>Controller는 Domain Aggregate와 Service를 직접 의존하면 안 됩니다. Domain VO/enum, IAM 패키지는 데이터
-     * 표현/인증 목적으로 허용됩니다.
+     * <p>Controller는 Domain Aggregate와 Service를 직접 의존하면 안 됩니다. Domain VO/enum, IAM 패키지는 데이터 표현/인증
+     * 목적으로 허용됩니다.
      */
     @Test
     @DisplayName("[금지] Controller는 Domain Aggregate/Service를 직접 의존하지 않아야 한다")

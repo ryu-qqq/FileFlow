@@ -44,6 +44,11 @@ class FileAssetCommandAdapterTest {
     private FileAssetCommandAdapter adapter;
     private Clock fixedClock;
 
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_USER_ID = UserId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+
     @BeforeEach
     void setUp() {
         adapter = new FileAssetCommandAdapter(fileAssetJpaRepository, fileAssetJpaEntityMapper);
@@ -124,9 +129,9 @@ class FileAssetCommandAdapterTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("assets/test-file.jpg"),
                 ETag.of("\"etag-123\""),
-                UserId.of("01912345-6789-7abc-def0-123456789200"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                UserId.of(TEST_USER_ID),
+                OrganizationId.of(TEST_ORG_ID),
+                TenantId.of(TEST_TENANT_ID),
                 FileAssetStatus.COMPLETED,
                 Instant.now(fixedClock),
                 null,
@@ -147,9 +152,9 @@ class FileAssetCommandAdapterTest {
                 "test-bucket",
                 "assets/test-file.jpg",
                 "\"etag-123\"",
-                "01912345-6789-7abc-def0-123456789001", // tenantId
-                "01912345-6789-7abc-def0-123456789100", // organizationId
-                "01912345-6789-7abc-def0-123456789200", // userId
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 null,
                 null,

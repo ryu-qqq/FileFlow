@@ -19,7 +19,8 @@ import java.time.Instant;
 @Schema(description = "단일 업로드 세션 초기화 응답")
 public record InitSingleUploadApiResponse(
         @Schema(description = "세션 ID", example = "session-123") String sessionId,
-        @Schema(description = "Presigned URL (15분 유효)", example = "https://s3.amazonaws.com/...") String presignedUrl,
+        @Schema(description = "Presigned URL (15분 유효)", example = "https://s3.amazonaws.com/...")
+                String presignedUrl,
         @Schema(description = "세션 만료 시각") Instant expiresAt,
         @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
         @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key) {

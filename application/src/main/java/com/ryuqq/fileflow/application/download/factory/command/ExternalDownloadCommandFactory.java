@@ -122,13 +122,7 @@ public class ExternalDownloadCommandFactory {
         OrganizationId organizationId = OrganizationId.of(command.organizationId());
 
         return ExternalDownload.forNew(
-                sourceUrl,
-                tenantId,
-                organizationId,
-                s3Bucket,
-                s3PathPrefix,
-                webhookUrl,
-                clock);
+                sourceUrl, tenantId, organizationId, s3Bucket, s3PathPrefix, webhookUrl, clock);
     }
 
     private WebhookUrl toWebhookUrl(String webhookUrl) {

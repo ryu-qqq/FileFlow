@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.download.controller;
 
+import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.command.RequestExternalDownloadApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.response.ExternalDownloadApiResponse;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,8 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>제공하는 API:
  *
  * <ul>
- *   <li>POST /api/v1/external-downloads - 외부 다운로드 요청
- *   <li>GET /api/v1/external-downloads/{id} - 외부 다운로드 상태 조회
+ *   <li>POST /api/v1/file/external-downloads - 외부 다운로드 요청
+ *   <li>GET /api/v1/file/external-downloads/{id} - 외부 다운로드 상태 조회
  * </ul>
  *
  * @author development-team
@@ -45,7 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "External Download", description = "외부 URL 다운로드 API")
 @RestController
-@RequestMapping("${api.endpoints.base-v1}${api.endpoints.external-download.base}")
+@RequestMapping(ApiPaths.ExternalDownload.BASE)
 @Validated
 public class ExternalDownloadController {
 
@@ -77,11 +79,18 @@ public class ExternalDownloadController {
      * @param request 외부 다운로드 요청 DTO
      * @return 생성된 ExternalDownload ID 및 상태 (201 Created)
      */
-    @Operation(summary = "외부 다운로드 요청", description = "외부 URL에서 이미지를 다운로드하여 S3에 업로드하는 비동기 요청을 생성합니다.")
+    @Operation(
+            summary = "외부 다운로드 요청",
+            description = "외부 URL에서 이미지를 다운로드하여 S3에 업로드하는 비동기 요청을 생성합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "요청 생성 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "201",
+                description = "요청 생성 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "잘못된 요청")
     })
+    @PreAuthorize("@access.canDownload()")
     @PostMapping
     public ResponseEntity<ApiResponse<ExternalDownloadApiResponse>> requestExternalDownload(
             @RequestBody @Valid RequestExternalDownloadApiRequest request) {
@@ -111,13 +120,19 @@ public class ExternalDownloadController {
      */
     @Operation(summary = "외부 다운로드 상태 조회", description = "외부 다운로드 요청의 현재 상태를 조회합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "외부 다운로드를 찾을 수 없음")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "외부 다운로드를 찾을 수 없음")
     })
-    @GetMapping("${api.endpoints.external-download.by-id}")
+    @PreAuthorize("@access.canRead()")
+    @GetMapping(ApiPaths.ExternalDownload.BY_ID)
     public ResponseEntity<ApiResponse<ExternalDownloadDetailApiResponse>> getExternalDownload(
             @Parameter(description = "외부 다운로드 ID", required = true, example = "download-123")
-            @PathVariable String id) {
+                    @PathVariable
+                    String id) {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();

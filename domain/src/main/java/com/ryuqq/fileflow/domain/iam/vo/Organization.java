@@ -114,14 +114,23 @@ public record Organization(OrganizationId id, String name, String namespace, Use
     }
 
     /**
-     * Admin 조직인지 확인한다.
+     * Admin 조직인지 확인한다 (SUPER_ADMIN 포함).
      *
      * <p><strong>주의</strong>: UserRole로만 판단한다 (ID 비교 없음).
      *
-     * @return Admin 조직이면 true
+     * @return SUPER_ADMIN 또는 ADMIN 조직이면 true
      */
     public boolean isAdmin() {
-        return role == UserRole.ADMIN;
+        return role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN;
+    }
+
+    /**
+     * SuperAdmin 조직인지 확인한다.
+     *
+     * @return SUPER_ADMIN 조직이면 true
+     */
+    public boolean isSuperAdmin() {
+        return role == UserRole.SUPER_ADMIN;
     }
 
     /**
@@ -178,7 +187,10 @@ public record Organization(OrganizationId id, String name, String namespace, Use
             return namespace + "/"; // "connectly/"
         } else if (isSeller()) {
             // Option A 확정: 전체 UUID 사용
-            return namespace + "/seller-" + id.value() + "/"; // "setof/seller-01912345-6789-7abc.../
+            return namespace
+                    + "/seller-"
+                    + id.value()
+                    + "/"; // "setof/seller-01912345-6789-7abc.../
         } else {
             return namespace + "/customer/"; // "setof/customer/"
         }
@@ -194,8 +206,8 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      */
     private static void validateRoleNamespaceConsistency(
             UserRole role, String namespace, OrganizationId id) {
-        // Admin 조직: role=ADMIN, namespace=connectly, id=null
-        if (role == UserRole.ADMIN) {
+        // SuperAdmin/Admin 조직: role=SUPER_ADMIN/ADMIN, namespace=connectly, id=null
+        if (role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN) {
             if (!CONNECTLY_NAMESPACE.equals(namespace)) {
                 throw new IllegalArgumentException("Admin 조직은 connectly namespace여야 합니다.");
             }

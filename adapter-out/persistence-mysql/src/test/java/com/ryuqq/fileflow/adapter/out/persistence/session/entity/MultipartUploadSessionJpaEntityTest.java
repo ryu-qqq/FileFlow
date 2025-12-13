@@ -2,6 +2,9 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -14,6 +17,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 @DisplayName("MultipartUploadSessionJpaEntity 단위 테스트")
 class MultipartUploadSessionJpaEntityTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     @Nested
     @DisplayName("of 팩토리 메서드 테스트")
@@ -31,11 +38,11 @@ class MultipartUploadSessionJpaEntityTest {
             MultipartUploadSessionJpaEntity entity =
                     MultipartUploadSessionJpaEntity.of(
                             "session-mp-123",
-                            "01912345-6789-7abc-def0-123456789200",
-                            "01912345-6789-7abc-def0-123456789100",
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
                             "Connectly Org",
                             "connectly",
-                            "01912345-6789-7abc-def0-123456789001",
+                            TEST_TENANT_ID,
                             "Connectly",
                             "ADMIN",
                             "admin@example.com",
@@ -57,11 +64,11 @@ class MultipartUploadSessionJpaEntityTest {
 
             // then
             assertThat(entity.getId()).isEqualTo("session-mp-123");
-            assertThat(entity.getUserId()).isEqualTo("01912345-6789-7abc-def0-123456789200");
-            assertThat(entity.getOrganizationId()).isEqualTo("01912345-6789-7abc-def0-123456789100");
+            assertThat(entity.getUserId()).isEqualTo(TEST_USER_ID);
+            assertThat(entity.getOrganizationId()).isEqualTo(TEST_ORG_ID);
             assertThat(entity.getOrganizationName()).isEqualTo("Connectly Org");
             assertThat(entity.getOrganizationNamespace()).isEqualTo("connectly");
-            assertThat(entity.getTenantId()).isEqualTo("01912345-6789-7abc-def0-123456789001");
+            assertThat(entity.getTenantId()).isEqualTo(TEST_TENANT_ID);
             assertThat(entity.getTenantName()).isEqualTo("Connectly");
             assertThat(entity.getUserRole()).isEqualTo("ADMIN");
             assertThat(entity.getEmail()).isEqualTo("admin@example.com");
@@ -237,11 +244,11 @@ class MultipartUploadSessionJpaEntityTest {
             MultipartUploadSessionJpaEntity entity =
                     MultipartUploadSessionJpaEntity.of(
                             "id",
-                            "01912345-6789-7abc-def0-123456789200",
-                            "01912345-6789-7abc-def0-123456789100",
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
                             "org",
                             "ns",
-                            "01912345-6789-7abc-def0-123456789001",
+                            TEST_TENANT_ID,
                             "tenant",
                             "USER",
                             null,
@@ -273,10 +280,10 @@ class MultipartUploadSessionJpaEntityTest {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
                 userId,
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -300,11 +307,11 @@ class MultipartUploadSessionJpaEntityTest {
     private MultipartUploadSessionJpaEntity createEntityWithEmail(String email) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 email,
@@ -329,11 +336,11 @@ class MultipartUploadSessionJpaEntityTest {
             String mergedEtag, Instant completedAt, SessionStatus status) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -357,11 +364,11 @@ class MultipartUploadSessionJpaEntityTest {
     private MultipartUploadSessionJpaEntity createEntityWithStatus(SessionStatus status) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -385,11 +392,11 @@ class MultipartUploadSessionJpaEntityTest {
     private MultipartUploadSessionJpaEntity createEntityWithTotalParts(int totalParts) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -413,11 +420,11 @@ class MultipartUploadSessionJpaEntityTest {
     private MultipartUploadSessionJpaEntity createEntityWithPartSize(long partSize) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -441,11 +448,11 @@ class MultipartUploadSessionJpaEntityTest {
     private MultipartUploadSessionJpaEntity createEntityWithFileSize(long fileSize) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -469,11 +476,11 @@ class MultipartUploadSessionJpaEntityTest {
     private MultipartUploadSessionJpaEntity createEntityWithS3UploadId(String s3UploadId) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",

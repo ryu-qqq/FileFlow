@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.controller;
 
+import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.SliceApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.session.dto.query.UploadSessionSearchApiRequest;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,8 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>제공하는 API:
  *
  * <ul>
- *   <li>GET /api/v1/upload-sessions/{sessionId} - 업로드 세션 상세 조회
- *   <li>GET /api/v1/upload-sessions - 업로드 세션 목록 조회
+ *   <li>GET /api/v1/file/upload-sessions/{sessionId} - 업로드 세션 상세 조회
+ *   <li>GET /api/v1/file/upload-sessions - 업로드 세션 목록 조회
  * </ul>
  *
  * @author development-team
@@ -45,7 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "Upload Session Query", description = "업로드 세션 조회 API")
 @RestController
-@RequestMapping("${api.endpoints.base-v1}${api.endpoints.upload-session.base}")
+@RequestMapping(ApiPaths.UploadSession.BASE)
 @Validated
 public class UploadSessionQueryController {
 
@@ -77,15 +79,24 @@ public class UploadSessionQueryController {
      * @param sessionId 세션 ID
      * @return 업로드 세션 상세 정보 (200 OK)
      */
-    @Operation(summary = "업로드 세션 상세 조회", description = "업로드 세션의 상세 정보를 조회합니다. Multipart 세션의 경우 Part 정보를 포함합니다.")
+    @Operation(
+            summary = "업로드 세션 상세 조회",
+            description = "업로드 세션의 상세 정보를 조회합니다. Multipart 세션의 경우 Part 정보를 포함합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "세션을 찾을 수 없음")
     })
-    @GetMapping("${api.endpoints.upload-session.by-id}")
+    @PreAuthorize("@access.canRead()")
+    @GetMapping(ApiPaths.UploadSession.BY_ID)
     public ResponseEntity<ApiResponse<UploadSessionDetailApiResponse>> getUploadSession(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
-            @PathVariable @NotBlank String sessionId) {
+                    @PathVariable
+                    @NotBlank
+                    String sessionId) {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
@@ -109,10 +120,15 @@ public class UploadSessionQueryController {
      * @param request 검색 조건
      * @return 업로드 세션 목록 (Slice 응답, 200 OK)
      */
-    @Operation(summary = "업로드 세션 목록 조회", description = "업로드 세션 목록을 조회합니다. 상태 및 업로드 타입으로 필터링할 수 있습니다.")
+    @Operation(
+            summary = "업로드 세션 목록 조회",
+            description = "업로드 세션 목록을 조회합니다. 상태 및 업로드 타입으로 필터링할 수 있습니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "조회 성공")
     })
+    @PreAuthorize("@access.canRead()")
     @GetMapping
     public ResponseEntity<ApiResponse<SliceApiResponse<UploadSessionApiResponse>>>
             getUploadSessions(@Valid UploadSessionSearchApiRequest request) {

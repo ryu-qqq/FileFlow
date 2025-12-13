@@ -2,7 +2,6 @@ package com.ryuqq.fileflow.adapter.in.rest.common.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.ryuqq.fileflow.adapter.in.rest.common.error.ErrorMapperRegistry;
@@ -52,11 +51,9 @@ class GlobalExceptionHandlerTest {
 
     private GlobalExceptionHandler exceptionHandler;
 
-    @Mock
-    private ErrorMapperRegistry errorMapperRegistry;
+    @Mock private ErrorMapperRegistry errorMapperRegistry;
 
-    @Mock
-    private HttpServletRequest request;
+    @Mock private HttpServletRequest request;
 
     @BeforeEach
     void setUp() {
@@ -69,8 +66,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleValidationException - MethodArgumentNotValidException")
     class HandleValidationException {
 
-        @Mock
-        private BindingResult bindingResult;
+        @Mock private BindingResult bindingResult;
 
         @Test
         @DisplayName("필드 유효성 검증 실패 시 400 응답 반환")
@@ -114,7 +110,8 @@ class GlobalExceptionHandlerTest {
             assertThat(response.getBody()).isNotNull();
             @SuppressWarnings("unchecked")
             java.util.Map<String, String> errors =
-                    (java.util.Map<String, String>) response.getBody().getProperties().get("errors");
+                    (java.util.Map<String, String>)
+                            response.getBody().getProperties().get("errors");
             assertThat(errors).containsKeys("email", "name");
         }
     }
@@ -123,8 +120,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleBindException - BindException")
     class HandleBindException {
 
-        @Mock
-        private BindingResult bindingResult;
+        @Mock private BindingResult bindingResult;
 
         @Test
         @DisplayName("바인딩 실패 시 400 응답 반환")
@@ -150,11 +146,9 @@ class GlobalExceptionHandlerTest {
     @DisplayName("handleConstraintViolation - ConstraintViolationException")
     class HandleConstraintViolation {
 
-        @Mock
-        private ConstraintViolation<?> violation;
+        @Mock private ConstraintViolation<?> violation;
 
-        @Mock
-        private Path propertyPath;
+        @Mock private Path propertyPath;
 
         @Test
         @DisplayName("제약조건 위반 시 400 응답 반환")
@@ -195,7 +189,8 @@ class GlobalExceptionHandlerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             @SuppressWarnings("unchecked")
             java.util.Map<String, String> errors =
-                    (java.util.Map<String, String>) response.getBody().getProperties().get("errors");
+                    (java.util.Map<String, String>)
+                            response.getBody().getProperties().get("errors");
             assertThat(errors).containsKey("unknown");
         }
     }
@@ -208,8 +203,7 @@ class GlobalExceptionHandlerTest {
         @DisplayName("잘못된 인자 시 400 응답 반환")
         void shouldReturn400WithMessage() {
             // given
-            IllegalArgumentException exception =
-                    new IllegalArgumentException("잘못된 파라미터입니다");
+            IllegalArgumentException exception = new IllegalArgumentException("잘못된 파라미터입니다");
 
             // when
             ResponseEntity<ProblemDetail> response =
@@ -255,8 +249,7 @@ class GlobalExceptionHandlerTest {
             // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getDetail())
-                    .isEqualTo("잘못된 요청 형식입니다. JSON 형식을 확인해주세요.");
+            assertThat(response.getBody().getDetail()).isEqualTo("잘못된 요청 형식입니다. JSON 형식을 확인해주세요.");
         }
     }
 
@@ -355,8 +348,7 @@ class GlobalExceptionHandlerTest {
         void shouldReturn405WithSupportedMethods() {
             // given
             HttpRequestMethodNotSupportedException exception =
-                    new HttpRequestMethodNotSupportedException(
-                            "PUT", Set.of("GET", "POST"));
+                    new HttpRequestMethodNotSupportedException("PUT", Set.of("GET", "POST"));
 
             // when
             ResponseEntity<ProblemDetail> response =
@@ -365,9 +357,7 @@ class GlobalExceptionHandlerTest {
             // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getDetail())
-                    .contains("PUT")
-                    .contains("메서드는 지원하지 않습니다");
+            assertThat(response.getBody().getDetail()).contains("PUT").contains("메서드는 지원하지 않습니다");
         }
 
         @Test
@@ -394,8 +384,7 @@ class GlobalExceptionHandlerTest {
         @DisplayName("상태 충돌 시 409 응답 반환")
         void shouldReturn409WhenStateConflict() {
             // given
-            IllegalStateException exception =
-                    new IllegalStateException("이미 처리된 요청입니다");
+            IllegalStateException exception = new IllegalStateException("이미 처리된 요청입니다");
 
             // when
             ResponseEntity<ProblemDetail> response =
@@ -441,8 +430,7 @@ class GlobalExceptionHandlerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getTitle()).isEqualTo("Internal Server Error");
-            assertThat(response.getBody().getDetail())
-                    .isEqualTo("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            assertThat(response.getBody().getDetail()).isEqualTo("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
         }
     }
 
@@ -474,14 +462,16 @@ class GlobalExceptionHandlerTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getTitle()).isEqualTo("Not Found");
             assertThat(response.getBody().getDetail()).isEqualTo("리소스를 찾을 수 없습니다");
-            assertThat(response.getBody().getProperties()).containsEntry("code", TestErrorCode.TEST_ERROR.getCode());
+            assertThat(response.getBody().getProperties())
+                    .containsEntry("code", TestErrorCode.TEST_ERROR.getCode());
         }
 
         @Test
         @DisplayName("매핑되지 않은 도메인 예외는 기본 매핑 사용")
         void shouldUseDefaultMappingWhenNotMapped() {
             // given
-            DomainException exception = new TestDomainException(TestErrorCode.UNKNOWN_ERROR, "알 수 없는 에러");
+            DomainException exception =
+                    new TestDomainException(TestErrorCode.UNKNOWN_ERROR, "알 수 없는 에러");
             ErrorMapper.MappedError defaultMapping =
                     new ErrorMapper.MappedError(
                             HttpStatus.BAD_REQUEST,
@@ -506,7 +496,8 @@ class GlobalExceptionHandlerTest {
         @DisplayName("5xx 에러는 ERROR 레벨로 로깅")
         void shouldLogErrorLevelFor5xxErrors() {
             // given
-            DomainException exception = new TestDomainException(TestErrorCode.SERVER_ERROR, "서버 에러");
+            DomainException exception =
+                    new TestDomainException(TestErrorCode.SERVER_ERROR, "서버 에러");
             ErrorMapper.MappedError mappedError =
                     new ErrorMapper.MappedError(
                             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -535,8 +526,7 @@ class GlobalExceptionHandlerTest {
         void shouldIncludeQueryStringInInstance() {
             // given
             when(request.getQueryString()).thenReturn("page=1&size=10");
-            IllegalArgumentException exception =
-                    new IllegalArgumentException("잘못된 파라미터");
+            IllegalArgumentException exception = new IllegalArgumentException("잘못된 파라미터");
 
             // when
             ResponseEntity<ProblemDetail> response =
@@ -553,8 +543,7 @@ class GlobalExceptionHandlerTest {
         void shouldNotIncludeBlankQueryString() {
             // given
             when(request.getQueryString()).thenReturn("   ");
-            IllegalArgumentException exception =
-                    new IllegalArgumentException("잘못된 파라미터");
+            IllegalArgumentException exception = new IllegalArgumentException("잘못된 파라미터");
 
             // when
             ResponseEntity<ProblemDetail> response =
@@ -562,14 +551,11 @@ class GlobalExceptionHandlerTest {
 
             // then
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getInstance().toString())
-                    .isEqualTo("/api/v1/test");
+            assertThat(response.getBody().getInstance().toString()).isEqualTo("/api/v1/test");
         }
     }
 
-    /**
-     * 테스트용 ErrorCode 구현
-     */
+    /** 테스트용 ErrorCode 구현 */
     private enum TestErrorCode implements com.ryuqq.fileflow.domain.common.exception.ErrorCode {
         TEST_ERROR("TEST_ERROR", 400, "테스트 에러"),
         UNKNOWN_ERROR("UNKNOWN_ERROR", 400, "알 수 없는 에러"),
@@ -601,9 +587,7 @@ class GlobalExceptionHandlerTest {
         }
     }
 
-    /**
-     * 테스트용 DomainException 구현
-     */
+    /** 테스트용 DomainException 구현 */
     private static class TestDomainException extends DomainException {
 
         TestDomainException(TestErrorCode errorCode, String message) {

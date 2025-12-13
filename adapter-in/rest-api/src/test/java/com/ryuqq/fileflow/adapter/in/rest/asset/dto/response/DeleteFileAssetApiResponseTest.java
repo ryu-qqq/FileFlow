@@ -59,7 +59,8 @@ class DeleteFileAssetApiResponseTest {
         @DisplayName("id가 null이어도 생성할 수 있다")
         void create_WithNullId_ShouldSucceed() {
             // when
-            DeleteFileAssetApiResponse response = new DeleteFileAssetApiResponse(null, Instant.now());
+            DeleteFileAssetApiResponse response =
+                    new DeleteFileAssetApiResponse(null, Instant.now());
 
             // then
             assertThat(response.id()).isNull();
@@ -114,9 +115,11 @@ class DeleteFileAssetApiResponseTest {
         void equals_WithDifferentDeletedAt_ShouldNotBeEqual() {
             // given
             DeleteFileAssetApiResponse response1 =
-                    new DeleteFileAssetApiResponse("asset-123", Instant.parse("2025-12-10T10:00:00Z"));
+                    new DeleteFileAssetApiResponse(
+                            "asset-123", Instant.parse("2025-12-10T10:00:00Z"));
             DeleteFileAssetApiResponse response2 =
-                    new DeleteFileAssetApiResponse("asset-123", Instant.parse("2025-12-10T11:00:00Z"));
+                    new DeleteFileAssetApiResponse(
+                            "asset-123", Instant.parse("2025-12-10T11:00:00Z"));
 
             // when & then
             assertThat(response1).isNotEqualTo(response2);

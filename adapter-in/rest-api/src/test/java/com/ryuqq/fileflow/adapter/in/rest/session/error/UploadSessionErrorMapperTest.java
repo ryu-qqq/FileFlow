@@ -143,7 +143,9 @@ class UploadSessionErrorMapperTest {
             // then
             assertThat(result.status()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(result.type())
-                    .isEqualTo(URI.create("https://api.fileflow.com/errors/session/file-size-exceeded"));
+                    .isEqualTo(
+                            URI.create(
+                                    "https://api.fileflow.com/errors/session/file-size-exceeded"));
         }
     }
 
@@ -165,7 +167,8 @@ class UploadSessionErrorMapperTest {
             assertThat(result.status()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(result.type())
                     .isEqualTo(
-                            URI.create("https://api.fileflow.com/errors/session/unsupported-file-type"));
+                            URI.create(
+                                    "https://api.fileflow.com/errors/session/unsupported-file-type"));
         }
     }
 
@@ -178,7 +181,8 @@ class UploadSessionErrorMapperTest {
         void map_invalidSessionStatus_returns409() {
             // given
             DomainException ex =
-                    new InvalidSessionStatusException(SessionStatus.PREPARING, SessionStatus.COMPLETED);
+                    new InvalidSessionStatusException(
+                            SessionStatus.PREPARING, SessionStatus.COMPLETED);
             setupMessageSourceMock("invalid-session-status");
 
             // when
@@ -210,7 +214,8 @@ class UploadSessionErrorMapperTest {
             // then
             assertThat(result.status()).isEqualTo(HttpStatus.GONE);
             assertThat(result.type())
-                    .isEqualTo(URI.create("https://api.fileflow.com/errors/session/session-expired"));
+                    .isEqualTo(
+                            URI.create("https://api.fileflow.com/errors/session/session-expired"));
         }
     }
 
@@ -255,7 +260,8 @@ class UploadSessionErrorMapperTest {
             assertThat(result.status()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(result.type())
                     .isEqualTo(
-                            URI.create("https://api.fileflow.com/errors/session/invalid-part-number"));
+                            URI.create(
+                                    "https://api.fileflow.com/errors/session/invalid-part-number"));
         }
     }
 
@@ -276,7 +282,8 @@ class UploadSessionErrorMapperTest {
             // then
             assertThat(result.status()).isEqualTo(HttpStatus.PRECONDITION_FAILED);
             assertThat(result.type())
-                    .isEqualTo(URI.create("https://api.fileflow.com/errors/session/incomplete-parts"));
+                    .isEqualTo(
+                            URI.create("https://api.fileflow.com/errors/session/incomplete-parts"));
         }
     }
 
@@ -298,7 +305,8 @@ class UploadSessionErrorMapperTest {
             assertThat(result.status()).isEqualTo(HttpStatus.NOT_FOUND);
             assertThat(result.type())
                     .isEqualTo(
-                            URI.create("https://api.fileflow.com/errors/session/session-not-found"));
+                            URI.create(
+                                    "https://api.fileflow.com/errors/session/session-not-found"));
         }
     }
 
@@ -333,17 +341,19 @@ class UploadSessionErrorMapperTest {
             // given
             DomainException ex = new SessionNotFoundException("session-123");
             String expectedTitle = "세션을 찾을 수 없음";
-            given(messageSource.getMessage(
-                            eq("error.session.session-not-found.title"),
-                            isNull(),
-                            anyString(),
-                            eq(Locale.KOREAN)))
+            given(
+                            messageSource.getMessage(
+                                    eq("error.session.session-not-found.title"),
+                                    isNull(),
+                                    anyString(),
+                                    eq(Locale.KOREAN)))
                     .willReturn(expectedTitle);
-            given(messageSource.getMessage(
-                            eq("error.session.session-not-found.detail"),
-                            isNull(),
-                            anyString(),
-                            eq(Locale.KOREAN)))
+            given(
+                            messageSource.getMessage(
+                                    eq("error.session.session-not-found.detail"),
+                                    isNull(),
+                                    anyString(),
+                                    eq(Locale.KOREAN)))
                     .willReturn(ex.getMessage());
 
             // when
@@ -359,17 +369,19 @@ class UploadSessionErrorMapperTest {
             // given
             DomainException ex = new SessionNotFoundException("session-123");
             String expectedDetail = "요청하신 세션을 찾을 수 없습니다";
-            given(messageSource.getMessage(
-                            eq("error.session.session-not-found.title"),
-                            isNull(),
-                            anyString(),
-                            eq(Locale.KOREAN)))
+            given(
+                            messageSource.getMessage(
+                                    eq("error.session.session-not-found.title"),
+                                    isNull(),
+                                    anyString(),
+                                    eq(Locale.KOREAN)))
                     .willReturn("세션 없음");
-            given(messageSource.getMessage(
-                            eq("error.session.session-not-found.detail"),
-                            isNull(),
-                            anyString(),
-                            eq(Locale.KOREAN)))
+            given(
+                            messageSource.getMessage(
+                                    eq("error.session.session-not-found.detail"),
+                                    isNull(),
+                                    anyString(),
+                                    eq(Locale.KOREAN)))
                     .willReturn(expectedDetail);
 
             // when
@@ -427,7 +439,8 @@ class UploadSessionErrorMapperTest {
         void map_normalizesCodeToLowerCase() {
             // given
             DomainException ex =
-                    new InvalidSessionStatusException(SessionStatus.PREPARING, SessionStatus.COMPLETED);
+                    new InvalidSessionStatusException(
+                            SessionStatus.PREPARING, SessionStatus.COMPLETED);
             setupMessageSourceMock("invalid-session-status");
 
             // when
@@ -450,17 +463,19 @@ class UploadSessionErrorMapperTest {
             String englishTitle = "Session Not Found";
             String englishDetail = "The requested session could not be found";
 
-            given(messageSource.getMessage(
-                            eq("error.session.session-not-found.title"),
-                            isNull(),
-                            anyString(),
-                            eq(Locale.ENGLISH)))
+            given(
+                            messageSource.getMessage(
+                                    eq("error.session.session-not-found.title"),
+                                    isNull(),
+                                    anyString(),
+                                    eq(Locale.ENGLISH)))
                     .willReturn(englishTitle);
-            given(messageSource.getMessage(
-                            eq("error.session.session-not-found.detail"),
-                            isNull(),
-                            anyString(),
-                            eq(Locale.ENGLISH)))
+            given(
+                            messageSource.getMessage(
+                                    eq("error.session.session-not-found.detail"),
+                                    isNull(),
+                                    anyString(),
+                                    eq(Locale.ENGLISH)))
                     .willReturn(englishDetail);
 
             // when

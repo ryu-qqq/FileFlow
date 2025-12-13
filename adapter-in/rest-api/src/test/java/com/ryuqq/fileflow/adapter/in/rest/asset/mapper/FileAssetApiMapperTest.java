@@ -21,6 +21,8 @@ import com.ryuqq.fileflow.application.asset.dto.response.BatchDownloadUrlRespons
 import com.ryuqq.fileflow.application.asset.dto.response.DeleteFileAssetResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.DownloadUrlResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.FileAssetResponse;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +32,9 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("FileAssetApiMapper 단위 테스트")
 class FileAssetApiMapperTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     private FileAssetApiMapper mapper;
 
@@ -47,8 +52,8 @@ class FileAssetApiMapperTest {
         void toGetFileAssetQuery_ShouldCreateQuery() {
             // given
             String id = "file-asset-123";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
 
             // when
             GetFileAssetQuery query = mapper.toGetFileAssetQuery(id, organizationId, tenantId);
@@ -66,7 +71,8 @@ class FileAssetApiMapperTest {
             String uuidId = "550e8400-e29b-41d4-a716-446655440000";
 
             // when
-            GetFileAssetQuery query = mapper.toGetFileAssetQuery(uuidId, "01912345-6789-7abc-def0-123456789001", "01912345-6789-7abc-def0-123456789001");
+            GetFileAssetQuery query =
+                    mapper.toGetFileAssetQuery(uuidId, TEST_TENANT_ID, TEST_TENANT_ID);
 
             // then
             assertThat(query.fileAssetId()).isEqualTo(uuidId);
@@ -84,8 +90,8 @@ class FileAssetApiMapperTest {
             FileAssetSearchApiRequest request =
                     new FileAssetSearchApiRequest(
                             FileAssetStatusFilter.COMPLETED, FileCategoryFilter.IMAGE, 0, 20);
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
 
             // when
             ListFileAssetsQuery query =
@@ -106,8 +112,8 @@ class FileAssetApiMapperTest {
             // given
             FileAssetSearchApiRequest request =
                     new FileAssetSearchApiRequest(null, null, null, null);
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
 
             // when
             ListFileAssetsQuery query =
@@ -130,7 +136,8 @@ class FileAssetApiMapperTest {
                     new FileAssetSearchApiRequest(FileAssetStatusFilter.PROCESSING, null, 1, 10);
 
             // when
-            ListFileAssetsQuery query = mapper.toListFileAssetsQuery(request, "01912345-6789-7abc-def0-123456789001", "01912345-6789-7abc-def0-123456789001");
+            ListFileAssetsQuery query =
+                    mapper.toListFileAssetsQuery(request, TEST_TENANT_ID, TEST_TENANT_ID);
 
             // then
             assertThat(query.status()).isEqualTo("PROCESSING");
@@ -147,7 +154,8 @@ class FileAssetApiMapperTest {
                     new FileAssetSearchApiRequest(null, FileCategoryFilter.VIDEO, 2, 50);
 
             // when
-            ListFileAssetsQuery query = mapper.toListFileAssetsQuery(request, "01912345-6789-7abc-def0-123456789001", "01912345-6789-7abc-def0-123456789001");
+            ListFileAssetsQuery query =
+                    mapper.toListFileAssetsQuery(request, TEST_TENANT_ID, TEST_TENANT_ID);
 
             // then
             assertThat(query.status()).isNull();
@@ -237,14 +245,10 @@ class FileAssetApiMapperTest {
             // given
             Instant now = Instant.now();
 
-            FileAssetResponse imageAsset =
-                    createFileAssetResponse("img-1", "IMAGE", now);
-            FileAssetResponse videoAsset =
-                    createFileAssetResponse("vid-1", "VIDEO", now);
-            FileAssetResponse audioAsset =
-                    createFileAssetResponse("aud-1", "AUDIO", now);
-            FileAssetResponse docAsset =
-                    createFileAssetResponse("doc-1", "DOCUMENT", now);
+            FileAssetResponse imageAsset = createFileAssetResponse("img-1", "IMAGE", now);
+            FileAssetResponse videoAsset = createFileAssetResponse("vid-1", "VIDEO", now);
+            FileAssetResponse audioAsset = createFileAssetResponse("aud-1", "AUDIO", now);
+            FileAssetResponse docAsset = createFileAssetResponse("doc-1", "DOCUMENT", now);
 
             // when
             FileAssetApiResponse imageApi = mapper.toApiResponse(imageAsset);
@@ -287,8 +291,8 @@ class FileAssetApiMapperTest {
             // given
             String fileAssetId = "file-asset-123";
             DeleteFileAssetApiRequest request = new DeleteFileAssetApiRequest("사용하지 않는 파일");
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             DeleteFileAssetCommand command =
@@ -307,8 +311,8 @@ class FileAssetApiMapperTest {
             // given
             String fileAssetId = "file-asset-456";
             DeleteFileAssetApiRequest request = DeleteFileAssetApiRequest.empty();
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             DeleteFileAssetCommand command =
@@ -327,7 +331,7 @@ class FileAssetApiMapperTest {
 
             // when
             DeleteFileAssetCommand command =
-                    mapper.toDeleteFileAssetCommand(fileAssetId, null, "01912345-6789-7abc-def0-123456789001", "01912345-6789-7abc-def0-123456789100");
+                    mapper.toDeleteFileAssetCommand(fileAssetId, null, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
             assertThat(command.fileAssetId()).isEqualTo(fileAssetId);
@@ -366,8 +370,8 @@ class FileAssetApiMapperTest {
             // given
             String fileAssetId = "file-asset-123";
             GenerateDownloadUrlApiRequest request = new GenerateDownloadUrlApiRequest(120);
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             GenerateDownloadUrlCommand command =
@@ -389,7 +393,8 @@ class FileAssetApiMapperTest {
 
             // when
             GenerateDownloadUrlCommand command =
-                    mapper.toGenerateDownloadUrlCommand(fileAssetId, null, "01912345-6789-7abc-def0-123456789001", "01912345-6789-7abc-def0-123456789100");
+                    mapper.toGenerateDownloadUrlCommand(
+                            fileAssetId, null, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
             assertThat(command.fileAssetId()).isEqualTo(fileAssetId);
@@ -408,8 +413,8 @@ class FileAssetApiMapperTest {
             List<String> fileAssetIds = List.of("file-1", "file-2", "file-3");
             BatchGenerateDownloadUrlApiRequest request =
                     new BatchGenerateDownloadUrlApiRequest(fileAssetIds, 180);
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             BatchGenerateDownloadUrlCommand command =
@@ -432,7 +437,7 @@ class FileAssetApiMapperTest {
 
             // when
             BatchGenerateDownloadUrlCommand command =
-                    mapper.toBatchGenerateDownloadUrlCommand(request, "01912345-6789-7abc-def0-123456789001", "01912345-6789-7abc-def0-123456789100");
+                    mapper.toBatchGenerateDownloadUrlCommand(request, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
             assertThat(command.expirationMinutes()).isEqualTo(60);

@@ -30,11 +30,9 @@ import org.springframework.http.HttpStatus;
 @DisplayName("ErrorMapperRegistry 테스트")
 class ErrorMapperRegistryTest {
 
-    @Mock
-    private ErrorMapper mapper1;
+    @Mock private ErrorMapper mapper1;
 
-    @Mock
-    private ErrorMapper mapper2;
+    @Mock private ErrorMapper mapper2;
 
     @Nested
     @DisplayName("map - 도메인 예외 매핑")
@@ -72,7 +70,8 @@ class ErrorMapperRegistryTest {
         @DisplayName("지원하는 매퍼가 없으면 빈 Optional 반환")
         void shouldReturnEmptyWhenNoMapperSupports() {
             // given
-            DomainException exception = new TestDomainException(TestErrorCode.UNKNOWN_ERROR, "알 수 없는 에러");
+            DomainException exception =
+                    new TestDomainException(TestErrorCode.UNKNOWN_ERROR, "알 수 없는 에러");
 
             when(mapper1.supports("UNKNOWN_ERROR")).thenReturn(false);
             when(mapper2.supports("UNKNOWN_ERROR")).thenReturn(false);
@@ -90,7 +89,8 @@ class ErrorMapperRegistryTest {
         @DisplayName("첫 번째로 지원하는 매퍼 사용")
         void shouldUseFirstSupportingMapper() {
             // given
-            DomainException exception = new TestDomainException(TestErrorCode.SHARED_ERROR, "공유 에러");
+            DomainException exception =
+                    new TestDomainException(TestErrorCode.SHARED_ERROR, "공유 에러");
             ErrorMapper.MappedError mapping1 =
                     new ErrorMapper.MappedError(
                             HttpStatus.BAD_REQUEST,
@@ -105,8 +105,7 @@ class ErrorMapperRegistryTest {
                             URI.create("about:blank"));
 
             when(mapper1.supports("SHARED_ERROR")).thenReturn(true);
-            when(mapper1.map(any(DomainException.class), any(Locale.class)))
-                    .thenReturn(mapping1);
+            when(mapper1.map(any(DomainException.class), any(Locale.class))).thenReturn(mapping1);
             // mapper2는 첫 번째 매퍼가 지원하므로 호출되지 않음
 
             ErrorMapperRegistry registry = new ErrorMapperRegistry(List.of(mapper1, mapper2));
@@ -184,7 +183,8 @@ class ErrorMapperRegistryTest {
         @DisplayName("예외 메시지가 있으면 detail에 포함")
         void shouldIncludeExceptionMessage() {
             // given
-            DomainException exception = new TestDomainException(TestErrorCode.TEST_ERROR, "커스텀 에러 메시지");
+            DomainException exception =
+                    new TestDomainException(TestErrorCode.TEST_ERROR, "커스텀 에러 메시지");
             ErrorMapperRegistry registry = new ErrorMapperRegistry(List.of());
 
             // when
@@ -221,10 +221,7 @@ class ErrorMapperRegistryTest {
                     new TestDomainException(TestErrorCode.SESSION_EXPIRED, "세션이 만료되었습니다");
             ErrorMapper.MappedError sessionMapping =
                     new ErrorMapper.MappedError(
-                            HttpStatus.GONE,
-                            "Gone",
-                            "업로드 세션이 만료되었습니다",
-                            URI.create("about:blank"));
+                            HttpStatus.GONE, "Gone", "업로드 세션이 만료되었습니다", URI.create("about:blank"));
 
             when(mapper1.supports("SESSION_EXPIRED")).thenReturn(true);
             when(mapper1.map(any(DomainException.class), any(Locale.class)))
@@ -268,9 +265,7 @@ class ErrorMapperRegistryTest {
         }
     }
 
-    /**
-     * 테스트용 ErrorCode 구현
-     */
+    /** 테스트용 ErrorCode 구현 */
     private enum TestErrorCode implements com.ryuqq.fileflow.domain.common.exception.ErrorCode {
         TEST_ERROR("TEST_ERROR", 400, "테스트 에러"),
         UNKNOWN_ERROR("UNKNOWN_ERROR", 400, "알 수 없는 에러"),
@@ -305,9 +300,7 @@ class ErrorMapperRegistryTest {
         }
     }
 
-    /**
-     * 테스트용 DomainException 구현
-     */
+    /** 테스트용 DomainException 구현 */
     private static class TestDomainException extends DomainException {
 
         TestDomainException(TestErrorCode errorCode, String message) {

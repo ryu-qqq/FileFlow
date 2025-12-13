@@ -72,9 +72,7 @@ class ErrorHandlingConfigTest {
         }
     }
 
-    /**
-     * 테스트용 ErrorMapper 구현체.
-     */
+    /** 테스트용 ErrorMapper 구현체. */
     private static class TestErrorMapper implements ErrorMapper {
         @Override
         public boolean supports(String code) {
@@ -92,9 +90,7 @@ class ErrorHandlingConfigTest {
         }
     }
 
-    /**
-     * 테스트용 또 다른 ErrorMapper 구현체.
-     */
+    /** 테스트용 또 다른 ErrorMapper 구현체. */
     private static class AnotherTestErrorMapper implements ErrorMapper {
         @Override
         public boolean supports(String code) {

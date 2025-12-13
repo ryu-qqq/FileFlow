@@ -46,6 +46,11 @@ class FileAssetQueryAdapterTest {
     private FileAssetQueryAdapter adapter;
     private Clock fixedClock;
 
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_USER_ID = UserId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+
     @BeforeEach
     void setUp() {
         adapter = new FileAssetQueryAdapter(fileAssetQueryDslRepository, fileAssetJpaEntityMapper);
@@ -61,18 +66,16 @@ class FileAssetQueryAdapterTest {
         void findById_WithValidParams_ShouldReturnFileAsset() {
             // given
             String id = UUID.randomUUID().toString();
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            FileAssetJpaEntity entity = createEntity(id, organizationId, tenantId);
-            FileAsset domain = createFileAsset(id, organizationId, tenantId);
+            FileAssetJpaEntity entity = createEntity(id, TEST_ORG_ID, TEST_TENANT_ID);
+            FileAsset domain = createFileAsset(id, TEST_ORG_ID, TEST_TENANT_ID);
 
-            when(fileAssetQueryDslRepository.findById(id, organizationId, tenantId))
+            when(fileAssetQueryDslRepository.findById(id, TEST_ORG_ID, TEST_TENANT_ID))
                     .thenReturn(Optional.of(entity));
             when(fileAssetJpaEntityMapper.toDomain(entity)).thenReturn(domain);
 
             // when
             Optional<FileAsset> result =
-                    adapter.findById(FileAssetId.of(id), organizationId, tenantId);
+                    adapter.findById(FileAssetId.of(id), TEST_ORG_ID, TEST_TENANT_ID);
 
             // then
             assertThat(result).isPresent();
@@ -84,12 +87,12 @@ class FileAssetQueryAdapterTest {
         void findById_WhenNotFound_ShouldReturnEmpty() {
             // given
             String id = UUID.randomUUID().toString();
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            when(fileAssetQueryDslRepository.findById(id, organizationId, tenantId)).thenReturn(Optional.empty());
+            when(fileAssetQueryDslRepository.findById(id, TEST_ORG_ID, TEST_TENANT_ID))
+                    .thenReturn(Optional.empty());
 
             // when
-            Optional<FileAsset> result = adapter.findById(FileAssetId.of(id), organizationId, tenantId);
+            Optional<FileAsset> result =
+                    adapter.findById(FileAssetId.of(id), TEST_ORG_ID, TEST_TENANT_ID);
 
             // then
             assertThat(result).isEmpty();
@@ -104,23 +107,21 @@ class FileAssetQueryAdapterTest {
         @DisplayName("조건에 맞는 FileAsset 목록을 조회할 수 있다")
         void findByCriteria_WithValidCriteria_ShouldReturnFileAssets() {
             // given
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
             FileAssetStatus status = FileAssetStatus.COMPLETED;
             FileCategory category = FileCategory.IMAGE;
 
             FileAssetCriteria criteria =
-                    FileAssetCriteria.of(organizationId, tenantId, status, category, 0, 10);
+                    FileAssetCriteria.of(TEST_ORG_ID, TEST_TENANT_ID, status, category, 0, 10);
 
             String id1 = UUID.randomUUID().toString();
             String id2 = UUID.randomUUID().toString();
-            FileAssetJpaEntity entity1 = createEntity(id1, organizationId, tenantId);
-            FileAssetJpaEntity entity2 = createEntity(id2, organizationId, tenantId);
-            FileAsset domain1 = createFileAsset(id1, organizationId, tenantId);
-            FileAsset domain2 = createFileAsset(id2, organizationId, tenantId);
+            FileAssetJpaEntity entity1 = createEntity(id1, TEST_ORG_ID, TEST_TENANT_ID);
+            FileAssetJpaEntity entity2 = createEntity(id2, TEST_ORG_ID, TEST_TENANT_ID);
+            FileAsset domain1 = createFileAsset(id1, TEST_ORG_ID, TEST_TENANT_ID);
+            FileAsset domain2 = createFileAsset(id2, TEST_ORG_ID, TEST_TENANT_ID);
 
             when(fileAssetQueryDslRepository.findByCriteria(
-                            organizationId, tenantId, status, category, 0, 10))
+                            TEST_ORG_ID, TEST_TENANT_ID, status, category, 0, 10))
                     .thenReturn(List.of(entity1, entity2));
             when(fileAssetJpaEntityMapper.toDomain(entity1)).thenReturn(domain1);
             when(fileAssetJpaEntityMapper.toDomain(entity2)).thenReturn(domain2);
@@ -138,11 +139,11 @@ class FileAssetQueryAdapterTest {
         @DisplayName("조건에 맞는 FileAsset이 없으면 빈 목록을 반환한다")
         void findByCriteria_WhenNoMatch_ShouldReturnEmptyList() {
             // given
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            FileAssetCriteria criteria = FileAssetCriteria.of(organizationId, tenantId, null, null, 0, 10);
+            FileAssetCriteria criteria =
+                    FileAssetCriteria.of(TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10);
 
-            when(fileAssetQueryDslRepository.findByCriteria(organizationId, tenantId, null, null, 0, 10))
+            when(fileAssetQueryDslRepository.findByCriteria(
+                            TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10))
                     .thenReturn(List.of());
 
             // when
@@ -161,14 +162,20 @@ class FileAssetQueryAdapterTest {
         @DisplayName("조건에 맞는 FileAsset 개수를 반환한다")
         void countByCriteria_WithValidCriteria_ShouldReturnCount() {
             // given
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
             FileAssetCriteria criteria =
                     FileAssetCriteria.of(
-                            organizationId, tenantId, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0, 10);
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0,
+                            10);
 
             when(fileAssetQueryDslRepository.countByCriteria(
-                            organizationId, tenantId, FileAssetStatus.COMPLETED, FileCategory.IMAGE))
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE))
                     .thenReturn(5L);
 
             // when
@@ -182,11 +189,12 @@ class FileAssetQueryAdapterTest {
         @DisplayName("조건에 맞는 FileAsset이 없으면 0을 반환한다")
         void countByCriteria_WhenNoMatch_ShouldReturnZero() {
             // given
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            FileAssetCriteria criteria = FileAssetCriteria.of(organizationId, tenantId, null, null, 0, 10);
+            FileAssetCriteria criteria =
+                    FileAssetCriteria.of(TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10);
 
-            when(fileAssetQueryDslRepository.countByCriteria(organizationId, tenantId, null, null)).thenReturn(0L);
+            when(fileAssetQueryDslRepository.countByCriteria(
+                            TEST_ORG_ID, TEST_TENANT_ID, null, null))
+                    .thenReturn(0L);
 
             // when
             long result = adapter.countByCriteria(criteria);
@@ -210,7 +218,7 @@ class FileAssetQueryAdapterTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("assets/test-file.jpg"),
                 ETag.of("\"etag-123\""),
-                UserId.of("01912345-6789-7abc-def0-123456789200"),
+                UserId.of(TEST_USER_ID),
                 OrganizationId.of(organizationId),
                 TenantId.of(tenantId),
                 FileAssetStatus.COMPLETED,
@@ -233,7 +241,7 @@ class FileAssetQueryAdapterTest {
                 "test-bucket",
                 "assets/test-file.jpg",
                 "\"etag-123\"",
-                "01912345-6789-7abc-def0-123456789200",
+                TEST_USER_ID,
                 organizationId,
                 tenantId,
                 FileAssetStatus.COMPLETED,

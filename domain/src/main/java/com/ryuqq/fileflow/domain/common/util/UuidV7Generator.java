@@ -105,8 +105,7 @@ public final class UuidV7Generator {
             throw new IllegalArgumentException(fieldName + "는 null이거나 빈 문자열일 수 없습니다.");
         }
         if (!isValid(value)) {
-            throw new IllegalArgumentException(
-                    fieldName + "는 유효한 UUIDv7 형식이어야 합니다: " + value);
+            throw new IllegalArgumentException(fieldName + "는 유효한 UUIDv7 형식이어야 합니다: " + value);
         }
     }
 

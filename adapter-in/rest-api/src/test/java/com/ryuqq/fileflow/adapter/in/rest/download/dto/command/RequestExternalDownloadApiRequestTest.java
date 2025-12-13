@@ -190,7 +190,8 @@ class RequestExternalDownloadApiRequestTest {
             String longPath = "b".repeat(2048 - baseUrl.length());
             String webhookUrl = baseUrl + longPath;
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest("https://example.com/image.jpg", webhookUrl);
+                    new RequestExternalDownloadApiRequest(
+                            "https://example.com/image.jpg", webhookUrl);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =

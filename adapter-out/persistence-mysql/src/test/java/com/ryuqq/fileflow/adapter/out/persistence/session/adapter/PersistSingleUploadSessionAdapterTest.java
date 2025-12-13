@@ -37,6 +37,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("PersistSingleUploadSessionAdapter 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class PersistSingleUploadSessionAdapterTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @Mock private SingleUploadSessionJpaRepository repository;
 
@@ -135,11 +138,13 @@ class PersistSingleUploadSessionAdapterTest {
     // ==================== Helper Methods ====================
 
     private SingleUploadSession createSession(String sessionId) {
-        String tenantId = "01912345-6789-7abc-def0-123456789001";
-        String organizationId = "01912345-6789-7abc-def0-123456789100";
+        String tenantId = TEST_TENANT_ID;
+        String organizationId = TEST_ORG_ID;
 
         Tenant tenant = Tenant.of(TenantId.of(tenantId), "Connectly");
-        Organization organization = Organization.of(OrganizationId.of(organizationId), "Test Org", "setof", UserRole.SELLER);
+        Organization organization =
+                Organization.of(
+                        OrganizationId.of(organizationId), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
         return SingleUploadSession.of(
@@ -162,8 +167,8 @@ class PersistSingleUploadSessionAdapterTest {
     }
 
     private SingleUploadSessionJpaEntity createEntity(String sessionId) {
-        String tenantId = "01912345-6789-7abc-def0-123456789001";
-        String organizationId = "01912345-6789-7abc-def0-123456789100";
+        String tenantId = TEST_TENANT_ID;
+        String organizationId = TEST_ORG_ID;
 
         Instant now = Instant.now();
         Instant expiresAt = now.plus(java.time.Duration.ofMinutes(15));

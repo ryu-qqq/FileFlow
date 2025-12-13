@@ -78,7 +78,14 @@ class InitMultipartUploadApiRequestTest {
             // when
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", 5242880L, 1L, 1L, null, null);
+                            "file.zip",
+                            104857600L,
+                            "application/zip",
+                            5242880L,
+                            1L,
+                            1L,
+                            null,
+                            null);
 
             // then
             assertThat(request.userId()).isNull();
@@ -157,7 +164,8 @@ class InitMultipartUploadApiRequestTest {
 
             // then
             assertThat(violations).isNotEmpty();
-            assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("contentType"));
+            assertThat(violations)
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("contentType"));
         }
 
         @ParameterizedTest
@@ -167,7 +175,14 @@ class InitMultipartUploadApiRequestTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", partSize, 1L, 1L, null, null);
+                            "file.zip",
+                            104857600L,
+                            "application/zip",
+                            partSize,
+                            1L,
+                            1L,
+                            null,
+                            null);
 
             // when
             Set<ConstraintViolation<InitMultipartUploadApiRequest>> violations =
@@ -184,7 +199,14 @@ class InitMultipartUploadApiRequestTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", 5242880L, null, 1L, null, null);
+                            "file.zip",
+                            104857600L,
+                            "application/zip",
+                            5242880L,
+                            null,
+                            1L,
+                            null,
+                            null);
 
             // when
             Set<ConstraintViolation<InitMultipartUploadApiRequest>> violations =
@@ -201,7 +223,14 @@ class InitMultipartUploadApiRequestTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", 5242880L, 1L, null, null, null);
+                            "file.zip",
+                            104857600L,
+                            "application/zip",
+                            5242880L,
+                            1L,
+                            null,
+                            null,
+                            null);
 
             // when
             Set<ConstraintViolation<InitMultipartUploadApiRequest>> violations =

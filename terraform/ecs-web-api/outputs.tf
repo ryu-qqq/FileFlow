@@ -1,16 +1,8 @@
 # ========================================
 # ECS web-api Outputs
 # ========================================
-
-output "alb_dns_name" {
-  description = "ALB DNS name"
-  value       = aws_lb.web_api.dns_name
-}
-
-output "alb_arn" {
-  description = "ALB ARN"
-  value       = aws_lb.web_api.arn
-}
+# NOTE: ALB/Route53 관련 outputs 제거됨
+# API Gateway를 통한 외부 접근, Service Discovery를 통한 내부 접근
 
 output "service_name" {
   description = "ECS service name"
@@ -27,14 +19,9 @@ output "task_definition_arn" {
   value       = module.ecs_service.task_definition_arn
 }
 
-output "fqdn" {
-  description = "Fully qualified domain name"
-  value       = local.fqdn
-}
-
-output "url" {
-  description = "Application URL"
-  value       = "https://${local.fqdn}"
+output "service_discovery_name" {
+  description = "Service Discovery DNS name for internal communication"
+  value       = "web-api.connectly.local"
 }
 
 output "log_group_name" {

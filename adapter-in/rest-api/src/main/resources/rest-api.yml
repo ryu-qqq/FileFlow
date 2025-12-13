@@ -1,41 +1,21 @@
 # ===============================================
 # REST API Adapter Configuration
 # ===============================================
+#
+# API 엔드포인트는 ApiPaths.java에서 상수로 관리됩니다.
+# @see com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths
+#
+# 보안 경로 분류는 SecurityPaths.java에서 관리됩니다.
+# @see com.ryuqq.fileflow.adapter.in.rest.auth.paths.SecurityPaths
+# ===============================================
 
-# Common API Settings
+# Error 설정
 api:
-  endpoints:
-    base-v1: /api/v1
-
-    # Upload Session 도메인 엔드포인트
-    upload-session:
-      base: /upload-sessions
-      single-init: /single
-      single-complete: /{sessionId}/single/complete
-      multipart-init: /multipart
-      multipart-complete: /{sessionId}/multipart/complete
-      parts: /{sessionId}/parts
-      cancel: /{sessionId}/cancel
-      by-id: /{sessionId}
-
-    # File Asset 도메인 엔드포인트
-    file-asset:
-      base: /file-assets
-      by-id: /{id}
-      delete: /{id}/delete
-      download-url: /{id}/download-url
-      batch-download-url: /batch-download-url
-
-    # External Download 도메인 엔드포인트
-    external-download:
-      base: /external-downloads
-      by-id: /{id}
-
   error:
     base-url: about:blank
     use-about-blank: true
 
-# Common Security Settings
+# Gateway Security Settings
 security:
   gateway:
     user-id-header: X-User-Id

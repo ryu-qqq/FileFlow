@@ -9,7 +9,6 @@ import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
 import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
-import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.iam.vo.UserRole;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
@@ -39,6 +38,10 @@ class MultipartUploadSessionJpaMapperTest {
 
     private MultipartUploadSessionJpaMapper mapper;
 
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+
     @BeforeEach
     void setUp() {
         mapper = new MultipartUploadSessionJpaMapper();
@@ -60,10 +63,10 @@ class MultipartUploadSessionJpaMapperTest {
             // then
             assertThat(entity.getId()).isEqualTo(domain.getId().getValue());
             assertThat(entity.getUserId()).isNull();
-            assertThat(entity.getOrganizationId()).isEqualTo("01912345-6789-7abc-def0-123456789100");
+            assertThat(entity.getOrganizationId()).isEqualTo(TEST_ORG_ID);
             assertThat(entity.getOrganizationName()).isEqualTo("Test Org");
             assertThat(entity.getOrganizationNamespace()).isEqualTo("setof");
-            assertThat(entity.getTenantId()).isEqualTo("01912345-6789-7abc-def0-123456789001");
+            assertThat(entity.getTenantId()).isEqualTo(TEST_TENANT_ID);
             assertThat(entity.getTenantName()).isEqualTo("Connectly");
             assertThat(entity.getUserRole()).isEqualTo("SELLER");
             assertThat(entity.getEmail()).isEqualTo("seller@test.com");
@@ -130,10 +133,15 @@ class MultipartUploadSessionJpaMapperTest {
 
             // then
             UserContext userContext = domain.getUserContext();
-            assertThat(userContext.userId()).isEqualTo(entity.getUserId());
-            assertThat(userContext.organization().id()).isEqualTo(entity.getOrganizationId());
+            // userId는 null이므로 null 체크
+            assertThat(userContext.userId()).isNull();
+            assertThat(entity.getUserId()).isNull();
+            // organizationId 값 비교
+            assertThat(userContext.organization().id().value())
+                    .isEqualTo(entity.getOrganizationId());
             assertThat(userContext.organization().name()).isEqualTo(entity.getOrganizationName());
-            assertThat(userContext.tenant().id()).isEqualTo(entity.getTenantId());
+            // tenantId 값 비교
+            assertThat(userContext.tenant().id().value()).isEqualTo(entity.getTenantId());
             assertThat(userContext.tenant().name()).isEqualTo(entity.getTenantName());
             assertThat(userContext.getRole().name()).isEqualTo(entity.getUserRole());
             assertThat(userContext.email()).isEqualTo(entity.getEmail());
@@ -261,8 +269,10 @@ class MultipartUploadSessionJpaMapperTest {
     // ==================== Helper Methods ====================
 
     private MultipartUploadSession createDomain(SessionStatus status) {
-        Tenant tenant = Tenant.of(TenantId.of("01912345-6789-7abc-def0-123456789001"), "Connectly");
-        Organization organization = Organization.of(OrganizationId.of("01912345-6789-7abc-def0-123456789100"), "Test Org", "setof", UserRole.SELLER);
+        Tenant tenant = Tenant.of(TenantId.of(TEST_TENANT_ID), "Connectly");
+        Organization organization =
+                Organization.of(
+                        OrganizationId.of(TEST_ORG_ID), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
         return MultipartUploadSession.reconstitute(
@@ -284,8 +294,10 @@ class MultipartUploadSessionJpaMapperTest {
     }
 
     private MultipartUploadSession createCompletedDomain() {
-        Tenant tenant = Tenant.of(TenantId.of("01912345-6789-7abc-def0-123456789001"), "Connectly");
-        Organization organization = Organization.of(OrganizationId.of("01912345-6789-7abc-def0-123456789100"), "Test Org", "setof", UserRole.SELLER);
+        Tenant tenant = Tenant.of(TenantId.of(TEST_TENANT_ID), "Connectly");
+        Organization organization =
+                Organization.of(
+                        OrganizationId.of(TEST_ORG_ID), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
         return MultipartUploadSession.reconstitute(
@@ -313,10 +325,10 @@ class MultipartUploadSessionJpaMapperTest {
         return MultipartUploadSessionJpaEntity.of(
                 UUID.randomUUID().toString(),
                 null,
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_ORG_ID,
                 "Test Org",
                 "setof",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "Connectly",
                 "SELLER",
                 "seller@test.com",
@@ -344,10 +356,10 @@ class MultipartUploadSessionJpaMapperTest {
         return MultipartUploadSessionJpaEntity.of(
                 UUID.randomUUID().toString(),
                 null,
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_ORG_ID,
                 "Test Org",
                 "setof",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "Connectly",
                 "SELLER",
                 "seller@test.com",

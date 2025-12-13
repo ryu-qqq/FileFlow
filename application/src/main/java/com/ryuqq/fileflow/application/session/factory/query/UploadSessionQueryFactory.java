@@ -35,9 +35,8 @@ public class UploadSessionQueryFactory {
      * @return Domain 검색 조건
      */
     public UploadSessionSearchCriteria createCriteria(ListUploadSessionsQuery query) {
-        SessionStatus status = query.status() != null
-                ? SessionStatus.valueOf(query.status())
-                : null;
+        SessionStatus status =
+                query.status() != null ? SessionStatus.valueOf(query.status()) : null;
 
         return UploadSessionSearchCriteria.of(
                 query.tenantId(),

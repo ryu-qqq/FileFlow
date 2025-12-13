@@ -76,7 +76,8 @@ class CompleteSingleUploadApiRequestTest {
                     new CompleteSingleUploadApiRequest("\"d41d8cd98f00b204e9800998ecf8427e\"");
 
             // when
-            Set<ConstraintViolation<CompleteSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<CompleteSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isEmpty();
@@ -91,7 +92,8 @@ class CompleteSingleUploadApiRequestTest {
             CompleteSingleUploadApiRequest request = new CompleteSingleUploadApiRequest(etag);
 
             // when
-            Set<ConstraintViolation<CompleteSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<CompleteSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations).isNotEmpty();
@@ -105,7 +107,8 @@ class CompleteSingleUploadApiRequestTest {
             CompleteSingleUploadApiRequest request = new CompleteSingleUploadApiRequest("");
 
             // when
-            Set<ConstraintViolation<CompleteSingleUploadApiRequest>> violations = validator.validate(request);
+            Set<ConstraintViolation<CompleteSingleUploadApiRequest>> violations =
+                    validator.validate(request);
 
             // then
             assertThat(violations)
@@ -138,7 +141,8 @@ class CompleteSingleUploadApiRequestTest {
             String multipartEtag = "\"d41d8cd98f00b204e9800998ecf8427e-5\"";
 
             // when
-            CompleteSingleUploadApiRequest request = new CompleteSingleUploadApiRequest(multipartEtag);
+            CompleteSingleUploadApiRequest request =
+                    new CompleteSingleUploadApiRequest(multipartEtag);
 
             // then
             assertThat(request.etag()).contains("-");

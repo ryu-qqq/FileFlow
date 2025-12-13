@@ -86,7 +86,8 @@ class ApiEndpointPropertiesTest {
             properties.setUploadSession(newEndpoints);
 
             // then
-            assertThat(properties.getUploadSession().getBase()).isEqualTo("/custom-upload-sessions");
+            assertThat(properties.getUploadSession().getBase())
+                    .isEqualTo("/custom-upload-sessions");
         }
 
         @Test
@@ -156,7 +157,8 @@ class ApiEndpointPropertiesTest {
         @Test
         @DisplayName("multipartComplete 기본값은 /{sessionId}/multipart/complete 이다")
         void multipartComplete_DefaultValue_ShouldBeCorrect() {
-            assertThat(endpoints.getMultipartComplete()).isEqualTo("/{sessionId}/multipart/complete");
+            assertThat(endpoints.getMultipartComplete())
+                    .isEqualTo("/{sessionId}/multipart/complete");
         }
 
         @Test

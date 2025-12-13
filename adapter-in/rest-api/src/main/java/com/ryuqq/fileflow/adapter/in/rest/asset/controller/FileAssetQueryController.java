@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.in.rest.asset.controller;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.FileAssetApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.mapper.FileAssetApiMapper;
+import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.PageApiResponse;
 import com.ryuqq.fileflow.application.asset.dto.query.GetFileAssetQuery;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -35,8 +37,8 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>제공하는 API:
  *
  * <ul>
- *   <li>GET /api/v1/file-assets/{id} - 파일 자산 단건 조회
- *   <li>GET /api/v1/file-assets - 파일 자산 목록 조회
+ *   <li>GET /api/v1/file/file-assets/{id} - 파일 자산 단건 조회
+ *   <li>GET /api/v1/file/file-assets - 파일 자산 목록 조회
  * </ul>
  *
  * @author development-team
@@ -44,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "FileAsset Query", description = "파일 자산 조회 API")
 @RestController
-@RequestMapping("${api.endpoints.base-v1}${api.endpoints.file-asset.base}")
+@RequestMapping(ApiPaths.FileAsset.BASE)
 @Validated
 public class FileAssetQueryController {
 
@@ -76,13 +78,20 @@ public class FileAssetQueryController {
      */
     @Operation(summary = "파일 자산 단건 조회", description = "파일 자산의 상세 정보를 조회합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "파일 자산을 찾을 수 없음")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "파일 자산을 찾을 수 없음")
     })
-    @GetMapping("${api.endpoints.file-asset.by-id}")
+    @PreAuthorize("@access.canRead()")
+    @GetMapping(ApiPaths.FileAsset.BY_ID)
     public ResponseEntity<ApiResponse<FileAssetApiResponse>> getFileAsset(
             @Parameter(description = "파일 자산 ID", required = true, example = "asset-123")
-            @PathVariable @NotBlank String id) {
+                    @PathVariable
+                    @NotBlank
+                    String id) {
 
         UserContext userContext = UserContextHolder.getRequired();
         String organizationId = userContext.getOrganizationId().value();
@@ -106,8 +115,11 @@ public class FileAssetQueryController {
      */
     @Operation(summary = "파일 자산 목록 조회", description = "파일 자산 목록을 조회합니다.")
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "조회 성공")
     })
+    @PreAuthorize("@access.canRead()")
     @GetMapping
     public ResponseEntity<ApiResponse<PageApiResponse<FileAssetApiResponse>>> getFileAssets(
             @Valid @ModelAttribute FileAssetSearchApiRequest request) {

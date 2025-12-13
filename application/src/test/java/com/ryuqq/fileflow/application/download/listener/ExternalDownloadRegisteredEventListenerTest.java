@@ -29,6 +29,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ExternalDownloadRegisteredEventListener 테스트")
 class ExternalDownloadRegisteredEventListenerTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @Mock private ExternalDownloadOutboxReadManager outboxReadManager;
 
@@ -205,8 +208,8 @@ class ExternalDownloadRegisteredEventListenerTest {
         return ExternalDownloadRegisteredEvent.of(
                 ExternalDownloadId.of(downloadId),
                 SourceUrl.of("https://example.com/file" + downloadId + ".jpg"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 null,
                 Instant.now());
     }

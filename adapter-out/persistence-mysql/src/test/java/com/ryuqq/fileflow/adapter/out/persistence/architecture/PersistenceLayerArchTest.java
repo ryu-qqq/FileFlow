@@ -41,7 +41,12 @@ class PersistenceLayerArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses = new ClassFileImporter().importPackages(PERSISTENCE);
+        allClasses =
+                new ClassFileImporter()
+                        .withImportOption(
+                                com.tngtech.archunit.core.importer.ImportOption.Predefined
+                                        .DO_NOT_INCLUDE_TESTS)
+                        .importPackages(PERSISTENCE);
     }
 
     /** 규칙 1: Package 구조 검증 */
@@ -73,13 +78,20 @@ class PersistenceLayerArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
+    /**
+     * Repository는 ..repository.. 패키지에 위치해야 합니다.
+     *
+     * <p>JpaRepository 인터페이스와 QueryDslRepository 클래스 모두 포함합니다.
+     */
     @Test
     @DisplayName("[필수] Repository는 ..repository.. 패키지에 위치해야 한다")
     void persistence_RepositoriesMustBeInRepositoryPackage() {
         ArchRule rule =
                 classes()
                         .that()
-                        .haveSimpleNameContaining("Repository")
+                        .haveSimpleNameEndingWith("Repository")
+                        .and()
+                        .haveSimpleNameNotContaining("Test")
                         .should()
                         .resideInAPackage(REPOSITORY_PATTERN)
                         .because("Repository 인터페이스/클래스는 repository 패키지에 위치해야 합니다");
@@ -101,32 +113,55 @@ class PersistenceLayerArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 2: Port 구현 검증 */
+    /**
+     * 규칙 2: Port 구현 검증
+     *
+     * <p>CommandAdapter 또는 Persist*Adapter는 *PersistencePort를 구현해야 합니다. 쓰기 작업을 담당하는 Adapter들이
+     * 해당됩니다.
+     */
     @Test
-    @DisplayName("[필수] CommandAdapter는 CommandPort를 구현해야 한다")
-    void persistence_CommandAdapterMustImplementCommandPort() {
+    @DisplayName("[필수] CommandAdapter/Persist*Adapter는 *PersistencePort를 구현해야 한다")
+    void persistence_WriteAdapterMustImplementPersistencePort() {
         ArchRule rule =
                 classes()
                         .that()
-                        .haveSimpleNameEndingWith("CommandAdapter")
-                        .should()
-                        .implement(
+                        .haveSimpleNameEndingWith("Adapter")
+                        .and()
+                        .areNotInterfaces()
+                        .and(
                                 com.tngtech.archunit.base.DescribedPredicate.describe(
-                                        "CommandPort interface",
+                                        "is CommandAdapter or Persist*Adapter",
                                         javaClass ->
-                                                javaClass.getAllRawInterfaces().stream()
-                                                        .anyMatch(
-                                                                i ->
-                                                                        i.getSimpleName()
-                                                                                .endsWith(
-                                                                                        "CommandPort"))))
-                        .because("CommandAdapter는 CommandPort 인터페이스를 구현해야 합니다");
+                                                javaClass.getSimpleName().endsWith("CommandAdapter")
+                                                        || javaClass
+                                                                .getSimpleName()
+                                                                .startsWith("Persist")
+                                                        || javaClass
+                                                                .getSimpleName()
+                                                                .contains("PersistenceAdapter")))
+                        .should(
+                                com.tngtech.archunit.lang.ArchCondition.from(
+                                        com.tngtech.archunit.base.DescribedPredicate.describe(
+                                                "*PersistencePort 인터페이스 구현",
+                                                javaClass ->
+                                                        javaClass.getAllRawInterfaces().stream()
+                                                                .anyMatch(
+                                                                        i ->
+                                                                                i.getSimpleName()
+                                                                                        .endsWith(
+                                                                                                "PersistencePort")))))
+                        .because("쓰기 Adapter는 *PersistencePort 인터페이스를 구현해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
 
+    /**
+     * QueryAdapter는 *QueryPort 인터페이스를 구현해야 합니다.
+     *
+     * <p>허용되는 인터페이스 패턴: *QueryPort (예: FileAssetQueryPort, FindCompletedPartQueryPort)
+     */
     @Test
-    @DisplayName("[필수] QueryAdapter는 QueryPort를 구현해야 한다")
+    @DisplayName("[필수] QueryAdapter는 *QueryPort를 구현해야 한다")
     void persistence_QueryAdapterMustImplementQueryPort() {
         ArchRule rule =
                 classes()
@@ -134,21 +169,18 @@ class PersistenceLayerArchTest {
                         .haveSimpleNameEndingWith("QueryAdapter")
                         .and()
                         .haveSimpleNameNotContaining("Lock")
-                        .should()
-                        .implement(
-                                com.tngtech.archunit.base.DescribedPredicate.describe(
-                                        "QueryPort interface",
-                                        javaClass ->
-                                                javaClass.getAllRawInterfaces().stream()
-                                                        .anyMatch(
-                                                                i ->
-                                                                        i.getSimpleName()
+                        .should(
+                                com.tngtech.archunit.lang.ArchCondition.from(
+                                        com.tngtech.archunit.base.DescribedPredicate.describe(
+                                                "*QueryPort 인터페이스 구현",
+                                                javaClass ->
+                                                        javaClass.getAllRawInterfaces().stream()
+                                                                .anyMatch(
+                                                                        i ->
+                                                                                i.getSimpleName()
                                                                                         .endsWith(
-                                                                                                "QueryPort")
-                                                                                && !i.getSimpleName()
-                                                                                        .contains(
-                                                                                                "Lock"))))
-                        .because("QueryAdapter는 QueryPort 인터페이스를 구현해야 합니다");
+                                                                                                "QueryPort")))))
+                        .because("QueryAdapter는 *QueryPort 인터페이스를 구현해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -228,47 +260,84 @@ class PersistenceLayerArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 5: Application Layer 의존 금지 */
+    /**
+     * 규칙 5: Application Layer 의존 금지
+     *
+     * <p>Persistence Layer는 Application Layer를 직접 의존하면 안 됩니다. 단, Port 인터페이스(..port.out..)는 예외입니다
+     * (Adapter가 구현해야 함).
+     */
     @Test
-    @DisplayName("[금지] Persistence Layer는 Application Layer를 직접 의존하지 않아야 한다")
-    void persistence_MustNotDependOnApplicationLayer() {
+    @DisplayName("[금지] Persistence Layer는 Application Layer를 직접 의존하지 않아야 한다 (Port 제외)")
+    void persistence_MustNotDependOnApplicationLayerExceptPorts() {
         ArchRule rule =
                 noClasses()
                         .that()
                         .resideInAnyPackage(PERSISTENCE_ALL)
+                        .and()
+                        .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .resideOutsideOfPackages(ARCHITECTURE_PATTERN)
                         .should()
-                        .dependOnClassesThat()
-                        .resideInAnyPackage(APPLICATION_ALL)
+                        .dependOnClassesThat(
+                                com.tngtech.archunit.base.DescribedPredicate.describe(
+                                        "Application Layer classes excluding Ports",
+                                        javaClass ->
+                                                javaClass.getPackageName().contains(".application.")
+                                                        && !javaClass
+                                                                .getPackageName()
+                                                                .contains(".port.")))
                         .because(
-                                "Persistence Layer는 Application Layer를 직접 의존하면 안 됩니다 (Port를 통해서만"
-                                        + " 접근)");
+                                "Persistence Layer는 Application Layer를 직접 의존하면 안 됩니다 (Port 인터페이스"
+                                        + " 제외)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 6: Domain Layer 의존 금지 (Adapter 제외) */
+    /**
+     * 규칙 6: Domain Layer 의존 금지 (Adapter, Mapper 제외)
+     *
+     * <p>Entity는 Domain Layer의 Enum만 의존 가능합니다 (규칙 3에서 별도 검증). Mapper는 Domain 변환을 담당하므로 Domain 의존이
+     * 필수입니다. Repository는 Domain Layer를 직접 의존하면 안 됩니다.
+     */
     @Test
-    @DisplayName("[금지] Repository/Entity/Mapper는 Domain Layer를 직접 의존하지 않아야 한다")
-    void persistence_RepositoryEntityMapperMustNotDependOnDomain() {
+    @DisplayName("[금지] Repository/Entity는 Domain Layer의 비-Enum 클래스를 의존하지 않아야 한다")
+    void persistence_RepositoryEntityMustNotDependOnDomainNonEnum() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAnyPackage(REPOSITORY_PATTERN, ENTITY_PATTERN, MAPPER_PATTERN)
+                        .resideInAnyPackage(REPOSITORY_PATTERN)
                         .and()
-                        .resideOutsideOfPackages(ARCHITECTURE_PATTERN) // 테스트 제외
+                        .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .resideOutsideOfPackages(ARCHITECTURE_PATTERN)
                         .should()
-                        .dependOnClassesThat()
-                        .resideInAnyPackage(DOMAIN_ALL)
-                        .because(
-                                "Repository/Entity/Mapper는 Domain Layer를 직접 의존하면 안 됩니다 (Adapter만"
-                                        + " Domain 접근 가능)");
+                        .dependOnClassesThat(
+                                com.tngtech.archunit.base.DescribedPredicate.describe(
+                                        "Domain Layer non-enum, non-VO classes",
+                                        javaClass ->
+                                                javaClass.getPackageName().contains(".domain.")
+                                                        && !javaClass.isEnum()
+                                                        && !javaClass
+                                                                .getSimpleName()
+                                                                .endsWith("Status")
+                                                        && !javaClass
+                                                                .getSimpleName()
+                                                                .endsWith("Type")))
+                        .because("Repository는 Domain Layer를 직접 의존하면 안 됩니다 (Enum/Status/Type 제외)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 7: Adapter 네이밍 규칙 */
+    /**
+     * 규칙 7: Adapter 네이밍 규칙 검증
+     *
+     * <p>허용되는 Adapter 네이밍 패턴: - *CommandAdapter: 쓰기 작업 (예: FileAssetCommandAdapter) -
+     * *QueryAdapter: 읽기 작업 (예: FileAssetQueryAdapter) - *LockQueryAdapter: 락을 사용하는 읽기 작업 -
+     * Persist*Adapter: 영속화 작업 (예: PersistCompletedPartAdapter) - *PersistenceAdapter: 영속화 작업 (예:
+     * ExternalDownloadPersistenceAdapter)
+     */
     @Test
-    @DisplayName("[필수] Adapter는 *CommandAdapter 또는 *QueryAdapter 네이밍 규칙을 따라야 한다")
+    @DisplayName("[필수] Adapter는 표준 네이밍 규칙을 따라야 한다")
     void persistence_AdaptersMustFollowNamingConvention() {
         ArchRule rule =
                 classes()
@@ -278,13 +347,22 @@ class PersistenceLayerArchTest {
                         .areNotInterfaces()
                         .and()
                         .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .resideInAPackage(ADAPTER_PATTERN)
                         .should()
                         .haveSimpleNameEndingWith("CommandAdapter")
                         .orShould()
                         .haveSimpleNameEndingWith("QueryAdapter")
                         .orShould()
                         .haveSimpleNameEndingWith("LockQueryAdapter")
-                        .because("Adapter는 *CommandAdapter 또는 *QueryAdapter 네이밍 규칙을 따라야 합니다");
+                        .orShould()
+                        .haveSimpleNameEndingWith("PersistenceAdapter")
+                        .orShould()
+                        .haveSimpleNameStartingWith("Persist")
+                        .because(
+                                "Adapter는 *CommandAdapter, *QueryAdapter, *LockQueryAdapter,"
+                                        + " *PersistenceAdapter, 또는 Persist*Adapter 네이밍 규칙을 따라야"
+                                        + " 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }

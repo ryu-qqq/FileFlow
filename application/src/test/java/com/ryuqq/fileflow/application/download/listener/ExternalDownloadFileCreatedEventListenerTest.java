@@ -10,14 +10,15 @@ import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
-import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
-import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +32,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ExternalDownloadFileCreatedEventListener 테스트")
 class ExternalDownloadFileCreatedEventListenerTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     @Mock private FileAssetCreationFacade fileAssetCreationFacade;
 
@@ -124,8 +129,8 @@ class ExternalDownloadFileCreatedEventListenerTest {
                             S3Bucket.of("test-bucket"),
                             S3Key.of("downloads/2025/11/26/large-video.mp4"),
                             ETag.of("etag-large-file-123"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                            OrganizationId.of(TEST_ORG_ID),
+                            TenantId.of(TEST_TENANT_ID),
                             Instant.now());
 
             // when
@@ -149,8 +154,8 @@ class ExternalDownloadFileCreatedEventListenerTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("downloads/2025/11/26/" + fileName),
                 ETag.of("etag-" + downloadId),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                OrganizationId.of(TEST_ORG_ID),
+                TenantId.of(TEST_TENANT_ID),
                 Instant.now());
     }
 
@@ -165,8 +170,8 @@ class ExternalDownloadFileCreatedEventListenerTest {
                 S3Bucket.of("production-bucket"),
                 S3Key.of("downloads/2025/11/26/detailed-test.jpg"),
                 ETag.of("etag-detailed-999"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789200"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
+                OrganizationId.of(TEST_USER_ID),
+                TenantId.of(TEST_TENANT_ID),
                 Instant.now());
     }
 }

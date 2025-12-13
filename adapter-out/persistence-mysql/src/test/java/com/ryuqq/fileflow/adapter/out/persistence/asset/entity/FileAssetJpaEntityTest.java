@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -15,6 +18,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 @DisplayName("FileAssetJpaEntity 단위 테스트")
 class FileAssetJpaEntityTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     @Nested
     @DisplayName("of 팩토리 메서드 테스트")
@@ -24,9 +31,9 @@ class FileAssetJpaEntityTest {
         @DisplayName("모든 필드로 Entity를 생성할 수 있다")
         void of_WithAllFields_ShouldCreateEntity() {
             // given
-            String userId = "01912345-6789-7abc-def0-123456789200";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String userId = TEST_USER_ID;
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
             Instant processedAt = LocalDateTime.of(2025, 11, 26, 12, 0).toInstant(ZoneOffset.UTC);
             Instant createdAt = LocalDateTime.of(2025, 11, 26, 10, 0).toInstant(ZoneOffset.UTC);
             Instant updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5).toInstant(ZoneOffset.UTC);
@@ -347,9 +354,9 @@ class FileAssetJpaEntityTest {
                             "bucket",
                             "key",
                             "etag",
-                            "01912345-6789-7abc-def0-123456789200",
-                            "01912345-6789-7abc-def0-123456789100",
-                            "01912345-6789-7abc-def0-123456789001",
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
                             FileAssetStatus.COMPLETED,
                             Instant.now(),
                             null,
@@ -379,8 +386,8 @@ class FileAssetJpaEntityTest {
                 "key",
                 "etag",
                 userId,
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -402,9 +409,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 "key",
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 processedAt,
                 null,
@@ -426,9 +433,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 "key",
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 status,
                 status == FileAssetStatus.COMPLETED ? now : null,
                 null,
@@ -451,9 +458,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 "key",
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 status,
                 processedAt,
                 null,
@@ -475,9 +482,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 "key",
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -500,9 +507,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 "key",
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -524,9 +531,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 "key",
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -548,9 +555,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 "key",
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -572,9 +579,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 s3Key,
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -596,9 +603,9 @@ class FileAssetJpaEntityTest {
                 bucket,
                 "key",
                 "etag",
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -620,9 +627,9 @@ class FileAssetJpaEntityTest {
                 "bucket",
                 "key",
                 etag,
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,

@@ -36,6 +36,10 @@ class ExternalDownloadPersistenceAdapterTest {
 
     private ExternalDownloadPersistenceAdapter adapter;
 
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+
     @BeforeEach
     void setUp() {
         adapter = new ExternalDownloadPersistenceAdapter(jpaRepository, mapper);
@@ -109,8 +113,8 @@ class ExternalDownloadPersistenceAdapterTest {
                     ExternalDownload.of(
                             ExternalDownloadId.forNew(),
                             SourceUrl.of("https://example.com/new-file.jpg"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PENDING,
@@ -144,8 +148,8 @@ class ExternalDownloadPersistenceAdapterTest {
                     ExternalDownload.of(
                             ExternalDownloadId.of(existingId),
                             SourceUrl.of("https://example.com/existing-file.jpg"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PROCESSING,
@@ -175,8 +179,8 @@ class ExternalDownloadPersistenceAdapterTest {
         return ExternalDownload.of(
                 ExternalDownloadId.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -193,8 +197,8 @@ class ExternalDownloadPersistenceAdapterTest {
         return ExternalDownloadJpaEntity.of(
                 id,
                 "https://example.com/file.jpg",
-                "01912345-6789-7abc-def0-123456789001",
-                "01912345-6789-7abc-def0-123456789002",
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

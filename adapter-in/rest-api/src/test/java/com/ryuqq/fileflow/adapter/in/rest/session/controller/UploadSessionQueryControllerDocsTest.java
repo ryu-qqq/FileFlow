@@ -18,6 +18,7 @@ import com.ryuqq.fileflow.application.session.dto.response.UploadSessionDetailRe
 import com.ryuqq.fileflow.application.session.dto.response.UploadSessionResponse;
 import com.ryuqq.fileflow.application.session.port.in.query.GetUploadSessionUseCase;
 import com.ryuqq.fileflow.application.session.port.in.query.GetUploadSessionsUseCase;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -57,7 +58,8 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
 
     @BeforeEach
     void setUpUserContext() {
-        UserContext userContext = UserContext.admin("admin@test.com");
+        UserContext userContext =
+                UserContext.seller(OrganizationId.generate(), "Test Org", "seller@test.com");
         UserContextHolder.set(userContext);
     }
 
@@ -67,7 +69,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("GET /api/v1/upload-sessions/{sessionId} - 업로드 세션 상세 조회 (단일) API 문서")
+    @DisplayName("GET /api/v1/file/upload-sessions/{sessionId} - 업로드 세션 상세 조회 (단일) API 문서")
     void getUploadSession_single() throws Exception {
         // given
         String sessionId = "session-123";
@@ -90,7 +92,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
         given(getUploadSessionUseCase.execute(any())).willReturn(response);
 
         // when & then
-        mockMvc.perform(get("/api/v1/upload-sessions/{sessionId}", sessionId))
+        mockMvc.perform(get("/api/v1/file/upload-sessions/{sessionId}", sessionId))
                 .andExpect(status().isOk())
                 .andDo(
                         document(
@@ -104,8 +106,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data").description("응답 데이터"),
                                         fieldWithPath("data.sessionId").description("세션 ID"),
                                         fieldWithPath("data.fileName").description("파일명"),
-                                        fieldWithPath("data.fileSize")
-                                                .description("파일 크기 (bytes)"),
+                                        fieldWithPath("data.fileSize").description("파일 크기 (bytes)"),
                                         fieldWithPath("data.contentType")
                                                 .description("Content-Type"),
                                         fieldWithPath("data.uploadType")
@@ -114,7 +115,8 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.bucket").description("S3 버킷명"),
                                         fieldWithPath("data.key").description("S3 객체 키"),
                                         fieldWithPath("data.uploadId")
-                                                .description("S3 Multipart Upload ID (단일 업로드 시 null)")
+                                                .description(
+                                                        "S3 Multipart Upload ID (단일 업로드 시 null)")
                                                 .optional(),
                                         fieldWithPath("data.totalParts")
                                                 .description("전체 Part 개수 (단일 업로드 시 null)")
@@ -137,7 +139,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("GET /api/v1/upload-sessions/{sessionId} - 업로드 세션 상세 조회 (Multipart) API 문서")
+    @DisplayName("GET /api/v1/file/upload-sessions/{sessionId} - 업로드 세션 상세 조회 (Multipart) API 문서")
     void getUploadSession_multipart() throws Exception {
         // given
         String sessionId = "session-456";
@@ -146,15 +148,9 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
         List<UploadSessionDetailResponse.PartDetailResponse> parts =
                 List.of(
                         UploadSessionDetailResponse.PartDetailResponse.of(
-                                1,
-                                "\"etag1\"",
-                                5242880L,
-                                now.minus(10, ChronoUnit.MINUTES)),
+                                1, "\"etag1\"", 5242880L, now.minus(10, ChronoUnit.MINUTES)),
                         UploadSessionDetailResponse.PartDetailResponse.of(
-                                2,
-                                "\"etag2\"",
-                                5242880L,
-                                now.minus(5, ChronoUnit.MINUTES)));
+                                2, "\"etag2\"", 5242880L, now.minus(5, ChronoUnit.MINUTES)));
 
         UploadSessionDetailResponse response =
                 UploadSessionDetailResponse.ofMultipart(
@@ -177,7 +173,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
         given(getUploadSessionUseCase.execute(any())).willReturn(response);
 
         // when & then
-        mockMvc.perform(get("/api/v1/upload-sessions/{sessionId}", sessionId))
+        mockMvc.perform(get("/api/v1/file/upload-sessions/{sessionId}", sessionId))
                 .andExpect(status().isOk())
                 .andDo(
                         document(
@@ -191,8 +187,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data").description("응답 데이터"),
                                         fieldWithPath("data.sessionId").description("세션 ID"),
                                         fieldWithPath("data.fileName").description("파일명"),
-                                        fieldWithPath("data.fileSize")
-                                                .description("파일 크기 (bytes)"),
+                                        fieldWithPath("data.fileSize").description("파일 크기 (bytes)"),
                                         fieldWithPath("data.contentType")
                                                 .description("Content-Type"),
                                         fieldWithPath("data.uploadType")
@@ -202,15 +197,13 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.key").description("S3 객체 키"),
                                         fieldWithPath("data.uploadId")
                                                 .description("S3 Multipart Upload ID"),
-                                        fieldWithPath("data.totalParts")
-                                                .description("전체 Part 개수"),
+                                        fieldWithPath("data.totalParts").description("전체 Part 개수"),
                                         fieldWithPath("data.uploadedParts")
                                                 .description("업로드 완료된 Part 개수"),
                                         fieldWithPath("data.parts").description("Part 정보 목록"),
                                         fieldWithPath("data.parts[].partNumber")
                                                 .description("Part 번호"),
-                                        fieldWithPath("data.parts[].etag")
-                                                .description("Part ETag"),
+                                        fieldWithPath("data.parts[].etag").description("Part ETag"),
                                         fieldWithPath("data.parts[].size")
                                                 .description("Part 크기 (bytes)"),
                                         fieldWithPath("data.parts[].uploadedAt")
@@ -229,7 +222,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("GET /api/v1/upload-sessions - 업로드 세션 목록 조회 API 문서")
+    @DisplayName("GET /api/v1/file/upload-sessions - 업로드 세션 목록 조회 API 문서")
     void getUploadSessions() throws Exception {
         // given
         Instant now = Instant.now();
@@ -266,7 +259,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/upload-sessions")
+                        get("/api/v1/file/upload-sessions")
                                 .param("page", "0")
                                 .param("size", "20")
                                 .param("status", "PENDING"))
@@ -285,7 +278,8 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                                 .optional(),
                                         parameterWithName("status")
                                                 .description(
-                                                        "세션 상태 필터 (PENDING/IN_PROGRESS/COMPLETED/EXPIRED/CANCELLED)")
+                                                        "세션 상태 필터"
+                                                            + " (PENDING/IN_PROGRESS/COMPLETED/EXPIRED/CANCELLED)")
                                                 .optional(),
                                         parameterWithName("uploadType")
                                                 .description("업로드 타입 필터 (SINGLE/MULTIPART)")
@@ -293,31 +287,26 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                 responseFields(
                                         fieldWithPath("success").description("성공 여부"),
                                         fieldWithPath("data").description("응답 데이터"),
-                                        fieldWithPath("data.content")
-                                                .description("업로드 세션 목록"),
+                                        fieldWithPath("data.content").description("업로드 세션 목록"),
                                         fieldWithPath("data.content[].sessionId")
                                                 .description("세션 ID"),
-                                        fieldWithPath("data.content[].fileName")
-                                                .description("파일명"),
+                                        fieldWithPath("data.content[].fileName").description("파일명"),
                                         fieldWithPath("data.content[].fileSize")
                                                 .description("파일 크기 (bytes)"),
                                         fieldWithPath("data.content[].contentType")
                                                 .description("Content-Type"),
                                         fieldWithPath("data.content[].uploadType")
                                                 .description("업로드 타입 (SINGLE/MULTIPART)"),
-                                        fieldWithPath("data.content[].status")
-                                                .description("세션 상태"),
+                                        fieldWithPath("data.content[].status").description("세션 상태"),
                                         fieldWithPath("data.content[].bucket")
                                                 .description("S3 버킷명"),
-                                        fieldWithPath("data.content[].key")
-                                                .description("S3 객체 키"),
+                                        fieldWithPath("data.content[].key").description("S3 객체 키"),
                                         fieldWithPath("data.content[].createdAt")
                                                 .description("생성 시각"),
                                         fieldWithPath("data.content[].expiresAt")
                                                 .description("만료 시각"),
                                         fieldWithPath("data.size").description("페이지 크기"),
-                                        fieldWithPath("data.hasNext")
-                                                .description("다음 페이지 존재 여부"),
+                                        fieldWithPath("data.hasNext").description("다음 페이지 존재 여부"),
                                         fieldWithPath("data.nextCursor")
                                                 .description("다음 커서")
                                                 .optional(),

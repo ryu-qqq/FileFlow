@@ -97,8 +97,7 @@ class ApiResponseTest {
         @DisplayName("에러 코드와 메시지로 실패 응답 생성")
         void shouldCreateFailureResponseWithCodeAndMessage() {
             // when
-            ApiResponse<Void> response =
-                    ApiResponse.ofFailure("USER_NOT_FOUND", "사용자를 찾을 수 없습니다");
+            ApiResponse<Void> response = ApiResponse.ofFailure("USER_NOT_FOUND", "사용자를 찾을 수 없습니다");
 
             // then
             assertThat(response.success()).isFalse();

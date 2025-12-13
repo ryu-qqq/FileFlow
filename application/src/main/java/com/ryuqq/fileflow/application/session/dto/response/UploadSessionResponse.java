@@ -5,8 +5,7 @@ import java.time.Instant;
 /**
  * UploadSession 응답 DTO.
  *
- * <p>업로드 세션의 기본 정보를 반환합니다.
- * REST API Layer와의 결합도를 낮추기 위해 status를 String으로 설계.
+ * <p>업로드 세션의 기본 정보를 반환합니다. REST API Layer와의 결합도를 낮추기 위해 status를 String으로 설계.
  *
  * @param sessionId 세션 ID
  * @param fileName 파일명

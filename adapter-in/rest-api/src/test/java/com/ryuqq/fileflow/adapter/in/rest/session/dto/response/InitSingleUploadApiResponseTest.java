@@ -32,7 +32,8 @@ class InitSingleUploadApiResponseTest {
 
             // when
             InitSingleUploadApiResponse response =
-                    new InitSingleUploadApiResponse(sessionId, presignedUrl, expiresAt, bucket, key);
+                    new InitSingleUploadApiResponse(
+                            sessionId, presignedUrl, expiresAt, bucket, key);
 
             // then
             assertThat(response.sessionId()).isEqualTo(sessionId);

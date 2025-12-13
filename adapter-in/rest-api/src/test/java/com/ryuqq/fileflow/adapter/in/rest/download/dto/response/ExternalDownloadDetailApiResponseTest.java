@@ -136,7 +136,8 @@ class ExternalDownloadDetailApiResponseTest {
         @DisplayName("errorMessage가 null이어도 생성할 수 있다")
         void create_WithNullErrorMessage_ShouldSucceed() {
             // when
-            ExternalDownloadDetailApiResponse response = createBasicResponse("asset-123", null, null);
+            ExternalDownloadDetailApiResponse response =
+                    createBasicResponse("asset-123", null, null);
 
             // then
             assertThat(response.errorMessage()).isNull();

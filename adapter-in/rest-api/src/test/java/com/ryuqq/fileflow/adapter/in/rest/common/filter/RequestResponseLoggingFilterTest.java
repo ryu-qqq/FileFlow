@@ -2,13 +2,9 @@ package com.ryuqq.fileflow.adapter.in.rest.common.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,8 +31,7 @@ class RequestResponseLoggingFilterTest {
 
     private RequestResponseLoggingFilter filter;
 
-    @Mock
-    private FilterChain filterChain;
+    @Mock private FilterChain filterChain;
 
     @BeforeEach
     void setUp() {
@@ -64,9 +59,9 @@ class RequestResponseLoggingFilterTest {
 
             // then
             // MDC는 finally에서 정리되므로 필터 체인 호출 확인
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
 
         @Test
@@ -81,9 +76,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
 
         @Test
@@ -111,9 +106,9 @@ class RequestResponseLoggingFilterTest {
             MockHttpServletResponse response = new MockHttpServletResponse();
 
             org.mockito.Mockito.doThrow(new RuntimeException("Test exception"))
-                    .when(filterChain).doFilter(
-                            org.mockito.ArgumentMatchers.any(),
-                            org.mockito.ArgumentMatchers.any());
+                    .when(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
 
             // when & then
             try {
@@ -145,9 +140,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
 
         @Test
@@ -162,9 +157,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
 
         @Test
@@ -180,9 +175,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
     }
 
@@ -201,9 +196,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
 
         @Test
@@ -218,9 +213,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
 
         @Test
@@ -235,9 +230,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
     }
 
@@ -257,9 +252,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
 
         @Test
@@ -269,12 +264,14 @@ class RequestResponseLoggingFilterTest {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/unknown");
             MockHttpServletResponse response = new MockHttpServletResponse();
 
-            org.mockito.Mockito.doAnswer(invocation -> {
-                response.setStatus(404);
-                return null;
-            }).when(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            org.mockito.Mockito.doAnswer(
+                            invocation -> {
+                                response.setStatus(404);
+                                return null;
+                            })
+                    .when(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
 
             // when
             filter.doFilterInternal(request, response, filterChain);
@@ -290,12 +287,14 @@ class RequestResponseLoggingFilterTest {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/error");
             MockHttpServletResponse response = new MockHttpServletResponse();
 
-            org.mockito.Mockito.doAnswer(invocation -> {
-                response.setStatus(500);
-                return null;
-            }).when(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            org.mockito.Mockito.doAnswer(
+                            invocation -> {
+                                response.setStatus(500);
+                                return null;
+                            })
+                    .when(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
 
             // when
             filter.doFilterInternal(request, response, filterChain);
@@ -316,24 +315,27 @@ class RequestResponseLoggingFilterTest {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/test");
             MockHttpServletResponse response = new MockHttpServletResponse();
 
-            org.mockito.Mockito.doAnswer(invocation -> {
-                // ContentCachingResponseWrapper를 통해 응답 작성
-                var wrappedResponse = (HttpServletResponse) invocation.getArgument(1);
-                wrappedResponse.setContentType("application/json");
-                wrappedResponse.getWriter().write("{\"message\":\"success\"}");
-                return null;
-            }).when(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            org.mockito.Mockito.doAnswer(
+                            invocation -> {
+                                // ContentCachingResponseWrapper를 통해 응답 작성
+                                var wrappedResponse =
+                                        (HttpServletResponse) invocation.getArgument(1);
+                                wrappedResponse.setContentType("application/json");
+                                wrappedResponse.getWriter().write("{\"message\":\"success\"}");
+                                return null;
+                            })
+                    .when(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
 
             // when
             filter.doFilterInternal(request, response, filterChain);
 
             // then
             // copyBodyToResponse가 호출되어 본문이 복사됨
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
     }
 
@@ -353,9 +355,9 @@ class RequestResponseLoggingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(
-                    org.mockito.ArgumentMatchers.any(),
-                    org.mockito.ArgumentMatchers.any());
+            verify(filterChain)
+                    .doFilter(
+                            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         }
     }
 }

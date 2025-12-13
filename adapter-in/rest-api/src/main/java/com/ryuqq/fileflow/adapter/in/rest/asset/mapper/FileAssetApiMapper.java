@@ -58,12 +58,7 @@ public class FileAssetApiMapper {
         String category = request.category() != null ? request.category().name() : null;
 
         return ListFileAssetsQuery.of(
-                organizationId,
-                tenantId,
-                status,
-                category,
-                request.page(),
-                request.size());
+                organizationId, tenantId, status, category, request.page(), request.size());
     }
 
     /**

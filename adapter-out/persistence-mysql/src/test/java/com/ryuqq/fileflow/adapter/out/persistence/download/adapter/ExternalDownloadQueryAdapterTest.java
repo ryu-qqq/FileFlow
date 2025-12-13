@@ -29,6 +29,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("ExternalDownloadQueryAdapter 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class ExternalDownloadQueryAdapterTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @Mock private ExternalDownloadQueryDslRepository queryDslRepository;
 
@@ -114,7 +117,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldReturnDomainWhenExists() {
             // given
             UUID id = UUID.randomUUID();
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
             ExternalDownload domain = createDomain(id);
@@ -136,7 +139,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldReturnEmptyWhenTenantMismatch() {
             // given
             UUID id = UUID.randomUUID();
-            String wrongTenantId = "01912345-6789-7abc-def0-999999999999";
+            String wrongTenantId = TenantId.generate().value(); // 다른 테넌트 ID 생성
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
 
             given(queryDslRepository.findByIdAndTenantId(id, wrongTenantId))
@@ -155,7 +158,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldRequireBothIdAndTenantIdMatch() {
             // given
             UUID id = UUID.randomUUID();
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
             ExternalDownload domain = createDomain(id);
@@ -234,8 +237,8 @@ class ExternalDownloadQueryAdapterTest {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
                 SourceUrl.of("https://example.com/file.jpg"),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789002"),
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -252,8 +255,8 @@ class ExternalDownloadQueryAdapterTest {
         return ExternalDownloadJpaEntity.of(
                 id,
                 "https://example.com/file.jpg",
-                "01912345-6789-7abc-def0-123456789001",
-                "01912345-6789-7abc-def0-123456789002",
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

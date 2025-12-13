@@ -45,7 +45,8 @@ class FilterConfigTest {
             // then
             assertThat(registrationBean).isNotNull();
             assertThat(registrationBean.getFilter()).isNotNull();
-            assertThat(registrationBean.getFilter()).isInstanceOf(RequestResponseLoggingFilter.class);
+            assertThat(registrationBean.getFilter())
+                    .isInstanceOf(RequestResponseLoggingFilter.class);
         }
 
         @Test

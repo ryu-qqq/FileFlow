@@ -13,6 +13,7 @@ import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,6 +27,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ExternalDownloadMessageManager 테스트")
 class ExternalDownloadMessageManagerTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     @Mock private ExternalDownloadSqsPublishPort externalDownloadSqsPublishPort;
 
@@ -97,8 +102,8 @@ class ExternalDownloadMessageManagerTest {
             // given
             String downloadId = "00000000-0000-0000-0000-000000000064";
             String sourceUrl = "https://example.com/convert-test.jpg";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789200";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_USER_ID;
 
             ExternalDownloadRegisteredEvent event =
                     ExternalDownloadRegisteredEvent.of(
@@ -135,8 +140,8 @@ class ExternalDownloadMessageManagerTest {
                     ExternalDownloadRegisteredEvent.of(
                             ExternalDownloadId.of("00000000-0000-0000-0000-000000000005"),
                             SourceUrl.of("https://example.com/webhook-test.jpg"),
-                            TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                            OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             WebhookUrl.of("https://callback.example.com/webhook"),
                             Instant.now());
 
@@ -156,8 +161,8 @@ class ExternalDownloadMessageManagerTest {
         return ExternalDownloadRegisteredEvent.of(
                 ExternalDownloadId.of(downloadId),
                 SourceUrl.of(sourceUrl),
-                TenantId.of("01912345-6789-7abc-def0-123456789001"),
-                OrganizationId.of("01912345-6789-7abc-def0-123456789100"),
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 null,
                 Instant.now());
     }

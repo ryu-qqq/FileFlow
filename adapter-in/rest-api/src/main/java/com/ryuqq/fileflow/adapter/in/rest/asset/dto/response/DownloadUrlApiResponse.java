@@ -20,7 +20,8 @@ import java.time.Instant;
 @Schema(description = "다운로드 URL 응답")
 public record DownloadUrlApiResponse(
         @Schema(description = "파일 자산 ID", example = "asset-123") String fileAssetId,
-        @Schema(description = "다운로드 URL", example = "https://s3.amazonaws.com/...") String downloadUrl,
+        @Schema(description = "다운로드 URL", example = "https://s3.amazonaws.com/...")
+                String downloadUrl,
         @Schema(description = "파일명", example = "image.jpg") String fileName,
         @Schema(description = "컨텐츠 타입", example = "image/jpeg") String contentType,
         @Schema(description = "파일 크기 (bytes)", example = "1024000") long fileSize,

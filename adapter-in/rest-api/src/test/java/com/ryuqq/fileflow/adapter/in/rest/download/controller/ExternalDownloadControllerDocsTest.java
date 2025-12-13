@@ -20,6 +20,7 @@ import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadDeta
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
 import com.ryuqq.fileflow.application.download.port.in.command.RequestExternalDownloadUseCase;
 import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownloadUseCase;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import java.time.Instant;
 import org.junit.jupiter.api.AfterEach;
@@ -53,7 +54,8 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
 
     @BeforeEach
     void setUpUserContext() {
-        UserContext userContext = UserContext.admin("admin@test.com");
+        UserContext userContext =
+                UserContext.seller(OrganizationId.generate(), "Test Org", "seller@test.com");
         UserContextHolder.set(userContext);
     }
 
@@ -63,7 +65,7 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("POST /api/v1/external-downloads - 외부 다운로드 요청 API 문서")
+    @DisplayName("POST /api/v1/file/external-downloads - 외부 다운로드 요청 API 문서")
     void requestExternalDownload() throws Exception {
         // given
         RequestExternalDownloadApiRequest request =
@@ -78,7 +80,7 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        post("/api/v1/external-downloads")
+                        post("/api/v1/file/external-downloads")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -104,7 +106,7 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("GET /api/v1/external-downloads/{id} - 외부 다운로드 상태 조회 API 문서")
+    @DisplayName("GET /api/v1/file/external-downloads/{id} - 외부 다운로드 상태 조회 API 문서")
     void getExternalDownload() throws Exception {
         // given
         String downloadId = "00000000-0000-0000-0000-000000000001";
@@ -124,7 +126,7 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
         given(getExternalDownloadUseCase.execute(any())).willReturn(response);
 
         // when & then
-        mockMvc.perform(get("/api/v1/external-downloads/{id}", downloadId))
+        mockMvc.perform(get("/api/v1/file/external-downloads/{id}", downloadId))
                 .andExpect(status().isOk())
                 .andDo(
                         document(

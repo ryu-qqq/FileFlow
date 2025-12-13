@@ -99,8 +99,9 @@ class UserContextSupplierConfigTest {
         @DisplayName("Seller 컨텍스트도 정상적으로 반환한다")
         void userContextSupplier_WithSellerContext_ShouldReturnContext() {
             // given
-            OrganizationId organizationId = OrganizationId.of("01912345-6789-7abc-def0-123456789100");
-            UserContext sellerContext = UserContext.seller(organizationId, "Test Company", "seller@test.com");
+            OrganizationId organizationId = OrganizationId.generate();
+            UserContext sellerContext =
+                    UserContext.seller(organizationId, "Test Company", "seller@test.com");
             UserContextHolder.set(sellerContext);
             Supplier<UserContext> supplier = config.userContextSupplier();
 
@@ -117,7 +118,7 @@ class UserContextSupplierConfigTest {
         @DisplayName("Customer 컨텍스트도 정상적으로 반환한다")
         void userContextSupplier_WithCustomerContext_ShouldReturnContext() {
             // given
-            UserId userId = UserId.of("01912345-6789-7abc-def0-123456789200");
+            UserId userId = UserId.generate();
             UserContext customerContext = UserContext.customer(userId);
             UserContextHolder.set(customerContext);
             Supplier<UserContext> supplier = config.userContextSupplier();

@@ -186,8 +186,8 @@ class RestApiLayerArchTest {
     /**
      * 규칙 6: REST API Layer는 Domain Layer 직접 의존 금지 (Aggregate/Service만)
      *
-     * <p>Domain의 Value Object(enum, VO), IAM 패키지는 데이터 표현/인증 목적으로 허용됩니다. Domain Aggregate,
-     * Service, Repository 등의 핵심 로직 클래스만 의존 금지합니다.
+     * <p>Domain의 Value Object(enum, VO), IAM 패키지는 데이터 표현/인증 목적으로 허용됩니다. Domain Aggregate, Service,
+     * Repository 등의 핵심 로직 클래스만 의존 금지합니다.
      */
     @Test
     @DisplayName("[금지] REST API Layer는 Domain Aggregate/Service를 직접 의존하지 않아야 한다")
@@ -204,9 +204,7 @@ class RestApiLayerArchTest {
                         .haveSimpleNameNotEndingWith("ErrorMapper")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage(
-                                DOMAIN + "..aggregate..",
-                                DOMAIN + "..service..")
+                        .resideInAnyPackage(DOMAIN + "..aggregate..", DOMAIN + "..service..")
                         .because(
                                 "REST API Layer는 Domain Aggregate/Service를 직접 의존하면 안 됩니다"
                                         + " (Domain VO/enum, IAM 패키지는 허용)");

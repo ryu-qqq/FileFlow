@@ -11,6 +11,9 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.MultipartUploadSessionJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSessionJpaEntity;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import java.time.Instant;
 import java.util.List;
@@ -26,6 +29,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("SessionQueryDslRepository 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class SessionQueryDslRepositoryTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     @Mock private JPAQueryFactory queryFactory;
 
@@ -316,7 +323,7 @@ class SessionQueryDslRepositoryTest {
         void findSingleUploadByIdAndTenantId_WithValidParams_ShouldReturnEntity() {
             // given
             String sessionId = "session-123";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
             SingleUploadSessionJpaEntity entity = createSingleUploadEntity(sessionId);
 
             when(queryFactory.selectFrom(singleUploadSessionJpaEntity)).thenReturn(singleQuery);
@@ -344,7 +351,7 @@ class SessionQueryDslRepositoryTest {
 
             // when
             Optional<SingleUploadSessionJpaEntity> result =
-                    repository.findSingleUploadByIdAndTenantId("not-exist", "01912345-6789-7abc-def0-123456789001");
+                    repository.findSingleUploadByIdAndTenantId("not-exist", TEST_TENANT_ID);
 
             // then
             assertThat(result).isEmpty();
@@ -360,7 +367,7 @@ class SessionQueryDslRepositoryTest {
         void findMultipartUploadByIdAndTenantId_WithValidParams_ShouldReturnEntity() {
             // given
             String sessionId = "mp-session-123";
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
             MultipartUploadSessionJpaEntity entity = createMultipartUploadEntity(sessionId);
 
             when(queryFactory.selectFrom(multipartUploadSessionJpaEntity))
@@ -390,7 +397,7 @@ class SessionQueryDslRepositoryTest {
 
             // when
             Optional<MultipartUploadSessionJpaEntity> result =
-                    repository.findMultipartUploadByIdAndTenantId("not-exist", "01912345-6789-7abc-def0-123456789001");
+                    repository.findMultipartUploadByIdAndTenantId("not-exist", TEST_TENANT_ID);
 
             // then
             assertThat(result).isEmpty();
@@ -405,8 +412,8 @@ class SessionQueryDslRepositoryTest {
         @DisplayName("검색 조건으로 SingleUploadSession 목록을 조회할 수 있다")
         void findSingleUploadsByCriteria_WithValidCriteria_ShouldReturnEntities() {
             // given
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             SessionStatus status = SessionStatus.ACTIVE;
             long offset = 0;
             int limit = 20;
@@ -436,7 +443,7 @@ class SessionQueryDslRepositoryTest {
         @DisplayName("organizationId와 status가 null이어도 조회할 수 있다")
         void findSingleUploadsByCriteria_WithNullFilters_ShouldReturnEntities() {
             // given
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
             long offset = 0;
             int limit = 20;
             List<SingleUploadSessionJpaEntity> entities =
@@ -467,8 +474,8 @@ class SessionQueryDslRepositoryTest {
         @DisplayName("검색 조건으로 MultipartUploadSession 목록을 조회할 수 있다")
         void findMultipartUploadsByCriteria_WithValidCriteria_ShouldReturnEntities() {
             // given
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             SessionStatus status = SessionStatus.ACTIVE;
             long offset = 0;
             int limit = 20;
@@ -505,8 +512,8 @@ class SessionQueryDslRepositoryTest {
         @DisplayName("검색 조건으로 SingleUploadSession 개수를 조회할 수 있다")
         void countSingleUploadsByCriteria_WithValidCriteria_ShouldReturnCount() {
             // given
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             SessionStatus status = SessionStatus.ACTIVE;
 
             when(queryFactory.select(singleUploadSessionJpaEntity.count())).thenReturn(countQuery);
@@ -525,7 +532,7 @@ class SessionQueryDslRepositoryTest {
         @DisplayName("결과가 null이면 0을 반환한다")
         void countSingleUploadsByCriteria_WhenNull_ShouldReturnZero() {
             // given
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
 
             when(queryFactory.select(singleUploadSessionJpaEntity.count())).thenReturn(countQuery);
             when(countQuery.from(singleUploadSessionJpaEntity)).thenReturn(countQuery);
@@ -550,8 +557,8 @@ class SessionQueryDslRepositoryTest {
         @DisplayName("검색 조건으로 MultipartUploadSession 개수를 조회할 수 있다")
         void countMultipartUploadsByCriteria_WithValidCriteria_ShouldReturnCount() {
             // given
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
-            String organizationId = "01912345-6789-7abc-def0-123456789100";
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             SessionStatus status = SessionStatus.ACTIVE;
 
             when(queryFactory.select(multipartUploadSessionJpaEntity.count()))
@@ -572,7 +579,7 @@ class SessionQueryDslRepositoryTest {
         @DisplayName("결과가 null이면 0을 반환한다")
         void countMultipartUploadsByCriteria_WhenNull_ShouldReturnZero() {
             // given
-            String tenantId = "01912345-6789-7abc-def0-123456789001";
+            String tenantId = TEST_TENANT_ID;
 
             when(queryFactory.select(multipartUploadSessionJpaEntity.count()))
                     .thenReturn(countQuery);
@@ -598,10 +605,10 @@ class SessionQueryDslRepositoryTest {
                 sessionId,
                 "idem-key-" + sessionId,
                 null,
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_ORG_ID,
                 "Test Org",
                 "setof",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "Test Tenant",
                 "SELLER",
                 "seller@test.com",
@@ -629,10 +636,10 @@ class SessionQueryDslRepositoryTest {
                 sessionId,
                 idempotencyKey,
                 null,
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_ORG_ID,
                 "Test Org",
                 "setof",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "Test Tenant",
                 "SELLER",
                 "seller@test.com",
@@ -657,11 +664,11 @@ class SessionQueryDslRepositoryTest {
 
         return MultipartUploadSessionJpaEntity.of(
                 sessionId,
-                "01912345-6789-7abc-def0-123456789200",
-                "01912345-6789-7abc-def0-123456789100",
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "Connectly Org",
                 "connectly",
-                "01912345-6789-7abc-def0-123456789001",
+                TEST_TENANT_ID,
                 "Connectly",
                 "ADMIN",
                 "admin@test.com",

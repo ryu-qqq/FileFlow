@@ -193,14 +193,7 @@ class CompleteMultipartUploadApiResponseTest {
             // when
             CompleteMultipartUploadApiResponse response =
                     CompleteMultipartUploadApiResponse.of(
-                            "session",
-                            "COMPLETED",
-                            "bucket",
-                            "key",
-                            "upload-id",
-                            100,
-                            parts,
-                            now);
+                            "session", "COMPLETED", "bucket", "key", "upload-id", 100, parts, now);
 
             // then
             assertThat(response.totalParts()).isEqualTo(100);
@@ -275,14 +268,7 @@ class CompleteMultipartUploadApiResponseTest {
 
     private CompleteMultipartUploadApiResponse createResponse(String sessionId) {
         return CompleteMultipartUploadApiResponse.of(
-                sessionId,
-                "COMPLETED",
-                "bucket",
-                "key",
-                "upload-id",
-                1,
-                List.of(),
-                Instant.now());
+                sessionId, "COMPLETED", "bucket", "key", "upload-id", 1, List.of(), Instant.now());
     }
 
     private CompleteMultipartUploadApiResponse createResponseWithUploadId(

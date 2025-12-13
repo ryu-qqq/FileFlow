@@ -115,8 +115,10 @@ class UploadSessionDetailApiResponseTest {
             Instant now = Instant.now();
             List<PartDetailApiResponse> parts =
                     List.of(
-                            PartDetailApiResponse.of(1, "\"etag1\"", 5242880L, now.minusSeconds(300)),
-                            PartDetailApiResponse.of(2, "\"etag2\"", 5242880L, now.minusSeconds(200)));
+                            PartDetailApiResponse.of(
+                                    1, "\"etag1\"", 5242880L, now.minusSeconds(300)),
+                            PartDetailApiResponse.of(
+                                    2, "\"etag2\"", 5242880L, now.minusSeconds(200)));
             Instant createdAt = now.minusSeconds(600);
             Instant expiresAt = now.plusSeconds(86400);
 
@@ -157,8 +159,10 @@ class UploadSessionDetailApiResponseTest {
             Instant now = Instant.now();
             List<PartDetailApiResponse> parts =
                     List.of(
-                            PartDetailApiResponse.of(1, "\"etag1\"", 5242880L, now.minusSeconds(200)),
-                            PartDetailApiResponse.of(2, "\"etag2\"", 5242880L, now.minusSeconds(100)));
+                            PartDetailApiResponse.of(
+                                    1, "\"etag1\"", 5242880L, now.minusSeconds(200)),
+                            PartDetailApiResponse.of(
+                                    2, "\"etag2\"", 5242880L, now.minusSeconds(100)));
 
             // when
             UploadSessionDetailApiResponse response =
@@ -231,10 +235,8 @@ class UploadSessionDetailApiResponseTest {
         void equals_PartDetail_ShouldWork() {
             // given
             Instant uploadedAt = Instant.parse("2025-11-26T10:00:00Z");
-            PartDetailApiResponse part1 =
-                    PartDetailApiResponse.of(1, "etag", 5242880L, uploadedAt);
-            PartDetailApiResponse part2 =
-                    PartDetailApiResponse.of(1, "etag", 5242880L, uploadedAt);
+            PartDetailApiResponse part1 = PartDetailApiResponse.of(1, "etag", 5242880L, uploadedAt);
+            PartDetailApiResponse part2 = PartDetailApiResponse.of(1, "etag", 5242880L, uploadedAt);
 
             // then
             assertThat(part1).isEqualTo(part2);
@@ -365,7 +367,9 @@ class UploadSessionDetailApiResponseTest {
             Instant createdAt = Instant.parse("2025-11-26T10:00:00Z");
             Instant expiresAt = Instant.parse("2025-11-27T10:00:00Z");
             List<PartDetailApiResponse> parts =
-                    List.of(PartDetailApiResponse.of(1, "etag", 5242880L, createdAt.plusSeconds(60)));
+                    List.of(
+                            PartDetailApiResponse.of(
+                                    1, "etag", 5242880L, createdAt.plusSeconds(60)));
 
             UploadSessionDetailApiResponse response1 =
                     UploadSessionDetailApiResponse.ofMultipart(

@@ -230,10 +230,15 @@ class DataAccessPatternArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 10: QueryDslRepository는 정확히 4개 표준 메서드만 허용 */
+    /**
+     * 규칙 10: QueryDslRepository 메서드 네이밍 패턴 검증
+     *
+     * <p>도메인별로 다양한 조회 메서드가 필요하므로 메서드명 패턴으로 검증합니다: - find* : 단건/다건 조회 - exists* : 존재 여부 확인 - count*
+     * : 개수 조회
+     */
     @Test
-    @DisplayName("[필수] QueryDslRepository는 표준 메서드만 허용한다")
-    void queryDslRepository_MustOnlyHaveStandardMethods() {
+    @DisplayName("[권장] QueryDslRepository는 표준 메서드 네이밍 패턴을 따른다")
+    void queryDslRepository_ShouldFollowStandardMethodNamingPattern() {
         ArchRule rule =
                 methods()
                         .that()
@@ -244,16 +249,8 @@ class DataAccessPatternArchTest {
                         .and()
                         .areNotStatic()
                         .should()
-                        .haveName("findById")
-                        .orShould()
-                        .haveName("existsById")
-                        .orShould()
-                        .haveName("findByCriteria")
-                        .orShould()
-                        .haveName("countByCriteria")
-                        .because(
-                                "QueryDslRepository는 4개 표준 메서드만 허용합니다 (findById, existsById,"
-                                        + " findByCriteria, countByCriteria)");
+                        .haveNameMatching("(find|exists|count).*")
+                        .because("QueryDslRepository 메서드는 find*, exists*, count* 패턴을 따라야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }

@@ -25,7 +25,10 @@ public record BatchGenerateDownloadUrlCommand(
      * @return BatchGenerateDownloadUrlCommand
      */
     public static BatchGenerateDownloadUrlCommand of(
-            List<String> fileAssetIds, String tenantId, String organizationId, int expirationMinutes) {
+            List<String> fileAssetIds,
+            String tenantId,
+            String organizationId,
+            int expirationMinutes) {
         return new BatchGenerateDownloadUrlCommand(
                 fileAssetIds, tenantId, organizationId, expirationMinutes);
     }

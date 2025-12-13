@@ -49,8 +49,7 @@ class SliceApiResponseTest {
             List<String> content = List.of("item1");
 
             // when
-            SliceApiResponse<String> response =
-                    new SliceApiResponse<>(content, 20, false, null);
+            SliceApiResponse<String> response = new SliceApiResponse<>(content, 20, false, null);
 
             // then
             assertThat(response.nextCursor()).isNull();
@@ -64,8 +63,7 @@ class SliceApiResponseTest {
             List<String> original = new ArrayList<>(List.of("item1", "item2"));
 
             // when
-            SliceApiResponse<String> response =
-                    new SliceApiResponse<>(original, 20, false, null);
+            SliceApiResponse<String> response = new SliceApiResponse<>(original, 20, false, null);
             original.add("item3");
 
             // then
@@ -111,8 +109,7 @@ class SliceApiResponseTest {
         @DisplayName("hasNext=false인 SliceResponse 변환")
         void shouldConvertSliceResponseWithNoNext() {
             // given
-            SliceResponse<String> appResponse =
-                    SliceResponse.of(List.of("item1"), 20, false, null);
+            SliceResponse<String> appResponse = SliceResponse.of(List.of("item1"), 20, false, null);
 
             // when
             SliceApiResponse<String> apiResponse = SliceApiResponse.from(appResponse);
@@ -208,8 +205,7 @@ class SliceApiResponseTest {
         @DisplayName("마지막 슬라이스 - 다음 페이지 없음")
         void shouldNotHaveNextForLastSlice() {
             // given
-            SliceResponse<String> appResponse =
-                    SliceResponse.of(List.of("lastItem"), 20, false);
+            SliceResponse<String> appResponse = SliceResponse.of(List.of("lastItem"), 20, false);
 
             // when
             SliceApiResponse<String> apiResponse = SliceApiResponse.from(appResponse);

@@ -23,7 +23,8 @@ public record CompleteSingleUploadApiResponse(
         @Schema(description = "세션 상태", example = "COMPLETED") String status,
         @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
         @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key,
-        @Schema(description = "S3 ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"") String etag,
+        @Schema(description = "S3 ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"")
+                String etag,
         @Schema(description = "완료 시각") Instant completedAt) {
 
     /**

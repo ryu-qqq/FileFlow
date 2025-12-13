@@ -48,7 +48,8 @@ class BatchDownloadUrlApiResponseTest {
             List<DownloadUrlApiResponse> downloadUrls = createSampleDownloadUrls(5);
 
             // when
-            BatchDownloadUrlApiResponse response = BatchDownloadUrlApiResponse.ofSuccess(downloadUrls);
+            BatchDownloadUrlApiResponse response =
+                    BatchDownloadUrlApiResponse.ofSuccess(downloadUrls);
 
             // then
             assertThat(response.downloadUrls()).hasSize(5);
@@ -119,7 +120,8 @@ class BatchDownloadUrlApiResponseTest {
         @DisplayName("생성자로 FailedDownloadUrl을 생성할 수 있다")
         void create_WithConstructor_ShouldSucceed() {
             // when
-            FailedDownloadUrl failure = new FailedDownloadUrl("asset-123", "NOT_FOUND", "파일을 찾을 수 없습니다");
+            FailedDownloadUrl failure =
+                    new FailedDownloadUrl("asset-123", "NOT_FOUND", "파일을 찾을 수 없습니다");
 
             // then
             assertThat(failure.fileAssetId()).isEqualTo("asset-123");

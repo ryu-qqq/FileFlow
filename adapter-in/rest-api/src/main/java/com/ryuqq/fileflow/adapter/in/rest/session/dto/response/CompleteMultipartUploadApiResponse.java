@@ -42,7 +42,8 @@ public record CompleteMultipartUploadApiResponse(
     @Schema(description = "완료된 Part 정보")
     public record CompletedPartInfoApiResponse(
             @Schema(description = "Part 번호 (1-based)", example = "1") int partNumber,
-            @Schema(description = "Part ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"") String etag,
+            @Schema(description = "Part ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"")
+                    String etag,
             @Schema(description = "Part 크기 (bytes)", example = "5242880") long size,
             @Schema(description = "업로드 시각") Instant uploadedAt) {
 
