@@ -9,7 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * FileAsset JPA Entity.
@@ -40,6 +40,12 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
     @Enumerated(EnumType.STRING)
     private FileCategory category;
 
+    @Column(name = "image_width")
+    private Integer imageWidth;
+
+    @Column(name = "image_height")
+    private Integer imageHeight;
+
     @Column(name = "bucket", nullable = false, length = 63)
     private String bucket;
 
@@ -49,24 +55,24 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
     @Column(name = "etag", nullable = false, length = 64)
     private String etag;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "user_id", length = 36)
+    private String userId;
 
-    @Column(name = "organization_id", nullable = false)
-    private Long organizationId;
+    @Column(name = "organization_id", nullable = false, length = 36)
+    private String organizationId;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
+    @Column(name = "tenant_id", nullable = false, length = 36)
+    private String tenantId;
 
     @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private FileAssetStatus status;
 
     @Column(name = "processed_at")
-    private LocalDateTime processedAt;
+    private Instant processedAt;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     protected FileAssetJpaEntity() {
         super();
@@ -79,17 +85,19 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
             Long fileSize,
             String contentType,
             FileCategory category,
+            Integer imageWidth,
+            Integer imageHeight,
             String bucket,
             String s3Key,
             String etag,
-            Long userId,
-            Long organizationId,
-            Long tenantId,
+            String userId,
+            String organizationId,
+            String tenantId,
             FileAssetStatus status,
-            LocalDateTime processedAt,
-            LocalDateTime deletedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant processedAt,
+            Instant deletedAt,
+            Instant createdAt,
+            Instant updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
         this.sessionId = sessionId;
@@ -97,6 +105,8 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
         this.fileSize = fileSize;
         this.contentType = contentType;
         this.category = category;
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
         this.bucket = bucket;
         this.s3Key = s3Key;
         this.etag = etag;
@@ -115,17 +125,19 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
             Long fileSize,
             String contentType,
             FileCategory category,
+            Integer imageWidth,
+            Integer imageHeight,
             String bucket,
             String s3Key,
             String etag,
-            Long userId,
-            Long organizationId,
-            Long tenantId,
+            String userId,
+            String organizationId,
+            String tenantId,
             FileAssetStatus status,
-            LocalDateTime processedAt,
-            LocalDateTime deletedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant processedAt,
+            Instant deletedAt,
+            Instant createdAt,
+            Instant updatedAt) {
         return new FileAssetJpaEntity(
                 id,
                 sessionId,
@@ -133,6 +145,8 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
                 fileSize,
                 contentType,
                 category,
+                imageWidth,
+                imageHeight,
                 bucket,
                 s3Key,
                 etag,
@@ -170,6 +184,14 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
         return category;
     }
 
+    public Integer getImageWidth() {
+        return imageWidth;
+    }
+
+    public Integer getImageHeight() {
+        return imageHeight;
+    }
+
     public String getBucket() {
         return bucket;
     }
@@ -182,15 +204,15 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
         return etag;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public Long getOrganizationId() {
+    public String getOrganizationId() {
         return organizationId;
     }
 
-    public Long getTenantId() {
+    public String getTenantId() {
         return tenantId;
     }
 
@@ -198,11 +220,11 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
         return status;
     }
 
-    public LocalDateTime getProcessedAt() {
+    public Instant getProcessedAt() {
         return processedAt;
     }
 
-    public LocalDateTime getDeletedAt() {
+    public Instant getDeletedAt() {
         return deletedAt;
     }
 
@@ -215,7 +237,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
      * @param processedAt 처리 완료 시각 (nullable)
      * @param deletedAt 삭제 시각 (nullable)
      */
-    public void update(FileAssetStatus status, LocalDateTime processedAt, LocalDateTime deletedAt) {
+    public void update(FileAssetStatus status, Instant processedAt, Instant deletedAt) {
         this.status = status;
         this.processedAt = processedAt;
         this.deletedAt = deletedAt;

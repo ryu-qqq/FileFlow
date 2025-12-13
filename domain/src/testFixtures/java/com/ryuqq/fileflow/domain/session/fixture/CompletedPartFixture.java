@@ -6,8 +6,7 @@ import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.PartNumber;
 import com.ryuqq.fileflow.domain.session.vo.PresignedUrl;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * CompletedPart Aggregate Test Fixture
@@ -26,8 +25,7 @@ public class CompletedPartFixture {
         return CompletedPart.forNew(
                 UploadSessionIdFixture.defaultUploadSessionId(),
                 PartNumberFixture.defaultPartNumber(),
-                PresignedUrlFixture.defaultPresignedUrl(),
-                ClockFixture.defaultClock());
+                PresignedUrlFixture.defaultPresignedUrl());
     }
 
     /** 완료된 CompletedPart Fixture (COMPLETED 상태) */
@@ -36,9 +34,9 @@ public class CompletedPartFixture {
                 CompletedPart.forNew(
                         UploadSessionIdFixture.defaultUploadSessionId(),
                         PartNumberFixture.defaultPartNumber(),
-                        PresignedUrlFixture.defaultPresignedUrl(),
-                        ClockFixture.defaultClock());
-        part.complete(ETagFixture.defaultETag(), 10 * 1024 * 1024L); // 10MB
+                        PresignedUrlFixture.defaultPresignedUrl());
+        part.complete(
+                ETagFixture.defaultETag(), 10 * 1024 * 1024L, ClockFixture.defaultClock()); // 10MB
         return part;
     }
 
@@ -51,17 +49,13 @@ public class CompletedPartFixture {
                 PresignedUrlFixture.defaultPresignedUrl(),
                 ETagFixture.defaultETag(),
                 10 * 1024 * 1024L,
-                LocalDateTime.now(),
-                ClockFixture.defaultClock());
+                Instant.now());
     }
 
     /** Custom CompletedPart Fixture */
     public static CompletedPart customCompletedPart(
-            UploadSessionId sessionId,
-            PartNumber partNumber,
-            PresignedUrl presignedUrl,
-            Clock clock) {
-        return CompletedPart.forNew(sessionId, partNumber, presignedUrl, clock);
+            UploadSessionId sessionId, PartNumber partNumber, PresignedUrl presignedUrl) {
+        return CompletedPart.forNew(sessionId, partNumber, presignedUrl);
     }
 
     /** Custom 완료된 CompletedPart Fixture */
@@ -72,9 +66,7 @@ public class CompletedPartFixture {
             PresignedUrl presignedUrl,
             ETag etag,
             long size,
-            LocalDateTime uploadedAt,
-            Clock clock) {
-        return CompletedPart.of(
-                id, sessionId, partNumber, presignedUrl, etag, size, uploadedAt, clock);
+            Instant uploadedAt) {
+        return CompletedPart.of(id, sessionId, partNumber, presignedUrl, etag, size, uploadedAt);
     }
 }

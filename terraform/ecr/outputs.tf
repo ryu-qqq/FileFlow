@@ -22,4 +22,24 @@ output "scheduler_repository_arn" {
   value       = module.ecr_scheduler.repository_arn
 }
 
+output "download_worker_repository_url" {
+  description = "ECR repository URL for download-worker"
+  value       = module.ecr_download_worker.repository_url
+}
+
+output "download_worker_repository_arn" {
+  description = "ECR repository ARN for download-worker"
+  value       = module.ecr_download_worker.repository_arn
+}
+
+output "resizing_worker_repository_url" {
+  description = "ECR repository URL for resizing-worker"
+  value       = module.ecr_resizing_worker.repository_url
+}
+
+output "resizing_worker_repository_arn" {
+  description = "ECR repository ARN for resizing-worker"
+  value       = module.ecr_resizing_worker.repository_arn
+}
+
 # KMS key output removed - encryption disabled to prevent ECR replacement

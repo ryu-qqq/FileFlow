@@ -85,7 +85,7 @@ public class FindUploadSessionQueryAdapter implements FindUploadSessionQueryPort
     }
 
     @Override
-    public Optional<UploadSession> findByIdAndTenantId(UploadSessionId sessionId, Long tenantId) {
+    public Optional<UploadSession> findByIdAndTenantId(UploadSessionId sessionId, String tenantId) {
         String id = sessionId.value().toString();
 
         // 1. Single 세션 먼저 조회

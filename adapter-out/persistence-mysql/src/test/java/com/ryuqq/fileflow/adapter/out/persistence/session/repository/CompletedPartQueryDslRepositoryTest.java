@@ -10,7 +10,7 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.CompletedPartJpaEntity;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -195,7 +195,7 @@ class CompletedPartQueryDslRepositoryTest {
     // ==================== Helper Methods ====================
 
     private CompletedPartJpaEntity createEntity(String sessionId, int partNumber) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return CompletedPartJpaEntity.of(
                 sessionId,
                 partNumber,

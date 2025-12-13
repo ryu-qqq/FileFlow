@@ -3,7 +3,7 @@
 # =====================================================
 # Git Hooks 자동 설치 스크립트
 # =====================================================
-# 용도: pre-commit + post-commit hooks를 자동으로 설치
+# 용도: pre-commit hook을 자동으로 설치
 # 실행: ./scripts/setup-hooks.sh
 # =====================================================
 
@@ -53,21 +53,7 @@ if [[ ! -d ".git/hooks" ]]; then
     log_success ".git/hooks directory created"
 fi
 
-# 1. pre-commit hook 설치
-log_info "Installing pre-commit hook..."
-
-if [[ -f ".git/hooks/pre-commit" ]] && [[ ! -L ".git/hooks/pre-commit" ]]; then
-    log_warning "Existing pre-commit hook found (not a symlink)"
-    read -p "   Overwrite? (y/n): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_error "Installation cancelled"
-        exit 1
-    fi
-    rm .git/hooks/pre-commit
-fi
-
-# config/hooks 또는 .claude/hooks 경로 자동 감지
+# 1. Hook 디렉토리 및 파일 확인
 if [[ -d "config/hooks" ]]; then
     HOOKS_DIR="config/hooks"
     HOOKS_RELATIVE="../../config/hooks"
@@ -75,78 +61,52 @@ elif [[ -d ".claude/hooks" ]]; then
     HOOKS_DIR=".claude/hooks"
     HOOKS_RELATIVE="../../.claude/hooks"
 else
-    log_error "Hook directory not found (config/hooks or .claude/hooks)"
+    log_error "Hook directory not found!"
+    echo ""
+    echo "Please create one of the following directories and add hook files:"
+    echo "  - ${GREEN}config/hooks/${NC} (for fileflow/crawlinghub style projects)"
+    echo "  - ${GREEN}.claude/hooks/${NC} (for claude-spring-standards style projects)"
+    echo ""
+    echo "Required files:"
+    echo "  - pre-commit (code validation)"
+    echo ""
     exit 1
 fi
 
-ln -sf "$HOOKS_RELATIVE/pre-commit" .git/hooks/pre-commit
-chmod +x "$HOOKS_DIR/pre-commit"
+# 2. pre-commit hook 설치
+if [[ -f "$HOOKS_DIR/pre-commit" ]]; then
+    log_info "Installing pre-commit hook..."
 
-log_success "pre-commit hook installed"
-
-# 2. post-commit hook 설치
-log_info "Installing post-commit hook..."
-
-if [[ -f ".git/hooks/post-commit" ]] && [[ ! -L ".git/hooks/post-commit" ]]; then
-    log_warning "Existing post-commit hook found (not a symlink)"
-    read -p "   Overwrite? (y/n): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_error "Installation cancelled"
-        exit 1
+    if [[ -f ".git/hooks/pre-commit" ]] && [[ ! -L ".git/hooks/pre-commit" ]]; then
+        log_warning "Existing pre-commit hook found (not a symlink)"
+        read -p "   Overwrite? (y/n): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            log_error "Installation cancelled"
+            exit 1
+        fi
+        rm .git/hooks/pre-commit
     fi
-    rm .git/hooks/post-commit
+
+    ln -sf "$HOOKS_RELATIVE/pre-commit" .git/hooks/pre-commit
+    chmod +x "$HOOKS_DIR/pre-commit"
+    log_success "pre-commit hook installed"
+else
+    log_error "pre-commit hook not found in $HOOKS_DIR/"
+    echo ""
+    echo "Please ensure pre-commit hook file exists."
+    exit 1
 fi
-
-ln -sf "$HOOKS_RELATIVE/post-commit" .git/hooks/post-commit
-chmod +x "$HOOKS_DIR/post-commit"
-
-log_success "post-commit hook installed"
 
 # 3. 설치 확인
 echo ""
 log_info "Verifying installation..."
 
-if [[ -L ".git/hooks/pre-commit" ]] && [[ -L ".git/hooks/post-commit" ]]; then
-    log_success "Both hooks are properly linked"
+if [[ -L ".git/hooks/pre-commit" ]]; then
+    log_success "pre-commit hook is properly linked"
 else
     log_error "Hook installation verification failed"
     exit 1
-fi
-
-# 4. LangFuse 의존성 확인
-echo ""
-log_info "Checking LangFuse dependencies..."
-
-# Python langfuse 패키지 확인
-if python3 -c "import langfuse" 2>/dev/null; then
-    log_success "langfuse package is installed"
-else
-    log_warning "langfuse package NOT installed"
-    echo ""
-    echo "   LangFuse 메트릭 수집을 사용하려면 다음 명령을 실행하세요:"
-    echo ""
-    echo "   ${GREEN}pip3 install langfuse${NC}"
-    echo ""
-    echo "   (선택사항: LangFuse 없이도 JSONL 로그는 작동합니다)"
-    echo ""
-fi
-
-# ~/.zshrc 환경 변수 확인
-if [[ -n "$LANGFUSE_PUBLIC_KEY" ]] && [[ -n "$LANGFUSE_SECRET_KEY" ]]; then
-    log_success "LangFuse environment variables configured in ~/.zshrc"
-else
-    log_warning "LangFuse environment variables NOT configured"
-    echo ""
-    echo "   LangFuse 클라우드 업로드를 사용하려면 ~/.zshrc에 환경 변수를 추가하세요:"
-    echo ""
-    echo "   ${GREEN}echo 'export LANGFUSE_PUBLIC_KEY=\"pk-lf-...\"' >> ~/.zshrc${NC}"
-    echo "   ${GREEN}echo 'export LANGFUSE_SECRET_KEY=\"sk-lf-...\"' >> ~/.zshrc${NC}"
-    echo "   ${GREEN}echo 'export LANGFUSE_HOST=\"https://us.cloud.langfuse.com\"' >> ~/.zshrc${NC}"
-    echo "   ${GREEN}source ~/.zshrc${NC}"
-    echo ""
-    echo "   (선택사항: 환경 변수 없이도 JSONL 로그는 작동합니다)"
-    echo ""
 fi
 
 # =====================================================
@@ -159,19 +119,11 @@ echo "✨ 설치 완료!"
 echo "=========================================="
 echo ""
 echo "설치된 Hooks:"
-echo "  ✅ pre-commit  → 코드 품질 검증 (ArchUnit + Gradle)"
-echo "  ✅ post-commit → TDD 메트릭 수집 (LangFuse)"
+echo "  ✅ pre-commit → 코드 품질 검증 (ArchUnit + Gradle)"
 echo ""
 echo "동작 방식:"
-echo "  1. git commit 전 → pre-commit이 코드 검증"
-echo "  2. git commit 후 → post-commit이 메트릭 수집"
-echo ""
-echo "메트릭 로그 위치:"
-echo "  📁 ~/.claude/logs/tdd-cycle.jsonl (항상 작동)"
-echo "  ☁️  LangFuse Cloud (환경 변수 설정 시)"
+echo "  git commit 전 → pre-commit이 코드 검증"
 echo ""
 echo "다음 단계:"
-echo "  1. LangFuse 사용 원하면: pip3 install langfuse"
-echo "  2. ~/.zshrc에 환경 변수 추가 (선택사항)"
-echo "  3. git commit 테스트!"
+echo "  git commit 테스트!"
 echo ""

@@ -3,6 +3,10 @@ package com.ryuqq.fileflow.domain.asset.aggregate;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.asset.vo.ImageDimension;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
@@ -11,7 +15,7 @@ import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * FileAsset Aggregate Root.
@@ -39,24 +43,24 @@ public class FileAsset {
     private final ContentType contentType;
     private final FileCategory category;
 
+    // 이미지 메타데이터 (이미지 파일인 경우에만 존재, 메타데이터 추출 후 업데이트 가능)
+    private ImageDimension dimension;
+
     // S3 위치 정보
     private final S3Bucket bucket;
     private final S3Key s3Key;
     private final ETag etag;
 
     // 소유자 정보
-    private final Long userId;
-    private final Long organizationId;
-    private final Long tenantId;
+    private final UserId userId;
+    private final OrganizationId organizationId;
+    private final TenantId tenantId;
 
     // 상태 관리
     private FileAssetStatus status;
-    private final LocalDateTime createdAt;
-    private LocalDateTime processedAt;
-    private LocalDateTime deletedAt;
-
-    // 시간
-    private final Clock clock;
+    private final Instant createdAt;
+    private Instant processedAt;
+    private Instant deletedAt;
 
     /**
      * 신규 FileAsset 생성용 팩토리 메서드.
@@ -66,12 +70,13 @@ public class FileAsset {
      * @param fileSize 파일 크기
      * @param contentType 컨텐츠 타입
      * @param category 파일 카테고리
+     * @param dimension 이미지 크기 (이미지가 아닌 경우 null)
      * @param bucket S3 버킷
      * @param s3Key S3 키
      * @param etag ETag
-     * @param userId 사용자 ID
-     * @param organizationId 조직 ID
-     * @param tenantId 테넌트 ID
+     * @param userId 사용자 ID (Customer만, Admin/Seller는 null) - UUIDv7
+     * @param organizationId 조직 ID (Seller만, Admin/Customer는 null) - UUIDv7
+     * @param tenantId 테넌트 ID - UUIDv7
      * @param clock 시간 제공자
      * @return FileAsset
      */
@@ -81,20 +86,22 @@ public class FileAsset {
             FileSize fileSize,
             ContentType contentType,
             FileCategory category,
+            ImageDimension dimension,
             S3Bucket bucket,
             S3Key s3Key,
             ETag etag,
-            Long userId,
-            Long organizationId,
-            Long tenantId,
+            UserId userId,
+            OrganizationId organizationId,
+            TenantId tenantId,
             Clock clock) {
         return new FileAsset(
-                FileAssetId.generate(),
+                FileAssetId.forNew(),
                 sessionId,
                 fileName,
                 fileSize,
                 contentType,
                 category,
+                dimension,
                 bucket,
                 s3Key,
                 etag,
@@ -102,10 +109,9 @@ public class FileAsset {
                 organizationId,
                 tenantId,
                 FileAssetStatus.PENDING,
-                LocalDateTime.now(clock),
+                clock.instant(),
                 null,
-                null,
-                clock);
+                null);
     }
 
     /** 영속성 복원용 팩토리 메서드. */
@@ -116,17 +122,17 @@ public class FileAsset {
             FileSize fileSize,
             ContentType contentType,
             FileCategory category,
+            ImageDimension dimension,
             S3Bucket bucket,
             S3Key s3Key,
             ETag etag,
-            Long userId,
-            Long organizationId,
-            Long tenantId,
+            UserId userId,
+            OrganizationId organizationId,
+            TenantId tenantId,
             FileAssetStatus status,
-            LocalDateTime createdAt,
-            LocalDateTime processedAt,
-            LocalDateTime deletedAt,
-            Clock clock) {
+            Instant createdAt,
+            Instant processedAt,
+            Instant deletedAt) {
         return new FileAsset(
                 id,
                 sessionId,
@@ -134,6 +140,7 @@ public class FileAsset {
                 fileSize,
                 contentType,
                 category,
+                dimension,
                 bucket,
                 s3Key,
                 etag,
@@ -143,8 +150,7 @@ public class FileAsset {
                 status,
                 createdAt,
                 processedAt,
-                deletedAt,
-                clock);
+                deletedAt);
     }
 
     private FileAsset(
@@ -154,19 +160,19 @@ public class FileAsset {
             FileSize fileSize,
             ContentType contentType,
             FileCategory category,
+            ImageDimension dimension,
             S3Bucket bucket,
             S3Key s3Key,
             ETag etag,
-            Long userId,
-            Long organizationId,
-            Long tenantId,
+            UserId userId,
+            OrganizationId organizationId,
+            TenantId tenantId,
             FileAssetStatus status,
-            LocalDateTime createdAt,
-            LocalDateTime processedAt,
-            LocalDateTime deletedAt,
-            Clock clock) {
+            Instant createdAt,
+            Instant processedAt,
+            Instant deletedAt) {
         validateNotNull(id, "FileAssetId");
-        validateNotNull(sessionId, "SessionId");
+        // sessionId는 ExternalDownload의 경우 null 허용
         validateNotNull(fileName, "FileName");
         validateNotNull(fileSize, "FileSize");
         validateNotNull(contentType, "ContentType");
@@ -174,11 +180,12 @@ public class FileAsset {
         validateNotNull(bucket, "S3Bucket");
         validateNotNull(s3Key, "S3Key");
         validateNotNull(etag, "ETag");
-        validateNotNull(organizationId, "OrganizationId");
+        // userId는 Customer만 가짐 (Admin/Seller는 null 허용)
+        // organizationId는 Seller만 가짐 (Admin/Customer는 null 허용)
         validateNotNull(tenantId, "TenantId");
         validateNotNull(status, "Status");
         validateNotNull(createdAt, "CreatedAt");
-        validateNotNull(clock, "Clock");
+        // dimension은 이미지가 아닌 경우 null 허용
 
         this.id = id;
         this.sessionId = sessionId;
@@ -186,6 +193,7 @@ public class FileAsset {
         this.fileSize = fileSize;
         this.contentType = contentType;
         this.category = category;
+        this.dimension = dimension;
         this.bucket = bucket;
         this.s3Key = s3Key;
         this.etag = etag;
@@ -196,7 +204,6 @@ public class FileAsset {
         this.createdAt = createdAt;
         this.processedAt = processedAt;
         this.deletedAt = deletedAt;
-        this.clock = clock;
     }
 
     private void validateNotNull(Object value, String fieldName) {
@@ -207,28 +214,69 @@ public class FileAsset {
 
     // ==================== 비즈니스 메서드 ====================
 
-    /** 가공 처리 시작. */
-    public void startProcessing() {
+    /**
+     * 가공 처리 가능 여부 검증.
+     *
+     * <p>PENDING 상태에서만 가공을 시작할 수 있습니다.
+     *
+     * @throws IllegalStateException PENDING 상태가 아닌 경우
+     */
+    public void validateCanProcess() {
         if (this.status != FileAssetStatus.PENDING) {
             throw new IllegalStateException("PENDING 상태에서만 가공을 시작할 수 있습니다. 현재: " + this.status);
         }
+    }
+
+    /** 가공 처리 시작. */
+    public void startProcessing() {
+        validateCanProcess();
         this.status = FileAssetStatus.PROCESSING;
     }
 
-    /** 가공 완료. */
-    public void completeProcessing() {
+    /**
+     * 가공 완료.
+     *
+     * @param clock 시간 제공자
+     */
+    public void completeProcessing(Clock clock) {
         if (this.status != FileAssetStatus.PROCESSING && this.status != FileAssetStatus.PENDING) {
             throw new IllegalStateException(
                     "PENDING 또는 PROCESSING 상태에서만 완료할 수 있습니다. 현재: " + this.status);
         }
         this.status = FileAssetStatus.COMPLETED;
-        this.processedAt = LocalDateTime.now(clock);
+        this.processedAt = clock.instant();
     }
 
-    /** 가공 실패. */
-    public void failProcessing() {
+    /**
+     * 가공 실패.
+     *
+     * @param clock 시간 제공자
+     */
+    public void failProcessing(Clock clock) {
         this.status = FileAssetStatus.FAILED;
-        this.processedAt = LocalDateTime.now(clock);
+        this.processedAt = clock.instant();
+    }
+
+    /**
+     * 상태를 변경한다.
+     *
+     * <p>N8N 워크플로우 등 외부 시스템에서 상태 변경 시 사용합니다.
+     *
+     * @param newStatus 변경할 상태
+     * @param clock 시간 제공자
+     */
+    public void changeStatus(FileAssetStatus newStatus, Clock clock) {
+        this.status = newStatus;
+        if (newStatus == FileAssetStatus.COMPLETED
+                || newStatus == FileAssetStatus.FAILED
+                || newStatus == FileAssetStatus.N8N_COMPLETED) {
+            this.processedAt = clock.instant();
+        }
+    }
+
+    /** 리사이징 완료 상태로 변경한다. */
+    public void markResized() {
+        this.status = FileAssetStatus.RESIZED;
     }
 
     /**
@@ -236,14 +284,15 @@ public class FileAsset {
      *
      * <p>DELETED 상태가 아닌 경우에만 삭제 가능합니다.
      *
+     * @param clock 시간 제공자
      * @throws IllegalStateException 이미 삭제된 경우
      */
-    public void delete() {
+    public void delete(Clock clock) {
         if (this.status == FileAssetStatus.DELETED) {
             throw new IllegalStateException("이미 삭제된 FileAsset입니다.");
         }
         this.status = FileAssetStatus.DELETED;
-        this.deletedAt = LocalDateTime.now(clock);
+        this.deletedAt = clock.instant();
     }
 
     // ==================== Getter ====================
@@ -292,6 +341,61 @@ public class FileAsset {
         return category;
     }
 
+    /**
+     * 이미지 크기를 반환한다.
+     *
+     * @return 이미지 크기 (이미지가 아닌 경우 null)
+     */
+    public ImageDimension getDimension() {
+        return dimension;
+    }
+
+    /**
+     * 이미지 너비를 반환한다 (편의 메서드).
+     *
+     * @return 이미지 너비 (이미지가 아닌 경우 null)
+     */
+    public Integer getWidth() {
+        return dimension != null ? dimension.width() : null;
+    }
+
+    /**
+     * 이미지 높이를 반환한다 (편의 메서드).
+     *
+     * @return 이미지 높이 (이미지가 아닌 경우 null)
+     */
+    public Integer getHeight() {
+        return dimension != null ? dimension.height() : null;
+    }
+
+    /**
+     * 이미지 파일인지 확인한다.
+     *
+     * @return 이미지 dimension이 있으면 true
+     */
+    public boolean hasImageDimension() {
+        return dimension != null;
+    }
+
+    /**
+     * 이미지 dimension을 업데이트한다.
+     *
+     * <p>메타데이터 추출 후 원본 이미지의 width/height를 설정할 때 사용한다.
+     *
+     * @param dimension 이미지 dimension (null 불가)
+     * @throws IllegalArgumentException dimension이 null인 경우
+     * @throws IllegalStateException 이미 dimension이 설정되어 있는 경우
+     */
+    public void updateDimension(ImageDimension dimension) {
+        if (dimension == null) {
+            throw new IllegalArgumentException("dimension은 null일 수 없습니다");
+        }
+        if (this.dimension != null) {
+            throw new IllegalStateException("이미 dimension이 설정되어 있습니다");
+        }
+        this.dimension = dimension;
+    }
+
     public S3Bucket getBucket() {
         return bucket;
     }
@@ -316,15 +420,15 @@ public class FileAsset {
         return etag.value();
     }
 
-    public Long getUserId() {
+    public UserId getUserId() {
         return userId;
     }
 
-    public Long getOrganizationId() {
+    public OrganizationId getOrganizationId() {
         return organizationId;
     }
 
-    public Long getTenantId() {
+    public TenantId getTenantId() {
         return tenantId;
     }
 
@@ -332,15 +436,15 @@ public class FileAsset {
         return status;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getProcessedAt() {
+    public Instant getProcessedAt() {
         return processedAt;
     }
 
-    public LocalDateTime getDeletedAt() {
+    public Instant getDeletedAt() {
         return deletedAt;
     }
 }

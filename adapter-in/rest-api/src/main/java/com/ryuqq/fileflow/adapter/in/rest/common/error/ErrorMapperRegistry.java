@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ErrorMapperRegistry {
     private final List<ErrorMapper> mappers;
 

@@ -1,14 +1,14 @@
 package com.ryuqq.fileflow.application.download.facade;
 
+import com.ryuqq.fileflow.application.common.config.TransactionEventRegistry;
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadBundle;
-import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
-import com.ryuqq.fileflow.application.download.manager.ExternalDownloadOutboxManager;
+import com.ryuqq.fileflow.application.download.manager.command.ExternalDownloadOutboxTransactionManager;
+import com.ryuqq.fileflow.application.download.manager.command.ExternalDownloadTransactionManager;
 import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <ul>
  *   <li>저장 작업은 하나의 트랜잭션에서 처리
- *   <li>이벤트 발행은 ApplicationEventPublisher를 통해 동기 발행
- *   <li>@TransactionalEventListener를 통해 커밋 후 처리 가능
+ *   <li>이벤트 발행은 TransactionEventRegistry를 통해 커밋 후 발행 (APP-ER-002, APP-ER-005)
  * </ul>
  */
 @Component
@@ -37,17 +36,17 @@ public class ExternalDownloadFacade {
 
     private static final Logger log = LoggerFactory.getLogger(ExternalDownloadFacade.class);
 
-    private final ExternalDownloadManager externalDownloadManager;
-    private final ExternalDownloadOutboxManager externalDownloadOutboxManager;
-    private final ApplicationEventPublisher eventPublisher;
+    private final ExternalDownloadTransactionManager externalDownloadTransactionManager;
+    private final ExternalDownloadOutboxTransactionManager outboxTransactionManager;
+    private final TransactionEventRegistry transactionEventRegistry;
 
     public ExternalDownloadFacade(
-            ExternalDownloadManager externalDownloadManager,
-            ExternalDownloadOutboxManager externalDownloadOutboxManager,
-            ApplicationEventPublisher eventPublisher) {
-        this.externalDownloadManager = externalDownloadManager;
-        this.externalDownloadOutboxManager = externalDownloadOutboxManager;
-        this.eventPublisher = eventPublisher;
+            ExternalDownloadTransactionManager externalDownloadTransactionManager,
+            ExternalDownloadOutboxTransactionManager outboxTransactionManager,
+            TransactionEventRegistry transactionEventRegistry) {
+        this.externalDownloadTransactionManager = externalDownloadTransactionManager;
+        this.outboxTransactionManager = outboxTransactionManager;
+        this.transactionEventRegistry = transactionEventRegistry;
     }
 
     /**
@@ -72,26 +71,26 @@ public class ExternalDownloadFacade {
         log.info("ExternalDownload 저장 및 이벤트 발행 시작: sourceUrl={}", download.getSourceUrl().value());
 
         // 1. ExternalDownload 저장 (ID 할당)
-        ExternalDownloadId savedId = externalDownloadManager.save(download);
+        ExternalDownloadId savedId = externalDownloadTransactionManager.persist(download);
         log.debug("ExternalDownload 저장 완료: downloadId={}", savedId.value());
 
         // 2. Outbox 저장
-        externalDownloadOutboxManager.save(bundle.outbox());
+        outboxTransactionManager.persist(bundle.outbox());
         log.debug("Outbox 저장 완료: downloadId={}", savedId.value());
 
-        // 3. 도메인 이벤트 발행 (Assembler에서 이미 등록된 이벤트)
+        // 3. 도메인 이벤트 등록 (커밋 후 발행, APP-ER-002, APP-ER-005)
         int eventCount = download.getDomainEvents().size();
-        log.info("도메인 이벤트 발행 시작: downloadId={}, eventCount={}", savedId.value(), eventCount);
+        log.info("도메인 이벤트 등록: downloadId={}, eventCount={}", savedId.value(), eventCount);
 
         for (DomainEvent event : download.getDomainEvents()) {
-            log.info(
-                    "Publishing event: type={}, downloadId={}",
+            log.debug(
+                    "Registering event for publish: type={}, downloadId={}",
                     event.getClass().getSimpleName(),
                     savedId.value());
-            eventPublisher.publishEvent(event);
+            transactionEventRegistry.registerForPublish(event);
         }
 
-        // 5. 도메인 이벤트 클리어
+        // 4. 도메인 이벤트 클리어
         download.clearDomainEvents();
 
         log.info("ExternalDownload 저장 및 이벤트 발행 완료: downloadId={}", savedId.value());

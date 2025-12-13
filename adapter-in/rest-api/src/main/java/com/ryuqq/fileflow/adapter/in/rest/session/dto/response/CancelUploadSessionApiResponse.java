@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 업로드 세션 취소 API Response.
  *
@@ -12,8 +14,12 @@ package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "업로드 세션 취소 응답")
 public record CancelUploadSessionApiResponse(
-        String sessionId, String status, String bucket, String key) {
+        @Schema(description = "세션 ID", example = "session-123") String sessionId,
+        @Schema(description = "세션 상태", example = "FAILED") String status,
+        @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
+        @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key) {
 
     /**
      * 값 기반 생성.

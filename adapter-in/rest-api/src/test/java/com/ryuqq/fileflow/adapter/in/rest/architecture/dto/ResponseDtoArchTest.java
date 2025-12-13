@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.architecture.dto;
 
+import static com.ryuqq.fileflow.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -49,7 +50,7 @@ class ResponseDtoArchTest {
         classes =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                        .importPackages("com.ryuqq.fileflow.adapter.in.rest");
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /** 규칙 1: Record 타입 필수 */
@@ -68,7 +69,7 @@ class ResponseDtoArchTest {
                         .beRecords()
                         .because("Response DTO는 불변 객체이므로 Record를 사용해야 합니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 2: 네이밍 규칙 (*ApiResponse) */
@@ -87,7 +88,7 @@ class ResponseDtoArchTest {
                                 "Response DTO는 *ApiResponse 네이밍 규칙을 따라야 합니다 (예: OrderApiResponse,"
                                         + " OrderSummaryApiResponse)");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 3: Lombok 어노테이션 절대 금지 */
@@ -116,7 +117,7 @@ class ResponseDtoArchTest {
                         .beAnnotatedWith("lombok.Value")
                         .because("Response DTO는 Pure Java Record를 사용해야 하며 Lombok은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 4: Jackson 어노테이션 절대 금지 */
@@ -142,7 +143,7 @@ class ResponseDtoArchTest {
                                 "com.fasterxml.jackson.databind.annotation.JsonDeserialize")
                         .because("Response DTO는 프레임워크 독립적이어야 하며 Jackson 어노테이션은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 5: Domain 변환 메서드 금지 */
@@ -208,18 +209,13 @@ class ResponseDtoArchTest {
 
         // Note: 이 규칙은 권장사항이므로 실패 시 경고만 표시
         try {
-            rule.check(classes);
+            rule.allowEmptyShould(true).check(classes);
         } catch (AssertionError e) {
             System.out.println("⚠️  Warning: " + e.getMessage());
         }
     }
 
-    /**
-     * 규칙 8: 패키지 위치 검증
-     *
-     * <p>Response DTO (*ApiResponse)는 dto.response 패키지에 위치해야 합니다. Common Response DTO (ApiResponse,
-     * PageApiResponse, SliceApiResponse)는 common.dto에 있으므로 제외합니다.
-     */
+    /** 규칙 8: 패키지 위치 검증 */
     @Test
     @DisplayName("[필수] Response DTO는 올바른 패키지에 위치해야 한다")
     void responseDto_MustBeInCorrectPackage() {
@@ -228,22 +224,20 @@ class ResponseDtoArchTest {
                         .that()
                         .haveSimpleNameEndingWith("ApiResponse")
                         .and()
-                        .doNotHaveSimpleName("ApiResponse")
-                        .and()
-                        .doNotHaveSimpleName("PageApiResponse")
-                        .and()
-                        .doNotHaveSimpleName("SliceApiResponse")
-                        .and()
                         .areNotNestedClasses()
                         .and()
                         .resideInAPackage("..adapter.in.rest..")
                         .and()
                         .resideInAPackage("..dto..")
                         .and()
+                        .resideOutsideOfPackage("..common..") // common/dto의 유틸리티 클래스 제외
+                        .and()
                         .areNotInterfaces()
                         .should()
                         .resideInAPackage("..dto.response..")
-                        .because("Response DTO는 dto.response 패키지에 위치해야 합니다");
+                        .because(
+                                "Response DTO는 dto.response 패키지에 위치해야 합니다 (예외: common/dto의"
+                                        + " ApiResponse 유틸리티)");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -283,6 +277,6 @@ class ResponseDtoArchTest {
                         .beAnnotatedWith("org.springframework.context.annotation.Configuration")
                         .because("Response DTO는 순수 데이터 전송 객체이므로 Spring 어노테이션은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 }

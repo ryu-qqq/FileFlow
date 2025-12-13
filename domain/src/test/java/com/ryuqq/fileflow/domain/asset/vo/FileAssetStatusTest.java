@@ -20,14 +20,17 @@ class FileAssetStatusTest {
             FileAssetStatus[] values = FileAssetStatus.values();
 
             // then
-            assertThat(values).hasSize(5);
+            assertThat(values).hasSize(8);
             assertThat(values)
                     .containsExactly(
                             FileAssetStatus.PENDING,
                             FileAssetStatus.PROCESSING,
                             FileAssetStatus.COMPLETED,
                             FileAssetStatus.FAILED,
-                            FileAssetStatus.DELETED);
+                            FileAssetStatus.DELETED,
+                            FileAssetStatus.RESIZED,
+                            FileAssetStatus.N8N_PROCESSING,
+                            FileAssetStatus.N8N_COMPLETED);
         }
 
         @Test
@@ -115,6 +118,44 @@ class FileAssetStatusTest {
 
             // when & then
             assertThat(status1).isNotEqualTo(status2);
+        }
+    }
+
+    @Nested
+    @DisplayName("신규 상태 테스트")
+    class NewStatusTest {
+
+        @Test
+        @DisplayName("RESIZED 상태가 존재한다")
+        void shouldHaveResizedStatus() {
+            // when
+            FileAssetStatus status = FileAssetStatus.RESIZED;
+
+            // then
+            assertThat(status).isNotNull();
+            assertThat(status.name()).isEqualTo("RESIZED");
+        }
+
+        @Test
+        @DisplayName("N8N_PROCESSING 상태가 존재한다")
+        void shouldHaveN8nProcessingStatus() {
+            // when
+            FileAssetStatus status = FileAssetStatus.N8N_PROCESSING;
+
+            // then
+            assertThat(status).isNotNull();
+            assertThat(status.name()).isEqualTo("N8N_PROCESSING");
+        }
+
+        @Test
+        @DisplayName("N8N_COMPLETED 상태가 존재한다")
+        void shouldHaveN8nCompletedStatus() {
+            // when
+            FileAssetStatus status = FileAssetStatus.N8N_COMPLETED;
+
+            // then
+            assertThat(status).isNotNull();
+            assertThat(status.name()).isEqualTo("N8N_COMPLETED");
         }
     }
 }

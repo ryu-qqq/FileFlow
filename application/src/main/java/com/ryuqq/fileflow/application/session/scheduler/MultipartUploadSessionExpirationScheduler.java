@@ -1,12 +1,15 @@
 package com.ryuqq.fileflow.application.session.scheduler;
 
 import com.ryuqq.fileflow.application.common.metrics.SchedulerMetrics;
+import com.ryuqq.fileflow.application.common.port.out.DistributedLockPort;
 import com.ryuqq.fileflow.application.session.port.in.command.ExpireUploadSessionUseCase;
 import com.ryuqq.fileflow.application.session.port.out.query.FindUploadSessionQueryPort;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
+import com.ryuqq.fileflow.domain.session.vo.SessionExpirationLockKey;
 import io.micrometer.core.instrument.Timer;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,17 +46,23 @@ public class MultipartUploadSessionExpirationScheduler {
 
     private static final String JOB_NAME = "multipart-session-expiration";
     private static final int BATCH_SIZE = 100;
+    private static final int MAX_ITERATIONS = 100;
+    private static final long LOCK_WAIT_TIME = 10;
+    private static final long LOCK_LEASE_TIME = 3600;
 
     private final FindUploadSessionQueryPort findUploadSessionQueryPort;
     private final ExpireUploadSessionUseCase expireUploadSessionUseCase;
+    private final DistributedLockPort distributedLockPort;
     private final SchedulerMetrics schedulerMetrics;
 
     public MultipartUploadSessionExpirationScheduler(
             FindUploadSessionQueryPort findUploadSessionQueryPort,
             ExpireUploadSessionUseCase expireUploadSessionUseCase,
+            DistributedLockPort distributedLockPort,
             SchedulerMetrics schedulerMetrics) {
         this.findUploadSessionQueryPort = findUploadSessionQueryPort;
         this.expireUploadSessionUseCase = expireUploadSessionUseCase;
+        this.distributedLockPort = distributedLockPort;
         this.schedulerMetrics = schedulerMetrics;
     }
 
@@ -61,57 +70,84 @@ public class MultipartUploadSessionExpirationScheduler {
      * 만료된 멀티파트 업로드 세션을 정리합니다.
      *
      * <p>1시간마다 실행됩니다.
+     *
+     * <p><strong>분산 락</strong>: 다중 인스턴스 환경에서 중복 실행 방지
+     *
+     * <p><strong>무한 루프 방지</strong>: MAX_ITERATIONS 제한 적용
      */
     @Scheduled(fixedRate = 3600000) // 1시간
     public void expireStalessMultipartUploadSessions() {
+        SessionExpirationLockKey lockKey = SessionExpirationLockKey.multipartUpload();
+
+        boolean lockAcquired =
+                distributedLockPort.tryLock(
+                        lockKey, LOCK_WAIT_TIME, LOCK_LEASE_TIME, TimeUnit.SECONDS);
+        if (!lockAcquired) {
+            log.info("[MultipartSessionExpiration] 락 획득 실패, 다른 인스턴스가 실행 중");
+            return;
+        }
+
         log.info("Starting multipart upload session expiration cleanup");
         Timer.Sample sample = schedulerMetrics.startJob(JOB_NAME);
 
-        Instant now = Instant.now();
-        int totalExpired = 0;
-        int totalFailed = 0;
-
         try {
-            List<MultipartUploadSession> expiredSessions =
-                    findUploadSessionQueryPort.findExpiredMultipartUploads(now, BATCH_SIZE);
-
-            while (!expiredSessions.isEmpty()) {
-                for (MultipartUploadSession session : expiredSessions) {
-                    try {
-
-                        expireUploadSessionUseCase.execute(session);
-                        totalExpired++;
-                        log.debug("Expired multipart upload session: {}", session.getIdValue());
-                    } catch (Exception e) {
-                        totalFailed++;
-                        log.warn(
-                                "Failed to expire multipart upload session: {}. Reason: {}",
-                                session.getIdValue(),
-                                e.getMessage());
-                    }
-                }
-
-                if (expiredSessions.size() < BATCH_SIZE) {
-                    break;
-                }
-
-                expiredSessions =
-                        findUploadSessionQueryPort.findExpiredMultipartUploads(now, BATCH_SIZE);
-            }
-
-            schedulerMetrics.recordJobItemsProcessed(JOB_NAME, totalExpired);
+            executeExpiration();
             schedulerMetrics.recordJobSuccess(JOB_NAME, sample);
-
-            log.info(
-                    "Multipart upload session expiration cleanup completed. Expired: {}, Failed:"
-                            + " {}",
-                    totalExpired,
-                    totalFailed);
-
         } catch (Exception e) {
             schedulerMetrics.recordJobFailure(JOB_NAME, sample, e.getClass().getSimpleName());
             log.error("Multipart upload session expiration cleanup failed", e);
             throw e;
+        } finally {
+            distributedLockPort.unlock(lockKey);
         }
+    }
+
+    private void executeExpiration() {
+        Instant now = Instant.now();
+        int totalExpired = 0;
+        int totalFailed = 0;
+        int iteration = 0;
+
+        List<MultipartUploadSession> expiredSessions =
+                findUploadSessionQueryPort.findExpiredMultipartUploads(now, BATCH_SIZE);
+
+        while (!expiredSessions.isEmpty() && iteration < MAX_ITERATIONS) {
+            iteration++;
+
+            for (MultipartUploadSession session : expiredSessions) {
+                try {
+                    expireUploadSessionUseCase.execute(session);
+                    totalExpired++;
+                    log.debug("Expired multipart upload session: {}", session.getIdValue());
+                } catch (Exception e) {
+                    totalFailed++;
+                    log.warn(
+                            "Failed to expire multipart upload session: {}. Reason: {}",
+                            session.getIdValue(),
+                            e.getMessage());
+                }
+            }
+
+            if (expiredSessions.size() < BATCH_SIZE) {
+                break;
+            }
+
+            expiredSessions =
+                    findUploadSessionQueryPort.findExpiredMultipartUploads(now, BATCH_SIZE);
+        }
+
+        if (iteration >= MAX_ITERATIONS) {
+            log.warn(
+                    "[MultipartSessionExpiration] MAX_ITERATIONS({}) 도달, 다음 주기에 계속",
+                    MAX_ITERATIONS);
+        }
+
+        schedulerMetrics.recordJobItemsProcessed(JOB_NAME, totalExpired);
+        log.info(
+                "Multipart upload session expiration cleanup completed. Expired: {}, Failed: {},"
+                        + " Iterations: {}",
+                totalExpired,
+                totalFailed,
+                iteration);
     }
 }

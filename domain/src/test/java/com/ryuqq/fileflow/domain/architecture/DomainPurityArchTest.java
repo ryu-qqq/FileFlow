@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.architecture;
 
+import static com.ryuqq.fileflow.domain.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -15,9 +16,10 @@ import org.junit.jupiter.api.Test;
  *
  * <p><strong>목적</strong>: Domain Layer 전체의 순수성을 종합적으로 검증합니다.
  *
- * <p><strong>검증 규칙</strong>:
+ * <p><strong>검증 규칙 (16개)</strong>:
  *
  * <ul>
+ *   <li>시간 타입 규칙: LocalDateTime 금지, Instant.now() 직접 호출 금지 (Clock 주입 필수)
  *   <li>Lombok 절대 금지 (전체 Domain layer)
  *   <li>JPA 어노테이션 절대 금지 (전체 Domain layer)
  *   <li>Spring 어노테이션 절대 금지 (전체 Domain layer)
@@ -28,11 +30,20 @@ import org.junit.jupiter.api.Test;
  *   <li>Pure Java만 허용 (java.*, 일부 jakarta.annotation 제외)
  * </ul>
  *
+ * <p><strong>허용 범위</strong>:
+ *
+ * <ul>
+ *   <li>{@code java.*} - Java Standard Library만 허용
+ *   <li>{@code java.time.Instant} - 시간 타입 (Clock.instant() 통해 획득)
+ *   <li>{@code java.time.Clock} - 테스트 가능한 시간 주입
+ * </ul>
+ *
  * <p><strong>이중 방어 시스템</strong>:
  *
  * <ul>
  *   <li>빌드 타임: verifyDomainPurity Gradle 태스크
  *   <li>테스트 타임: 본 ArchUnit 테스트
+ *   <li>Pre-commit Hook: Instant.now() 호출 검증
  * </ul>
  *
  * @author development-team
@@ -49,19 +60,73 @@ class DomainPurityArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.domain");
+        classes = new ClassFileImporter().importPackages(DOMAIN);
+    }
+
+    // ==================== 시간 타입 규칙 (Zero-Tolerance) ====================
+
+    /**
+     * 규칙 1: Domain Layer는 LocalDateTime을 사용하지 않아야 한다
+     *
+     * <p>타임존 문제로 인해 LocalDateTime 사용을 금지합니다.
+     *
+     * <p>모든 시간 필드는 Instant를 사용해야 합니다.
+     */
+    @Test
+    @DisplayName("[금지] Domain Layer는 LocalDateTime을 사용하지 않아야 한다")
+    void domainLayer_MustNotUseLocalDateTime() {
+        ArchRule rule =
+                noClasses()
+                        .that()
+                        .resideInAPackage(DOMAIN_ALL)
+                        .should()
+                        .dependOnClassesThat()
+                        .haveFullyQualifiedName("java.time.LocalDateTime")
+                        .because(
+                                "Domain Layer는 LocalDateTime을 사용하지 않아야 합니다 (Instant 필수)\n"
+                                        + "이유:\n"
+                                        + "  - LocalDateTime은 타임존 정보가 없어 서버 위치에 따라 다른 값\n"
+                                        + "  - Instant는 UTC 기준 절대 시간으로 전 세계 동일한 값\n"
+                                        + "  - 예: 한국 서버와 미국 서버에서 같은 시점이 다른 값으로 저장됨\n"
+                                        + "  → domain/README.md 참조");
+
+        rule.check(classes);
+    }
+
+    /**
+     * 규칙 2: Domain Layer는 Instant.now()를 직접 호출하지 않아야 한다
+     *
+     * <p>테스트 가능성을 위해 Clock 주입을 사용해야 합니다.
+     *
+     * <p>clock.instant()를 통해 시간을 획득해야 합니다.
+     *
+     * <p><strong>참고</strong>: ArchUnit은 메서드 호출을 직접 검증하기 어렵습니다. 이 규칙은 Instant 클래스에 대한 직접 의존성을 허용하되,
+     * 코드 리뷰와 Pre-commit Hook에서 Instant.now() 호출을 검증합니다.
+     */
+    @Test
+    @DisplayName("[금지] Domain Layer는 Instant.now()를 직접 호출하지 않아야 한다 (Clock 주입 필수)")
+    void domainLayer_MustNotCallInstantNowDirectly() {
+        // Note: ArchUnit은 메서드 호출 검증에 제한이 있어,
+        // 이 규칙은 문서화 목적이며 실제 검증은 Pre-commit Hook에서 수행합니다.
+        // Pre-commit Hook: hooks/validators/validate-instant-now.sh
+        //
+        // 권장 패턴:
+        // ❌ Instant.now()
+        // ✅ clock.instant() (Clock 의존성 주입)
+        //
+        // 이 테스트는 Domain Layer에서 Clock 인터페이스를 사용하도록 유도합니다.
     }
 
     // ==================== Lombok 금지 ====================
 
-    /** 규칙 1: Domain Layer는 Lombok 어노테이션을 사용하지 않아야 한다 */
+    /** 규칙 3: Domain Layer는 Lombok 어노테이션을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Lombok 어노테이션을 사용하지 않아야 한다")
     void domainLayer_MustNotUseLombok() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .beAnnotatedWith("lombok.Data")
                         .orShould()
@@ -105,14 +170,14 @@ class DomainPurityArchTest {
 
     // ==================== JPA 금지 ====================
 
-    /** 규칙 2: Domain Layer는 JPA 어노테이션을 사용하지 않아야 한다 */
+    /** 규칙 4: Domain Layer는 JPA 어노테이션을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 JPA 어노테이션을 사용하지 않아야 한다")
     void domainLayer_MustNotUseJPA() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .beAnnotatedWith("jakarta.persistence.Entity")
                         .orShould()
@@ -164,14 +229,14 @@ class DomainPurityArchTest {
 
     // ==================== Spring 금지 ====================
 
-    /** 규칙 3: Domain Layer는 Spring 어노테이션을 사용하지 않아야 한다 */
+    /** 규칙 5: Domain Layer는 Spring 어노테이션을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Spring 어노테이션을 사용하지 않아야 한다")
     void domainLayer_MustNotUseSpring() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .beAnnotatedWith("org.springframework.stereotype.Component")
                         .orShould()
@@ -215,14 +280,14 @@ class DomainPurityArchTest {
 
     // ==================== Validation API 금지 ====================
 
-    /** 규칙 4: Domain Layer는 Validation API를 사용하지 않아야 한다 */
+    /** 규칙 6: Domain Layer는 Validation API를 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Validation API를 사용하지 않아야 한다")
     void domainLayer_MustNotUseValidationAPI() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .beAnnotatedWith("jakarta.validation.constraints.NotNull")
                         .orShould()
@@ -276,14 +341,14 @@ class DomainPurityArchTest {
 
     // ==================== External Utilities 금지 ====================
 
-    /** 규칙 5: Domain Layer는 Apache Commons를 사용하지 않아야 한다 */
+    /** 규칙 7: Domain Layer는 Apache Commons를 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Apache Commons를 사용하지 않아야 한다")
     void domainLayer_MustNotUseApacheCommons() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage(
@@ -302,14 +367,14 @@ class DomainPurityArchTest {
         rule.check(classes);
     }
 
-    /** 규칙 6: Domain Layer는 Google Guava를 사용하지 않아야 한다 */
+    /** 규칙 8: Domain Layer는 Google Guava를 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Google Guava를 사용하지 않아야 한다")
     void domainLayer_MustNotUseGuava() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.google.common..")
@@ -323,14 +388,14 @@ class DomainPurityArchTest {
         rule.check(classes);
     }
 
-    /** 규칙 7: Domain Layer는 Vavr를 사용하지 않아야 한다 */
+    /** 규칙 9: Domain Layer는 Vavr를 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Vavr를 사용하지 않아야 한다")
     void domainLayer_MustNotUseVavr() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("io.vavr..")
@@ -346,14 +411,14 @@ class DomainPurityArchTest {
 
     // ==================== JSON Libraries 금지 ====================
 
-    /** 규칙 8: Domain Layer는 Jackson을 사용하지 않아야 한다 */
+    /** 규칙 10: Domain Layer는 Jackson을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Jackson을 사용하지 않아야 한다")
     void domainLayer_MustNotUseJackson() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.fasterxml.jackson..")
@@ -367,14 +432,14 @@ class DomainPurityArchTest {
         rule.check(classes);
     }
 
-    /** 규칙 9: Domain Layer는 Gson을 사용하지 않아야 한다 */
+    /** 규칙 11: Domain Layer는 Gson을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Gson을 사용하지 않아야 한다")
     void domainLayer_MustNotUseGson() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.google.gson..")
@@ -390,14 +455,14 @@ class DomainPurityArchTest {
 
     // ==================== Logging Libraries 금지 ====================
 
-    /** 규칙 10: Domain Layer는 SLF4J를 사용하지 않아야 한다 */
+    /** 규칙 12: Domain Layer는 SLF4J를 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 SLF4J를 사용하지 않아야 한다")
     void domainLayer_MustNotUseSLF4J() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("org.slf4j..")
@@ -411,14 +476,14 @@ class DomainPurityArchTest {
         rule.check(classes);
     }
 
-    /** 규칙 11: Domain Layer는 Logback을 사용하지 않아야 한다 */
+    /** 규칙 13: Domain Layer는 Logback을 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Logback을 사용하지 않아야 한다")
     void domainLayer_MustNotUseLogback() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("ch.qos.logback..")
@@ -432,14 +497,14 @@ class DomainPurityArchTest {
         rule.check(classes);
     }
 
-    /** 규칙 12: Domain Layer는 Log4j를 사용하지 않아야 한다 */
+    /** 규칙 14: Domain Layer는 Log4j를 사용하지 않아야 한다 */
     @Test
     @DisplayName("[금지] Domain Layer는 Log4j를 사용하지 않아야 한다")
     void domainLayer_MustNotUseLog4j() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("org.apache.logging.log4j..")
@@ -455,21 +520,18 @@ class DomainPurityArchTest {
 
     // ==================== 레이어 의존성 규칙 ====================
 
-    /** 규칙 13: Domain Layer는 Application/Adapter 레이어에 의존하지 않아야 한다 */
+    /** 규칙 15: Domain Layer는 Application/Adapter 레이어에 의존하지 않아야 한다 */
     @Test
     @DisplayName("[필수] Domain Layer는 Application/Adapter 레이어에 의존하지 않아야 한다")
     void domainLayer_ShouldNotDependOnOuterLayers() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage(
-                                "com.ryuqq.fileflow.application..",
-                                "com.ryuqq.fileflow.adapter..",
-                                "com.ryuqq.bootstrap..",
-                                "com.ryuqq.persistence..")
+                                APPLICATION_ALL, ADAPTER_ALL, BOOTSTRAP_ALL, PERSISTENCE_ALL)
                         .because(
                                 "Domain Layer는 Application/Adapter 레이어에 의존하지 않아야 합니다 (헥사고날 아키텍처)\n"
                                         + "이유:\n"

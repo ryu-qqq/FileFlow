@@ -1,143 +1,95 @@
 package com.ryuqq.fileflow.domain.iam.vo;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Organization 단위 테스트")
 class OrganizationTest {
 
     @Nested
-    @DisplayName("Admin 조직 생성 테스트")
-    class AdminOrganizationTest {
+    @DisplayName("팩토리 메서드 테스트")
+    class FactoryMethodTest {
 
         @Test
-        @DisplayName("Admin 조직을 생성할 수 있다")
+        @DisplayName("admin 메서드로 Admin 조직을 생성할 수 있다")
         void admin_ShouldCreateAdminOrganization() {
             // when
             Organization org = Organization.admin();
 
             // then
-            assertThat(org.id()).isEqualTo(0L);
+            assertThat(org.id()).isNull();
             assertThat(org.name()).isEqualTo("Connectly Admin");
             assertThat(org.namespace()).isEqualTo("connectly");
             assertThat(org.role()).isEqualTo(UserRole.ADMIN);
         }
 
         @Test
-        @DisplayName("Admin 조직인지 확인할 수 있다")
-        void isAdmin_WithAdminOrg_ShouldReturnTrue() {
+        @DisplayName("seller 메서드로 Seller 조직을 생성할 수 있다")
+        void seller_ShouldCreateSellerOrganization() {
             // given
-            Organization org = Organization.admin();
-
-            // then
-            assertThat(org.isAdmin()).isTrue();
-            assertThat(org.isSeller()).isFalse();
-            assertThat(org.isCustomer()).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("Seller 조직 생성 테스트")
-    class SellerOrganizationTest {
-
-        @Test
-        @DisplayName("Seller 조직을 생성할 수 있다")
-        void seller_WithValidParams_ShouldCreateSellerOrganization() {
-            // given
-            long id = 100L;
-            String companyName = "Test Company";
+            OrganizationId orgId = OrganizationId.generate();
 
             // when
-            Organization org = Organization.seller(id, companyName);
+            Organization org = Organization.seller(orgId, "TestCompany");
 
             // then
-            assertThat(org.id()).isEqualTo(id);
-            assertThat(org.name()).isEqualTo(companyName);
+            assertThat(org.id()).isEqualTo(orgId);
+            assertThat(org.name()).isEqualTo("TestCompany");
             assertThat(org.namespace()).isEqualTo("setof");
             assertThat(org.role()).isEqualTo(UserRole.SELLER);
         }
 
         @Test
-        @DisplayName("Seller 조직인지 확인할 수 있다")
-        void isSeller_WithSellerOrg_ShouldReturnTrue() {
-            // given
-            Organization org = Organization.seller(1L, "Company");
+        @DisplayName("newSeller 메서드로 새로운 Seller 조직을 생성할 수 있다")
+        void newSeller_ShouldCreateNewSellerOrganization() {
+            // when
+            Organization org = Organization.newSeller("TestCompany");
 
             // then
-            assertThat(org.isSeller()).isTrue();
-            assertThat(org.isAdmin()).isFalse();
-            assertThat(org.isCustomer()).isFalse();
+            assertThat(org.id()).isNotNull();
+            assertThat(org.name()).isEqualTo("TestCompany");
+            assertThat(org.namespace()).isEqualTo("setof");
+            assertThat(org.role()).isEqualTo(UserRole.SELLER);
         }
-
-        @ParameterizedTest
-        @ValueSource(longs = {0, -1, -100})
-        @DisplayName("Seller 조직 ID가 1 미만이면 예외가 발생한다")
-        void seller_WithInvalidId_ShouldThrowException(long invalidId) {
-            // when & then
-            assertThatThrownBy(() -> Organization.seller(invalidId, "Company"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Seller 조직 ID는 1 이상이어야 합니다");
-        }
-    }
-
-    @Nested
-    @DisplayName("Customer 조직 생성 테스트")
-    class CustomerOrganizationTest {
 
         @Test
-        @DisplayName("Customer 조직을 생성할 수 있다")
+        @DisplayName("customer 메서드로 Customer 조직을 생성할 수 있다")
         void customer_ShouldCreateCustomerOrganization() {
             // when
             Organization org = Organization.customer();
 
             // then
-            assertThat(org.id()).isEqualTo(-1L);
+            assertThat(org.id()).isNull();
             assertThat(org.name()).isEqualTo("Customer");
             assertThat(org.namespace()).isEqualTo("setof");
             assertThat(org.role()).isEqualTo(UserRole.DEFAULT);
         }
 
         @Test
-        @DisplayName("Customer 조직인지 확인할 수 있다")
-        void isCustomer_WithCustomerOrg_ShouldReturnTrue() {
-            // given
-            Organization org = Organization.customer();
-
-            // then
-            assertThat(org.isCustomer()).isTrue();
-            assertThat(org.isAdmin()).isFalse();
-            assertThat(org.isSeller()).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("of 메서드 생성 테스트")
-    class OfMethodTest {
-
-        @Test
         @DisplayName("of 메서드로 조직을 생성할 수 있다")
-        void of_WithValidParams_ShouldCreateOrganization() {
+        void of_ShouldCreateOrganization() {
             // given
-            long id = 0L;
-            String name = "Connectly Admin";
-            String namespace = "connectly";
-            UserRole role = UserRole.ADMIN;
+            OrganizationId orgId = OrganizationId.generate();
 
             // when
-            Organization org = Organization.of(id, name, namespace, role);
+            Organization org = Organization.of(orgId, "Company", "setof", UserRole.SELLER);
 
             // then
-            assertThat(org.id()).isEqualTo(id);
-            assertThat(org.name()).isEqualTo(name);
-            assertThat(org.namespace()).isEqualTo(namespace);
-            assertThat(org.role()).isEqualTo(role);
+            assertThat(org.id()).isEqualTo(orgId);
+            assertThat(org.name()).isEqualTo("Company");
+            assertThat(org.namespace()).isEqualTo("setof");
+            assertThat(org.role()).isEqualTo(UserRole.SELLER);
+        }
+
+        @Test
+        @DisplayName("seller ID가 null이면 예외가 발생한다")
+        void sellerWithNullId_ShouldThrowException() {
+            assertThatThrownBy(() -> Organization.seller(null, "Test"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Seller 조직 ID는 null일 수 없습니다");
         }
     }
 
@@ -145,90 +97,125 @@ class OrganizationTest {
     @DisplayName("검증 테스트")
     class ValidationTest {
 
-        @ParameterizedTest
-        @NullAndEmptySource
-        @ValueSource(strings = {"   "})
-        @DisplayName("조직명이 null이거나 빈 문자열이면 예외가 발생한다")
-        void constructor_WithInvalidName_ShouldThrowException(String invalidName) {
-            // when & then
-            assertThatThrownBy(() -> Organization.of(0L, invalidName, "connectly", UserRole.ADMIN))
+        @Test
+        @DisplayName("이름이 null이면 예외가 발생한다")
+        void nullName_ShouldThrowException() {
+            assertThatThrownBy(() -> new Organization(null, null, "connectly", UserRole.ADMIN))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("조직명은 null이거나 빈 문자열일 수 없습니다");
         }
 
-        @ParameterizedTest
-        @NullAndEmptySource
-        @ValueSource(strings = {"   "})
-        @DisplayName("네임스페이스가 null이거나 빈 문자열이면 예외가 발생한다")
-        void constructor_WithInvalidNamespace_ShouldThrowException(String invalidNamespace) {
-            // when & then
-            assertThatThrownBy(() -> Organization.of(0L, "Admin", invalidNamespace, UserRole.ADMIN))
+        @Test
+        @DisplayName("이름이 빈 문자열이면 예외가 발생한다")
+        void emptyName_ShouldThrowException() {
+            assertThatThrownBy(() -> new Organization(null, "", "connectly", UserRole.ADMIN))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("조직명은 null이거나 빈 문자열일 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("네임스페이스가 null이면 예외가 발생한다")
+        void nullNamespace_ShouldThrowException() {
+            assertThatThrownBy(() -> new Organization(null, "Test", null, UserRole.ADMIN))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("네임스페이스는 null이거나 빈 문자열일 수 없습니다");
         }
 
         @Test
-        @DisplayName("조직 역할이 null이면 예외가 발생한다")
-        void constructor_WithNullRole_ShouldThrowException() {
-            // when & then
-            assertThatThrownBy(() -> Organization.of(0L, "Admin", "connectly", null))
+        @DisplayName("역할이 null이면 예외가 발생한다")
+        void nullRole_ShouldThrowException() {
+            assertThatThrownBy(() -> new Organization(null, "Test", "connectly", null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("조직 역할은 null일 수 없습니다");
         }
 
         @Test
-        @DisplayName("Admin 조직 (id=0)은 ADMIN role이어야 한다")
-        void constructor_AdminOrgWithNonAdminRole_ShouldThrowException() {
+        @DisplayName("Admin 조직에 OrganizationId가 있으면 예외가 발생한다")
+        void adminWithId_ShouldThrowException() {
+            // given
+            OrganizationId orgId = OrganizationId.generate();
+
             // when & then
-            assertThatThrownBy(() -> Organization.of(0L, "Admin", "connectly", UserRole.SELLER))
+            assertThatThrownBy(() -> new Organization(orgId, "Test", "connectly", UserRole.ADMIN))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Admin 조직 (id=0)은 ADMIN role이어야 합니다");
+                    .hasMessageContaining("Admin 조직은 OrganizationId를 가질 수 없습니다");
         }
 
         @Test
-        @DisplayName("Admin 조직은 connectly namespace여야 한다")
-        void constructor_AdminOrgWithNonConnectlyNamespace_ShouldThrowException() {
-            // when & then
-            assertThatThrownBy(() -> Organization.of(0L, "Admin", "setof", UserRole.ADMIN))
+        @DisplayName("Admin 조직에 잘못된 네임스페이스면 예외가 발생한다")
+        void adminIdWithWrongNamespace_ShouldThrowException() {
+            assertThatThrownBy(() -> new Organization(null, "Test", "setof", UserRole.ADMIN))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Admin 조직은 connectly namespace여야 합니다");
         }
 
         @Test
-        @DisplayName("Seller 조직 (id>0)은 SELLER role이어야 한다")
-        void constructor_SellerOrgWithNonSellerRole_ShouldThrowException() {
-            // when & then
-            assertThatThrownBy(() -> Organization.of(1L, "Company", "setof", UserRole.ADMIN))
+        @DisplayName("Seller 조직에 OrganizationId가 없으면 예외가 발생한다")
+        void sellerWithoutId_ShouldThrowException() {
+            assertThatThrownBy(() -> new Organization(null, "Test", "setof", UserRole.SELLER))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Seller 조직 (id>0)은 SELLER role이어야 합니다");
+                    .hasMessageContaining("Seller 조직은 OrganizationId가 필수입니다");
         }
 
         @Test
-        @DisplayName("Seller 조직은 setof namespace여야 한다")
-        void constructor_SellerOrgWithNonSetofNamespace_ShouldThrowException() {
+        @DisplayName("Seller 조직에 잘못된 네임스페이스면 예외가 발생한다")
+        void sellerIdWithWrongNamespace_ShouldThrowException() {
+            // given
+            OrganizationId orgId = OrganizationId.generate();
+
             // when & then
-            assertThatThrownBy(() -> Organization.of(1L, "Company", "connectly", UserRole.SELLER))
+            assertThatThrownBy(() -> new Organization(orgId, "Test", "connectly", UserRole.SELLER))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Seller 조직은 setof namespace여야 합니다");
         }
 
         @Test
-        @DisplayName("Customer 조직 (id=-1)은 DEFAULT role이어야 한다")
-        void constructor_CustomerOrgWithNonDefaultRole_ShouldThrowException() {
+        @DisplayName("Customer 조직에 OrganizationId가 있으면 예외가 발생한다")
+        void customerWithId_ShouldThrowException() {
+            // given
+            OrganizationId orgId = OrganizationId.generate();
+
             // when & then
-            assertThatThrownBy(() -> Organization.of(-1L, "Customer", "setof", UserRole.SELLER))
+            assertThatThrownBy(() -> new Organization(orgId, "Test", "setof", UserRole.DEFAULT))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Customer 조직 (id=-1)은 DEFAULT role이어야 합니다");
+                    .hasMessageContaining("Customer 조직은 OrganizationId를 가질 수 없습니다");
         }
 
         @Test
-        @DisplayName("Customer 조직은 setof namespace여야 한다")
-        void constructor_CustomerOrgWithNonSetofNamespace_ShouldThrowException() {
-            // when & then
-            assertThatThrownBy(
-                            () -> Organization.of(-1L, "Customer", "connectly", UserRole.DEFAULT))
+        @DisplayName("Customer 조직에 잘못된 네임스페이스면 예외가 발생한다")
+        void customerIdWithWrongNamespace_ShouldThrowException() {
+            assertThatThrownBy(() -> new Organization(null, "Test", "connectly", UserRole.DEFAULT))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Customer 조직은 setof namespace여야 합니다");
+        }
+    }
+
+    @Nested
+    @DisplayName("조직 유형 확인 테스트")
+    class OrganizationTypeTest {
+
+        @Test
+        @DisplayName("isAdmin은 Admin 조직일 때만 true")
+        void isAdmin_ShouldReturnTrueOnlyForAdmin() {
+            assertThat(Organization.admin().isAdmin()).isTrue();
+            assertThat(Organization.newSeller("Test").isAdmin()).isFalse();
+            assertThat(Organization.customer().isAdmin()).isFalse();
+        }
+
+        @Test
+        @DisplayName("isSeller는 Seller 조직일 때만 true")
+        void isSeller_ShouldReturnTrueOnlyForSeller() {
+            assertThat(Organization.admin().isSeller()).isFalse();
+            assertThat(Organization.newSeller("Test").isSeller()).isTrue();
+            assertThat(Organization.customer().isSeller()).isFalse();
+        }
+
+        @Test
+        @DisplayName("isCustomer는 Customer 조직일 때만 true")
+        void isCustomer_ShouldReturnTrueOnlyForCustomer() {
+            assertThat(Organization.admin().isCustomer()).isFalse();
+            assertThat(Organization.newSeller("Test").isCustomer()).isFalse();
+            assertThat(Organization.customer().isCustomer()).isTrue();
         }
     }
 
@@ -237,74 +224,69 @@ class OrganizationTest {
     class S3PathTest {
 
         @Test
-        @DisplayName("getS3BucketName은 fileflow-uploads-prod를 반환한다")
-        void getS3BucketName_ShouldReturnFileflowUploadsProd() {
-            // given
-            Organization admin = Organization.admin();
-            Organization seller = Organization.seller(1L, "Company");
-            Organization customer = Organization.customer();
-
-            // then - 모든 조직이 동일한 버킷 사용
-            assertThat(admin.getS3BucketName()).isEqualTo("fileflow-uploads-prod");
-            assertThat(seller.getS3BucketName()).isEqualTo("fileflow-uploads-prod");
-            assertThat(customer.getS3BucketName()).isEqualTo("fileflow-uploads-prod");
+        @DisplayName("getS3BucketName은 고정 버킷명을 반환한다")
+        void getS3BucketName_ShouldReturnFixedBucketName() {
+            Organization org = Organization.admin();
+            assertThat(org.getS3BucketName()).isEqualTo("fileflow-uploads-prod");
         }
 
         @Test
-        @DisplayName("Admin 조직의 S3 경로 prefix는 connectly/이다")
-        void getS3PathPrefix_Admin_ShouldReturnAdminPrefix() {
-            // given
+        @DisplayName("Admin의 S3 경로 prefix는 connectly/이다")
+        void admin_S3PathPrefix_ShouldBeConnectly() {
             Organization org = Organization.admin();
-
-            // then
             assertThat(org.getS3PathPrefix()).isEqualTo("connectly/");
         }
 
         @Test
-        @DisplayName("Seller 조직의 S3 경로 prefix는 setof/seller-{id}/이다")
-        void getS3PathPrefix_Seller_ShouldReturnSellerPrefix() {
+        @DisplayName("Seller의 S3 경로 prefix는 setof/seller-{id}/이다")
+        void seller_S3PathPrefix_ShouldIncludeId() {
             // given
-            Organization org = Organization.seller(100L, "Company");
+            OrganizationId orgId = OrganizationId.generate();
+            Organization org = Organization.seller(orgId, "TestCompany");
 
             // then
-            assertThat(org.getS3PathPrefix()).isEqualTo("setof/seller-100/");
+            assertThat(org.getS3PathPrefix()).isEqualTo("setof/seller-" + orgId.value() + "/");
         }
 
         @Test
-        @DisplayName("Customer 조직의 S3 경로 prefix는 setof/customer/이다")
-        void getS3PathPrefix_Customer_ShouldReturnCustomerPrefix() {
-            // given
+        @DisplayName("Customer의 S3 경로 prefix는 setof/customer/이다")
+        void customer_S3PathPrefix_ShouldBeCustomer() {
             Organization org = Organization.customer();
-
-            // then
             assertThat(org.getS3PathPrefix()).isEqualTo("setof/customer/");
         }
     }
 
     @Nested
-    @DisplayName("동등성 테스트")
+    @DisplayName("레코드 동등성 테스트")
     class EqualityTest {
 
         @Test
         @DisplayName("같은 값을 가진 Organization은 동등하다")
-        void equals_WithSameValues_ShouldBeEqual() {
-            // given
+        void sameValues_ShouldBeEqual() {
             Organization org1 = Organization.admin();
             Organization org2 = Organization.admin();
 
-            // when & then
             assertThat(org1).isEqualTo(org2);
             assertThat(org1.hashCode()).isEqualTo(org2.hashCode());
         }
 
         @Test
-        @DisplayName("다른 id를 가진 Organization은 동등하지 않다")
-        void equals_WithDifferentId_ShouldNotBeEqual() {
+        @DisplayName("다른 이름을 가진 Organization은 동등하지 않다")
+        void differentName_ShouldNotBeEqual() {
             // given
-            Organization org1 = Organization.seller(1L, "Company");
-            Organization org2 = Organization.seller(2L, "Company");
+            OrganizationId orgId = OrganizationId.generate();
+            Organization org1 = Organization.seller(orgId, "Company1");
+            Organization org2 = Organization.seller(orgId, "Company2");
 
-            // when & then
+            assertThat(org1).isNotEqualTo(org2);
+        }
+
+        @Test
+        @DisplayName("다른 ID를 가진 Organization은 동등하지 않다")
+        void differentId_ShouldNotBeEqual() {
+            Organization org1 = Organization.newSeller("Company");
+            Organization org2 = Organization.newSeller("Company");
+
             assertThat(org1).isNotEqualTo(org2);
         }
     }

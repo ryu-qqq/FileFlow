@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.session.aggregate;
 
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
 import com.ryuqq.fileflow.domain.session.exception.IncompletePartsException;
@@ -18,7 +19,7 @@ import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.TotalParts;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,11 +63,10 @@ public class MultipartUploadSession implements UploadSession {
     private final TotalParts totalParts;
     private final PartSize partSize;
     private final ExpirationTime expirationTime;
-    private final LocalDateTime createdAt;
-    private final Clock clock;
+    private final Instant createdAt;
 
     private SessionStatus status;
-    private LocalDateTime completedAt;
+    private Instant completedAt;
     private ETag mergedETag;
     private Long version;
 
@@ -103,7 +103,7 @@ public class MultipartUploadSession implements UploadSession {
             PartSize partSize,
             ExpirationTime expirationTime,
             Clock clock) {
-        LocalDateTime now = LocalDateTime.now(clock);
+        Instant now = clock.instant();
         return new MultipartUploadSession(
                 UploadSessionId.forNew(),
                 userContext,
@@ -119,8 +119,7 @@ public class MultipartUploadSession implements UploadSession {
                 now,
                 SessionStatus.PREPARING,
                 null,
-                null, // version: 신규 생성 시 null
-                clock);
+                null); // version: 신규 생성 시 null
     }
 
     /**
@@ -141,7 +140,6 @@ public class MultipartUploadSession implements UploadSession {
      * @param status 세션 상태
      * @param completedAt 완료 시각 (선택적)
      * @param version 낙관락 버전 (선택적)
-     * @param clock 시간 소스
      * @return MultipartUploadSession
      * @throws IllegalArgumentException id가 null인 경우
      */
@@ -157,11 +155,10 @@ public class MultipartUploadSession implements UploadSession {
             TotalParts totalParts,
             PartSize partSize,
             ExpirationTime expirationTime,
-            LocalDateTime createdAt,
+            Instant createdAt,
             SessionStatus status,
-            LocalDateTime completedAt,
-            Long version,
-            Clock clock) {
+            Instant completedAt,
+            Long version) {
         if (id == null) {
             throw new IllegalArgumentException("ID는 null일 수 없습니다.");
         }
@@ -180,8 +177,7 @@ public class MultipartUploadSession implements UploadSession {
                 createdAt,
                 status,
                 completedAt,
-                version,
-                clock);
+                version);
     }
 
     /** 생성자 (private). */
@@ -197,11 +193,10 @@ public class MultipartUploadSession implements UploadSession {
             TotalParts totalParts,
             PartSize partSize,
             ExpirationTime expirationTime,
-            LocalDateTime createdAt,
+            Instant createdAt,
             SessionStatus status,
-            LocalDateTime completedAt,
-            Long version,
-            Clock clock) {
+            Instant completedAt,
+            Long version) {
         this.id = id;
         this.userContext = userContext;
         this.fileName = fileName;
@@ -217,7 +212,6 @@ public class MultipartUploadSession implements UploadSession {
         this.status = status;
         this.completedAt = completedAt;
         this.version = version;
-        this.clock = clock;
     }
 
     // ==================== 비즈니스 메서드 ====================
@@ -237,11 +231,12 @@ public class MultipartUploadSession implements UploadSession {
      *
      * @param mergedETag S3에서 반환한 병합된 ETag
      * @param completedParts 완료된 Part 목록 (검증용)
+     * @param clock 시간 소스
      * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
      * @throws SessionExpiredException 세션이 만료된 경우
      * @throws IncompletePartsException 모든 Part가 완료되지 않은 경우
      */
-    public void complete(ETag mergedETag, List<CompletedPart> completedParts) {
+    public void complete(ETag mergedETag, List<CompletedPart> completedParts, Clock clock) {
         validateStatusTransition(SessionStatus.COMPLETED);
 
         if (!areAllPartsCompleted(completedParts)) {
@@ -251,7 +246,7 @@ public class MultipartUploadSession implements UploadSession {
         }
 
         this.status = SessionStatus.COMPLETED;
-        this.completedAt = LocalDateTime.now(clock);
+        this.completedAt = clock.instant();
         this.mergedETag = mergedETag;
 
         // 도메인 이벤트 생성
@@ -273,9 +268,11 @@ public class MultipartUploadSession implements UploadSession {
     /**
      * 세션 만료 처리.
      *
+     * @param clock 시간 소스
      * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
      */
-    public void expire() {
+    @Override
+    public void expire(Clock clock) {
         validateStatusTransition(SessionStatus.EXPIRED);
         this.status = SessionStatus.EXPIRED;
     }
@@ -293,9 +290,10 @@ public class MultipartUploadSession implements UploadSession {
     /**
      * 세션이 만료되지 않았는지 검증한다.
      *
+     * @param clock 시간 소스
      * @throws SessionExpiredException 세션이 만료된 경우
      */
-    public void validateNotExpired() {
+    public void validateNotExpired(Clock clock) {
         if (expirationTime.isExpired(clock)) {
             throw new SessionExpiredException(expirationTime.value());
         }
@@ -365,9 +363,9 @@ public class MultipartUploadSession implements UploadSession {
     /**
      * Law of Demeter: 조직 ID 반환.
      *
-     * @return 조직 ID
+     * @return 조직 ID (nullable - Admin/Customer는 null)
      */
-    public long getOrganizationId() {
+    public OrganizationId getOrganizationId() {
         return userContext.getOrganizationId();
     }
 
@@ -439,11 +437,11 @@ public class MultipartUploadSession implements UploadSession {
         return expirationTime;
     }
 
-    public LocalDateTime getExpiresAt() {
+    public Instant getExpiresAt() {
         return expirationTime.value();
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
@@ -451,7 +449,7 @@ public class MultipartUploadSession implements UploadSession {
         return status;
     }
 
-    public LocalDateTime getCompletedAt() {
+    public Instant getCompletedAt() {
         return completedAt;
     }
 
@@ -485,9 +483,10 @@ public class MultipartUploadSession implements UploadSession {
     /**
      * 세션이 만료되었는지 확인한다.
      *
+     * @param clock 시간 소스
      * @return 만료되었으면 true
      */
-    public boolean isExpired() {
+    public boolean isExpired(Clock clock) {
         return expirationTime.isExpired(clock);
     }
 

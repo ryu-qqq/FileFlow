@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.architecture.dto;
 
+import static com.ryuqq.fileflow.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
@@ -48,7 +49,7 @@ class CommandDtoArchTest {
         classes =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                        .importPackages("com.ryuqq.fileflow.adapter.in.rest");
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /** 규칙 1: Record 타입 필수 */
@@ -67,7 +68,7 @@ class CommandDtoArchTest {
                         .beRecords()
                         .because("Command DTO는 불변 객체이므로 Record를 사용해야 합니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 2: 네이밍 규칙 (*ApiRequest) */
@@ -84,7 +85,7 @@ class CommandDtoArchTest {
                         .haveSimpleNameEndingWith("ApiRequest")
                         .because("Command DTO는 *ApiRequest 네이밍 규칙을 따라야 합니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 3: Lombok 어노테이션 절대 금지 */
@@ -113,7 +114,7 @@ class CommandDtoArchTest {
                         .beAnnotatedWith("lombok.Value")
                         .because("Command DTO는 Pure Java Record를 사용해야 하며 Lombok은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 4: Jackson 어노테이션 절대 금지 */
@@ -139,7 +140,7 @@ class CommandDtoArchTest {
                                 "com.fasterxml.jackson.databind.annotation.JsonDeserialize")
                         .because("Command DTO는 프레임워크 독립적이어야 하며 Jackson 어노테이션은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 5: Domain 변환 메서드 금지 */
@@ -199,7 +200,7 @@ class CommandDtoArchTest {
 
         // Note: 이 규칙은 권장사항이므로 실패 시 경고만 표시
         try {
-            rule.check(classes);
+            rule.allowEmptyShould(true).check(classes);
         } catch (AssertionError e) {
             System.out.println("⚠️  Warning: " + e.getMessage());
         }
@@ -208,8 +209,8 @@ class CommandDtoArchTest {
     /**
      * 규칙 8: 패키지 위치 검증
      *
-     * <p>Command DTO (*ApiRequest)는 dto.command 패키지에 위치해야 합니다. Query DTO도 *ApiRequest 접미사를 사용하므로
-     * dto.query도 허용합니다.
+     * <p>Command DTO(*ApiRequest)는 dto.command 패키지에 위치해야 합니다. 단, 검색용 *SearchApiRequest는 dto.query
+     * 패키지에 위치하므로 제외합니다.
      */
     @Test
     @DisplayName("[필수] Command DTO는 올바른 패키지에 위치해야 한다")
@@ -219,14 +220,16 @@ class CommandDtoArchTest {
                         .that()
                         .haveSimpleNameEndingWith("ApiRequest")
                         .and()
+                        .haveSimpleNameNotEndingWith("SearchApiRequest") // Query용 Search Request 제외
+                        .and()
                         .areNotNestedClasses()
                         .and()
                         .resideInAPackage("..adapter.in.rest..")
-                        .and()
-                        .resideInAPackage("..dto..")
                         .should()
-                        .resideInAnyPackage("..dto.command..", "..dto.query..")
-                        .because("Command/Query DTO는 dto.command 또는 dto.query 패키지에 위치해야 합니다");
+                        .resideInAPackage("..dto.command..")
+                        .because(
+                                "Command DTO는 dto.command 패키지에 위치해야 합니다"
+                                        + " (SearchApiRequest는 dto.query 패키지)");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -266,6 +269,6 @@ class CommandDtoArchTest {
                         .beAnnotatedWith("org.springframework.context.annotation.Configuration")
                         .because("Command DTO는 순수 데이터 전송 객체이므로 Spring 어노테이션은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 }

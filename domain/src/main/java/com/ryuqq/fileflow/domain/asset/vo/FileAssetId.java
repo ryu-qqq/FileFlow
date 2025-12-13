@@ -27,14 +27,6 @@ public record FileAssetId(UUID value) {
         return new FileAssetId(UuidCreator.getTimeOrderedEpoch());
     }
 
-    /**
-     * @deprecated use {@link #forNew()} instead
-     */
-    @Deprecated
-    public static FileAssetId generate() {
-        return forNew();
-    }
-
     public static FileAssetId of(UUID value) {
         return new FileAssetId(value);
     }

@@ -9,7 +9,7 @@ import com.ryuqq.fileflow.domain.session.exception.ETagMismatchException;
 import com.ryuqq.fileflow.domain.session.exception.InvalidSessionStatusException;
 import com.ryuqq.fileflow.domain.session.fixture.*;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -40,11 +40,7 @@ class SingleUploadSessionTest {
         @DisplayName("of()로 생성 시 ID가 null이면 예외가 발생한다")
         void of_WithNullId_ShouldThrowException() {
             // given & when & then
-            LocalDateTime now =
-                    ClockFixture.defaultClock()
-                            .instant()
-                            .atZone(ClockFixture.defaultClock().getZone())
-                            .toLocalDateTime();
+            Instant now = Instant.now(ClockFixture.defaultClock());
             assertThatThrownBy(
                             () ->
                                     SingleUploadSession.of(
@@ -63,8 +59,7 @@ class SingleUploadSessionTest {
                                             null,
                                             null,
                                             now, // updatedAt
-                                            null,
-                                            ClockFixture.defaultClock()))
+                                            null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("ID는 null일 수 없습니다");
         }
@@ -81,7 +76,8 @@ class SingleUploadSessionTest {
             SingleUploadSession session = SingleUploadSessionFixture.defaultSingleUploadSession();
 
             // when
-            session.activate(PresignedUrlFixture.defaultPresignedUrl());
+            session.activate(
+                    PresignedUrlFixture.defaultPresignedUrl(), ClockFixture.defaultClock());
 
             // then
             assertThat(session.getStatus()).isEqualTo(SessionStatus.ACTIVE);
@@ -95,7 +91,7 @@ class SingleUploadSessionTest {
             SingleUploadSession session = SingleUploadSessionFixture.defaultSingleUploadSession();
 
             // when & then
-            assertThatThrownBy(() -> session.activate(null))
+            assertThatThrownBy(() -> session.activate(null, ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Presigned URL은 null일 수 없습니다");
         }
@@ -107,7 +103,11 @@ class SingleUploadSessionTest {
             SingleUploadSession session = SingleUploadSessionFixture.completedSingleUploadSession();
 
             // when & then
-            assertThatThrownBy(() -> session.activate(PresignedUrlFixture.defaultPresignedUrl()))
+            assertThatThrownBy(
+                            () ->
+                                    session.activate(
+                                            PresignedUrlFixture.defaultPresignedUrl(),
+                                            ClockFixture.defaultClock()))
                     .isInstanceOf(InvalidSessionStatusException.class);
         }
 
@@ -118,7 +118,7 @@ class SingleUploadSessionTest {
             SingleUploadSession session = SingleUploadSessionFixture.activeSingleUploadSession();
 
             // when
-            session.expire();
+            session.expire(ClockFixture.defaultClock());
 
             // then
             assertThat(session.getStatus()).isEqualTo(SessionStatus.EXPIRED);
@@ -131,7 +131,7 @@ class SingleUploadSessionTest {
             SingleUploadSession session = SingleUploadSessionFixture.activeSingleUploadSession();
 
             // when
-            session.fail();
+            session.fail(ClockFixture.defaultClock());
 
             // then
             assertThat(session.getStatus()).isEqualTo(SessionStatus.FAILED);
@@ -150,7 +150,7 @@ class SingleUploadSessionTest {
             var etag = ETagFixture.defaultETag();
 
             // when
-            session.complete(etag, etag);
+            session.complete(etag, etag, ClockFixture.defaultClock());
 
             // then
             assertThat(session.getStatus()).isEqualTo(SessionStatus.COMPLETED);
@@ -168,7 +168,8 @@ class SingleUploadSessionTest {
             var s3ETag = ETagFixture.customETag("different-etag");
 
             // when & then
-            assertThatThrownBy(() -> session.complete(clientETag, s3ETag))
+            assertThatThrownBy(
+                            () -> session.complete(clientETag, s3ETag, ClockFixture.defaultClock()))
                     .isInstanceOf(ETagMismatchException.class);
         }
 
@@ -179,7 +180,12 @@ class SingleUploadSessionTest {
             SingleUploadSession session = SingleUploadSessionFixture.activeSingleUploadSession();
 
             // when & then
-            assertThatThrownBy(() -> session.complete(null, ETagFixture.defaultETag()))
+            assertThatThrownBy(
+                            () ->
+                                    session.complete(
+                                            null,
+                                            ETagFixture.defaultETag(),
+                                            ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("클라이언트 ETag는 null일 수 없습니다");
         }
@@ -191,7 +197,12 @@ class SingleUploadSessionTest {
             SingleUploadSession session = SingleUploadSessionFixture.activeSingleUploadSession();
 
             // when & then
-            assertThatThrownBy(() -> session.complete(ETagFixture.defaultETag(), null))
+            assertThatThrownBy(
+                            () ->
+                                    session.complete(
+                                            ETagFixture.defaultETag(),
+                                            null,
+                                            ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("S3 ETag는 null일 수 없습니다");
         }
@@ -204,7 +215,7 @@ class SingleUploadSessionTest {
             var etag = ETagFixture.defaultETag();
 
             // when
-            session.complete(etag, etag);
+            session.complete(etag, etag, ClockFixture.defaultClock());
             List<FileUploadCompletedEvent> events = session.pollDomainEvents();
 
             // then
@@ -221,7 +232,7 @@ class SingleUploadSessionTest {
             // given
             SingleUploadSession session = SingleUploadSessionFixture.activeSingleUploadSession();
             var etag = ETagFixture.defaultETag();
-            session.complete(etag, etag);
+            session.complete(etag, etag, ClockFixture.defaultClock());
 
             // when
             List<FileUploadCompletedEvent> firstPoll = session.pollDomainEvents();
@@ -263,7 +274,8 @@ class SingleUploadSessionTest {
                             S3KeyFixture.defaultS3Key(),
                             ExpirationTimeFixture.expiredExpirationTime(),
                             ClockFixture.defaultClock());
-            session.activate(PresignedUrlFixture.defaultPresignedUrl());
+            session.activate(
+                    PresignedUrlFixture.defaultPresignedUrl(), ClockFixture.defaultClock());
 
             // when & then
             assertThatCode(session::getPresignedUrl).doesNotThrowAnyException();
@@ -304,8 +316,8 @@ class SingleUploadSessionTest {
                             ClockFixture.defaultClock());
 
             // when & then
-            assertThat(activeSession.isExpired()).isFalse();
-            assertThat(expiredSession.isExpired()).isTrue();
+            assertThat(activeSession.isExpired(ClockFixture.defaultClock())).isFalse();
+            assertThat(expiredSession.isExpired(ClockFixture.defaultClock())).isTrue();
         }
     }
 
@@ -341,7 +353,7 @@ class SingleUploadSessionTest {
             // when & then
             assertThat(session.getIdValue()).isNotBlank();
             assertThat(session.getUserIdentifier()).isNotNull();
-            assertThat(session.getOrganizationId()).isGreaterThanOrEqualTo(0L); // Admin org ID is 0
+            assertThat(session.getOrganizationId()).isNull(); // Admin org ID is null
             assertThat(session.getFileNameValue()).isNotBlank();
             assertThat(session.getFileSizeValue()).isPositive();
             assertThat(session.getContentTypeValue()).isNotBlank();

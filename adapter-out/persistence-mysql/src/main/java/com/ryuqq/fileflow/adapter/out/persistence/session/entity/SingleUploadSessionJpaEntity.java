@@ -9,7 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * SingleUploadSession JPA Entity.
@@ -27,11 +27,11 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
     @Column(name = "idempotency_key", nullable = false, length = 36)
     private String idempotencyKey;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "user_id", length = 36)
+    private String userId;
 
-    @Column(name = "organization_id", nullable = false)
-    private Long organizationId;
+    @Column(name = "organization_id", nullable = false, length = 36)
+    private String organizationId;
 
     @Column(name = "organization_name", nullable = false, length = 100)
     private String organizationName;
@@ -39,8 +39,8 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
     @Column(name = "organization_namespace", nullable = false, length = 50)
     private String organizationNamespace;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
+    @Column(name = "tenant_id", nullable = false, length = 36)
+    private String tenantId;
 
     @Column(name = "tenant_name", nullable = false, length = 50)
     private String tenantName;
@@ -67,7 +67,7 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
     private String s3Key;
 
     @Column(name = "expires_at", nullable = false)
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
 
     @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
@@ -80,7 +80,7 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
     private String etag;
 
     @Column(name = "completed_at")
-    private LocalDateTime completedAt;
+    private Instant completedAt;
 
     @Version
     @Column(name = "version", nullable = false)
@@ -93,11 +93,11 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
     private SingleUploadSessionJpaEntity(
             String id,
             String idempotencyKey,
-            Long userId,
-            Long organizationId,
+            String userId,
+            String organizationId,
             String organizationName,
             String organizationNamespace,
-            Long tenantId,
+            String tenantId,
             String tenantName,
             String userRole,
             String email,
@@ -106,14 +106,14 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
             String contentType,
             String bucket,
             String s3Key,
-            LocalDateTime expiresAt,
+            Instant expiresAt,
             SessionStatus status,
             String presignedUrl,
             String etag,
-            LocalDateTime completedAt,
+            Instant completedAt,
             Long version,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant createdAt,
+            Instant updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
         this.idempotencyKey = idempotencyKey;
@@ -141,11 +141,11 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
     public static SingleUploadSessionJpaEntity of(
             String id,
             String idempotencyKey,
-            Long userId,
-            Long organizationId,
+            String userId,
+            String organizationId,
             String organizationName,
             String organizationNamespace,
-            Long tenantId,
+            String tenantId,
             String tenantName,
             String userRole,
             String email,
@@ -154,14 +154,14 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
             String contentType,
             String bucket,
             String s3Key,
-            LocalDateTime expiresAt,
+            Instant expiresAt,
             SessionStatus status,
             String presignedUrl,
             String etag,
-            LocalDateTime completedAt,
+            Instant completedAt,
             Long version,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant createdAt,
+            Instant updatedAt) {
         return new SingleUploadSessionJpaEntity(
                 id,
                 idempotencyKey,
@@ -196,11 +196,11 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
         return idempotencyKey;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public Long getOrganizationId() {
+    public String getOrganizationId() {
         return organizationId;
     }
 
@@ -212,7 +212,7 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
         return organizationNamespace;
     }
 
-    public Long getTenantId() {
+    public String getTenantId() {
         return tenantId;
     }
 
@@ -248,7 +248,7 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
         return s3Key;
     }
 
-    public LocalDateTime getExpiresAt() {
+    public Instant getExpiresAt() {
         return expiresAt;
     }
 
@@ -264,7 +264,7 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
         return etag;
     }
 
-    public LocalDateTime getCompletedAt() {
+    public Instant getCompletedAt() {
         return completedAt;
     }
 

@@ -12,7 +12,9 @@ import com.ryuqq.fileflow.adapter.out.persistence.session.mapper.MultipartUpload
 import com.ryuqq.fileflow.adapter.out.persistence.session.mapper.SingleUploadSessionJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.session.repository.SessionQueryDslRepository;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.iam.vo.UserRole;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
@@ -32,10 +34,7 @@ import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.TotalParts;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionSearchCriteria;
-import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,6 +49,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("FindUploadSessionQueryAdapter 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class FindUploadSessionQueryAdapterTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @Mock private SessionQueryDslRepository queryRepository;
 
@@ -58,12 +60,11 @@ class FindUploadSessionQueryAdapterTest {
     @Mock private MultipartUploadSessionJpaMapper multipartMapper;
 
     private FindUploadSessionQueryAdapter adapter;
-    private Clock fixedClock;
+    private static final Instant FIXED_INSTANT = Instant.parse("2025-11-26T10:00:00Z");
 
     @BeforeEach
     void setUp() {
         adapter = new FindUploadSessionQueryAdapter(queryRepository, singleMapper, multipartMapper);
-        fixedClock = Clock.fixed(Instant.parse("2025-11-26T10:00:00Z"), ZoneId.of("UTC"));
     }
 
     @Nested
@@ -358,7 +359,7 @@ class FindUploadSessionQueryAdapterTest {
         void findByIdAndTenantId_WhenSingleExists_ShouldReturnSingle() {
             // given
             String sessionId = UUID.randomUUID().toString();
-            Long tenantId = 1L;
+            String tenantId = TEST_TENANT_ID;
             UploadSessionId uploadSessionId = UploadSessionId.of(UUID.fromString(sessionId));
             SingleUploadSessionJpaEntity entity = createSingleEntity(sessionId);
             SingleUploadSession domain = createSingleSession(sessionId);
@@ -380,7 +381,7 @@ class FindUploadSessionQueryAdapterTest {
         void findByIdAndTenantId_WhenOnlyMultipartExists_ShouldReturnMultipart() {
             // given
             String sessionId = UUID.randomUUID().toString();
-            Long tenantId = 1L;
+            String tenantId = TEST_TENANT_ID;
             UploadSessionId uploadSessionId = UploadSessionId.of(UUID.fromString(sessionId));
             MultipartUploadSessionJpaEntity entity = createMultipartEntity(sessionId);
             MultipartUploadSession domain = createMultipartSession(sessionId);
@@ -404,7 +405,7 @@ class FindUploadSessionQueryAdapterTest {
         void findByIdAndTenantId_WhenNoneExists_ShouldReturnEmpty() {
             // given
             String sessionId = UUID.randomUUID().toString();
-            Long tenantId = 1L;
+            String tenantId = TEST_TENANT_ID;
             UploadSessionId uploadSessionId = UploadSessionId.of(UUID.fromString(sessionId));
 
             when(queryRepository.findSingleUploadByIdAndTenantId(sessionId, tenantId))
@@ -428,8 +429,8 @@ class FindUploadSessionQueryAdapterTest {
         @DisplayName("uploadType이 null이면 Single과 Multipart 모두 조회한다")
         void findByCriteria_WithNullUploadType_ShouldReturnBoth() {
             // given
-            Long tenantId = 1L;
-            Long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             UploadSessionSearchCriteria criteria =
                     UploadSessionSearchCriteria.of(tenantId, organizationId, null, null, 0, 20);
 
@@ -459,8 +460,8 @@ class FindUploadSessionQueryAdapterTest {
         @DisplayName("uploadType이 SINGLE이면 Single만 조회한다")
         void findByCriteria_WithSingleUploadType_ShouldReturnOnlySingle() {
             // given
-            Long tenantId = 1L;
-            Long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             UploadSessionSearchCriteria criteria =
                     UploadSessionSearchCriteria.of(tenantId, organizationId, null, "SINGLE", 0, 20);
 
@@ -484,8 +485,8 @@ class FindUploadSessionQueryAdapterTest {
         @DisplayName("uploadType이 MULTIPART이면 Multipart만 조회한다")
         void findByCriteria_WithMultipartUploadType_ShouldReturnOnlyMultipart() {
             // given
-            Long tenantId = 1L;
-            Long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             UploadSessionSearchCriteria criteria =
                     UploadSessionSearchCriteria.of(
                             tenantId, organizationId, null, "MULTIPART", 0, 20);
@@ -511,8 +512,8 @@ class FindUploadSessionQueryAdapterTest {
         @DisplayName("status 필터로 조회할 수 있다")
         void findByCriteria_WithStatusFilter_ShouldFilterByStatus() {
             // given
-            Long tenantId = 1L;
-            Long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             SessionStatus status = SessionStatus.COMPLETED;
             UploadSessionSearchCriteria criteria =
                     UploadSessionSearchCriteria.of(tenantId, organizationId, status, null, 0, 20);
@@ -540,8 +541,8 @@ class FindUploadSessionQueryAdapterTest {
         @DisplayName("uploadType이 null이면 Single과 Multipart 개수를 합산한다")
         void countByCriteria_WithNullUploadType_ShouldReturnTotalCount() {
             // given
-            Long tenantId = 1L;
-            Long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             UploadSessionSearchCriteria criteria =
                     UploadSessionSearchCriteria.of(tenantId, organizationId, null, null, 0, 20);
 
@@ -561,8 +562,8 @@ class FindUploadSessionQueryAdapterTest {
         @DisplayName("uploadType이 SINGLE이면 Single 개수만 반환한다")
         void countByCriteria_WithSingleUploadType_ShouldReturnSingleCount() {
             // given
-            Long tenantId = 1L;
-            Long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             UploadSessionSearchCriteria criteria =
                     UploadSessionSearchCriteria.of(tenantId, organizationId, null, "SINGLE", 0, 20);
 
@@ -580,8 +581,8 @@ class FindUploadSessionQueryAdapterTest {
         @DisplayName("uploadType이 MULTIPART이면 Multipart 개수만 반환한다")
         void countByCriteria_WithMultipartUploadType_ShouldReturnMultipartCount() {
             // given
-            Long tenantId = 1L;
-            Long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             UploadSessionSearchCriteria criteria =
                     UploadSessionSearchCriteria.of(
                             tenantId, organizationId, null, "MULTIPART", 0, 20);
@@ -600,8 +601,8 @@ class FindUploadSessionQueryAdapterTest {
         @DisplayName("status 필터로 개수를 조회할 수 있다")
         void countByCriteria_WithStatusFilter_ShouldFilterByStatus() {
             // given
-            Long tenantId = 1L;
-            Long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             SessionStatus status = SessionStatus.ACTIVE;
             UploadSessionSearchCriteria criteria =
                     UploadSessionSearchCriteria.of(tenantId, organizationId, status, null, 0, 20);
@@ -622,11 +623,15 @@ class FindUploadSessionQueryAdapterTest {
     // ==================== Helper Methods ====================
 
     private SingleUploadSession createSingleSession(String sessionId) {
-        Tenant tenant = Tenant.of(1L, "Connectly");
-        Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
+        String tenantId = TEST_TENANT_ID;
+        String organizationId = TEST_ORG_ID;
+
+        Tenant tenant = Tenant.of(TenantId.of(tenantId), "Connectly");
+        Organization organization =
+                Organization.of(
+                        OrganizationId.of(organizationId), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
-        LocalDateTime now = LocalDateTime.now(fixedClock);
         return SingleUploadSession.of(
                 UploadSessionId.of(UUID.fromString(sessionId)),
                 IdempotencyKey.of(UUID.randomUUID()),
@@ -636,22 +641,25 @@ class FindUploadSessionQueryAdapterTest {
                 ContentType.of("application/pdf"),
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/document.pdf"),
-                ExpirationTime.of(LocalDateTime.now(fixedClock).plusMinutes(15)),
-                now,
+                ExpirationTime.of(FIXED_INSTANT.plus(java.time.Duration.ofMinutes(15))),
+                FIXED_INSTANT,
                 SessionStatus.ACTIVE,
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/..."),
                 null,
                 null,
-                now,
-                0L,
-                fixedClock);
+                FIXED_INSTANT,
+                0L);
     }
 
     private MultipartUploadSession createMultipartSession(String sessionId) {
-        Tenant tenant = Tenant.of(1L, "Connectly");
+        String tenantId = TEST_TENANT_ID;
+        String organizationId = TEST_ORG_ID;
+
+        Tenant tenant = Tenant.of(TenantId.of(tenantId), "Connectly");
         Organization organization =
-                Organization.of(0L, "Connectly Org", "connectly", UserRole.ADMIN);
-        UserContext userContext = UserContext.of(tenant, organization, "admin@test.com", null);
+                Organization.of(
+                        OrganizationId.of(organizationId), "Test Org", "setof", UserRole.SELLER);
+        UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
         return MultipartUploadSession.reconstitute(
                 UploadSessionId.of(UUID.fromString(sessionId)),
@@ -664,26 +672,28 @@ class FindUploadSessionQueryAdapterTest {
                 S3UploadId.of("s3-upload-id-xyz"),
                 TotalParts.of(10),
                 PartSize.of(50 * 1024 * 1024L),
-                ExpirationTime.of(LocalDateTime.now(fixedClock).plusDays(1)),
-                LocalDateTime.now(fixedClock),
+                ExpirationTime.of(FIXED_INSTANT.plus(java.time.Duration.ofDays(1))),
+                FIXED_INSTANT,
                 SessionStatus.ACTIVE,
                 null,
-                0L,
-                fixedClock);
+                0L);
     }
 
     private SingleUploadSessionJpaEntity createSingleEntity(String sessionId) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusMinutes(15);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofMinutes(15));
+
+        String tenantId = TEST_TENANT_ID;
+        String organizationId = TEST_ORG_ID;
 
         return SingleUploadSessionJpaEntity.of(
                 sessionId,
                 UUID.randomUUID().toString(),
                 null,
-                100L,
+                organizationId,
                 "Test Org",
                 "setof",
-                1L,
+                tenantId,
                 "Connectly",
                 "SELLER",
                 "seller@test.com",
@@ -703,19 +713,22 @@ class FindUploadSessionQueryAdapterTest {
     }
 
     private MultipartUploadSessionJpaEntity createMultipartEntity(String sessionId) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusDays(1);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofDays(1));
+
+        String tenantId = TEST_TENANT_ID;
+        String organizationId = TEST_ORG_ID;
 
         return MultipartUploadSessionJpaEntity.of(
                 sessionId,
-                1L,
-                0L,
-                "Connectly Org",
-                "connectly",
-                1L,
+                tenantId,
+                organizationId,
+                "Test Org",
+                "setof",
+                tenantId,
                 "Connectly",
-                "ADMIN",
-                "admin@test.com",
+                "SELLER",
+                "seller@test.com",
                 "large-video.mp4",
                 500 * 1024 * 1024L,
                 "video/mp4",

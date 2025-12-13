@@ -6,21 +6,25 @@ package com.ryuqq.fileflow.domain.iam.vo;
  * <p><strong>도메인 규칙</strong>:
  *
  * <ul>
- *   <li>테넌트 ID는 1 이상이어야 한다.
+ *   <li>테넌트 ID는 UUIDv7 형식이어야 한다.
  *   <li>테넌트명은 null이거나 빈 문자열일 수 없다.
- *   <li>현재 시스템은 단일 테넌트 (tenantId=1, Connectly)를 지원한다.
+ *   <li>현재 시스템은 단일 테넌트 (Connectly)를 지원한다.
  *   <li>향후 멀티테넌트 확장을 위한 구조를 유지한다.
  * </ul>
  *
- * @param id 테넌트 ID (1부터 시작)
+ * @param id 테넌트 ID (UUIDv7)
  * @param name 테넌트명 (예: "Connectly")
  */
-public record Tenant(long id, String name) {
+public record Tenant(TenantId id, String name) {
+
+    // Connectly 테넌트의 Well-Known ID (시스템 부팅 시 한 번 생성됨)
+    private static final String CONNECTLY_TENANT_ID = "01912345-6789-7abc-8000-000000000001";
+    private static final String CONNECTLY_NAME = "Connectly";
 
     /** Compact Constructor (검증 로직). */
     public Tenant {
-        if (id < 1) {
-            throw new IllegalArgumentException("테넌트 ID는 1 이상이어야 합니다: " + id);
+        if (id == null) {
+            throw new IllegalArgumentException("테넌트 ID는 null일 수 없습니다.");
         }
 
         if (name == null || name.isBlank()) {
@@ -36,25 +40,37 @@ public record Tenant(long id, String name) {
      * @return Tenant
      * @throws IllegalArgumentException 검증 실패 시
      */
-    public static Tenant of(long id, String name) {
+    public static Tenant of(TenantId id, String name) {
         return new Tenant(id, name);
     }
 
     /**
      * Connectly 테넌트 생성 (현재 유일한 테넌트).
      *
-     * @return Connectly Tenant (id=1)
+     * <p>시스템에서 사용하는 Well-Known TenantId를 사용한다.
+     *
+     * @return Connectly Tenant
      */
     public static Tenant connectly() {
-        return new Tenant(1L, "Connectly");
+        return new Tenant(TenantId.of(CONNECTLY_TENANT_ID), CONNECTLY_NAME);
+    }
+
+    /**
+     * 새로운 테넌트 생성 (향후 멀티테넌트 지원용).
+     *
+     * @param name 테넌트명
+     * @return 새로운 UUIDv7 기반 Tenant
+     */
+    public static Tenant create(String name) {
+        return new Tenant(TenantId.generate(), name);
     }
 
     /**
      * Connectly 테넌트인지 확인한다.
      *
-     * @return id가 1이고 name이 "Connectly"이면 true
+     * @return Connectly 테넌트이면 true
      */
     public boolean isConnectly() {
-        return id == 1L && "Connectly".equals(name);
+        return CONNECTLY_NAME.equals(name);
     }
 }

@@ -5,7 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -30,7 +30,7 @@ public class ExternalDownloadOutboxJpaEntity extends BaseAuditEntity {
     private Boolean published;
 
     @Column(name = "published_at")
-    private LocalDateTime publishedAt;
+    private Instant publishedAt;
 
     protected ExternalDownloadOutboxJpaEntity() {
         super();
@@ -40,9 +40,9 @@ public class ExternalDownloadOutboxJpaEntity extends BaseAuditEntity {
             UUID id,
             UUID externalDownloadId,
             Boolean published,
-            LocalDateTime publishedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant publishedAt,
+            Instant createdAt,
+            Instant updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
         this.externalDownloadId = externalDownloadId;
@@ -54,9 +54,9 @@ public class ExternalDownloadOutboxJpaEntity extends BaseAuditEntity {
             UUID id,
             UUID externalDownloadId,
             Boolean published,
-            LocalDateTime publishedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant publishedAt,
+            Instant createdAt,
+            Instant updatedAt) {
         return new ExternalDownloadOutboxJpaEntity(
                 id, externalDownloadId, published, publishedAt, createdAt, updatedAt);
     }
@@ -73,7 +73,7 @@ public class ExternalDownloadOutboxJpaEntity extends BaseAuditEntity {
         return published;
     }
 
-    public LocalDateTime getPublishedAt() {
+    public Instant getPublishedAt() {
         return publishedAt;
     }
 }

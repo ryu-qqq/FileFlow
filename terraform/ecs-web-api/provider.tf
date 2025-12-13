@@ -95,17 +95,17 @@ data "aws_ssm_parameter" "private_subnets" {
   name = "/shared/network/private-subnets"
 }
 
-data "aws_ssm_parameter" "public_subnets" {
-  name = "/shared/network/public-subnets"
-}
-
-data "aws_ssm_parameter" "certificate_arn" {
-  name = "/shared/network/certificate-arn"
-}
-
-data "aws_ssm_parameter" "route53_zone_id" {
-  name = "/shared/network/route53-zone-id"
-}
+# NOTE: ALB/Route53 제거로 인해 아래 리소스들은 더 이상 사용되지 않음
+# API Gateway를 통한 외부 접근으로 전환
+# data "aws_ssm_parameter" "public_subnets" {
+#   name = "/shared/network/public-subnets"
+# }
+# data "aws_ssm_parameter" "certificate_arn" {
+#   name = "/shared/network/certificate-arn"
+# }
+# data "aws_ssm_parameter" "route53_zone_id" {
+#   name = "/shared/network/route53-zone-id"
+# }
 
 # ========================================
 # RDS Configuration (MySQL)
@@ -137,10 +137,12 @@ data "aws_ssm_parameter" "amp_remote_write_url" {
 locals {
   vpc_id          = data.aws_ssm_parameter.vpc_id.value
   private_subnets = split(",", data.aws_ssm_parameter.private_subnets.value)
-  public_subnets  = split(",", data.aws_ssm_parameter.public_subnets.value)
-  certificate_arn = data.aws_ssm_parameter.certificate_arn.value
-  route53_zone_id = data.aws_ssm_parameter.route53_zone_id.value
-  fqdn            = "files.set-of.com"
+
+  # NOTE: ALB/Route53 제거로 인해 아래 locals는 더 이상 사용되지 않음
+  # public_subnets  = split(",", data.aws_ssm_parameter.public_subnets.value)
+  # certificate_arn = data.aws_ssm_parameter.certificate_arn.value
+  # route53_zone_id = data.aws_ssm_parameter.route53_zone_id.value
+  # fqdn            = "files.set-of.com"
 
   # RDS Configuration (MySQL)
   rds_credentials = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)

@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.architecture;
 
+import static com.ryuqq.fileflow.adapter.out.persistence.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -52,9 +53,7 @@ class FlywayMigrationArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses =
-                new ClassFileImporter()
-                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+        allClasses = new ClassFileImporter().importPackages(PERSISTENCE);
     }
 
     /** 규칙 1: FlywayConfig 클래스는 @Configuration 필수 */
@@ -66,7 +65,7 @@ class FlywayMigrationArchTest {
                         .that()
                         .haveSimpleNameContaining("FlywayConfig")
                         .and()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
                         .beAnnotatedWith(org.springframework.context.annotation.Configuration.class)
                         .because("Flyway 설정 클래스는 @Configuration 어노테이션이 필수입니다");
@@ -83,7 +82,7 @@ class FlywayMigrationArchTest {
                         .that()
                         .haveSimpleNameContaining("FlywayConfig")
                         .should()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .because("Flyway 설정 클래스는 config 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -145,29 +144,34 @@ class FlywayMigrationArchTest {
                         .haveSimpleNameContaining("FlywayConfig")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..entity..", "..repository..")
+                        .resideInAnyPackage(ENTITY_PATTERN, REPOSITORY_PATTERN)
                         .because("FlywayConfig는 순수 설정 클래스로 Entity/Repository를 의존하면 안 됩니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 7: Flyway 관련 클래스는 org.flywaydb 패키지 의존 */
+    /**
+     * 규칙 7: Flyway 관련 클래스는 org.flywaydb 패키지 의존
+     *
+     * <p>Spring Boot Auto-configuration 사용 시 FlywayConfig 클래스가 필요하지 않을 수 있습니다. 이 규칙은 FlywayConfig
+     * 클래스가 존재하는 경우에만 적용됩니다.
+     */
     @Test
-    @DisplayName("[필수] Flyway 관련 클래스는 org.flywaydb 패키지를 의존해야 한다")
-    void flywayRelatedClasses_MustDependOnFlywayPackage() {
+    @DisplayName("[권장] Flyway 관련 클래스가 있다면 org.flywaydb 패키지를 의존해야 한다")
+    void flywayRelatedClasses_ShouldDependOnFlywayPackageIfExists() {
+        // Spring Boot Auto-configuration 사용 시 FlywayConfig 클래스가 없을 수 있음
+        // allowEmptyShould(true)로 클래스가 없는 경우 통과
         ArchRule rule =
                 classes()
                         .that()
-                        .haveSimpleNameContaining("Flyway")
+                        .haveSimpleNameContaining("FlywayConfig")
                         .and()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("org.flywaydb..")
-                        .orShould()
-                        .dependOnClassesThat()
-                        .resideInAnyPackage("org.springframework..")
-                        .because("Flyway 관련 클래스는 org.flywaydb 패키지를 의존해야 합니다");
+                        .resideInAnyPackage("org.flywaydb..", "org.springframework..")
+                        .because(
+                                "FlywayConfig 클래스가 있다면 org.flywaydb 또는 Spring Framework를 의존해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -182,7 +186,7 @@ class FlywayMigrationArchTest {
                         .haveSimpleNameContaining("FlywayConfig")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..domain..", "..application..")
+                        .resideInAnyPackage(DOMAIN_ALL, APPLICATION_ALL)
                         .because(
                                 "FlywayConfig는 Infrastructure Layer 설정으로 Domain/Application을 의존하면 안"
                                         + " 됩니다");

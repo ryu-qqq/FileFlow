@@ -1,0 +1,53 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'java'
+}
+
+dependencies {
+    // Core Module Dependencies
+    implementation project(':domain')
+    implementation project(':application')
+
+    // Adapter Dependencies
+    implementation project(':adapter-in:sqs-listener')
+    implementation project(':adapter-out:persistence-mysql')
+    implementation project(':adapter-out:persistence-redis')
+    implementation project(':adapter-out:aws-s3')
+    implementation project(':adapter-out:http-client')
+
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web' // For management server HTTP endpoints
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Spring Cloud AWS SQS
+    implementation libs.spring.cloud.aws.sqs
+
+    // Development Tools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Configuration Processor
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // Observability
+    implementation libs.micrometer.prometheus
+    implementation libs.logstash.logback.encoder
+
+    // Test Dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// Spring Boot Application 설정
+bootJar {
+    archiveBaseName = 'fileflow-resizing-worker'
+    archiveVersion = project.version
+}
+
+jar {
+    enabled = false
+}

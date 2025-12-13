@@ -9,8 +9,6 @@ import com.ryuqq.fileflow.adapter.out.persistence.session.entity.QSingleUploadSe
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSessionJpaEntity;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
@@ -87,13 +85,10 @@ public class SessionQueryDslRepository {
      */
     public List<SingleUploadSessionJpaEntity> findExpiredSingleUploads(
             Instant expiredBefore, int limit) {
-        LocalDateTime expiredBeforeLocal =
-                LocalDateTime.ofInstant(expiredBefore, ZoneId.systemDefault());
-
         return queryFactory
                 .selectFrom(single)
                 .where(
-                        single.expiresAt.before(expiredBeforeLocal),
+                        single.expiresAt.before(expiredBefore),
                         single.status.in(SessionStatus.PREPARING, SessionStatus.ACTIVE))
                 .limit(limit)
                 .fetch();
@@ -110,13 +105,10 @@ public class SessionQueryDslRepository {
      */
     public List<MultipartUploadSessionJpaEntity> findExpiredMultipartUploads(
             Instant expiredBefore, int limit) {
-        LocalDateTime expiredBeforeLocal =
-                LocalDateTime.ofInstant(expiredBefore, ZoneId.systemDefault());
-
         return queryFactory
                 .selectFrom(multipart)
                 .where(
-                        multipart.expiresAt.before(expiredBeforeLocal),
+                        multipart.expiresAt.before(expiredBefore),
                         multipart.status.in(SessionStatus.PREPARING, SessionStatus.ACTIVE))
                 .limit(limit)
                 .fetch();
@@ -126,11 +118,11 @@ public class SessionQueryDslRepository {
      * Single Upload Session을 ID와 tenantId로 조회한다.
      *
      * @param sessionId 세션 ID
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return SingleUploadSessionJpaEntity Optional
      */
     public Optional<SingleUploadSessionJpaEntity> findSingleUploadByIdAndTenantId(
-            String sessionId, Long tenantId) {
+            String sessionId, String tenantId) {
         SingleUploadSessionJpaEntity result =
                 queryFactory
                         .selectFrom(single)
@@ -143,11 +135,11 @@ public class SessionQueryDslRepository {
      * Multipart Upload Session을 ID와 tenantId로 조회한다.
      *
      * @param sessionId 세션 ID
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return MultipartUploadSessionJpaEntity Optional
      */
     public Optional<MultipartUploadSessionJpaEntity> findMultipartUploadByIdAndTenantId(
-            String sessionId, Long tenantId) {
+            String sessionId, String tenantId) {
         MultipartUploadSessionJpaEntity result =
                 queryFactory
                         .selectFrom(multipart)
@@ -159,15 +151,15 @@ public class SessionQueryDslRepository {
     /**
      * Single Upload Session을 검색 조건으로 조회한다.
      *
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID (nullable)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열, nullable)
      * @param status 상태 (nullable)
      * @param offset 오프셋
      * @param limit 조회 개수
      * @return SingleUploadSessionJpaEntity 목록
      */
     public List<SingleUploadSessionJpaEntity> findSingleUploadsByCriteria(
-            Long tenantId, Long organizationId, SessionStatus status, long offset, int limit) {
+            String tenantId, String organizationId, SessionStatus status, long offset, int limit) {
         return queryFactory
                 .selectFrom(single)
                 .where(
@@ -183,15 +175,15 @@ public class SessionQueryDslRepository {
     /**
      * Multipart Upload Session을 검색 조건으로 조회한다.
      *
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID (nullable)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열, nullable)
      * @param status 상태 (nullable)
      * @param offset 오프셋
      * @param limit 조회 개수
      * @return MultipartUploadSessionJpaEntity 목록
      */
     public List<MultipartUploadSessionJpaEntity> findMultipartUploadsByCriteria(
-            Long tenantId, Long organizationId, SessionStatus status, long offset, int limit) {
+            String tenantId, String organizationId, SessionStatus status, long offset, int limit) {
         return queryFactory
                 .selectFrom(multipart)
                 .where(
@@ -207,13 +199,13 @@ public class SessionQueryDslRepository {
     /**
      * Single Upload Session 개수를 검색 조건으로 조회한다.
      *
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID (nullable)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열, nullable)
      * @param status 상태 (nullable)
      * @return 개수
      */
     public long countSingleUploadsByCriteria(
-            Long tenantId, Long organizationId, SessionStatus status) {
+            String tenantId, String organizationId, SessionStatus status) {
         Long count =
                 queryFactory
                         .select(single.count())
@@ -229,13 +221,13 @@ public class SessionQueryDslRepository {
     /**
      * Multipart Upload Session 개수를 검색 조건으로 조회한다.
      *
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID (nullable)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열, nullable)
      * @param status 상태 (nullable)
      * @return 개수
      */
     public long countMultipartUploadsByCriteria(
-            Long tenantId, Long organizationId, SessionStatus status) {
+            String tenantId, String organizationId, SessionStatus status) {
         Long count =
                 queryFactory
                         .select(multipart.count())
@@ -249,7 +241,7 @@ public class SessionQueryDslRepository {
     }
 
     private BooleanExpression eqOrganizationId(
-            com.querydsl.core.types.dsl.NumberPath<Long> path, Long organizationId) {
+            com.querydsl.core.types.dsl.StringPath path, String organizationId) {
         return organizationId != null ? path.eq(organizationId) : null;
     }
 

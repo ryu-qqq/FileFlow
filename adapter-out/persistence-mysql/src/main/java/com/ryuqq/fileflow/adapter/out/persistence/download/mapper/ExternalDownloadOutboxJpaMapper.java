@@ -4,9 +4,6 @@ import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownlo
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,8 +13,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ExternalDownloadOutboxJpaMapper {
-
-    private static final ZoneId ZONE_ID = ZoneId.of("UTC");
 
     /**
      * Domain을 Entity로 변환합니다.
@@ -30,9 +25,9 @@ public class ExternalDownloadOutboxJpaMapper {
                 domain.getId().isNew() ? null : domain.getId().value(),
                 domain.getExternalDownloadId().value(),
                 domain.isPublished(),
-                toLocalDateTime(domain.getPublishedAt()),
-                toLocalDateTime(domain.getCreatedAt()),
-                toLocalDateTime(domain.getCreatedAt()) // updatedAt으로 createdAt 사용 (Outbox는 수정 없음)
+                domain.getPublishedAt(),
+                domain.getCreatedAt(),
+                domain.getCreatedAt() // updatedAt으로 createdAt 사용 (Outbox는 수정 없음)
                 );
     }
 
@@ -47,21 +42,7 @@ public class ExternalDownloadOutboxJpaMapper {
                 ExternalDownloadOutboxId.of(entity.getId()),
                 ExternalDownloadId.of(entity.getExternalDownloadId()),
                 entity.getPublished(),
-                toInstant(entity.getPublishedAt()),
-                toInstant(entity.getCreatedAt()));
-    }
-
-    private LocalDateTime toLocalDateTime(Instant instant) {
-        if (instant == null) {
-            return null;
-        }
-        return LocalDateTime.ofInstant(instant, ZONE_ID);
-    }
-
-    private Instant toInstant(LocalDateTime localDateTime) {
-        if (localDateTime == null) {
-            return null;
-        }
-        return localDateTime.atZone(ZONE_ID).toInstant();
+                entity.getPublishedAt(),
+                entity.getCreatedAt());
     }
 }

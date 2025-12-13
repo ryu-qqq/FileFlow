@@ -4,7 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,6 +18,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 @DisplayName("FileAssetJpaEntity 단위 테스트")
 class FileAssetJpaEntityTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     @Nested
     @DisplayName("of 팩토리 메서드 테스트")
@@ -22,9 +31,12 @@ class FileAssetJpaEntityTest {
         @DisplayName("모든 필드로 Entity를 생성할 수 있다")
         void of_WithAllFields_ShouldCreateEntity() {
             // given
-            LocalDateTime processedAt = LocalDateTime.of(2025, 11, 26, 12, 0);
-            LocalDateTime createdAt = LocalDateTime.of(2025, 11, 26, 10, 0);
-            LocalDateTime updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5);
+            String userId = TEST_USER_ID;
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
+            Instant processedAt = LocalDateTime.of(2025, 11, 26, 12, 0).toInstant(ZoneOffset.UTC);
+            Instant createdAt = LocalDateTime.of(2025, 11, 26, 10, 0).toInstant(ZoneOffset.UTC);
+            Instant updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5).toInstant(ZoneOffset.UTC);
 
             // when
             FileAssetJpaEntity entity =
@@ -35,12 +47,14 @@ class FileAssetJpaEntityTest {
                             1024 * 1024L,
                             "application/pdf",
                             FileCategory.DOCUMENT,
+                            null, // imageWidth
+                            null, // imageHeight
                             "test-bucket",
                             "uploads/document.pdf",
                             "\"etag-abc123\"",
-                            1L,
-                            100L,
-                            1L,
+                            userId,
+                            organizationId,
+                            tenantId,
                             FileAssetStatus.COMPLETED,
                             processedAt,
                             null,
@@ -57,9 +71,9 @@ class FileAssetJpaEntityTest {
             assertThat(entity.getBucket()).isEqualTo("test-bucket");
             assertThat(entity.getS3Key()).isEqualTo("uploads/document.pdf");
             assertThat(entity.getEtag()).isEqualTo("\"etag-abc123\"");
-            assertThat(entity.getUserId()).isEqualTo(1L);
-            assertThat(entity.getOrganizationId()).isEqualTo(100L);
-            assertThat(entity.getTenantId()).isEqualTo(1L);
+            assertThat(entity.getUserId()).isEqualTo(userId);
+            assertThat(entity.getOrganizationId()).isEqualTo(organizationId);
+            assertThat(entity.getTenantId()).isEqualTo(tenantId);
             assertThat(entity.getStatus()).isEqualTo(FileAssetStatus.COMPLETED);
             assertThat(entity.getProcessedAt()).isEqualTo(processedAt);
             assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
@@ -102,7 +116,7 @@ class FileAssetJpaEntityTest {
         @DisplayName("COMPLETED 상태는 processedAt이 설정된다")
         void of_WithCompletedStatus_ShouldHaveProcessedAt() {
             // given
-            LocalDateTime processedAt = LocalDateTime.of(2025, 11, 26, 12, 0);
+            Instant processedAt = LocalDateTime.of(2025, 11, 26, 12, 0).toInstant(ZoneOffset.UTC);
 
             // when
             FileAssetJpaEntity entity =
@@ -323,8 +337,8 @@ class FileAssetJpaEntityTest {
         @DisplayName("BaseAuditEntity의 감사 필드를 상속받는다")
         void inheritance_ShouldProvideAuditFields() {
             // given
-            LocalDateTime createdAt = LocalDateTime.of(2025, 1, 1, 0, 0);
-            LocalDateTime updatedAt = LocalDateTime.of(2025, 6, 1, 12, 0);
+            Instant createdAt = LocalDateTime.of(2025, 1, 1, 0, 0).toInstant(ZoneOffset.UTC);
+            Instant updatedAt = LocalDateTime.of(2025, 6, 1, 12, 0).toInstant(ZoneOffset.UTC);
 
             // when
             FileAssetJpaEntity entity =
@@ -335,14 +349,16 @@ class FileAssetJpaEntityTest {
                             100L,
                             "text/plain",
                             FileCategory.DOCUMENT,
+                            null, // imageWidth
+                            null, // imageHeight
                             "bucket",
                             "key",
                             "etag",
-                            1L,
-                            1L,
-                            1L,
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
                             FileAssetStatus.COMPLETED,
-                            LocalDateTime.now(),
+                            Instant.now(),
                             null,
                             createdAt,
                             updatedAt);
@@ -355,8 +371,8 @@ class FileAssetJpaEntityTest {
 
     // ==================== Helper Methods ====================
 
-    private FileAssetJpaEntity createEntity(Long userId) {
-        LocalDateTime now = LocalDateTime.now();
+    private FileAssetJpaEntity createEntity(String userId) {
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -364,12 +380,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "text/plain",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 "etag",
                 userId,
-                1L,
-                1L,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -377,8 +395,8 @@ class FileAssetJpaEntityTest {
                 now);
     }
 
-    private FileAssetJpaEntity createEntityWithProcessedAt(LocalDateTime processedAt) {
-        LocalDateTime now = LocalDateTime.now();
+    private FileAssetJpaEntity createEntityWithProcessedAt(Instant processedAt) {
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -386,12 +404,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "text/plain",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 processedAt,
                 null,
@@ -400,7 +420,7 @@ class FileAssetJpaEntityTest {
     }
 
     private FileAssetJpaEntity createEntityWithStatus(FileAssetStatus status) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -408,12 +428,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "text/plain",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 status,
                 status == FileAssetStatus.COMPLETED ? now : null,
                 null,
@@ -422,8 +444,8 @@ class FileAssetJpaEntityTest {
     }
 
     private FileAssetJpaEntity createEntityWithStatusAndProcessedAt(
-            FileAssetStatus status, LocalDateTime processedAt) {
-        LocalDateTime now = LocalDateTime.now();
+            FileAssetStatus status, Instant processedAt) {
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -431,12 +453,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "text/plain",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 status,
                 processedAt,
                 null,
@@ -445,7 +469,7 @@ class FileAssetJpaEntityTest {
     }
 
     private FileAssetJpaEntity createEntityWithCategory(FileCategory category) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -453,12 +477,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "application/octet-stream",
                 category,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -468,7 +494,7 @@ class FileAssetJpaEntityTest {
 
     private FileAssetJpaEntity createEntityWithCategoryAndContentType(
             FileCategory category, String contentType) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -476,12 +502,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 contentType,
                 category,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -490,7 +518,7 @@ class FileAssetJpaEntityTest {
     }
 
     private FileAssetJpaEntity createEntityWithFileSize(long fileSize) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -498,12 +526,14 @@ class FileAssetJpaEntityTest {
                 fileSize,
                 "text/plain",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -512,7 +542,7 @@ class FileAssetJpaEntityTest {
     }
 
     private FileAssetJpaEntity createEntityWithFileName(String fileName) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -520,12 +550,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "application/octet-stream",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -534,7 +566,7 @@ class FileAssetJpaEntityTest {
     }
 
     private FileAssetJpaEntity createEntityWithS3Key(String s3Key) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -542,12 +574,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "text/plain",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 s3Key,
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -556,7 +590,7 @@ class FileAssetJpaEntityTest {
     }
 
     private FileAssetJpaEntity createEntityWithBucket(String bucket) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -564,12 +598,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "text/plain",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 bucket,
                 "key",
                 "etag",
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,
@@ -578,7 +614,7 @@ class FileAssetJpaEntityTest {
     }
 
     private FileAssetJpaEntity createEntityWithEtag(String etag) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return FileAssetJpaEntity.of(
                 "id",
                 "session",
@@ -586,12 +622,14 @@ class FileAssetJpaEntityTest {
                 100L,
                 "text/plain",
                 FileCategory.DOCUMENT,
+                null, // imageWidth
+                null, // imageHeight
                 "bucket",
                 "key",
                 etag,
-                1L,
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
+                TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
                 null,

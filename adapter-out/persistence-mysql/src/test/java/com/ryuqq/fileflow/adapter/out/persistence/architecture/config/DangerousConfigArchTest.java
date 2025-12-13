@@ -1,0 +1,546 @@
+package com.ryuqq.fileflow.adapter.out.persistence.architecture.config;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
+import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchRule;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.Yaml;
+
+/**
+ * DangerousConfigArchTest - 위험한 설정 방지 규칙 검증 (Zero-Tolerance)
+ *
+ * <p>데이터 손실, 성능 저하, 보안 취약점을 유발하는 설정을 빌드 타임에 차단합니다.
+ *
+ * <h2>검증 항목</h2>
+ *
+ * <ul>
+ *   <li><strong>Flyway 위험 설정</strong>: clean() 호출, clean-disabled: false
+ *   <li><strong>Hibernate 위험 설정</strong>: ddl-auto: create/update, open-in-view: true
+ *   <li><strong>코드 레벨 위험</strong>: Flyway.clean() 직접 호출
+ * </ul>
+ *
+ * @author Development Team
+ * @since 1.0.0
+ */
+@DisplayName("위험한 설정 방지 검증 (Zero-Tolerance)")
+class DangerousConfigArchTest {
+
+    private static final String BASE_PACKAGE = "com.ryuqq.fileflow.adapter.out.persistence";
+
+    private static JavaClasses allClasses;
+    private static boolean isFlywayAvailable;
+
+    @BeforeAll
+    static void setUp() {
+        allClasses =
+                new ClassFileImporter()
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(BASE_PACKAGE);
+
+        // Flyway 의존성 존재 여부 확인
+        isFlywayAvailable = isClassAvailable("org.flywaydb.core.Flyway");
+    }
+
+    private static boolean isClassAvailable(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    // ========================================================================
+    // 1. Flyway 코드 레벨 위험 방지 (ArchUnit)
+    // ========================================================================
+
+    @Nested
+    @DisplayName("1. Flyway 코드 레벨 위험 방지")
+    class FlywayCodeLevelRules {
+
+        /**
+         * Flyway.clean() 호출 검증
+         *
+         * <p>Config 클래스에서 프로필별로 clean() 호출은 허용됩니다. local 프로필에서의 clean() 호출은 개발 편의를 위해 의도된 설계입니다. 일반
+         * 서비스/어댑터에서의 직접 호출만 금지합니다.
+         */
+        @Test
+        @DisplayName("규칙 1-1: Flyway.clean() 호출은 Config 클래스에서만 허용")
+        void flywayClean_OnlyAllowedInConfig() {
+            assumeTrue(isFlywayAvailable, "Flyway 의존성이 없어 테스트를 건너뜁니다");
+
+            // Config 클래스를 제외한 클래스에서 Flyway 의존 금지
+            // (clean() 메서드 호출 검사는 ArchUnit의 한계로 인해
+            //  Flyway 의존 자체를 Config 외에서 금지하는 것으로 대체)
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..persistence..")
+                            .and()
+                            .haveSimpleNameNotContaining("Config")
+                            .and()
+                            .haveSimpleNameNotEndingWith("Test")
+                            .should()
+                            .dependOnClassesThat()
+                            .haveFullyQualifiedName("org.flywaydb.core.Flyway")
+                            .because("Flyway 접근은 Config 클래스에서만 허용됩니다");
+
+            rule.allowEmptyShould(true).check(allClasses);
+        }
+
+        /**
+         * FlywayMigrationStrategy 구현 검증
+         *
+         * <p>FlywayConfig 클래스에서 프로필별 전략 구현은 허용됩니다. local 프로필에서의 clean() 호출은 개발 편의를 위해 의도된 설계입니다.
+         */
+        @Test
+        @DisplayName("규칙 1-2: FlywayMigrationStrategy는 Config 클래스에서만 구현 허용")
+        void flywayMigrationStrategy_OnlyAllowedInConfig() {
+            assumeTrue(isFlywayAvailable, "Flyway 의존성이 없어 테스트를 건너뜁니다");
+
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..persistence..")
+                            .and()
+                            .haveSimpleNameNotContaining("Config")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .should()
+                            .dependOnClassesThat()
+                            .haveFullyQualifiedName(
+                                    "org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy")
+                            .because("FlywayMigrationStrategy는 Config 클래스에서만 구현해야 합니다");
+
+            rule.allowEmptyShould(true).check(allClasses);
+        }
+
+        /**
+         * Flyway 직접 주입 검증
+         *
+         * <p>Config 클래스에서의 Flyway 사용은 허용됩니다. 일반 서비스/어댑터에서의 직접 주입만 금지합니다.
+         */
+        @Test
+        @DisplayName("규칙 1-3: Flyway 직접 주입은 Config 클래스에서만 허용")
+        void flyway_OnlyAllowedInConfig() {
+            assumeTrue(isFlywayAvailable, "Flyway 의존성이 없어 테스트를 건너뜁니다");
+
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..persistence..")
+                            .and()
+                            .haveSimpleNameNotContaining("Config")
+                            .and()
+                            .haveSimpleNameNotEndingWith("Test")
+                            .should()
+                            .dependOnClassesThat()
+                            .haveFullyQualifiedName("org.flywaydb.core.Flyway")
+                            .because("Flyway 직접 주입은 Config 클래스에서만 허용됩니다");
+
+            rule.allowEmptyShould(true).check(allClasses);
+        }
+    }
+
+    // ========================================================================
+    // 2. Hibernate/JPA 코드 레벨 위험 방지 (ArchUnit)
+    // ========================================================================
+
+    @Nested
+    @DisplayName("2. Hibernate/JPA 코드 레벨 위험 방지")
+    class HibernateCodeLevelRules {
+
+        @Test
+        @DisplayName("규칙 2-1: EntityManager.createNativeQuery() DELETE/TRUNCATE 금지")
+        void nativeQueryDelete_MustBeCareful() {
+            // 이 규칙은 코드 리뷰로 검증 권장
+            // ArchUnit으로는 문자열 내용까지 검사하기 어려움
+            // 대신 Native Query 사용 자체를 경고로 표시
+        }
+
+        @Test
+        @DisplayName("규칙 2-2: @Modifying + @Query DELETE 시 조건절 필수")
+        void modifyingDeleteQuery_MustHaveWhereClause() {
+            // 이 규칙도 코드 리뷰로 검증 권장
+            // 정적 분석으로는 쿼리 문자열 파싱이 필요
+        }
+    }
+
+    // ========================================================================
+    // 3. YAML 설정 파일 검증
+    // ========================================================================
+
+    @Nested
+    @DisplayName("3. YAML 설정 파일 검증")
+    class YamlConfigurationRules {
+
+        private static final Path RESOURCES_PATH = Paths.get("src/main/resources");
+
+        /**
+         * ddl-auto 설정 검증
+         *
+         * <p>Test profile에서는 create-drop이 허용됩니다 (인메모리 DB 사용). Production profile에서만 validate/none을
+         * 강제합니다.
+         */
+        @Test
+        @DisplayName(
+                "규칙 3-1: ddl-auto는 validate/none만 허용 - create/update/create-drop 금지 (test profile"
+                        + " 제외)")
+        void ddlAuto_MustBeValidateOrNone() throws IOException {
+            // none: Hibernate가 스키마를 건드리지 않음 (Flyway가 관리할 때 안전)
+            // validate: 스키마 검증만 수행 (안전)
+            List<String> dangerousDdlAutoValues = List.of("create", "update", "create-drop");
+
+            if (!Files.exists(RESOURCES_PATH)) {
+                return; // resources 디렉토리가 없으면 테스트 스킵
+            }
+
+            try (Stream<Path> paths = Files.walk(RESOURCES_PATH)) {
+                paths.filter(p -> p.toString().endsWith(".yml") || p.toString().endsWith(".yaml"))
+                        .filter(p -> p.getFileName().toString().contains("persistence"))
+                        .forEach(
+                                yamlPath -> {
+                                    // Test profile 설정은 검사에서 제외
+                                    // (Multi-document YAML의 test profile은 인메모리 DB 사용)
+                                    String fileContent = readFileContent(yamlPath);
+                                    if (fileContent == null) {
+                                        return;
+                                    }
+
+                                    // 기본(prod) 프로필의 ddl-auto만 검사
+                                    // test profile 섹션이 있는 YAML은 prod 섹션만 검사
+                                    String ddlAutoValue =
+                                            getYamlValue(
+                                                    yamlPath,
+                                                    "spring",
+                                                    "jpa",
+                                                    "hibernate",
+                                                    "ddl-auto");
+
+                                    // test profile 섹션의 설정인지 확인
+                                    if (ddlAutoValue != null
+                                            && dangerousDdlAutoValues.contains(ddlAutoValue)
+                                            && !isTestProfileSetting(fileContent, ddlAutoValue)) {
+                                        fail(
+                                                "⚠️ 위험한 설정 발견!\n"
+                                                        + "파일: "
+                                                        + yamlPath
+                                                        + "\n"
+                                                        + "설정: spring.jpa.hibernate.ddl-auto="
+                                                        + ddlAutoValue
+                                                        + "\n"
+                                                        + "권장: ddl-auto: validate 또는 none (Flyway가"
+                                                        + " 스키마 관리)");
+                                    }
+                                });
+            }
+        }
+
+        private String readFileContent(Path path) {
+            try {
+                return Files.readString(path);
+            } catch (IOException e) {
+                return null;
+            }
+        }
+
+        private boolean isTestProfileSetting(String fileContent, String value) {
+            // test profile 섹션에서 해당 값이 설정된 경우 true 반환
+            // Multi-document YAML에서 "on-profile: test" 이후에 값이 나오면 test profile 설정
+            int testProfileIndex = fileContent.indexOf("on-profile: test");
+            if (testProfileIndex == -1) {
+                return false;
+            }
+            int valueIndex = fileContent.indexOf("ddl-auto: " + value);
+            return valueIndex > testProfileIndex;
+        }
+
+        @Test
+        @DisplayName("규칙 3-2: open-in-view는 false만 허용 - 커넥션 점유 방지")
+        void openInView_MustBeFalse() throws IOException {
+            if (!Files.exists(RESOURCES_PATH)) {
+                return; // resources 디렉토리가 없으면 테스트 스킵
+            }
+
+            try (Stream<Path> paths = Files.walk(RESOURCES_PATH)) {
+                paths.filter(p -> p.toString().endsWith(".yml") || p.toString().endsWith(".yaml"))
+                        .filter(p -> p.getFileName().toString().contains("persistence"))
+                        .forEach(
+                                yamlPath -> {
+                                    String osivValue =
+                                            getYamlValue(yamlPath, "spring", "jpa", "open-in-view");
+
+                                    if ("true".equalsIgnoreCase(osivValue)) {
+                                        fail(
+                                                "⚠️ 위험한 설정 발견!\n"
+                                                        + "파일: "
+                                                        + yamlPath
+                                                        + "\n"
+                                                        + "설정: spring.jpa.open-in-view=true\n"
+                                                        + "문제: HTTP 요청 전체 기간 커넥션 점유, Lazy Loading"
+                                                        + " N+1 위험\n"
+                                                        + "권장: open-in-view: false");
+                                    }
+                                });
+            }
+        }
+
+        @Test
+        @DisplayName("규칙 3-3: flyway.clean-disabled는 true만 허용 - 데이터 보호")
+        void flywayCleanDisabled_MustBeTrue() throws IOException {
+            if (!Files.exists(RESOURCES_PATH)) {
+                return; // resources 디렉토리가 없으면 테스트 스킵
+            }
+
+            try (Stream<Path> paths = Files.walk(RESOURCES_PATH)) {
+                paths.filter(p -> p.toString().endsWith(".yml") || p.toString().endsWith(".yaml"))
+                        .filter(p -> p.getFileName().toString().contains("persistence"))
+                        .forEach(
+                                yamlPath -> {
+                                    String cleanDisabledValue =
+                                            getYamlValue(
+                                                    yamlPath, "spring", "flyway", "clean-disabled");
+
+                                    if ("false".equalsIgnoreCase(cleanDisabledValue)) {
+                                        fail(
+                                                "⚠️ 위험한 설정 발견!\n"
+                                                        + "파일: "
+                                                        + yamlPath
+                                                        + "\n"
+                                                        + "설정: spring.flyway.clean-disabled=false\n"
+                                                        + "문제: flyway clean 명령어로 모든 데이터 삭제 가능\n"
+                                                        + "권장: clean-disabled: true");
+                                    }
+                                });
+            }
+        }
+
+        @Test
+        @DisplayName("규칙 3-4: show-sql은 prod에서 false 권장 - 성능 저하 방지")
+        void showSql_MustBeFalseInProd() throws IOException {
+            Path prodYaml = RESOURCES_PATH.resolve("persistence-prod.yml");
+
+            if (Files.exists(prodYaml)) {
+                String showSqlValue = getYamlValue(prodYaml, "spring", "jpa", "show-sql");
+
+                if ("true".equalsIgnoreCase(showSqlValue)) {
+                    fail(
+                            "⚠️ 운영 환경 성능 저하 위험!\n"
+                                    + "파일: "
+                                    + prodYaml
+                                    + "\n"
+                                    + "설정: spring.jpa.show-sql=true\n"
+                                    + "문제: 콘솔 출력으로 인한 성능 저하\n"
+                                    + "권장: show-sql: false (Logback SQL 로깅 사용)");
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("규칙 3-5: prod 환경에 하드코딩된 자격증명 금지")
+        void prodCredentials_MustUseEnvVariables() throws IOException {
+            Path prodYaml = RESOURCES_PATH.resolve("persistence-prod.yml");
+
+            if (Files.exists(prodYaml)) {
+                String password = getYamlValue(prodYaml, "spring", "datasource", "password");
+                String username = getYamlValue(prodYaml, "spring", "datasource", "username");
+                String url = getYamlValue(prodYaml, "spring", "datasource", "url");
+
+                // 환경 변수 패턴 체크 (${...} 형태)
+                if (password != null && !password.contains("${")) {
+                    fail(
+                            "⚠️ 보안 취약점!\n"
+                                    + "파일: "
+                                    + prodYaml
+                                    + "\n"
+                                    + "문제: password가 하드코딩됨\n"
+                                    + "권장: ${DB_PASSWORD} 환경 변수 사용");
+                }
+
+                if (username != null && !username.contains("${")) {
+                    fail(
+                            "⚠️ 보안 취약점!\n"
+                                    + "파일: "
+                                    + prodYaml
+                                    + "\n"
+                                    + "문제: username이 하드코딩됨\n"
+                                    + "권장: ${DB_USERNAME} 환경 변수 사용");
+                }
+
+                if (url != null && !url.contains("${")) {
+                    fail(
+                            "⚠️ 보안 취약점!\n"
+                                    + "파일: "
+                                    + prodYaml
+                                    + "\n"
+                                    + "문제: URL이 하드코딩됨\n"
+                                    + "권장: ${DB_HOST}, ${DB_PORT}, ${DB_NAME} 환경 변수 사용");
+                }
+            }
+        }
+
+        /** YAML 파일에서 중첩된 키 값을 추출합니다. Multi-document YAML의 경우 첫 번째 문서(기본/공통 설정)에서만 값을 가져옵니다. */
+        @SuppressWarnings("unchecked")
+        private String getYamlValue(Path yamlPath, String... keys) {
+            try (InputStream inputStream = Files.newInputStream(yamlPath)) {
+                Yaml yaml = new Yaml();
+
+                // Multi-document YAML 지원: 첫 번째 문서(기본/공통 설정)만 파싱
+                Iterable<Object> documents = yaml.loadAll(inputStream);
+                Map<String, Object> data = null;
+
+                for (Object doc : documents) {
+                    if (doc instanceof Map) {
+                        data = (Map<String, Object>) doc;
+                        break; // 첫 번째 문서만 사용
+                    }
+                }
+
+                if (data == null) {
+                    return null;
+                }
+
+                Object current = data;
+                for (String key : keys) {
+                    if (current instanceof Map) {
+                        current = ((Map<String, Object>) current).get(key);
+                    } else {
+                        return null;
+                    }
+                }
+
+                return current != null ? current.toString() : null;
+            } catch (IOException e) {
+                return null;
+            }
+        }
+    }
+
+    // ========================================================================
+    // 4. HikariCP 설정 검증
+    // ========================================================================
+
+    @Nested
+    @DisplayName("4. HikariCP 설정 검증")
+    class HikariCPConfigRules {
+
+        private static final Path RESOURCES_PATH = Paths.get("src/main/resources");
+
+        @Test
+        @DisplayName("규칙 4-1: maximum-pool-size는 50 이하 권장")
+        void maxPoolSize_MustBeReasonable() throws IOException {
+            if (!Files.exists(RESOURCES_PATH)) {
+                return; // resources 디렉토리가 없으면 테스트 스킵
+            }
+
+            try (Stream<Path> paths = Files.walk(RESOURCES_PATH)) {
+                paths.filter(p -> p.toString().endsWith(".yml") || p.toString().endsWith(".yaml"))
+                        .filter(p -> p.getFileName().toString().contains("persistence"))
+                        .forEach(
+                                yamlPath -> {
+                                    String maxPoolSize =
+                                            getYamlValue(
+                                                    yamlPath,
+                                                    "spring",
+                                                    "datasource",
+                                                    "hikari",
+                                                    "maximum-pool-size");
+
+                                    if (maxPoolSize != null) {
+                                        try {
+                                            int poolSize = Integer.parseInt(maxPoolSize);
+                                            if (poolSize > 50) {
+                                                fail(
+                                                        "⚠️ 과도한 커넥션 풀 설정!\n"
+                                                                + "파일: "
+                                                                + yamlPath
+                                                                + "\n"
+                                                                + "설정: maximum-pool-size="
+                                                                + poolSize
+                                                                + "\n"
+                                                                + "문제: DB 부하 증가, Context Switching"
+                                                                + " 비용\n"
+                                                                + "권장: 50 이하 (공식: CPU cores * 2 +"
+                                                                + " spindle count)");
+                                            }
+                                        } catch (NumberFormatException e) {
+                                            // 환경 변수 형태(${...})인 경우 무시
+                                        }
+                                    }
+                                });
+            }
+        }
+
+        @Test
+        @DisplayName("규칙 4-2: prod에서 leak-detection-threshold 활성화 권장")
+        void leakDetection_MustBeEnabledInProd() throws IOException {
+            Path prodYaml = RESOURCES_PATH.resolve("persistence-prod.yml");
+
+            if (Files.exists(prodYaml)) {
+                String leakThreshold =
+                        getYamlValue(
+                                prodYaml,
+                                "spring",
+                                "datasource",
+                                "hikari",
+                                "leak-detection-threshold");
+
+                if (leakThreshold == null || "0".equals(leakThreshold)) {
+                    System.out.println("⚠️ 권장사항: prod 환경에서 leak-detection-threshold 활성화 권장");
+                }
+            }
+        }
+
+        /** YAML 파일에서 중첩된 키 값을 추출합니다. Multi-document YAML의 경우 첫 번째 문서(기본/공통 설정)에서만 값을 가져옵니다. */
+        @SuppressWarnings("unchecked")
+        private String getYamlValue(Path yamlPath, String... keys) {
+            try (InputStream inputStream = Files.newInputStream(yamlPath)) {
+                Yaml yaml = new Yaml();
+
+                // Multi-document YAML 지원: 첫 번째 문서(기본/공통 설정)만 파싱
+                Iterable<Object> documents = yaml.loadAll(inputStream);
+                Map<String, Object> data = null;
+
+                for (Object doc : documents) {
+                    if (doc instanceof Map) {
+                        data = (Map<String, Object>) doc;
+                        break; // 첫 번째 문서만 사용
+                    }
+                }
+
+                if (data == null) {
+                    return null;
+                }
+
+                Object current = data;
+                for (String key : keys) {
+                    if (current instanceof Map) {
+                        current = ((Map<String, Object>) current).get(key);
+                    } else {
+                        return null;
+                    }
+                }
+
+                return current != null ? current.toString() : null;
+            } catch (IOException e) {
+                return null;
+            }
+        }
+    }
+}

@@ -16,6 +16,10 @@ on:
         description: 'Scheduler Docker image tag'
         required: false
         type: string
+      resizing-worker-image-tag:
+        description: 'Resizing Worker Docker image tag'
+        required: false
+        type: string
     secrets:
       AWS_ROLE_ARN:
         required: true
@@ -56,6 +60,9 @@ jobs:
           - name: ecs-download-worker
             dir: terraform/ecs-download-worker
             order: 6
+          - name: ecs-resizing-worker
+            dir: terraform/ecs-resizing-worker
+            order: 7
 
     steps:
       - name: Checkout code
@@ -177,6 +184,9 @@ jobs:
           elif [ "${{ matrix.module.name }}" == "ecs-scheduler" ] && [ -n "${{ inputs.scheduler-image-tag }}" ]; then
             echo "📦 Using Scheduler image tag: ${{ inputs.scheduler-image-tag }}"
             EXTRA_VARS="-var=image_tag=${{ inputs.scheduler-image-tag }}"
+          elif [ "${{ matrix.module.name }}" == "ecs-resizing-worker" ] && [ -n "${{ inputs.resizing-worker-image-tag }}" ]; then
+            echo "📦 Using Resizing Worker image tag: ${{ inputs.resizing-worker-image-tag }}"
+            EXTRA_VARS="-var=image_tag=${{ inputs.resizing-worker-image-tag }}"
           else
             echo "ℹ️  No image tag provided for ${{ matrix.module.name }}, using default from provider.tf"
           fi
@@ -227,6 +237,7 @@ jobs:
           echo "- ✅ ECS Web API" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ ECS Scheduler" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ ECS Download Worker" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ECS Resizing Worker" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next Steps**:" >> $GITHUB_STEP_SUMMARY
           echo "1. Verify infrastructure in AWS Console" >> $GITHUB_STEP_SUMMARY

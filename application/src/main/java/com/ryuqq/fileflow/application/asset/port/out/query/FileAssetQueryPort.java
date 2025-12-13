@@ -17,11 +17,21 @@ public interface FileAssetQueryPort {
      * ID로 FileAsset 조회.
      *
      * @param id 파일 자산 ID (Value Object)
-     * @param organizationId 조직 ID
-     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return FileAsset Domain (없으면 empty)
      */
-    Optional<FileAsset> findById(FileAssetId id, Long organizationId, Long tenantId);
+    Optional<FileAsset> findById(FileAssetId id, String organizationId, String tenantId);
+
+    /**
+     * ID만으로 FileAsset 조회 (DLQ 처리용).
+     *
+     * <p>DLQ 처리 시 organizationId/tenantId 없이 조회가 필요한 경우 사용합니다.
+     *
+     * @param id 파일 자산 ID (Value Object)
+     * @return FileAsset Domain (없으면 empty)
+     */
+    Optional<FileAsset> findById(FileAssetId id);
 
     /**
      * 검색 조건에 맞는 FileAsset 목록 조회.

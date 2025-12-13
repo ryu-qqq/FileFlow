@@ -7,10 +7,9 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,8 +19,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ExternalDownloadJpaMapper {
-
-    private static final ZoneId ZONE_ID = ZoneId.of("UTC");
 
     /**
      * Domain을 Entity로 변환합니다.
@@ -33,8 +30,8 @@ public class ExternalDownloadJpaMapper {
         return ExternalDownloadJpaEntity.of(
                 domain.getId().isNew() ? null : domain.getId().value(),
                 domain.getSourceUrl().value(),
-                domain.getTenantId(),
-                domain.getOrganizationId(),
+                domain.getTenantId().value(),
+                domain.getOrganizationId() != null ? domain.getOrganizationId().value() : null,
                 domain.getS3Bucket().bucketName(),
                 domain.getS3PathPrefix(),
                 domain.getStatus(),
@@ -43,8 +40,8 @@ public class ExternalDownloadJpaMapper {
                 domain.getErrorMessage(),
                 domain.hasWebhook() ? domain.getWebhookUrl().value() : null,
                 null, // version은 JPA가 관리
-                toLocalDateTime(domain.getCreatedAt()),
-                toLocalDateTime(domain.getUpdatedAt()));
+                domain.getCreatedAt(),
+                domain.getUpdatedAt());
     }
 
     /**
@@ -57,8 +54,10 @@ public class ExternalDownloadJpaMapper {
         return ExternalDownload.of(
                 ExternalDownloadId.of(entity.getId()),
                 SourceUrl.of(entity.getSourceUrl()),
-                entity.getTenantId(),
-                entity.getOrganizationId(),
+                TenantId.of(entity.getTenantId()),
+                entity.getOrganizationId() != null
+                        ? OrganizationId.of(entity.getOrganizationId())
+                        : null,
                 S3Bucket.of(entity.getS3Bucket()),
                 entity.getS3PathPrefix(),
                 entity.getStatus(),
@@ -66,21 +65,7 @@ public class ExternalDownloadJpaMapper {
                 entity.getFileAssetId() != null ? FileAssetId.of(entity.getFileAssetId()) : null,
                 entity.getErrorMessage(),
                 entity.getWebhookUrl() != null ? WebhookUrl.of(entity.getWebhookUrl()) : null,
-                toInstant(entity.getCreatedAt()),
-                toInstant(entity.getUpdatedAt()));
-    }
-
-    private LocalDateTime toLocalDateTime(Instant instant) {
-        if (instant == null) {
-            return null;
-        }
-        return LocalDateTime.ofInstant(instant, ZONE_ID);
-    }
-
-    private Instant toInstant(LocalDateTime localDateTime) {
-        if (localDateTime == null) {
-            return null;
-        }
-        return localDateTime.atZone(ZONE_ID).toInstant();
+                entity.getCreatedAt(),
+                entity.getUpdatedAt());
     }
 }

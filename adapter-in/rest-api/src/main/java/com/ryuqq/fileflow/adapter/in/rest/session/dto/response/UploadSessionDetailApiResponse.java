@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
-import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
-import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -28,23 +28,27 @@ import java.util.List;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "업로드 세션 상세 응답")
 public record UploadSessionDetailApiResponse(
-        String sessionId,
-        String fileName,
-        long fileSize,
-        String contentType,
-        String uploadType,
-        SessionStatus status,
-        String bucket,
-        String key,
-        String uploadId,
-        Integer totalParts,
-        Integer uploadedParts,
-        List<PartDetailApiResponse> parts,
-        String etag,
-        LocalDateTime createdAt,
-        LocalDateTime expiresAt,
-        LocalDateTime completedAt) {
+        @Schema(description = "세션 ID", example = "session-123") String sessionId,
+        @Schema(description = "파일명", example = "image.jpg") String fileName,
+        @Schema(description = "파일 크기 (bytes)", example = "1024000") long fileSize,
+        @Schema(description = "Content-Type", example = "image/jpeg") String contentType,
+        @Schema(description = "업로드 타입", example = "MULTIPART") String uploadType,
+        @Schema(description = "세션 상태", example = "PENDING") String status,
+        @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
+        @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key,
+        @Schema(description = "S3 Multipart Upload ID (Multipart 전용)", nullable = true)
+                String uploadId,
+        @Schema(description = "전체 Part 개수 (Multipart 전용)", nullable = true) Integer totalParts,
+        @Schema(description = "업로드 완료된 Part 개수 (Multipart 전용)", nullable = true)
+                Integer uploadedParts,
+        @Schema(description = "Part 정보 목록 (Multipart 전용)", nullable = true)
+                List<PartDetailApiResponse> parts,
+        @Schema(description = "ETag (완료 시)", nullable = true) String etag,
+        @Schema(description = "생성 시각") Instant createdAt,
+        @Schema(description = "만료 시각") Instant expiresAt,
+        @Schema(description = "완료 시각", nullable = true) Instant completedAt) {
 
     /**
      * Part 상세 정보.
@@ -54,8 +58,13 @@ public record UploadSessionDetailApiResponse(
      * @param size Part 크기 (바이트)
      * @param uploadedAt 업로드 완료 시각
      */
+    @Schema(description = "Part 상세 정보")
     public record PartDetailApiResponse(
-            int partNumber, String etag, long size, LocalDateTime uploadedAt) {
+            @Schema(description = "Part 번호 (1-based)", example = "1") int partNumber,
+            @Schema(description = "ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"")
+                    String etag,
+            @Schema(description = "Part 크기 (bytes)", example = "5242880") long size,
+            @Schema(description = "업로드 완료 시각") Instant uploadedAt) {
 
         /**
          * 값 기반 생성.
@@ -67,7 +76,7 @@ public record UploadSessionDetailApiResponse(
          * @return PartDetailApiResponse
          */
         public static PartDetailApiResponse of(
-                int partNumber, String etag, long size, LocalDateTime uploadedAt) {
+                int partNumber, String etag, long size, Instant uploadedAt) {
             return new PartDetailApiResponse(partNumber, etag, size, uploadedAt);
         }
     }
@@ -93,13 +102,13 @@ public record UploadSessionDetailApiResponse(
             String fileName,
             long fileSize,
             String contentType,
-            SessionStatus status,
+            String status,
             String bucket,
             String key,
             String etag,
-            LocalDateTime createdAt,
-            LocalDateTime expiresAt,
-            LocalDateTime completedAt) {
+            Instant createdAt,
+            Instant expiresAt,
+            Instant completedAt) {
         return new UploadSessionDetailApiResponse(
                 sessionId,
                 fileName,
@@ -144,7 +153,7 @@ public record UploadSessionDetailApiResponse(
             String fileName,
             long fileSize,
             String contentType,
-            SessionStatus status,
+            String status,
             String bucket,
             String key,
             String uploadId,
@@ -152,9 +161,9 @@ public record UploadSessionDetailApiResponse(
             int uploadedParts,
             List<PartDetailApiResponse> parts,
             String etag,
-            LocalDateTime createdAt,
-            LocalDateTime expiresAt,
-            LocalDateTime completedAt) {
+            Instant createdAt,
+            Instant expiresAt,
+            Instant completedAt) {
         return new UploadSessionDetailApiResponse(
                 sessionId,
                 fileName,

@@ -7,6 +7,8 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import java.time.Clock;
 import java.time.Instant;
@@ -27,8 +29,8 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload defaultExternalDownload() {
         return ExternalDownload.forNew(
                 SourceUrl.of("https://example.com/image.jpg"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 null,
@@ -39,8 +41,8 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload pendingDownload() {
         return ExternalDownload.forNew(
                 SourceUrl.of("https://example.com/image.jpg"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 null,
@@ -51,8 +53,8 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload pendingDownloadWithWebhook() {
         return ExternalDownload.forNew(
                 SourceUrl.of("https://example.com/image.jpg"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 WebhookUrl.of("https://callback.example.com/webhook"),
@@ -64,8 +66,8 @@ public final class ExternalDownloadFixture {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.jpg"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 ExternalDownloadStatus.PENDING,
@@ -82,8 +84,8 @@ public final class ExternalDownloadFixture {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.png"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 ExternalDownloadStatus.PROCESSING,
@@ -100,8 +102,8 @@ public final class ExternalDownloadFixture {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.gif"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 ExternalDownloadStatus.COMPLETED,
@@ -118,8 +120,8 @@ public final class ExternalDownloadFixture {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.webp"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 ExternalDownloadStatus.FAILED,
@@ -136,8 +138,8 @@ public final class ExternalDownloadFixture {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
                 SourceUrl.of("https://example.com/image.jpg"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 ExternalDownloadStatus.PENDING,
@@ -153,8 +155,8 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload customExternalDownload(
             ExternalDownloadId id,
             SourceUrl sourceUrl,
-            long tenantId,
-            long organizationId,
+            TenantId tenantId,
+            OrganizationId organizationId,
             S3Bucket s3Bucket,
             String s3PathPrefix,
             ExternalDownloadStatus status,
@@ -194,8 +196,8 @@ public final class ExternalDownloadFixture {
 
         private String id;
         private String sourceUrl = "https://example.com/image.jpg";
-        private long tenantId = 1L;
-        private long organizationId = 100L;
+        private TenantId tenantId = TenantId.generate();
+        private OrganizationId organizationId = OrganizationId.generate();
         private S3Bucket s3Bucket = DEFAULT_S3_BUCKET;
         private String s3PathPrefix = DEFAULT_S3_PATH_PREFIX;
         private ExternalDownloadStatus status = ExternalDownloadStatus.PENDING;
@@ -216,12 +218,12 @@ public final class ExternalDownloadFixture {
             return this;
         }
 
-        public Builder tenantId(long tenantId) {
+        public Builder tenantId(TenantId tenantId) {
             this.tenantId = tenantId;
             return this;
         }
 
-        public Builder organizationId(long organizationId) {
+        public Builder organizationId(OrganizationId organizationId) {
             this.organizationId = organizationId;
             return this;
         }

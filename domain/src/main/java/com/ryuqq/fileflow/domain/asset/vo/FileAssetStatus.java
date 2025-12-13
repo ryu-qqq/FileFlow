@@ -16,5 +16,14 @@ public enum FileAssetStatus {
     FAILED,
 
     /** 삭제됨 (Soft Delete). */
-    DELETED
+    DELETED,
+
+    /** 이미지 리사이징 완료. */
+    RESIZED,
+
+    /** N8N 워크플로우 처리 중. */
+    N8N_PROCESSING,
+
+    /** N8N 워크플로우 완료. */
+    N8N_COMPLETED
 }

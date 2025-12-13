@@ -1,13 +1,13 @@
 package com.ryuqq.fileflow.adapter.out.persistence.session.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.CompletedPartJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.MultipartUploadSessionJpaEntity;
-import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.iam.vo.UserRole;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
@@ -26,32 +26,25 @@ import com.ryuqq.fileflow.domain.session.vo.S3UploadId;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.TotalParts;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @DisplayName("MultipartUploadSessionJpaMapper 단위 테스트")
-@ExtendWith(MockitoExtension.class)
 class MultipartUploadSessionJpaMapperTest {
 
-    @Mock private ClockHolder clockHolder;
-
     private MultipartUploadSessionJpaMapper mapper;
-    private Clock fixedClock;
+
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @BeforeEach
     void setUp() {
-        mapper = new MultipartUploadSessionJpaMapper(clockHolder);
-        fixedClock = Clock.fixed(Instant.parse("2025-11-26T10:00:00Z"), ZoneId.of("UTC"));
+        mapper = new MultipartUploadSessionJpaMapper();
     }
 
     @Nested
@@ -70,10 +63,10 @@ class MultipartUploadSessionJpaMapperTest {
             // then
             assertThat(entity.getId()).isEqualTo(domain.getId().getValue());
             assertThat(entity.getUserId()).isNull();
-            assertThat(entity.getOrganizationId()).isEqualTo(100L);
+            assertThat(entity.getOrganizationId()).isEqualTo(TEST_ORG_ID);
             assertThat(entity.getOrganizationName()).isEqualTo("Test Org");
             assertThat(entity.getOrganizationNamespace()).isEqualTo("setof");
-            assertThat(entity.getTenantId()).isEqualTo(1L);
+            assertThat(entity.getTenantId()).isEqualTo(TEST_TENANT_ID);
             assertThat(entity.getTenantName()).isEqualTo("Connectly");
             assertThat(entity.getUserRole()).isEqualTo("SELLER");
             assertThat(entity.getEmail()).isEqualTo("seller@test.com");
@@ -111,7 +104,6 @@ class MultipartUploadSessionJpaMapperTest {
         @DisplayName("Entity를 Domain으로 변환할 수 있다")
         void toDomain_WithValidEntity_ShouldConvertToDomain() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             MultipartUploadSessionJpaEntity entity = createEntity(SessionStatus.ACTIVE);
 
             // when
@@ -134,7 +126,6 @@ class MultipartUploadSessionJpaMapperTest {
         @DisplayName("UserContext가 올바르게 복원된다")
         void toDomain_ShouldReconstructUserContext() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             MultipartUploadSessionJpaEntity entity = createEntity(SessionStatus.ACTIVE);
 
             // when
@@ -142,10 +133,15 @@ class MultipartUploadSessionJpaMapperTest {
 
             // then
             UserContext userContext = domain.getUserContext();
-            assertThat(userContext.userId()).isEqualTo(entity.getUserId());
-            assertThat(userContext.organization().id()).isEqualTo(entity.getOrganizationId());
+            // userId는 null이므로 null 체크
+            assertThat(userContext.userId()).isNull();
+            assertThat(entity.getUserId()).isNull();
+            // organizationId 값 비교
+            assertThat(userContext.organization().id().value())
+                    .isEqualTo(entity.getOrganizationId());
             assertThat(userContext.organization().name()).isEqualTo(entity.getOrganizationName());
-            assertThat(userContext.tenant().id()).isEqualTo(entity.getTenantId());
+            // tenantId 값 비교
+            assertThat(userContext.tenant().id().value()).isEqualTo(entity.getTenantId());
             assertThat(userContext.tenant().name()).isEqualTo(entity.getTenantName());
             assertThat(userContext.getRole().name()).isEqualTo(entity.getUserRole());
             assertThat(userContext.email()).isEqualTo(entity.getEmail());
@@ -155,7 +151,6 @@ class MultipartUploadSessionJpaMapperTest {
         @DisplayName("버전 정보가 복원된다")
         void toDomain_ShouldReconstructVersion() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             MultipartUploadSessionJpaEntity entity = createEntityWithVersion(5L);
 
             // when
@@ -214,7 +209,6 @@ class MultipartUploadSessionJpaMapperTest {
         @DisplayName("Entity를 CompletedPart Domain으로 변환할 수 있다")
         void toCompletedPart_WithValidEntity_ShouldConvertToDomain() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             CompletedPartJpaEntity entity = createCompletedPartEntity();
 
             // when
@@ -234,7 +228,6 @@ class MultipartUploadSessionJpaMapperTest {
         @DisplayName("완료된 Part의 isCompleted()는 true를 반환한다")
         void toCompletedPart_WithCompletedPart_ShouldReturnIsCompletedTrue() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             CompletedPartJpaEntity entity = createCompletedPartEntity();
 
             // when
@@ -253,7 +246,6 @@ class MultipartUploadSessionJpaMapperTest {
         @DisplayName("Domain → Entity → Domain 변환 시 데이터가 보존된다")
         void roundTrip_ShouldPreserveData() {
             // given
-            when(clockHolder.getClock()).thenReturn(fixedClock);
             MultipartUploadSession original = createDomain(SessionStatus.ACTIVE);
 
             // when
@@ -277,8 +269,10 @@ class MultipartUploadSessionJpaMapperTest {
     // ==================== Helper Methods ====================
 
     private MultipartUploadSession createDomain(SessionStatus status) {
-        Tenant tenant = Tenant.of(1L, "Connectly");
-        Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
+        Tenant tenant = Tenant.of(TenantId.of(TEST_TENANT_ID), "Connectly");
+        Organization organization =
+                Organization.of(
+                        OrganizationId.of(TEST_ORG_ID), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
         return MultipartUploadSession.reconstitute(
@@ -292,17 +286,18 @@ class MultipartUploadSessionJpaMapperTest {
                 S3UploadId.of("s3-upload-id-xyz"),
                 TotalParts.of(10),
                 PartSize.of(50 * 1024 * 1024L),
-                ExpirationTime.of(LocalDateTime.now().plusHours(24)),
-                LocalDateTime.now(),
+                ExpirationTime.of(Instant.now().plus(java.time.Duration.ofHours(24))),
+                Instant.now(),
                 status,
                 null,
-                0L,
-                fixedClock);
+                0L);
     }
 
     private MultipartUploadSession createCompletedDomain() {
-        Tenant tenant = Tenant.of(1L, "Connectly");
-        Organization organization = Organization.of(100L, "Test Org", "setof", UserRole.SELLER);
+        Tenant tenant = Tenant.of(TenantId.of(TEST_TENANT_ID), "Connectly");
+        Organization organization =
+                Organization.of(
+                        OrganizationId.of(TEST_ORG_ID), "Test Org", "setof", UserRole.SELLER);
         UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
 
         return MultipartUploadSession.reconstitute(
@@ -316,25 +311,24 @@ class MultipartUploadSessionJpaMapperTest {
                 S3UploadId.of("s3-upload-id-xyz"),
                 TotalParts.of(10),
                 PartSize.of(50 * 1024 * 1024L),
-                ExpirationTime.of(LocalDateTime.now().plusHours(24)),
-                LocalDateTime.now(),
+                ExpirationTime.of(Instant.now().plus(java.time.Duration.ofHours(24))),
+                Instant.now(),
                 SessionStatus.COMPLETED,
-                LocalDateTime.now(),
-                1L,
-                fixedClock);
+                Instant.now(),
+                1L);
     }
 
     private MultipartUploadSessionJpaEntity createEntity(SessionStatus status) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusHours(24);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofHours(24));
 
         return MultipartUploadSessionJpaEntity.of(
                 UUID.randomUUID().toString(),
                 null,
-                100L,
+                TEST_ORG_ID,
                 "Test Org",
                 "setof",
-                1L,
+                TEST_TENANT_ID,
                 "Connectly",
                 "SELLER",
                 "seller@test.com",
@@ -356,16 +350,16 @@ class MultipartUploadSessionJpaMapperTest {
     }
 
     private MultipartUploadSessionJpaEntity createEntityWithVersion(Long version) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusHours(24);
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(java.time.Duration.ofHours(24));
 
         return MultipartUploadSessionJpaEntity.of(
                 UUID.randomUUID().toString(),
                 null,
-                100L,
+                TEST_ORG_ID,
                 "Test Org",
                 "setof",
-                1L,
+                TEST_TENANT_ID,
                 "Connectly",
                 "SELLER",
                 "seller@test.com",
@@ -394,8 +388,7 @@ class MultipartUploadSessionJpaMapperTest {
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/part1"),
                 ETag.of("\"etag-part-1\""),
                 5 * 1024 * 1024L,
-                LocalDateTime.now(),
-                fixedClock);
+                Instant.now());
     }
 
     private CompletedPart createCompletedPartWithId(String sessionId, Long id) {
@@ -406,13 +399,12 @@ class MultipartUploadSessionJpaMapperTest {
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/part1"),
                 ETag.of("\"etag-part-1\""),
                 5 * 1024 * 1024L,
-                LocalDateTime.now(),
-                fixedClock);
+                Instant.now());
     }
 
     private CompletedPartJpaEntity createCompletedPartEntity() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime uploadedAt = now.minusMinutes(5);
+        Instant now = Instant.now();
+        Instant uploadedAt = now.minus(java.time.Duration.ofMinutes(5));
 
         return CompletedPartJpaEntity.reconstitute(
                 123L,

@@ -10,10 +10,10 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,9 +22,11 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("ExternalDownloadJpaMapper 단위 테스트")
 class ExternalDownloadJpaMapperTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     private ExternalDownloadJpaMapper mapper;
-    private static final ZoneId ZONE_ID = ZoneId.of("UTC");
 
     @BeforeEach
     void setUp() {
@@ -48,8 +50,8 @@ class ExternalDownloadJpaMapperTest {
             // then
             assertThat(entity.getId()).isEqualTo(id);
             assertThat(entity.getSourceUrl()).isEqualTo(domain.getSourceUrl().value());
-            assertThat(entity.getTenantId()).isEqualTo(domain.getTenantId());
-            assertThat(entity.getOrganizationId()).isEqualTo(domain.getOrganizationId());
+            assertThat(entity.getTenantId()).isEqualTo(domain.getTenantId().value());
+            assertThat(entity.getOrganizationId()).isEqualTo(domain.getOrganizationId().value());
             assertThat(entity.getS3Bucket()).isEqualTo(domain.getS3Bucket().bucketName());
             assertThat(entity.getS3PathPrefix()).isEqualTo(domain.getS3PathPrefix());
             assertThat(entity.getStatus()).isEqualTo(domain.getStatus());
@@ -96,16 +98,16 @@ class ExternalDownloadJpaMapperTest {
         }
 
         @Test
-        @DisplayName("Instant를 LocalDateTime(UTC)으로 변환한다")
-        void shouldConvertInstantToLocalDateTime() {
+        @DisplayName("Instant 시간 정보가 Entity에 전달된다")
+        void shouldConvertInstantToEntity() {
             // given
             Instant instant = Instant.parse("2025-11-26T12:00:00Z");
             ExternalDownload domain =
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
-                            100L,
-                            200L,
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PENDING,
@@ -120,9 +122,8 @@ class ExternalDownloadJpaMapperTest {
             ExternalDownloadJpaEntity entity = mapper.toEntity(domain);
 
             // then
-            LocalDateTime expected = LocalDateTime.ofInstant(instant, ZONE_ID);
-            assertThat(entity.getCreatedAt()).isEqualTo(expected);
-            assertThat(entity.getUpdatedAt()).isEqualTo(expected);
+            assertThat(entity.getCreatedAt()).isEqualTo(instant);
+            assertThat(entity.getUpdatedAt()).isEqualTo(instant);
         }
     }
 
@@ -142,8 +143,8 @@ class ExternalDownloadJpaMapperTest {
             // then
             assertThat(domain.getId().value()).isEqualTo(entity.getId());
             assertThat(domain.getSourceUrl().value()).isEqualTo(entity.getSourceUrl());
-            assertThat(domain.getTenantId()).isEqualTo(entity.getTenantId());
-            assertThat(domain.getOrganizationId()).isEqualTo(entity.getOrganizationId());
+            assertThat(domain.getTenantId().value()).isEqualTo(entity.getTenantId());
+            assertThat(domain.getOrganizationId().value()).isEqualTo(entity.getOrganizationId());
             assertThat(domain.getS3Bucket().bucketName()).isEqualTo(entity.getS3Bucket());
             assertThat(domain.getS3PathPrefix()).isEqualTo(entity.getS3PathPrefix());
             assertThat(domain.getStatus()).isEqualTo(entity.getStatus());
@@ -176,16 +177,18 @@ class ExternalDownloadJpaMapperTest {
         }
 
         @Test
-        @DisplayName("LocalDateTime을 Instant(UTC)로 변환한다")
-        void shouldConvertLocalDateTimeToInstant() {
+        @DisplayName("Entity의 Instant가 Domain으로 전달된다")
+        void shouldConvertInstantToDomain() {
             // given
-            LocalDateTime localDateTime = LocalDateTime.of(2025, 11, 26, 12, 0, 0);
+            Instant instant = Instant.parse("2025-11-26T12:00:00Z");
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
                             "https://example.com/file.jpg",
-                            100L,
-                            200L,
+                            tenantId,
+                            organizationId,
                             "test-bucket",
                             "downloads/",
                             ExternalDownloadStatus.PENDING,
@@ -194,16 +197,15 @@ class ExternalDownloadJpaMapperTest {
                             null,
                             null,
                             0L,
-                            localDateTime,
-                            localDateTime);
+                            instant,
+                            instant);
 
             // when
             ExternalDownload domain = mapper.toDomain(entity);
 
             // then
-            Instant expected = localDateTime.atZone(ZONE_ID).toInstant();
-            assertThat(domain.getCreatedAt()).isEqualTo(expected);
-            assertThat(domain.getUpdatedAt()).isEqualTo(expected);
+            assertThat(domain.getCreatedAt()).isEqualTo(instant);
+            assertThat(domain.getUpdatedAt()).isEqualTo(instant);
         }
     }
 
@@ -238,8 +240,8 @@ class ExternalDownloadJpaMapperTest {
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
-                            100L,
-                            200L,
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PROCESSING,
@@ -268,8 +270,8 @@ class ExternalDownloadJpaMapperTest {
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
                             SourceUrl.of("https://example.com/file.jpg"),
-                            100L,
-                            200L,
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PENDING,
@@ -297,8 +299,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
                 SourceUrl.of("https://example.com/file.jpg"),
-                100L,
-                200L,
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -314,8 +316,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownload.of(
                 ExternalDownloadId.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
-                100L,
-                200L,
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -331,8 +333,8 @@ class ExternalDownloadJpaMapperTest {
         return ExternalDownload.of(
                 ExternalDownloadId.of(UUID.randomUUID()),
                 SourceUrl.of("https://example.com/file.jpg"),
-                100L,
-                200L,
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -345,12 +347,12 @@ class ExternalDownloadJpaMapperTest {
     }
 
     private ExternalDownloadJpaEntity createEntity(UUID id) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 id,
                 "https://example.com/file.jpg",
-                100L,
-                200L,
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -364,12 +366,12 @@ class ExternalDownloadJpaMapperTest {
     }
 
     private ExternalDownloadJpaEntity createEntityWithoutFileAsset() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
                 "https://example.com/file.jpg",
-                100L,
-                200L,
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -383,12 +385,12 @@ class ExternalDownloadJpaMapperTest {
     }
 
     private ExternalDownloadJpaEntity createEntityWithoutWebhook() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
                 "https://example.com/file.jpg",
-                100L,
-                200L,
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

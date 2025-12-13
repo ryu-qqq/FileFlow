@@ -1,0 +1,28 @@
+# ===============================================
+# REST API Adapter Configuration - Local Profile
+# ===============================================
+spring:
+  config:
+    activate:
+      on-profile: local
+
+# API Settings for Local Development
+api:
+  error:
+    include-stacktrace: true
+
+# Security Settings for Local Development
+security:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:8080
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    allow-credentials: true

@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.session.aggregate;
 
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
 import com.ryuqq.fileflow.domain.session.exception.ETagMismatchException;
@@ -17,7 +18,7 @@ import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,14 +60,13 @@ public class SingleUploadSession implements UploadSession {
     private final S3Bucket bucket;
     private final S3Key s3Key;
     private final ExpirationTime expirationTime;
-    private final LocalDateTime createdAt;
-    private final Clock clock;
+    private final Instant createdAt;
 
     private SessionStatus status;
     private PresignedUrl presignedUrl;
     private ETag etag;
-    private LocalDateTime completedAt;
-    private LocalDateTime updatedAt;
+    private Instant completedAt;
+    private Instant updatedAt;
     private Long version;
 
     // 도메인 이벤트
@@ -98,7 +98,7 @@ public class SingleUploadSession implements UploadSession {
             S3Key s3Key,
             ExpirationTime expirationTime,
             Clock clock) {
-        LocalDateTime now = LocalDateTime.now(clock);
+        Instant now = clock.instant();
         return new SingleUploadSession(
                 UploadSessionId.forNew(),
                 idempotencyKey,
@@ -115,8 +115,7 @@ public class SingleUploadSession implements UploadSession {
                 null, // etag
                 null, // completedAt
                 now, // updatedAt: 생성 시각과 동일
-                null, // version: 신규 생성 시 null
-                clock);
+                null); // version: 신규 생성 시 null
     }
 
     /**
@@ -138,7 +137,6 @@ public class SingleUploadSession implements UploadSession {
      * @param completedAt 완료 시각 (선택적)
      * @param updatedAt 수정 시각 (선택적)
      * @param version 낙관락 버전 (선택적)
-     * @param clock 시간 소스
      * @return SingleUploadSession
      * @throws IllegalArgumentException id가 null인 경우
      */
@@ -152,14 +150,13 @@ public class SingleUploadSession implements UploadSession {
             S3Bucket bucket,
             S3Key s3Key,
             ExpirationTime expirationTime,
-            LocalDateTime createdAt,
+            Instant createdAt,
             SessionStatus status,
             PresignedUrl presignedUrl,
             ETag etag,
-            LocalDateTime completedAt,
-            LocalDateTime updatedAt,
-            Long version,
-            Clock clock) {
+            Instant completedAt,
+            Instant updatedAt,
+            Long version) {
         if (id == null) {
             throw new IllegalArgumentException("ID는 null일 수 없습니다.");
         }
@@ -179,8 +176,7 @@ public class SingleUploadSession implements UploadSession {
                 etag,
                 completedAt,
                 updatedAt,
-                version,
-                clock);
+                version);
     }
 
     /**
@@ -202,7 +198,6 @@ public class SingleUploadSession implements UploadSession {
      * @param completedAt 완료 시각 (선택적)
      * @param updatedAt 수정 시각 (선택적)
      * @param version 낙관락 버전 (선택적)
-     * @param clock 시간 소스
      * @return SingleUploadSession
      * @throws IllegalArgumentException id가 null인 경우
      */
@@ -216,14 +211,13 @@ public class SingleUploadSession implements UploadSession {
             S3Bucket bucket,
             S3Key s3Key,
             ExpirationTime expirationTime,
-            LocalDateTime createdAt,
+            Instant createdAt,
             SessionStatus status,
             PresignedUrl presignedUrl,
             ETag etag,
-            LocalDateTime completedAt,
-            LocalDateTime updatedAt,
-            Long version,
-            Clock clock) {
+            Instant completedAt,
+            Instant updatedAt,
+            Long version) {
         return of(
                 id,
                 idempotencyKey,
@@ -240,8 +234,7 @@ public class SingleUploadSession implements UploadSession {
                 etag,
                 completedAt,
                 updatedAt,
-                version,
-                clock);
+                version);
     }
 
     /** 생성자 (private). */
@@ -255,14 +248,13 @@ public class SingleUploadSession implements UploadSession {
             S3Bucket bucket,
             S3Key s3Key,
             ExpirationTime expirationTime,
-            LocalDateTime createdAt,
+            Instant createdAt,
             SessionStatus status,
             PresignedUrl presignedUrl,
             ETag etag,
-            LocalDateTime completedAt,
-            LocalDateTime updatedAt,
-            Long version,
-            Clock clock) {
+            Instant completedAt,
+            Instant updatedAt,
+            Long version) {
         this.id = id;
         this.idempotencyKey = idempotencyKey;
         this.userContext = userContext;
@@ -279,7 +271,6 @@ public class SingleUploadSession implements UploadSession {
         this.completedAt = completedAt;
         this.updatedAt = updatedAt != null ? updatedAt : createdAt;
         this.version = version;
-        this.clock = clock;
     }
 
     // ==================== 비즈니스 메서드 ====================
@@ -288,10 +279,11 @@ public class SingleUploadSession implements UploadSession {
      * 세션 활성화 (Presigned URL 발급 후 호출).
      *
      * @param presignedUrl S3 Presigned PUT URL
+     * @param clock 시간 소스
      * @throws InvalidSessionStatusException 상태 전환 불가능한 경우 (PREPARING 아님)
      * @throws IllegalArgumentException Presigned URL이 null인 경우
      */
-    public void activate(PresignedUrl presignedUrl) {
+    public void activate(PresignedUrl presignedUrl, Clock clock) {
         validateStatusTransition(SessionStatus.ACTIVE);
 
         if (presignedUrl == null) {
@@ -300,7 +292,7 @@ public class SingleUploadSession implements UploadSession {
 
         this.presignedUrl = presignedUrl;
         this.status = SessionStatus.ACTIVE;
-        this.updatedAt = LocalDateTime.now(clock);
+        this.updatedAt = clock.instant();
     }
 
     /**
@@ -315,10 +307,11 @@ public class SingleUploadSession implements UploadSession {
      *
      * @param clientETag 클라이언트가 제공한 ETag
      * @param s3ETag S3에 실제 저장된 파일의 ETag
+     * @param clock 시간 소스
      * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
      * @throws ETagMismatchException ETag가 일치하지 않는 경우
      */
-    public void complete(ETag clientETag, ETag s3ETag) {
+    public void complete(ETag clientETag, ETag s3ETag, Clock clock) {
         // 만료 검증 제거 - S3 업로드 성공 후 세션 만료되어도 완료 가능해야 함
         validateStatusTransition(SessionStatus.COMPLETED);
 
@@ -337,7 +330,7 @@ public class SingleUploadSession implements UploadSession {
 
         this.status = SessionStatus.COMPLETED;
         this.etag = clientETag;
-        this.completedAt = LocalDateTime.now(clock);
+        this.completedAt = clock.instant();
         this.updatedAt = this.completedAt;
 
         // 도메인 이벤트 생성
@@ -370,23 +363,26 @@ public class SingleUploadSession implements UploadSession {
     /**
      * 세션 만료 처리.
      *
+     * @param clock 시간 소스
      * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
      */
-    public void expire() {
+    @Override
+    public void expire(Clock clock) {
         validateStatusTransition(SessionStatus.EXPIRED);
         this.status = SessionStatus.EXPIRED;
-        this.updatedAt = LocalDateTime.now(clock);
+        this.updatedAt = clock.instant();
     }
 
     /**
      * 업로드 실패 처리.
      *
+     * @param clock 시간 소스
      * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
      */
-    public void fail() {
+    public void fail(Clock clock) {
         validateStatusTransition(SessionStatus.FAILED);
         this.status = SessionStatus.FAILED;
-        this.updatedAt = LocalDateTime.now(clock);
+        this.updatedAt = clock.instant();
     }
 
     // ==================== private 검증 메서드 ====================
@@ -394,9 +390,10 @@ public class SingleUploadSession implements UploadSession {
     /**
      * 세션이 만료되지 않았는지 검증한다.
      *
+     * @param clock 시간 소스
      * @throws SessionExpiredException 세션이 만료된 경우
      */
-    private void validateNotExpired() {
+    private void validateNotExpired(Clock clock) {
         if (expirationTime.isExpired(clock)) {
             throw new SessionExpiredException(expirationTime.value());
         }
@@ -444,9 +441,9 @@ public class SingleUploadSession implements UploadSession {
     /**
      * Law of Demeter: 조직 ID 반환.
      *
-     * @return 조직 ID
+     * @return 조직 ID (nullable - Admin/Customer는 null)
      */
-    public long getOrganizationId() {
+    public OrganizationId getOrganizationId() {
         return userContext.getOrganizationId();
     }
 
@@ -494,11 +491,11 @@ public class SingleUploadSession implements UploadSession {
         return expirationTime;
     }
 
-    public LocalDateTime getExpiresAt() {
+    public Instant getExpiresAt() {
         return expirationTime.value();
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
@@ -536,11 +533,11 @@ public class SingleUploadSession implements UploadSession {
         return etag != null ? etag.value() : null;
     }
 
-    public LocalDateTime getCompletedAt() {
+    public Instant getCompletedAt() {
         return completedAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 
@@ -565,9 +562,10 @@ public class SingleUploadSession implements UploadSession {
     /**
      * 세션이 만료되었는지 확인한다.
      *
+     * @param clock 시간 소스
      * @return 만료되었으면 true
      */
-    public boolean isExpired() {
+    public boolean isExpired(Clock clock) {
         return expirationTime.isExpired(clock);
     }
 

@@ -6,6 +6,8 @@ import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.BatchGenerateDownloa
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.DeleteFileAssetApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.GenerateDownloadUrlApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest.FileAssetStatusFilter;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest.FileCategoryFilter;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.BatchDownloadUrlApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.DeleteFileAssetApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.DownloadUrlApiResponse;
@@ -19,9 +21,9 @@ import com.ryuqq.fileflow.application.asset.dto.response.BatchDownloadUrlRespons
 import com.ryuqq.fileflow.application.asset.dto.response.DeleteFileAssetResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.DownloadUrlResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.FileAssetResponse;
-import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
-import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
-import java.time.LocalDateTime;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +32,9 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("FileAssetApiMapper 단위 테스트")
 class FileAssetApiMapperTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     private FileAssetApiMapper mapper;
 
@@ -47,8 +52,8 @@ class FileAssetApiMapperTest {
         void toGetFileAssetQuery_ShouldCreateQuery() {
             // given
             String id = "file-asset-123";
-            long organizationId = 100L;
-            long tenantId = 1L;
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
 
             // when
             GetFileAssetQuery query = mapper.toGetFileAssetQuery(id, organizationId, tenantId);
@@ -66,7 +71,8 @@ class FileAssetApiMapperTest {
             String uuidId = "550e8400-e29b-41d4-a716-446655440000";
 
             // when
-            GetFileAssetQuery query = mapper.toGetFileAssetQuery(uuidId, 1L, 1L);
+            GetFileAssetQuery query =
+                    mapper.toGetFileAssetQuery(uuidId, TEST_TENANT_ID, TEST_TENANT_ID);
 
             // then
             assertThat(query.fileAssetId()).isEqualTo(uuidId);
@@ -83,9 +89,9 @@ class FileAssetApiMapperTest {
             // given
             FileAssetSearchApiRequest request =
                     new FileAssetSearchApiRequest(
-                            FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0, 20);
-            long organizationId = 100L;
-            long tenantId = 1L;
+                            FileAssetStatusFilter.COMPLETED, FileCategoryFilter.IMAGE, 0, 20);
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
 
             // when
             ListFileAssetsQuery query =
@@ -94,8 +100,8 @@ class FileAssetApiMapperTest {
             // then
             assertThat(query.organizationId()).isEqualTo(organizationId);
             assertThat(query.tenantId()).isEqualTo(tenantId);
-            assertThat(query.status()).isEqualTo(FileAssetStatus.COMPLETED);
-            assertThat(query.category()).isEqualTo(FileCategory.IMAGE);
+            assertThat(query.status()).isEqualTo("COMPLETED");
+            assertThat(query.category()).isEqualTo("IMAGE");
             assertThat(query.page()).isEqualTo(0);
             assertThat(query.size()).isEqualTo(20);
         }
@@ -106,8 +112,8 @@ class FileAssetApiMapperTest {
             // given
             FileAssetSearchApiRequest request =
                     new FileAssetSearchApiRequest(null, null, null, null);
-            long organizationId = 100L;
-            long tenantId = 1L;
+            String organizationId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
 
             // when
             ListFileAssetsQuery query =
@@ -127,13 +133,14 @@ class FileAssetApiMapperTest {
         void toListFileAssetsQuery_WithStatusOnly_ShouldCreateQuery() {
             // given
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(FileAssetStatus.PROCESSING, null, 1, 10);
+                    new FileAssetSearchApiRequest(FileAssetStatusFilter.PROCESSING, null, 1, 10);
 
             // when
-            ListFileAssetsQuery query = mapper.toListFileAssetsQuery(request, 1L, 1L);
+            ListFileAssetsQuery query =
+                    mapper.toListFileAssetsQuery(request, TEST_TENANT_ID, TEST_TENANT_ID);
 
             // then
-            assertThat(query.status()).isEqualTo(FileAssetStatus.PROCESSING);
+            assertThat(query.status()).isEqualTo("PROCESSING");
             assertThat(query.category()).isNull();
             assertThat(query.page()).isEqualTo(1);
             assertThat(query.size()).isEqualTo(10);
@@ -144,14 +151,15 @@ class FileAssetApiMapperTest {
         void toListFileAssetsQuery_WithCategoryOnly_ShouldCreateQuery() {
             // given
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(null, FileCategory.VIDEO, 2, 50);
+                    new FileAssetSearchApiRequest(null, FileCategoryFilter.VIDEO, 2, 50);
 
             // when
-            ListFileAssetsQuery query = mapper.toListFileAssetsQuery(request, 1L, 1L);
+            ListFileAssetsQuery query =
+                    mapper.toListFileAssetsQuery(request, TEST_TENANT_ID, TEST_TENANT_ID);
 
             // then
             assertThat(query.status()).isNull();
-            assertThat(query.category()).isEqualTo(FileCategory.VIDEO);
+            assertThat(query.category()).isEqualTo("VIDEO");
             assertThat(query.page()).isEqualTo(2);
             assertThat(query.size()).isEqualTo(50);
         }
@@ -165,8 +173,8 @@ class FileAssetApiMapperTest {
         @DisplayName("FileAssetResponse를 API Response로 변환할 수 있다")
         void toApiResponse_ShouldConvertCorrectly() {
             // given
-            LocalDateTime createdAt = LocalDateTime.of(2025, 11, 26, 10, 0);
-            LocalDateTime processedAt = LocalDateTime.of(2025, 11, 26, 10, 5);
+            Instant createdAt = Instant.parse("2025-11-26T10:00:00Z");
+            Instant processedAt = Instant.parse("2025-11-26T10:05:00Z");
 
             FileAssetResponse response =
                     new FileAssetResponse(
@@ -175,11 +183,11 @@ class FileAssetApiMapperTest {
                             "document.pdf",
                             1024 * 1024L,
                             "application/pdf",
-                            FileCategory.DOCUMENT,
+                            "DOCUMENT",
                             "test-bucket",
                             "uploads/document.pdf",
                             "etag-abc123",
-                            FileAssetStatus.COMPLETED,
+                            "COMPLETED",
                             createdAt,
                             processedAt);
 
@@ -192,11 +200,11 @@ class FileAssetApiMapperTest {
             assertThat(apiResponse.fileName()).isEqualTo("document.pdf");
             assertThat(apiResponse.fileSize()).isEqualTo(1024 * 1024L);
             assertThat(apiResponse.contentType()).isEqualTo("application/pdf");
-            assertThat(apiResponse.category()).isEqualTo(FileCategory.DOCUMENT);
+            assertThat(apiResponse.category()).isEqualTo("DOCUMENT");
             assertThat(apiResponse.bucket()).isEqualTo("test-bucket");
             assertThat(apiResponse.s3Key()).isEqualTo("uploads/document.pdf");
             assertThat(apiResponse.etag()).isEqualTo("etag-abc123");
-            assertThat(apiResponse.status()).isEqualTo(FileAssetStatus.COMPLETED);
+            assertThat(apiResponse.status()).isEqualTo("COMPLETED");
             assertThat(apiResponse.createdAt()).isEqualTo(createdAt);
             assertThat(apiResponse.processedAt()).isEqualTo(processedAt);
         }
@@ -205,7 +213,7 @@ class FileAssetApiMapperTest {
         @DisplayName("processedAt이 null인 경우에도 변환할 수 있다")
         void toApiResponse_WithNullProcessedAt_ShouldConvertCorrectly() {
             // given
-            LocalDateTime createdAt = LocalDateTime.of(2025, 11, 26, 10, 0);
+            Instant createdAt = Instant.parse("2025-11-26T10:00:00Z");
 
             FileAssetResponse response =
                     new FileAssetResponse(
@@ -214,11 +222,11 @@ class FileAssetApiMapperTest {
                             "image.jpg",
                             512 * 1024L,
                             "image/jpeg",
-                            FileCategory.IMAGE,
+                            "IMAGE",
                             "bucket",
                             "key",
                             null,
-                            FileAssetStatus.PENDING,
+                            "PENDING",
                             createdAt,
                             null);
 
@@ -226,7 +234,7 @@ class FileAssetApiMapperTest {
             FileAssetApiResponse apiResponse = mapper.toApiResponse(response);
 
             // then
-            assertThat(apiResponse.status()).isEqualTo(FileAssetStatus.PENDING);
+            assertThat(apiResponse.status()).isEqualTo("PENDING");
             assertThat(apiResponse.etag()).isNull();
             assertThat(apiResponse.processedAt()).isNull();
         }
@@ -235,16 +243,12 @@ class FileAssetApiMapperTest {
         @DisplayName("다양한 카테고리의 파일을 변환할 수 있다")
         void toApiResponse_WithVariousCategories_ShouldConvertCorrectly() {
             // given
-            LocalDateTime now = LocalDateTime.now();
+            Instant now = Instant.now();
 
-            FileAssetResponse imageAsset =
-                    createFileAssetResponse("img-1", FileCategory.IMAGE, now);
-            FileAssetResponse videoAsset =
-                    createFileAssetResponse("vid-1", FileCategory.VIDEO, now);
-            FileAssetResponse audioAsset =
-                    createFileAssetResponse("aud-1", FileCategory.AUDIO, now);
-            FileAssetResponse docAsset =
-                    createFileAssetResponse("doc-1", FileCategory.DOCUMENT, now);
+            FileAssetResponse imageAsset = createFileAssetResponse("img-1", "IMAGE", now);
+            FileAssetResponse videoAsset = createFileAssetResponse("vid-1", "VIDEO", now);
+            FileAssetResponse audioAsset = createFileAssetResponse("aud-1", "AUDIO", now);
+            FileAssetResponse docAsset = createFileAssetResponse("doc-1", "DOCUMENT", now);
 
             // when
             FileAssetApiResponse imageApi = mapper.toApiResponse(imageAsset);
@@ -253,15 +257,15 @@ class FileAssetApiMapperTest {
             FileAssetApiResponse docApi = mapper.toApiResponse(docAsset);
 
             // then
-            assertThat(imageApi.category()).isEqualTo(FileCategory.IMAGE);
-            assertThat(videoApi.category()).isEqualTo(FileCategory.VIDEO);
-            assertThat(audioApi.category()).isEqualTo(FileCategory.AUDIO);
-            assertThat(docApi.category()).isEqualTo(FileCategory.DOCUMENT);
+            assertThat(imageApi.category()).isEqualTo("IMAGE");
+            assertThat(videoApi.category()).isEqualTo("VIDEO");
+            assertThat(audioApi.category()).isEqualTo("AUDIO");
+            assertThat(docApi.category()).isEqualTo("DOCUMENT");
         }
     }
 
     private FileAssetResponse createFileAssetResponse(
-            String id, FileCategory category, LocalDateTime createdAt) {
+            String id, String category, Instant createdAt) {
         return new FileAssetResponse(
                 id,
                 "session-1",
@@ -272,7 +276,7 @@ class FileAssetApiMapperTest {
                 "bucket",
                 "key/" + id,
                 "etag",
-                FileAssetStatus.COMPLETED,
+                "COMPLETED",
                 createdAt,
                 createdAt);
     }
@@ -287,8 +291,8 @@ class FileAssetApiMapperTest {
             // given
             String fileAssetId = "file-asset-123";
             DeleteFileAssetApiRequest request = new DeleteFileAssetApiRequest("사용하지 않는 파일");
-            long tenantId = 1L;
-            long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             DeleteFileAssetCommand command =
@@ -307,8 +311,8 @@ class FileAssetApiMapperTest {
             // given
             String fileAssetId = "file-asset-456";
             DeleteFileAssetApiRequest request = DeleteFileAssetApiRequest.empty();
-            long tenantId = 1L;
-            long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             DeleteFileAssetCommand command =
@@ -327,7 +331,7 @@ class FileAssetApiMapperTest {
 
             // when
             DeleteFileAssetCommand command =
-                    mapper.toDeleteFileAssetCommand(fileAssetId, null, 1L, 100L);
+                    mapper.toDeleteFileAssetCommand(fileAssetId, null, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
             assertThat(command.fileAssetId()).isEqualTo(fileAssetId);
@@ -343,7 +347,7 @@ class FileAssetApiMapperTest {
         @DisplayName("삭제 응답을 API 응답으로 변환할 수 있다")
         void toDeleteApiResponse_ShouldConvertCorrectly() {
             // given
-            LocalDateTime processedAt = LocalDateTime.of(2025, 11, 27, 10, 30);
+            Instant processedAt = Instant.parse("2025-11-27T10:30:00Z");
             DeleteFileAssetResponse response =
                     DeleteFileAssetResponse.of("file-deleted-123", processedAt);
 
@@ -366,8 +370,8 @@ class FileAssetApiMapperTest {
             // given
             String fileAssetId = "file-asset-123";
             GenerateDownloadUrlApiRequest request = new GenerateDownloadUrlApiRequest(120);
-            long tenantId = 1L;
-            long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             GenerateDownloadUrlCommand command =
@@ -389,7 +393,8 @@ class FileAssetApiMapperTest {
 
             // when
             GenerateDownloadUrlCommand command =
-                    mapper.toGenerateDownloadUrlCommand(fileAssetId, null, 1L, 100L);
+                    mapper.toGenerateDownloadUrlCommand(
+                            fileAssetId, null, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
             assertThat(command.fileAssetId()).isEqualTo(fileAssetId);
@@ -408,8 +413,8 @@ class FileAssetApiMapperTest {
             List<String> fileAssetIds = List.of("file-1", "file-2", "file-3");
             BatchGenerateDownloadUrlApiRequest request =
                     new BatchGenerateDownloadUrlApiRequest(fileAssetIds, 180);
-            long tenantId = 1L;
-            long organizationId = 100L;
+            String tenantId = TEST_TENANT_ID;
+            String organizationId = TEST_ORG_ID;
 
             // when
             BatchGenerateDownloadUrlCommand command =
@@ -432,7 +437,7 @@ class FileAssetApiMapperTest {
 
             // when
             BatchGenerateDownloadUrlCommand command =
-                    mapper.toBatchGenerateDownloadUrlCommand(request, 1L, 100L);
+                    mapper.toBatchGenerateDownloadUrlCommand(request, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
             assertThat(command.expirationMinutes()).isEqualTo(60);
@@ -447,7 +452,7 @@ class FileAssetApiMapperTest {
         @DisplayName("다운로드 URL 응답을 API 응답으로 변환할 수 있다")
         void toDownloadUrlApiResponse_ShouldConvertCorrectly() {
             // given
-            LocalDateTime expiresAt = LocalDateTime.of(2025, 11, 27, 12, 0);
+            Instant expiresAt = Instant.parse("2025-11-27T12:00:00Z");
             DownloadUrlResponse response =
                     DownloadUrlResponse.of(
                             "file-asset-123",
@@ -479,7 +484,7 @@ class FileAssetApiMapperTest {
         @DisplayName("일괄 다운로드 URL 응답을 API 응답으로 변환할 수 있다 (모두 성공)")
         void toBatchDownloadUrlApiResponse_AllSuccess_ShouldConvertCorrectly() {
             // given
-            LocalDateTime expiresAt = LocalDateTime.of(2025, 11, 27, 12, 0);
+            Instant expiresAt = Instant.parse("2025-11-27T12:00:00Z");
             List<DownloadUrlResponse> downloadUrls =
                     List.of(
                             DownloadUrlResponse.of(
@@ -514,7 +519,7 @@ class FileAssetApiMapperTest {
         @DisplayName("일괄 다운로드 URL 응답을 API 응답으로 변환할 수 있다 (일부 실패)")
         void toBatchDownloadUrlApiResponse_PartialFailure_ShouldConvertCorrectly() {
             // given
-            LocalDateTime expiresAt = LocalDateTime.of(2025, 11, 27, 12, 0);
+            Instant expiresAt = Instant.parse("2025-11-27T12:00:00Z");
             List<DownloadUrlResponse> downloadUrls =
                     List.of(
                             DownloadUrlResponse.of(

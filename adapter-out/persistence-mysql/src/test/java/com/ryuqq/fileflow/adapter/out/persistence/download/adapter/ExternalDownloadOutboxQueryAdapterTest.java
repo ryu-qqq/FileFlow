@@ -11,7 +11,6 @@ import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -216,7 +215,7 @@ class ExternalDownloadOutboxQueryAdapterTest {
 
     private ExternalDownloadOutboxJpaEntity createEntity(Long outboxId, UUID downloadId) {
         UUID id = outboxId != null ? UUID.randomUUID() : null;
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return ExternalDownloadOutboxJpaEntity.of(id, downloadId, false, null, now, now);
     }
 }

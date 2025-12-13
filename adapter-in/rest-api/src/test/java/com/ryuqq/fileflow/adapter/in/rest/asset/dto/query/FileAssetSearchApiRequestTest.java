@@ -2,8 +2,8 @@ package com.ryuqq.fileflow.adapter.in.rest.asset.dto.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
-import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest.FileAssetStatusFilter;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest.FileCategoryFilter;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -36,11 +36,11 @@ class FileAssetSearchApiRequestTest {
             // when
             FileAssetSearchApiRequest request =
                     new FileAssetSearchApiRequest(
-                            FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0, 20);
+                            FileAssetStatusFilter.COMPLETED, FileCategoryFilter.IMAGE, 0, 20);
 
             // then
-            assertThat(request.status()).isEqualTo(FileAssetStatus.COMPLETED);
-            assertThat(request.category()).isEqualTo(FileCategory.IMAGE);
+            assertThat(request.status()).isEqualTo(FileAssetStatusFilter.COMPLETED);
+            assertThat(request.category()).isEqualTo(FileCategoryFilter.IMAGE);
             assertThat(request.page()).isEqualTo(0);
             assertThat(request.size()).isEqualTo(20);
         }
@@ -64,10 +64,10 @@ class FileAssetSearchApiRequestTest {
         void create_WithStatusOnly_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(FileAssetStatus.PROCESSING, null, 1, 10);
+                    new FileAssetSearchApiRequest(FileAssetStatusFilter.PROCESSING, null, 1, 10);
 
             // then
-            assertThat(request.status()).isEqualTo(FileAssetStatus.PROCESSING);
+            assertThat(request.status()).isEqualTo(FileAssetStatusFilter.PROCESSING);
             assertThat(request.category()).isNull();
             assertThat(request.page()).isEqualTo(1);
             assertThat(request.size()).isEqualTo(10);
@@ -78,11 +78,11 @@ class FileAssetSearchApiRequestTest {
         void create_WithCategoryOnly_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(null, FileCategory.VIDEO, 2, 50);
+                    new FileAssetSearchApiRequest(null, FileCategoryFilter.VIDEO, 2, 50);
 
             // then
             assertThat(request.status()).isNull();
-            assertThat(request.category()).isEqualTo(FileCategory.VIDEO);
+            assertThat(request.category()).isEqualTo(FileCategoryFilter.VIDEO);
             assertThat(request.page()).isEqualTo(2);
             assertThat(request.size()).isEqualTo(50);
         }
@@ -118,7 +118,7 @@ class FileAssetSearchApiRequestTest {
             // given
             FileAssetSearchApiRequest request =
                     new FileAssetSearchApiRequest(
-                            FileAssetStatus.COMPLETED, FileCategory.DOCUMENT, 0, 50);
+                            FileAssetStatusFilter.COMPLETED, FileCategoryFilter.DOCUMENT, 0, 50);
 
             // when
             Set<ConstraintViolation<FileAssetSearchApiRequest>> violations =
@@ -200,7 +200,7 @@ class FileAssetSearchApiRequestTest {
     }
 
     @Nested
-    @DisplayName("FileAssetStatus 필터 테스트")
+    @DisplayName("FileAssetStatusFilter 테스트")
     class StatusFilterTest {
 
         @Test
@@ -208,10 +208,10 @@ class FileAssetSearchApiRequestTest {
         void filter_WithPendingStatus_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(FileAssetStatus.PENDING, null, 0, 20);
+                    new FileAssetSearchApiRequest(FileAssetStatusFilter.PENDING, null, 0, 20);
 
             // then
-            assertThat(request.status()).isEqualTo(FileAssetStatus.PENDING);
+            assertThat(request.status()).isEqualTo(FileAssetStatusFilter.PENDING);
         }
 
         @Test
@@ -219,10 +219,10 @@ class FileAssetSearchApiRequestTest {
         void filter_WithProcessingStatus_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(FileAssetStatus.PROCESSING, null, 0, 20);
+                    new FileAssetSearchApiRequest(FileAssetStatusFilter.PROCESSING, null, 0, 20);
 
             // then
-            assertThat(request.status()).isEqualTo(FileAssetStatus.PROCESSING);
+            assertThat(request.status()).isEqualTo(FileAssetStatusFilter.PROCESSING);
         }
 
         @Test
@@ -230,10 +230,10 @@ class FileAssetSearchApiRequestTest {
         void filter_WithCompletedStatus_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(FileAssetStatus.COMPLETED, null, 0, 20);
+                    new FileAssetSearchApiRequest(FileAssetStatusFilter.COMPLETED, null, 0, 20);
 
             // then
-            assertThat(request.status()).isEqualTo(FileAssetStatus.COMPLETED);
+            assertThat(request.status()).isEqualTo(FileAssetStatusFilter.COMPLETED);
         }
 
         @Test
@@ -241,15 +241,15 @@ class FileAssetSearchApiRequestTest {
         void filter_WithFailedStatus_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(FileAssetStatus.FAILED, null, 0, 20);
+                    new FileAssetSearchApiRequest(FileAssetStatusFilter.FAILED, null, 0, 20);
 
             // then
-            assertThat(request.status()).isEqualTo(FileAssetStatus.FAILED);
+            assertThat(request.status()).isEqualTo(FileAssetStatusFilter.FAILED);
         }
     }
 
     @Nested
-    @DisplayName("FileCategory 필터 테스트")
+    @DisplayName("FileCategoryFilter 테스트")
     class CategoryFilterTest {
 
         @Test
@@ -257,10 +257,10 @@ class FileAssetSearchApiRequestTest {
         void filter_WithImageCategory_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(null, FileCategory.IMAGE, 0, 20);
+                    new FileAssetSearchApiRequest(null, FileCategoryFilter.IMAGE, 0, 20);
 
             // then
-            assertThat(request.category()).isEqualTo(FileCategory.IMAGE);
+            assertThat(request.category()).isEqualTo(FileCategoryFilter.IMAGE);
         }
 
         @Test
@@ -268,10 +268,10 @@ class FileAssetSearchApiRequestTest {
         void filter_WithVideoCategory_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(null, FileCategory.VIDEO, 0, 20);
+                    new FileAssetSearchApiRequest(null, FileCategoryFilter.VIDEO, 0, 20);
 
             // then
-            assertThat(request.category()).isEqualTo(FileCategory.VIDEO);
+            assertThat(request.category()).isEqualTo(FileCategoryFilter.VIDEO);
         }
 
         @Test
@@ -279,10 +279,10 @@ class FileAssetSearchApiRequestTest {
         void filter_WithDocumentCategory_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(null, FileCategory.DOCUMENT, 0, 20);
+                    new FileAssetSearchApiRequest(null, FileCategoryFilter.DOCUMENT, 0, 20);
 
             // then
-            assertThat(request.category()).isEqualTo(FileCategory.DOCUMENT);
+            assertThat(request.category()).isEqualTo(FileCategoryFilter.DOCUMENT);
         }
 
         @Test
@@ -290,10 +290,10 @@ class FileAssetSearchApiRequestTest {
         void filter_WithAudioCategory_ShouldSucceed() {
             // when
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(null, FileCategory.AUDIO, 0, 20);
+                    new FileAssetSearchApiRequest(null, FileCategoryFilter.AUDIO, 0, 20);
 
             // then
-            assertThat(request.category()).isEqualTo(FileCategory.AUDIO);
+            assertThat(request.category()).isEqualTo(FileCategoryFilter.AUDIO);
         }
     }
 
@@ -307,10 +307,10 @@ class FileAssetSearchApiRequestTest {
             // given
             FileAssetSearchApiRequest request1 =
                     new FileAssetSearchApiRequest(
-                            FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0, 20);
+                            FileAssetStatusFilter.COMPLETED, FileCategoryFilter.IMAGE, 0, 20);
             FileAssetSearchApiRequest request2 =
                     new FileAssetSearchApiRequest(
-                            FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0, 20);
+                            FileAssetStatusFilter.COMPLETED, FileCategoryFilter.IMAGE, 0, 20);
 
             // when & then
             assertThat(request1).isEqualTo(request2);
@@ -322,9 +322,9 @@ class FileAssetSearchApiRequestTest {
         void equals_WithDifferentStatus_ShouldNotBeEqual() {
             // given
             FileAssetSearchApiRequest request1 =
-                    new FileAssetSearchApiRequest(FileAssetStatus.COMPLETED, null, 0, 20);
+                    new FileAssetSearchApiRequest(FileAssetStatusFilter.COMPLETED, null, 0, 20);
             FileAssetSearchApiRequest request2 =
-                    new FileAssetSearchApiRequest(FileAssetStatus.PENDING, null, 0, 20);
+                    new FileAssetSearchApiRequest(FileAssetStatusFilter.PENDING, null, 0, 20);
 
             // when & then
             assertThat(request1).isNotEqualTo(request2);

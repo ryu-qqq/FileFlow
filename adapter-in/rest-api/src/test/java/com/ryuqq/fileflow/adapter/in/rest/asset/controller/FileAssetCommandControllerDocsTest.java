@@ -24,8 +24,10 @@ import com.ryuqq.fileflow.application.asset.port.in.command.BatchGenerateDownloa
 import com.ryuqq.fileflow.application.asset.port.in.command.DeleteFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.command.GenerateDownloadUrlUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +61,8 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
 
     @BeforeEach
     void setUpUserContext() {
-        UserContext userContext = UserContext.admin("admin@test.com");
+        UserContext userContext =
+                UserContext.seller(OrganizationId.generate(), "Test Org", "seller@test.com");
         UserContextHolder.set(userContext);
     }
 
@@ -69,20 +72,19 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/file-assets/{id}/delete - 파일 자산 삭제 API 문서")
+    @DisplayName("PATCH /api/v1/file/file-assets/{id}/delete - 파일 자산 삭제 API 문서")
     void deleteFileAsset() throws Exception {
         // given
         String fileAssetId = "asset-123";
         DeleteFileAssetApiRequest request = new DeleteFileAssetApiRequest("더 이상 필요하지 않음");
 
-        DeleteFileAssetResponse response =
-                new DeleteFileAssetResponse(fileAssetId, LocalDateTime.now());
+        DeleteFileAssetResponse response = new DeleteFileAssetResponse(fileAssetId, Instant.now());
 
         given(deleteFileAssetUseCase.execute(any())).willReturn(response);
 
         // when & then
         mockMvc.perform(
-                        patch("/api/v1/file-assets/{id}/delete", fileAssetId)
+                        patch("/api/v1/file/file-assets/{id}/delete", fileAssetId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -107,7 +109,7 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("POST /api/v1/file-assets/{id}/download-url - Download URL 생성 API 문서")
+    @DisplayName("POST /api/v1/file/file-assets/{id}/download-url - Download URL 생성 API 문서")
     void generateDownloadUrl() throws Exception {
         // given
         String fileAssetId = "asset-123";
@@ -120,13 +122,13 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
                         "example.jpg",
                         "image/jpeg",
                         1024000L,
-                        LocalDateTime.now().plusHours(1));
+                        Instant.now().plus(Duration.ofHours(1)));
 
         given(generateDownloadUrlUseCase.execute(any())).willReturn(response);
 
         // when & then
         mockMvc.perform(
-                        post("/api/v1/file-assets/{id}/download-url", fileAssetId)
+                        post("/api/v1/file/file-assets/{id}/download-url", fileAssetId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -156,7 +158,7 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("POST /api/v1/file-assets/batch-download-url - 일괄 Download URL 생성 API 문서")
+    @DisplayName("POST /api/v1/file/file-assets/batch-download-url - 일괄 Download URL 생성 API 문서")
     void batchGenerateDownloadUrl() throws Exception {
         // given
         BatchGenerateDownloadUrlApiRequest request =
@@ -171,14 +173,14 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
                                         "file1.jpg",
                                         "image/jpeg",
                                         1024000L,
-                                        LocalDateTime.now().plusHours(1)),
+                                        Instant.now().plus(Duration.ofHours(1))),
                                 new DownloadUrlResponse(
                                         "asset-456",
                                         "https://s3.amazonaws.com/bucket/file2.jpg?signature=...",
                                         "file2.jpg",
                                         "image/jpeg",
                                         2048000L,
-                                        LocalDateTime.now().plusHours(1))),
+                                        Instant.now().plus(Duration.ofHours(1)))),
                         2,
                         0,
                         List.of());
@@ -187,7 +189,7 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        post("/api/v1/file-assets/batch-download-url")
+                        post("/api/v1/file/file-assets/batch-download-url")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

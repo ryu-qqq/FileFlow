@@ -9,7 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -30,11 +30,11 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
     @Column(name = "source_url", nullable = false, length = 2048)
     private String sourceUrl;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
+    @Column(name = "tenant_id", nullable = false, length = 36)
+    private String tenantId;
 
-    @Column(name = "organization_id", nullable = false)
-    private Long organizationId;
+    @Column(name = "organization_id", nullable = false, length = 36)
+    private String organizationId;
 
     @Column(name = "s3_bucket", nullable = false, length = 63)
     private String s3Bucket;
@@ -69,8 +69,8 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
     private ExternalDownloadJpaEntity(
             UUID id,
             String sourceUrl,
-            Long tenantId,
-            Long organizationId,
+            String tenantId,
+            String organizationId,
             String s3Bucket,
             String s3PathPrefix,
             ExternalDownloadStatus status,
@@ -79,8 +79,8 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
             String errorMessage,
             String webhookUrl,
             Long version,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant createdAt,
+            Instant updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
         this.sourceUrl = sourceUrl;
@@ -99,8 +99,8 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
     public static ExternalDownloadJpaEntity of(
             UUID id,
             String sourceUrl,
-            Long tenantId,
-            Long organizationId,
+            String tenantId,
+            String organizationId,
             String s3Bucket,
             String s3PathPrefix,
             ExternalDownloadStatus status,
@@ -109,8 +109,8 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
             String errorMessage,
             String webhookUrl,
             Long version,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            Instant createdAt,
+            Instant updatedAt) {
         return new ExternalDownloadJpaEntity(
                 id,
                 sourceUrl,
@@ -136,11 +136,11 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
         return sourceUrl;
     }
 
-    public Long getTenantId() {
+    public String getTenantId() {
         return tenantId;
     }
 
-    public Long getOrganizationId() {
+    public String getOrganizationId() {
         return organizationId;
     }
 

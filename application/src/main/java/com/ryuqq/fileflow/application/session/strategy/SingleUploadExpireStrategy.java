@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.session.strategy;
 
-import com.ryuqq.fileflow.application.session.manager.UploadSessionManager;
+import com.ryuqq.fileflow.application.session.factory.command.UploadSessionCommandFactory;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import org.springframework.stereotype.Component;
 
@@ -14,19 +14,20 @@ import org.springframework.stereotype.Component;
  * <ul>
  *   <li>Domain에서 상태 전환 (PREPARING/ACTIVE → EXPIRED)
  * </ul>
+ *
+ * <p><strong>영속화 책임</strong>: Service에서 처리 (Strategy는 비즈니스 로직만 담당)
  */
 @Component
 public class SingleUploadExpireStrategy implements ExpireStrategy<SingleUploadSession> {
 
-    private final UploadSessionManager uploadSessionManager;
+    private final UploadSessionCommandFactory commandFactory;
 
-    public SingleUploadExpireStrategy(UploadSessionManager uploadSessionManager) {
-        this.uploadSessionManager = uploadSessionManager;
+    public SingleUploadExpireStrategy(UploadSessionCommandFactory commandFactory) {
+        this.commandFactory = commandFactory;
     }
 
     @Override
     public void expire(SingleUploadSession session) {
-        session.expire();
-        uploadSessionManager.save(session);
+        session.expire(commandFactory.getClock());
     }
 }

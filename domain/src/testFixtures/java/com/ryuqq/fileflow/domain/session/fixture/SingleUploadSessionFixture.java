@@ -5,7 +5,7 @@ import com.ryuqq.fileflow.domain.iam.fixture.UserContextFixture;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import com.ryuqq.fileflow.domain.session.vo.*;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * SingleUploadSession Aggregate Test Fixture
@@ -46,7 +46,7 @@ public class SingleUploadSessionFixture {
                         S3KeyFixture.defaultS3Key(),
                         ExpirationTimeFixture.defaultExpirationTime(),
                         ClockFixture.defaultClock());
-        session.activate(PresignedUrlFixture.defaultPresignedUrl());
+        session.activate(PresignedUrlFixture.defaultPresignedUrl(), ClockFixture.defaultClock());
         return session;
     }
 
@@ -63,15 +63,15 @@ public class SingleUploadSessionFixture {
                         S3KeyFixture.defaultS3Key(),
                         ExpirationTimeFixture.defaultExpirationTime(),
                         ClockFixture.defaultClock());
-        session.activate(PresignedUrlFixture.defaultPresignedUrl());
+        session.activate(PresignedUrlFixture.defaultPresignedUrl(), ClockFixture.defaultClock());
         ETag etag = ETagFixture.defaultETag();
-        session.complete(etag, etag);
+        session.complete(etag, etag, ClockFixture.defaultClock());
         return session;
     }
 
     /** 영속화된 SingleUploadSession Fixture (reconstitute) */
     public static SingleUploadSession existingSingleUploadSession() {
-        LocalDateTime createdAt = LocalDateTime.now().minusMinutes(5);
+        Instant createdAt = Instant.now().minusSeconds(300);
         return SingleUploadSession.reconstitute(
                 UploadSessionIdFixture.fixedUploadSessionId(),
                 IdempotencyKeyFixture.fixedIdempotencyKey(),
@@ -88,8 +88,7 @@ public class SingleUploadSessionFixture {
                 null,
                 null,
                 createdAt, // updatedAt
-                1L,
-                ClockFixture.defaultClock());
+                1L);
     }
 
     /** Custom SingleUploadSession Fixture */

@@ -1,8 +1,9 @@
 package com.ryuqq.fileflow.application.download.listener;
 
+import com.ryuqq.fileflow.application.download.factory.command.ExternalDownloadCommandFactory;
 import com.ryuqq.fileflow.application.download.manager.ExternalDownloadMessageManager;
-import com.ryuqq.fileflow.application.download.manager.ExternalDownloadOutboxManager;
-import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadOutboxQueryPort;
+import com.ryuqq.fileflow.application.download.manager.command.ExternalDownloadOutboxTransactionManager;
+import com.ryuqq.fileflow.application.download.manager.query.ExternalDownloadOutboxReadManager;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
@@ -39,17 +40,20 @@ public class ExternalDownloadRegisteredEventListener {
     private static final Logger log =
             LoggerFactory.getLogger(ExternalDownloadRegisteredEventListener.class);
 
-    private final ExternalDownloadOutboxQueryPort outboxQueryPort;
-    private final ExternalDownloadOutboxManager outboxManager;
+    private final ExternalDownloadOutboxReadManager outboxReadManager;
+    private final ExternalDownloadOutboxTransactionManager outboxTransactionManager;
     private final ExternalDownloadMessageManager messageManager;
+    private final ExternalDownloadCommandFactory commandFactory;
 
     public ExternalDownloadRegisteredEventListener(
-            ExternalDownloadOutboxQueryPort outboxQueryPort,
-            ExternalDownloadOutboxManager outboxManager,
-            ExternalDownloadMessageManager messageManager) {
-        this.outboxQueryPort = outboxQueryPort;
-        this.outboxManager = outboxManager;
+            ExternalDownloadOutboxReadManager outboxReadManager,
+            ExternalDownloadOutboxTransactionManager outboxTransactionManager,
+            ExternalDownloadMessageManager messageManager,
+            ExternalDownloadCommandFactory commandFactory) {
+        this.outboxReadManager = outboxReadManager;
+        this.outboxTransactionManager = outboxTransactionManager;
         this.messageManager = messageManager;
+        this.commandFactory = commandFactory;
     }
 
     /**
@@ -72,7 +76,7 @@ public class ExternalDownloadRegisteredEventListener {
                 event.sourceUrl().value());
 
         ExternalDownloadOutbox outbox =
-                outboxQueryPort.findByExternalDownloadId(downloadId).orElse(null);
+                outboxReadManager.findByExternalDownloadId(downloadId).orElse(null);
 
         if (outbox == null) {
             log.warn("Outbox를 찾을 수 없습니다: downloadId={}", downloadId.value());
@@ -86,12 +90,13 @@ public class ExternalDownloadRegisteredEventListener {
 
             if (published) {
                 // 성공 시 Outbox 상태 업데이트
-                outboxManager.markAsPublished(outbox);
+                commandFactory.markAsPublished(outbox);
+                outboxTransactionManager.persist(outbox);
 
                 log.info("✅ SQS 메시지 발행 성공: downloadId={}", downloadId.value());
             } else {
                 log.warn("❌ SQS 메시지 발행 실패 (반환값 false): downloadId={}", downloadId.value());
-                outboxManager.markAsFailed(outbox);
+                // published=false 상태 유지하여 재시도 스케줄러에서 처리
             }
         } catch (Exception e) {
             // 실패 시 로그 기록 (재시도 스케줄러에서 처리)
@@ -100,7 +105,7 @@ public class ExternalDownloadRegisteredEventListener {
                     downloadId.value(),
                     e.getMessage(),
                     e);
-            outboxManager.markAsFailed(outbox);
+            // published=false 상태 유지하여 재시도 스케줄러에서 처리
         }
     }
 }

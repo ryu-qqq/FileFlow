@@ -5,7 +5,7 @@ import com.ryuqq.fileflow.domain.iam.fixture.UserContextFixture;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.vo.*;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * MultipartUploadSession Aggregate Test Fixture
@@ -68,11 +68,10 @@ public class MultipartUploadSessionFixture {
                 TotalPartsFixture.defaultTotalParts(),
                 PartSizeFixture.defaultPartSize(),
                 ExpirationTimeFixture.multipartExpirationTime(),
-                LocalDateTime.now().minusHours(1),
+                Instant.now().minusSeconds(3600),
                 SessionStatus.ACTIVE,
                 null,
-                1L,
-                ClockFixture.defaultClock());
+                1L);
     }
 
     /** Custom MultipartUploadSession Fixture */

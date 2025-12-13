@@ -5,13 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,9 +39,9 @@ class ExternalDownloadFileCreatedEventTest {
             S3Bucket bucket = S3Bucket.of("test-bucket");
             S3Key s3Key = S3Key.of("uploads/image.jpg");
             ETag etag = ETag.of("test-etag");
-            Long organizationId = 100L;
-            Long tenantId = 200L;
-            LocalDateTime completedAt = LocalDateTime.of(2025, 1, 15, 10, 30, 0);
+            OrganizationId organizationId = OrganizationId.generate();
+            TenantId tenantId = TenantId.generate();
+            Instant completedAt = Instant.parse("2025-01-15T10:30:00Z");
 
             // when
             ExternalDownloadFileCreatedEvent event =
@@ -86,9 +88,9 @@ class ExternalDownloadFileCreatedEventTest {
             S3Bucket bucket = S3Bucket.of("video-bucket");
             S3Key s3Key = S3Key.of("videos/video.mp4");
             ETag etag = ETag.of("video-etag");
-            Long organizationId = 101L;
-            Long tenantId = 201L;
-            LocalDateTime completedAt = LocalDateTime.now();
+            OrganizationId organizationId = OrganizationId.generate();
+            TenantId tenantId = TenantId.generate();
+            Instant completedAt = Instant.now();
 
             // when
             ExternalDownloadFileCreatedEvent event =
@@ -120,11 +122,11 @@ class ExternalDownloadFileCreatedEventTest {
         @DisplayName("occurredAt()은 completedAt을 반환한다")
         void occurredAt_ShouldReturnCompletedAt() {
             // given
-            LocalDateTime completedAt = LocalDateTime.of(2025, 6, 15, 14, 30, 0);
+            Instant completedAt = Instant.parse("2025-06-15T14:30:00Z");
             ExternalDownloadFileCreatedEvent event = createTestEvent(completedAt);
 
             // when
-            LocalDateTime result = event.occurredAt();
+            Instant result = event.occurredAt();
 
             // then
             assertThat(result).isEqualTo(completedAt);
@@ -139,9 +141,16 @@ class ExternalDownloadFileCreatedEventTest {
         @DisplayName("같은 값을 가진 이벤트는 동등하다")
         void equals_WithSameValues_ShouldBeEqual() {
             // given
-            LocalDateTime completedAt = LocalDateTime.of(2025, 1, 1, 12, 0, 0);
-            ExternalDownloadFileCreatedEvent event1 = createTestEvent(completedAt);
-            ExternalDownloadFileCreatedEvent event2 = createTestEvent(completedAt);
+            Instant completedAt = Instant.parse("2025-01-01T12:00:00Z");
+            ExternalDownloadId downloadId =
+                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
+            OrganizationId organizationId = OrganizationId.generate();
+            TenantId tenantId = TenantId.generate();
+
+            ExternalDownloadFileCreatedEvent event1 =
+                    createTestEventWithIds(downloadId, organizationId, tenantId, completedAt);
+            ExternalDownloadFileCreatedEvent event2 =
+                    createTestEventWithIds(downloadId, organizationId, tenantId, completedAt);
 
             // when & then
             assertThat(event1).isEqualTo(event2);
@@ -152,21 +161,21 @@ class ExternalDownloadFileCreatedEventTest {
         @DisplayName("다른 downloadId를 가진 이벤트는 동등하지 않다")
         void equals_WithDifferentDownloadId_ShouldNotBeEqual() {
             // given
-            LocalDateTime completedAt = LocalDateTime.of(2025, 1, 1, 12, 0, 0);
-            ExternalDownloadFileCreatedEvent event1 = createTestEvent(completedAt);
+            Instant completedAt = Instant.parse("2025-01-01T12:00:00Z");
+            OrganizationId organizationId = OrganizationId.generate();
+            TenantId tenantId = TenantId.generate();
+
+            ExternalDownloadFileCreatedEvent event1 =
+                    createTestEventWithIds(
+                            ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                            organizationId,
+                            tenantId,
+                            completedAt);
             ExternalDownloadFileCreatedEvent event2 =
-                    ExternalDownloadFileCreatedEvent.of(
+                    createTestEventWithIds(
                             ExternalDownloadId.of("00000000-0000-0000-0000-000000000002"),
-                            SourceUrl.of("https://example.com/image.jpg"),
-                            FileName.of("image.jpg"),
-                            FileSize.of(1024L),
-                            ContentType.of("image/jpeg"),
-                            FileCategory.IMAGE,
-                            S3Bucket.of("test-bucket"),
-                            S3Key.of("uploads/image.jpg"),
-                            ETag.of("test-etag"),
-                            100L,
-                            200L,
+                            organizationId,
+                            tenantId,
                             completedAt);
 
             // when & then
@@ -174,7 +183,7 @@ class ExternalDownloadFileCreatedEventTest {
         }
     }
 
-    private ExternalDownloadFileCreatedEvent createTestEvent(LocalDateTime completedAt) {
+    private ExternalDownloadFileCreatedEvent createTestEvent(Instant completedAt) {
         return ExternalDownloadFileCreatedEvent.of(
                 ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                 SourceUrl.of("https://example.com/image.jpg"),
@@ -185,8 +194,28 @@ class ExternalDownloadFileCreatedEventTest {
                 S3Bucket.of("test-bucket"),
                 S3Key.of("uploads/image.jpg"),
                 ETag.of("test-etag"),
-                100L,
-                200L,
+                OrganizationId.generate(),
+                TenantId.generate(),
+                completedAt);
+    }
+
+    private ExternalDownloadFileCreatedEvent createTestEventWithIds(
+            ExternalDownloadId downloadId,
+            OrganizationId organizationId,
+            TenantId tenantId,
+            Instant completedAt) {
+        return ExternalDownloadFileCreatedEvent.of(
+                downloadId,
+                SourceUrl.of("https://example.com/image.jpg"),
+                FileName.of("image.jpg"),
+                FileSize.of(1024L),
+                ContentType.of("image/jpeg"),
+                FileCategory.IMAGE,
+                S3Bucket.of("test-bucket"),
+                S3Key.of("uploads/image.jpg"),
+                ETag.of("test-etag"),
+                organizationId,
+                tenantId,
                 completedAt);
     }
 }

@@ -21,12 +21,12 @@ public class ExternalDownloadApiMapper {
      * API Request를 Application Command로 변환합니다.
      *
      * @param request API Request
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열)
      * @return RequestExternalDownloadCommand
      */
     public RequestExternalDownloadCommand toCommand(
-            RequestExternalDownloadApiRequest request, long tenantId, long organizationId) {
+            RequestExternalDownloadApiRequest request, String tenantId, String organizationId) {
         return new RequestExternalDownloadCommand(
                 request.sourceUrl(), tenantId, organizationId, request.webhookUrl());
     }
@@ -35,10 +35,10 @@ public class ExternalDownloadApiMapper {
      * 조회용 Query를 생성합니다.
      *
      * @param id ExternalDownload ID (UUID 문자열)
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return GetExternalDownloadQuery
      */
-    public GetExternalDownloadQuery toQuery(String id, long tenantId) {
+    public GetExternalDownloadQuery toQuery(String id, String tenantId) {
         return new GetExternalDownloadQuery(id, tenantId);
     }
 

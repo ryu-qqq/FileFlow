@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.command;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -11,4 +12,11 @@ import jakarta.validation.constraints.NotBlank;
  * @author development-team
  * @since 1.0.0
  */
-public record CompleteSingleUploadApiRequest(@NotBlank(message = "ETag는 필수입니다") String etag) {}
+@Schema(description = "단일 업로드 완료 요청")
+public record CompleteSingleUploadApiRequest(
+        @Schema(
+                        description = "S3가 반환한 ETag",
+                        example = "\"d41d8cd98f00b204e9800998ecf8427e\"",
+                        requiredMode = Schema.RequiredMode.REQUIRED)
+                @NotBlank(message = "ETag는 필수입니다")
+                String etag) {}

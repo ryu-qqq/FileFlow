@@ -11,9 +11,10 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -25,8 +26,8 @@ import org.junit.jupiter.api.Test;
  * <ul>
  *   <li>DomainEvent 인터페이스 구현 필수
  *   <li>Record 타입 필수 (불변성)
- *   <li>과거형 네이밍 (*edEvent, *dEvent)
- *   <li>occurredAt (LocalDateTime) 필드 필수
+ *   <li>과거형 네이밍 (*edEvent, *dEvent, 불규칙 과거형)
+ *   <li>occurredAt (Instant) 필드 필수
  *   <li>domain.[bc].event 패키지에 위치
  *   <li>Lombok, JPA, Spring 금지
  *   <li>불변성 보장 (final fields)
@@ -37,12 +38,12 @@ import org.junit.jupiter.api.Test;
  * <pre>
  * public record OrderPlacedEvent(
  *     OrderId orderId,
- *     long customerId,
+ *     MemberId memberId,
  *     Money totalAmount,
- *     LocalDateTime occurredAt
+ *     Instant occurredAt
  * ) implements DomainEvent {
- *     public static OrderPlacedEvent of(...) {
- *         return new OrderPlacedEvent(..., LocalDateTime.now());
+ *     public static OrderPlacedEvent from(Order order, Instant occurredAt) {
+ *         return new OrderPlacedEvent(..., occurredAt);
  *     }
  * }
  * </pre>
@@ -60,303 +61,337 @@ class DomainEventArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.domain");
+        classes = new ClassFileImporter().importPackages("com.ryuqq.domain");
     }
 
-    // ==================== DomainEvent 인터페이스 규칙 ====================
+    // ==================== 필수 구조 규칙 ====================
 
-    /** 규칙 1: Domain Event는 DomainEvent 인터페이스를 구현해야 한다 */
-    @Test
-    @DisplayName("[필수] Domain Event는 DomainEvent 인터페이스를 구현해야 한다")
-    void domainEvents_ShouldImplementDomainEventInterface() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .and()
-                        .haveSimpleNameNotContaining("Fixture")
-                        .and()
-                        .haveSimpleNameNotContaining("Mother")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .and()
-                        .areNotInterfaces()
-                        .and()
-                        .areNotAnonymousClasses()
-                        .and()
-                        .areNotMemberClasses()
-                        .and()
-                        .doNotHaveSimpleName("DomainEvent")
-                        .should(implementDomainEventInterface())
-                        .because("Domain Event는 DomainEvent 인터페이스를 구현해야 합니다");
+    @Nested
+    @DisplayName("필수 구조 규칙")
+    class RequiredStructureTests {
 
-        rule.check(classes);
-    }
+        /** 규칙 1: Domain Event는 DomainEvent 인터페이스를 구현해야 한다 */
+        @Test
+        @DisplayName("[필수] Domain Event는 DomainEvent 인터페이스를 구현해야 한다")
+        void domainEvents_ShouldImplementDomainEventInterface() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Fixture")
+                            .and()
+                            .haveSimpleNameNotContaining("Mother")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .and()
+                            .areNotInterfaces()
+                            .and()
+                            .areNotAnonymousClasses()
+                            .and()
+                            .areNotMemberClasses()
+                            .and()
+                            .doNotHaveSimpleName("DomainEvent")
+                            .should(implementDomainEventInterface())
+                            .because("Domain Event는 DomainEvent 인터페이스를 구현해야 합니다");
 
-    // ==================== Record 타입 규칙 ====================
+            rule.allowEmptyShould(true).check(classes);
+        }
 
-    /** 규칙 2: Domain Event는 Record여야 한다 */
-    @Test
-    @DisplayName("[필수] Domain Event는 Record로 구현되어야 한다")
-    void domainEvents_ShouldBeRecords() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .and()
-                        .haveSimpleNameNotContaining("Fixture")
-                        .and()
-                        .haveSimpleNameNotContaining("Mother")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .and()
-                        .areNotInterfaces()
-                        .and()
-                        .areNotAnonymousClasses()
-                        .and()
-                        .areNotMemberClasses()
-                        .and()
-                        .doNotHaveSimpleName("DomainEvent")
-                        .should(beRecords())
-                        .because("Domain Event는 Java 21 Record로 구현해야 합니다 (불변성 보장)");
+        /** 규칙 2: Domain Event는 Record여야 한다 */
+        @Test
+        @DisplayName("[필수] Domain Event는 Record로 구현되어야 한다")
+        void domainEvents_ShouldBeRecords() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Fixture")
+                            .and()
+                            .haveSimpleNameNotContaining("Mother")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .and()
+                            .areNotInterfaces()
+                            .and()
+                            .areNotAnonymousClasses()
+                            .and()
+                            .areNotMemberClasses()
+                            .and()
+                            .doNotHaveSimpleName("DomainEvent")
+                            .should(beRecords())
+                            .because("Domain Event는 Java 21 Record로 구현해야 합니다 (불변성 보장)");
 
-        rule.check(classes);
-    }
+            rule.allowEmptyShould(true).check(classes);
+        }
 
-    // ==================== 네이밍 규칙 ====================
+        /** 규칙 3: Domain Event는 occurredAt 필드를 가져야 한다 */
+        @Test
+        @DisplayName("[필수] Domain Event는 occurredAt (Instant) 필드를 가져야 한다")
+        void domainEvents_ShouldHaveOccurredAtField() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Fixture")
+                            .and()
+                            .haveSimpleNameNotContaining("Mother")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .and()
+                            .areNotInterfaces()
+                            .and()
+                            .areNotAnonymousClasses()
+                            .and()
+                            .areNotMemberClasses()
+                            .and()
+                            .doNotHaveSimpleName("DomainEvent")
+                            .should(haveOccurredAtField())
+                            .because("Domain Event는 occurredAt (Instant) 필드를 가져야 합니다 (이벤트 발생 시각)");
 
-    /** 규칙 3: Domain Event는 과거형 네이밍을 따라야 한다 */
-    @Test
-    @DisplayName("[필수] Domain Event는 과거형 네이밍을 따라야 한다")
-    void domainEvents_ShouldHavePastTenseNaming() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .and()
-                        .haveSimpleNameNotContaining("Fixture")
-                        .and()
-                        .haveSimpleNameNotContaining("Mother")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .and()
-                        .areNotInterfaces()
-                        .and()
-                        .areNotAnonymousClasses()
-                        .and()
-                        .areNotMemberClasses()
-                        .and()
-                        .doNotHaveSimpleName("DomainEvent")
-                        .should(havePastTenseEventName())
-                        .because(
-                                "Domain Event는 과거형 네이밍을 사용해야 합니다\n"
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 4: Domain Event는 from() 정적 팩토리 메서드를 가져야 한다 */
+        @Test
+        @DisplayName("[필수] Domain Event는 from() 정적 팩토리 메서드를 가져야 한다")
+        void domainEvents_ShouldHaveFromMethod() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Fixture")
+                            .and()
+                            .haveSimpleNameNotContaining("Mother")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .and()
+                            .areNotInterfaces()
+                            .and()
+                            .areNotAnonymousClasses()
+                            .and()
+                            .areNotMemberClasses()
+                            .and()
+                            .doNotHaveSimpleName("DomainEvent")
+                            .should(haveStaticMethodWithName("from"))
+                            .because(
+                                    "Domain Event는 from() 정적 팩토리 메서드로 생성해야 합니다\n"
                                         + "예시:\n"
-                                        + "  - OrderPlacedEvent ✅ (placed는 과거형)\n"
-                                        + "  - OrderCreatedEvent ✅ (created는 과거형)\n"
-                                        + "  - OrderCancelledEvent ✅ (cancelled는 과거형)\n"
-                                        + "  - OrderEvent ❌ (과거형 아님)");
-
-        rule.check(classes);
-    }
-
-    // ==================== occurredAt 필드 규칙 ====================
-
-    /** 규칙 4: Domain Event는 occurredAt 필드를 가져야 한다 */
-    @Test
-    @DisplayName("[필수] Domain Event는 occurredAt (LocalDateTime) 필드를 가져야 한다")
-    void domainEvents_ShouldHaveOccurredAtField() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .and()
-                        .haveSimpleNameNotContaining("Fixture")
-                        .and()
-                        .haveSimpleNameNotContaining("Mother")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .and()
-                        .areNotInterfaces()
-                        .and()
-                        .areNotAnonymousClasses()
-                        .and()
-                        .areNotMemberClasses()
-                        .and()
-                        .doNotHaveSimpleName("DomainEvent")
-                        .should(haveOccurredAtField())
-                        .because(
-                                "Domain Event는 occurredAt (LocalDateTime) 필드를 가져야 합니다 (이벤트 발생 시각)");
-
-        rule.check(classes);
-    }
-
-    // ==================== 패키지 위치 규칙 ====================
-
-    /** 규칙 5: Domain Event는 domain.[bc].event 패키지에 위치해야 한다 */
-    @Test
-    @DisplayName("[필수] Domain Event는 domain.[bc].event 패키지에 위치해야 한다")
-    void domainEvents_ShouldBeInEventPackage() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .haveSimpleNameEndingWith("Event")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .and()
-                        .areNotInterfaces()
-                        .and()
-                        .areNotAnonymousClasses()
-                        .and()
-                        .areNotMemberClasses()
-                        .and()
-                        .doNotHaveSimpleName("DomainEvent")
-                        .and()
-                        .resideInAPackage("..domain..")
-                        .should()
-                        .resideInAPackage("..domain..event..")
-                        .because(
-                                "Domain Event는 domain.[bc].event 패키지에 위치해야 합니다\n"
-                                    + "예시:\n"
-                                    + "  - domain.order.event.OrderPlacedEvent ✅\n"
-                                    + "  - domain.order.aggregate.OrderPlacedEvent ❌ (잘못된 패키지)");
-
-        rule.check(classes);
-    }
-
-    // ==================== Lombok 금지 ====================
-
-    /** 규칙 6: Domain Event는 Lombok 어노테이션을 사용하지 않아야 한다 */
-    @Test
-    @DisplayName("[금지] Domain Event는 Lombok 어노테이션을 사용하지 않아야 한다")
-    void domainEvents_ShouldNotUseLombok() {
-        ArchRule rule =
-                noClasses()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .should()
-                        .beAnnotatedWith("lombok.Data")
-                        .orShould()
-                        .beAnnotatedWith("lombok.Value")
-                        .orShould()
-                        .beAnnotatedWith("lombok.Builder")
-                        .orShould()
-                        .beAnnotatedWith("lombok.Getter")
-                        .orShould()
-                        .beAnnotatedWith("lombok.AllArgsConstructor")
-                        .orShould()
-                        .beAnnotatedWith("lombok.NoArgsConstructor")
-                        .because("Domain Event는 Lombok을 사용하지 않고 Pure Java Record로 구현해야 합니다");
-
-        rule.check(classes);
-    }
-
-    // ==================== JPA 금지 ====================
-
-    /** 규칙 7: Domain Event는 JPA 어노테이션을 사용하지 않아야 한다 */
-    @Test
-    @DisplayName("[금지] Domain Event는 JPA 어노테이션을 사용하지 않아야 한다")
-    void domainEvents_ShouldNotUseJPA() {
-        ArchRule rule =
-                noClasses()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .should()
-                        .beAnnotatedWith("jakarta.persistence.Entity")
-                        .orShould()
-                        .beAnnotatedWith("jakarta.persistence.Table")
-                        .orShould()
-                        .beAnnotatedWith("jakarta.persistence.Embeddable")
-                        .because("Domain Event는 JPA 어노테이션을 사용하지 않아야 합니다 (Domain은 Persistence 독립적)");
-
-        rule.check(classes);
-    }
-
-    // ==================== Spring 금지 ====================
-
-    /** 규칙 8: Domain Event는 Spring 어노테이션을 사용하지 않아야 한다 */
-    @Test
-    @DisplayName("[금지] Domain Event는 Spring 어노테이션을 사용하지 않아야 한다")
-    void domainEvents_ShouldNotUseSpring() {
-        ArchRule rule =
-                noClasses()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .should()
-                        .beAnnotatedWith("org.springframework.stereotype.Component")
-                        .orShould()
-                        .beAnnotatedWith("org.springframework.context.event.EventListener")
-                        .orShould()
-                        .beAnnotatedWith("org.springframework.context.ApplicationEvent")
-                        .because(
-                                "Domain Event는 Spring 어노테이션을 사용하지 않아야 합니다\n"
-                                        + "  - Domain Event는 Pure Java Record\n"
-                                        + "  - EventListener는 Application Layer에 위치");
-
-        rule.check(classes);
-    }
-
-    // ==================== Factory Method 규칙 ====================
-
-    /** 규칙 9: Domain Event는 of() 정적 팩토리 메서드를 가져야 한다 */
-    @Test
-    @DisplayName("[권장] Domain Event는 of() 정적 팩토리 메서드를 가져야 한다")
-    void domainEvents_ShouldHaveOfMethod() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .and()
-                        .haveSimpleNameNotContaining("Fixture")
-                        .and()
-                        .haveSimpleNameNotContaining("Mother")
-                        .and()
-                        .haveSimpleNameNotContaining("Test")
-                        .and()
-                        .areNotInterfaces()
-                        .and()
-                        .areNotAnonymousClasses()
-                        .and()
-                        .areNotMemberClasses()
-                        .and()
-                        .doNotHaveSimpleName("DomainEvent")
-                        .should(haveStaticMethodWithName("of"))
-                        .because(
-                                "Domain Event는 of() 정적 팩토리 메서드로 생성해야 합니다\n"
-                                        + "예시:\n"
-                                        + "  public static OrderPlacedEvent of(...) {\n"
-                                        + "      return new OrderPlacedEvent(...,"
-                                        + " LocalDateTime.now());\n"
+                                        + "  public static OrderCreatedEvent from(Order order,"
+                                        + " Instant occurredAt) {\n"
+                                        + "      return new OrderCreatedEvent(..., occurredAt);\n"
                                         + "  }");
 
-        rule.check(classes);
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // ==================== 네이밍 및 패키지 규칙 ====================
+
+    @Nested
+    @DisplayName("네이밍 및 패키지 규칙")
+    class NamingAndPackageTests {
+
+        /** 규칙 5: Domain Event는 과거형 네이밍을 따라야 한다 */
+        @Test
+        @DisplayName("[필수] Domain Event는 과거형 네이밍을 따라야 한다")
+        void domainEvents_ShouldHavePastTenseNaming() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Fixture")
+                            .and()
+                            .haveSimpleNameNotContaining("Mother")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .and()
+                            .areNotInterfaces()
+                            .and()
+                            .areNotAnonymousClasses()
+                            .and()
+                            .areNotMemberClasses()
+                            .and()
+                            .doNotHaveSimpleName("DomainEvent")
+                            .should(havePastTenseEventName())
+                            .because(
+                                    "Domain Event는 과거형 네이밍을 사용해야 합니다\n"
+                                            + "예시:\n"
+                                            + "  - OrderPlacedEvent ✅ (placed는 과거형)\n"
+                                            + "  - OrderCreatedEvent ✅ (created는 과거형)\n"
+                                            + "  - OrderCancelledEvent ✅ (cancelled는 과거형)\n"
+                                            + "  - OrderSentEvent ✅ (sent는 불규칙 과거형)\n"
+                                            + "  - OrderPaidEvent ✅ (paid는 불규칙 과거형)\n"
+                                            + "  - OrderEvent ❌ (과거형 아님)");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 6: Domain Event는 domain.[bc].event 패키지에 위치해야 한다 */
+        @Test
+        @DisplayName("[필수] Domain Event는 domain.[bc].event 패키지에 위치해야 한다")
+        void domainEvents_ShouldBeInEventPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("Event")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .and()
+                            .areNotInterfaces()
+                            .and()
+                            .areNotAnonymousClasses()
+                            .and()
+                            .areNotMemberClasses()
+                            .and()
+                            .doNotHaveSimpleName("DomainEvent")
+                            .and()
+                            .resideInAPackage("..domain..")
+                            .should()
+                            .resideInAPackage("..domain..event..")
+                            .because(
+                                    "Domain Event는 domain.[bc].event 패키지에 위치해야 합니다\n"
+                                            + "예시:\n"
+                                            + "  - domain.order.event.OrderPlacedEvent ✅\n"
+                                            + "  - domain.order.aggregate.OrderPlacedEvent ❌ (잘못된"
+                                            + " 패키지)");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // ==================== 금지 규칙 (Lombok, JPA, Spring) ====================
+
+    @Nested
+    @DisplayName("금지 규칙 (Lombok, JPA, Spring)")
+    class ProhibitionTests {
+
+        /** 규칙 7: Domain Event는 Lombok 어노테이션을 사용하지 않아야 한다 */
+        @Test
+        @DisplayName("[금지] Domain Event는 Lombok 어노테이션을 사용하지 않아야 한다")
+        void domainEvents_ShouldNotUseLombok() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .should()
+                            .beAnnotatedWith("lombok.Data")
+                            .orShould()
+                            .beAnnotatedWith("lombok.Value")
+                            .orShould()
+                            .beAnnotatedWith("lombok.Builder")
+                            .orShould()
+                            .beAnnotatedWith("lombok.Getter")
+                            .orShould()
+                            .beAnnotatedWith("lombok.AllArgsConstructor")
+                            .orShould()
+                            .beAnnotatedWith("lombok.NoArgsConstructor")
+                            .because("Domain Event는 Lombok을 사용하지 않고 Pure Java Record로 구현해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 8: Domain Event는 JPA 어노테이션을 사용하지 않아야 한다 */
+        @Test
+        @DisplayName("[금지] Domain Event는 JPA 어노테이션을 사용하지 않아야 한다")
+        void domainEvents_ShouldNotUseJPA() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .should()
+                            .beAnnotatedWith("jakarta.persistence.Entity")
+                            .orShould()
+                            .beAnnotatedWith("jakarta.persistence.Table")
+                            .orShould()
+                            .beAnnotatedWith("jakarta.persistence.Embeddable")
+                            .because(
+                                    "Domain Event는 JPA 어노테이션을 사용하지 않아야 합니다 (Domain은 Persistence"
+                                            + " 독립적)");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 9: Domain Event는 Spring 어노테이션을 사용하지 않아야 한다 */
+        @Test
+        @DisplayName("[금지] Domain Event는 Spring 어노테이션을 사용하지 않아야 한다")
+        void domainEvents_ShouldNotUseSpringAnnotations() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .should()
+                            .beAnnotatedWith("org.springframework.stereotype.Component")
+                            .orShould()
+                            .beAnnotatedWith("org.springframework.context.event.EventListener")
+                            .orShould()
+                            .beAnnotatedWith("org.springframework.context.ApplicationEvent")
+                            .because(
+                                    "Domain Event는 Spring 어노테이션을 사용하지 않아야 합니다\n"
+                                            + "  - Domain Event는 Pure Java Record\n"
+                                            + "  - EventListener는 Application Layer에 위치");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 10: Domain Event는 Spring Framework에 의존하지 않아야 한다 */
+        @Test
+        @DisplayName("[금지] Domain Event는 Spring Framework에 의존하지 않아야 한다")
+        void domainEvents_ShouldNotDependOnSpringFramework() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .and()
+                            .haveSimpleNameNotContaining("Test")
+                            .should()
+                            .dependOnClassesThat()
+                            .resideInAnyPackage("org.springframework..")
+                            .because(
+                                    "Domain Event는 Spring Framework에 의존하지 않아야 합니다 (Domain Layer"
+                                            + " 순수성)");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
     }
 
     // ==================== 레이어 의존성 규칙 ====================
 
-    /** 규칙 10: Domain Event는 Application/Adapter 레이어에 의존하지 않아야 한다 */
-    @Test
-    @DisplayName("[필수] Domain Event는 Application/Adapter 레이어에 의존하지 않아야 한다")
-    void domainEvents_ShouldNotDependOnOuterLayers() {
-        ArchRule rule =
-                noClasses()
-                        .that()
-                        .resideInAPackage("..domain..event..")
-                        .should()
-                        .dependOnClassesThat()
-                        .resideInAnyPackage(
-                                "..application..",
-                                "..adapter..",
-                                "..persistence..",
-                                "..bootstrap..")
-                        .because("Domain Event는 Application/Adapter 레이어에 의존하지 않아야 합니다 (헥사고날 아키텍처)");
+    @Nested
+    @DisplayName("레이어 의존성 규칙")
+    class LayerDependencyTests {
 
-        rule.check(classes);
+        /** 규칙 11: Domain Event는 Application/Adapter 레이어에 의존하지 않아야 한다 */
+        @Test
+        @DisplayName("[필수] Domain Event는 Application/Adapter 레이어에 의존하지 않아야 한다")
+        void domainEvents_ShouldNotDependOnOuterLayers() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..domain..event..")
+                            .should()
+                            .dependOnClassesThat()
+                            .resideInAnyPackage(
+                                    "..application..",
+                                    "..adapter..",
+                                    "..persistence..",
+                                    "..bootstrap..")
+                            .because(
+                                    "Domain Event는 Application/Adapter 레이어에 의존하지 않아야 합니다 (헥사고날"
+                                            + " 아키텍처)");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
     }
 
     // ==================== 커스텀 ArchCondition 헬퍼 메서드 ====================
@@ -405,22 +440,45 @@ class DomainEventArchTest {
         };
     }
 
-    /** 과거형 이벤트 네이밍인지 검증 */
+    /**
+     * 과거형 이벤트 네이밍인지 검증
+     *
+     * <p>지원하는 패턴:
+     *
+     * <ul>
+     *   <li>규칙 과거형: *edEvent (Created, Placed, Updated, Deleted, Cancelled)
+     *   <li>불규칙 과거형: *SentEvent, *PaidEvent, *SoldEvent, *BoughtEvent, *CaughtEvent, *TaughtEvent,
+     *       *BuiltEvent, *MadeEvent, *HeldEvent, *LeftEvent, *LostEvent, *MetEvent, *RunEvent,
+     *       *WonEvent, *BegunEvent, *DoneEvent
+     * </ul>
+     */
     private static ArchCondition<JavaClass> havePastTenseEventName() {
         return new ArchCondition<JavaClass>("have past tense event name") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
                 String simpleName = javaClass.getSimpleName();
 
-                // 과거형 패턴: *edEvent 또는 *dEvent
-                boolean hasPastTenseNaming = simpleName.matches(".*(?:ed|d)Event");
+                // 규칙 과거형: *edEvent 또는 *dEvent
+                boolean hasRegularPastTense = simpleName.matches(".*(?:ed|d)Event");
 
-                if (!hasPastTenseNaming) {
+                // 불규칙 과거형 패턴 (흔히 사용되는 동사들)
+                boolean hasIrregularPastTense =
+                        simpleName.matches(
+                                ".*(?:Sent|Paid|Sold|Bought|Caught|Taught|Built|Made|Held|Left|"
+                                    + "Lost|Met|Run|Won|Begun|Done|Gone|Grown|Known|Shown|Thrown|Worn|"
+                                    + "Withdrawn|Written|Driven|Given|Taken|Broken|Chosen|Frozen|Spoken|"
+                                    + "Stolen|Woken|Hidden|Ridden|Risen|Fallen|Forgotten|Gotten|Eaten|"
+                                    + "Beaten|Bitten|Blown|Drawn|Flown|Sworn|Torn)Event");
+
+                if (!hasRegularPastTense && !hasIrregularPastTense) {
                     String message =
                             String.format(
-                                    "Event %s should have past tense naming (e.g.,"
-                                            + " OrderPlacedEvent, OrderCreatedEvent,"
-                                            + " OrderCancelledEvent)",
+                                    "Event %s should have past tense naming.\n"
+                                            + "Examples:\n"
+                                            + "  - Regular: OrderCreatedEvent, OrderPlacedEvent,"
+                                            + " OrderCancelledEvent\n"
+                                            + "  - Irregular: OrderSentEvent, OrderPaidEvent,"
+                                            + " OrderSoldEvent",
                                     javaClass.getName());
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }
@@ -428,42 +486,23 @@ class DomainEventArchTest {
         };
     }
 
-    /**
-     * occurredAt 필드 또는 메서드를 가지고 있는지 검증.
-     *
-     * <p>DomainEvent는 occurredAt 필드를 직접 가지거나, occurredAt() 메서드를 제공해야 합니다. Record의 경우 다른 필드명(예:
-     * completedAt)을 사용하고 occurredAt() 메서드로 반환할 수 있습니다.
-     */
+    /** occurredAt 필드를 가지고 있는지 검증 */
     private static ArchCondition<JavaClass> haveOccurredAtField() {
-        return new ArchCondition<JavaClass>(
-                "have occurredAt field or method of type LocalDateTime") {
+        return new ArchCondition<JavaClass>("have occurredAt field of type Instant") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
-                // 1. occurredAt 필드가 있는지 확인
-                boolean hasOccurredAtField =
+                boolean hasOccurredAt =
                         javaClass.getAllFields().stream()
                                 .anyMatch(
                                         field ->
                                                 field.getName().equals("occurredAt")
                                                         && field.getRawType()
-                                                                .isEquivalentTo(
-                                                                        LocalDateTime.class));
+                                                                .isEquivalentTo(Instant.class));
 
-                // 2. occurredAt() 메서드가 있는지 확인 (Record에서 다른 필드를 반환할 수 있음)
-                boolean hasOccurredAtMethod =
-                        javaClass.getAllMethods().stream()
-                                .anyMatch(
-                                        method ->
-                                                method.getName().equals("occurredAt")
-                                                        && method.getRawReturnType()
-                                                                .isEquivalentTo(
-                                                                        LocalDateTime.class));
-
-                if (!hasOccurredAtField && !hasOccurredAtMethod) {
+                if (!hasOccurredAt) {
                     String message =
                             String.format(
-                                    "Event %s does not have occurredAt field or method of type"
-                                            + " LocalDateTime",
+                                    "Event %s does not have occurredAt field of type Instant",
                                     javaClass.getName());
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }

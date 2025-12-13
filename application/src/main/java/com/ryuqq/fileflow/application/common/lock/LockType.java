@@ -37,7 +37,18 @@ public enum LockType {
      *
      * <p>유지: 60초 (완료 처리 최대 시간)
      */
-    UPLOAD_SESSION("upload-session:", 3_000L, 60_000L);
+    UPLOAD_SESSION("upload-session:", 3_000L, 60_000L),
+
+    /**
+     * File Processing 처리 락.
+     *
+     * <p>락 키: file-processing:{fileAssetId}
+     *
+     * <p>대기: 0ms (즉시 반환 - 다른 워커가 처리 중이면 skip)
+     *
+     * <p>유지: 600초 (10분 - 이미지 리사이징 최대 시간)
+     */
+    FILE_PROCESSING("file-processing:", 0L, 600_000L);
 
     private final String keyPrefix;
     private final long waitTimeMs;

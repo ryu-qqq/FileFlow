@@ -19,6 +19,15 @@ import java.util.Set;
  */
 public record ContentType(String type) {
 
+    // HTML MIME 타입 상수
+    private static final String MIME_TEXT_HTML = "text/html";
+    private static final String MIME_APPLICATION_XHTML = "application/xhtml+xml";
+
+    // Excel MIME 타입 상수
+    private static final String MIME_EXCEL_XLS = "application/vnd.ms-excel";
+    private static final String MIME_EXCEL_XLSX =
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
     // 허용된 MIME 타입 (확장 가능)
     private static final Set<String> ALLOWED_MIME_TYPES =
             Set.of(
@@ -43,12 +52,15 @@ public record ContentType(String type) {
                     "application/pdf",
                     "application/msword",
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    "application/vnd.ms-excel",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    MIME_EXCEL_XLS,
+                    MIME_EXCEL_XLSX,
                     "application/vnd.ms-powerpoint",
                     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
                     "text/plain",
                     "text/csv",
+                    // HTML
+                    MIME_TEXT_HTML,
+                    MIME_APPLICATION_XHTML,
                     // Archive
                     "application/zip",
                     "application/x-rar-compressed",
@@ -80,6 +92,9 @@ public record ContentType(String type) {
                             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
                     Map.entry("txt", "text/plain"),
                     Map.entry("csv", "text/csv"),
+                    Map.entry("html", MIME_TEXT_HTML),
+                    Map.entry("htm", MIME_TEXT_HTML),
+                    Map.entry("xhtml", MIME_APPLICATION_XHTML),
                     Map.entry("zip", "application/zip"));
 
     /** Compact Constructor (검증 로직). */
@@ -150,6 +165,26 @@ public record ContentType(String type) {
     }
 
     /**
+     * 래스터 이미지인지 확인한다.
+     *
+     * <p>리사이징 가능한 비트맵 이미지만 true를 반환합니다. SVG 등 벡터 이미지는 제외됩니다.
+     *
+     * @return 래스터 이미지이면 true (SVG 제외)
+     */
+    public boolean isRasterImage() {
+        return isImage() && !type.equals("image/svg+xml");
+    }
+
+    /**
+     * HTML 타입인지 확인한다.
+     *
+     * @return HTML 타입이면 true (text/html 또는 application/xhtml+xml)
+     */
+    public boolean isHtml() {
+        return type.equals(MIME_TEXT_HTML) || type.equals(MIME_APPLICATION_XHTML);
+    }
+
+    /**
      * 비디오 타입인지 확인한다.
      *
      * @return 비디오 타입이면 true
@@ -188,6 +223,15 @@ public record ContentType(String type) {
         return type.equals("application/zip")
                 || type.equals("application/x-rar-compressed")
                 || type.equals("application/x-7z-compressed");
+    }
+
+    /**
+     * Excel 타입인지 확인한다.
+     *
+     * @return Excel 타입이면 true (xls 또는 xlsx)
+     */
+    public boolean isExcel() {
+        return type.equals(MIME_EXCEL_XLS) || type.equals(MIME_EXCEL_XLSX);
     }
 
     /**

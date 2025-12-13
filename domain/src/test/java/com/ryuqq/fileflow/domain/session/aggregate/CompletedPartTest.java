@@ -61,8 +61,7 @@ class CompletedPartTest {
                                     CompletedPart.forNew(
                                             null,
                                             PartNumberFixture.defaultPartNumber(),
-                                            PresignedUrlFixture.defaultPresignedUrl(),
-                                            ClockFixture.defaultClock()))
+                                            PresignedUrlFixture.defaultPresignedUrl()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("세션 ID는 null일 수 없습니다");
         }
@@ -76,8 +75,7 @@ class CompletedPartTest {
                                     CompletedPart.forNew(
                                             UploadSessionIdFixture.defaultUploadSessionId(),
                                             null,
-                                            PresignedUrlFixture.defaultPresignedUrl(),
-                                            ClockFixture.defaultClock()))
+                                            PresignedUrlFixture.defaultPresignedUrl()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Part 번호는 null일 수 없습니다");
         }
@@ -91,8 +89,7 @@ class CompletedPartTest {
                                     CompletedPart.forNew(
                                             UploadSessionIdFixture.defaultUploadSessionId(),
                                             PartNumberFixture.defaultPartNumber(),
-                                            null,
-                                            ClockFixture.defaultClock()))
+                                            null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Presigned URL은 null일 수 없습니다");
         }
@@ -111,7 +108,7 @@ class CompletedPartTest {
             long size = 10 * 1024 * 1024L; // 10MB
 
             // when
-            part.complete(etag, size);
+            part.complete(etag, size, ClockFixture.defaultClock());
 
             // then
             assertThat(part.isCompleted()).isTrue();
@@ -127,7 +124,10 @@ class CompletedPartTest {
             CompletedPart part = CompletedPartFixture.defaultCompletedPart();
 
             // when & then
-            assertThatThrownBy(() -> part.complete(null, 10 * 1024 * 1024L))
+            assertThatThrownBy(
+                            () ->
+                                    part.complete(
+                                            null, 10 * 1024 * 1024L, ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("ETag는 null이거나 비어있을 수 없습니다");
         }
@@ -139,7 +139,12 @@ class CompletedPartTest {
             CompletedPart part = CompletedPartFixture.defaultCompletedPart();
 
             // when & then
-            assertThatThrownBy(() -> part.complete(ETagFixture.emptyETag(), 10 * 1024 * 1024L))
+            assertThatThrownBy(
+                            () ->
+                                    part.complete(
+                                            ETagFixture.emptyETag(),
+                                            10 * 1024 * 1024L,
+                                            ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("ETag는 null이거나 비어있을 수 없습니다");
         }
@@ -151,11 +156,21 @@ class CompletedPartTest {
             CompletedPart part = CompletedPartFixture.defaultCompletedPart();
 
             // when & then
-            assertThatThrownBy(() -> part.complete(ETagFixture.defaultETag(), 0))
+            assertThatThrownBy(
+                            () ->
+                                    part.complete(
+                                            ETagFixture.defaultETag(),
+                                            0,
+                                            ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Part 크기는 0보다 커야 합니다");
 
-            assertThatThrownBy(() -> part.complete(ETagFixture.defaultETag(), -1))
+            assertThatThrownBy(
+                            () ->
+                                    part.complete(
+                                            ETagFixture.defaultETag(),
+                                            -1,
+                                            ClockFixture.defaultClock()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Part 크기는 0보다 커야 합니다");
         }
@@ -182,7 +197,8 @@ class CompletedPartTest {
             CompletedPart part = CompletedPartFixture.defaultCompletedPart();
 
             // when
-            part.complete(ETagFixture.defaultETag(), 10 * 1024 * 1024L);
+            part.complete(
+                    ETagFixture.defaultETag(), 10 * 1024 * 1024L, ClockFixture.defaultClock());
 
             // then
             assertThat(part.isCompleted()).isTrue();

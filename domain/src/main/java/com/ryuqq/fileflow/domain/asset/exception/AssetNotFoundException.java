@@ -6,6 +6,6 @@ import com.ryuqq.fileflow.domain.common.exception.DomainException;
 public class AssetNotFoundException extends DomainException {
 
     public AssetNotFoundException(String assetId) {
-        super(AssetErrorCode.ASSET_NOT_FOUND.getCode(), "Asset ID: " + assetId);
+        super(AssetErrorCode.ASSET_NOT_FOUND, "Asset ID: " + assetId);
     }
 }

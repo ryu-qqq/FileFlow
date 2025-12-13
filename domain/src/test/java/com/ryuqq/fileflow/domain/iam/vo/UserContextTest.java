@@ -1,178 +1,81 @@
 package com.ryuqq.fileflow.domain.iam.vo;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.UploadCategory;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("UserContext 단위 테스트")
 class UserContextTest {
 
     @Nested
-    @DisplayName("Admin 사용자 컨텍스트 생성 테스트")
-    class AdminContextTest {
+    @DisplayName("팩토리 메서드 테스트")
+    class FactoryMethodTest {
 
         @Test
-        @DisplayName("Admin 사용자 컨텍스트를 생성할 수 있다")
-        void admin_WithValidEmail_ShouldCreateContext() {
-            // given
-            String email = "admin@fileflow.com";
-
+        @DisplayName("admin 메서드로 Admin 컨텍스트를 생성할 수 있다")
+        void admin_ShouldCreateAdminContext() {
             // when
-            UserContext context = UserContext.admin(email);
-
-            // then
-            assertThat(context).isNotNull();
-            assertThat(context.tenant()).isEqualTo(Tenant.connectly());
-            assertThat(context.organization()).isEqualTo(Organization.admin());
-            assertThat(context.email()).isEqualTo(email);
-            assertThat(context.userId()).isNull();
-        }
-
-        @ParameterizedTest
-        @NullAndEmptySource
-        @ValueSource(strings = {"   "})
-        @DisplayName("Admin 이메일이 null이거나 빈 문자열이면 예외가 발생한다")
-        void admin_WithInvalidEmail_ShouldThrowException(String invalidEmail) {
-            // when & then
-            assertThatThrownBy(() -> UserContext.admin(invalidEmail))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Admin 이메일은 null이거나 빈 문자열일 수 없습니다");
-        }
-
-        @Test
-        @DisplayName("Admin 사용자인지 확인할 수 있다")
-        void isAdmin_WithAdminContext_ShouldReturnTrue() {
-            // given
             UserContext context = UserContext.admin("admin@test.com");
 
             // then
-            assertThat(context.isAdmin()).isTrue();
-            assertThat(context.isSeller()).isFalse();
-            assertThat(context.isCustomer()).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("Seller 사용자 컨텍스트 생성 테스트")
-    class SellerContextTest {
-
-        @Test
-        @DisplayName("Seller 사용자 컨텍스트를 생성할 수 있다")
-        void seller_WithValidParams_ShouldCreateContext() {
-            // given
-            long organizationId = 100L;
-            String companyName = "Test Company";
-            String email = "seller@company.com";
-
-            // when
-            UserContext context = UserContext.seller(organizationId, companyName, email);
-
-            // then
-            assertThat(context).isNotNull();
             assertThat(context.tenant()).isEqualTo(Tenant.connectly());
-            assertThat(context.organization().id()).isEqualTo(organizationId);
-            assertThat(context.organization().name()).isEqualTo(companyName);
-            assertThat(context.email()).isEqualTo(email);
+            assertThat(context.organization()).isEqualTo(Organization.admin());
+            assertThat(context.email()).isEqualTo("admin@test.com");
             assertThat(context.userId()).isNull();
         }
 
-        @ParameterizedTest
-        @NullAndEmptySource
-        @ValueSource(strings = {"   "})
-        @DisplayName("Seller 이메일이 null이거나 빈 문자열이면 예외가 발생한다")
-        void seller_WithInvalidEmail_ShouldThrowException(String invalidEmail) {
-            // when & then
-            assertThatThrownBy(() -> UserContext.seller(1L, "Company", invalidEmail))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Seller 이메일은 null이거나 빈 문자열일 수 없습니다");
-        }
-
         @Test
-        @DisplayName("Seller 사용자인지 확인할 수 있다")
-        void isSeller_WithSellerContext_ShouldReturnTrue() {
+        @DisplayName("seller 메서드로 Seller 컨텍스트를 생성할 수 있다")
+        void seller_ShouldCreateSellerContext() {
             // given
-            UserContext context = UserContext.seller(1L, "Company", "seller@test.com");
+            OrganizationId organizationId = OrganizationId.generate();
+
+            // when
+            UserContext context =
+                    UserContext.seller(organizationId, "TestCompany", "seller@test.com");
 
             // then
-            assertThat(context.isSeller()).isTrue();
-            assertThat(context.isAdmin()).isFalse();
-            assertThat(context.isCustomer()).isFalse();
+            assertThat(context.tenant()).isEqualTo(Tenant.connectly());
+            assertThat(context.organization().id()).isEqualTo(organizationId);
+            assertThat(context.organization().name()).isEqualTo("TestCompany");
+            assertThat(context.email()).isEqualTo("seller@test.com");
+            assertThat(context.userId()).isNull();
         }
-    }
-
-    @Nested
-    @DisplayName("Customer 사용자 컨텍스트 생성 테스트")
-    class CustomerContextTest {
 
         @Test
-        @DisplayName("Customer 사용자 컨텍스트를 생성할 수 있다")
-        void customer_WithValidUserId_ShouldCreateContext() {
+        @DisplayName("customer 메서드로 Customer 컨텍스트를 생성할 수 있다")
+        void customer_ShouldCreateCustomerContext() {
             // given
-            long userId = 9999L;
+            UserId userId = UserId.generate();
 
             // when
             UserContext context = UserContext.customer(userId);
 
             // then
-            assertThat(context).isNotNull();
             assertThat(context.tenant()).isEqualTo(Tenant.connectly());
             assertThat(context.organization()).isEqualTo(Organization.customer());
             assertThat(context.email()).isNull();
             assertThat(context.userId()).isEqualTo(userId);
         }
 
-        @ParameterizedTest
-        @ValueSource(longs = {0, -1, -100})
-        @DisplayName("Customer userId가 0 이하이면 예외가 발생한다")
-        void customer_WithInvalidUserId_ShouldThrowException(long invalidUserId) {
-            // when & then
-            assertThatThrownBy(() -> UserContext.customer(invalidUserId))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Customer userId는 1 이상이어야 합니다");
-        }
-
         @Test
-        @DisplayName("Customer 사용자인지 확인할 수 있다")
-        void isCustomer_WithCustomerContext_ShouldReturnTrue() {
-            // given
-            UserContext context = UserContext.customer(1L);
-
-            // then
-            assertThat(context.isCustomer()).isTrue();
-            assertThat(context.isAdmin()).isFalse();
-            assertThat(context.isSeller()).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("of 메서드 테스트")
-    class OfMethodTest {
-
-        @Test
-        @DisplayName("of 메서드로 사용자 컨텍스트를 생성할 수 있다")
-        void of_WithValidParams_ShouldCreateContext() {
-            // given
-            Tenant tenant = Tenant.connectly();
-            Organization organization = Organization.admin();
-            String email = "admin@test.com";
-
+        @DisplayName("of 메서드로 컨텍스트를 생성할 수 있다")
+        void of_ShouldCreateContext() {
             // when
-            UserContext context = UserContext.of(tenant, organization, email, null);
+            UserContext context =
+                    UserContext.of(
+                            Tenant.connectly(), Organization.admin(), "admin@test.com", null);
 
             // then
-            assertThat(context.tenant()).isEqualTo(tenant);
-            assertThat(context.organization()).isEqualTo(organization);
-            assertThat(context.email()).isEqualTo(email);
+            assertThat(context.email()).isEqualTo("admin@test.com");
         }
     }
 
@@ -182,73 +85,164 @@ class UserContextTest {
 
         @Test
         @DisplayName("테넌트가 null이면 예외가 발생한다")
-        void constructor_WithNullTenant_ShouldThrowException() {
-            // when & then
+        void nullTenant_ShouldThrowException() {
             assertThatThrownBy(
                             () ->
-                                    UserContext.of(
-                                            null, Organization.admin(), "admin@test.com", null))
+                                    new UserContext(
+                                            null,
+                                            Organization.admin(),
+                                            "admin@test.com",
+                                            null,
+                                            List.of("ADMIN"),
+                                            Collections.emptyList()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("테넌트는 null일 수 없습니다");
         }
 
         @Test
         @DisplayName("조직이 null이면 예외가 발생한다")
-        void constructor_WithNullOrganization_ShouldThrowException() {
-            // when & then
+        void nullOrganization_ShouldThrowException() {
             assertThatThrownBy(
-                            () -> UserContext.of(Tenant.connectly(), null, "admin@test.com", null))
+                            () ->
+                                    new UserContext(
+                                            Tenant.connectly(),
+                                            null,
+                                            "admin@test.com",
+                                            null,
+                                            List.of("ADMIN"),
+                                            Collections.emptyList()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("조직은 null일 수 없습니다");
         }
 
         @Test
-        @DisplayName("Admin/Seller가 userId를 가지면 예외가 발생한다")
-        void constructor_AdminWithUserId_ShouldThrowException() {
-            // when & then
-            assertThatThrownBy(
-                            () ->
-                                    UserContext.of(
-                                            Tenant.connectly(),
-                                            Organization.admin(),
-                                            "admin@test.com",
-                                            100L))
+        @DisplayName("Admin 이메일이 null이면 예외가 발생한다")
+        void adminWithNullEmail_ShouldThrowException() {
+            assertThatThrownBy(() -> UserContext.admin(null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("userId를 가질 수 없습니다");
+                    .hasMessageContaining("Admin 이메일은 null이거나 빈 문자열일 수 없습니다");
         }
 
         @Test
-        @DisplayName("Customer가 email을 가지면 예외가 발생한다")
-        void constructor_CustomerWithEmail_ShouldThrowException() {
+        @DisplayName("Admin 이메일이 빈 문자열이면 예외가 발생한다")
+        void adminWithBlankEmail_ShouldThrowException() {
+            assertThatThrownBy(() -> UserContext.admin("   "))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Admin 이메일은 null이거나 빈 문자열일 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("Seller 이메일이 null이면 예외가 발생한다")
+        void sellerWithNullEmail_ShouldThrowException() {
+            // given
+            OrganizationId organizationId = OrganizationId.generate();
+
             // when & then
+            assertThatThrownBy(() -> UserContext.seller(organizationId, "Company", null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Seller 이메일은 null이거나 빈 문자열일 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("Customer userId가 null이면 예외가 발생한다")
+        void customerWithNullUserId_ShouldThrowException() {
+            assertThatThrownBy(() -> UserContext.customer(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Customer userId는 null일 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("Admin에 userId가 있으면 예외가 발생한다")
+        void adminWithUserId_ShouldThrowException() {
             assertThatThrownBy(
                             () ->
-                                    UserContext.of(
+                                    new UserContext(
+                                            Tenant.connectly(),
+                                            Organization.admin(),
+                                            "admin@test.com",
+                                            UserId.generate(),
+                                            List.of("ADMIN"),
+                                            Collections.emptyList()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("ADMIN 사용자는 userId를 가질 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("Customer에 email이 있으면 예외가 발생한다")
+        void customerWithEmail_ShouldThrowException() {
+            assertThatThrownBy(
+                            () ->
+                                    new UserContext(
                                             Tenant.connectly(),
                                             Organization.customer(),
-                                            "customer@test.com",
-                                            100L))
+                                            "test@test.com",
+                                            UserId.generate(),
+                                            List.of("DEFAULT"),
+                                            Collections.emptyList()))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("email을 가질 수 없습니다");
+                    .hasMessageContaining("DEFAULT 사용자는 email을 가질 수 없습니다");
         }
     }
 
     @Nested
-    @DisplayName("역할 조회 테스트")
-    class RoleTest {
+    @DisplayName("역할 확인 테스트")
+    class RoleCheckTest {
 
         @Test
-        @DisplayName("getRole로 사용자 역할을 조회할 수 있다")
-        void getRole_ShouldReturnUserRole() {
+        @DisplayName("getRole은 조직의 역할을 반환한다")
+        void getRole_ShouldReturnOrganizationRole() {
             // given
-            UserContext admin = UserContext.admin("admin@test.com");
-            UserContext seller = UserContext.seller(1L, "Company", "seller@test.com");
-            UserContext customer = UserContext.customer(1L);
+            OrganizationId orgId = OrganizationId.generate();
+            UserId userId = UserId.generate();
 
-            // then
+            UserContext admin = UserContext.admin("admin@test.com");
+            UserContext seller = UserContext.seller(orgId, "Company", "seller@test.com");
+            UserContext customer = UserContext.customer(userId);
+
+            // when & then
             assertThat(admin.getRole()).isEqualTo(UserRole.ADMIN);
             assertThat(seller.getRole()).isEqualTo(UserRole.SELLER);
             assertThat(customer.getRole()).isEqualTo(UserRole.DEFAULT);
+        }
+
+        @Test
+        @DisplayName("isAdmin은 Admin일 때만 true")
+        void isAdmin_ShouldReturnTrueOnlyForAdmin() {
+            // given
+            OrganizationId orgId = OrganizationId.generate();
+            UserId userId = UserId.generate();
+
+            // when & then
+            assertThat(UserContext.admin("admin@test.com").isAdmin()).isTrue();
+            assertThat(UserContext.seller(orgId, "Company", "seller@test.com").isAdmin()).isFalse();
+            assertThat(UserContext.customer(userId).isAdmin()).isFalse();
+        }
+
+        @Test
+        @DisplayName("isSeller는 Seller일 때만 true")
+        void isSeller_ShouldReturnTrueOnlyForSeller() {
+            // given
+            OrganizationId orgId = OrganizationId.generate();
+            UserId userId = UserId.generate();
+
+            // when & then
+            assertThat(UserContext.admin("admin@test.com").isSeller()).isFalse();
+            assertThat(UserContext.seller(orgId, "Company", "seller@test.com").isSeller()).isTrue();
+            assertThat(UserContext.customer(userId).isSeller()).isFalse();
+        }
+
+        @Test
+        @DisplayName("isCustomer는 Customer일 때만 true")
+        void isCustomer_ShouldReturnTrueOnlyForCustomer() {
+            // given
+            OrganizationId orgId = OrganizationId.generate();
+            UserId userId = UserId.generate();
+
+            // when & then
+            assertThat(UserContext.admin("admin@test.com").isCustomer()).isFalse();
+            assertThat(UserContext.seller(orgId, "Company", "seller@test.com").isCustomer())
+                    .isFalse();
+            assertThat(UserContext.customer(userId).isCustomer()).isTrue();
         }
     }
 
@@ -257,103 +251,106 @@ class UserContextTest {
     class S3Test {
 
         @Test
-        @DisplayName("getS3Bucket으로 S3 버킷을 조회할 수 있다")
+        @DisplayName("getS3Bucket은 S3Bucket을 반환한다")
         void getS3Bucket_ShouldReturnS3Bucket() {
-            // given
-            UserContext admin = UserContext.admin("admin@test.com");
+            UserContext context = UserContext.admin("admin@test.com");
+            S3Bucket bucket = context.getS3Bucket();
 
-            // when
-            S3Bucket bucket = admin.getS3Bucket();
-
-            // then
+            assertThat(bucket).isNotNull();
             assertThat(bucket.bucketName()).isEqualTo("fileflow-uploads-prod");
         }
 
         @Test
-        @DisplayName("Admin 사용자의 S3 키를 생성할 수 있다")
-        void generateS3Key_Admin_ShouldGenerateCorrectKey() {
-            // given
-            UserContext admin = UserContext.admin("admin@test.com");
-            LocalDate uploadDate = LocalDate.of(2025, 11, 15);
+        @DisplayName("Admin의 S3 키는 카테고리를 포함한다")
+        void adminS3Key_ShouldIncludeCategory() {
+            UserContext context = UserContext.admin("admin@test.com");
+            LocalDate date = LocalDate.of(2024, 3, 15);
 
-            // when
-            S3Key s3Key = admin.generateS3Key(UploadCategory.BANNER, "test.jpg", uploadDate);
+            S3Key key = context.generateS3Key(UploadCategory.PRODUCT_IMAGE, "test.jpg", date);
 
-            // then
-            assertThat(s3Key.key()).contains("connectly/");
-            assertThat(s3Key.key()).contains("banner");
-            assertThat(s3Key.key()).contains("2025");
-            assertThat(s3Key.key()).contains("11");
-            assertThat(s3Key.key()).contains("test.jpg");
+            assertThat(key.key()).contains("connectly/");
+            assertThat(key.key()).contains("product/");
+            assertThat(key.key()).contains("2024");
+            assertThat(key.key()).contains("03");
+            assertThat(key.key()).contains("test.jpg");
         }
 
         @Test
-        @DisplayName("Seller 사용자의 S3 키를 생성할 수 있다")
-        void generateS3Key_Seller_ShouldGenerateCorrectKey() {
+        @DisplayName("Seller의 S3 키는 조직 ID를 포함한다")
+        void sellerS3Key_ShouldIncludeOrgId() {
             // given
-            UserContext seller = UserContext.seller(100L, "Company", "seller@test.com");
-            LocalDate uploadDate = LocalDate.of(2025, 11, 15);
+            OrganizationId organizationId = OrganizationId.generate();
+            UserContext context = UserContext.seller(organizationId, "Company", "seller@test.com");
+            LocalDate date = LocalDate.of(2024, 3, 15);
 
             // when
-            S3Key s3Key =
-                    seller.generateS3Key(UploadCategory.PRODUCT_IMAGE, "product.jpg", uploadDate);
+            S3Key key = context.generateS3Key(UploadCategory.PRODUCT_IMAGE, "test.jpg", date);
 
             // then
-            assertThat(s3Key.key()).contains("seller-100/");
-            assertThat(s3Key.key()).contains("product");
-            assertThat(s3Key.key()).contains("2025");
+            assertThat(key.key()).contains("setof/seller-" + organizationId.value() + "/");
         }
 
         @Test
-        @DisplayName("Customer 사용자의 S3 키를 생성할 수 있다 (카테고리 없음)")
-        void generateS3Key_Customer_ShouldGenerateCorrectKey() {
+        @DisplayName("Customer의 S3 키는 카테고리를 포함하지 않는다")
+        void customerS3Key_ShouldNotIncludeCategory() {
             // given
-            UserContext customer = UserContext.customer(1L);
-            LocalDate uploadDate = LocalDate.of(2025, 11, 15);
+            UserId userId = UserId.generate();
+            UserContext context = UserContext.customer(userId);
+            LocalDate date = LocalDate.of(2024, 3, 15);
 
             // when
-            S3Key s3Key = customer.generateS3Key(null, "file.jpg", uploadDate);
+            S3Key key = context.generateS3Key(null, "test.jpg", date);
 
             // then
-            assertThat(s3Key.key()).contains("customer/");
-            assertThat(s3Key.key()).contains("2025");
+            assertThat(key.key()).contains("setof/customer/");
+            assertThat(key.key()).doesNotContain("product");
         }
 
         @Test
-        @DisplayName("Admin/Seller는 카테고리가 필수이다")
-        void generateS3Key_AdminWithoutCategory_ShouldThrowException() {
-            // given
-            UserContext admin = UserContext.admin("admin@test.com");
+        @DisplayName("Admin/Seller에 카테고리가 없으면 예외가 발생한다")
+        void adminWithoutCategory_ShouldThrowException() {
+            UserContext context = UserContext.admin("admin@test.com");
+            LocalDate date = LocalDate.of(2024, 3, 15);
 
-            // when & then
-            assertThatThrownBy(() -> admin.generateS3Key(null, "test.jpg", LocalDate.now()))
+            assertThatThrownBy(() -> context.generateS3Key(null, "test.jpg", date))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("업로드 카테고리가 필수입니다");
+                    .hasMessageContaining("Admin/Seller는 업로드 카테고리가 필수입니다");
         }
 
         @Test
         @DisplayName("파일명이 null이면 예외가 발생한다")
-        void generateS3Key_WithNullFileName_ShouldThrowException() {
-            // given
-            UserContext admin = UserContext.admin("admin@test.com");
+        void nullFileName_ShouldThrowException() {
+            UserContext context = UserContext.admin("admin@test.com");
+            LocalDate date = LocalDate.of(2024, 3, 15);
 
-            // when & then
             assertThatThrownBy(
-                            () -> admin.generateS3Key(UploadCategory.BANNER, null, LocalDate.now()))
+                            () -> context.generateS3Key(UploadCategory.PRODUCT_IMAGE, null, date))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("파일명은 null이거나 빈 문자열일 수 없습니다");
         }
 
         @Test
-        @DisplayName("업로드 날짜가 null이면 예외가 발생한다")
-        void generateS3Key_WithNullUploadDate_ShouldThrowException() {
-            // given
-            UserContext admin = UserContext.admin("admin@test.com");
+        @DisplayName("날짜가 null이면 예외가 발생한다")
+        void nullDate_ShouldThrowException() {
+            UserContext context = UserContext.admin("admin@test.com");
 
-            // when & then
-            assertThatThrownBy(() -> admin.generateS3Key(UploadCategory.BANNER, "test.jpg", null))
+            assertThatThrownBy(
+                            () ->
+                                    context.generateS3Key(
+                                            UploadCategory.PRODUCT_IMAGE, "test.jpg", null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("업로드 날짜는 null일 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("generateS3KeyToday는 오늘 날짜로 키를 생성한다")
+        void generateS3KeyToday_ShouldUseToday() {
+            UserContext context = UserContext.admin("admin@test.com");
+
+            S3Key key = context.generateS3KeyToday(UploadCategory.PRODUCT_IMAGE, "test.jpg");
+
+            assertThat(key).isNotNull();
+            assertThat(key.key()).contains("test.jpg");
         }
     }
 
@@ -362,72 +359,345 @@ class UserContextTest {
     class UserIdentifierTest {
 
         @Test
-        @DisplayName("Admin/Seller의 식별자는 email이다")
-        void getUserIdentifier_AdminSeller_ShouldReturnEmail() {
-            // given
-            UserContext admin = UserContext.admin("admin@test.com");
-            UserContext seller = UserContext.seller(1L, "Company", "seller@test.com");
-
-            // then
-            assertThat(admin.getUserIdentifier()).isEqualTo("admin@test.com");
-            assertThat(seller.getUserIdentifier()).isEqualTo("seller@test.com");
+        @DisplayName("Admin의 식별자는 이메일이다")
+        void adminIdentifier_ShouldBeEmail() {
+            UserContext context = UserContext.admin("admin@test.com");
+            assertThat(context.getUserIdentifier()).isEqualTo("admin@test.com");
         }
 
         @Test
-        @DisplayName("Customer의 식별자는 user-{userId}이다")
-        void getUserIdentifier_Customer_ShouldReturnUserIdFormat() {
+        @DisplayName("Seller의 식별자는 이메일이다")
+        void sellerIdentifier_ShouldBeEmail() {
             // given
-            UserContext customer = UserContext.customer(9999L);
+            OrganizationId organizationId = OrganizationId.generate();
+            UserContext context = UserContext.seller(organizationId, "Company", "seller@test.com");
 
-            // then
-            assertThat(customer.getUserIdentifier()).isEqualTo("user-9999");
+            // when & then
+            assertThat(context.getUserIdentifier()).isEqualTo("seller@test.com");
+        }
+
+        @Test
+        @DisplayName("Customer의 식별자는 user-{id} 형식이다")
+        void customerIdentifier_ShouldBeUserFormat() {
+            // given
+            UserId userId = UserId.generate();
+            UserContext context = UserContext.customer(userId);
+
+            // when & then
+            assertThat(context.getUserIdentifier()).isEqualTo("user-" + userId.value());
         }
     }
 
     @Nested
-    @DisplayName("조직 ID 조회 테스트")
-    class OrganizationIdTest {
+    @DisplayName("조직 ID 테스트")
+    class OrganizationIdGetterTest {
 
         @Test
-        @DisplayName("getOrganizationId로 조직 ID를 조회할 수 있다")
-        void getOrganizationId_ShouldReturnOrganizationId() {
+        @DisplayName("getOrganizationId는 조직 ID를 반환한다")
+        void getOrganizationId_ShouldReturnOrgId() {
             // given
-            UserContext admin = UserContext.admin("admin@test.com");
-            UserContext seller = UserContext.seller(100L, "Company", "seller@test.com");
-            UserContext customer = UserContext.customer(1L);
+            OrganizationId orgId = OrganizationId.generate();
+            UserId userId = UserId.generate();
 
-            // then
-            assertThat(admin.getOrganizationId()).isEqualTo(0L);
-            assertThat(seller.getOrganizationId()).isEqualTo(100L);
-            assertThat(customer.getOrganizationId()).isEqualTo(-1L);
+            // when & then
+            assertThat(UserContext.admin("admin@test.com").getOrganizationId()).isNull();
+            assertThat(UserContext.seller(orgId, "Company", "seller@test.com").getOrganizationId())
+                    .isEqualTo(orgId);
+            assertThat(UserContext.customer(userId).getOrganizationId()).isNull();
         }
     }
 
     @Nested
-    @DisplayName("동등성 테스트")
-    class EqualityTest {
+    @DisplayName("roles/permissions 테스트")
+    class RolesPermissionsTest {
 
         @Test
-        @DisplayName("같은 값을 가진 UserContext는 동등하다")
-        void equals_WithSameValues_ShouldBeEqual() {
+        @DisplayName("팩토리 메서드로 생성된 컨텍스트는 기본 역할을 가진다")
+        void factoryMethod_ShouldHaveDefaultRoles() {
             // given
-            UserContext context1 = UserContext.admin("admin@test.com");
-            UserContext context2 = UserContext.admin("admin@test.com");
+            UserContext admin = UserContext.admin("admin@test.com");
+            UserContext seller =
+                    UserContext.seller(OrganizationId.generate(), "Company", "seller@test.com");
+            UserContext customer = UserContext.customer(UserId.generate());
 
-            // when & then
-            assertThat(context1).isEqualTo(context2);
-            assertThat(context1.hashCode()).isEqualTo(context2.hashCode());
+            // then
+            assertThat(admin.roles()).containsExactly("ADMIN");
+            assertThat(seller.roles()).containsExactly("SELLER");
+            assertThat(customer.roles()).containsExactly("DEFAULT");
         }
 
         @Test
-        @DisplayName("다른 이메일을 가진 UserContext는 동등하지 않다")
-        void equals_WithDifferentEmail_ShouldNotBeEqual() {
+        @DisplayName("roles()는 불변 리스트를 반환한다")
+        void roles_ShouldReturnUnmodifiableList() {
             // given
-            UserContext context1 = UserContext.admin("admin1@test.com");
-            UserContext context2 = UserContext.admin("admin2@test.com");
+            UserContext context = UserContext.admin("admin@test.com");
 
             // when & then
-            assertThat(context1).isNotEqualTo(context2);
+            assertThatThrownBy(() -> context.roles().add("SELLER"))
+                    .isInstanceOf(UnsupportedOperationException.class);
+        }
+
+        @Test
+        @DisplayName("permissions()는 불변 리스트를 반환한다")
+        void permissions_ShouldReturnUnmodifiableList() {
+            // given
+            UserContext context = UserContext.admin("admin@test.com");
+
+            // when & then
+            assertThatThrownBy(() -> context.permissions().add("read"))
+                    .isInstanceOf(UnsupportedOperationException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("hasRole 테스트")
+    class HasRoleTest {
+
+        @Test
+        @DisplayName("hasRole은 역할 존재 여부를 반환한다")
+        void hasRole_ShouldReturnTrueIfRoleExists() {
+            // given
+            UserContext context =
+                    UserContext.of(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "admin@test.com",
+                            null,
+                            List.of("ADMIN", "SELLER"),
+                            Collections.emptyList());
+
+            // then
+            assertThat(context.hasRole("ADMIN")).isTrue();
+            assertThat(context.hasRole("SELLER")).isTrue();
+            assertThat(context.hasRole("DEFAULT")).isFalse();
+        }
+
+        @Test
+        @DisplayName("hasRole은 대소문자를 구분하지 않는다")
+        void hasRole_ShouldBeCaseInsensitive() {
+            // given
+            UserContext context = UserContext.admin("admin@test.com");
+
+            // then
+            assertThat(context.hasRole("admin")).isTrue();
+            assertThat(context.hasRole("Admin")).isTrue();
+            assertThat(context.hasRole("ADMIN")).isTrue();
+        }
+
+        @Test
+        @DisplayName("hasRole에 null이나 빈 문자열을 전달하면 false를 반환한다")
+        void hasRole_ShouldReturnFalseForNullOrEmpty() {
+            // given
+            UserContext context = UserContext.admin("admin@test.com");
+
+            // then
+            assertThat(context.hasRole(null)).isFalse();
+            assertThat(context.hasRole("")).isFalse();
+            assertThat(context.hasRole("   ")).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("hasPermission 테스트")
+    class HasPermissionTest {
+
+        @Test
+        @DisplayName("hasPermission은 권한 존재 여부를 반환한다")
+        void hasPermission_ShouldReturnTrueIfPermissionExists() {
+            // given
+            UserContext context =
+                    UserContext.of(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "admin@test.com",
+                            null,
+                            List.of("ADMIN"),
+                            List.of("read", "write", "delete"));
+
+            // then
+            assertThat(context.hasPermission("read")).isTrue();
+            assertThat(context.hasPermission("write")).isTrue();
+            assertThat(context.hasPermission("delete")).isTrue();
+            assertThat(context.hasPermission("execute")).isFalse();
+        }
+
+        @Test
+        @DisplayName("hasPermission은 대소문자를 구분한다")
+        void hasPermission_ShouldBeCaseSensitive() {
+            // given
+            UserContext context =
+                    UserContext.of(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "admin@test.com",
+                            null,
+                            List.of("ADMIN"),
+                            List.of("Read", "WRITE"));
+
+            // then
+            assertThat(context.hasPermission("Read")).isTrue();
+            assertThat(context.hasPermission("read")).isFalse();
+            assertThat(context.hasPermission("WRITE")).isTrue();
+            assertThat(context.hasPermission("write")).isFalse();
+        }
+
+        @Test
+        @DisplayName("hasPermission에 null이나 빈 문자열을 전달하면 false를 반환한다")
+        void hasPermission_ShouldReturnFalseForNullOrEmpty() {
+            // given
+            UserContext context =
+                    UserContext.of(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "admin@test.com",
+                            null,
+                            List.of("ADMIN"),
+                            List.of("read"));
+
+            // then
+            assertThat(context.hasPermission(null)).isFalse();
+            assertThat(context.hasPermission("")).isFalse();
+            assertThat(context.hasPermission("   ")).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("hasAnyRole 테스트")
+    class HasAnyRoleTest {
+
+        @Test
+        @DisplayName("hasAnyRole은 하나라도 매칭되면 true를 반환한다")
+        void hasAnyRole_ShouldReturnTrueIfAnyMatches() {
+            // given
+            UserContext context = UserContext.admin("admin@test.com");
+
+            // then
+            assertThat(context.hasAnyRole("SELLER", "ADMIN", "DEFAULT")).isTrue();
+            assertThat(context.hasAnyRole("SELLER", "DEFAULT")).isFalse();
+        }
+
+        @Test
+        @DisplayName("hasAnyRole에 빈 배열을 전달하면 false를 반환한다")
+        void hasAnyRole_ShouldReturnFalseForEmptyArray() {
+            // given
+            UserContext context = UserContext.admin("admin@test.com");
+
+            // then
+            assertThat(context.hasAnyRole()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("hasAnyPermission 테스트")
+    class HasAnyPermissionTest {
+
+        @Test
+        @DisplayName("hasAnyPermission은 하나라도 매칭되면 true를 반환한다")
+        void hasAnyPermission_ShouldReturnTrueIfAnyMatches() {
+            // given
+            UserContext context =
+                    UserContext.of(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "admin@test.com",
+                            null,
+                            List.of("ADMIN"),
+                            List.of("read", "write"));
+
+            // then
+            assertThat(context.hasAnyPermission("delete", "read")).isTrue();
+            assertThat(context.hasAnyPermission("delete", "execute")).isFalse();
+        }
+
+        @Test
+        @DisplayName("hasAnyPermission에 빈 배열을 전달하면 false를 반환한다")
+        void hasAnyPermission_ShouldReturnFalseForEmptyArray() {
+            // given
+            UserContext context = UserContext.admin("admin@test.com");
+
+            // then
+            assertThat(context.hasAnyPermission()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("isSuperAdmin 테스트")
+    class IsSuperAdminTest {
+
+        @Test
+        @DisplayName("isSuperAdmin은 SUPER_ADMIN 역할이 있을 때만 true를 반환한다")
+        void isSuperAdmin_ShouldReturnTrueOnlyForSuperAdminRole() {
+            // given
+            UserContext superAdmin =
+                    UserContext.of(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "super@test.com",
+                            null,
+                            List.of("SUPER_ADMIN"),
+                            Collections.emptyList());
+            UserContext admin = UserContext.admin("admin@test.com");
+            UserContext seller =
+                    UserContext.seller(OrganizationId.generate(), "Company", "seller@test.com");
+
+            // then
+            assertThat(superAdmin.isSuperAdmin()).isTrue();
+            assertThat(admin.isSuperAdmin()).isFalse();
+            assertThat(seller.isSuperAdmin()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("getPrimaryRole 테스트")
+    class GetPrimaryRoleTest {
+
+        @Test
+        @DisplayName("getPrimaryRole은 역할 목록 중 가장 높은 우선순위를 반환한다")
+        void getPrimaryRole_ShouldReturnHighestPriority() {
+            // given
+            UserContext context =
+                    UserContext.of(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "admin@test.com",
+                            null,
+                            List.of("SELLER", "ADMIN", "DEFAULT"),
+                            Collections.emptyList());
+
+            // then
+            assertThat(context.getPrimaryRole()).isEqualTo(UserRole.ADMIN);
+        }
+
+        @Test
+        @DisplayName("SUPER_ADMIN이 있으면 getPrimaryRole은 SUPER_ADMIN을 반환한다")
+        void getPrimaryRole_ShouldReturnSuperAdminIfPresent() {
+            // given
+            UserContext context =
+                    UserContext.of(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "admin@test.com",
+                            null,
+                            List.of("ADMIN", "SUPER_ADMIN"),
+                            Collections.emptyList());
+
+            // then
+            assertThat(context.getPrimaryRole()).isEqualTo(UserRole.SUPER_ADMIN);
+        }
+
+        @Test
+        @DisplayName("팩토리 메서드로 생성된 컨텍스트의 getPrimaryRole은 조직 역할과 일치한다")
+        void getPrimaryRole_ShouldMatchOrganizationRoleForFactoryMethods() {
+            // given
+            UserContext admin = UserContext.admin("admin@test.com");
+            UserContext seller =
+                    UserContext.seller(OrganizationId.generate(), "Company", "seller@test.com");
+            UserContext customer = UserContext.customer(UserId.generate());
+
+            // then
+            assertThat(admin.getPrimaryRole()).isEqualTo(UserRole.ADMIN);
+            assertThat(seller.getPrimaryRole()).isEqualTo(UserRole.SELLER);
+            assertThat(customer.getPrimaryRole()).isEqualTo(UserRole.DEFAULT);
         }
     }
 }

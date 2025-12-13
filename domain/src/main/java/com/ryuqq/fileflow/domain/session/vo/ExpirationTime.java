@@ -1,7 +1,8 @@
 package com.ryuqq.fileflow.domain.session.vo;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * 세션 만료 시각 Value Object.
@@ -12,9 +13,9 @@ import java.time.LocalDateTime;
  *
  * <p><strong>도메인 규칙</strong>: 만료 시각은 null일 수 없다.
  *
- * @param value 만료 시각
+ * @param value 만료 시각 (UTC 기준 Instant)
  */
-public record ExpirationTime(LocalDateTime value) {
+public record ExpirationTime(Instant value) {
 
     /** Compact Constructor (검증 로직). */
     public ExpirationTime {
@@ -30,7 +31,7 @@ public record ExpirationTime(LocalDateTime value) {
      * @return ExpirationTime
      * @throws IllegalArgumentException value가 null인 경우
      */
-    public static ExpirationTime of(LocalDateTime value) {
+    public static ExpirationTime of(Instant value) {
         return new ExpirationTime(value);
     }
 
@@ -42,7 +43,7 @@ public record ExpirationTime(LocalDateTime value) {
      * @return ExpirationTime
      */
     public static ExpirationTime fromNow(Clock clock, long minutesFromNow) {
-        LocalDateTime expiresAt = LocalDateTime.now(clock).plusMinutes(minutesFromNow);
+        Instant expiresAt = clock.instant().plus(Duration.ofMinutes(minutesFromNow));
         return new ExpirationTime(expiresAt);
     }
 
@@ -53,7 +54,7 @@ public record ExpirationTime(LocalDateTime value) {
      * @return 만료되었으면 true
      */
     public boolean isExpired(Clock clock) {
-        return LocalDateTime.now(clock).isAfter(value);
+        return clock.instant().isAfter(value);
     }
 
     /**

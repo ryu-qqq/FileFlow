@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.session.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -22,7 +22,7 @@ public record InitMultipartUploadResponse(
         String uploadId,
         int totalParts,
         long partSize,
-        LocalDateTime expiresAt,
+        Instant expiresAt,
         String bucket,
         String key,
         List<PartInfo> parts) {
@@ -65,7 +65,7 @@ public record InitMultipartUploadResponse(
             String uploadId,
             int totalParts,
             long partSize,
-            LocalDateTime expiresAt,
+            Instant expiresAt,
             String bucket,
             String key,
             List<PartInfo> parts) {
