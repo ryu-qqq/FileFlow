@@ -1,6 +1,8 @@
 package com.ryuqq.fileflow.domain.iam.fixture;
 
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 
 /**
  * UserContext Value Object Test Fixture
@@ -21,12 +23,12 @@ public class UserContextFixture {
 
     /** 기본 Seller UserContext Fixture */
     public static UserContext defaultSellerUserContext() {
-        return UserContext.seller(1001L, "Test Company", "seller@test.com");
+        return UserContext.seller(OrganizationId.generate(), "Test Company", "seller@test.com");
     }
 
     /** 기본 Customer UserContext Fixture */
     public static UserContext defaultCustomerUserContext() {
-        return UserContext.customer(9999L);
+        return UserContext.customer(UserId.generate());
     }
 
     /** Custom Admin UserContext Fixture */
@@ -36,12 +38,12 @@ public class UserContextFixture {
 
     /** Custom Seller UserContext Fixture */
     public static UserContext customSellerUserContext(
-            long organizationId, String companyName, String email) {
+            OrganizationId organizationId, String companyName, String email) {
         return UserContext.seller(organizationId, companyName, email);
     }
 
     /** Custom Customer UserContext Fixture */
-    public static UserContext customCustomerUserContext(long userId) {
+    public static UserContext customCustomerUserContext(UserId userId) {
         return UserContext.customer(userId);
     }
 }

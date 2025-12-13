@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * SoftDeletableEntity - 소프트 딜리트 지원 추상 클래스
@@ -72,7 +72,7 @@ public abstract class SoftDeletableEntity extends BaseAuditEntity {
      * </ul>
      */
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     /**
      * 기본 생성자 (protected)
@@ -93,7 +93,7 @@ public abstract class SoftDeletableEntity extends BaseAuditEntity {
      * @param createdAt 생성 일시
      * @param updatedAt 수정 일시
      */
-    protected SoftDeletableEntity(LocalDateTime createdAt, LocalDateTime updatedAt) {
+    protected SoftDeletableEntity(Instant createdAt, Instant updatedAt) {
         super(createdAt, updatedAt);
         this.deletedAt = null; // 기본값: 활성 상태
     }
@@ -109,8 +109,7 @@ public abstract class SoftDeletableEntity extends BaseAuditEntity {
      * @param updatedAt 수정 일시
      * @param deletedAt 삭제 일시 (null이면 활성 상태)
      */
-    protected SoftDeletableEntity(
-            LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt) {
+    protected SoftDeletableEntity(Instant createdAt, Instant updatedAt, Instant deletedAt) {
         super(createdAt, updatedAt);
         this.deletedAt = deletedAt;
     }
@@ -120,7 +119,7 @@ public abstract class SoftDeletableEntity extends BaseAuditEntity {
      *
      * @return 삭제 일시 (null이면 활성 상태)
      */
-    public LocalDateTime getDeletedAt() {
+    public Instant getDeletedAt() {
         return deletedAt;
     }
 

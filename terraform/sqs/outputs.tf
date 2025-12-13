@@ -33,6 +33,40 @@ output "external_download_dlq_name" {
 }
 
 # ========================================
+# Outputs - File Processing Queue
+# ========================================
+
+output "file_processing_queue_url" {
+  description = "URL of the file processing SQS queue"
+  value       = module.file_processing_queue.queue_url
+}
+
+output "file_processing_queue_arn" {
+  description = "ARN of the file processing SQS queue"
+  value       = module.file_processing_queue.queue_arn
+}
+
+output "file_processing_queue_name" {
+  description = "Name of the file processing SQS queue"
+  value       = module.file_processing_queue.queue_name
+}
+
+output "file_processing_dlq_url" {
+  description = "URL of the file processing dead letter queue"
+  value       = module.file_processing_queue.dlq_url
+}
+
+output "file_processing_dlq_arn" {
+  description = "ARN of the file processing dead letter queue"
+  value       = module.file_processing_queue.dlq_arn
+}
+
+output "file_processing_dlq_name" {
+  description = "Name of the file processing dead letter queue"
+  value       = module.file_processing_queue.dlq_name
+}
+
+# ========================================
 # Common Outputs
 # ========================================
 

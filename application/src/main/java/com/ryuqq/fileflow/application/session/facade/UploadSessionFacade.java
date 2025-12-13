@@ -1,9 +1,12 @@
 package com.ryuqq.fileflow.application.session.facade;
 
-import com.ryuqq.fileflow.application.session.assembler.MultiPartUploadAssembler;
+import com.ryuqq.fileflow.application.common.config.TransactionEventRegistry;
+import com.ryuqq.fileflow.application.session.factory.command.UploadSessionCommandFactory;
 import com.ryuqq.fileflow.application.session.manager.UploadSessionCacheManager;
-import com.ryuqq.fileflow.application.session.manager.UploadSessionManager;
-import com.ryuqq.fileflow.application.session.port.out.client.S3ClientPort;
+import com.ryuqq.fileflow.application.session.manager.command.CompletedPartTransactionManager;
+import com.ryuqq.fileflow.application.session.manager.command.MultipartUploadSessionTransactionManager;
+import com.ryuqq.fileflow.application.session.manager.command.SingleUploadSessionTransactionManager;
+import com.ryuqq.fileflow.application.session.port.out.client.SessionS3ClientPort;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
@@ -15,7 +18,6 @@ import java.time.Duration;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
@@ -47,23 +49,29 @@ public class UploadSessionFacade {
     private static final Duration MULTIPART_UPLOAD_TTL = Duration.ofHours(24);
     private static final Duration PART_URL_EXPIRATION = Duration.ofHours(24);
 
-    private final UploadSessionManager uploadSessionManager;
+    private final SingleUploadSessionTransactionManager singleUploadSessionTransactionManager;
+    private final MultipartUploadSessionTransactionManager multipartUploadSessionTransactionManager;
+    private final CompletedPartTransactionManager completedPartTransactionManager;
     private final UploadSessionCacheManager uploadSessionCacheManager;
-    private final S3ClientPort s3ClientPort;
-    private final MultiPartUploadAssembler multiPartUploadAssembler;
-    private final ApplicationEventPublisher eventPublisher;
+    private final SessionS3ClientPort sessionS3ClientPort;
+    private final TransactionEventRegistry transactionEventRegistry;
+    private final UploadSessionCommandFactory commandFactory;
 
     public UploadSessionFacade(
-            UploadSessionManager uploadSessionManager,
+            SingleUploadSessionTransactionManager singleUploadSessionTransactionManager,
+            MultipartUploadSessionTransactionManager multipartUploadSessionTransactionManager,
+            CompletedPartTransactionManager completedPartTransactionManager,
             UploadSessionCacheManager uploadSessionCacheManager,
-            S3ClientPort s3ClientPort,
-            MultiPartUploadAssembler multiPartUploadAssembler,
-            ApplicationEventPublisher eventPublisher) {
-        this.uploadSessionManager = uploadSessionManager;
+            SessionS3ClientPort sessionS3ClientPort,
+            TransactionEventRegistry transactionEventRegistry,
+            UploadSessionCommandFactory commandFactory) {
+        this.singleUploadSessionTransactionManager = singleUploadSessionTransactionManager;
+        this.multipartUploadSessionTransactionManager = multipartUploadSessionTransactionManager;
+        this.completedPartTransactionManager = completedPartTransactionManager;
         this.uploadSessionCacheManager = uploadSessionCacheManager;
-        this.s3ClientPort = s3ClientPort;
-        this.multiPartUploadAssembler = multiPartUploadAssembler;
-        this.eventPublisher = eventPublisher;
+        this.sessionS3ClientPort = sessionS3ClientPort;
+        this.transactionEventRegistry = transactionEventRegistry;
+        this.commandFactory = commandFactory;
     }
 
     /**
@@ -76,7 +84,7 @@ public class UploadSessionFacade {
      */
     public S3UploadId initiateMultipartUpload(S3UploadMetadata s3Metadata) {
         String uploadId =
-                s3ClientPort.initiateMultipartUpload(
+                sessionS3ClientPort.initiateMultipartUpload(
                         s3Metadata.getBucket(), s3Metadata.getS3Key(), s3Metadata.getContentType());
 
         return S3UploadId.of(uploadId);
@@ -99,13 +107,15 @@ public class UploadSessionFacade {
      */
     public SingleUploadSession createAndActivateSingleUpload(SingleUploadSession session) {
         // Step 1: PREPARING 상태로 RDB 저장 (ID 발급)
-        SingleUploadSession preparedSession = uploadSessionManager.save(session);
+        SingleUploadSession preparedSession =
+                singleUploadSessionTransactionManager.persist(session);
 
         // Step 2: Presigned URL 발급 및 활성화 (내부에서 activate 호출)
         SingleUploadSession activatedSession = generateSingleUploadPresignedUrl(preparedSession);
 
         // Step 3: ACTIVE 상태로 RDB 업데이트
-        SingleUploadSession savedSession = uploadSessionManager.save(activatedSession);
+        SingleUploadSession savedSession =
+                singleUploadSessionTransactionManager.persist(activatedSession);
 
         // Step 4: Redis 캐싱 (TTL 자동 만료용, 한 번만 저장)
         uploadSessionCacheManager.cacheSingleUpload(savedSession, SINGLE_UPLOAD_TTL);
@@ -148,24 +158,26 @@ public class UploadSessionFacade {
      */
     public MultipartUploadSession createAndActivateMultipartUpload(MultipartUploadSession session) {
         // Step 1: PREPARING 상태로 RDB 저장 (ID 발급)
-        MultipartUploadSession preparedSession = uploadSessionManager.save(session);
+        MultipartUploadSession preparedSession =
+                multipartUploadSessionTransactionManager.persist(session);
 
         // Step 2: 세션 활성화 (PREPARING → ACTIVE)
         preparedSession.activate();
 
         // Step 3: ACTIVE 상태로 RDB 업데이트
-        MultipartUploadSession savedSession = uploadSessionManager.save(preparedSession);
+        MultipartUploadSession savedSession =
+                multipartUploadSessionTransactionManager.persist(preparedSession);
 
-        // Step 4: Part별 Presigned URL 생성 및 CompletedPart 초기화 (Assembler 사용)
+        // Step 4: Part별 Presigned URL 생성 및 CompletedPart 초기화 (CommandFactory 사용)
         List<CompletedPart> initialParts =
-                multiPartUploadAssembler.toInitialCompletedParts(
+                commandFactory.createInitialCompletedParts(
                         savedSession,
                         (bucket, s3Key, uploadId, partNumber) ->
-                                s3ClientPort.generatePresignedUploadPartUrl(
+                                sessionS3ClientPort.generatePresignedUploadPartUrl(
                                         bucket, s3Key, uploadId, partNumber, PART_URL_EXPIRATION));
 
         // Step 5: 초기화된 파트들 RDB 저장 (한 트랜잭션)
-        uploadSessionManager.saveAllCompletedParts(savedSession.getId(), initialParts);
+        completedPartTransactionManager.persistAll(savedSession.getId(), initialParts);
 
         // Step 6: Redis 캐싱 (TTL 자동 만료용)
         uploadSessionCacheManager.cacheMultipartUpload(savedSession, MULTIPART_UPLOAD_TTL);
@@ -182,7 +194,7 @@ public class UploadSessionFacade {
     private SingleUploadSession generateSingleUploadPresignedUrl(SingleUploadSession session) {
         // S3 Presigned URL 발급
         String presignedUrlString =
-                s3ClientPort.generatePresignedPutUrl(
+                sessionS3ClientPort.generatePresignedPutUrl(
                         session.getBucket(),
                         session.getS3Key(),
                         session.getContentType(),
@@ -192,7 +204,7 @@ public class UploadSessionFacade {
         PresignedUrl presignedUrl = PresignedUrl.of(presignedUrlString);
 
         // 세션 활성화 (PREPARING → ACTIVE)
-        session.activate(presignedUrl);
+        commandFactory.activateSingleUpload(session, presignedUrl);
 
         return session;
     }
@@ -200,9 +212,9 @@ public class UploadSessionFacade {
     // ==================== 완료 처리 및 이벤트 발행 ====================
 
     /**
-     * SingleUploadSession 저장 후 도메인 이벤트 발행.
+     * SingleUploadSession 저장 후 도메인 이벤트 등록.
      *
-     * <p>세션 저장 후 도메인에서 생성된 이벤트를 발행합니다.
+     * <p>세션 저장 후 도메인에서 생성된 이벤트를 커밋 후 발행하도록 등록합니다 (APP-ER-002, APP-ER-005).
      *
      * <p><strong>캐시 삭제</strong>: 완료된 세션은 Redis에서 즉시 삭제하여 불필요한 TTL 만료 이벤트를 방지합니다.
      *
@@ -216,30 +228,30 @@ public class UploadSessionFacade {
                 "Extracted {} domain events from session: {}", events.size(), session.getIdValue());
 
         // 2. 세션 저장
-        SingleUploadSession savedSession = uploadSessionManager.save(session);
+        SingleUploadSession savedSession = singleUploadSessionTransactionManager.persist(session);
 
         // 3. Redis 캐시 삭제 (완료된 세션은 불필요한 만료 이벤트 방지)
         if (session.isCompleted()) {
             uploadSessionCacheManager.deleteSingleUploadSession(session.getId());
         }
 
-        // 4. 이벤트 발행
+        // 4. 이벤트 등록 (커밋 후 발행)
         for (FileUploadCompletedEvent event : events) {
             log.info(
-                    "Publishing FileUploadCompletedEvent: sessionId={}, bucket={}, key={}",
+                    "Registering FileUploadCompletedEvent: sessionId={}, bucket={}, key={}",
                     event.sessionId().getValue(),
                     event.bucket().bucketName(),
                     event.s3Key().key());
-            eventPublisher.publishEvent(event);
+            transactionEventRegistry.registerObjectForPublish(event);
         }
 
         return savedSession;
     }
 
     /**
-     * MultipartUploadSession 저장 후 도메인 이벤트 발행.
+     * MultipartUploadSession 저장 후 도메인 이벤트 등록.
      *
-     * <p>세션 저장 후 도메인에서 생성된 이벤트를 발행합니다.
+     * <p>세션 저장 후 도메인에서 생성된 이벤트를 커밋 후 발행하도록 등록합니다 (APP-ER-002, APP-ER-005).
      *
      * @param session 완료 처리된 세션
      * @return 저장된 세션
@@ -249,11 +261,12 @@ public class UploadSessionFacade {
         List<FileUploadCompletedEvent> events = session.pollDomainEvents();
 
         // 2. 세션 저장
-        MultipartUploadSession savedSession = uploadSessionManager.save(session);
+        MultipartUploadSession savedSession =
+                multipartUploadSessionTransactionManager.persist(session);
 
-        // 3. 이벤트 발행
+        // 3. 이벤트 등록 (커밋 후 발행)
         for (FileUploadCompletedEvent event : events) {
-            eventPublisher.publishEvent(event);
+            transactionEventRegistry.registerObjectForPublish(event);
         }
 
         return savedSession;

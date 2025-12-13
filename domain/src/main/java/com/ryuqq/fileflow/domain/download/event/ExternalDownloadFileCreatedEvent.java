@@ -4,13 +4,15 @@ import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
 import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 외부 다운로드 파일 생성 완료 이벤트.
@@ -18,6 +20,19 @@ import java.time.LocalDateTime;
  * <p>ExternalDownload 완료 시 FileAsset 생성을 위해 발행됩니다.
  *
  * <p>이벤트 리스너에서 FileAsset을 생성하고 저장합니다.
+ *
+ * @param downloadId 외부 다운로드 ID
+ * @param sourceUrl 원본 URL
+ * @param fileName 파일명
+ * @param fileSize 파일 크기
+ * @param contentType 컨텐츠 타입
+ * @param category 파일 카테고리
+ * @param bucket S3 버킷
+ * @param s3Key S3 키
+ * @param etag ETag
+ * @param organizationId 조직 ID (Seller만, Admin/Customer는 null) - UUIDv7
+ * @param tenantId 테넌트 ID - UUIDv7
+ * @param completedAt 완료 시간
  */
 public record ExternalDownloadFileCreatedEvent(
         ExternalDownloadId downloadId,
@@ -29,9 +44,9 @@ public record ExternalDownloadFileCreatedEvent(
         S3Bucket bucket,
         S3Key s3Key,
         ETag etag,
-        Long organizationId,
-        Long tenantId,
-        LocalDateTime completedAt)
+        OrganizationId organizationId,
+        TenantId tenantId,
+        Instant completedAt)
         implements DomainEvent {
 
     /**
@@ -46,8 +61,8 @@ public record ExternalDownloadFileCreatedEvent(
      * @param bucket S3 버킷
      * @param s3Key S3 키
      * @param etag ETag
-     * @param organizationId 조직 ID
-     * @param tenantId 테넌트 ID
+     * @param organizationId 조직 ID (Seller만, Admin/Customer는 null) - UUIDv7
+     * @param tenantId 테넌트 ID - UUIDv7
      * @param completedAt 완료 시간
      * @return ExternalDownloadFileCreatedEvent
      */
@@ -61,9 +76,9 @@ public record ExternalDownloadFileCreatedEvent(
             S3Bucket bucket,
             S3Key s3Key,
             ETag etag,
-            Long organizationId,
-            Long tenantId,
-            LocalDateTime completedAt) {
+            OrganizationId organizationId,
+            TenantId tenantId,
+            Instant completedAt) {
         return new ExternalDownloadFileCreatedEvent(
                 downloadId,
                 sourceUrl,
@@ -84,7 +99,7 @@ public record ExternalDownloadFileCreatedEvent(
      *
      * @return 완료 시간
      */
-    public LocalDateTime occurredAt() {
+    public Instant occurredAt() {
         return completedAt;
     }
 }

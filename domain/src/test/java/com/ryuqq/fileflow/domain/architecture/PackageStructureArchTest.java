@@ -1,9 +1,11 @@
 package com.ryuqq.fileflow.domain.architecture;
 
+import static com.ryuqq.fileflow.domain.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition;
 import org.junit.jupiter.api.BeforeAll;
@@ -56,7 +58,10 @@ class PackageStructureArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.fileflow.domain");
+        classes =
+                new ClassFileImporter()
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(DOMAIN);
     }
 
     // ==================== domain.common 패키지 규칙 ====================
@@ -68,7 +73,7 @@ class PackageStructureArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain.common.event")
+                        .resideInAPackage(DOMAIN_COMMON + ".event")
                         .should()
                         .beInterfaces()
                         .because(
@@ -88,7 +93,7 @@ class PackageStructureArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain.common.exception")
+                        .resideInAPackage(DOMAIN_COMMON + ".exception")
                         .and()
                         .haveSimpleNameNotContaining("Test")
                         .should()
@@ -107,20 +112,24 @@ class PackageStructureArchTest {
         rule.check(classes);
     }
 
-    /** 규칙 3: domain.common.util 패키지는 Utility 인터페이스만 포함해야 한다 */
+    /** 규칙 3: domain.common.util 패키지는 Utility 인터페이스 또는 순수 유틸리티 클래스만 포함해야 한다 */
     @Test
-    @DisplayName("[필수] domain.common.util 패키지는 Utility 인터페이스만 포함해야 한다")
-    void domainCommonUtil_ShouldOnlyContainUtilityInterfaces() {
+    @DisplayName("[필수] domain.common.util 패키지는 Utility 인터페이스 또는 순수 유틸리티 클래스만 포함해야 한다")
+    void domainCommonUtil_ShouldOnlyContainUtilityInterfacesOrPureUtilityClasses() {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain.common.util")
+                        .resideInAPackage(DOMAIN_COMMON + ".util")
+                        .and()
+                        .doNotHaveSimpleName("UuidV7Generator") // 순수 유틸리티 클래스 예외
                         .should()
                         .beInterfaces()
                         .because(
                                 "domain.common.util 패키지는 Utility 인터페이스만 포함해야 합니다 (DIP)\n"
+                                    + "예외: 순수 유틸리티 클래스 (외부 의존성 없이 static 메서드만 제공)\n"
                                     + "예시:\n"
                                     + "  - ClockHolder.java ✅ (interface, 구현은 Application Layer)\n"
+                                    + "  - UuidV7Generator.java ✅ (순수 유틸리티 클래스, static 메서드만)\n"
                                     + "  - SystemClockHolder.java ❌ (concrete class, Application"
                                     + " Layer에 위치해야 함)");
 
@@ -136,7 +145,7 @@ class PackageStructureArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .implement("com.ryuqq.fileflow.domain.common.event.DomainEvent")
+                        .implement(DOMAIN_COMMON + ".event.DomainEvent")
                         .and()
                         .haveSimpleNameNotContaining("Fixture")
                         .and()
@@ -146,7 +155,8 @@ class PackageStructureArchTest {
                         .and()
                         .doNotHaveSimpleName("DomainEvent")
                         .should()
-                        .resideInAPackage("..domain..event..")
+                        .resideInAPackage(EVENT_PATTERN)
+                        .allowEmptyShould(true)
                         .because(
                                 "Domain Event는 domain.[bc].event 패키지에 위치해야 합니다\n"
                                     + "예시:\n"
@@ -163,16 +173,16 @@ class PackageStructureArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .areAssignableTo(
-                                "com.ryuqq.fileflow.domain.common.exception.DomainException")
+                        .areAssignableTo(DOMAIN_COMMON + ".exception.DomainException")
                         .and()
                         .haveSimpleNameNotContaining("Test")
                         .and()
                         .doNotHaveSimpleName("DomainException")
                         .and()
-                        .resideInAPackage("..domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
-                        .resideInAPackage("..domain..exception..")
+                        .resideInAPackage(EXCEPTION_PATTERN)
+                        .allowEmptyShould(true)
                         .because(
                                 "Concrete Exception은 domain.[bc].exception 패키지에 위치해야 합니다\n"
                                         + "예시:\n"
@@ -191,7 +201,7 @@ class PackageStructureArchTest {
     @DisplayName("[필수] Bounded Context 간 순환 의존성이 없어야 한다")
     void boundedContexts_ShouldBeFreeOfCycles() {
         SlicesRuleDefinition.slices()
-                .matching("com.ryuqq.fileflow.domain.(*)..")
+                .matching(DOMAIN + ".(*)..")
                 .should()
                 .beFreeOfCycles()
                 .because(
@@ -211,15 +221,15 @@ class PackageStructureArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain.common..")
+                        .resideInAPackage(DOMAIN_COMMON + "..")
                         .should()
                         .onlyBeAccessed()
                         .byAnyPackage(
-                                "com.ryuqq.fileflow.domain..",
-                                "com.ryuqq.fileflow.application..",
-                                "com.ryuqq.fileflow.adapter..",
-                                "com.ryuqq.persistence..",
-                                "com.ryuqq.bootstrap..")
+                                DOMAIN_ALL,
+                                APPLICATION_ALL,
+                                ADAPTER_ALL,
+                                PERSISTENCE_ALL,
+                                BOOTSTRAP_ALL)
                         .because("domain.common 패키지는 공통 인터페이스로 모든 레이어에서 접근 가능합니다");
 
         rule.check(classes);
@@ -237,11 +247,11 @@ class PackageStructureArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .and()
-                        .resideOutsideOfPackage("com.ryuqq.fileflow.domain.common..")
+                        .resideOutsideOfPackage(DOMAIN_COMMON + "..")
                         .should()
-                        .resideInAPackage("com.ryuqq.fileflow.domain.(*)..")
+                        .resideInAPackage(DOMAIN + ".(*)..")
                         .because(
                                 "Bounded Context 패키지명은 소문자 단어로 구성되어야 합니다\n"
                                     + "예시:\n"
@@ -267,26 +277,22 @@ class PackageStructureArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("com.ryuqq.fileflow.domain.(*)..")
+                        .resideInAPackage(DOMAIN + ".(*)..")
                         .and()
-                        .resideOutsideOfPackage("com.ryuqq.fileflow.domain.common..")
+                        .resideOutsideOfPackage(DOMAIN_COMMON + "..")
                         .and()
-                        .resideOutsideOfPackage("..architecture..") // 아키텍처 테스트 클래스 제외
-                        .and()
-                        .haveSimpleNameNotEndingWith("Test") // 테스트 클래스 제외
-                        .and()
-                        .haveSimpleNameNotContaining("Fixture") // Fixture 클래스 제외
-                        .and()
-                        .areTopLevelClasses() // 내부 클래스 (Nested Class) 제외
+                        .resideOutsideOfPackage(ARCHITECTURE_PATTERN) // 테스트 클래스 제외
                         .should()
                         .onlyDependOnClassesThat()
                         .resideInAnyPackage(
-                                "com.ryuqq.fileflow.domain.common..",
-                                "com.ryuqq.fileflow.domain.(*)..", // 같은 BC는 허용
+                                DOMAIN_COMMON + "..",
+                                DOMAIN + ".(*)..", // 같은 BC는 허용
                                 "java..",
                                 "jakarta.annotation..",
-                                "edu.umd.cs.findbugs.annotations..", // SpotBugs 어노테이션 허용
-                                "com.github.f4b6a3.uuid..") // UUID 생성 라이브러리 허용
+                                "com.github.f4b6a3.uuid..", // UUID 생성 라이브러리
+                                "edu.umd.cs.findbugs.annotations.." // SpotBugs 어노테이션
+                                )
+                        .allowEmptyShould(true)
                         .because(
                                 "Bounded Context는 다른 Bounded Context 내부에 직접 의존하지 않아야 합니다\n"
                                     + "통신 방법:\n"

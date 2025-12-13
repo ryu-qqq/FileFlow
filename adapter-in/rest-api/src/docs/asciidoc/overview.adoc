@@ -1,0 +1,55 @@
+[[overview]]
+== 개요
+
+FileFlow는 파일 업로드, 다운로드, 관리를 위한 REST API를 제공합니다.
+
+[[overview-http-verbs]]
+=== HTTP 동사
+
+본 REST API에서 사용하는 HTTP 동사(verbs)는 가능한 한 표준 HTTP와 REST 규약을 따릅니다.
+
+|===
+| 동사 | 용례
+
+| `GET`
+| 리소스를 가져올 때 사용
+
+| `POST`
+| 새 리소스를 만들거나 명령을 실행할 때 사용
+
+| `PATCH`
+| 기존 리소스를 수정할 때 사용
+
+| `DELETE`
+| 기존 리소스를 삭제할 때 사용
+|===
+
+[[overview-http-status-codes]]
+=== HTTP 상태 코드
+
+본 REST API에서 사용하는 HTTP 상태 코드는 가능한 한 표준 HTTP와 REST 규약을 따릅니다.
+
+|===
+| 상태 코드 | 용례
+
+| `200 OK`
+| 요청을 성공적으로 처리함
+
+| `201 Created`
+| 새 리소스를 성공적으로 생성함
+
+| `400 Bad Request`
+| 잘못된 요청을 보낸 경우
+
+| `401 Unauthorized`
+| 인증되지 않은 요청
+
+| `403 Forbidden`
+| 권한이 없는 요청
+
+| `404 Not Found`
+| 요청한 리소스가 없음
+
+| `500 Internal Server Error`
+| 서버 내부 오류
+|===

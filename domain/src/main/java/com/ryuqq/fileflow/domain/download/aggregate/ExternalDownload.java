@@ -10,6 +10,8 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
@@ -19,7 +21,6 @@ import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,8 +53,8 @@ public class ExternalDownload {
 
     private final ExternalDownloadId id;
     private final SourceUrl sourceUrl;
-    private final long tenantId;
-    private final long organizationId;
+    private final TenantId tenantId;
+    private final OrganizationId organizationId;
     private final S3Bucket s3Bucket;
     private final String s3PathPrefix;
     private ExternalDownloadStatus status;
@@ -70,8 +71,8 @@ public class ExternalDownload {
     private ExternalDownload(
             ExternalDownloadId id,
             SourceUrl sourceUrl,
-            long tenantId,
-            long organizationId,
+            TenantId tenantId,
+            OrganizationId organizationId,
             S3Bucket s3Bucket,
             String s3PathPrefix,
             ExternalDownloadStatus status,
@@ -82,6 +83,8 @@ public class ExternalDownload {
             Instant createdAt,
             Instant updatedAt) {
         Objects.requireNonNull(sourceUrl, "sourceUrl must not be null");
+        Objects.requireNonNull(tenantId, "tenantId must not be null");
+        // organizationId는 Seller만 가짐 (Admin/Customer는 null 허용)
         Objects.requireNonNull(s3Bucket, "s3Bucket must not be null");
         Objects.requireNonNull(s3PathPrefix, "s3PathPrefix must not be null");
         Objects.requireNonNull(status, "status must not be null");
@@ -106,8 +109,8 @@ public class ExternalDownload {
      * 새 ExternalDownload 생성 (ID null, PENDING 상태).
      *
      * @param sourceUrl 외부 이미지 URL
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID - UUIDv7
+     * @param organizationId 조직 ID (Seller만, Admin/Customer는 null) - UUIDv7
      * @param s3Bucket S3 버킷 (UserContext에서 추출)
      * @param s3PathPrefix S3 경로 prefix (예: "admin/", "seller-123/", "customer/")
      * @param webhookUrl 콜백 URL (nullable)
@@ -116,8 +119,8 @@ public class ExternalDownload {
      */
     public static ExternalDownload forNew(
             SourceUrl sourceUrl,
-            long tenantId,
-            long organizationId,
+            TenantId tenantId,
+            OrganizationId organizationId,
             S3Bucket s3Bucket,
             String s3PathPrefix,
             WebhookUrl webhookUrl,
@@ -144,8 +147,8 @@ public class ExternalDownload {
      *
      * @param id 다운로드 ID
      * @param sourceUrl 외부 이미지 URL
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID - UUIDv7
+     * @param organizationId 조직 ID (Seller만, Admin/Customer는 null) - UUIDv7
      * @param s3Bucket S3 버킷
      * @param s3PathPrefix S3 경로 prefix
      * @param status 현재 상태
@@ -160,8 +163,8 @@ public class ExternalDownload {
     public static ExternalDownload of(
             ExternalDownloadId id,
             SourceUrl sourceUrl,
-            long tenantId,
-            long organizationId,
+            TenantId tenantId,
+            OrganizationId organizationId,
             S3Bucket s3Bucket,
             String s3PathPrefix,
             ExternalDownloadStatus status,
@@ -416,11 +419,11 @@ public class ExternalDownload {
         return sourceUrl;
     }
 
-    public long getTenantId() {
+    public TenantId getTenantId() {
         return tenantId;
     }
 
-    public long getOrganizationId() {
+    public OrganizationId getOrganizationId() {
         return organizationId;
     }
 
@@ -528,7 +531,7 @@ public class ExternalDownload {
                 etag,
                 this.organizationId,
                 this.tenantId,
-                LocalDateTime.now(clock));
+                clock.instant());
     }
 
     /**

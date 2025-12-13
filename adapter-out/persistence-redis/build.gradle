@@ -21,6 +21,9 @@ dependencies {
     // Spring Data Redis
     implementation libs.spring.boot.starter.data.redis
 
+    // Connection Pooling for Lettuce
+    implementation libs.commons.pool2
+
     // Redisson for Distributed Lock
     implementation libs.redisson
 
@@ -32,6 +35,9 @@ dependencies {
     // Test Dependencies
     // ========================================
     testImplementation libs.spring.boot.starter.test
+
+    // Testcontainers for integration tests
+    testImplementation libs.testcontainers.junit
 
     // ArchUnit for architecture validation
     testImplementation libs.archunit.junit5

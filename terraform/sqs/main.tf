@@ -84,6 +84,48 @@ module "external_download_queue" {
 }
 
 # ========================================
+# SQS Queue: File Processing (Resizing Worker)
+# ========================================
+module "file_processing_queue" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/sqs?ref=main"
+
+  name       = "${var.environment}-${var.project_name}-file-processing"
+  fifo_queue = false
+
+  # KMS Encryption (required)
+  kms_key_id = aws_kms_key.sqs.arn
+
+  # Message Configuration
+  visibility_timeout_seconds = 600  # 10 minutes - enough time for image resizing
+  message_retention_seconds  = 345600  # 4 days
+  max_message_size           = 262144  # 256 KB
+  delay_seconds              = 0
+  receive_wait_time_seconds  = 20  # Long polling enabled
+
+  # DLQ Configuration
+  enable_dlq                    = true
+  max_receive_count             = 3  # Move to DLQ after 3 failed attempts
+  dlq_message_retention_seconds = 1209600  # 14 days for DLQ
+
+  # CloudWatch Alarms
+  enable_cloudwatch_alarms         = true
+  alarm_evaluation_periods         = 2
+  alarm_period                     = 300  # 5 minutes
+  alarm_message_age_threshold      = 900  # Alert if message older than 15 minutes
+  alarm_messages_visible_threshold = 500  # Alert if queue depth exceeds 500
+  alarm_dlq_messages_threshold     = 1  # Alert on any DLQ message
+
+  # Required Tags
+  environment = local.common_tags.environment
+  service     = local.common_tags.service_name
+  team        = local.common_tags.team
+  owner       = local.common_tags.owner
+  cost_center = local.common_tags.cost_center
+  project     = local.common_tags.project
+  data_class  = local.common_tags.data_class
+}
+
+# ========================================
 # IAM Policy for SQS Access (ECS Tasks)
 # ========================================
 data "aws_iam_policy_document" "sqs_access" {
@@ -100,7 +142,9 @@ data "aws_iam_policy_document" "sqs_access" {
     ]
     resources = [
       module.external_download_queue.queue_arn,
-      module.external_download_queue.dlq_arn
+      module.external_download_queue.dlq_arn,
+      module.file_processing_queue.queue_arn,
+      module.file_processing_queue.dlq_arn
     ]
   }
 
@@ -174,6 +218,45 @@ resource "aws_ssm_parameter" "sqs_policy_arn" {
 
   tags = {
     Name        = "${var.project_name}-sqs-policy-arn"
+    Environment = var.environment
+  }
+}
+
+# ========================================
+# SSM Parameters: File Processing Queue
+# ========================================
+resource "aws_ssm_parameter" "file_processing_queue_url" {
+  name        = "/${var.project_name}/sqs/file-processing-queue-url"
+  description = "FileFlow file processing queue URL"
+  type        = "String"
+  value       = module.file_processing_queue.queue_url
+
+  tags = {
+    Name        = "${var.project_name}-sqs-file-processing-queue-url"
+    Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "file_processing_queue_arn" {
+  name        = "/${var.project_name}/sqs/file-processing-queue-arn"
+  description = "FileFlow file processing queue ARN"
+  type        = "String"
+  value       = module.file_processing_queue.queue_arn
+
+  tags = {
+    Name        = "${var.project_name}-sqs-file-processing-queue-arn"
+    Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "file_processing_dlq_url" {
+  name        = "/${var.project_name}/sqs/file-processing-dlq-url"
+  description = "FileFlow file processing DLQ URL"
+  type        = "String"
+  value       = module.file_processing_queue.dlq_url
+
+  tags = {
+    Name        = "${var.project_name}-sqs-file-processing-dlq-url"
     Environment = var.environment
   }
 }

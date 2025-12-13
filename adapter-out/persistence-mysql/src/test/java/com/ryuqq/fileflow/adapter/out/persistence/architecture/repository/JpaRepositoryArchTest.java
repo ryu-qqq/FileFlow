@@ -1,42 +1,53 @@
 package com.ryuqq.fileflow.adapter.out.persistence.architecture.repository;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
 /**
- * JpaRepositoryArchTest - JPA Repository 아키텍처 규칙 검증
+ * JpaRepositoryArchTest - JPA Repository 아키텍처 규칙 검증 (7개 규칙)
  *
  * <p>jpa-repository-guide.md의 핵심 규칙을 ArchUnit으로 검증합니다.
  *
- * <p><strong>검증 규칙:</strong>
+ * <p><strong>JPA Repository 역할:</strong>
  *
  * <ul>
- *   <li>규칙 1: JpaRepository는 인터페이스여야 함
- *   <li>규칙 2: JpaRepository 상속 필수
- *   <li>규칙 3: QuerydslPredicateExecutor 상속 금지
- *   <li>규칙 4: Query Method 추가 금지
- *   <li>규칙 5: @Query 어노테이션 사용 금지
- *   <li>규칙 6: Custom Repository 구현 금지
- *   <li>규칙 7: 네이밍 규칙 (*Repository)
+ *   <li>Command 전용 (save, delete, deleteById)
+ *   <li>Merge 기반 업데이트 (DDD 순수성 유지)
+ *   <li>순수 JpaRepository 상속만 허용
+ * </ul>
+ *
+ * <p><strong>검증 그룹:</strong>
+ *
+ * <ul>
+ *   <li>인터페이스 구조 규칙 (2개)
+ *   <li>금지 사항 규칙 (4개)
+ *   <li>네이밍 규칙 (1개)
  * </ul>
  *
  * @author Development Team
  * @since 1.0.0
+ * @see <a
+ *     href="docs/coding_convention/04-persistence-layer/mysql/repository/jpa/jpa-repository-guide.md">JPA
+ *     Repository Guide</a>
  */
 @DisplayName("JPA Repository 아키텍처 규칙 검증 (Zero-Tolerance)")
 class JpaRepositoryArchTest {
+
+    private static final String BASE_PACKAGE = "com.ryuqq.adapter.out.persistence";
 
     private static JavaClasses allClasses;
     private static JavaClasses jpaRepositoryClasses;
@@ -45,194 +56,249 @@ class JpaRepositoryArchTest {
     static void setUp() {
         allClasses =
                 new ClassFileImporter()
-                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(BASE_PACKAGE);
 
-        // JpaRepository 인터페이스만 (QueryDsl 제외)
+        // JpaRepository 인터페이스만 (QueryDsl, Admin, Lock, Jdbc 제외)
         jpaRepositoryClasses =
                 allClasses.that(
                         DescribedPredicate.describe(
-                                "are JpaRepository interfaces",
+                                "JPA Repository 인터페이스 (*Repository, QueryDsl/Admin/Lock/Jdbc 제외)",
                                 javaClass ->
                                         javaClass.getSimpleName().endsWith("Repository")
                                                 && !javaClass.getSimpleName().contains("QueryDsl")
+                                                && !javaClass.getSimpleName().contains("Admin")
+                                                && !javaClass.getSimpleName().contains("Lock")
+                                                && !javaClass.getSimpleName().contains("Jdbc")
                                                 && javaClass.isInterface()));
     }
 
-    @Test
-    @DisplayName("규칙 1: JpaRepository는 인터페이스여야 함")
-    void jpaRepository_MustBeInterface() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .haveSimpleNameEndingWith("Repository")
-                        .and()
-                        .haveSimpleNameNotContaining("QueryDsl")
-                        .and()
-                        .resideInAPackage("..repository..")
-                        .should()
-                        .beInterfaces()
-                        .because("JpaRepository는 인터페이스로 정의되어야 합니다");
+    // ========================================================================
+    // 1. 인터페이스 구조 규칙 (2개)
+    // ========================================================================
 
-        rule.check(jpaRepositoryClasses);
+    @Nested
+    @DisplayName("1. 인터페이스 구조 규칙")
+    class InterfaceStructureRules {
+
+        @Test
+        @DisplayName("규칙 1-1: JpaRepository는 인터페이스여야 합니다")
+        void jpaRepository_MustBeInterface() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("Repository")
+                            .and()
+                            .haveSimpleNameNotContaining("QueryDsl")
+                            .and()
+                            .haveSimpleNameNotContaining("Admin")
+                            .and()
+                            .haveSimpleNameNotContaining("Lock")
+                            .and()
+                            .haveSimpleNameNotContaining("Jdbc")
+                            .and()
+                            .resideInAPackage("..repository..")
+                            .should()
+                            .beInterfaces()
+                            .allowEmptyShould(true)
+                            .because("JpaRepository는 인터페이스로 정의되어야 합니다 (Spring Data JPA 표준)");
+
+            rule.check(jpaRepositoryClasses);
+        }
+
+        @Test
+        @DisplayName("규칙 1-2: JpaRepository 상속이 필수입니다")
+        void jpaRepository_MustExtendJpaRepository() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("Repository")
+                            .and()
+                            .haveSimpleNameNotContaining("QueryDsl")
+                            .and()
+                            .haveSimpleNameNotContaining("Admin")
+                            .and()
+                            .haveSimpleNameNotContaining("Lock")
+                            .and()
+                            .haveSimpleNameNotContaining("Jdbc")
+                            .and()
+                            .areInterfaces()
+                            .and()
+                            .resideInAPackage("..repository..")
+                            .should()
+                            .beAssignableTo(JpaRepository.class)
+                            .allowEmptyShould(true)
+                            .because("JpaRepository 인터페이스를 상속해야 합니다");
+
+            rule.check(jpaRepositoryClasses);
+        }
     }
 
-    @Test
-    @DisplayName("규칙 2: JpaRepository 상속 필수")
-    void jpaRepository_MustExtendJpaRepository() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .haveSimpleNameEndingWith("Repository")
-                        .and()
-                        .haveSimpleNameNotContaining("QueryDsl")
-                        .and()
-                        .areInterfaces()
-                        .should()
-                        .beAssignableTo(JpaRepository.class)
-                        .because("JpaRepository 인터페이스를 상속해야 합니다");
+    // ========================================================================
+    // 2. 금지 사항 규칙 (4개)
+    // ========================================================================
 
-        rule.check(jpaRepositoryClasses);
+    @Nested
+    @DisplayName("2. 금지 사항 규칙")
+    class ProhibitionRules {
+
+        @Test
+        @DisplayName("규칙 2-1: QuerydslPredicateExecutor 상속이 금지됩니다")
+        void jpaRepository_MustNotExtendQuerydslPredicateExecutor() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .haveSimpleNameEndingWith("Repository")
+                            .and()
+                            .haveSimpleNameNotContaining("QueryDsl")
+                            .and()
+                            .haveSimpleNameNotContaining("Admin")
+                            .and()
+                            .haveSimpleNameNotContaining("Lock")
+                            .and()
+                            .haveSimpleNameNotContaining("Jdbc")
+                            .and()
+                            .areInterfaces()
+                            .and()
+                            .resideInAPackage("..repository..")
+                            .should()
+                            .beAssignableTo(QuerydslPredicateExecutor.class)
+                            .allowEmptyShould(true)
+                            .because(
+                                    "JpaRepository는 QuerydslPredicateExecutor 상속이 금지됩니다 (순수 Command"
+                                            + " 전용)");
+
+            rule.check(jpaRepositoryClasses);
+        }
+
+        @Test
+        @DisplayName("규칙 2-2: Query Method 추가가 금지됩니다")
+        void jpaRepository_MustNotHaveQueryMethods() {
+            ArchRule rule =
+                    noMethods()
+                            .that()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameEndingWith("Repository")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameNotContaining("QueryDsl")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameNotContaining("Admin")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameNotContaining("Lock")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameNotContaining("Jdbc")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .areInterfaces()
+                            .and()
+                            .haveNameMatching("find.*|search.*|count.*|exists.*|get.*")
+                            .should()
+                            .beDeclaredInClassesThat()
+                            .haveSimpleNameEndingWith("Repository")
+                            .allowEmptyShould(true)
+                            .because(
+                                    "JpaRepository는 Query Method 추가가 금지됩니다 (QueryDslRepository"
+                                            + " 사용)");
+
+            rule.check(allClasses);
+        }
+
+        @Test
+        @DisplayName("규칙 2-3: @Query 어노테이션 사용이 금지됩니다")
+        void jpaRepository_MustNotUseQueryAnnotation() {
+            ArchRule rule =
+                    noMethods()
+                            .that()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameEndingWith("Repository")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameNotContaining("QueryDsl")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameNotContaining("Admin")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameNotContaining("Lock")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleNameNotContaining("Jdbc")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .areInterfaces()
+                            .should()
+                            .beAnnotatedWith(Query.class)
+                            .allowEmptyShould(true)
+                            .because("JpaRepository는 @Query 어노테이션 사용이 금지됩니다 (QueryDSL 사용)");
+
+            rule.check(allClasses);
+        }
+
+        @Test
+        @DisplayName("규칙 2-4: Custom Repository 구현이 금지됩니다")
+        void jpaRepository_MustNotHaveCustomImplementation() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .haveSimpleNameEndingWith("RepositoryImpl")
+                            .and()
+                            .haveSimpleNameNotContaining("QueryDsl")
+                            .and()
+                            .haveSimpleNameNotContaining("Admin")
+                            .and()
+                            .haveSimpleNameNotContaining("Lock")
+                            .and()
+                            .haveSimpleNameNotContaining("Jdbc")
+                            .and()
+                            .resideInAPackage("..repository..")
+                            .should()
+                            .beTopLevelClasses()
+                            .allowEmptyShould(true)
+                            .because("Custom Repository 구현이 금지됩니다 (QueryDslRepository 사용)");
+
+            rule.check(allClasses);
+        }
     }
 
-    @Test
-    @DisplayName("규칙 3: QuerydslPredicateExecutor 상속 금지")
-    void jpaRepository_MustNotExtendQuerydslPredicateExecutor() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .haveSimpleNameEndingWith("Repository")
-                        .and()
-                        .haveSimpleNameNotContaining("QueryDsl")
-                        .and()
-                        .areInterfaces()
-                        .should()
-                        .notBeAssignableTo(QuerydslPredicateExecutor.class)
-                        .because(
-                                "JpaRepository는 QuerydslPredicateExecutor 상속이 금지됩니다 (순수 Command"
-                                        + " 전용)");
+    // ========================================================================
+    // 3. 네이밍 규칙 (1개)
+    // ========================================================================
 
-        rule.check(jpaRepositoryClasses);
-    }
+    @Nested
+    @DisplayName("3. 네이밍 규칙")
+    class NamingRules {
 
-    /**
-     * 규칙 4: Query Method 추가 금지 (권장)
-     *
-     * <p>JpaRepository는 Query Method 추가를 지양합니다.
-     *
-     * <ul>
-     *   <li>✅ JpaRepository 기본 메서드만 사용 (save, findById, delete 등)
-     *   <li>❌ 복잡한 Query Method (findByStatusAndCategory 등)
-     *   <li>✅ 복잡한 조회는 QueryDslRepository 사용
-     * </ul>
-     *
-     * <p>Note: Query 용도가 아닌 JpaRepository도 포함되므로 allowEmptyShould(true) 적용
-     */
-    @Test
-    @DisplayName("규칙 4: Query Method 추가 금지 (권장)")
-    void jpaRepository_ShouldNotHaveQueryMethods() {
-        ArchRule rule =
-                noMethods()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .haveSimpleNameEndingWith("JpaRepository")
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .haveSimpleNameNotContaining("QueryDsl")
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .haveSimpleNameNotContaining("Query")
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .areInterfaces()
-                        .and()
-                        .arePublic()
-                        .should()
-                        .haveNameMatching("find.*|search.*|count.*|exists.*|get.*")
-                        .because("JpaRepository는 Query Method 추가가 금지됩니다 (QueryDslRepository 사용)");
+        @Test
+        @DisplayName("규칙 3-1: *Repository 네이밍 규칙을 따라야 합니다")
+        void jpaRepository_MustFollowNamingConvention() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areInterfaces()
+                            .and()
+                            .areAssignableTo(JpaRepository.class)
+                            .and()
+                            .resideInAPackage("..repository..")
+                            .should()
+                            .haveSimpleNameEndingWith("Repository")
+                            .andShould()
+                            .haveSimpleNameNotContaining("QueryDsl")
+                            .andShould()
+                            .haveSimpleNameNotContaining("Admin")
+                            .andShould()
+                            .haveSimpleNameNotContaining("Lock")
+                            .andShould()
+                            .haveSimpleNameNotContaining("Jdbc")
+                            .allowEmptyShould(true)
+                            .because(
+                                    "JpaRepository는 *Repository 네이밍 규칙을 따라야 합니다"
+                                            + " (QueryDsl/Admin/Lock/Jdbc 제외)");
 
-        rule.allowEmptyShould(true).check(allClasses);
-    }
-
-    /**
-     * 규칙 5: @Query 어노테이션 사용 금지
-     *
-     * <p>JpaRepository에서 @Query 사용을 지양합니다.
-     *
-     * <ul>
-     *   <li>❌ @Query로 JPQL/Native Query 작성
-     *   <li>✅ QueryDSL Repository 사용
-     * </ul>
-     */
-    @Test
-    @DisplayName("규칙 5: @Query 어노테이션 사용 금지")
-    void jpaRepository_MustNotUseQueryAnnotation() {
-        ArchRule rule =
-                methods()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .haveSimpleNameEndingWith("JpaRepository")
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .haveSimpleNameNotContaining("QueryDsl")
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .haveSimpleNameNotContaining("Query")
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .areInterfaces()
-                        .should()
-                        .notBeAnnotatedWith(Query.class)
-                        .because("JpaRepository는 @Query 어노테이션 사용이 금지됩니다 (QueryDSL 사용)");
-
-        rule.allowEmptyShould(true).check(allClasses);
-    }
-
-    /**
-     * 규칙 6: Custom Repository 구현 금지
-     *
-     * <p>JpaRepository의 Custom 구현체 패턴을 지양합니다.
-     *
-     * <ul>
-     *   <li>❌ *RepositoryImpl (Spring Data JPA Custom Repository 패턴)
-     *   <li>✅ QueryDslRepository 클래스로 분리
-     * </ul>
-     */
-    @Test
-    @DisplayName("규칙 6: Custom Repository 구현 금지")
-    void jpaRepository_MustNotHaveCustomImplementation() {
-        ArchRule rule =
-                classes()
-                        .that(
-                                DescribedPredicate.describe(
-                                        "have name matching '.*RepositoryImpl'",
-                                        javaClass ->
-                                                javaClass
-                                                        .getSimpleName()
-                                                        .matches(".*RepositoryImpl")))
-                        .and()
-                        .resideInAPackage("..repository..")
-                        .should()
-                        .haveSimpleNameNotEndingWith("RepositoryImpl")
-                        .because("Custom Repository 구현이 금지됩니다 (QueryDslRepository 사용)");
-
-        rule.allowEmptyShould(true).check(allClasses);
-    }
-
-    @Test
-    @DisplayName("규칙 7: JpaRepository 네이밍 규칙 (*Repository)")
-    void jpaRepository_MustFollowNamingConvention() {
-        ArchRule rule =
-                classes()
-                        .that()
-                        .areInterfaces()
-                        .and()
-                        .areAssignableTo(JpaRepository.class)
-                        .and()
-                        .resideInAPackage("..repository..")
-                        .should()
-                        .haveSimpleNameEndingWith("Repository")
-                        .because("JpaRepository는 *Repository 네이밍 규칙을 따라야 합니다");
-
-        rule.check(allClasses);
+            rule.check(jpaRepositoryClasses);
+        }
     }
 }

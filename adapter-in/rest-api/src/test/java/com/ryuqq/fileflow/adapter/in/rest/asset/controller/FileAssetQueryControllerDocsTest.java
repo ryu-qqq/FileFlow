@@ -17,10 +17,9 @@ import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetsUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.application.common.dto.response.PageResponse;
-import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
-import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +51,8 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
 
     @BeforeEach
     void setUpUserContext() {
-        UserContext userContext = UserContext.admin("admin@test.com");
+        UserContext userContext =
+                UserContext.seller(OrganizationId.generate(), "Test Org", "seller@test.com");
         UserContextHolder.set(userContext);
     }
 
@@ -62,7 +62,7 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("GET /api/v1/file-assets/{id} - 파일 자산 단건 조회 API 문서")
+    @DisplayName("GET /api/v1/file/file-assets/{id} - 파일 자산 단건 조회 API 문서")
     void getFileAsset() throws Exception {
         // given
         String fileAssetId = "asset-123";
@@ -74,18 +74,18 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                         "example.jpg",
                         1024000L,
                         "image/jpeg",
-                        FileCategory.IMAGE,
+                        "IMAGE",
                         "bucket",
                         "path/example.jpg",
                         "etag-abc123",
-                        FileAssetStatus.COMPLETED,
-                        LocalDateTime.now(),
-                        LocalDateTime.now());
+                        "COMPLETED",
+                        Instant.now(),
+                        Instant.now());
 
         given(getFileAssetUseCase.execute(any())).willReturn(response);
 
         // when & then
-        mockMvc.perform(get("/api/v1/file-assets/{id}", fileAssetId))
+        mockMvc.perform(get("/api/v1/file/file-assets/{id}", fileAssetId))
                 .andExpect(status().isOk())
                 .andDo(
                         document(
@@ -115,7 +115,7 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
     }
 
     @Test
-    @DisplayName("GET /api/v1/file-assets - 파일 자산 목록 조회 API 문서")
+    @DisplayName("GET /api/v1/file/file-assets - 파일 자산 목록 조회 API 문서")
     void getFileAssets() throws Exception {
         // given
         List<FileAssetResponse> content =
@@ -126,26 +126,26 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                                 "example1.jpg",
                                 1024000L,
                                 "image/jpeg",
-                                FileCategory.IMAGE,
+                                "IMAGE",
                                 "bucket",
                                 "path/example1.jpg",
                                 "etag-abc123",
-                                FileAssetStatus.COMPLETED,
-                                LocalDateTime.now(),
-                                LocalDateTime.now()),
+                                "COMPLETED",
+                                Instant.now(),
+                                Instant.now()),
                         new FileAssetResponse(
                                 "asset-456",
                                 "session-456",
                                 "example2.png",
                                 2048000L,
                                 "image/png",
-                                FileCategory.IMAGE,
+                                "IMAGE",
                                 "bucket",
                                 "path/example2.png",
                                 "etag-def456",
-                                FileAssetStatus.COMPLETED,
-                                LocalDateTime.now(),
-                                LocalDateTime.now()));
+                                "COMPLETED",
+                                Instant.now(),
+                                Instant.now()));
 
         PageResponse<FileAssetResponse> response =
                 new PageResponse<>(content, 0, 10, 2, 1, true, false);
@@ -154,7 +154,7 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
 
         // when & then
         mockMvc.perform(
-                        get("/api/v1/file-assets")
+                        get("/api/v1/file/file-assets")
                                 .param("page", "0")
                                 .param("size", "10")
                                 .param("status", "COMPLETED"))

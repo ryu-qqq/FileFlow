@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.application.download.manager;
 
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadMessage;
-import com.ryuqq.fileflow.application.download.port.out.client.SqsPublishPort;
+import com.ryuqq.fileflow.application.download.port.out.client.ExternalDownloadSqsPublishPort;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -24,10 +24,11 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "sqs.publish.enabled", havingValue = "true")
 public class ExternalDownloadMessageManager {
 
-    private final SqsPublishPort sqsPublishPort;
+    private final ExternalDownloadSqsPublishPort externalDownloadSqsPublishPort;
 
-    public ExternalDownloadMessageManager(SqsPublishPort sqsPublishPort) {
-        this.sqsPublishPort = sqsPublishPort;
+    public ExternalDownloadMessageManager(
+            ExternalDownloadSqsPublishPort externalDownloadSqsPublishPort) {
+        this.externalDownloadSqsPublishPort = externalDownloadSqsPublishPort;
     }
 
     /**
@@ -38,14 +39,14 @@ public class ExternalDownloadMessageManager {
      */
     public boolean publishFromEvent(ExternalDownloadRegisteredEvent event) {
         ExternalDownloadMessage message = toMessage(event);
-        return sqsPublishPort.publish(message);
+        return externalDownloadSqsPublishPort.publish(message);
     }
 
     private ExternalDownloadMessage toMessage(ExternalDownloadRegisteredEvent event) {
         return new ExternalDownloadMessage(
                 event.downloadId().value().toString(),
                 event.sourceUrl().value(),
-                event.tenantId(),
-                event.organizationId());
+                event.tenantId().value(),
+                event.organizationId().value());
     }
 }

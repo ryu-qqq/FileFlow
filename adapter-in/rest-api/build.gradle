@@ -57,6 +57,14 @@ dependencies {
 // Test Coverage (신규 개발로 임시 하향, 통합 테스트 추가 후 복원 예정)
 // ========================================
 tasks.jacocoTestCoverageVerification {
+    // 상수 클래스(ApiPaths, SecurityPaths)는 커버리지 대상에서 제외
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/paths/**'  // ApiPaths, SecurityPaths 등 상수 클래스 제외
+            ])
+        }))
+    }
     violationRules {
         rule {
             limit {

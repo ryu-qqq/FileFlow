@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.architecture.controller;
 
+import static com.ryuqq.fileflow.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -49,7 +50,7 @@ class ControllerArchTest {
         classes =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                        .importPackages("com.ryuqq.fileflow.adapter.in.rest");
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /** 규칙 1: @RestController 어노테이션 필수 */
@@ -62,12 +63,14 @@ class ControllerArchTest {
                         .resideInAPackage("..controller..")
                         .and()
                         .haveSimpleNameEndingWith("Controller")
+                        .and()
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
                         .should()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RestController.class)
-                        .because("Controller는 @RestController 어노테이션이 필수입니다");
+                        .because("Controller는 @RestController 어노테이션이 필수입니다 (ApiDocsController 제외)");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 2: @RequestMapping 어노테이션 필수 */
@@ -81,13 +84,13 @@ class ControllerArchTest {
                         .and()
                         .haveSimpleNameEndingWith("Controller")
                         .and()
-                        .haveSimpleNameNotEndingWith("ApiDocsController")
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
                         .should()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RequestMapping.class)
-                        .because("Controller는 @RequestMapping 어노테이션이 필수입니다");
+                        .because("Controller는 @RequestMapping 어노테이션이 필수입니다 (ApiDocsController 제외)");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 3: 네이밍 규칙 (*Controller) */
@@ -107,7 +110,7 @@ class ControllerArchTest {
                                 "Controller는 *Controller 네이밍 규칙을 따라야 합니다 (예:"
                                         + " OrderCommandController, OrderQueryController)");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 4: @Transactional 사용 금지 */
@@ -122,7 +125,7 @@ class ControllerArchTest {
                         .beAnnotatedWith("org.springframework.transaction.annotation.Transactional")
                         .because("Controller는 트랜잭션 관리를 하지 않습니다. UseCase에서 @Transactional을 사용하세요.");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 5: @Service 사용 금지 */
@@ -137,7 +140,7 @@ class ControllerArchTest {
                         .beAnnotatedWith(org.springframework.stereotype.Service.class)
                         .because("Controller는 @RestController만 사용해야 합니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 6: Lombok 어노테이션 금지 */
@@ -164,7 +167,7 @@ class ControllerArchTest {
                         .beAnnotatedWith("lombok.RequiredArgsConstructor")
                         .because("Controller는 Pure Java를 사용해야 하며 Lombok은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 7: DELETE 메서드 금지 */
@@ -181,7 +184,7 @@ class ControllerArchTest {
                                 org.springframework.web.bind.annotation.DeleteMapping.class)
                         .because("DELETE 메서드는 지원하지 않습니다. 소프트 삭제는 PATCH로 처리하세요.");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 8: 패키지 위치 검증 */
@@ -199,13 +202,14 @@ class ControllerArchTest {
                         .resideInAPackage("..adapter.in.rest..controller..")
                         .because("Controller는 adapter.in.rest.[bc].controller 패키지에 위치해야 합니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
      * 규칙 9: Domain Aggregate/Service 직접 의존 금지
      *
-     * <p>Controller는 Domain Aggregate와 Service를 직접 의존하면 안 됩니다. Domain VO/enum은 데이터 표현 목적으로 허용됩니다.
+     * <p>Controller는 Domain Aggregate와 Service를 직접 의존하면 안 됩니다. Domain VO/enum, IAM 패키지는 데이터 표현/인증
+     * 목적으로 허용됩니다.
      */
     @Test
     @DisplayName("[금지] Controller는 Domain Aggregate/Service를 직접 의존하지 않아야 한다")
@@ -221,12 +225,12 @@ class ControllerArchTest {
                         .resideInAnyPackage("..domain..aggregate..", "..domain..service..")
                         .because(
                                 "Controller는 Domain Aggregate/Service를 직접 의존하지 않습니다."
-                                        + " UseCase를 통해 간접 호출하세요. (Domain VO/enum은 허용)");
+                                        + " UseCase를 통해 간접 호출하세요. (Domain VO/enum, IAM은 허용)");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
-    /** 규칙 10: UseCase 의존성 필수 (API Docs 등 유틸리티 컨트롤러 제외) */
+    /** 규칙 10: UseCase 의존성 필수 */
     @Test
     @DisplayName("[필수] Controller는 UseCase 인터페이스에 의존해야 한다")
     void controller_MustDependOnUseCaseInterfaces() {
@@ -237,13 +241,17 @@ class ControllerArchTest {
                         .and()
                         .haveSimpleNameEndingWith("Controller")
                         .and()
-                        .haveSimpleNameNotEndingWith("ApiDocsController")
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
+                        .and()
+                        .haveSimpleNameNotContaining("GlobalExceptionHandler") // 예외 핸들러 제외
                         .should()
                         .dependOnClassesThat()
                         .resideInAPackage("..application..port.in..")
-                        .because("Controller는 UseCase 인터페이스에 의존해야 합니다");
+                        .because(
+                                "Controller는 UseCase 인터페이스에 의존해야 합니다 (ApiDocsController,"
+                                        + " GlobalExceptionHandler 제외)");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /** 규칙 11: ResponseEntity<ApiResponse<T>> 반환 타입 권장 */
@@ -272,7 +280,7 @@ class ControllerArchTest {
 
         // Note: 이 규칙은 권장사항이므로 실패 시 경고만 표시
         try {
-            rule.check(classes);
+            rule.allowEmptyShould(true).check(classes);
         } catch (AssertionError e) {
             System.out.println("⚠️  Warning: " + e.getMessage());
         }

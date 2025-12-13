@@ -261,10 +261,10 @@ public class UploadSessionApiMapper {
      * sessionId + tenantId → GetUploadSessionQuery 변환
      *
      * @param sessionId 세션 ID
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return GetUploadSessionQuery
      */
-    public GetUploadSessionQuery toGetUploadSessionQuery(String sessionId, long tenantId) {
+    public GetUploadSessionQuery toGetUploadSessionQuery(String sessionId, String tenantId) {
         return GetUploadSessionQuery.of(sessionId, tenantId);
     }
 
@@ -272,21 +272,17 @@ public class UploadSessionApiMapper {
      * UploadSessionSearchApiRequest → ListUploadSessionsQuery 변환
      *
      * @param request REST API 검색 요청
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열)
      * @return ListUploadSessionsQuery
      */
     public ListUploadSessionsQuery toListUploadSessionsQuery(
-            UploadSessionSearchApiRequest request, long tenantId, long organizationId) {
+            UploadSessionSearchApiRequest request, String tenantId, String organizationId) {
         String uploadType = request.uploadType() != null ? request.uploadType().name() : null;
+        String status = request.status() != null ? request.status().name() : null;
 
         return ListUploadSessionsQuery.of(
-                tenantId,
-                organizationId,
-                request.status(),
-                uploadType,
-                request.page(),
-                request.size());
+                tenantId, organizationId, status, uploadType, request.page(), request.size());
     }
 
     // ========== Application Response → Query API Response 변환 ==========

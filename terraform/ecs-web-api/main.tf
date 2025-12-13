@@ -1,9 +1,10 @@
 # ========================================
 # ECS Service: web-api
 # ========================================
-# REST API server with ALB and Auto Scaling
+# REST API server with Auto Scaling
 # Using Infrastructure modules
-# Domain: files.set-of.com
+# Access: API Gateway (external) / Service Discovery (internal)
+# Service Discovery DNS: web-api.connectly.local
 # ========================================
 
 # ========================================
@@ -36,6 +37,18 @@ data "aws_ecs_cluster" "main" {
 }
 
 data "aws_caller_identity" "current" {}
+
+# ========================================
+# Service Discovery Namespace (from shared infrastructure)
+# ========================================
+data "aws_ssm_parameter" "service_discovery_namespace_id" {
+  name = "/shared/service-discovery/namespace-id"
+}
+
+# VPC data source for internal communication
+data "aws_vpc" "main" {
+  id = local.vpc_id
+}
 
 # ========================================
 # KMS Key for CloudWatch Logs Encryption
@@ -114,57 +127,25 @@ module "web_api_logs" {
 # ========================================
 # Security Groups
 # ========================================
-resource "aws_security_group" "alb" {
-  name        = "${var.project_name}-alb-sg-${var.environment}"
-  description = "Security group for ALB"
-  vpc_id      = local.vpc_id
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS from anywhere"
-  }
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP for redirect"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(local.common_tags, {
-    Name      = "${var.project_name}-alb-sg-${var.environment}"
-    Lifecycle = "production"
-    ManagedBy = "terraform"
-  })
-}
+# NOTE: ALB Security Group removed - API Gateway를 통해서만 접근
+# ECS Service는 Service Discovery (connectly.local)를 통해 내부 통신만 허용
 
 module "ecs_security_group" {
   source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/security-group?ref=main"
 
   name        = "${var.project_name}-web-api-sg-${var.environment}"
-  description = "Security group for web-api ECS tasks"
+  description = "Security group for web-api ECS tasks - internal only"
   vpc_id      = local.vpc_id
 
   type = "custom"
 
   custom_ingress_rules = [
     {
-      from_port                 = 8080
-      to_port                   = 8080
-      protocol                  = "tcp"
-      source_security_group_id  = aws_security_group.alb.id
-      description               = "From ALB only"
+      from_port   = 8080
+      to_port     = 8080
+      protocol    = "tcp"
+      cidr_block  = data.aws_vpc.main.cidr_block
+      description = "VPC internal traffic only (API Gateway, Service Discovery)"
     }
   ]
 
@@ -178,92 +159,13 @@ module "ecs_security_group" {
 }
 
 # ========================================
-# Application Load Balancer
+# ALB & Route53 Removed
 # ========================================
-resource "aws_lb" "web_api" {
-  name               = "${var.project_name}-alb-${var.environment}"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = local.public_subnets
-
-  enable_deletion_protection = false
-
-  tags = merge(local.common_tags, {
-    Name      = "${var.project_name}-alb-${var.environment}"
-    Lifecycle = "production"
-    ManagedBy = "terraform"
-  })
-}
-
-# Target Group
-resource "aws_lb_target_group" "web_api" {
-  name        = "${var.project_name}-web-api-tg-${var.environment}"
-  port        = 8080
-  protocol    = "HTTP"
-  vpc_id      = local.vpc_id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/actuator/health"
-    matcher             = "200"
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-web-api-tg-${var.environment}"
-  })
-}
-
-# HTTPS Listener
-resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.web_api.arn
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn   = local.certificate_arn
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.web_api.arn
-  }
-}
-
-# HTTP to HTTPS Redirect
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.web_api.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type = "redirect"
-
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
-    }
-  }
-}
-
+# NOTE: 외부 접근은 API Gateway를 통해서만 허용
+# 내부 서비스 간 통신은 Service Discovery (web-api.connectly.local)를 통해 수행
+# - ALB, Target Group, Listeners 제거됨
+# - Route53 DNS Record (files.set-of.com) 제거됨
 # ========================================
-# Route53 DNS Record
-# ========================================
-resource "aws_route53_record" "web_api" {
-  zone_id = local.route53_zone_id
-  name    = local.fqdn
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.web_api.dns_name
-    zone_id                = aws_lb.web_api.zone_id
-    evaluate_target_health = true
-  }
-}
 
 # ========================================
 # IAM Roles (using Infrastructure module)
@@ -488,14 +390,11 @@ module "ecs_service" {
   security_group_ids = [module.ecs_security_group.security_group_id]
   assign_public_ip   = false
 
-  # Load Balancer Configuration
-  load_balancer_config = {
-    target_group_arn = aws_lb_target_group.web_api.arn
-    container_name   = "web-api"
-    container_port   = 8080
-  }
+  # NOTE: Load Balancer 제거됨 - Service Discovery를 통한 내부 통신만 지원
+  # load_balancer_config 제거
 
   # Health Check Grace Period (Spring Boot startup: ~109s)
+  # Service Discovery 환경에서도 ECS container health check를 위해 유지
   health_check_grace_period_seconds = 180
 
   # Container Environment Variables
@@ -547,6 +446,11 @@ module "ecs_service" {
   # Deployment Configuration
   deployment_circuit_breaker_enable   = true
   deployment_circuit_breaker_rollback = true
+
+  # Service Discovery Configuration
+  enable_service_discovery         = true
+  service_discovery_namespace_id   = data.aws_ssm_parameter.service_discovery_namespace_id.value
+  service_discovery_namespace_name = "connectly.local"
 
   # Tagging
   environment  = local.common_tags.environment

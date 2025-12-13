@@ -1,10 +1,13 @@
 package com.ryuqq.fileflow.adapter.out.persistence.architecture;
 
+import static com.ryuqq.fileflow.adapter.out.persistence.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -59,7 +62,8 @@ class HikariCPConfigArchTest {
     static void setUp() {
         allClasses =
                 new ClassFileImporter()
-                        .importPackages("com.ryuqq.fileflow.adapter.out.persistence");
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(PERSISTENCE);
     }
 
     /** 규칙 1: DataSourceConfig는 @Configuration 필수 */
@@ -69,14 +73,29 @@ class HikariCPConfigArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .haveSimpleNameContaining("DataSourceConfig")
-                        .or()
-                        .haveSimpleNameContaining("HikariConfig")
+                        .haveSimpleNameEndingWith("DataSourceConfig")
                         .and()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
                         .beAnnotatedWith(org.springframework.context.annotation.Configuration.class)
-                        .because("DataSource/HikariCP 설정 클래스는 @Configuration 어노테이션이 필수입니다");
+                        .because("DataSource 설정 클래스는 @Configuration 어노테이션이 필수입니다");
+
+        rule.allowEmptyShould(true).check(allClasses);
+    }
+
+    /** 규칙 1-2: HikariConfig는 @Configuration 필수 */
+    @Test
+    @DisplayName("[필수] HikariConfig는 @Configuration 어노테이션을 가져야 한다")
+    void hikariConfig_MustHaveConfigurationAnnotation() {
+        ArchRule rule =
+                classes()
+                        .that()
+                        .haveSimpleNameEndingWith("HikariConfig")
+                        .and()
+                        .resideInAPackage(CONFIG_PATTERN)
+                        .should()
+                        .beAnnotatedWith(org.springframework.context.annotation.Configuration.class)
+                        .because("HikariCP 설정 클래스는 @Configuration 어노테이션이 필수입니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -88,12 +107,25 @@ class HikariCPConfigArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .haveSimpleNameContaining("DataSourceConfig")
-                        .or()
-                        .haveSimpleNameContaining("HikariConfig")
+                        .haveSimpleNameEndingWith("DataSourceConfig")
                         .should()
-                        .resideInAPackage("..config..")
-                        .because("DataSource/HikariCP 설정 클래스는 config 패키지에 위치해야 합니다");
+                        .resideInAPackage(CONFIG_PATTERN)
+                        .because("DataSource 설정 클래스는 config 패키지에 위치해야 합니다");
+
+        rule.allowEmptyShould(true).check(allClasses);
+    }
+
+    /** 규칙 2-2: HikariConfig는 config 패키지에 위치 */
+    @Test
+    @DisplayName("[필수] HikariConfig는 ..config.. 패키지에 위치해야 한다")
+    void hikariConfig_MustBeInConfigPackage() {
+        ArchRule rule =
+                classes()
+                        .that()
+                        .haveSimpleNameEndingWith("HikariConfig")
+                        .should()
+                        .resideInAPackage(CONFIG_PATTERN)
+                        .because("HikariCP 설정 클래스는 config 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
@@ -105,9 +137,7 @@ class HikariCPConfigArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .haveSimpleNameContaining("DataSourceConfig")
-                        .or()
-                        .haveSimpleNameContaining("HikariConfig")
+                        .haveSimpleNameEndingWith("DataSourceConfig")
                         .should()
                         .bePublic()
                         .because("Spring Configuration 클래스는 public이어야 합니다");
@@ -115,18 +145,35 @@ class HikariCPConfigArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 4: Config 클래스는 final 금지 */
+    /** 규칙 4: Config 클래스는 final 금지 (프록시 생성) */
     @Test
     @DisplayName("[필수] DataSourceConfig는 final이 아니어야 한다")
     void dataSourceConfig_MustNotBeFinal() {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .haveSimpleNameContaining("DataSourceConfig")
-                        .or()
-                        .haveSimpleNameContaining("HikariConfig")
+                        .haveSimpleNameEndingWith("DataSourceConfig")
+                        .and()
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
-                        .beAnnotatedWith("final")
+                        .haveModifier(JavaModifier.FINAL)
+                        .because("Spring Configuration 클래스는 프록시 생성을 위해 final이 아니어야 합니다");
+
+        rule.allowEmptyShould(true).check(allClasses);
+    }
+
+    /** 규칙 4-2: HikariConfig는 final 금지 */
+    @Test
+    @DisplayName("[필수] HikariConfig는 final이 아니어야 한다")
+    void hikariConfig_MustNotBeFinal() {
+        ArchRule rule =
+                noClasses()
+                        .that()
+                        .haveSimpleNameEndingWith("HikariConfig")
+                        .and()
+                        .resideInAPackage(CONFIG_PATTERN)
+                        .should()
+                        .haveModifier(JavaModifier.FINAL)
                         .because("Spring Configuration 클래스는 프록시 생성을 위해 final이 아니어야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -139,12 +186,10 @@ class HikariCPConfigArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .haveSimpleNameContaining("DataSourceConfig")
-                        .or()
-                        .haveSimpleNameContaining("HikariConfig")
+                        .haveSimpleNameEndingWith("DataSourceConfig")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..entity..", "..repository..")
+                        .resideInAnyPackage(ENTITY_PATTERN, REPOSITORY_PATTERN)
                         .because("DataSourceConfig는 순수 설정 클래스로 Entity/Repository를 의존하면 안 됩니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -157,12 +202,10 @@ class HikariCPConfigArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .haveSimpleNameContaining("DataSourceConfig")
-                        .or()
-                        .haveSimpleNameContaining("HikariConfig")
+                        .haveSimpleNameEndingWith("DataSourceConfig")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..domain..", "..application..")
+                        .resideInAnyPackage(DOMAIN_ALL, APPLICATION_ALL)
                         .because(
                                 "DataSourceConfig는 Infrastructure Layer 설정으로 Domain/Application을"
                                         + " 의존하면 안 됩니다");
@@ -177,9 +220,7 @@ class HikariCPConfigArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .haveSimpleNameContaining("DataSourceConfig")
-                        .or()
-                        .haveSimpleNameContaining("HikariConfig")
+                        .haveSimpleNameEndingWith("DataSourceConfig")
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage(
@@ -198,7 +239,7 @@ class HikariCPConfigArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .haveSimpleNameContaining("DataSourceConfig")
+                        .haveSimpleNameEndingWith("DataSourceConfig")
                         .should()
                         .haveSimpleNameContaining("Jpa")
                         .because("DataSource 설정과 JPA 설정은 별도 클래스로 분리해야 합니다 (단일 책임)");
@@ -213,34 +254,27 @@ class HikariCPConfigArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..adapter..", "..mapper..")
+                        .resideInAnyPackage(ADAPTER_PATTERN, MAPPER_PATTERN)
                         .because("Config 클래스는 인프라 설정만 담당하며 비즈니스 레이어를 의존하면 안 됩니다");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /**
-     * 규칙 10: Config 네이밍 규칙
-     *
-     * <p>Config 클래스는 *Config 네이밍 규칙을 따르거나 @Configuration 어노테이션을 가져야 합니다.
-     */
+    /** 규칙 10: Config 네이밍 규칙 */
     @Test
     @DisplayName("[권장] Config 클래스는 *Config 네이밍 규칙을 따라야 한다")
     void config_ShouldFollowNamingConvention() {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .and()
                         .areNotInterfaces()
                         .and()
                         .haveSimpleNameNotContaining("Test")
-                        .and()
-                        .areAnnotatedWith(
-                                org.springframework.context.annotation.Configuration.class)
                         .should()
                         .haveSimpleNameEndingWith("Config")
                         .because("Config 클래스는 *Config 네이밍 규칙을 따라야 합니다");

@@ -86,3 +86,61 @@ module "ecr_scheduler" {
   project      = local.common_tags.project
   data_class   = local.common_tags.data_class
 }
+
+# ========================================
+# ECR Repository: download-worker
+# ========================================
+module "ecr_download_worker" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecr?ref=main"
+
+  name                 = "${var.project_name}-download-worker-${var.environment}"
+  image_tag_mutability = "IMMUTABLE"
+  scan_on_push         = true
+
+  # Lifecycle Policy
+  enable_lifecycle_policy    = true
+  max_image_count            = 30
+  lifecycle_tag_prefixes     = ["v", "prod", "latest"]
+  untagged_image_expiry_days = 7
+
+  # SSM Parameter for cross-stack reference
+  create_ssm_parameter = true
+
+  # Required Tags (governance compliance)
+  environment  = local.common_tags.environment
+  service_name = "${var.project_name}-download-worker"
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = local.common_tags.project
+  data_class   = local.common_tags.data_class
+}
+
+# ========================================
+# ECR Repository: resizing-worker
+# ========================================
+module "ecr_resizing_worker" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecr?ref=main"
+
+  name                 = "${var.project_name}-resizing-worker-${var.environment}"
+  image_tag_mutability = "IMMUTABLE"
+  scan_on_push         = true
+
+  # Lifecycle Policy
+  enable_lifecycle_policy    = true
+  max_image_count            = 30
+  lifecycle_tag_prefixes     = ["v", "prod", "latest"]
+  untagged_image_expiry_days = 7
+
+  # SSM Parameter for cross-stack reference
+  create_ssm_parameter = true
+
+  # Required Tags (governance compliance)
+  environment  = local.common_tags.environment
+  service_name = "${var.project_name}-resizing-worker"
+  team         = local.common_tags.team
+  owner        = local.common_tags.owner
+  cost_center  = local.common_tags.cost_center
+  project      = local.common_tags.project
+  data_class   = local.common_tags.data_class
+}

@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * BaseAuditEntity - 감사 정보 공통 추상 클래스
@@ -44,22 +44,22 @@ public abstract class BaseAuditEntity {
     /**
      * 생성 일시
      *
-     * <p>엔티티 최초 생성 시각을 기록합니다.
+     * <p>엔티티 최초 생성 시각을 기록합니다. (UTC 기준 Instant)
      *
      * <p>updatable = false로 수정 불가능하게 설정합니다.
      */
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     /**
      * 수정 일시
      *
-     * <p>엔티티 최종 수정 시각을 기록합니다.
+     * <p>엔티티 최종 수정 시각을 기록합니다. (UTC 기준 Instant)
      *
      * <p>Mapper에서 of() 메서드로 새 Entity 생성 시 updatedAt을 직접 설정합니다.
      */
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     /**
      * 기본 생성자 (protected)
@@ -73,10 +73,10 @@ public abstract class BaseAuditEntity {
      *
      * <p>상속 클래스에서 감사 필드를 초기화할 때 사용합니다.
      *
-     * @param createdAt 생성 일시
-     * @param updatedAt 수정 일시
+     * @param createdAt 생성 일시 (UTC 기준 Instant)
+     * @param updatedAt 수정 일시 (UTC 기준 Instant)
      */
-    protected BaseAuditEntity(LocalDateTime createdAt, LocalDateTime updatedAt) {
+    protected BaseAuditEntity(Instant createdAt, Instant updatedAt) {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -84,18 +84,18 @@ public abstract class BaseAuditEntity {
     /**
      * 생성 일시 조회
      *
-     * @return 생성 일시
+     * @return 생성 일시 (UTC 기준 Instant)
      */
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
     /**
      * 수정 일시 조회
      *
-     * @return 수정 일시
+     * @return 수정 일시 (UTC 기준 Instant)
      */
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 }

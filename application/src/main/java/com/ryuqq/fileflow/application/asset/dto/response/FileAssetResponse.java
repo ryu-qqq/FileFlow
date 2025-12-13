@@ -1,22 +1,23 @@
 package com.ryuqq.fileflow.application.asset.dto.response;
 
-import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatus;
-import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * FileAsset 응답 DTO.
+ *
+ * <p>REST API Layer와의 결합도를 낮추기 위해 String 기반으로 설계. Domain Enum → String 변환은 Application Layer 내부에서
+ * 처리.
  *
  * @param id 파일 자산 ID
  * @param sessionId 업로드 세션 ID
  * @param fileName 파일명
  * @param fileSize 파일 크기
  * @param contentType 컨텐츠 타입
- * @param category 파일 카테고리
+ * @param category 파일 카테고리 (enum name as String)
  * @param bucket S3 버킷
  * @param s3Key S3 키
  * @param etag ETag
- * @param status 상태
+ * @param status 상태 (enum name as String)
  * @param createdAt 생성 시각
  * @param processedAt 처리 완료 시각
  */
@@ -26,13 +27,13 @@ public record FileAssetResponse(
         String fileName,
         long fileSize,
         String contentType,
-        FileCategory category,
+        String category,
         String bucket,
         String s3Key,
         String etag,
-        FileAssetStatus status,
-        LocalDateTime createdAt,
-        LocalDateTime processedAt) {
+        String status,
+        Instant createdAt,
+        Instant processedAt) {
 
     public static FileAssetResponse of(
             String id,
@@ -40,13 +41,13 @@ public record FileAssetResponse(
             String fileName,
             long fileSize,
             String contentType,
-            FileCategory category,
+            String category,
             String bucket,
             String s3Key,
             String etag,
-            FileAssetStatus status,
-            LocalDateTime createdAt,
-            LocalDateTime processedAt) {
+            String status,
+            Instant createdAt,
+            Instant processedAt) {
         return new FileAssetResponse(
                 id,
                 sessionId,

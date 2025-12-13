@@ -21,7 +21,7 @@ public class FileSizeExceededException extends DomainException {
      */
     public FileSizeExceededException(long actualSize, long maxSize) {
         super(
-                SessionErrorCode.FILE_SIZE_EXCEEDED.getCode(),
+                SessionErrorCode.FILE_SIZE_EXCEEDED,
                 String.format("파일 크기가 최대 허용 크기를 초과했습니다. (실제: %d, 최대: %d)", actualSize, maxSize));
     }
 }

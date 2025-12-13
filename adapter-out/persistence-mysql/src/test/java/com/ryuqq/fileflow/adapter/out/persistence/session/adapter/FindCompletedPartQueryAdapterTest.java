@@ -16,7 +16,6 @@ import com.ryuqq.fileflow.domain.session.vo.PresignedUrl;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -181,12 +180,11 @@ class FindCompletedPartQueryAdapterTest {
                 PresignedUrl.of("https://presigned-url.s3.amazonaws.com/part-" + partNumber),
                 ETag.of("\"etag-" + partNumber + "\""),
                 5 * 1024 * 1024L,
-                LocalDateTime.now(fixedClock),
-                fixedClock);
+                Instant.now(fixedClock));
     }
 
     private CompletedPartJpaEntity createEntity(String sessionId, int partNumber) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return CompletedPartJpaEntity.of(
                 sessionId,
                 partNumber,

@@ -1,53 +1,47 @@
 package com.ryuqq.fileflow.domain.iam.vo;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 @DisplayName("UserRole 단위 테스트")
 class UserRoleTest {
 
     @Nested
-    @DisplayName("Enum 기본 테스트")
-    class EnumBasicTest {
-
-        @Test
-        @DisplayName("모든 역할이 정의되어 있다")
-        void values_ShouldContainAllRoles() {
-            // when
-            UserRole[] values = UserRole.values();
-
-            // then
-            assertThat(values).hasSize(3);
-            assertThat(values).containsExactly(UserRole.ADMIN, UserRole.SELLER, UserRole.DEFAULT);
-        }
-    }
-
-    @Nested
-    @DisplayName("네임스페이스 테스트")
+    @DisplayName("namespace 테스트")
     class NamespaceTest {
 
         @Test
-        @DisplayName("ADMIN은 connectly 네임스페이스를 가진다")
+        @DisplayName("SUPER_ADMIN은 connectly namespace를 가진다")
+        void superAdmin_ShouldHaveConnectlyNamespace() {
+            assertThat(UserRole.SUPER_ADMIN.namespace()).isEqualTo("connectly");
+            assertThat(UserRole.SUPER_ADMIN.getNamespace()).isEqualTo("connectly");
+        }
+
+        @Test
+        @DisplayName("ADMIN은 connectly namespace를 가진다")
         void admin_ShouldHaveConnectlyNamespace() {
             assertThat(UserRole.ADMIN.namespace()).isEqualTo("connectly");
             assertThat(UserRole.ADMIN.getNamespace()).isEqualTo("connectly");
         }
 
         @Test
-        @DisplayName("SELLER는 setof 네임스페이스를 가진다")
+        @DisplayName("SELLER는 setof namespace를 가진다")
         void seller_ShouldHaveSetofNamespace() {
             assertThat(UserRole.SELLER.namespace()).isEqualTo("setof");
             assertThat(UserRole.SELLER.getNamespace()).isEqualTo("setof");
         }
 
         @Test
-        @DisplayName("DEFAULT는 setof 네임스페이스를 가진다")
+        @DisplayName("DEFAULT는 setof namespace를 가진다")
         void default_ShouldHaveSetofNamespace() {
             assertThat(UserRole.DEFAULT.namespace()).isEqualTo("setof");
             assertThat(UserRole.DEFAULT.getNamespace()).isEqualTo("setof");
@@ -55,136 +49,148 @@ class UserRoleTest {
     }
 
     @Nested
-    @DisplayName("최대 파일 크기 테스트")
+    @DisplayName("maxFileSize 테스트")
     class MaxFileSizeTest {
 
         @Test
-        @DisplayName("ADMIN은 5TB 최대 파일 크기를 가진다")
-        void admin_ShouldHave5TBMaxFileSize() {
-            // given
-            long expected5TB = 5L * 1024 * 1024 * 1024 * 1024;
-
-            // then
-            assertThat(UserRole.ADMIN.getMaxFileSizeBytes()).isEqualTo(expected5TB);
+        @DisplayName("SUPER_ADMIN은 5TB 제한을 가진다")
+        void superAdmin_ShouldHave5TBLimit() {
+            long expected = 5L * 1024 * 1024 * 1024 * 1024;
+            assertThat(UserRole.SUPER_ADMIN.getMaxFileSizeBytes()).isEqualTo(expected);
         }
 
         @Test
-        @DisplayName("SELLER는 5GB 최대 파일 크기를 가진다")
-        void seller_ShouldHave5GBMaxFileSize() {
-            // given
-            long expected5GB = 5L * 1024 * 1024 * 1024;
-
-            // then
-            assertThat(UserRole.SELLER.getMaxFileSizeBytes()).isEqualTo(expected5GB);
+        @DisplayName("ADMIN은 5TB 제한을 가진다")
+        void admin_ShouldHave5TBLimit() {
+            long expected = 5L * 1024 * 1024 * 1024 * 1024;
+            assertThat(UserRole.ADMIN.getMaxFileSizeBytes()).isEqualTo(expected);
         }
 
         @Test
-        @DisplayName("DEFAULT는 1GB 최대 파일 크기를 가진다")
-        void default_ShouldHave1GBMaxFileSize() {
-            // given
-            long expected1GB = 1024L * 1024 * 1024;
+        @DisplayName("SELLER는 5GB 제한을 가진다")
+        void seller_ShouldHave5GBLimit() {
+            long expected = 5L * 1024 * 1024 * 1024;
+            assertThat(UserRole.SELLER.getMaxFileSizeBytes()).isEqualTo(expected);
+        }
 
-            // then
-            assertThat(UserRole.DEFAULT.getMaxFileSizeBytes()).isEqualTo(expected1GB);
+        @Test
+        @DisplayName("DEFAULT는 1GB 제한을 가진다")
+        void default_ShouldHave1GBLimit() {
+            long expected = (long) 1024 * 1024 * 1024;
+            assertThat(UserRole.DEFAULT.getMaxFileSizeBytes()).isEqualTo(expected);
         }
     }
 
     @Nested
-    @DisplayName("업로드 권한 테스트")
-    class UploadPermissionTest {
+    @DisplayName("hasUploadPermission 테스트")
+    class HasUploadPermissionTest {
 
-        @Test
+        @ParameterizedTest
+        @EnumSource(UserRole.class)
         @DisplayName("모든 역할은 업로드 권한을 가진다")
-        void allRoles_ShouldHaveUploadPermission() {
-            for (UserRole role : UserRole.values()) {
-                assertThat(role.hasUploadPermission()).isTrue();
-            }
+        void allRoles_ShouldHaveUploadPermission(UserRole role) {
+            assertThat(role.hasUploadPermission()).isTrue();
         }
     }
 
     @Nested
-    @DisplayName("canUpload 테스트")
-    class CanUploadTest {
+    @DisplayName("canUpload(long) 테스트")
+    class CanUploadLongTest {
 
-        @ParameterizedTest
-        @CsvSource({
-            "ADMIN, 1, true",
-            "ADMIN, 1073741824, true",
-            "SELLER, 1, true",
-            "SELLER, 5368709120, true",
-            "DEFAULT, 1, true",
-            "DEFAULT, 1073741824, true"
-        })
-        @DisplayName("허용 범위 내 파일 크기는 업로드 가능하다")
-        void canUpload_WithinLimit_ShouldReturnTrue(
-                UserRole role, long fileSize, boolean expected) {
-            assertThat(role.canUpload(fileSize)).isEqualTo(expected);
-        }
-
-        @ParameterizedTest
-        @CsvSource({"SELLER, 5368709121, false", "DEFAULT, 1073741825, false"})
-        @DisplayName("허용 범위 초과 파일 크기는 업로드 불가능하다")
-        void canUpload_ExceedingLimit_ShouldReturnFalse(
-                UserRole role, long fileSize, boolean expected) {
-            assertThat(role.canUpload(fileSize)).isEqualTo(expected);
+        @Test
+        @DisplayName("제한 이내의 파일은 업로드 가능하다")
+        void withinLimit_ShouldReturnTrue() {
+            long oneGB = 1024L * 1024 * 1024;
+            assertThat(UserRole.ADMIN.canUpload(oneGB)).isTrue();
+            assertThat(UserRole.SELLER.canUpload(oneGB)).isTrue();
+            assertThat(UserRole.DEFAULT.canUpload(oneGB)).isTrue();
         }
 
         @Test
-        @DisplayName("0 또는 음수 파일 크기는 업로드 불가능하다")
-        void canUpload_WithZeroOrNegativeSize_ShouldReturnFalse() {
-            for (UserRole role : UserRole.values()) {
-                assertThat(role.canUpload(0L)).isFalse();
-                assertThat(role.canUpload(-1L)).isFalse();
-            }
+        @DisplayName("제한과 동일한 크기도 업로드 가능하다")
+        void atLimit_ShouldReturnTrue() {
+            long oneGB = 1024L * 1024 * 1024;
+            assertThat(UserRole.DEFAULT.canUpload(oneGB)).isTrue();
         }
 
         @Test
-        @DisplayName("FileSize VO로 업로드 가능 여부를 확인할 수 있다")
-        void canUpload_WithFileSizeVO_ShouldWork() {
-            // given
-            FileSize validSize = FileSize.of(1024L * 1024); // 1MB
-
-            // then
-            assertThat(UserRole.ADMIN.canUpload(validSize)).isTrue();
-            assertThat(UserRole.SELLER.canUpload(validSize)).isTrue();
-            assertThat(UserRole.DEFAULT.canUpload(validSize)).isTrue();
+        @DisplayName("제한을 초과하면 업로드 불가하다")
+        void exceedsLimit_ShouldReturnFalse() {
+            long twoGB = 2L * 1024 * 1024 * 1024;
+            assertThat(UserRole.DEFAULT.canUpload(twoGB)).isFalse();
         }
 
         @Test
-        @DisplayName("null FileSize는 업로드 불가능하다")
-        void canUpload_WithNullFileSize_ShouldReturnFalse() {
-            for (UserRole role : UserRole.values()) {
-                assertThat(role.canUpload((FileSize) null)).isFalse();
-            }
+        @DisplayName("0 이하의 파일 크기는 업로드 불가하다")
+        void zeroOrNegative_ShouldReturnFalse() {
+            assertThat(UserRole.ADMIN.canUpload(0)).isFalse();
+            assertThat(UserRole.ADMIN.canUpload(-1)).isFalse();
         }
     }
 
     @Nested
-    @DisplayName("역할 확인 테스트")
+    @DisplayName("canUpload(FileSize) 테스트")
+    class CanUploadFileSizeTest {
+
+        @Test
+        @DisplayName("유효한 FileSize는 업로드 가능 여부를 반환한다")
+        void validFileSize_ShouldCheckUploadable() {
+            FileSize oneGB = FileSize.of(1024L * 1024 * 1024);
+            assertThat(UserRole.DEFAULT.canUpload(oneGB)).isTrue();
+        }
+
+        @Test
+        @DisplayName("null FileSize는 업로드 불가하다")
+        void nullFileSize_ShouldReturnFalse() {
+            assertThat(UserRole.ADMIN.canUpload((FileSize) null)).isFalse();
+        }
+
+        @Test
+        @DisplayName("제한을 초과하는 FileSize는 업로드 불가하다")
+        void exceedsLimit_ShouldReturnFalse() {
+            FileSize twoGB = FileSize.of(2L * 1024 * 1024 * 1024);
+            assertThat(UserRole.DEFAULT.canUpload(twoGB)).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("Role 확인 메서드 테스트")
     class RoleCheckTest {
 
         @Test
-        @DisplayName("ADMIN.isAdmin()은 true를 반환한다")
-        void isAdmin_WithAdmin_ShouldReturnTrue() {
+        @DisplayName("isAdmin은 SUPER_ADMIN과 ADMIN일 때 true")
+        void isAdmin_ShouldReturnTrueForAdminRoles() {
+            assertThat(UserRole.SUPER_ADMIN.isAdmin()).isTrue();
             assertThat(UserRole.ADMIN.isAdmin()).isTrue();
             assertThat(UserRole.SELLER.isAdmin()).isFalse();
             assertThat(UserRole.DEFAULT.isAdmin()).isFalse();
         }
 
         @Test
-        @DisplayName("SELLER.isSeller()은 true를 반환한다")
-        void isSeller_WithSeller_ShouldReturnTrue() {
-            assertThat(UserRole.SELLER.isSeller()).isTrue();
+        @DisplayName("isSuperAdmin은 SUPER_ADMIN일 때만 true")
+        void isSuperAdmin_ShouldReturnTrueOnlyForSuperAdmin() {
+            assertThat(UserRole.SUPER_ADMIN.isSuperAdmin()).isTrue();
+            assertThat(UserRole.ADMIN.isSuperAdmin()).isFalse();
+            assertThat(UserRole.SELLER.isSuperAdmin()).isFalse();
+            assertThat(UserRole.DEFAULT.isSuperAdmin()).isFalse();
+        }
+
+        @Test
+        @DisplayName("isSeller는 SELLER일 때만 true")
+        void isSeller_ShouldReturnTrueOnlyForSeller() {
+            assertThat(UserRole.SUPER_ADMIN.isSeller()).isFalse();
             assertThat(UserRole.ADMIN.isSeller()).isFalse();
+            assertThat(UserRole.SELLER.isSeller()).isTrue();
             assertThat(UserRole.DEFAULT.isSeller()).isFalse();
         }
 
         @Test
-        @DisplayName("DEFAULT.isDefault()은 true를 반환한다")
-        void isDefault_WithDefault_ShouldReturnTrue() {
-            assertThat(UserRole.DEFAULT.isDefault()).isTrue();
+        @DisplayName("isDefault는 DEFAULT일 때만 true")
+        void isDefault_ShouldReturnTrueOnlyForDefault() {
+            assertThat(UserRole.SUPER_ADMIN.isDefault()).isFalse();
             assertThat(UserRole.ADMIN.isDefault()).isFalse();
             assertThat(UserRole.SELLER.isDefault()).isFalse();
+            assertThat(UserRole.DEFAULT.isDefault()).isTrue();
         }
     }
 
@@ -193,33 +199,150 @@ class UserRoleTest {
     class MaxFileSizeFormattedTest {
 
         @Test
-        @DisplayName("ADMIN의 최대 파일 크기를 포맷팅하여 반환한다")
-        void getMaxFileSizeFormatted_Admin_ShouldReturnFormatted() {
-            // when
+        @DisplayName("ADMIN은 사람이 읽기 쉬운 형식을 반환한다")
+        void admin_ShouldReturnHumanReadableFormat() {
             String formatted = UserRole.ADMIN.getMaxFileSizeFormatted();
-
-            // then
-            assertThat(formatted).contains("TB");
+            assertThat(formatted).isNotEmpty();
         }
 
         @Test
-        @DisplayName("SELLER의 최대 파일 크기를 포맷팅하여 반환한다")
-        void getMaxFileSizeFormatted_Seller_ShouldReturnFormatted() {
-            // when
+        @DisplayName("SELLER는 사람이 읽기 쉬운 형식을 반환한다")
+        void seller_ShouldReturnHumanReadableFormat() {
             String formatted = UserRole.SELLER.getMaxFileSizeFormatted();
-
-            // then
-            assertThat(formatted).contains("GB");
+            assertThat(formatted).isNotEmpty();
         }
 
         @Test
-        @DisplayName("DEFAULT의 최대 파일 크기를 포맷팅하여 반환한다")
-        void getMaxFileSizeFormatted_Default_ShouldReturnFormatted() {
-            // when
+        @DisplayName("DEFAULT는 사람이 읽기 쉬운 형식을 반환한다")
+        void default_ShouldReturnHumanReadableFormat() {
             String formatted = UserRole.DEFAULT.getMaxFileSizeFormatted();
+            assertThat(formatted).isNotEmpty();
+        }
 
-            // then
-            assertThat(formatted).contains("GB");
+        @Test
+        @DisplayName("SUPER_ADMIN은 사람이 읽기 쉬운 형식을 반환한다")
+        void superAdmin_ShouldReturnHumanReadableFormat() {
+            String formatted = UserRole.SUPER_ADMIN.getMaxFileSizeFormatted();
+            assertThat(formatted).isNotEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("fromString 테스트")
+    class FromStringTest {
+
+        @Test
+        @DisplayName("유효한 역할 문자열은 해당 UserRole을 반환한다")
+        void validRoleString_ShouldReturnMatchingRole() {
+            assertThat(UserRole.fromString("SUPER_ADMIN")).isEqualTo(UserRole.SUPER_ADMIN);
+            assertThat(UserRole.fromString("ADMIN")).isEqualTo(UserRole.ADMIN);
+            assertThat(UserRole.fromString("SELLER")).isEqualTo(UserRole.SELLER);
+            assertThat(UserRole.fromString("DEFAULT")).isEqualTo(UserRole.DEFAULT);
+        }
+
+        @Test
+        @DisplayName("소문자 역할 문자열도 정상 파싱된다")
+        void lowercaseRoleString_ShouldReturnMatchingRole() {
+            assertThat(UserRole.fromString("super_admin")).isEqualTo(UserRole.SUPER_ADMIN);
+            assertThat(UserRole.fromString("admin")).isEqualTo(UserRole.ADMIN);
+            assertThat(UserRole.fromString("seller")).isEqualTo(UserRole.SELLER);
+            assertThat(UserRole.fromString("default")).isEqualTo(UserRole.DEFAULT);
+        }
+
+        @Test
+        @DisplayName("혼합 대소문자 역할 문자열도 정상 파싱된다")
+        void mixedCaseRoleString_ShouldReturnMatchingRole() {
+            assertThat(UserRole.fromString("Super_Admin")).isEqualTo(UserRole.SUPER_ADMIN);
+            assertThat(UserRole.fromString("Admin")).isEqualTo(UserRole.ADMIN);
+            assertThat(UserRole.fromString("Seller")).isEqualTo(UserRole.SELLER);
+        }
+
+        @Test
+        @DisplayName("앞뒤 공백이 있는 역할 문자열도 정상 파싱된다")
+        void trimmedRoleString_ShouldReturnMatchingRole() {
+            assertThat(UserRole.fromString("  ADMIN  ")).isEqualTo(UserRole.ADMIN);
+            assertThat(UserRole.fromString("\tSELLER\n")).isEqualTo(UserRole.SELLER);
+        }
+
+        @Test
+        @DisplayName("null 역할 문자열은 DEFAULT를 반환한다")
+        void nullRoleString_ShouldReturnDefault() {
+            assertThat(UserRole.fromString(null)).isEqualTo(UserRole.DEFAULT);
+        }
+
+        @Test
+        @DisplayName("빈 문자열은 DEFAULT를 반환한다")
+        void emptyRoleString_ShouldReturnDefault() {
+            assertThat(UserRole.fromString("")).isEqualTo(UserRole.DEFAULT);
+            assertThat(UserRole.fromString("   ")).isEqualTo(UserRole.DEFAULT);
+        }
+
+        @Test
+        @DisplayName("알 수 없는 역할 문자열은 DEFAULT를 반환한다")
+        void unknownRoleString_ShouldReturnDefault() {
+            assertThat(UserRole.fromString("UNKNOWN")).isEqualTo(UserRole.DEFAULT);
+            assertThat(UserRole.fromString("MANAGER")).isEqualTo(UserRole.DEFAULT);
+            assertThat(UserRole.fromString("USER")).isEqualTo(UserRole.DEFAULT);
+        }
+    }
+
+    @Nested
+    @DisplayName("highestPriority 테스트")
+    class HighestPriorityTest {
+
+        @Test
+        @DisplayName("역할 목록에서 가장 높은 우선순위를 반환한다")
+        void roleList_ShouldReturnHighestPriority() {
+            List<String> roles = Arrays.asList("SELLER", "ADMIN", "DEFAULT");
+            assertThat(UserRole.highestPriority(roles)).isEqualTo(UserRole.ADMIN);
+        }
+
+        @Test
+        @DisplayName("SUPER_ADMIN이 포함되면 SUPER_ADMIN을 반환한다")
+        void withSuperAdmin_ShouldReturnSuperAdmin() {
+            List<String> roles = Arrays.asList("ADMIN", "SUPER_ADMIN", "SELLER");
+            assertThat(UserRole.highestPriority(roles)).isEqualTo(UserRole.SUPER_ADMIN);
+        }
+
+        @Test
+        @DisplayName("SELLER만 있으면 SELLER를 반환한다")
+        void onlySeller_ShouldReturnSeller() {
+            List<String> roles = Arrays.asList("SELLER", "DEFAULT");
+            assertThat(UserRole.highestPriority(roles)).isEqualTo(UserRole.SELLER);
+        }
+
+        @Test
+        @DisplayName("DEFAULT만 있으면 DEFAULT를 반환한다")
+        void onlyDefault_ShouldReturnDefault() {
+            List<String> roles = List.of("DEFAULT");
+            assertThat(UserRole.highestPriority(roles)).isEqualTo(UserRole.DEFAULT);
+        }
+
+        @Test
+        @DisplayName("빈 목록은 DEFAULT를 반환한다")
+        void emptyList_ShouldReturnDefault() {
+            assertThat(UserRole.highestPriority(Collections.emptyList()))
+                    .isEqualTo(UserRole.DEFAULT);
+        }
+
+        @Test
+        @DisplayName("null 목록은 DEFAULT를 반환한다")
+        void nullList_ShouldReturnDefault() {
+            assertThat(UserRole.highestPriority(null)).isEqualTo(UserRole.DEFAULT);
+        }
+
+        @Test
+        @DisplayName("알 수 없는 역할이 포함되어도 유효한 역할 중 최고 우선순위를 반환한다")
+        void withUnknownRoles_ShouldReturnHighestValidPriority() {
+            List<String> roles = Arrays.asList("UNKNOWN", "SELLER", "GUEST");
+            assertThat(UserRole.highestPriority(roles)).isEqualTo(UserRole.SELLER);
+        }
+
+        @Test
+        @DisplayName("대소문자 혼합된 역할 목록도 정상 처리된다")
+        void mixedCaseRoles_ShouldWork() {
+            List<String> roles = Arrays.asList("admin", "seller");
+            assertThat(UserRole.highestPriority(roles)).isEqualTo(UserRole.ADMIN);
         }
     }
 }

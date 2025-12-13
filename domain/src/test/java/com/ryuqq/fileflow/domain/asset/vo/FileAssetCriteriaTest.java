@@ -2,12 +2,17 @@ package com.ryuqq.fileflow.domain.asset.vo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("FileAssetCriteria 단위 테스트")
 class FileAssetCriteriaTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @Nested
     @DisplayName("생성 테스트")
@@ -17,8 +22,8 @@ class FileAssetCriteriaTest {
         @DisplayName("정적 팩토리 메서드로 생성할 수 있다")
         void of_WithValidParams_ShouldCreateCriteria() {
             // given
-            Long organizationId = 1L;
-            Long tenantId = 1L;
+            String organizationId = "01912345-6789-7abc-def0-123456789abc";
+            String tenantId = "01912345-6789-7abc-def0-123456789def";
             FileAssetStatus status = FileAssetStatus.COMPLETED;
             FileCategory category = FileCategory.IMAGE;
             long offset = 0L;
@@ -42,8 +47,8 @@ class FileAssetCriteriaTest {
         @DisplayName("레코드 생성자로 생성할 수 있다")
         void constructor_WithValidParams_ShouldCreateCriteria() {
             // given
-            Long organizationId = 100L;
-            Long tenantId = 50L;
+            String organizationId = TEST_ORG_ID;
+            String tenantId = "01912345-6789-7abc-def0-123456789050";
             FileAssetStatus status = FileAssetStatus.PENDING;
             FileCategory category = FileCategory.VIDEO;
             long offset = 10L;
@@ -67,8 +72,8 @@ class FileAssetCriteriaTest {
         @DisplayName("상태와 카테고리가 null인 조건으로 생성할 수 있다")
         void of_WithNullStatusAndCategory_ShouldCreateCriteria() {
             // given
-            Long organizationId = 1L;
-            Long tenantId = 1L;
+            String organizationId = "01912345-6789-7abc-def0-123456789abc";
+            String tenantId = "01912345-6789-7abc-def0-123456789def";
             long offset = 0L;
             int limit = 20;
 
@@ -112,10 +117,20 @@ class FileAssetCriteriaTest {
             // given
             FileAssetCriteria criteria1 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
             FileAssetCriteria criteria2 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
 
             // when & then
             assertThat(criteria1).isEqualTo(criteria2);
@@ -128,10 +143,20 @@ class FileAssetCriteriaTest {
             // given
             FileAssetCriteria criteria1 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 20);
+                            TEST_TENANT_ID,
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
             FileAssetCriteria criteria2 =
                     FileAssetCriteria.of(
-                            2L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 20);
+                            TEST_ORG_ID,
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
 
             // when & then
             assertThat(criteria1).isNotEqualTo(criteria2);
@@ -143,10 +168,20 @@ class FileAssetCriteriaTest {
             // given
             FileAssetCriteria criteria1 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
             FileAssetCriteria criteria2 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.PENDING, FileCategory.IMAGE, 0L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.PENDING,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
 
             // when & then
             assertThat(criteria1).isNotEqualTo(criteria2);
@@ -158,10 +193,20 @@ class FileAssetCriteriaTest {
             // given
             FileAssetCriteria criteria1 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
             FileAssetCriteria criteria2 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.VIDEO, 0L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.VIDEO,
+                            0L,
+                            20);
 
             // when & then
             assertThat(criteria1).isNotEqualTo(criteria2);
@@ -173,10 +218,20 @@ class FileAssetCriteriaTest {
             // given
             FileAssetCriteria criteria1 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
             FileAssetCriteria criteria2 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 10L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            10L,
+                            20);
 
             // when & then
             assertThat(criteria1).isNotEqualTo(criteria2);
@@ -188,10 +243,20 @@ class FileAssetCriteriaTest {
             // given
             FileAssetCriteria criteria1 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 20);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            20);
             FileAssetCriteria criteria2 =
                     FileAssetCriteria.of(
-                            1L, 1L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 0L, 50);
+                            "01912345-6789-7abc-def0-123456789abc",
+                            "01912345-6789-7abc-def0-123456789def",
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            0L,
+                            50);
 
             // when & then
             assertThat(criteria1).isNotEqualTo(criteria2);
@@ -208,15 +273,20 @@ class FileAssetCriteriaTest {
             // given
             FileAssetCriteria criteria =
                     FileAssetCriteria.of(
-                            1L, 2L, FileAssetStatus.COMPLETED, FileCategory.IMAGE, 10L, 20);
+                            TEST_TENANT_ID,
+                            TEST_ORG_ID,
+                            FileAssetStatus.COMPLETED,
+                            FileCategory.IMAGE,
+                            10L,
+                            20);
 
             // when
             String result = criteria.toString();
 
             // then
             assertThat(result).contains("FileAssetCriteria");
-            assertThat(result).contains("organizationId=1");
-            assertThat(result).contains("tenantId=2");
+            assertThat(result).contains("organizationId=" + TEST_TENANT_ID);
+            assertThat(result).contains("tenantId=" + TEST_ORG_ID);
             assertThat(result).contains("COMPLETED");
             assertThat(result).contains("IMAGE");
             assertThat(result).contains("offset=10");

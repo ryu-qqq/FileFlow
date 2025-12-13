@@ -35,11 +35,11 @@ import java.time.Clock;
  * // Aggregate (Domain)
  * public class Order {
  *     private final Clock clock;
- *     private final LocalDateTime createdAt;
+ *     private final Instant createdAt;
  *
  *     private Order(Clock clock, ...) {
  *         this.clock = clock;
- *         this.createdAt = LocalDateTime.now(clock);
+ *         this.createdAt = clock.instant();
  *     }
  *
  *     public static Order forNew(Clock clock, Money amount) {
@@ -58,7 +58,7 @@ import java.time.Clock;
  * );
  *
  * Order order = Order.forNew(fixedClockHolder.getClock(), Money.of(10000));
- * assertThat(order.createdAt()).isEqualTo(LocalDateTime.of(2025, 1, 1, 0, 0));
+ * assertThat(order.createdAt()).isEqualTo(Instant.parse("2025-01-01T00:00:00Z"));
  * }</pre>
  *
  * @author ryu-qqq

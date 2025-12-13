@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.asset.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.asset.entity.FileAssetJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.asset.mapper.FileAssetJpaEntityMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.asset.repository.FileAssetQueryRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.asset.repository.FileAssetQueryDslRepository;
 import com.ryuqq.fileflow.application.asset.port.out.query.FileAssetQueryPort;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetCriteria;
@@ -19,27 +19,34 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileAssetQueryAdapter implements FileAssetQueryPort {
 
-    private final FileAssetQueryRepository fileAssetQueryRepository;
+    private final FileAssetQueryDslRepository fileAssetQueryDslRepository;
     private final FileAssetJpaEntityMapper fileAssetJpaEntityMapper;
 
     public FileAssetQueryAdapter(
-            FileAssetQueryRepository fileAssetQueryRepository,
+            FileAssetQueryDslRepository fileAssetQueryDslRepository,
             FileAssetJpaEntityMapper fileAssetJpaEntityMapper) {
-        this.fileAssetQueryRepository = fileAssetQueryRepository;
+        this.fileAssetQueryDslRepository = fileAssetQueryDslRepository;
         this.fileAssetJpaEntityMapper = fileAssetJpaEntityMapper;
     }
 
     @Override
-    public Optional<FileAsset> findById(FileAssetId id, Long organizationId, Long tenantId) {
-        return fileAssetQueryRepository
+    public Optional<FileAsset> findById(FileAssetId id, String organizationId, String tenantId) {
+        return fileAssetQueryDslRepository
                 .findById(id.getValue(), organizationId, tenantId)
+                .map(fileAssetJpaEntityMapper::toDomain);
+    }
+
+    @Override
+    public Optional<FileAsset> findById(FileAssetId id) {
+        return fileAssetQueryDslRepository
+                .findById(id.getValue())
                 .map(fileAssetJpaEntityMapper::toDomain);
     }
 
     @Override
     public List<FileAsset> findByCriteria(FileAssetCriteria criteria) {
         List<FileAssetJpaEntity> entities =
-                fileAssetQueryRepository.findAll(
+                fileAssetQueryDslRepository.findByCriteria(
                         criteria.organizationId(),
                         criteria.tenantId(),
                         criteria.status(),
@@ -52,7 +59,7 @@ public class FileAssetQueryAdapter implements FileAssetQueryPort {
 
     @Override
     public long countByCriteria(FileAssetCriteria criteria) {
-        return fileAssetQueryRepository.count(
+        return fileAssetQueryDslRepository.countByCriteria(
                 criteria.organizationId(),
                 criteria.tenantId(),
                 criteria.status(),

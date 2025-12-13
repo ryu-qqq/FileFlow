@@ -6,31 +6,28 @@ package com.ryuqq.fileflow.domain.iam.vo;
  * <p><strong>조직 유형</strong>:
  *
  * <ul>
- *   <li>ADMIN 조직: Connectly 관리자 전용 (organizationId=0, namespace=connectly)
- *   <li>SELLER 조직: 입점 판매자 회사별 조직 (organizationId=입점사ID, namespace=setof)
- *   <li>CUSTOMER 조직: 커머스 손님용 조직 (organizationId=-1, namespace=setof)
+ *   <li>ADMIN 조직: Connectly 관리자 전용 (namespace=connectly)
+ *   <li>SELLER 조직: 입점 판매자 회사별 조직 (organizationId=UUIDv7, namespace=setof)
+ *   <li>CUSTOMER 조직: 커머스 손님용 조직 (namespace=setof)
  * </ul>
  *
  * <p><strong>도메인 규칙</strong>:
  *
  * <ul>
- *   <li>조직 ID는 -1 (손님), 0 (관리자), 1+ (판매자)이다.
+ *   <li>조직 유형은 UserRole로만 판단한다 (ID 비교 없음).
+ *   <li>Seller 조직만 OrganizationId를 가진다 (UUIDv7).
+ *   <li>Admin/Customer 조직은 시스템 정의 조직이라 OrganizationId가 null이다.
  *   <li>조직명은 null이거나 빈 문자열일 수 없다.
- *   <li>Admin 조직은 organizationId=0, namespace=connectly
- *   <li>Seller 조직은 organizationId=1+, namespace=setof
- *   <li>Customer 조직은 organizationId=-1, namespace=setof
+ *   <li>Admin 조직은 namespace=connectly.
+ *   <li>Seller/Customer 조직은 namespace=setof.
  * </ul>
  *
- * @param id 조직 ID (-1: 손님, 0: 관리자, 1+: 판매자)
+ * @param id 조직 ID (Seller만 UUIDv7, Admin/Customer는 null)
  * @param name 조직명 (예: "Connectly Admin", "입점사A", "Customer")
  * @param namespace S3 버킷 네임스페이스 (connectly 또는 setof)
  * @param role 조직 역할 (ADMIN, SELLER, DEFAULT)
  */
-public record Organization(long id, String name, String namespace, UserRole role) {
-
-    // 특수 조직 ID 상수
-    private static final long ADMIN_ORG_ID = 0L;
-    private static final long CUSTOMER_ORG_ID = -1L;
+public record Organization(OrganizationId id, String name, String namespace, UserRole role) {
 
     // 네임스페이스 상수
     private static final String CONNECTLY_NAMESPACE = "connectly";
@@ -50,83 +47,112 @@ public record Organization(long id, String name, String namespace, UserRole role
             throw new IllegalArgumentException("조직 역할은 null일 수 없습니다.");
         }
 
-        // 조직 ID와 Role 일관성 검증
-        validateOrganizationConsistency(id, role, namespace);
+        // Role과 Namespace 일관성 검증
+        validateRoleNamespaceConsistency(role, namespace, id);
     }
 
     /**
      * 값 기반 생성.
      *
-     * @param id 조직 ID
+     * @param id 조직 ID (nullable)
      * @param name 조직명
      * @param namespace 네임스페이스
      * @param role 조직 역할
      * @return Organization
      * @throws IllegalArgumentException 검증 실패 시
      */
-    public static Organization of(long id, String name, String namespace, UserRole role) {
+    public static Organization of(OrganizationId id, String name, String namespace, UserRole role) {
         return new Organization(id, name, namespace, role);
     }
 
     /**
      * Admin 조직 생성.
      *
-     * @return Connectly Admin Organization (id=0, namespace=connectly)
+     * <p>Admin은 시스템 정의 조직이므로 OrganizationId가 없다.
+     *
+     * @return Connectly Admin Organization (id=null, namespace=connectly)
      */
     public static Organization admin() {
-        return new Organization(
-                ADMIN_ORG_ID, "Connectly Admin", CONNECTLY_NAMESPACE, UserRole.ADMIN);
+        return new Organization(null, "Connectly Admin", CONNECTLY_NAMESPACE, UserRole.ADMIN);
     }
 
     /**
-     * Seller 조직 생성.
+     * Seller 조직 생성 (기존 OrganizationId 사용).
      *
-     * @param id 입점사 ID (1 이상)
+     * @param id 입점사 조직 ID (UUIDv7)
      * @param companyName 입점사명
      * @return Seller Organization
-     * @throws IllegalArgumentException id가 1 미만인 경우
+     * @throws IllegalArgumentException id가 null인 경우
      */
-    public static Organization seller(long id, String companyName) {
-        if (id < 1) {
-            throw new IllegalArgumentException("Seller 조직 ID는 1 이상이어야 합니다: " + id);
+    public static Organization seller(OrganizationId id, String companyName) {
+        if (id == null) {
+            throw new IllegalArgumentException("Seller 조직 ID는 null일 수 없습니다.");
         }
         return new Organization(id, companyName, SETOF_NAMESPACE, UserRole.SELLER);
     }
 
     /**
-     * Customer 조직 생성 (손님용).
+     * Seller 조직 생성 (새로운 OrganizationId 자동 생성).
      *
-     * @return Customer Organization (id=-1, namespace=setof)
+     * @param companyName 입점사명
+     * @return Seller Organization (새로운 UUIDv7 기반 ID)
      */
-    public static Organization customer() {
-        return new Organization(CUSTOMER_ORG_ID, "Customer", SETOF_NAMESPACE, UserRole.DEFAULT);
+    public static Organization newSeller(String companyName) {
+        return new Organization(
+                OrganizationId.generate(), companyName, SETOF_NAMESPACE, UserRole.SELLER);
     }
 
     /**
-     * Admin 조직인지 확인한다.
+     * Customer 조직 생성 (손님용).
      *
-     * @return Admin 조직이면 true
+     * <p>Customer는 시스템 정의 조직이므로 OrganizationId가 없다.
+     *
+     * @return Customer Organization (id=null, namespace=setof)
+     */
+    public static Organization customer() {
+        return new Organization(null, "Customer", SETOF_NAMESPACE, UserRole.DEFAULT);
+    }
+
+    /**
+     * Admin 조직인지 확인한다 (SUPER_ADMIN 포함).
+     *
+     * <p><strong>주의</strong>: UserRole로만 판단한다 (ID 비교 없음).
+     *
+     * @return SUPER_ADMIN 또는 ADMIN 조직이면 true
      */
     public boolean isAdmin() {
-        return id == ADMIN_ORG_ID && role == UserRole.ADMIN;
+        return role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN;
+    }
+
+    /**
+     * SuperAdmin 조직인지 확인한다.
+     *
+     * @return SUPER_ADMIN 조직이면 true
+     */
+    public boolean isSuperAdmin() {
+        return role == UserRole.SUPER_ADMIN;
     }
 
     /**
      * Seller 조직인지 확인한다.
      *
+     * <p><strong>주의</strong>: UserRole로만 판단한다 (ID 비교 없음).
+     *
      * @return Seller 조직이면 true
      */
     public boolean isSeller() {
-        return id > 0 && role == UserRole.SELLER;
+        return role == UserRole.SELLER;
     }
 
     /**
      * Customer 조직인지 확인한다.
      *
+     * <p><strong>주의</strong>: UserRole로만 판단한다 (ID 비교 없음).
+     *
      * @return Customer 조직이면 true
      */
     public boolean isCustomer() {
-        return id == CUSTOMER_ORG_ID && role == UserRole.DEFAULT;
+        return role == UserRole.DEFAULT;
     }
 
     /**
@@ -150,7 +176,7 @@ public record Organization(long id, String name, String namespace, UserRole role
      *
      * <ul>
      *   <li>Admin: "connectly/"
-     *   <li>Seller: "setof/seller-{organizationId}/"
+     *   <li>Seller: "setof/seller-{organizationId}/" (전체 UUID 사용)
      *   <li>Customer: "setof/customer/"
      * </ul>
      *
@@ -160,48 +186,53 @@ public record Organization(long id, String name, String namespace, UserRole role
         if (isAdmin()) {
             return namespace + "/"; // "connectly/"
         } else if (isSeller()) {
-            return namespace + "/seller-" + id + "/"; // "setof/seller-123/"
+            // Option A 확정: 전체 UUID 사용
+            return namespace
+                    + "/seller-"
+                    + id.value()
+                    + "/"; // "setof/seller-01912345-6789-7abc.../
         } else {
             return namespace + "/customer/"; // "setof/customer/"
         }
     }
 
     /**
-     * 조직 ID와 Role, Namespace 일관성을 검증한다.
+     * Role과 Namespace, ID 일관성을 검증한다.
      *
-     * @param id 조직 ID
      * @param role 조직 역할
      * @param namespace 네임스페이스
+     * @param id 조직 ID (nullable)
      * @throws IllegalArgumentException 일관성 위반 시
      */
-    private static void validateOrganizationConsistency(long id, UserRole role, String namespace) {
-        // Admin 조직: id=0, role=ADMIN, namespace=connectly
-        if (id == ADMIN_ORG_ID) {
-            if (role != UserRole.ADMIN) {
-                throw new IllegalArgumentException("Admin 조직 (id=0)은 ADMIN role이어야 합니다.");
-            }
+    private static void validateRoleNamespaceConsistency(
+            UserRole role, String namespace, OrganizationId id) {
+        // SuperAdmin/Admin 조직: role=SUPER_ADMIN/ADMIN, namespace=connectly, id=null
+        if (role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN) {
             if (!CONNECTLY_NAMESPACE.equals(namespace)) {
                 throw new IllegalArgumentException("Admin 조직은 connectly namespace여야 합니다.");
             }
+            if (id != null) {
+                throw new IllegalArgumentException("Admin 조직은 OrganizationId를 가질 수 없습니다.");
+            }
         }
 
-        // Seller 조직: id>0, role=SELLER, namespace=setof
-        if (id > 0) {
-            if (role != UserRole.SELLER) {
-                throw new IllegalArgumentException("Seller 조직 (id>0)은 SELLER role이어야 합니다.");
-            }
+        // Seller 조직: role=SELLER, namespace=setof, id=필수
+        if (role == UserRole.SELLER) {
             if (!SETOF_NAMESPACE.equals(namespace)) {
                 throw new IllegalArgumentException("Seller 조직은 setof namespace여야 합니다.");
             }
+            if (id == null) {
+                throw new IllegalArgumentException("Seller 조직은 OrganizationId가 필수입니다.");
+            }
         }
 
-        // Customer 조직: id=-1, role=DEFAULT, namespace=setof
-        if (id == CUSTOMER_ORG_ID) {
-            if (role != UserRole.DEFAULT) {
-                throw new IllegalArgumentException("Customer 조직 (id=-1)은 DEFAULT role이어야 합니다.");
-            }
+        // Customer 조직: role=DEFAULT, namespace=setof, id=null
+        if (role == UserRole.DEFAULT) {
             if (!SETOF_NAMESPACE.equals(namespace)) {
                 throw new IllegalArgumentException("Customer 조직은 setof namespace여야 합니다.");
+            }
+            if (id != null) {
+                throw new IllegalArgumentException("Customer 조직은 OrganizationId를 가질 수 없습니다.");
             }
         }
     }

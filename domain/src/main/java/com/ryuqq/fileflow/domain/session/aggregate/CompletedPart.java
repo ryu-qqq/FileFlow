@@ -6,7 +6,7 @@ import com.ryuqq.fileflow.domain.session.vo.PresignedUrl;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Multipart Upload의 Part를 나타내는 Aggregate Root.
@@ -34,10 +34,9 @@ public class CompletedPart {
     private final UploadSessionId sessionId;
     private final PartNumber partNumber;
     private final PresignedUrl presignedUrl;
-    private final Clock clock;
     private ETag etag;
     private long size;
-    private LocalDateTime uploadedAt;
+    private Instant uploadedAt;
 
     /**
      * 초기화용 팩토리 메서드.
@@ -47,23 +46,12 @@ public class CompletedPart {
      * @param sessionId 세션 ID
      * @param partNumber Part 번호 (1 이상)
      * @param presignedUrl Presigned URL
-     * @param clock 시간 제공자
      * @return CompletedPart (PENDING 상태)
      */
     public static CompletedPart forNew(
-            UploadSessionId sessionId,
-            PartNumber partNumber,
-            PresignedUrl presignedUrl,
-            Clock clock) {
+            UploadSessionId sessionId, PartNumber partNumber, PresignedUrl presignedUrl) {
         return new CompletedPart(
-                null,
-                sessionId,
-                partNumber,
-                presignedUrl,
-                ETag.empty(),
-                0,
-                LocalDateTime.MIN,
-                clock);
+                null, sessionId, partNumber, presignedUrl, ETag.empty(), 0, Instant.MIN);
     }
 
     /**
@@ -76,7 +64,6 @@ public class CompletedPart {
      * @param etag ETag
      * @param size Part 크기
      * @param uploadedAt 업로드 완료 시각
-     * @param clock 시간 제공자
      * @return CompletedPart
      */
     public static CompletedPart of(
@@ -86,10 +73,8 @@ public class CompletedPart {
             PresignedUrl presignedUrl,
             ETag etag,
             long size,
-            LocalDateTime uploadedAt,
-            Clock clock) {
-        return new CompletedPart(
-                id, sessionId, partNumber, presignedUrl, etag, size, uploadedAt, clock);
+            Instant uploadedAt) {
+        return new CompletedPart(id, sessionId, partNumber, presignedUrl, etag, size, uploadedAt);
     }
 
     /** 생성자 (private). */
@@ -103,8 +88,7 @@ public class CompletedPart {
             PresignedUrl presignedUrl,
             ETag etag,
             long size,
-            LocalDateTime uploadedAt,
-            Clock clock) {
+            Instant uploadedAt) {
         if (sessionId == null) {
             throw new IllegalArgumentException("세션 ID는 null일 수 없습니다.");
         }
@@ -120,9 +104,6 @@ public class CompletedPart {
         if (uploadedAt == null) {
             throw new IllegalArgumentException("업로드 완료 시각은 null일 수 없습니다.");
         }
-        if (clock == null) {
-            throw new IllegalArgumentException("Clock은 null일 수 없습니다.");
-        }
         this.id = id;
         this.sessionId = sessionId;
         this.partNumber = partNumber;
@@ -130,7 +111,6 @@ public class CompletedPart {
         this.etag = etag;
         this.size = size;
         this.uploadedAt = uploadedAt;
-        this.clock = clock;
     }
 
     // ==================== 비즈니스 메서드 ====================
@@ -140,8 +120,9 @@ public class CompletedPart {
      *
      * @param etag S3가 반환한 ETag
      * @param size Part 크기 (바이트)
+     * @param clock 시간 제공자
      */
-    public void complete(ETag etag, long size) {
+    public void complete(ETag etag, long size, Clock clock) {
         if (etag == null || etag.isEmpty()) {
             throw new IllegalArgumentException("ETag는 null이거나 비어있을 수 없습니다.");
         }
@@ -150,7 +131,7 @@ public class CompletedPart {
         }
         this.etag = etag;
         this.size = size;
-        this.uploadedAt = LocalDateTime.now(clock);
+        this.uploadedAt = clock.instant();
     }
 
     /**
@@ -204,7 +185,7 @@ public class CompletedPart {
         return size;
     }
 
-    public LocalDateTime getUploadedAt() {
+    public Instant getUploadedAt() {
         return uploadedAt;
     }
 }

@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.session.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Part 업로드 완료 표시 Response.
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  * @param uploadedAt 업로드 시각 (UTC)
  */
 public record MarkPartUploadedResponse(
-        String sessionId, int partNumber, String etag, LocalDateTime uploadedAt) {
+        String sessionId, int partNumber, String etag, Instant uploadedAt) {
 
     /**
      * 값 기반 생성.
@@ -32,7 +32,7 @@ public record MarkPartUploadedResponse(
      * @return MarkPartUploadedResponse
      */
     public static MarkPartUploadedResponse of(
-            String sessionId, int partNumber, String etag, LocalDateTime uploadedAt) {
+            String sessionId, int partNumber, String etag, Instant uploadedAt) {
         return new MarkPartUploadedResponse(sessionId, partNumber, etag, uploadedAt);
     }
 }

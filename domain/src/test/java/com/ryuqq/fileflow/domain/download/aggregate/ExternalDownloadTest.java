@@ -9,10 +9,11 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -36,8 +37,8 @@ class ExternalDownloadTest {
         void forNew_ShouldCreateNewExternalDownload() {
             // given
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/image.jpg");
-            long tenantId = 1L;
-            long organizationId = 100L;
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
 
             // when
             ExternalDownload download =
@@ -72,13 +73,15 @@ class ExternalDownloadTest {
             // given
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/image.jpg");
             WebhookUrl webhookUrl = WebhookUrl.of("https://callback.example.com/webhook");
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
 
             // when
             ExternalDownload download =
                     ExternalDownload.forNew(
                             sourceUrl,
-                            1L,
-                            100L,
+                            tenantId,
+                            organizationId,
                             DEFAULT_S3_BUCKET,
                             DEFAULT_S3_PATH_PREFIX,
                             webhookUrl,
@@ -95,8 +98,8 @@ class ExternalDownloadTest {
             // given
             ExternalDownloadId id = ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/image.jpg");
-            long tenantId = 1L;
-            long organizationId = 100L;
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
             ExternalDownloadStatus status = ExternalDownloadStatus.PROCESSING;
             RetryCount retryCount = RetryCount.of(1);
             FileAssetId fileAssetId = null;
@@ -139,13 +142,17 @@ class ExternalDownloadTest {
         @Test
         @DisplayName("forNew()에 sourceUrl이 null이면 예외가 발생한다")
         void forNew_WithNullSourceUrl_ShouldThrowException() {
-            // given & when & then
+            // given
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
+
+            // when & then
             assertThatThrownBy(
                             () ->
                                     ExternalDownload.forNew(
                                             null,
-                                            1L,
-                                            100L,
+                                            tenantId,
+                                            organizationId,
                                             DEFAULT_S3_BUCKET,
                                             DEFAULT_S3_PATH_PREFIX,
                                             null,
@@ -234,12 +241,14 @@ class ExternalDownloadTest {
         @DisplayName("retryCount가 2 이상일 때 retry() 호출 시 예외가 발생한다")
         void retry_WhenRetryCountExceeded_ShouldThrowException() {
             // given
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
             ExternalDownload download =
                     ExternalDownload.of(
                             ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                             SourceUrl.of("https://example.com/image.jpg"),
-                            1L,
-                            100L,
+                            tenantId,
+                            organizationId,
                             DEFAULT_S3_BUCKET,
                             DEFAULT_S3_PATH_PREFIX,
                             ExternalDownloadStatus.PROCESSING,
@@ -305,12 +314,14 @@ class ExternalDownloadTest {
         @DisplayName("canRetry()는 retryCount가 2 이상이면 false를 반환한다")
         void canRetry_WhenRetryCountGreaterOrEqual2_ShouldReturnFalse() {
             // given
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
             ExternalDownload download =
                     ExternalDownload.of(
                             ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                             SourceUrl.of("https://example.com/image.jpg"),
-                            1L,
-                            100L,
+                            tenantId,
+                            organizationId,
                             DEFAULT_S3_BUCKET,
                             DEFAULT_S3_PATH_PREFIX,
                             ExternalDownloadStatus.PROCESSING,
@@ -329,11 +340,13 @@ class ExternalDownloadTest {
         @DisplayName("hasWebhook()은 webhookUrl이 있으면 true를 반환한다")
         void hasWebhook_WithWebhookUrl_ShouldReturnTrue() {
             // given
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
             ExternalDownload download =
                     ExternalDownload.forNew(
                             SourceUrl.of("https://example.com/image.jpg"),
-                            1L,
-                            100L,
+                            tenantId,
+                            organizationId,
                             DEFAULT_S3_BUCKET,
                             DEFAULT_S3_PATH_PREFIX,
                             WebhookUrl.of("https://callback.example.com/webhook"),
@@ -359,12 +372,14 @@ class ExternalDownloadTest {
             // given
             String uuidString = "00000000-0000-0000-0000-000000000001";
             UUID expectedUuid = UUID.fromString(uuidString);
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
             ExternalDownload download =
                     ExternalDownload.of(
                             ExternalDownloadId.of(uuidString),
                             SourceUrl.of("https://example.com/image.jpg"),
-                            1L,
-                            100L,
+                            tenantId,
+                            organizationId,
                             DEFAULT_S3_BUCKET,
                             DEFAULT_S3_PATH_PREFIX,
                             ExternalDownloadStatus.PENDING,
@@ -389,14 +404,12 @@ class ExternalDownloadTest {
             ExternalDownloadRegisteredEvent event = download.createRegisteredEvent();
 
             // then
-            LocalDateTime expectedLocalDateTime =
-                    LocalDateTime.ofInstant(download.getCreatedAt(), ZoneId.systemDefault());
             assertThat(event.downloadId()).isEqualTo(download.getId());
             assertThat(event.sourceUrl()).isEqualTo(download.getSourceUrl());
             assertThat(event.tenantId()).isEqualTo(download.getTenantId());
             assertThat(event.organizationId()).isEqualTo(download.getOrganizationId());
             assertThat(event.webhookUrl()).isNull();
-            assertThat(event.occurredAt()).isEqualTo(expectedLocalDateTime);
+            assertThat(event.occurredAt()).isEqualTo(download.getCreatedAt());
         }
 
         @Test
@@ -404,11 +417,13 @@ class ExternalDownloadTest {
         void createRegisteredEvent_WithWebhookUrl_ShouldIncludeInEvent() {
             // given
             WebhookUrl webhookUrl = WebhookUrl.of("https://callback.example.com/webhook");
+            TenantId tenantId = TenantId.generate();
+            OrganizationId organizationId = OrganizationId.generate();
             ExternalDownload download =
                     ExternalDownload.forNew(
                             SourceUrl.of("https://example.com/image.jpg"),
-                            1L,
-                            100L,
+                            tenantId,
+                            organizationId,
                             DEFAULT_S3_BUCKET,
                             DEFAULT_S3_PATH_PREFIX,
                             webhookUrl,
@@ -503,8 +518,8 @@ class ExternalDownloadTest {
     private ExternalDownload createPendingDownload() {
         return ExternalDownload.forNew(
                 SourceUrl.of("https://example.com/image.jpg"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 null,
@@ -515,8 +530,8 @@ class ExternalDownloadTest {
         return ExternalDownload.of(
                 ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
                 SourceUrl.of("https://example.com/image.jpg"),
-                1L,
-                100L,
+                TenantId.generate(),
+                OrganizationId.generate(),
                 DEFAULT_S3_BUCKET,
                 DEFAULT_S3_PATH_PREFIX,
                 ExternalDownloadStatus.PROCESSING,

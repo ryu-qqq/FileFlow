@@ -28,12 +28,20 @@ aws:
       # ExternalDownload DLQ: receives failed tasks for error handling
       external-download-dlq-url: ${SQS_EXTERNAL_DOWNLOAD_DLQ_URL:}
 
+      # FileProcessing Queue: receives file processing tasks (image resizing)
+      file-processing-queue-url: ${SQS_FILE_PROCESSING_QUEUE_URL:}
+
+      # FileProcessing DLQ: receives failed file processing tasks
+      file-processing-dlq-url: ${SQS_FILE_PROCESSING_DLQ_URL:}
+
       # ========================================
       # Feature Toggles
       # ========================================
       # Enable/Disable individual listeners
       external-download-listener-enabled: true
       external-download-dlq-listener-enabled: true
+      file-processing-listener-enabled: true
+      file-processing-dlq-listener-enabled: true
 
 logging:
   level:

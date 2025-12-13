@@ -7,8 +7,6 @@ import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadOutboxId;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +17,6 @@ import org.junit.jupiter.api.Test;
 class ExternalDownloadOutboxJpaMapperTest {
 
     private ExternalDownloadOutboxJpaMapper mapper;
-    private static final ZoneId ZONE_ID = ZoneId.of("UTC");
 
     @BeforeEach
     void setUp() {
@@ -106,8 +103,8 @@ class ExternalDownloadOutboxJpaMapperTest {
         }
 
         @Test
-        @DisplayName("Instant를 LocalDateTime(UTC)으로 변환한다")
-        void shouldConvertInstantToLocalDateTime() {
+        @DisplayName("Instant 시간 정보가 Entity에 전달된다")
+        void shouldConvertInstantToEntity() {
             // given
             UUID outboxId = UUID.randomUUID();
             UUID downloadId = UUID.randomUUID();
@@ -124,8 +121,7 @@ class ExternalDownloadOutboxJpaMapperTest {
             ExternalDownloadOutboxJpaEntity entity = mapper.toEntity(domain);
 
             // then
-            LocalDateTime expected = LocalDateTime.ofInstant(createdAt, ZONE_ID);
-            assertThat(entity.getCreatedAt()).isEqualTo(expected);
+            assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
         }
     }
 
@@ -178,12 +174,12 @@ class ExternalDownloadOutboxJpaMapperTest {
         }
 
         @Test
-        @DisplayName("LocalDateTime을 Instant(UTC)로 변환한다")
-        void shouldConvertLocalDateTimeToInstant() {
+        @DisplayName("Entity의 Instant가 Domain으로 전달된다")
+        void shouldConvertInstantToDomain() {
             // given
             UUID outboxId = UUID.randomUUID();
             UUID downloadId = UUID.randomUUID();
-            LocalDateTime createdAt = LocalDateTime.of(2025, 11, 26, 12, 0, 0);
+            Instant createdAt = Instant.parse("2025-11-26T12:00:00Z");
             ExternalDownloadOutboxJpaEntity entity =
                     ExternalDownloadOutboxJpaEntity.of(
                             outboxId, downloadId, false, null, createdAt, createdAt);
@@ -192,8 +188,7 @@ class ExternalDownloadOutboxJpaMapperTest {
             ExternalDownloadOutbox domain = mapper.toDomain(entity);
 
             // then
-            Instant expected = createdAt.atZone(ZONE_ID).toInstant();
-            assertThat(domain.getCreatedAt()).isEqualTo(expected);
+            assertThat(domain.getCreatedAt()).isEqualTo(createdAt);
         }
     }
 
@@ -285,9 +280,7 @@ class ExternalDownloadOutboxJpaMapperTest {
             ExternalDownloadOutbox restored = mapper.toDomain(entity);
 
             // then
-            // LocalDateTime 변환으로 인한 나노초 손실 허용
-            assertThat(restored.getCreatedAt().getEpochSecond())
-                    .isEqualTo(original.getCreatedAt().getEpochSecond());
+            assertThat(restored.getCreatedAt()).isEqualTo(original.getCreatedAt());
         }
     }
 
@@ -315,8 +308,8 @@ class ExternalDownloadOutboxJpaMapperTest {
 
     private ExternalDownloadOutboxJpaEntity createEntity(UUID id, boolean published) {
         UUID downloadId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime publishedAt = published ? now : null;
+        Instant now = Instant.now();
+        Instant publishedAt = published ? now : null;
         return ExternalDownloadOutboxJpaEntity.of(id, downloadId, published, publishedAt, now, now);
     }
 }

@@ -8,14 +8,14 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.ryuqq.fileflow.application.download.assembler.ExternalDownloadAssembler;
+import com.ryuqq.fileflow.application.common.config.TransactionEventRegistry;
 import com.ryuqq.fileflow.application.download.dto.DownloadResult;
 import com.ryuqq.fileflow.application.download.dto.response.S3UploadResponse;
-import com.ryuqq.fileflow.application.download.manager.ExternalDownloadManager;
+import com.ryuqq.fileflow.application.download.factory.command.ExternalDownloadCommandFactory;
+import com.ryuqq.fileflow.application.download.manager.command.ExternalDownloadTransactionManager;
+import com.ryuqq.fileflow.application.download.manager.query.ExternalDownloadReadManager;
+import com.ryuqq.fileflow.application.download.port.out.client.DownloadS3ClientPort;
 import com.ryuqq.fileflow.application.download.port.out.client.HttpDownloadPort;
-import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
-import com.ryuqq.fileflow.application.session.port.out.client.S3ClientPort;
-import com.ryuqq.fileflow.domain.common.util.ClockHolder;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
@@ -35,37 +35,41 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ExternalDownloadProcessingFacade 테스트")
 class ExternalDownloadProcessingFacadeTest {
 
-    @Mock private ExternalDownloadQueryPort queryPort;
+    @Mock private ExternalDownloadReadManager externalDownloadReadManager;
 
-    @Mock private ExternalDownloadManager externalDownloadManager;
-
-    @Mock private ExternalDownloadAssembler assembler;
+    @Mock private ExternalDownloadTransactionManager externalDownloadTransactionManager;
 
     @Mock private HttpDownloadPort httpDownloadPort;
 
-    @Mock private S3ClientPort s3ClientPort;
+    @Mock private DownloadS3ClientPort downloadS3ClientPort;
 
-    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private TransactionEventRegistry transactionEventRegistry;
 
-    @Mock private ClockHolder clockHolder;
+    @Mock private ExternalDownloadCommandFactory commandFactory;
 
-    @InjectMocks private ExternalDownloadProcessingFacade facade;
+    private ExternalDownloadProcessingFacade facade;
 
     private static final Clock FIXED_CLOCK =
             Clock.fixed(Instant.parse("2025-11-26T12:00:00Z"), ZoneId.of("UTC"));
 
     @BeforeEach
     void setUp() {
-        given(clockHolder.getClock()).willReturn(FIXED_CLOCK);
+        facade =
+                new ExternalDownloadProcessingFacade(
+                        externalDownloadReadManager,
+                        externalDownloadTransactionManager,
+                        httpDownloadPort,
+                        downloadS3ClientPort,
+                        transactionEventRegistry,
+                        commandFactory);
+        given(commandFactory.getClock()).willReturn(FIXED_CLOCK);
     }
 
     @Nested
@@ -93,13 +97,13 @@ class ExternalDownloadProcessingFacadeTest {
 
             ETag etag = ETag.of("abc123etag");
 
-            given(queryPort.findById(ExternalDownloadId.of(downloadId)))
+            given(externalDownloadReadManager.findById(ExternalDownloadId.of(downloadId)))
                     .willReturn(Optional.of(download));
             given(httpDownloadPort.download(download.getSourceUrl())).willReturn(downloadResult);
-            given(assembler.toS3UploadResponse(download, downloadResult))
+            given(commandFactory.createS3UploadResponse(download, downloadResult))
                     .willReturn(uploadResponse);
             given(
-                            s3ClientPort.putObject(
+                            downloadS3ClientPort.putObject(
                                     download.getS3Bucket(),
                                     uploadResponse.s3Key(),
                                     uploadResponse.contentType(),
@@ -110,17 +114,19 @@ class ExternalDownloadProcessingFacadeTest {
             facade.process(downloadId);
 
             // then
-            verify(queryPort).findById(ExternalDownloadId.of(downloadId));
+            verify(externalDownloadReadManager).findById(ExternalDownloadId.of(downloadId));
             verify(httpDownloadPort).download(download.getSourceUrl());
-            verify(assembler).toS3UploadResponse(download, downloadResult);
-            verify(s3ClientPort)
+            verify(commandFactory).createS3UploadResponse(download, downloadResult);
+            verify(downloadS3ClientPort)
                     .putObject(
                             download.getS3Bucket(),
                             uploadResponse.s3Key(),
                             uploadResponse.contentType(),
                             uploadResponse.content());
-            verify(externalDownloadManager, org.mockito.Mockito.times(2)).save(download);
-            verify(eventPublisher).publishEvent(any(ExternalDownloadFileCreatedEvent.class));
+            verify(externalDownloadTransactionManager, org.mockito.Mockito.times(2))
+                    .persist(download);
+            verify(transactionEventRegistry)
+                    .registerForPublish(any(ExternalDownloadFileCreatedEvent.class));
         }
 
         @Test
@@ -146,11 +152,11 @@ class ExternalDownloadProcessingFacadeTest {
 
             ETag etag = ETag.of("etag123");
 
-            given(queryPort.findById(ExternalDownloadId.of(downloadId)))
+            given(externalDownloadReadManager.findById(ExternalDownloadId.of(downloadId)))
                     .willReturn(Optional.of(download));
             given(httpDownloadPort.download(any())).willReturn(downloadResult);
-            given(assembler.toS3UploadResponse(any(), any())).willReturn(uploadResponse);
-            given(s3ClientPort.putObject(any(), any(), any(), any())).willReturn(etag);
+            given(commandFactory.createS3UploadResponse(any(), any())).willReturn(uploadResponse);
+            given(downloadS3ClientPort.putObject(any(), any(), any(), any())).willReturn(etag);
 
             // when
             facade.process(downloadId);
@@ -158,7 +164,8 @@ class ExternalDownloadProcessingFacadeTest {
             // then
             ArgumentCaptor<ExternalDownload> captor =
                     ArgumentCaptor.forClass(ExternalDownload.class);
-            verify(externalDownloadManager, org.mockito.Mockito.times(2)).save(captor.capture());
+            verify(externalDownloadTransactionManager, org.mockito.Mockito.times(2))
+                    .persist(captor.capture());
 
             ExternalDownload savedDownload = captor.getAllValues().get(1);
             assertThat(savedDownload.getStatus()).isEqualTo(ExternalDownloadStatus.COMPLETED);
@@ -169,7 +176,7 @@ class ExternalDownloadProcessingFacadeTest {
         void shouldThrowExceptionWhenDownloadNotFound() {
             // given
             String downloadId = "00000000-0000-0000-0000-000000000999";
-            given(queryPort.findById(ExternalDownloadId.of(downloadId)))
+            given(externalDownloadReadManager.findById(ExternalDownloadId.of(downloadId)))
                     .willReturn(Optional.empty());
 
             // when & then
@@ -178,7 +185,7 @@ class ExternalDownloadProcessingFacadeTest {
                     .hasMessageContaining("ExternalDownload not found");
 
             verify(httpDownloadPort, never()).download(any());
-            verify(s3ClientPort, never()).putObject(any(), any(), any(), any());
+            verify(downloadS3ClientPort, never()).putObject(any(), any(), any(), any());
         }
 
         @Test
@@ -201,18 +208,19 @@ class ExternalDownloadProcessingFacadeTest {
 
             ETag etag = ETag.of("etag-gif");
 
-            given(queryPort.findById(ExternalDownloadId.of(downloadId)))
+            given(externalDownloadReadManager.findById(ExternalDownloadId.of(downloadId)))
                     .willReturn(Optional.of(download));
             given(httpDownloadPort.download(download.getSourceUrl())).willReturn(downloadResult);
-            given(assembler.toS3UploadResponse(download, downloadResult))
+            given(commandFactory.createS3UploadResponse(download, downloadResult))
                     .willReturn(uploadResponse);
-            given(s3ClientPort.putObject(any(), any(), any(), any())).willReturn(etag);
+            given(downloadS3ClientPort.putObject(any(), any(), any(), any())).willReturn(etag);
 
             // when
             facade.process(downloadId);
 
             // then
-            verify(eventPublisher).publishEvent(any(ExternalDownloadFileCreatedEvent.class));
+            verify(transactionEventRegistry)
+                    .registerForPublish(any(ExternalDownloadFileCreatedEvent.class));
             assertThat(download.getDomainEvents()).isEmpty();
         }
 
@@ -237,13 +245,13 @@ class ExternalDownloadProcessingFacadeTest {
 
             ETag etag = ETag.of("webp-etag");
 
-            given(queryPort.findById(eq(ExternalDownloadId.of(downloadId))))
+            given(externalDownloadReadManager.findById(eq(ExternalDownloadId.of(downloadId))))
                     .willReturn(Optional.of(download));
             given(httpDownloadPort.download(download.getSourceUrl())).willReturn(downloadResult);
-            given(assembler.toS3UploadResponse(download, downloadResult))
+            given(commandFactory.createS3UploadResponse(download, downloadResult))
                     .willReturn(uploadResponse);
             given(
-                            s3ClientPort.putObject(
+                            downloadS3ClientPort.putObject(
                                     download.getS3Bucket(),
                                     s3Key,
                                     uploadResponse.contentType(),
@@ -255,8 +263,8 @@ class ExternalDownloadProcessingFacadeTest {
 
             // then
             verify(httpDownloadPort).download(download.getSourceUrl());
-            verify(assembler).toS3UploadResponse(download, downloadResult);
-            verify(s3ClientPort)
+            verify(commandFactory).createS3UploadResponse(download, downloadResult);
+            verify(downloadS3ClientPort)
                     .putObject(
                             download.getS3Bucket(), s3Key, uploadResponse.contentType(), content);
         }

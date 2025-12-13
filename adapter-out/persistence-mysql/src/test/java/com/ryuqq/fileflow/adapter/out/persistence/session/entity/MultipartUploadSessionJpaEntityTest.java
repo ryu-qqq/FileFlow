@@ -2,8 +2,13 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
+import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +17,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 @DisplayName("MultipartUploadSessionJpaEntity 단위 테스트")
 class MultipartUploadSessionJpaEntityTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
+    private static final String TEST_USER_ID = UserId.generate().value();
 
     @Nested
     @DisplayName("of 팩토리 메서드 테스트")
@@ -21,19 +30,19 @@ class MultipartUploadSessionJpaEntityTest {
         @DisplayName("모든 필드로 Entity를 생성할 수 있다")
         void of_WithAllFields_ShouldCreateEntity() {
             // given
-            LocalDateTime expiresAt = LocalDateTime.of(2025, 11, 27, 10, 0);
-            LocalDateTime createdAt = LocalDateTime.of(2025, 11, 26, 10, 0);
-            LocalDateTime updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5);
+            Instant expiresAt = LocalDateTime.of(2025, 11, 27, 10, 0).toInstant(ZoneOffset.UTC);
+            Instant createdAt = LocalDateTime.of(2025, 11, 26, 10, 0).toInstant(ZoneOffset.UTC);
+            Instant updatedAt = LocalDateTime.of(2025, 11, 26, 10, 5).toInstant(ZoneOffset.UTC);
 
             // when
             MultipartUploadSessionJpaEntity entity =
                     MultipartUploadSessionJpaEntity.of(
                             "session-mp-123",
-                            1L,
-                            0L,
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
                             "Connectly Org",
                             "connectly",
-                            1L,
+                            TEST_TENANT_ID,
                             "Connectly",
                             "ADMIN",
                             "admin@example.com",
@@ -55,11 +64,11 @@ class MultipartUploadSessionJpaEntityTest {
 
             // then
             assertThat(entity.getId()).isEqualTo("session-mp-123");
-            assertThat(entity.getUserId()).isEqualTo(1L);
-            assertThat(entity.getOrganizationId()).isEqualTo(0L);
+            assertThat(entity.getUserId()).isEqualTo(TEST_USER_ID);
+            assertThat(entity.getOrganizationId()).isEqualTo(TEST_ORG_ID);
             assertThat(entity.getOrganizationName()).isEqualTo("Connectly Org");
             assertThat(entity.getOrganizationNamespace()).isEqualTo("connectly");
-            assertThat(entity.getTenantId()).isEqualTo(1L);
+            assertThat(entity.getTenantId()).isEqualTo(TEST_TENANT_ID);
             assertThat(entity.getTenantName()).isEqualTo("Connectly");
             assertThat(entity.getUserRole()).isEqualTo("ADMIN");
             assertThat(entity.getEmail()).isEqualTo("admin@example.com");
@@ -104,7 +113,7 @@ class MultipartUploadSessionJpaEntityTest {
         @DisplayName("완료된 세션은 mergedEtag와 completedAt이 설정된다")
         void of_WithCompletedSession_ShouldHaveMergedEtagAndCompletedAt() {
             // given
-            LocalDateTime completedAt = LocalDateTime.of(2025, 11, 26, 12, 0);
+            Instant completedAt = LocalDateTime.of(2025, 11, 26, 12, 0).toInstant(ZoneOffset.UTC);
             String mergedEtag = "\"abc123-10\"";
 
             // when
@@ -228,18 +237,18 @@ class MultipartUploadSessionJpaEntityTest {
         @DisplayName("BaseAuditEntity의 감사 필드를 상속받는다")
         void inheritance_ShouldProvideAuditFields() {
             // given
-            LocalDateTime createdAt = LocalDateTime.of(2025, 1, 1, 0, 0);
-            LocalDateTime updatedAt = LocalDateTime.of(2025, 6, 1, 12, 0);
+            Instant createdAt = LocalDateTime.of(2025, 1, 1, 0, 0).toInstant(ZoneOffset.UTC);
+            Instant updatedAt = LocalDateTime.of(2025, 6, 1, 12, 0).toInstant(ZoneOffset.UTC);
 
             // when
             MultipartUploadSessionJpaEntity entity =
                     MultipartUploadSessionJpaEntity.of(
                             "id",
-                            1L,
-                            1L,
+                            TEST_USER_ID,
+                            TEST_ORG_ID,
                             "org",
                             "ns",
-                            1L,
+                            TEST_TENANT_ID,
                             "tenant",
                             "USER",
                             null,
@@ -251,7 +260,7 @@ class MultipartUploadSessionJpaEntityTest {
                             "upload-id",
                             5,
                             20 * 1024 * 1024L,
-                            LocalDateTime.now().plusDays(1),
+                            Instant.now().plus(java.time.Duration.ofDays(1)),
                             SessionStatus.PREPARING,
                             null,
                             null,
@@ -267,14 +276,14 @@ class MultipartUploadSessionJpaEntityTest {
 
     // ==================== Helper Methods ====================
 
-    private MultipartUploadSessionJpaEntity createEntity(Long userId) {
+    private MultipartUploadSessionJpaEntity createEntity(String userId) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
                 userId,
-                1L,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                1L,
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -286,23 +295,23 @@ class MultipartUploadSessionJpaEntityTest {
                 "upload-id",
                 5,
                 20 * 1024 * 1024L,
-                LocalDateTime.now().plusDays(1),
+                Instant.now().plus(java.time.Duration.ofDays(1)),
                 SessionStatus.PREPARING,
                 null,
                 null,
                 0L,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                Instant.now(),
+                Instant.now());
     }
 
     private MultipartUploadSessionJpaEntity createEntityWithEmail(String email) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                1L,
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 email,
@@ -314,24 +323,24 @@ class MultipartUploadSessionJpaEntityTest {
                 "upload-id",
                 5,
                 20 * 1024 * 1024L,
-                LocalDateTime.now().plusDays(1),
+                Instant.now().plus(java.time.Duration.ofDays(1)),
                 SessionStatus.PREPARING,
                 null,
                 null,
                 0L,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                Instant.now(),
+                Instant.now());
     }
 
     private MultipartUploadSessionJpaEntity createCompletedEntity(
-            String mergedEtag, LocalDateTime completedAt, SessionStatus status) {
+            String mergedEtag, Instant completedAt, SessionStatus status) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                1L,
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -343,23 +352,23 @@ class MultipartUploadSessionJpaEntityTest {
                 "upload-id",
                 5,
                 20 * 1024 * 1024L,
-                LocalDateTime.now().plusDays(1),
+                Instant.now().plus(java.time.Duration.ofDays(1)),
                 status,
                 mergedEtag,
                 completedAt,
                 0L,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                Instant.now(),
+                Instant.now());
     }
 
     private MultipartUploadSessionJpaEntity createEntityWithStatus(SessionStatus status) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                1L,
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -371,23 +380,23 @@ class MultipartUploadSessionJpaEntityTest {
                 "upload-id",
                 5,
                 20 * 1024 * 1024L,
-                LocalDateTime.now().plusDays(1),
+                Instant.now().plus(java.time.Duration.ofDays(1)),
                 status,
                 null,
                 null,
                 0L,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                Instant.now(),
+                Instant.now());
     }
 
     private MultipartUploadSessionJpaEntity createEntityWithTotalParts(int totalParts) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                1L,
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -399,23 +408,23 @@ class MultipartUploadSessionJpaEntityTest {
                 "upload-id",
                 totalParts,
                 20 * 1024 * 1024L,
-                LocalDateTime.now().plusDays(1),
+                Instant.now().plus(java.time.Duration.ofDays(1)),
                 SessionStatus.PREPARING,
                 null,
                 null,
                 0L,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                Instant.now(),
+                Instant.now());
     }
 
     private MultipartUploadSessionJpaEntity createEntityWithPartSize(long partSize) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                1L,
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -427,23 +436,23 @@ class MultipartUploadSessionJpaEntityTest {
                 "upload-id",
                 5,
                 partSize,
-                LocalDateTime.now().plusDays(1),
+                Instant.now().plus(java.time.Duration.ofDays(1)),
                 SessionStatus.PREPARING,
                 null,
                 null,
                 0L,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                Instant.now(),
+                Instant.now());
     }
 
     private MultipartUploadSessionJpaEntity createEntityWithFileSize(long fileSize) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                1L,
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -455,23 +464,23 @@ class MultipartUploadSessionJpaEntityTest {
                 "upload-id",
                 5,
                 20 * 1024 * 1024L,
-                LocalDateTime.now().plusDays(1),
+                Instant.now().plus(java.time.Duration.ofDays(1)),
                 SessionStatus.PREPARING,
                 null,
                 null,
                 0L,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                Instant.now(),
+                Instant.now());
     }
 
     private MultipartUploadSessionJpaEntity createEntityWithS3UploadId(String s3UploadId) {
         return MultipartUploadSessionJpaEntity.of(
                 "id",
-                1L,
-                1L,
+                TEST_USER_ID,
+                TEST_ORG_ID,
                 "org",
                 "ns",
-                1L,
+                TEST_TENANT_ID,
                 "tenant",
                 "USER",
                 "email@test.com",
@@ -483,12 +492,12 @@ class MultipartUploadSessionJpaEntityTest {
                 s3UploadId,
                 5,
                 20 * 1024 * 1024L,
-                LocalDateTime.now().plusDays(1),
+                Instant.now().plus(java.time.Duration.ofDays(1)),
                 SessionStatus.PREPARING,
                 null,
                 null,
                 0L,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                Instant.now(),
+                Instant.now());
     }
 }

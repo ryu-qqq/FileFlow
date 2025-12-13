@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.session.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -25,7 +25,7 @@ public record CompleteMultipartUploadResponse(
         String uploadId,
         int totalParts,
         List<CompletedPartInfo> completedParts,
-        LocalDateTime completedAt) {
+        Instant completedAt) {
 
     /**
      * 완료된 Part 정보.
@@ -35,8 +35,7 @@ public record CompleteMultipartUploadResponse(
      * @param size Part 크기 (바이트)
      * @param uploadedAt 업로드 시각 (UTC)
      */
-    public record CompletedPartInfo(
-            int partNumber, String etag, long size, LocalDateTime uploadedAt) {
+    public record CompletedPartInfo(int partNumber, String etag, long size, Instant uploadedAt) {
 
         /**
          * 값 기반 생성.
@@ -48,7 +47,7 @@ public record CompleteMultipartUploadResponse(
          * @return CompletedPartInfo
          */
         public static CompletedPartInfo of(
-                int partNumber, String etag, long size, LocalDateTime uploadedAt) {
+                int partNumber, String etag, long size, Instant uploadedAt) {
             return new CompletedPartInfo(partNumber, etag, size, uploadedAt);
         }
     }
@@ -74,7 +73,7 @@ public record CompleteMultipartUploadResponse(
             String uploadId,
             int totalParts,
             List<CompletedPartInfo> completedParts,
-            LocalDateTime completedAt) {
+            Instant completedAt) {
         return new CompleteMultipartUploadResponse(
                 sessionId, status, bucket, key, uploadId, totalParts, completedParts, completedAt);
     }

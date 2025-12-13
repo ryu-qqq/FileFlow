@@ -1,0 +1,53 @@
+// ========================================
+// Adapter-Out: Image Processor
+// ========================================
+// Outbound adapter for image processing operations
+// Implements ImageProcessingPort from application layer
+// Technology: Scrimage (Kotlin-based image processing library)
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Scrimage - Image Processing Library
+    implementation libs.scrimage.core
+    implementation libs.scrimage.webp
+    implementation libs.scrimage.formats.extra
+
+    // Spring Boot
+    implementation libs.spring.boot.starter.web
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.spring.boot.starter.test
+
+    // ArchUnit for architecture validation
+    testImplementation libs.archunit.junit5
+}
+
+// ========================================
+// Test Coverage (70% for adapters)
+// ========================================
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.70
+            }
+        }
+    }
+}
+
+tasks.test {
+    finalizedBy tasks.jacocoTestCoverageVerification
+}

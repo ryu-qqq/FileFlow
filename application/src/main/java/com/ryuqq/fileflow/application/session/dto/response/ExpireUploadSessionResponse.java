@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.session.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 업로드 세션 만료 처리 Response.
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * @param expiresAt 만료 시각 (UTC)
  */
 public record ExpireUploadSessionResponse(
-        String sessionId, String status, String bucket, String key, LocalDateTime expiresAt) {
+        String sessionId, String status, String bucket, String key, Instant expiresAt) {
 
     /**
      * 값 기반 생성.
@@ -27,7 +27,7 @@ public record ExpireUploadSessionResponse(
      * @return ExpireUploadSessionResponse
      */
     public static ExpireUploadSessionResponse of(
-            String sessionId, String status, String bucket, String key, LocalDateTime expiresAt) {
+            String sessionId, String status, String bucket, String key, Instant expiresAt) {
         return new ExpireUploadSessionResponse(sessionId, status, bucket, key, expiresAt);
     }
 }

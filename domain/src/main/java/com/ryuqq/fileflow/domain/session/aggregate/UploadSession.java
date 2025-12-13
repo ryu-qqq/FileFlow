@@ -4,7 +4,8 @@ import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 
 /**
  * 업로드 세션 공통 인터페이스.
@@ -44,15 +45,16 @@ public interface UploadSession {
     /**
      * 만료 시각을 반환한다.
      *
-     * @return 만료 시각
+     * @return 만료 시각 (UTC 기준 Instant)
      */
-    LocalDateTime getExpiresAt();
+    Instant getExpiresAt();
 
     /**
      * 세션을 만료 처리한다.
      *
+     * @param clock 시간 소스
      * @throws com.ryuqq.fileflow.domain.session.exception.InvalidSessionStatusException 상태 전환 불가능한
      *     경우
      */
-    void expire();
+    void expire(Clock clock);
 }

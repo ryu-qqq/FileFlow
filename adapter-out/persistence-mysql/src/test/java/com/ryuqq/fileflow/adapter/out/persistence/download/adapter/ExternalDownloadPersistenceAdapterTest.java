@@ -13,9 +13,10 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +35,10 @@ class ExternalDownloadPersistenceAdapterTest {
     @Mock private ExternalDownloadJpaMapper mapper;
 
     private ExternalDownloadPersistenceAdapter adapter;
+
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @BeforeEach
     void setUp() {
@@ -108,8 +113,8 @@ class ExternalDownloadPersistenceAdapterTest {
                     ExternalDownload.of(
                             ExternalDownloadId.forNew(),
                             SourceUrl.of("https://example.com/new-file.jpg"),
-                            100L,
-                            200L,
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PENDING,
@@ -143,8 +148,8 @@ class ExternalDownloadPersistenceAdapterTest {
                     ExternalDownload.of(
                             ExternalDownloadId.of(existingId),
                             SourceUrl.of("https://example.com/existing-file.jpg"),
-                            100L,
-                            200L,
+                            TenantId.of(TEST_TENANT_ID),
+                            OrganizationId.of(TEST_ORG_ID),
                             S3Bucket.of("test-bucket"),
                             "downloads/",
                             ExternalDownloadStatus.PROCESSING,
@@ -174,8 +179,8 @@ class ExternalDownloadPersistenceAdapterTest {
         return ExternalDownload.of(
                 ExternalDownloadId.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
-                100L,
-                200L,
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -188,12 +193,12 @@ class ExternalDownloadPersistenceAdapterTest {
     }
 
     private ExternalDownloadJpaEntity createEntity(UUID id) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 id,
                 "https://example.com/file.jpg",
-                100L,
-                200L,
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

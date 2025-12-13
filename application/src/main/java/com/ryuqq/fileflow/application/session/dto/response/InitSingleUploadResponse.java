@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.session.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 단일 파일 업로드 세션 초기화 Response.
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * @param key S3 객체 키
  */
 public record InitSingleUploadResponse(
-        String sessionId, String presignedUrl, LocalDateTime expiresAt, String bucket, String key) {
+        String sessionId, String presignedUrl, Instant expiresAt, String bucket, String key) {
 
     /**
      * 값 기반 생성.
@@ -27,11 +27,7 @@ public record InitSingleUploadResponse(
      * @return InitSingleUploadResponse
      */
     public static InitSingleUploadResponse of(
-            String sessionId,
-            String presignedUrl,
-            LocalDateTime expiresAt,
-            String bucket,
-            String key) {
+            String sessionId, String presignedUrl, Instant expiresAt, String bucket, String key) {
         return new InitSingleUploadResponse(sessionId, presignedUrl, expiresAt, bucket, key);
     }
 }

@@ -40,10 +40,10 @@ public class ExternalDownloadQueryDslRepository {
      * ID와 테넌트 ID로 ExternalDownload를 조회한다.
      *
      * @param id ExternalDownload ID (UUID)
-     * @param tenantId 테넌트 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
      * @return ExternalDownloadJpaEntity Optional
      */
-    public Optional<ExternalDownloadJpaEntity> findByIdAndTenantId(UUID id, Long tenantId) {
+    public Optional<ExternalDownloadJpaEntity> findByIdAndTenantId(UUID id, String tenantId) {
         ExternalDownloadJpaEntity result =
                 queryFactory
                         .selectFrom(download)

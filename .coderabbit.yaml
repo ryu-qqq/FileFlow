@@ -5,11 +5,7 @@
 # Based on: docs/coding_convention/ (98 rules analyzed)
 
 language: ko-KR
-tone_instructions: |
-  Expert Java/Spring reviewer for hexagonal architecture with Kent Beck TDD.
-
-  CRITICAL Zero-Tolerance (ASSERTIVE):
-  1. No Lombok 2. No getter chaining 3. Long FK only 4. No external API in @Transactional 5. TDD: test:/feat:/struct: 6. Tidy First: never mix structural+behavioral
+tone_instructions: "Expert Java/Spring hexagonal arch reviewer. Zero-Tolerance: No Lombok, No getter chain, Long FK, No API in @Transactional, TDD commits, Tidy First."
 
 early_access: true
 enable_free_tier: false

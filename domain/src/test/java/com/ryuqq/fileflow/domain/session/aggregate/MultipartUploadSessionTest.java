@@ -10,6 +10,7 @@ import com.ryuqq.fileflow.domain.session.exception.InvalidSessionStatusException
 import com.ryuqq.fileflow.domain.session.exception.SessionExpiredException;
 import com.ryuqq.fileflow.domain.session.fixture.*;
 import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +43,7 @@ class MultipartUploadSessionTest {
         @DisplayName("reconstitute()로 영속성 복원 시 ID가 null이면 예외가 발생한다")
         void reconstitute_WithNullId_ShouldThrowException() {
             // given & when & then
+            Instant now = Instant.now(ClockFixture.defaultClock());
             assertThatThrownBy(
                             () ->
                                     MultipartUploadSession.reconstitute(
@@ -56,14 +58,10 @@ class MultipartUploadSessionTest {
                                             TotalPartsFixture.defaultTotalParts(),
                                             PartSizeFixture.defaultPartSize(),
                                             ExpirationTimeFixture.multipartExpirationTime(),
-                                            ClockFixture.defaultClock()
-                                                    .instant()
-                                                    .atZone(ClockFixture.defaultClock().getZone())
-                                                    .toLocalDateTime(),
+                                            now,
                                             SessionStatus.PREPARING,
                                             null,
-                                            null,
-                                            ClockFixture.defaultClock()))
+                                            null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("ID는 null일 수 없습니다");
         }
@@ -95,7 +93,8 @@ class MultipartUploadSessionTest {
             MultipartUploadSession session =
                     MultipartUploadSessionFixture.activeMultipartUploadSession();
             List<CompletedPart> completedParts = createAllCompletedParts(session);
-            session.complete(ETagFixture.multipartETag(), completedParts);
+            session.complete(
+                    ETagFixture.multipartETag(), completedParts, ClockFixture.defaultClock());
 
             // when & then
             assertThatThrownBy(session::activate).isInstanceOf(InvalidSessionStatusException.class);
@@ -109,7 +108,7 @@ class MultipartUploadSessionTest {
                     MultipartUploadSessionFixture.activeMultipartUploadSession();
 
             // when
-            session.expire();
+            session.expire(ClockFixture.defaultClock());
 
             // then
             assertThat(session.getStatus()).isEqualTo(SessionStatus.EXPIRED);
@@ -143,7 +142,8 @@ class MultipartUploadSessionTest {
             List<CompletedPart> completedParts = createAllCompletedParts(session);
 
             // when
-            session.complete(ETagFixture.multipartETag(), completedParts);
+            session.complete(
+                    ETagFixture.multipartETag(), completedParts, ClockFixture.defaultClock());
 
             // then
             assertThat(session.getStatus()).isEqualTo(SessionStatus.COMPLETED);
@@ -161,7 +161,12 @@ class MultipartUploadSessionTest {
             List<CompletedPart> incompleteParts = createIncompleteparts(session);
 
             // when & then
-            assertThatThrownBy(() -> session.complete(ETagFixture.multipartETag(), incompleteParts))
+            assertThatThrownBy(
+                            () ->
+                                    session.complete(
+                                            ETagFixture.multipartETag(),
+                                            incompleteParts,
+                                            ClockFixture.defaultClock()))
                     .isInstanceOf(IncompletePartsException.class);
         }
 
@@ -176,7 +181,11 @@ class MultipartUploadSessionTest {
 
             // when & then
             assertThatThrownBy(
-                            () -> session.complete(ETagFixture.multipartETag(), insufficientParts))
+                            () ->
+                                    session.complete(
+                                            ETagFixture.multipartETag(),
+                                            insufficientParts,
+                                            ClockFixture.defaultClock()))
                     .isInstanceOf(IncompletePartsException.class);
         }
 
@@ -189,7 +198,8 @@ class MultipartUploadSessionTest {
             List<CompletedPart> completedParts = createAllCompletedParts(session);
 
             // when
-            session.complete(ETagFixture.multipartETag(), completedParts);
+            session.complete(
+                    ETagFixture.multipartETag(), completedParts, ClockFixture.defaultClock());
             List<FileUploadCompletedEvent> events = session.pollDomainEvents();
 
             // then
@@ -207,7 +217,8 @@ class MultipartUploadSessionTest {
             MultipartUploadSession session =
                     MultipartUploadSessionFixture.activeMultipartUploadSession();
             List<CompletedPart> completedParts = createAllCompletedParts(session);
-            session.complete(ETagFixture.multipartETag(), completedParts);
+            session.complete(
+                    ETagFixture.multipartETag(), completedParts, ClockFixture.defaultClock());
 
             // when
             List<FileUploadCompletedEvent> firstPoll = session.pollDomainEvents();
@@ -231,7 +242,8 @@ class MultipartUploadSessionTest {
                     MultipartUploadSessionFixture.activeMultipartUploadSession();
 
             // when & then
-            assertThatCode(session::validateNotExpired).doesNotThrowAnyException();
+            assertThatCode(() -> session.validateNotExpired(ClockFixture.defaultClock()))
+                    .doesNotThrowAnyException();
         }
 
         @Test
@@ -253,7 +265,7 @@ class MultipartUploadSessionTest {
                             ClockFixture.defaultClock());
 
             // when & then
-            assertThatThrownBy(session::validateNotExpired)
+            assertThatThrownBy(() -> session.validateNotExpired(ClockFixture.defaultClock()))
                     .isInstanceOf(SessionExpiredException.class);
         }
 
@@ -278,8 +290,8 @@ class MultipartUploadSessionTest {
                             ClockFixture.defaultClock());
 
             // when & then
-            assertThat(activeSession.isExpired()).isFalse();
-            assertThat(expiredSession.isExpired()).isTrue();
+            assertThat(activeSession.isExpired(ClockFixture.defaultClock())).isFalse();
+            assertThat(expiredSession.isExpired(ClockFixture.defaultClock())).isTrue();
         }
     }
 
@@ -347,7 +359,7 @@ class MultipartUploadSessionTest {
 
             // when & then
             assertThat(session.getUserIdentifier()).isNotNull();
-            assertThat(session.getOrganizationId()).isGreaterThanOrEqualTo(0L); // Admin org ID is 0
+            assertThat(session.getOrganizationId()).isNull(); // Admin org ID is null
             assertThat(session.getFileNameValue()).isNotBlank();
             assertThat(session.getFileSizeValue()).isPositive();
             assertThat(session.getContentTypeValue()).isNotBlank();
@@ -369,9 +381,9 @@ class MultipartUploadSessionTest {
                     CompletedPart.forNew(
                             session.getId(),
                             PartNumberFixture.customPartNumber(i),
-                            PresignedUrlFixture.defaultPresignedUrl(),
-                            ClockFixture.defaultClock());
-            part.complete(ETagFixture.defaultETag(), 10 * 1024 * 1024L);
+                            PresignedUrlFixture.defaultPresignedUrl());
+            part.complete(
+                    ETagFixture.defaultETag(), 10 * 1024 * 1024L, ClockFixture.defaultClock());
             parts.add(part);
         }
         return parts;
@@ -384,11 +396,11 @@ class MultipartUploadSessionTest {
                     CompletedPart.forNew(
                             session.getId(),
                             PartNumberFixture.customPartNumber(i),
-                            PresignedUrlFixture.defaultPresignedUrl(),
-                            ClockFixture.defaultClock());
+                            PresignedUrlFixture.defaultPresignedUrl());
             // 첫 번째 Part만 완료하지 않음
             if (i > 1) {
-                part.complete(ETagFixture.defaultETag(), 10 * 1024 * 1024L);
+                part.complete(
+                        ETagFixture.defaultETag(), 10 * 1024 * 1024L, ClockFixture.defaultClock());
             }
             parts.add(part);
         }

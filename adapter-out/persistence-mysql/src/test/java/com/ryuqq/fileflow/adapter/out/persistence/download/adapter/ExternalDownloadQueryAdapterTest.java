@@ -12,9 +12,10 @@ import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
+import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("ExternalDownloadQueryAdapter 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class ExternalDownloadQueryAdapterTest {
+    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
+    private static final String TEST_TENANT_ID = TenantId.generate().value();
+    private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @Mock private ExternalDownloadQueryDslRepository queryDslRepository;
 
@@ -113,7 +117,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldReturnDomainWhenExists() {
             // given
             UUID id = UUID.randomUUID();
-            Long tenantId = 100L;
+            String tenantId = TEST_TENANT_ID;
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
             ExternalDownload domain = createDomain(id);
@@ -135,7 +139,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldReturnEmptyWhenTenantMismatch() {
             // given
             UUID id = UUID.randomUUID();
-            Long wrongTenantId = 999L;
+            String wrongTenantId = TenantId.generate().value(); // 다른 테넌트 ID 생성
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
 
             given(queryDslRepository.findByIdAndTenantId(id, wrongTenantId))
@@ -154,7 +158,7 @@ class ExternalDownloadQueryAdapterTest {
         void shouldRequireBothIdAndTenantIdMatch() {
             // given
             UUID id = UUID.randomUUID();
-            Long tenantId = 100L;
+            String tenantId = TEST_TENANT_ID;
             ExternalDownloadId downloadId = ExternalDownloadId.of(id);
             ExternalDownloadJpaEntity entity = createEntity(id);
             ExternalDownload domain = createDomain(id);
@@ -233,8 +237,8 @@ class ExternalDownloadQueryAdapterTest {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
                 SourceUrl.of("https://example.com/file.jpg"),
-                100L,
-                200L,
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
                 S3Bucket.of("test-bucket"),
                 "downloads/",
                 ExternalDownloadStatus.PENDING,
@@ -247,12 +251,12 @@ class ExternalDownloadQueryAdapterTest {
     }
 
     private ExternalDownloadJpaEntity createEntity(UUID id) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 id,
                 "https://example.com/file.jpg",
-                100L,
-                200L,
+                TEST_TENANT_ID,
+                TEST_ORG_ID,
                 "test-bucket",
                 "downloads/",
                 ExternalDownloadStatus.PENDING,

@@ -1,8 +1,8 @@
 package com.ryuqq.fileflow.adapter.out.persistence.redis.lock.adapter;
 
-import com.ryuqq.fileflow.application.common.port.out.lock.DistributedLockPort;
+import com.ryuqq.fileflow.application.common.port.out.DistributedLockPort;
+import com.ryuqq.fileflow.domain.common.vo.LockKey;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
@@ -46,10 +46,11 @@ public class DistributedLockAdapter implements DistributedLockPort {
     }
 
     @Override
-    public boolean tryLock(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit) {
+    public boolean tryLock(LockKey key, long waitTime, long leaseTime, TimeUnit unit) {
+        String lockKey = key.value();
         RLock lock = redissonClient.getLock(lockKey);
         try {
-            boolean acquired = lock.tryLock(waitTime, leaseTime, timeUnit);
+            boolean acquired = lock.tryLock(waitTime, leaseTime, unit);
             if (acquired) {
                 log.debug("락 획득 성공: key={}", lockKey);
             } else {
@@ -64,7 +65,8 @@ public class DistributedLockAdapter implements DistributedLockPort {
     }
 
     @Override
-    public void unlock(String lockKey) {
+    public void unlock(LockKey key) {
+        String lockKey = key.value();
         RLock lock = redissonClient.getLock(lockKey);
         if (lock.isHeldByCurrentThread()) {
             lock.unlock();
@@ -75,78 +77,14 @@ public class DistributedLockAdapter implements DistributedLockPort {
     }
 
     @Override
-    public <T> T executeWithLock(
-            String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit, Supplier<T> action) {
-
-        RLock lock = redissonClient.getLock(lockKey);
-        try {
-            if (lock.tryLock(waitTime, leaseTime, timeUnit)) {
-                log.debug("락 획득 후 작업 실행: key={}", lockKey);
-                try {
-                    return action.get();
-                } finally {
-                    safeUnlock(lock, lockKey);
-                }
-            } else {
-                log.debug("락 획득 실패로 작업 건너뜀: key={}", lockKey);
-                return null;
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("락 획득 중 인터럽트 발생: key={}", lockKey);
-            return null;
-        }
-    }
-
-    @Override
-    public boolean executeWithLock(
-            String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit, Runnable action) {
-
-        RLock lock = redissonClient.getLock(lockKey);
-        try {
-            if (lock.tryLock(waitTime, leaseTime, timeUnit)) {
-                log.debug("락 획득 후 작업 실행: key={}", lockKey);
-                try {
-                    action.run();
-                    return true;
-                } finally {
-                    safeUnlock(lock, lockKey);
-                }
-            } else {
-                log.debug("락 획득 실패로 작업 건너뜀: key={}", lockKey);
-                return false;
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("락 획득 중 인터럽트 발생: key={}", lockKey);
-            return false;
-        }
-    }
-
-    @Override
-    public boolean isLocked(String lockKey) {
-        RLock lock = redissonClient.getLock(lockKey);
-        return lock.isLocked();
-    }
-
-    @Override
-    public boolean isHeldByCurrentThread(String lockKey) {
-        RLock lock = redissonClient.getLock(lockKey);
+    public boolean isHeldByCurrentThread(LockKey key) {
+        RLock lock = redissonClient.getLock(key.value());
         return lock.isHeldByCurrentThread();
     }
 
-    /**
-     * 안전한 락 해제.
-     *
-     * <p>현재 스레드가 보유한 경우에만 해제.
-     *
-     * @param lock RLock 인스턴스
-     * @param lockKey 락 키 (로깅용)
-     */
-    private void safeUnlock(RLock lock, String lockKey) {
-        if (lock.isHeldByCurrentThread()) {
-            lock.unlock();
-            log.debug("락 해제: key={}", lockKey);
-        }
+    @Override
+    public boolean isLocked(LockKey key) {
+        RLock lock = redissonClient.getLock(key.value());
+        return lock.isLocked();
     }
 }

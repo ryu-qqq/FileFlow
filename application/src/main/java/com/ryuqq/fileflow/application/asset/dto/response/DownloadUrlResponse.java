@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.application.asset.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Presigned Download URL 생성 Response.
@@ -20,7 +20,7 @@ public record DownloadUrlResponse(
         String fileName,
         String contentType,
         long fileSize,
-        LocalDateTime expiresAt) {
+        Instant expiresAt) {
 
     /**
      * 값 기반 생성.
@@ -39,7 +39,7 @@ public record DownloadUrlResponse(
             String fileName,
             String contentType,
             long fileSize,
-            LocalDateTime expiresAt) {
+            Instant expiresAt) {
         return new DownloadUrlResponse(
                 fileAssetId, downloadUrl, fileName, contentType, fileSize, expiresAt);
     }

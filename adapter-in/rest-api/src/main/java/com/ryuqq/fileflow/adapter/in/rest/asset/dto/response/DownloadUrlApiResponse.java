@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.asset.dto.response;
 
-import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 
 /**
  * Presigned Download URL 생성 응답 DTO.
@@ -16,13 +17,15 @@ import java.time.LocalDateTime;
  * @author development-team
  * @since 1.0.0
  */
+@Schema(description = "다운로드 URL 응답")
 public record DownloadUrlApiResponse(
-        String fileAssetId,
-        String downloadUrl,
-        String fileName,
-        String contentType,
-        long fileSize,
-        LocalDateTime expiresAt) {
+        @Schema(description = "파일 자산 ID", example = "asset-123") String fileAssetId,
+        @Schema(description = "다운로드 URL", example = "https://s3.amazonaws.com/...")
+                String downloadUrl,
+        @Schema(description = "파일명", example = "image.jpg") String fileName,
+        @Schema(description = "컨텐츠 타입", example = "image/jpeg") String contentType,
+        @Schema(description = "파일 크기 (bytes)", example = "1024000") long fileSize,
+        @Schema(description = "URL 만료 시각") Instant expiresAt) {
 
     /**
      * 값 기반 생성.
@@ -41,7 +44,7 @@ public record DownloadUrlApiResponse(
             String fileName,
             String contentType,
             long fileSize,
-            LocalDateTime expiresAt) {
+            Instant expiresAt) {
         return new DownloadUrlApiResponse(
                 fileAssetId, downloadUrl, fileName, contentType, fileSize, expiresAt);
     }
