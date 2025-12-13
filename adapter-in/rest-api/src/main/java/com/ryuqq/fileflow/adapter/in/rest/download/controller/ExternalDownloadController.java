@@ -17,6 +17,7 @@ import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -81,7 +82,9 @@ public class ExternalDownloadController {
      */
     @Operation(
             summary = "외부 다운로드 요청",
-            description = "외부 URL에서 이미지를 다운로드하여 S3에 업로드하는 비동기 요청을 생성합니다.")
+            description =
+                    "외부 URL에서 이미지를 다운로드하여 S3에 업로드하는 비동기 요청을 생성합니다.\n\n**필요 권한**: `file:download`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "201",
@@ -118,7 +121,10 @@ public class ExternalDownloadController {
      * @param id ExternalDownload ID
      * @return 외부 다운로드 상세 정보 (200 OK)
      */
-    @Operation(summary = "외부 다운로드 상태 조회", description = "외부 다운로드 요청의 현재 상태를 조회합니다.")
+    @Operation(
+            summary = "외부 다운로드 상태 조회",
+            description = "외부 다운로드 요청의 현재 상태를 조회합니다.\n\n**필요 권한**: `file:read`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",

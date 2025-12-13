@@ -17,6 +17,7 @@ import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -76,7 +77,10 @@ public class FileAssetQueryController {
      * @param id 파일 자산 ID
      * @return 파일 자산 상세 정보 (200 OK)
      */
-    @Operation(summary = "파일 자산 단건 조회", description = "파일 자산의 상세 정보를 조회합니다.")
+    @Operation(
+            summary = "파일 자산 단건 조회",
+            description = "파일 자산의 상세 정보를 조회합니다.\n\n**필요 권한**: `file:read`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
@@ -113,7 +117,10 @@ public class FileAssetQueryController {
      * @param request 검색 조건
      * @return 파일 자산 목록 (200 OK)
      */
-    @Operation(summary = "파일 자산 목록 조회", description = "파일 자산 목록을 조회합니다.")
+    @Operation(
+            summary = "파일 자산 목록 조회",
+            description = "파일 자산 목록을 조회합니다.\n\n**필요 권한**: `file:read`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",

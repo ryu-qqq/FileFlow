@@ -144,7 +144,7 @@ module "ecs_security_group" {
       from_port   = 8080
       to_port     = 8080
       protocol    = "tcp"
-      cidr_blocks = [data.aws_vpc.main.cidr_block]
+      cidr_block  = data.aws_vpc.main.cidr_block
       description = "VPC internal traffic only (API Gateway, Service Discovery)"
     }
   ]

@@ -34,6 +34,7 @@ import com.ryuqq.fileflow.application.session.port.in.command.MarkPartUploadedUs
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -117,7 +118,9 @@ public class UploadSessionCommandController {
      */
     @Operation(
             summary = "단일 업로드 세션 초기화",
-            description = "단일 파일 업로드를 위한 세션을 초기화하고 Presigned URL을 발급합니다.")
+            description =
+                    "단일 파일 업로드를 위한 세션을 초기화하고 Presigned URL을 발급합니다.\n\n**필요 권한**: `file:write`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "201",
@@ -149,7 +152,9 @@ public class UploadSessionCommandController {
      */
     @Operation(
             summary = "Multipart 업로드 세션 초기화",
-            description = "대용량 파일 업로드를 위한 Multipart 세션을 초기화합니다.")
+            description =
+                    "대용량 파일 업로드를 위한 Multipart 세션을 초기화합니다.\n\n**필요 권한**: `file:write`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "201",
@@ -181,7 +186,10 @@ public class UploadSessionCommandController {
      * @param request 단일 업로드 완료 요청 DTO
      * @return 완료된 세션 정보 (200 OK)
      */
-    @Operation(summary = "단일 업로드 완료", description = "단일 파일 업로드를 완료 처리합니다.")
+    @Operation(
+            summary = "단일 업로드 완료",
+            description = "단일 파일 업로드를 완료 처리합니다.\n\n**필요 권한**: `file:write`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
@@ -216,7 +224,10 @@ public class UploadSessionCommandController {
      * @param sessionId 세션 ID
      * @return 완료된 세션 정보 및 Part 목록 (200 OK)
      */
-    @Operation(summary = "Multipart 업로드 완료", description = "Multipart 업로드를 완료 처리합니다.")
+    @Operation(
+            summary = "Multipart 업로드 완료",
+            description = "Multipart 업로드를 완료 처리합니다.\n\n**필요 권한**: `file:write`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
@@ -252,7 +263,11 @@ public class UploadSessionCommandController {
      * @param request Part 업로드 완료 요청 DTO
      * @return Part 업로드 진행 상황 (200 OK)
      */
-    @Operation(summary = "Part 업로드 완료 표시", description = "Multipart 업로드의 개별 Part 업로드 완료를 표시합니다.")
+    @Operation(
+            summary = "Part 업로드 완료 표시",
+            description =
+                    "Multipart 업로드의 개별 Part 업로드 완료를 표시합니다.\n\n**필요 권한**: `file:write`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
@@ -287,7 +302,10 @@ public class UploadSessionCommandController {
      * @param sessionId 세션 ID
      * @return 취소된 세션 정보 (200 OK)
      */
-    @Operation(summary = "업로드 세션 취소", description = "진행 중인 업로드 세션을 취소합니다.")
+    @Operation(
+            summary = "업로드 세션 취소",
+            description = "진행 중인 업로드 세션을 취소합니다.\n\n**필요 권한**: `file:write`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",

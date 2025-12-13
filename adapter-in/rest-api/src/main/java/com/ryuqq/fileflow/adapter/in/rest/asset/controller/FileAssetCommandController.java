@@ -23,6 +23,7 @@ import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -100,7 +101,10 @@ public class FileAssetCommandController {
      * @param request 삭제 요청 (삭제 사유 선택적)
      * @return 삭제 결과 (200 OK)
      */
-    @Operation(summary = "파일 자산 삭제", description = "파일 자산을 논리적으로 삭제합니다. S3 객체는 유지됩니다.")
+    @Operation(
+            summary = "파일 자산 삭제",
+            description = "파일 자산을 논리적으로 삭제합니다. S3 객체는 유지됩니다.\n\n**필요 권한**: `file:delete`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
@@ -142,7 +146,10 @@ public class FileAssetCommandController {
      * @param request URL 생성 요청 (유효 기간 설정 선택적)
      * @return Download URL 정보 (200 OK)
      */
-    @Operation(summary = "다운로드 URL 생성", description = "파일 다운로드를 위한 Presigned URL을 생성합니다.")
+    @Operation(
+            summary = "다운로드 URL 생성",
+            description = "파일 다운로드를 위한 Presigned URL을 생성합니다.\n\n**필요 권한**: `file:download`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
@@ -186,7 +193,9 @@ public class FileAssetCommandController {
      */
     @Operation(
             summary = "다운로드 URL 일괄 생성",
-            description = "여러 파일에 대한 다운로드 URL을 일괄 생성합니다. 최대 100개까지 요청 가능합니다.")
+            description =
+                    "여러 파일에 대한 다운로드 URL을 일괄 생성합니다. 최대 100개까지 요청 가능합니다.\n\n**필요 권한**: `file:download`",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
