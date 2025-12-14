@@ -83,7 +83,8 @@ public class UploadSessionQueryController {
     @Operation(
             summary = "업로드 세션 상세 조회",
             description =
-                    "업로드 세션의 상세 정보를 조회합니다. Multipart 세션의 경우 Part 정보를 포함합니다.\n\n**필요 권한**: `file:read`",
+                    "업로드 세션의 상세 정보를 조회합니다. Multipart 세션의 경우 Part 정보를 포함합니다.\n\n"
+                            + "**필요 권한**: `file:read`",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -125,8 +126,7 @@ public class UploadSessionQueryController {
      */
     @Operation(
             summary = "업로드 세션 목록 조회",
-            description =
-                    "업로드 세션 목록을 조회합니다. 상태 및 업로드 타입으로 필터링할 수 있습니다.\n\n**필요 권한**: `file:read`",
+            description = "업로드 세션 목록을 조회합니다. 상태 및 업로드 타입으로 필터링할 수 있습니다.\n\n**필요 권한**: `file:read`",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

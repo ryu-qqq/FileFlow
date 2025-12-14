@@ -152,8 +152,7 @@ public class UploadSessionCommandController {
      */
     @Operation(
             summary = "Multipart 업로드 세션 초기화",
-            description =
-                    "대용량 파일 업로드를 위한 Multipart 세션을 초기화합니다.\n\n**필요 권한**: `file:write`",
+            description = "대용량 파일 업로드를 위한 Multipart 세션을 초기화합니다.\n\n**필요 권한**: `file:write`",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -265,8 +264,7 @@ public class UploadSessionCommandController {
      */
     @Operation(
             summary = "Part 업로드 완료 표시",
-            description =
-                    "Multipart 업로드의 개별 Part 업로드 완료를 표시합니다.\n\n**필요 권한**: `file:write`",
+            description = "Multipart 업로드의 개별 Part 업로드 완료를 표시합니다.\n\n**필요 권한**: `file:write`",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

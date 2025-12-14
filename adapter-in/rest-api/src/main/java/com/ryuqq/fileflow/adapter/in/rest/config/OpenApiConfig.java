@@ -41,28 +41,28 @@ import org.springframework.context.annotation.Configuration;
                         version = "1.0.0",
                         description =
                                 """
-                FileFlow 파일 관리 서비스 API
+                                FileFlow 파일 관리 서비스 API
 
-                ## 인증
-                모든 API는 Bearer Token 인증이 필요합니다.
-                Authorization 헤더에 JWT 토큰을 포함하여 요청하세요.
+                                ## 인증
+                                모든 API는 Bearer Token 인증이 필요합니다.
+                                Authorization 헤더에 JWT 토큰을 포함하여 요청하세요.
 
-                ## 권한 체계
-                | 권한 | 설명 |
-                |------|------|
-                | `file:read` | 파일 자산 조회, 업로드 세션 조회 |
-                | `file:write` | 업로드 세션 생성/완료/취소 |
-                | `file:delete` | 파일 자산 삭제 |
-                | `file:download` | 다운로드 URL 생성, 외부 다운로드 요청 |
+                                ## 권한 체계
+                                | 권한 | 설명 |
+                                |------|------|
+                                | `file:read` | 파일 자산 조회, 업로드 세션 조회 |
+                                | `file:write` | 업로드 세션 생성/완료/취소 |
+                                | `file:delete` | 파일 자산 삭제 |
+                                | `file:download` | 다운로드 URL 생성, 외부 다운로드 요청 |
 
-                ## 역할별 기본 권한
-                | 역할 | 권한 |
-                |------|------|
-                | `SUPER_ADMIN` | 모든 권한 |
-                | `ADMIN` | 테넌트 내 모든 권한 |
-                | `SELLER` | file:read, file:write, file:download |
-                | `CUSTOMER` | file:read, file:download |
-                """,
+                                ## 역할별 기본 권한
+                                | 역할 | 권한 |
+                                |------|------|
+                                | `SUPER_ADMIN` | 모든 권한 |
+                                | `ADMIN` | 테넌트 내 모든 권한 |
+                                | `SELLER` | file:read, file:write, file:download |
+                                | `CUSTOMER` | file:read, file:download |
+                                """,
                         contact =
                                 @Contact(
                                         name = "FileFlow Development Team",

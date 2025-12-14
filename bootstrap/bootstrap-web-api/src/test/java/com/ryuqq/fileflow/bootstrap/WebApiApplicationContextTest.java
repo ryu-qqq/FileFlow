@@ -13,7 +13,7 @@ import org.springframework.test.context.TestPropertySource;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@TestPropertySource(properties = "redisson.enabled=false")
+@TestPropertySource(properties = "spring.data.redis.enabled=false")
 @Import(TestMockConfig.class)
 class WebApiApplicationContextTest {
 
