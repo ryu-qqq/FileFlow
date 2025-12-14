@@ -9,8 +9,8 @@ DROP TABLE IF EXISTS external_download;
 CREATE TABLE external_download (
     id BINARY(16) NOT NULL COMMENT 'UUID v7 (Time-Ordered)',
     source_url VARCHAR(2048) NOT NULL COMMENT '다운로드할 외부 이미지 URL',
-    tenant_id BIGINT NOT NULL COMMENT '테넌트 ID',
-    organization_id BIGINT NOT NULL COMMENT '조직 ID',
+    tenant_id VARCHAR(36) NOT NULL COMMENT '테넌트 ID (UUIDv7)',
+    organization_id VARCHAR(36) NOT NULL COMMENT '조직 ID (UUIDv7)',
     s3_bucket VARCHAR(63) NOT NULL COMMENT 'S3 버킷 이름',
     s3_path_prefix VARCHAR(255) NOT NULL COMMENT 'S3 경로 prefix',
     status VARCHAR(20) NOT NULL COMMENT '상태 (PENDING, PROCESSING, COMPLETED, FAILED)',
