@@ -134,7 +134,7 @@ module "ecs_security_group" {
   source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/security-group?ref=main"
 
   name        = "${var.project_name}-web-api-sg-${var.environment}"
-  description = "Security group for web-api ECS tasks - internal only"
+  description = "Security group for web-api ECS tasks"
   vpc_id      = local.vpc_id
 
   type = "custom"
