@@ -10,7 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Redis 통합 테스트 지원 추상 클래스
@@ -68,7 +67,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@Testcontainers
 public abstract class RedisTestSupport {
 
     private static final boolean IS_CI = "true".equals(System.getenv("CI"));
