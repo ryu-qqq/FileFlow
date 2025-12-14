@@ -2,3 +2,7 @@ spring:
   data:
     redis:
       enabled: true
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 5000ms
+      connect-timeout: 3000ms
