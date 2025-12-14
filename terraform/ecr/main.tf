@@ -97,6 +97,10 @@ module "ecr_download_worker" {
   image_tag_mutability = "IMMUTABLE"
   scan_on_push         = true
 
+  # Encryption (existing repo uses KMS)
+  encryption_type = "KMS"
+  kms_key_arn     = "arn:aws:kms:ap-northeast-2:646886795421:key/71a789da-813c-4a95-a36f-a7a7259c5015"
+
   # Lifecycle Policy
   enable_lifecycle_policy    = true
   max_image_count            = 30
