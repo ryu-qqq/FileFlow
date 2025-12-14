@@ -183,10 +183,12 @@ public class LettuceConfig {
      * </ul>
      *
      * @param connectionFactory RedisConnectionFactory
+     * @param redisObjectMapper Redis용 ObjectMapper
      * @return RedisTemplate 인스턴스
      */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, Object> redisTemplate(
+            RedisConnectionFactory connectionFactory, ObjectMapper redisObjectMapper) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
@@ -196,7 +198,7 @@ public class LettuceConfig {
         template.setHashKeySerializer(stringSerializer);
 
         // Value Serializer (JSON with Type Info)
-        GenericJackson2JsonRedisSerializer jsonSerializer = createJsonSerializer();
+        GenericJackson2JsonRedisSerializer jsonSerializer = createJsonSerializer(redisObjectMapper);
         template.setValueSerializer(jsonSerializer);
         template.setHashValueSerializer(jsonSerializer);
 
@@ -205,11 +207,14 @@ public class LettuceConfig {
     }
 
     /**
-     * JSON Serializer 생성 (타입 정보 포함)
+     * Redis용 ObjectMapper 설정
      *
-     * @return GenericJackson2JsonRedisSerializer 인스턴스
+     * <p>Java 8 날짜/시간 지원 및 타입 정보를 포함합니다.
+     *
+     * @return ObjectMapper 인스턴스
      */
-    private GenericJackson2JsonRedisSerializer createJsonSerializer() {
+    @Bean
+    public ObjectMapper redisObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // Java 8 날짜/시간 모듈
@@ -217,11 +222,22 @@ public class LettuceConfig {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         // 타입 정보 포함 (역직렬화 시 정확한 타입 복원)
+        // EVERYTHING 사용: Java record는 암묵적 final이므로 NON_FINAL 사용 시 타입 정보 누락
         objectMapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance,
-                ObjectMapper.DefaultTyping.NON_FINAL,
+                ObjectMapper.DefaultTyping.EVERYTHING,
                 JsonTypeInfo.As.PROPERTY);
 
+        return objectMapper;
+    }
+
+    /**
+     * JSON Serializer 생성 (타입 정보 포함)
+     *
+     * @param objectMapper Redis용 ObjectMapper
+     * @return GenericJackson2JsonRedisSerializer 인스턴스
+     */
+    private GenericJackson2JsonRedisSerializer createJsonSerializer(ObjectMapper objectMapper) {
         return new GenericJackson2JsonRedisSerializer(objectMapper);
     }
 }

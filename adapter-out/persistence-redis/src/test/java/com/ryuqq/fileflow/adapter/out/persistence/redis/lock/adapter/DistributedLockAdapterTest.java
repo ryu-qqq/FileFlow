@@ -44,11 +44,36 @@ class DistributedLockAdapterTest extends LockTestSupport {
 
         @Test
         @DisplayName("성공 - 대기 시간 내 락 획득 실패")
-        void tryLock_timeout_failure() {
+        void tryLock_timeout_failure() throws InterruptedException {
             // Given
             TestLockKey key = new TestLockKey("lock-timeout");
+            AtomicBoolean lockHeld = new AtomicBoolean(false);
+
             // 다른 스레드에서 먼저 락 획득
-            tryLockDirectly(key.value(), 0, 30, TimeUnit.SECONDS);
+            Thread lockHolder =
+                    new Thread(
+                            () -> {
+                                try {
+                                    boolean acquired =
+                                            tryLockDirectly(key.value(), 0, 30, TimeUnit.SECONDS);
+                                    if (acquired) {
+                                        lockHeld.set(true);
+                                        // 테스트가 완료될 때까지 대기
+                                        Thread.sleep(5000);
+                                    }
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                } finally {
+                                    if (lockHeld.get()) {
+                                        unlockDirectly(key.value());
+                                    }
+                                }
+                            });
+            lockHolder.start();
+
+            // 락이 획득될 때까지 대기
+            Thread.sleep(100);
+            assertThat(lockHeld.get()).isTrue();
 
             // When
             boolean acquired = lockAdapter.tryLock(key, 1, 30, TimeUnit.SECONDS);
@@ -57,7 +82,8 @@ class DistributedLockAdapterTest extends LockTestSupport {
             assertThat(acquired).isFalse();
 
             // Cleanup
-            unlockDirectly(key.value());
+            lockHolder.interrupt();
+            lockHolder.join(1000);
         }
 
         @Test
