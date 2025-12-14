@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.asset.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.asset.mapper.ProcessedFileAssetJpaMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.asset.repository.ProcessedFileAssetJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.asset.repository.ProcessedFileAssetQueryDslRepository;
 import com.ryuqq.fileflow.application.asset.port.out.query.ProcessedFileAssetQueryPort;
 import com.ryuqq.fileflow.domain.asset.aggregate.ProcessedFileAsset;
 import java.util.List;
@@ -15,25 +15,26 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProcessedFileAssetQueryAdapter implements ProcessedFileAssetQueryPort {
 
-    private final ProcessedFileAssetJpaRepository repository;
+    private final ProcessedFileAssetQueryDslRepository queryDslRepository;
     private final ProcessedFileAssetJpaMapper mapper;
 
     public ProcessedFileAssetQueryAdapter(
-            ProcessedFileAssetJpaRepository repository, ProcessedFileAssetJpaMapper mapper) {
-        this.repository = repository;
+            ProcessedFileAssetQueryDslRepository queryDslRepository,
+            ProcessedFileAssetJpaMapper mapper) {
+        this.queryDslRepository = queryDslRepository;
         this.mapper = mapper;
     }
 
     @Override
     public List<ProcessedFileAsset> findByOriginalAssetId(String originalAssetId) {
-        return repository.findByOriginalAssetId(originalAssetId).stream()
+        return queryDslRepository.findByOriginalAssetId(originalAssetId).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public List<ProcessedFileAsset> findByParentAssetId(String parentAssetId) {
-        return repository.findByParentAssetId(parentAssetId).stream()
+        return queryDslRepository.findByParentAssetId(parentAssetId).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
