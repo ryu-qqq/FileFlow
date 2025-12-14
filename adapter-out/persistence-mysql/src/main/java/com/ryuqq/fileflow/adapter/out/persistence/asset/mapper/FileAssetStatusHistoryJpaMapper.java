@@ -2,13 +2,14 @@ package com.ryuqq.fileflow.adapter.out.persistence.asset.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.asset.entity.FileAssetStatusHistoryJpaEntity;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAssetStatusHistory;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
+import com.ryuqq.fileflow.domain.asset.vo.FileAssetStatusHistoryId;
 import java.time.Instant;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
  * FileAssetStatusHistory Domain ↔ JPA Entity 매퍼.
- *
- * <p>Append-Only 테이블로 toEntity만 사용합니다.
  */
 @Component
 public class FileAssetStatusHistoryJpaMapper {
@@ -31,5 +32,24 @@ public class FileAssetStatusHistoryJpaMapper {
                 domain.getChangedAt(),
                 domain.getDurationMillis(),
                 Instant.now());
+    }
+
+    /**
+     * JPA Entity → Domain 변환.
+     *
+     * @param entity FileAssetStatusHistoryJpaEntity
+     * @return FileAssetStatusHistory 도메인 객체
+     */
+    public FileAssetStatusHistory toDomain(FileAssetStatusHistoryJpaEntity entity) {
+        return FileAssetStatusHistory.reconstitute(
+                new FileAssetStatusHistoryId(entity.getId()),
+                new FileAssetId(UUID.fromString(entity.getFileAssetId())),
+                entity.getFromStatus(),
+                entity.getToStatus(),
+                entity.getMessage(),
+                entity.getActor(),
+                entity.getActorType(),
+                entity.getChangedAt(),
+                entity.getDurationMillis());
     }
 }

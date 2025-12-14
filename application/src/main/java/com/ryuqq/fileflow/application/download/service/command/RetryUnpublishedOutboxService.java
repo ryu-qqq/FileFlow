@@ -12,6 +12,7 @@ import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 /**
@@ -27,10 +28,18 @@ import org.springframework.stereotype.Service;
  *   <li>성공 시 markAsPublished, 실패 시 로깅 후 다음 시도에 재시도
  * </ol>
  *
+ * <p><strong>조건부 등록</strong>:
+ *
+ * <ul>
+ *   <li>ExternalDownloadSqsPublishPort 빈이 존재할 때만 등록됩니다.
+ *   <li>resizing-worker 등 SQS 발행 기능이 없는 모듈에서는 비활성화됩니다.
+ * </ul>
+ *
  * @author Development Team
  * @since 1.0.0
  */
 @Service
+@ConditionalOnBean(ExternalDownloadSqsPublishPort.class)
 public class RetryUnpublishedOutboxService implements RetryUnpublishedOutboxUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(RetryUnpublishedOutboxService.class);

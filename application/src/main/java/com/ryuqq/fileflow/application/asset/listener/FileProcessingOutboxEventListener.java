@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.domain.asset.aggregate.FileProcessingOutbox;
 import com.ryuqq.fileflow.domain.asset.event.FileProcessingRequestedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,8 +43,16 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *   <li>SQS 발행 실패: Outbox 상태 FAILED 업데이트, 스케줄러에서 재시도
  *   <li>Outbox 조회 실패: 로그만 기록 (Outbox는 이미 DB에 있음)
  * </ul>
+ *
+ * <p><strong>조건부 등록</strong>:
+ *
+ * <ul>
+ *   <li>FileProcessingSqsPublishPort 빈이 존재할 때만 등록됩니다.
+ *   <li>download-worker 등 SQS 발행 기능이 없는 모듈에서는 비활성화됩니다.
+ * </ul>
  */
 @Component
+@ConditionalOnBean(FileProcessingSqsPublishPort.class)
 public class FileProcessingOutboxEventListener {
 
     private static final Logger log =

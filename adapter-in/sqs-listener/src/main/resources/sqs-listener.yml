@@ -37,11 +37,11 @@ aws:
       # ========================================
       # Feature Toggles
       # ========================================
-      # Enable/Disable individual listeners
-      external-download-listener-enabled: true
-      external-download-dlq-listener-enabled: true
-      file-processing-listener-enabled: true
-      file-processing-dlq-listener-enabled: true
+      # Enable/Disable individual listeners (configurable per bootstrap module)
+      external-download-listener-enabled: ${EXTERNAL_DOWNLOAD_LISTENER_ENABLED:true}
+      external-download-dlq-listener-enabled: ${EXTERNAL_DOWNLOAD_DLQ_LISTENER_ENABLED:true}
+      file-processing-listener-enabled: ${FILE_PROCESSING_LISTENER_ENABLED:true}
+      file-processing-dlq-listener-enabled: ${FILE_PROCESSING_DLQ_LISTENER_ENABLED:true}
 
 logging:
   level:

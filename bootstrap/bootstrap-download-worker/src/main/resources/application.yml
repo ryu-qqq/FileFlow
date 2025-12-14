@@ -24,6 +24,17 @@ spring:
       - classpath:s3.yml
       - classpath:sqs-listener.yml
 
+# ===============================================
+# SQS Listener Configuration
+# ===============================================
+# Download Worker는 External Download만 처리
+# File Processing Listener는 Resizing Worker에서 처리
+aws:
+  sqs:
+    listener:
+      file-processing-listener-enabled: false
+      file-processing-dlq-listener-enabled: false
+
 # Enable Redisson for Redis operations
 redisson:
   enabled: ${REDISSON_ENABLED:true}
