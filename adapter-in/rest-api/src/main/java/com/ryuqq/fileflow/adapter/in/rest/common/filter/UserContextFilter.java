@@ -1,6 +1,5 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.filter;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
@@ -42,7 +41,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  *   <li>X-User-Id: 사용자 ID (UUIDv7)
  *   <li>X-Tenant-Id: 테넌트 ID (UUIDv7)
  *   <li>X-Organization-Id: 조직 ID (UUIDv7)
- *   <li>X-Roles: 역할 목록 (JSON 배열, 예: ["SUPER_ADMIN"])
+ *   <li>X-User-Roles: 역할 목록 (콤마 구분, 예: "SUPER_ADMIN,ADMIN")
  *   <li>X-Permissions: 권한 목록 (콤마 구분, 예: "file:read,file:write")
  * </ul>
  *
@@ -80,7 +79,7 @@ public class UserContextFilter extends OncePerRequestFilter {
     private static final String HEADER_USER_ID = "X-User-Id";
     private static final String HEADER_TENANT_ID = "X-Tenant-Id";
     private static final String HEADER_ORGANIZATION_ID = "X-Organization-Id";
-    private static final String HEADER_ROLES = "X-Roles";
+    private static final String HEADER_ROLES = "X-User-Roles";
     private static final String HEADER_PERMISSIONS = "X-Permissions";
 
     // JWT Payload Claims
@@ -323,22 +322,24 @@ public class UserContextFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Roles JSON 배열을 파싱합니다.
+     * Roles 콤마 구분 문자열을 파싱합니다.
      *
-     * @param rolesJson JSON 배열 문자열 (예: ["SUPER_ADMIN", "ADMIN"])
-     * @return 역할 목록
+     * <p>Gateway에서 콤마로 구분된 역할 문자열을 파싱합니다.
+     * ROLE_ prefix가 있으면 제거합니다 (UserRole enum은 prefix 없이 매칭).
+     *
+     * @param rolesStr 콤마 구분 문자열 (예: "SUPER_ADMIN,ADMIN" 또는 "ROLE_SUPER_ADMIN")
+     * @return 역할 목록 (prefix 없이)
      */
-    private List<String> parseRoles(String rolesJson) {
-        if (rolesJson == null || rolesJson.isBlank()) {
+    private List<String> parseRoles(String rolesStr) {
+        if (rolesStr == null || rolesStr.isBlank()) {
             return Collections.emptyList();
         }
 
-        try {
-            return objectMapper.readValue(rolesJson, new TypeReference<List<String>>() {});
-        } catch (Exception e) {
-            log.warn("Roles JSON 파싱 실패, 기본값 사용: {}", e.getMessage());
-            return Collections.emptyList();
-        }
+        return Arrays.stream(rolesStr.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role)
+                .toList();
     }
 
     /**
