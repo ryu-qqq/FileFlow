@@ -22,6 +22,7 @@ build/
 !bootstrap/bootstrap-web-api/build/libs/
 !bootstrap/bootstrap-scheduler/build/libs/
 !bootstrap/bootstrap-download-worker/build/libs/
+!bootstrap/bootstrap-resizing-worker/build/libs/
 !gradle/wrapper/gradle-wrapper.jar
 target/
 out/
@@ -174,6 +175,7 @@ docker-compose.*.yml
 !bootstrap/bootstrap-web-api/build/libs/*.jar
 !bootstrap/bootstrap-scheduler/build/libs/*.jar
 !bootstrap/bootstrap-download-worker/build/libs/*.jar
+!bootstrap/bootstrap-resizing-worker/build/libs/*.jar
 *.war
 *.ear
 *.zip
