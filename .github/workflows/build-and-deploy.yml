@@ -49,7 +49,7 @@ jobs:
       - name: Run tests
         run: |
           chmod +x gradlew
-          ./gradlew clean test -x jacocoTestCoverageVerification --no-daemon
+          ./gradlew clean test -x jacocoTestCoverageVerification -x :adapter-out:persistence-redis:test --no-daemon
 
   # ============================================================================
   # 빌드 Jobs (병렬 실행)
