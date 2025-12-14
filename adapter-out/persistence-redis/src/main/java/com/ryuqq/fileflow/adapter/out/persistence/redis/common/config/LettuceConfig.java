@@ -222,9 +222,10 @@ public class LettuceConfig {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         // 타입 정보 포함 (역직렬화 시 정확한 타입 복원)
+        // EVERYTHING 사용: Java record는 암묵적 final이므로 NON_FINAL 사용 시 타입 정보 누락
         objectMapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance,
-                ObjectMapper.DefaultTyping.NON_FINAL,
+                ObjectMapper.DefaultTyping.EVERYTHING,
                 JsonTypeInfo.As.PROPERTY);
 
         return objectMapper;
