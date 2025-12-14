@@ -14,10 +14,12 @@ import com.ryuqq.fileflow.domain.asset.aggregate.ProcessedFileAsset;
 import com.ryuqq.fileflow.domain.asset.exception.FileAssetNotFoundException;
 import com.ryuqq.fileflow.domain.asset.service.FileAssetUpdateResult;
 import com.ryuqq.fileflow.domain.asset.service.FileAssetUpdateService;
+import com.ryuqq.fileflow.application.asset.port.out.client.ImageProcessingPort;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 /**
@@ -46,6 +48,7 @@ import org.springframework.stereotype.Service;
  * </ul>
  */
 @Service
+@ConditionalOnBean(ImageProcessingPort.class)
 public class ProcessFileAssetService implements ProcessFileAssetUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessFileAssetService.class);
