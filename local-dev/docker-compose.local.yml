@@ -90,6 +90,11 @@ services:
     networks:
       - fileflow-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   scheduler:
     build:
@@ -137,6 +142,11 @@ services:
     networks:
       - fileflow-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   download-worker:
     build:
@@ -175,7 +185,11 @@ services:
       
       # Disable SQS for local development
       SPRING_CLOUD_AWS_SQS_ENABLED: "false"
-      
+
+      # Disable File Processing Listener (resizing-worker only)
+      FILE_PROCESSING_LISTENER_ENABLED: "false"
+      FILE_PROCESSING_DLQ_LISTENER_ENABLED: "false"
+
     ports:
       - "8082:8082"
     depends_on:
@@ -186,6 +200,70 @@ services:
     networks:
       - fileflow-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  resizing-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.local
+      args:
+        MODULE_NAME: bootstrap-resizing-worker
+    container_name: fileflow-resizing-worker
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8083
+
+      # Database
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: fileflow
+      DB_USER: root
+      DB_PASSWORD: root
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDISSON_ENABLED: "true"
+
+      # Worker
+      WORKER_RESIZING_ENABLED: "false"
+
+      # Logging
+      LOG_LEVEL: DEBUG
+      SQS_LOG_LEVEL: INFO
+
+      # AWS (LocalStack or Disabled for local)
+      AWS_REGION: ap-northeast-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+
+      # Disable SQS for local development
+      SPRING_CLOUD_AWS_SQS_ENABLED: "false"
+
+      # Disable External Download Listener (download-worker only)
+      EXTERNAL_DOWNLOAD_LISTENER_ENABLED: "false"
+      EXTERNAL_DOWNLOAD_DLQ_LISTENER_ENABLED: "false"
+
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fileflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 # ===============================================
 # Networks
