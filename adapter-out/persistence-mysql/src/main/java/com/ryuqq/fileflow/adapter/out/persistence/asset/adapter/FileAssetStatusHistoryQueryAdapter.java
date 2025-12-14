@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.asset.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.asset.mapper.FileAssetStatusHistoryJpaMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.asset.repository.FileAssetStatusHistoryJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.asset.repository.FileAssetStatusHistoryQueryDslRepository;
 import com.ryuqq.fileflow.application.asset.port.out.query.FileAssetStatusHistoryQueryPort;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAssetStatusHistory;
 import java.util.List;
@@ -16,33 +16,31 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileAssetStatusHistoryQueryAdapter implements FileAssetStatusHistoryQueryPort {
 
-    private final FileAssetStatusHistoryJpaRepository repository;
+    private final FileAssetStatusHistoryQueryDslRepository queryDslRepository;
     private final FileAssetStatusHistoryJpaMapper mapper;
 
     public FileAssetStatusHistoryQueryAdapter(
-            FileAssetStatusHistoryJpaRepository repository,
+            FileAssetStatusHistoryQueryDslRepository queryDslRepository,
             FileAssetStatusHistoryJpaMapper mapper) {
-        this.repository = repository;
+        this.queryDslRepository = queryDslRepository;
         this.mapper = mapper;
     }
 
     @Override
     public List<FileAssetStatusHistory> findByFileAssetId(String fileAssetId) {
-        return repository.findByFileAssetIdOrderByChangedAtAsc(fileAssetId).stream()
+        return queryDslRepository.findByFileAssetId(fileAssetId).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public Optional<FileAssetStatusHistory> findLatestByFileAssetId(String fileAssetId) {
-        return repository
-                .findFirstByFileAssetIdOrderByChangedAtDesc(fileAssetId)
-                .map(mapper::toDomain);
+        return queryDslRepository.findLatestByFileAssetId(fileAssetId).map(mapper::toDomain);
     }
 
     @Override
     public List<FileAssetStatusHistory> findExceedingSla(long slaMillis, int limit) {
-        return repository.findExceedingSla(slaMillis, limit).stream()
+        return queryDslRepository.findExceedingSla(slaMillis, limit).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
