@@ -18,8 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Lock Adapter 테스트 지원 추상 클래스
@@ -33,6 +31,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  *   <li>동시성 테스트 유틸리티
  *   <li>Lock 상태 검증 메서드
  *   <li>테스트 후 Lock 자동 해제
+ * </ul>
+ *
+ * <h2>환경별 동작:</h2>
+ *
+ * <ul>
+ *   <li>CI 환경 (CI=true): GitHub Actions Redis Service 사용
+ *   <li>로컬 환경: Testcontainers 자동 시작
  * </ul>
  *
  * <h2>사용 예시:</h2>
@@ -75,17 +80,23 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@Testcontainers
 public abstract class LockTestSupport {
 
+    private static final boolean IS_CI = "true".equals(System.getenv("CI"));
+
     /**
-     * Redis TestContainer
+     * Redis TestContainer (로컬 환경에서만 사용)
      *
-     * <p>모든 테스트에서 공유되는 단일 컨테이너입니다.
+     * <p>CI 환경에서는 GitHub Actions Redis Service를 사용하므로 컨테이너를 시작하지 않습니다.
      */
-    @Container
-    protected static GenericContainer<?> redis =
-            new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);
+    protected static GenericContainer<?> redis;
+
+    static {
+        if (!IS_CI) {
+            redis = new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);
+            redis.start();
+        }
+    }
 
     /**
      * RedissonClient - 분산락용
@@ -95,14 +106,21 @@ public abstract class LockTestSupport {
     @Autowired protected RedissonClient redissonClient;
 
     /**
-     * TestContainers 동적 프로퍼티 설정
+     * 동적 프로퍼티 설정
+     *
+     * <p>CI 환경: GitHub Actions Redis Service (localhost:6379) 로컬 환경: Testcontainers 동적 포트
      *
      * @param registry 동적 프로퍼티 레지스트리
      */
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+        if (IS_CI) {
+            registry.add("spring.data.redis.host", () -> "localhost");
+            registry.add("spring.data.redis.port", () -> 6379);
+        } else {
+            registry.add("spring.data.redis.host", redis::getHost);
+            registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+        }
     }
 
     /**
