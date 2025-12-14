@@ -82,7 +82,7 @@ class UserContextFilterTest {
             when(request.getHeader("X-Tenant-Id")).thenReturn(TEST_TENANT_ID);
             when(request.getHeader("X-Organization-Id")).thenReturn(null);
             when(request.getHeader("X-User-Id")).thenReturn(null);
-            when(request.getHeader("X-Roles")).thenReturn("[\"ADMIN\"]");
+            when(request.getHeader("X-User-Roles")).thenReturn("ADMIN");
             when(request.getHeader("X-Permissions")).thenReturn("read,write,delete");
             when(request.getHeader("Authorization"))
                     .thenReturn("Bearer " + createJwtTokenWithEmail("admin@test.com"));
@@ -101,7 +101,7 @@ class UserContextFilterTest {
             when(request.getHeader("X-Tenant-Id")).thenReturn(TEST_TENANT_ID);
             when(request.getHeader("X-Organization-Id")).thenReturn(TEST_ORG_ID);
             when(request.getHeader("X-User-Id")).thenReturn(null);
-            when(request.getHeader("X-Roles")).thenReturn("[\"SELLER\"]");
+            when(request.getHeader("X-User-Roles")).thenReturn("SELLER");
             when(request.getHeader("X-Permissions")).thenReturn("read,write");
             when(request.getHeader("Authorization"))
                     .thenReturn(
@@ -122,7 +122,7 @@ class UserContextFilterTest {
             when(request.getHeader("X-Tenant-Id")).thenReturn(TEST_TENANT_ID);
             when(request.getHeader("X-Organization-Id")).thenReturn(null);
             when(request.getHeader("X-User-Id")).thenReturn(TEST_USER_ID);
-            when(request.getHeader("X-Roles")).thenReturn("[\"DEFAULT\"]");
+            when(request.getHeader("X-User-Roles")).thenReturn("DEFAULT");
             when(request.getHeader("X-Permissions")).thenReturn("");
             when(request.getHeader("Authorization")).thenReturn(null);
 
@@ -140,7 +140,7 @@ class UserContextFilterTest {
             when(request.getHeader("X-Tenant-Id")).thenReturn(TEST_TENANT_ID);
             when(request.getHeader("X-Organization-Id")).thenReturn(null);
             when(request.getHeader("X-User-Id")).thenReturn(null);
-            when(request.getHeader("X-Roles")).thenReturn("[\"SUPER_ADMIN\", \"ADMIN\"]");
+            when(request.getHeader("X-User-Roles")).thenReturn("SUPER_ADMIN,ADMIN");
             when(request.getHeader("X-Permissions")).thenReturn("*");
             when(request.getHeader("Authorization"))
                     .thenReturn("Bearer " + createJwtTokenWithEmail("super@test.com"));
@@ -153,13 +153,13 @@ class UserContextFilterTest {
         }
 
         @Test
-        @DisplayName("빈 X-Roles 헤더는 빈 역할 목록으로 처리")
+        @DisplayName("빈 X-User-Roles 헤더는 빈 역할 목록으로 처리")
         void shouldHandleEmptyRolesHeader() throws Exception {
             // given
             when(request.getHeader("X-Tenant-Id")).thenReturn(TEST_TENANT_ID);
             when(request.getHeader("X-Organization-Id")).thenReturn(null);
             when(request.getHeader("X-User-Id")).thenReturn(TEST_USER_ID);
-            when(request.getHeader("X-Roles")).thenReturn("");
+            when(request.getHeader("X-User-Roles")).thenReturn("");
             when(request.getHeader("X-Permissions")).thenReturn(null);
             when(request.getHeader("Authorization")).thenReturn(null);
 
@@ -171,15 +171,16 @@ class UserContextFilterTest {
         }
 
         @Test
-        @DisplayName("잘못된 JSON 형식의 X-Roles는 빈 목록으로 처리")
-        void shouldHandleInvalidJsonRoles() throws Exception {
-            // given
+        @DisplayName("여러 역할이 콤마 구분으로 전달되면 모두 파싱된다")
+        void shouldParseMultipleCommaSeparatedRoles() throws Exception {
+            // given - SUPER_ADMIN/ADMIN은 userId가 null이어야 하고 email이 필수
             when(request.getHeader("X-Tenant-Id")).thenReturn(TEST_TENANT_ID);
             when(request.getHeader("X-Organization-Id")).thenReturn(null);
-            when(request.getHeader("X-User-Id")).thenReturn(TEST_USER_ID);
-            when(request.getHeader("X-Roles")).thenReturn("ADMIN,SELLER"); // Not valid JSON array
+            when(request.getHeader("X-User-Id")).thenReturn(null);
+            when(request.getHeader("X-User-Roles")).thenReturn("SUPER_ADMIN,ADMIN");
             when(request.getHeader("X-Permissions")).thenReturn(null);
-            when(request.getHeader("Authorization")).thenReturn(null);
+            when(request.getHeader("Authorization"))
+                    .thenReturn("Bearer " + createJwtTokenWithEmail("admin@test.com"));
 
             // when
             filter.doFilterInternal(request, response, filterChain);
