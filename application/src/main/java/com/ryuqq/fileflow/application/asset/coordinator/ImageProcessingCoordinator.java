@@ -4,10 +4,12 @@ import com.ryuqq.fileflow.application.asset.component.ImageDownloader;
 import com.ryuqq.fileflow.application.asset.component.ImageMetadataExtractor;
 import com.ryuqq.fileflow.application.asset.dto.processor.UploadedImage;
 import com.ryuqq.fileflow.application.asset.processor.ImageResizingProcessor;
+import com.ryuqq.fileflow.application.asset.port.out.client.ImageProcessingPort;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,6 +40,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
+@ConditionalOnBean(ImageProcessingPort.class)
 public class ImageProcessingCoordinator {
 
     private static final Logger log = LoggerFactory.getLogger(ImageProcessingCoordinator.class);

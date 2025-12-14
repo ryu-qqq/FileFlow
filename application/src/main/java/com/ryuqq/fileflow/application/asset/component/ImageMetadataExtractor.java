@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.ImageDimension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
+@ConditionalOnBean(ImageProcessingPort.class)
 public class ImageMetadataExtractor {
 
     private static final Logger log = LoggerFactory.getLogger(ImageMetadataExtractor.class);
