@@ -34,7 +34,10 @@ import org.springframework.stereotype.Component;
  * <p><strong>활성화 조건</strong>: {@code redisson.enabled=true}
  */
 @Component
-@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        name = "spring.data.redis.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class DistributedLockAdapter implements DistributedLockPort {
 
     private static final Logger log = LoggerFactory.getLogger(DistributedLockAdapter.class);

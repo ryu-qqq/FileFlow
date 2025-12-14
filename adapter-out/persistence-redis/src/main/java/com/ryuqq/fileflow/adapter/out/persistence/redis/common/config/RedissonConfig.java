@@ -40,7 +40,10 @@ import org.springframework.context.annotation.Configuration;
  * @see LettuceConfig
  */
 @Configuration
-@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        name = "spring.data.redis.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class RedissonConfig {
 
     @Value("${spring.data.redis.host:localhost}")

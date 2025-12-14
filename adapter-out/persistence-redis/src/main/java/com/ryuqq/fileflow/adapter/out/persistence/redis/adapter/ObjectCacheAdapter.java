@@ -55,7 +55,10 @@ import org.springframework.stereotype.Component;
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        name = "spring.data.redis.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class ObjectCacheAdapter implements CachePort<Object> {
 
     private static final Duration DEFAULT_TTL = Duration.ofMinutes(30);

@@ -114,7 +114,6 @@ public class UserContextFilter extends OncePerRequestFilter {
             UserContext userContext;
 
             // Gateway 헤더 확인
-            String headerUserId = request.getHeader(HEADER_USER_ID);
             String headerTenantId = request.getHeader(HEADER_TENANT_ID);
 
             if (headerTenantId != null && !headerTenantId.isBlank()) {

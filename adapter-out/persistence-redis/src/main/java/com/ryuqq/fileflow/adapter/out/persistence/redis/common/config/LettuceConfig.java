@@ -51,7 +51,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @see RedissonConfig
  */
 @Configuration
-@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        name = "spring.data.redis.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class LettuceConfig {
 
     @Value("${spring.data.redis.host:localhost}")
