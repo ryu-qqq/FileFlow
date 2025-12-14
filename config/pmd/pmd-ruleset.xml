@@ -25,11 +25,16 @@
     <rule ref="category/java/design.xml/LawOfDemeter">
         <priority>1</priority>
         <properties>
-            <!-- Domain 레이어는 모든 체이닝 금지 -->
-            <property name="violationSuppressRegex" value=""/>
-
             <!-- Fluent API 패턴 허용 (Builder, Stream) -->
             <property name="trustRadius" value="2"/>
+
+            <!-- Mapper 클래스는 데이터 변환 목적으로 체이닝이 불가피하므로 제외 -->
+            <property name="violationSuppressXPath"
+                      value="//ClassDeclaration[
+                             contains(@SimpleName, 'Mapper')
+                             or contains(@SimpleName, 'Assembler')
+                             or contains(@SimpleName, 'Factory')
+                             ]"/>
         </properties>
     </rule>
 
@@ -162,11 +167,13 @@
         <priority>2</priority>
         <properties>
             <property name="maxfields" value="7"/>
-            <!-- 설정 클래스는 필드가 많을 수 있음 (Redis, DB 등 인프라 설정) -->
+            <!-- 설정 클래스, JPA Entity, Outbox Entity는 필드가 많을 수 있음 -->
             <property name="violationSuppressXPath"
                       value="//ClassDeclaration[
                              contains(@SimpleName, 'Config')
                              or contains(@SimpleName, 'Properties')
+                             or contains(@SimpleName, 'JpaEntity')
+                             or contains(@SimpleName, 'Outbox')
                              or starts-with(@SimpleName, 'Q')
                              ]"/>
         </properties>

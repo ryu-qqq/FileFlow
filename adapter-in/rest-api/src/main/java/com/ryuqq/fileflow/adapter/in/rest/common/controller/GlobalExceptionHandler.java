@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -84,8 +85,7 @@ public class GlobalExceptionHandler {
 
         var res =
                 build(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed for request", req);
-        assert res.getBody() != null;
-        res.getBody().setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
         log.warn("MethodArgumentNotValid: errors={}", errors);
         return res;
     }
@@ -100,8 +100,7 @@ public class GlobalExceptionHandler {
         }
         var res =
                 build(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed for request", req);
-        assert res.getBody() != null;
-        res.getBody().setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
         log.warn("BindException: errors={}", errors);
         return res;
     }
@@ -117,8 +116,7 @@ public class GlobalExceptionHandler {
         }
         var res =
                 build(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed for request", req);
-        assert res.getBody() != null;
-        res.getBody().setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
         log.warn("ConstraintViolation: errors={}", errors);
         return res;
     }
@@ -151,10 +149,8 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
         String name = Optional.of(ex.getName()).orElse("unknown");
         Object value = ex.getValue();
-        String required =
-                ex.getRequiredType() != null
-                        ? ex.getRequiredType().getSimpleName()
-                        : "required type";
+        Class<?> requiredType = ex.getRequiredType();
+        String required = requiredType != null ? requiredType.getSimpleName() : "required type";
         String msg =
                 "파라미터 '%s'의 값 '%s'는 %s 타입으로 변환할 수 없습니다"
                         .formatted(name, String.valueOf(value), required);

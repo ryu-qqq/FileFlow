@@ -31,7 +31,14 @@
         <module name="LeftCurly"/>
         <module name="RightCurly"/>
         <module name="WhitespaceAfter"/>
-        <module name="WhitespaceAround"/>
+        <module name="WhitespaceAround">
+            <!-- Allow empty constructors, methods, types, lambdas, and loops (compatible with Spotless) -->
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="allowEmptyTypes" value="true"/>
+            <property name="allowEmptyLambdas" value="true"/>
+            <property name="allowEmptyLoops" value="true"/>
+        </module>
 
         <!-- Lombok ban to keep domain pure -->
         <module name="IllegalImport">

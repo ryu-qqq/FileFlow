@@ -194,7 +194,8 @@ public class FileAssetCommandController {
     @Operation(
             summary = "다운로드 URL 일괄 생성",
             description =
-                    "여러 파일에 대한 다운로드 URL을 일괄 생성합니다. 최대 100개까지 요청 가능합니다.\n\n**필요 권한**: `file:download`",
+                    "여러 파일에 대한 다운로드 URL을 일괄 생성합니다. 최대 100개까지 요청 가능합니다.\n\n"
+                            + "**필요 권한**: `file:download`",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
