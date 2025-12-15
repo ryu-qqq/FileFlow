@@ -1,10 +1,12 @@
 package com.ryuqq.fileflow.adapter.in.rest.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.in.rest.common.filter.RequestResponseLoggingFilter;
 import com.ryuqq.fileflow.adapter.in.rest.common.filter.UserContextFilter;
+import com.ryuqq.fileflow.adapter.in.rest.config.properties.ServiceTokenProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,11 +26,13 @@ class FilterConfigTest {
 
     private FilterConfig filterConfig;
     private ObjectMapper objectMapper;
+    private ServiceTokenProperties serviceTokenProperties;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        filterConfig = new FilterConfig(objectMapper);
+        serviceTokenProperties = mock(ServiceTokenProperties.class);
+        filterConfig = new FilterConfig(objectMapper, serviceTokenProperties);
     }
 
     @Nested

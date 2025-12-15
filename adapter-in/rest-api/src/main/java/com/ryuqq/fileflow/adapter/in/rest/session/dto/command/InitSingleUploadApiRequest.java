@@ -19,6 +19,7 @@ import jakarta.validation.constraints.Positive;
  * @param userId 사용자 ID (Customer 전용, null 가능)
  * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
  * @param uploadCategory 업로드 카테고리 (Admin/Seller 필수, Customer는 null)
+ * @param customPath 커스텀 S3 경로 (SYSTEM 전용, uploadCategory와 동시 사용 불가)
  * @author development-team
  * @since 1.0.0
  */
@@ -64,4 +65,9 @@ public record InitSingleUploadApiRequest(
                         nullable = true)
                 String userEmail,
         @Schema(description = "업로드 카테고리 (Admin/Seller 필수)", example = "PRODUCT", nullable = true)
-                String uploadCategory) {}
+                String uploadCategory,
+        @Schema(
+                        description = "커스텀 S3 경로 (SYSTEM 전용, uploadCategory와 동시 사용 불가)",
+                        example = "applications/seller-123/documents",
+                        nullable = true)
+                String customPath) {}

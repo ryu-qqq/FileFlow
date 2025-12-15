@@ -68,7 +68,8 @@ public class UploadSessionApiMapper {
                 request.organizationId(),
                 request.userId(),
                 request.userEmail(),
-                request.uploadCategory());
+                request.uploadCategory(),
+                request.customPath());
     }
 
     /**
@@ -87,7 +88,8 @@ public class UploadSessionApiMapper {
                 request.tenantId(),
                 request.organizationId(),
                 request.userId(),
-                request.userEmail());
+                request.userEmail(),
+                request.customPath());
     }
 
     /**

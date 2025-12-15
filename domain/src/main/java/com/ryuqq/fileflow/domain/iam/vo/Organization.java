@@ -6,6 +6,7 @@ package com.ryuqq.fileflow.domain.iam.vo;
  * <p><strong>조직 유형</strong>:
  *
  * <ul>
+ *   <li>SYSTEM 조직: 서버 간 내부 호출 전용 (namespace=connectly)
  *   <li>ADMIN 조직: Connectly 관리자 전용 (namespace=connectly)
  *   <li>SELLER 조직: 입점 판매자 회사별 조직 (organizationId=UUIDv7, namespace=setof)
  *   <li>CUSTOMER 조직: 커머스 손님용 조직 (namespace=setof)
@@ -16,16 +17,16 @@ package com.ryuqq.fileflow.domain.iam.vo;
  * <ul>
  *   <li>조직 유형은 UserRole로만 판단한다 (ID 비교 없음).
  *   <li>Seller 조직만 OrganizationId를 가진다 (UUIDv7).
- *   <li>Admin/Customer 조직은 시스템 정의 조직이라 OrganizationId가 null이다.
+ *   <li>System/Admin/Customer 조직은 시스템 정의 조직이라 OrganizationId가 null이다.
  *   <li>조직명은 null이거나 빈 문자열일 수 없다.
- *   <li>Admin 조직은 namespace=connectly.
+ *   <li>System/Admin 조직은 namespace=connectly.
  *   <li>Seller/Customer 조직은 namespace=setof.
  * </ul>
  *
- * @param id 조직 ID (Seller만 UUIDv7, Admin/Customer는 null)
- * @param name 조직명 (예: "Connectly Admin", "입점사A", "Customer")
+ * @param id 조직 ID (Seller만 UUIDv7, System/Admin/Customer는 null)
+ * @param name 조직명 (예: "System Internal", "Connectly Admin", "입점사A", "Customer")
  * @param namespace S3 버킷 네임스페이스 (connectly 또는 setof)
- * @param role 조직 역할 (ADMIN, SELLER, DEFAULT)
+ * @param role 조직 역할 (SYSTEM, ADMIN, SELLER, DEFAULT)
  */
 public record Organization(OrganizationId id, String name, String namespace, UserRole role) {
 
@@ -67,6 +68,17 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      */
     public static Organization of(OrganizationId id, String name, String namespace, UserRole role) {
         return new Organization(id, name, namespace, role);
+    }
+
+    /**
+     * System 조직 생성 (서버 간 내부 호출용).
+     *
+     * <p>System은 시스템 정의 조직이므로 OrganizationId가 없다.
+     *
+     * @return System Organization (id=null, namespace=connectly)
+     */
+    public static Organization system() {
+        return new Organization(null, "System Internal", CONNECTLY_NAMESPACE, UserRole.SYSTEM);
     }
 
     /**
@@ -118,14 +130,23 @@ public record Organization(OrganizationId id, String name, String namespace, Use
     }
 
     /**
-     * Admin 조직인지 확인한다 (SUPER_ADMIN 포함).
+     * System 조직인지 확인한다.
+     *
+     * @return SYSTEM 조직이면 true
+     */
+    public boolean isSystem() {
+        return role == UserRole.SYSTEM;
+    }
+
+    /**
+     * Admin 조직인지 확인한다 (SYSTEM, SUPER_ADMIN 포함).
      *
      * <p><strong>주의</strong>: UserRole로만 판단한다 (ID 비교 없음).
      *
-     * @return SUPER_ADMIN 또는 ADMIN 조직이면 true
+     * @return SYSTEM, SUPER_ADMIN 또는 ADMIN 조직이면 true
      */
     public boolean isAdmin() {
-        return role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN;
+        return role == UserRole.SYSTEM || role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN;
     }
 
     /**
@@ -179,6 +200,7 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      * <p>경로 구조:
      *
      * <ul>
+     *   <li>System: "connectly/system/"
      *   <li>Admin: "connectly/"
      *   <li>Seller: "setof/seller-{organizationId}/" (전체 UUID 사용)
      *   <li>Customer: "setof/customer/"
@@ -187,7 +209,9 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      * @return S3 경로 prefix (namespace 포함)
      */
     public String getS3PathPrefix() {
-        if (isAdmin()) {
+        if (isSystem()) {
+            return namespace + "/system/"; // "connectly/system/"
+        } else if (isAdmin()) {
             return namespace + "/"; // "connectly/"
         } else if (isSeller()) {
             // Option A 확정: 전체 UUID 사용
@@ -211,6 +235,7 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      * <p><strong>경로 구조</strong>:
      *
      * <ul>
+     *   <li>System: "uploads/connectly/system/"
      *   <li>Admin: "uploads/connectly/"
      *   <li>Seller: "uploads/setof/seller-{organizationId}/"
      *   <li>Customer: "uploads/setof/customer/"
@@ -235,6 +260,7 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      * <p><strong>경로 구조</strong>:
      *
      * <ul>
+     *   <li>System: "internal/connectly/system/"
      *   <li>Admin: "internal/connectly/"
      *   <li>Seller: "internal/setof/seller-{organizationId}/"
      *   <li>Customer: "internal/setof/customer/"
@@ -256,6 +282,16 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      */
     private static void validateRoleNamespaceConsistency(
             UserRole role, String namespace, OrganizationId id) {
+        // System 조직: role=SYSTEM, namespace=connectly, id=null
+        if (role == UserRole.SYSTEM) {
+            if (!CONNECTLY_NAMESPACE.equals(namespace)) {
+                throw new IllegalArgumentException("System 조직은 connectly namespace여야 합니다.");
+            }
+            if (id != null) {
+                throw new IllegalArgumentException("System 조직은 OrganizationId를 가질 수 없습니다.");
+            }
+        }
+
         // SuperAdmin/Admin 조직: role=SUPER_ADMIN/ADMIN, namespace=connectly, id=null
         if (role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN) {
             if (!CONNECTLY_NAMESPACE.equals(namespace)) {

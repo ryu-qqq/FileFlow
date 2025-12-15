@@ -1,6 +1,8 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ryuqq.fileflow.adapter.in.rest.auth.paths.SecurityPaths;
+import com.ryuqq.fileflow.adapter.in.rest.config.properties.ServiceTokenProperties;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
@@ -80,6 +82,9 @@ public class UserContextFilter extends OncePerRequestFilter {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
+    // Service Token Header (서버 간 내부 통신용)
+    private static final String HEADER_SERVICE_TOKEN = SecurityPaths.Headers.SERVICE_TOKEN;
+
     // Gateway Headers
     private static final String HEADER_USER_ID = "X-User-Id";
     private static final String HEADER_TENANT_ID = "X-Tenant-Id";
@@ -104,9 +109,12 @@ public class UserContextFilter extends OncePerRequestFilter {
     private static final String MDC_ROLES = "roles";
 
     private final ObjectMapper objectMapper;
+    private final ServiceTokenProperties serviceTokenProperties;
 
-    public UserContextFilter(ObjectMapper objectMapper) {
+    public UserContextFilter(
+            ObjectMapper objectMapper, ServiceTokenProperties serviceTokenProperties) {
         this.objectMapper = objectMapper;
+        this.serviceTokenProperties = serviceTokenProperties;
     }
 
     @Override
@@ -117,42 +125,50 @@ public class UserContextFilter extends OncePerRequestFilter {
         try {
             UserContext userContext;
 
-            // Gateway 헤더 확인
-            String headerTenantId = request.getHeader(HEADER_TENANT_ID);
+            // 1. Service Token 확인 (서버 간 내부 통신)
+            String serviceToken = request.getHeader(HEADER_SERVICE_TOKEN);
+            if (serviceTokenProperties.isValidToken(serviceToken)) {
+                userContext = createSystemContext();
+                log.debug("Service Token 인증 성공 - SYSTEM UserContext 사용");
+            }
+            // 2. Gateway 헤더 확인
+            else {
+                String headerTenantId = request.getHeader(HEADER_TENANT_ID);
 
-            if (headerTenantId != null && !headerTenantId.isBlank()) {
-                // Gateway 경유: 헤더 기반 UserContext 생성
-                try {
-                    userContext = createUserContextFromHeaders(request);
-                } catch (IllegalArgumentException e) {
-                    log.warn("Gateway 헤더 파싱 실패: {}", e.getMessage());
-                    sendErrorResponse(
-                            request,
-                            response,
-                            HttpStatus.BAD_REQUEST,
-                            "INVALID_HEADERS",
-                            e.getMessage());
-                    return;
-                }
-            } else {
-                // Gateway 미경유: 개발 모드 또는 JWT 직접 파싱
-                String token = extractToken(request);
-                if (token == null) {
-                    // 개발 모드: 기본 Admin UserContext 생성
-                    userContext = createDefaultAdminContext();
-                    log.warn("헤더/토큰 없음 - 개발용 기본 Admin UserContext 사용: {}", userContext.email());
-                } else {
+                if (headerTenantId != null && !headerTenantId.isBlank()) {
+                    // Gateway 경유: 헤더 기반 UserContext 생성
                     try {
-                        userContext = parseTokenAndCreateUserContext(token);
+                        userContext = createUserContextFromHeaders(request);
                     } catch (IllegalArgumentException e) {
-                        log.warn("JWT 토큰 파싱 실패: {}", e.getMessage());
+                        log.warn("Gateway 헤더 파싱 실패: {}", e.getMessage());
                         sendErrorResponse(
                                 request,
                                 response,
                                 HttpStatus.BAD_REQUEST,
-                                "INVALID_TOKEN",
+                                "INVALID_HEADERS",
                                 e.getMessage());
                         return;
+                    }
+                } else {
+                    // Gateway 미경유: 개발 모드 또는 JWT 직접 파싱
+                    String token = extractToken(request);
+                    if (token == null) {
+                        // 개발 모드: 기본 Admin UserContext 생성
+                        userContext = createDefaultAdminContext();
+                        log.warn("헤더/토큰 없음 - 개발용 기본 Admin UserContext 사용: {}", userContext.email());
+                    } else {
+                        try {
+                            userContext = parseTokenAndCreateUserContext(token);
+                        } catch (IllegalArgumentException e) {
+                            log.warn("JWT 토큰 파싱 실패: {}", e.getMessage());
+                            sendErrorResponse(
+                                    request,
+                                    response,
+                                    HttpStatus.BAD_REQUEST,
+                                    "INVALID_TOKEN",
+                                    e.getMessage());
+                            return;
+                        }
                     }
                 }
             }
@@ -319,6 +335,7 @@ public class UserContextFilter extends OncePerRequestFilter {
     private Organization createOrganization(
             OrganizationId organizationId, String organizationName, UserRole role) {
         return switch (role) {
+            case SYSTEM -> Organization.system();
             case SUPER_ADMIN, ADMIN -> Organization.admin();
             case SELLER -> {
                 if (organizationId == null) {
@@ -427,6 +444,17 @@ public class UserContextFilter extends OncePerRequestFilter {
                 "master@connectly.com",
                 List.of("SUPER_ADMIN"),
                 List.of("file:read", "file:write", "file:delete"));
+    }
+
+    /**
+     * System 내부 호출용 UserContext를 생성합니다.
+     *
+     * <p>Service Token 인증 성공 시 사용됩니다. 최상위 권한을 가지며 모든 리소스에 접근 가능합니다.
+     *
+     * @return System UserContext
+     */
+    private UserContext createSystemContext() {
+        return UserContext.system();
     }
 
     /**

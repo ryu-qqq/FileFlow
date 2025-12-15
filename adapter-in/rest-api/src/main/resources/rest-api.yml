@@ -22,3 +22,9 @@ security:
     user-roles-header: X-User-Roles
     tenant-id-header: X-Tenant-Id
     organization-id-header: X-Organization-Id
+
+  # Service Token 인증 설정 (서버 간 내부 통신용)
+  # SSM Parameter Store에서 환경변수로 주입됨
+  service-token:
+    enabled: ${SECURITY_SERVICE_TOKEN_ENABLED:false}
+    secret: ${SECURITY_SERVICE_TOKEN_SECRET:}

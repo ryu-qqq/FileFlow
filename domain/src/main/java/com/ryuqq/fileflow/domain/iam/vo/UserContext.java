@@ -115,6 +115,23 @@ public record UserContext(
     }
 
     /**
+     * System 내부 호출 컨텍스트 생성.
+     *
+     * <p>서버 간 통신에서 Service Token 인증 시 사용된다. 최상위 권한을 가지며, 모든 리소스에 접근 가능하다.
+     *
+     * @return System UserContext
+     */
+    public static UserContext system() {
+        return new UserContext(
+                Tenant.connectly(),
+                Organization.system(),
+                "system@internal",
+                null,
+                List.of("SYSTEM"),
+                Collections.emptyList());
+    }
+
+    /**
      * Seller 사용자 컨텍스트 생성.
      *
      * @param organizationId 입점사 조직 ID (UUIDv7)
@@ -264,6 +281,15 @@ public record UserContext(
     }
 
     /**
+     * System 내부 호출인지 확인한다.
+     *
+     * @return System이면 true
+     */
+    public boolean isSystem() {
+        return organization.isSystem();
+    }
+
+    /**
      * Seller 사용자인지 확인한다.
      *
      * @return Seller이면 true
@@ -304,6 +330,7 @@ public record UserContext(
      * <p><strong>경로 구조</strong>:
      *
      * <ul>
+     *   <li>System: internal/connectly/system/{category}/{yyyy}/{MM}/{filename}
      *   <li>Admin CDN: uploads/connectly/{category}/{yyyy}/{MM}/{filename}
      *   <li>Admin Internal: internal/connectly/{category}/{yyyy}/{MM}/{filename}
      *   <li>Seller CDN: uploads/setof/seller-{id}/{category}/{yyyy}/{MM}/{filename}
@@ -329,10 +356,17 @@ public record UserContext(
         String year = uploadDate.format(DateTimeFormatter.ofPattern("yyyy"));
         String month = uploadDate.format(DateTimeFormatter.ofPattern("MM"));
 
-        // Admin/Seller: 카테고리 필수
-        if (isAdmin() || isSeller()) {
+        // System/Admin/Seller: 카테고리 필수
+        if (isSystem() || isAdmin() || isSeller()) {
             if (uploadCategory == null) {
-                throw new IllegalArgumentException("Admin/Seller는 업로드 카테고리가 필수입니다.");
+                throw new IllegalArgumentException("System/Admin/Seller는 업로드 카테고리가 필수입니다.");
+            }
+
+            // System은 항상 internal 경로 사용
+            if (isSystem()) {
+                String basePath = organization.getInternalS3PathPrefix();
+                return S3Key.fromSegments(
+                        basePath + uploadCategory.getPath(), year, month, fileName);
             }
 
             // CDN 접근 여부에 따라 경로 분기
@@ -361,11 +395,67 @@ public record UserContext(
     }
 
     /**
+     * SYSTEM 토큰 전용: customPath로 S3 경로 직접 지정.
+     *
+     * <p>internal/ prefix가 자동으로 추가됩니다. 날짜 경로(yyyy/MM/)는 추가되지 않습니다.
+     *
+     * <p><strong>경로 검증 규칙</strong>:
+     *
+     * <ul>
+     *   <li>customPath는 null이거나 빈 문자열일 수 없습니다.
+     *   <li>customPath에 '..'을 포함할 수 없습니다 (path traversal 방지).
+     *   <li>customPath는 '/'로 시작할 수 없습니다 (상대 경로만 허용).
+     * </ul>
+     *
+     * @param customPath 사용자 지정 경로 (예: "applications/seller-123/docs")
+     * @param fileName 파일명
+     * @return S3Key (예: "internal/applications/seller-123/docs/file.pdf")
+     * @throws IllegalStateException SYSTEM이 아닌 경우
+     * @throws IllegalArgumentException customPath 또는 fileName이 유효하지 않은 경우
+     */
+    public S3Key generateS3KeyWithCustomPath(String customPath, String fileName) {
+        if (!isSystem()) {
+            throw new IllegalStateException("customPath는 SYSTEM 토큰에서만 사용 가능합니다.");
+        }
+
+        validateCustomPath(customPath);
+        validateFileName(fileName);
+
+        String normalizedPath =
+                customPath.endsWith("/")
+                        ? customPath.substring(0, customPath.length() - 1)
+                        : customPath;
+
+        return S3Key.of("internal/" + normalizedPath + "/" + fileName);
+    }
+
+    private void validateCustomPath(String customPath) {
+        if (customPath == null || customPath.isBlank()) {
+            throw new IllegalArgumentException("customPath는 null이거나 빈 문자열일 수 없습니다.");
+        }
+        if (customPath.contains("..")) {
+            throw new IllegalArgumentException("customPath에 '..'을 포함할 수 없습니다.");
+        }
+        if (customPath.startsWith("/")) {
+            throw new IllegalArgumentException("customPath는 '/'로 시작할 수 없습니다.");
+        }
+    }
+
+    private void validateFileName(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            throw new IllegalArgumentException("파일명은 null이거나 빈 문자열일 수 없습니다.");
+        }
+    }
+
+    /**
      * 사용자 식별자를 반환한다 (로깅/추적용).
      *
-     * @return Admin/Seller: email, Customer: "user-{userId}"
+     * @return System: "SYSTEM", Admin/Seller: email, Customer: "user-{userId}"
      */
     public String getUserIdentifier() {
+        if (isSystem()) {
+            return "SYSTEM";
+        }
         if (isAdmin() || isSeller()) {
             return email;
         } else {
@@ -484,6 +574,10 @@ public record UserContext(
      * @throws IllegalArgumentException 검증 실패 시
      */
     private static void validateRequiredFields(UserRole role, String email, UserId userId) {
+        if (role == UserRole.SYSTEM) {
+            // SYSTEM은 email/userId 검증 없음 (내부 호출용)
+            return;
+        }
         if (role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN || role == UserRole.SELLER) {
             // SuperAdmin/Admin/Seller는 email 필수
             if (email == null || email.isBlank()) {
