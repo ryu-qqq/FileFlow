@@ -115,7 +115,9 @@ public class ExternalDownloadCommandFactory {
         // ThreadLocal에서 UserContext 조회하여 S3 정보 추출
         UserContext userContext = userContextSupplier.get();
         S3Bucket s3Bucket = userContext.getS3Bucket();
-        String s3PathPrefix = userContext.organization().getS3PathPrefix();
+
+        // 외부 다운로드 이미지는 CDN 접근 필요 (uploads/ prefix 사용)
+        String s3PathPrefix = userContext.organization().getPublicS3PathPrefix();
 
         // String → VO 변환
         TenantId tenantId = TenantId.of(command.tenantId());
