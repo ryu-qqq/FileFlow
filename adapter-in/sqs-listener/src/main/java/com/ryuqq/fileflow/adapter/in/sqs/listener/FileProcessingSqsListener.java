@@ -10,6 +10,7 @@ import io.awspring.cloud.sqs.annotation.SqsListener;
 import io.awspring.cloud.sqs.listener.acknowledgement.Acknowledgement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -58,6 +59,7 @@ import org.springframework.stereotype.Component;
         name = "aws.sqs.listener.file-processing-listener-enabled",
         havingValue = "true",
         matchIfMissing = false)
+@ConditionalOnBean(ProcessFileAssetUseCase.class)
 public class FileProcessingSqsListener {
 
     private static final Logger log = LoggerFactory.getLogger(FileProcessingSqsListener.class);
