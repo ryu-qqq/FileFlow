@@ -151,8 +151,8 @@ public enum UploadCategory {
     /**
      * CDN 접근이 필요한 카테고리인지 확인한다.
      *
-     * <p>CDN(cdn.set-of.com)을 통해 공개 접근이 가능해야 하는 카테고리입니다. {@code uploads/} prefix 경로에
-     * 저장되어 CloudFront를 통해 접근 가능합니다.
+     * <p>CDN(cdn.set-of.com)을 통해 공개 접근이 가능해야 하는 카테고리입니다. {@code uploads/} prefix 경로에 저장되어
+     * CloudFront를 통해 접근 가능합니다.
      *
      * <p><strong>CDN 접근 필요</strong>: BANNER, PRODUCT_IMAGE, HTML
      *

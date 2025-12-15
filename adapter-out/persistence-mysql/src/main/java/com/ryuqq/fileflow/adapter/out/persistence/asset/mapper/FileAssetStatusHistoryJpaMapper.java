@@ -8,9 +8,7 @@ import java.time.Instant;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
-/**
- * FileAssetStatusHistory Domain ↔ JPA Entity 매퍼.
- */
+/** FileAssetStatusHistory Domain ↔ JPA Entity 매퍼. */
 @Component
 public class FileAssetStatusHistoryJpaMapper {
 

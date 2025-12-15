@@ -381,7 +381,8 @@ class UserContextTest {
                 LocalDate date = LocalDate.of(2024, 3, 15);
 
                 // when
-                S3Key key = context.generateS3Key(UploadCategory.PRODUCT_IMAGE, "product.jpg", date);
+                S3Key key =
+                        context.generateS3Key(UploadCategory.PRODUCT_IMAGE, "product.jpg", date);
 
                 // then
                 assertThat(key.key()).startsWith("uploads/");
@@ -427,7 +428,8 @@ class UserContextTest {
                 LocalDate date = LocalDate.of(2024, 3, 15);
 
                 // when
-                S3Key key = context.generateS3Key(UploadCategory.SALES_MATERIAL, "catalog.pdf", date);
+                S3Key key =
+                        context.generateS3Key(UploadCategory.SALES_MATERIAL, "catalog.pdf", date);
 
                 // then
                 assertThat(key.key()).startsWith("internal/");

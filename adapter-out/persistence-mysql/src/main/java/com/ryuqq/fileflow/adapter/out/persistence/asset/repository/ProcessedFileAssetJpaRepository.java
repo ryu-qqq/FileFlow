@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-/**
- * ProcessedFileAsset JPA Repository.
- */
+/** ProcessedFileAsset JPA Repository. */
 public interface ProcessedFileAssetJpaRepository
         extends JpaRepository<ProcessedFileAssetJpaEntity, UUID> {
 

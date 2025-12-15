@@ -324,8 +324,7 @@ public class UserContextFilter extends OncePerRequestFilter {
     /**
      * Roles 콤마 구분 문자열을 파싱합니다.
      *
-     * <p>Gateway에서 콤마로 구분된 역할 문자열을 파싱합니다.
-     * ROLE_ prefix가 있으면 제거합니다 (UserRole enum은 prefix 없이 매칭).
+     * <p>Gateway에서 콤마로 구분된 역할 문자열을 파싱합니다. ROLE_ prefix가 있으면 제거합니다 (UserRole enum은 prefix 없이 매칭).
      *
      * @param rolesStr 콤마 구분 문자열 (예: "SUPER_ADMIN,ADMIN" 또는 "ROLE_SUPER_ADMIN")
      * @return 역할 목록 (prefix 없이)

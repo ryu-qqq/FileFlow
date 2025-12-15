@@ -203,8 +203,8 @@ public record Organization(OrganizationId id, String name, String namespace, Use
     /**
      * CDN 접근용 Public S3 경로 prefix를 반환한다.
      *
-     * <p>CloudFront CDN(cdn.set-of.com)을 통해 공개 접근이 가능한 경로입니다. {@code uploads/} prefix 하위에
-     * 저장되며, CDN을 통해 직접 접근 가능합니다.
+     * <p>CloudFront CDN(cdn.set-of.com)을 통해 공개 접근이 가능한 경로입니다. {@code uploads/} prefix 하위에 저장되며,
+     * CDN을 통해 직접 접근 가능합니다.
      *
      * <p><strong>사용 대상 카테고리</strong>: BANNER, PRODUCT_IMAGE, HTML
      *
@@ -225,8 +225,8 @@ public record Organization(OrganizationId id, String name, String namespace, Use
     /**
      * 내부 전용 S3 경로 prefix를 반환한다.
      *
-     * <p>CDN을 통해 접근할 수 없는 내부 전용 파일 경로입니다. {@code internal/} prefix 하위에 저장되며,
-     * 서명된 URL 또는 내부 서비스를 통해서만 접근 가능합니다.
+     * <p>CDN을 통해 접근할 수 없는 내부 전용 파일 경로입니다. {@code internal/} prefix 하위에 저장되며, 서명된 URL 또는 내부 서비스를
+     * 통해서만 접근 가능합니다.
      *
      * <p><strong>사용 대상 카테고리</strong>: EXCEL, SALES_MATERIAL, DOCUMENT
      *
