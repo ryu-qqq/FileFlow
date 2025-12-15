@@ -282,7 +282,7 @@ module "resizing_worker_task_role" {
             Action = [
               "s3:GetObject"
             ]
-            Resource = "arn:aws:s3:::connectly-prod/otel-config/*"
+            Resource = "arn:aws:s3:::prod-connectly/otel-config/*"
           }
         ]
       })
@@ -436,6 +436,14 @@ module "resizing_worker_service" {
     {
       name  = "SQS_FILE_PROCESSING_DLQ_URL"
       value = data.aws_ssm_parameter.file_processing_dlq_url.value
+    },
+    {
+      name  = "FILE_PROCESSING_LISTENER_ENABLED"
+      value = "true"
+    },
+    {
+      name  = "FILE_PROCESSING_DLQ_LISTENER_ENABLED"
+      value = "true"
     }
   ]
 
