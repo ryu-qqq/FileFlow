@@ -33,6 +33,10 @@ spring:
 aws:
   sqs:
     listener:
+      # External Download 리스너 활성화
+      external-download-listener-enabled: true
+      external-download-dlq-listener-enabled: true
+      # File Processing 리스너 비활성화
       file-processing-listener-enabled: false
       file-processing-dlq-listener-enabled: false
 
