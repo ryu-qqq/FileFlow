@@ -352,6 +352,121 @@ class UserContextTest {
             assertThat(key).isNotNull();
             assertThat(key.key()).contains("test.jpg");
         }
+
+        @Nested
+        @DisplayName("CDN 경로 분기 테스트")
+        class CdnPathPrefixTest {
+
+            @Test
+            @DisplayName("CDN 접근 필요 카테고리는 uploads/ 접두사를 사용한다 - BANNER")
+            void cdnCategory_ShouldUseUploadsPrefix_Banner() {
+                // given
+                UserContext context = UserContext.admin("admin@test.com");
+                LocalDate date = LocalDate.of(2024, 3, 15);
+
+                // when
+                S3Key key = context.generateS3Key(UploadCategory.BANNER, "hero.jpg", date);
+
+                // then
+                assertThat(key.key()).startsWith("uploads/");
+                assertThat(key.key()).contains("connectly/banner/");
+            }
+
+            @Test
+            @DisplayName("CDN 접근 필요 카테고리는 uploads/ 접두사를 사용한다 - PRODUCT_IMAGE")
+            void cdnCategory_ShouldUseUploadsPrefix_ProductImage() {
+                // given
+                OrganizationId orgId = OrganizationId.generate();
+                UserContext context = UserContext.seller(orgId, "Company", "seller@test.com");
+                LocalDate date = LocalDate.of(2024, 3, 15);
+
+                // when
+                S3Key key =
+                        context.generateS3Key(UploadCategory.PRODUCT_IMAGE, "product.jpg", date);
+
+                // then
+                assertThat(key.key()).startsWith("uploads/");
+                assertThat(key.key()).contains("setof/seller-" + orgId.value() + "/product/");
+            }
+
+            @Test
+            @DisplayName("CDN 접근 필요 카테고리는 uploads/ 접두사를 사용한다 - HTML")
+            void cdnCategory_ShouldUseUploadsPrefix_Html() {
+                // given
+                UserContext context = UserContext.admin("admin@test.com");
+                LocalDate date = LocalDate.of(2024, 3, 15);
+
+                // when
+                S3Key key = context.generateS3Key(UploadCategory.HTML, "detail.html", date);
+
+                // then
+                assertThat(key.key()).startsWith("uploads/");
+                assertThat(key.key()).contains("connectly/html/");
+            }
+
+            @Test
+            @DisplayName("내부 전용 카테고리는 internal/ 접두사를 사용한다 - EXCEL")
+            void internalCategory_ShouldUseInternalPrefix_Excel() {
+                // given
+                UserContext context = UserContext.admin("admin@test.com");
+                LocalDate date = LocalDate.of(2024, 3, 15);
+
+                // when
+                S3Key key = context.generateS3Key(UploadCategory.EXCEL, "data.xlsx", date);
+
+                // then
+                assertThat(key.key()).startsWith("internal/");
+                assertThat(key.key()).contains("connectly/excel/");
+            }
+
+            @Test
+            @DisplayName("내부 전용 카테고리는 internal/ 접두사를 사용한다 - SALES_MATERIAL")
+            void internalCategory_ShouldUseInternalPrefix_SalesMaterial() {
+                // given
+                OrganizationId orgId = OrganizationId.generate();
+                UserContext context = UserContext.seller(orgId, "Company", "seller@test.com");
+                LocalDate date = LocalDate.of(2024, 3, 15);
+
+                // when
+                S3Key key =
+                        context.generateS3Key(UploadCategory.SALES_MATERIAL, "catalog.pdf", date);
+
+                // then
+                assertThat(key.key()).startsWith("internal/");
+                assertThat(key.key()).contains("setof/seller-" + orgId.value() + "/sales/");
+            }
+
+            @Test
+            @DisplayName("내부 전용 카테고리는 internal/ 접두사를 사용한다 - DOCUMENT")
+            void internalCategory_ShouldUseInternalPrefix_Document() {
+                // given
+                UserContext context = UserContext.admin("admin@test.com");
+                LocalDate date = LocalDate.of(2024, 3, 15);
+
+                // when
+                S3Key key = context.generateS3Key(UploadCategory.DOCUMENT, "contract.pdf", date);
+
+                // then
+                assertThat(key.key()).startsWith("internal/");
+                assertThat(key.key()).contains("connectly/document/");
+            }
+
+            @Test
+            @DisplayName("Customer도 CDN 접근 조건에 따라 경로가 분기된다")
+            void customer_ShouldUseUploadsPrefix() {
+                // given
+                UserId userId = UserId.generate();
+                UserContext context = UserContext.customer(userId);
+                LocalDate date = LocalDate.of(2024, 3, 15);
+
+                // when - Customer는 카테고리 없이 사용
+                S3Key key = context.generateS3Key(null, "photo.jpg", date);
+
+                // then - Customer는 기본적으로 uploads/ 사용 (공개 이미지)
+                assertThat(key.key()).startsWith("uploads/");
+                assertThat(key.key()).contains("setof/customer/");
+            }
+        }
     }
 
     @Nested

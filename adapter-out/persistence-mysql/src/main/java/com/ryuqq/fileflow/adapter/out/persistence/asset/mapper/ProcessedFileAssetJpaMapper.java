@@ -16,9 +16,7 @@ import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
-/**
- * ProcessedFileAsset Domain ↔ JPA Entity 매퍼.
- */
+/** ProcessedFileAsset Domain ↔ JPA Entity 매퍼. */
 @Component
 public class ProcessedFileAssetJpaMapper {
 
@@ -72,8 +70,7 @@ public class ProcessedFileAssetJpaMapper {
                 entity.getCreatedAt());
     }
 
-    private ImageVariant resolveVariant(
-            com.ryuqq.fileflow.domain.asset.vo.ImageVariantType type) {
+    private ImageVariant resolveVariant(com.ryuqq.fileflow.domain.asset.vo.ImageVariantType type) {
         return switch (type) {
             case ORIGINAL -> ImageVariant.ORIGINAL;
             case LARGE -> ImageVariant.LARGE;
@@ -82,8 +79,7 @@ public class ProcessedFileAssetJpaMapper {
         };
     }
 
-    private ImageFormat resolveFormat(
-            com.ryuqq.fileflow.domain.asset.vo.ImageFormatType type) {
+    private ImageFormat resolveFormat(com.ryuqq.fileflow.domain.asset.vo.ImageFormatType type) {
         return switch (type) {
             case WEBP -> ImageFormat.WEBP;
             case JPEG -> ImageFormat.JPEG;

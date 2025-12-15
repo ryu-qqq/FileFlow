@@ -273,4 +273,41 @@ class UploadCategoryTest {
             assertThat(category.requiresImageProcessing()).isFalse();
         }
     }
+
+    @Nested
+    @DisplayName("CDN 접근 필요 여부 테스트")
+    class RequiresCdnAccessTest {
+
+        @Test
+        @DisplayName("BANNER 카테고리는 CDN 접근이 필요하다")
+        void shouldRequireCdnAccessForBanner() {
+            // when & then
+            assertThat(UploadCategory.BANNER.requiresCdnAccess()).isTrue();
+        }
+
+        @Test
+        @DisplayName("PRODUCT_IMAGE 카테고리는 CDN 접근이 필요하다")
+        void shouldRequireCdnAccessForProductImage() {
+            // when & then
+            assertThat(UploadCategory.PRODUCT_IMAGE.requiresCdnAccess()).isTrue();
+        }
+
+        @Test
+        @DisplayName("HTML 카테고리는 CDN 접근이 필요하다")
+        void shouldRequireCdnAccessForHtml() {
+            // when & then
+            assertThat(UploadCategory.HTML.requiresCdnAccess()).isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"EXCEL", "SALES_MATERIAL", "DOCUMENT"})
+        @DisplayName("EXCEL, SALES_MATERIAL, DOCUMENT 카테고리는 CDN 접근이 필요하지 않다")
+        void shouldNotRequireCdnAccessForInternalCategories(String categoryName) {
+            // given
+            UploadCategory category = UploadCategory.valueOf(categoryName);
+
+            // when & then
+            assertThat(category.requiresCdnAccess()).isFalse();
+        }
+    }
 }

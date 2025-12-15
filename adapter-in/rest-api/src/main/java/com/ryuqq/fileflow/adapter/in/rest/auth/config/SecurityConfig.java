@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.in.rest.auth.config;
 
 import com.ryuqq.fileflow.adapter.in.rest.auth.handler.SecurityExceptionHandler;
 import com.ryuqq.fileflow.adapter.in.rest.auth.paths.SecurityPaths;
+import com.ryuqq.fileflow.adapter.in.rest.common.filter.UserContextFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Spring Security 설정.
@@ -49,9 +51,13 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final SecurityExceptionHandler securityExceptionHandler;
+    private final UserContextFilter userContextFilter;
 
-    public SecurityConfig(SecurityExceptionHandler securityExceptionHandler) {
+    public SecurityConfig(
+            SecurityExceptionHandler securityExceptionHandler,
+            UserContextFilter userContextFilter) {
         this.securityExceptionHandler = securityExceptionHandler;
+        this.userContextFilter = userContextFilter;
     }
 
     /**
@@ -79,6 +85,8 @@ public class SecurityConfig {
                                 exception
                                         .authenticationEntryPoint(securityExceptionHandler)
                                         .accessDeniedHandler(securityExceptionHandler))
+                // UserContextFilter를 UsernamePasswordAuthenticationFilter 전에 등록
+                .addFilterBefore(userContextFilter, UsernamePasswordAuthenticationFilter.class)
                 // 엔드포인트 권한 설정
                 .authorizeHttpRequests(this::configureAuthorization);
 
@@ -99,12 +107,12 @@ public class SecurityConfig {
         // PUBLIC 엔드포인트 설정 (인증 불필요)
         auth.requestMatchers(SecurityPaths.Public.PATTERNS.toArray(String[]::new)).permitAll();
 
-        // DOCS 엔드포인트 설정 (인증된 사용자면 접근 가능)
+        // DOCS 엔드포인트 설정 (개발 환경에서 API 문서 접근 가능)
         auth.requestMatchers(SecurityPaths.Docs.PATTERNS.toArray(String[]::new)).permitAll();
 
         // 그 외 모든 요청은 인증 필요 + @PreAuthorize로 세부 권한 검사
-        // UserContextFilter에서 인증 정보가 설정되면 permitAll로 통과시키고,
-        // @PreAuthorize에서 세부 권한을 검사합니다.
-        auth.anyRequest().permitAll();
+        // UserContextFilter에서 Spring Security Authentication을 설정하면 통과
+        // @PreAuthorize 어노테이션으로 세부 권한 검사
+        auth.anyRequest().authenticated();
     }
 }

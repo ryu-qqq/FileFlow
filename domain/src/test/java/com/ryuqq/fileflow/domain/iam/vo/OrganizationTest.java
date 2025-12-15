@@ -257,6 +257,101 @@ class OrganizationTest {
     }
 
     @Nested
+    @DisplayName("CDN 경로 테스트")
+    class CdnPathTest {
+
+        @Nested
+        @DisplayName("Public S3 Path Prefix (CDN 접근용)")
+        class PublicS3PathPrefixTest {
+
+            @Test
+            @DisplayName("Admin의 Public 경로는 uploads/connectly/이다")
+            void admin_PublicPathPrefix_ShouldHaveUploadsPrefix() {
+                // given
+                Organization org = Organization.admin();
+
+                // when
+                String path = org.getPublicS3PathPrefix();
+
+                // then
+                assertThat(path).isEqualTo("uploads/connectly/");
+            }
+
+            @Test
+            @DisplayName("Seller의 Public 경로는 uploads/setof/seller-{id}/이다")
+            void seller_PublicPathPrefix_ShouldHaveUploadsPrefix() {
+                // given
+                OrganizationId orgId = OrganizationId.generate();
+                Organization org = Organization.seller(orgId, "TestCompany");
+
+                // when
+                String path = org.getPublicS3PathPrefix();
+
+                // then
+                assertThat(path).isEqualTo("uploads/setof/seller-" + orgId.value() + "/");
+            }
+
+            @Test
+            @DisplayName("Customer의 Public 경로는 uploads/setof/customer/이다")
+            void customer_PublicPathPrefix_ShouldHaveUploadsPrefix() {
+                // given
+                Organization org = Organization.customer();
+
+                // when
+                String path = org.getPublicS3PathPrefix();
+
+                // then
+                assertThat(path).isEqualTo("uploads/setof/customer/");
+            }
+        }
+
+        @Nested
+        @DisplayName("Internal S3 Path Prefix (내부 전용)")
+        class InternalS3PathPrefixTest {
+
+            @Test
+            @DisplayName("Admin의 Internal 경로는 internal/connectly/이다")
+            void admin_InternalPathPrefix_ShouldHaveInternalPrefix() {
+                // given
+                Organization org = Organization.admin();
+
+                // when
+                String path = org.getInternalS3PathPrefix();
+
+                // then
+                assertThat(path).isEqualTo("internal/connectly/");
+            }
+
+            @Test
+            @DisplayName("Seller의 Internal 경로는 internal/setof/seller-{id}/이다")
+            void seller_InternalPathPrefix_ShouldHaveInternalPrefix() {
+                // given
+                OrganizationId orgId = OrganizationId.generate();
+                Organization org = Organization.seller(orgId, "TestCompany");
+
+                // when
+                String path = org.getInternalS3PathPrefix();
+
+                // then
+                assertThat(path).isEqualTo("internal/setof/seller-" + orgId.value() + "/");
+            }
+
+            @Test
+            @DisplayName("Customer의 Internal 경로는 internal/setof/customer/이다")
+            void customer_InternalPathPrefix_ShouldHaveInternalPrefix() {
+                // given
+                Organization org = Organization.customer();
+
+                // when
+                String path = org.getInternalS3PathPrefix();
+
+                // then
+                assertThat(path).isEqualTo("internal/setof/customer/");
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("레코드 동등성 테스트")
     class EqualityTest {
 

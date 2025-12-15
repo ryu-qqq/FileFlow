@@ -291,14 +291,24 @@ public record UserContext(
     }
 
     /**
-     * S3 객체 키를 생성한다 (업로드 카테고리 포함).
+     * S3 객체 키를 생성한다 (업로드 카테고리 포함, CDN 접근 여부에 따라 경로 분기).
      *
-     * <p>경로 구조:
+     * <p><strong>CDN 경로 분기</strong>:
      *
      * <ul>
-     *   <li>Admin: connectly/{category}/{yyyy}/{MM}/{filename}
-     *   <li>Seller: setof/seller-{organizationId}/{category}/{yyyy}/{MM}/{filename}
-     *   <li>Customer: setof/customer/{yyyy}/{MM}/{filename} (카테고리 없음)
+     *   <li>CDN 접근 필요 (BANNER, PRODUCT_IMAGE, HTML): {@code uploads/} prefix 사용
+     *   <li>내부 전용 (EXCEL, SALES_MATERIAL, DOCUMENT): {@code internal/} prefix 사용
+     *   <li>Customer (카테고리 없음): {@code uploads/} prefix 사용 (공개 이미지)
+     * </ul>
+     *
+     * <p><strong>경로 구조</strong>:
+     *
+     * <ul>
+     *   <li>Admin CDN: uploads/connectly/{category}/{yyyy}/{MM}/{filename}
+     *   <li>Admin Internal: internal/connectly/{category}/{yyyy}/{MM}/{filename}
+     *   <li>Seller CDN: uploads/setof/seller-{id}/{category}/{yyyy}/{MM}/{filename}
+     *   <li>Seller Internal: internal/setof/seller-{id}/{category}/{yyyy}/{MM}/{filename}
+     *   <li>Customer: uploads/setof/customer/{yyyy}/{MM}/{filename} (카테고리 없음)
      * </ul>
      *
      * @param uploadCategory 업로드 카테고리 (Admin/Seller 전용, Customer는 null)
@@ -319,16 +329,22 @@ public record UserContext(
         String year = uploadDate.format(DateTimeFormatter.ofPattern("yyyy"));
         String month = uploadDate.format(DateTimeFormatter.ofPattern("MM"));
 
-        String basePath = organization.getS3PathPrefix();
-
         // Admin/Seller: 카테고리 필수
         if (isAdmin() || isSeller()) {
             if (uploadCategory == null) {
                 throw new IllegalArgumentException("Admin/Seller는 업로드 카테고리가 필수입니다.");
             }
+
+            // CDN 접근 여부에 따라 경로 분기
+            String basePath =
+                    uploadCategory.requiresCdnAccess()
+                            ? organization.getPublicS3PathPrefix()
+                            : organization.getInternalS3PathPrefix();
+
             return S3Key.fromSegments(basePath + uploadCategory.getPath(), year, month, fileName);
         } else {
-            // Customer: 카테고리 불필요, setof/customer/{yyyy}/{MM}/{filename}
+            // Customer: 카테고리 불필요, 공개 경로 사용
+            String basePath = organization.getPublicS3PathPrefix();
             return S3Key.fromSegments(basePath + year, month, fileName);
         }
     }

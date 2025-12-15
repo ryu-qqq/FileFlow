@@ -50,8 +50,14 @@ class FileAssetStatusHistoryQueryDslRepositoryTest {
             String fileAssetId = "asset-123";
             List<FileAssetStatusHistoryJpaEntity> entities =
                     List.of(
-                            createEntity(fileAssetId, FileAssetStatus.PENDING, FileAssetStatus.PROCESSING),
-                            createEntity(fileAssetId, FileAssetStatus.PROCESSING, FileAssetStatus.COMPLETED));
+                            createEntity(
+                                    fileAssetId,
+                                    FileAssetStatus.PENDING,
+                                    FileAssetStatus.PROCESSING),
+                            createEntity(
+                                    fileAssetId,
+                                    FileAssetStatus.PROCESSING,
+                                    FileAssetStatus.COMPLETED));
 
             when(queryFactory.selectFrom(fileAssetStatusHistoryJpaEntity)).thenReturn(jpaQuery);
             when(jpaQuery.where(any(Predicate.class))).thenReturn(jpaQuery);
@@ -59,7 +65,8 @@ class FileAssetStatusHistoryQueryDslRepositoryTest {
             when(jpaQuery.fetch()).thenReturn(entities);
 
             // when
-            List<FileAssetStatusHistoryJpaEntity> result = repository.findByFileAssetId(fileAssetId);
+            List<FileAssetStatusHistoryJpaEntity> result =
+                    repository.findByFileAssetId(fileAssetId);
 
             // then
             assertThat(result).hasSize(2);
@@ -76,7 +83,8 @@ class FileAssetStatusHistoryQueryDslRepositoryTest {
             when(jpaQuery.fetch()).thenReturn(List.of());
 
             // when
-            List<FileAssetStatusHistoryJpaEntity> result = repository.findByFileAssetId("not-exist");
+            List<FileAssetStatusHistoryJpaEntity> result =
+                    repository.findByFileAssetId("not-exist");
 
             // then
             assertThat(result).isEmpty();
@@ -93,7 +101,8 @@ class FileAssetStatusHistoryQueryDslRepositoryTest {
             // given
             String fileAssetId = "asset-123";
             FileAssetStatusHistoryJpaEntity entity =
-                    createEntity(fileAssetId, FileAssetStatus.PROCESSING, FileAssetStatus.COMPLETED);
+                    createEntity(
+                            fileAssetId, FileAssetStatus.PROCESSING, FileAssetStatus.COMPLETED);
 
             when(queryFactory.selectFrom(fileAssetStatusHistoryJpaEntity)).thenReturn(jpaQuery);
             when(jpaQuery.where(any(Predicate.class))).thenReturn(jpaQuery);

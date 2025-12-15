@@ -366,7 +366,8 @@ module "adot_sidecar" {
   app_port                  = 8082  # Worker management port
   cluster_name              = data.aws_ecs_cluster.main.cluster_name
   environment               = var.environment
-  config_version            = "20251130"  # Cache busting for OTEL config with APP_PORT env var
+  config_bucket             = "prod-connectly"
+  config_version            = "20251215"  # Cache busting for OTEL config - removed otel-collector job
 }
 
 # ========================================
