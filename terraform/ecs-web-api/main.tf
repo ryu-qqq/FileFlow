@@ -331,7 +331,7 @@ module "web_api_task_role" {
             Action = [
               "s3:GetObject"
             ]
-            Resource = "arn:aws:s3:::connectly-prod/*"
+            Resource = "arn:aws:s3:::prod-connectly/*"
           }
         ]
       })
