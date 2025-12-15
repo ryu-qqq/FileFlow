@@ -86,6 +86,36 @@ public class FileAssetStatusHistoryFixture {
     }
 
     /**
+     * PROCESSING 상태 변경 히스토리 (PENDING → PROCESSING).
+     *
+     * @return FileAssetStatusHistory
+     */
+    public static FileAssetStatusHistory aProcessingHistory() {
+        return FileAssetStatusHistory.forSystemChange(
+                DEFAULT_FILE_ASSET_ID,
+                FileAssetStatus.PENDING,
+                FileAssetStatus.PROCESSING,
+                "이미지 처리 시작",
+                DEFAULT_DURATION_MILLIS,
+                ClockFixture.defaultClock());
+    }
+
+    /**
+     * RESIZED 상태 변경 히스토리 (PROCESSING → RESIZED).
+     *
+     * @return FileAssetStatusHistory
+     */
+    public static FileAssetStatusHistory aResizedHistory() {
+        return FileAssetStatusHistory.forSystemChange(
+                DEFAULT_FILE_ASSET_ID,
+                FileAssetStatus.PROCESSING,
+                FileAssetStatus.RESIZED,
+                "이미지 리사이징 완료",
+                DEFAULT_DURATION_MILLIS,
+                ClockFixture.defaultClock());
+    }
+
+    /**
      * n8n 상태 변경 히스토리 (PROCESSING → N8N_PROCESSING).
      *
      * @return FileAssetStatusHistory
