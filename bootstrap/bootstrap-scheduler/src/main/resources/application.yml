@@ -9,6 +9,10 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod}
 
+  # Graceful Shutdown - Scheduler 작업 종료 대기
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:30s}
+
   # Management server runs on separate port (8082)
   # Main web server is automatically disabled when only management port is configured
 
