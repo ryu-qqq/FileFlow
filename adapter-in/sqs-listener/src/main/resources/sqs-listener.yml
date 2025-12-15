@@ -38,10 +38,11 @@ aws:
       # Feature Toggles
       # ========================================
       # Enable/Disable individual listeners (configurable per bootstrap module)
-      external-download-listener-enabled: ${EXTERNAL_DOWNLOAD_LISTENER_ENABLED:true}
-      external-download-dlq-listener-enabled: ${EXTERNAL_DOWNLOAD_DLQ_LISTENER_ENABLED:true}
-      file-processing-listener-enabled: ${FILE_PROCESSING_LISTENER_ENABLED:true}
-      file-processing-dlq-listener-enabled: ${FILE_PROCESSING_DLQ_LISTENER_ENABLED:true}
+      # 각 bootstrap 모듈의 application.yml에서 명시적으로 활성화해야 함
+      external-download-listener-enabled: ${EXTERNAL_DOWNLOAD_LISTENER_ENABLED:false}
+      external-download-dlq-listener-enabled: ${EXTERNAL_DOWNLOAD_DLQ_LISTENER_ENABLED:false}
+      file-processing-listener-enabled: ${FILE_PROCESSING_LISTENER_ENABLED:false}
+      file-processing-dlq-listener-enabled: ${FILE_PROCESSING_DLQ_LISTENER_ENABLED:false}
 
 logging:
   level:
