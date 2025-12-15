@@ -95,6 +95,13 @@ public final class SecurityPaths {
         /** 추적 ID 헤더 - 분산 추적용 */
         public static final String TRACE_ID = "X-Trace-Id";
 
+        /**
+         * Service Token 헤더 - 서버 간 내부 통신 인증용.
+         *
+         * <p>이 헤더에 유효한 Service Token이 포함되어 있으면 시스템 내부 호출로 인식하고 SYSTEM 권한을 부여합니다.
+         */
+        public static final String SERVICE_TOKEN = "X-Service-Token";
+
         private Headers() {}
     }
 

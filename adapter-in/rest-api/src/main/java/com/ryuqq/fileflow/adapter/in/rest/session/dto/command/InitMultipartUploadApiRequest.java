@@ -18,6 +18,7 @@ import jakarta.validation.constraints.Positive;
  * @param organizationId 조직 ID
  * @param userId 사용자 ID (Customer 전용, null 가능)
  * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
+ * @param customPath 커스텀 S3 경로 (SYSTEM 전용)
  * @author development-team
  * @since 1.0.0
  */
@@ -61,4 +62,9 @@ public record InitMultipartUploadApiRequest(
                         description = "사용자 이메일 (Admin/Seller 전용)",
                         example = "user@example.com",
                         nullable = true)
-                String userEmail) {}
+                String userEmail,
+        @Schema(
+                        description = "커스텀 S3 경로 (SYSTEM 전용)",
+                        example = "applications/seller-123/documents",
+                        nullable = true)
+                String customPath) {}
