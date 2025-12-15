@@ -7,6 +7,7 @@ import io.awspring.cloud.sqs.annotation.SqsListener;
 import io.awspring.cloud.sqs.listener.acknowledgement.Acknowledgement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -44,6 +45,7 @@ import org.springframework.stereotype.Component;
  * <p><strong>에러 메시지</strong>: "DLQ: 이미지 처리 최대 재시도 횟수 초과"
  */
 @Component
+@ConditionalOnBean(MarkFileAssetAsFailedUseCase.class)
 @ConditionalOnProperty(
         name = "aws.sqs.listener.file-processing-dlq-listener-enabled",
         havingValue = "true",
