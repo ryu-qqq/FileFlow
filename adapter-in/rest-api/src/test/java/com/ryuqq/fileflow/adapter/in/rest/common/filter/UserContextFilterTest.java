@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ryuqq.fileflow.adapter.in.rest.config.properties.ServiceTokenProperties;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.TenantId;
@@ -54,6 +55,8 @@ class UserContextFilterTest {
 
     @Mock private FilterChain filterChain;
 
+    @Mock private ServiceTokenProperties serviceTokenProperties;
+
     // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
     private static final String TEST_TENANT_ID = TenantId.generate().value();
     private static final String TEST_ORG_ID = OrganizationId.generate().value();
@@ -62,7 +65,7 @@ class UserContextFilterTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        filter = new UserContextFilter(objectMapper);
+        filter = new UserContextFilter(objectMapper, serviceTokenProperties);
     }
 
     @AfterEach
@@ -435,5 +438,101 @@ class UserContextFilterTest {
     private String createJwtTokenWithOrgName(String orgName, String email) throws Exception {
         Map<String, Object> payload = Map.of("org_name", orgName, "email", email);
         return createJwtToken(payload);
+    }
+
+    @Nested
+    @DisplayName("Service Token 인증 (서버 간 내부 통신)")
+    class ServiceTokenAuthentication {
+
+        private static final String VALID_SERVICE_TOKEN = "test-service-token-secret";
+
+        @Test
+        @DisplayName("유효한 Service Token으로 SYSTEM UserContext 생성")
+        void shouldCreateSystemContextFromValidServiceToken() throws Exception {
+            // given
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
+            // Service Token이 유효하면 Gateway 헤더는 체크하지 않음
+            verify(request, never()).getHeader("X-Tenant-Id");
+        }
+
+        @Test
+        @DisplayName("Service Token 비활성화 시 일반 플로우로 진행")
+        void shouldFallbackToNormalFlowWhenServiceTokenDisabled() throws Exception {
+            // given
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(false);
+            when(request.getHeader("X-Tenant-Id")).thenReturn(null);
+            when(request.getHeader("Authorization")).thenReturn(null);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
+            // Service Token이 비활성화되면 Gateway 헤더 체크 진행
+            verify(request).getHeader("X-Tenant-Id");
+        }
+
+        @Test
+        @DisplayName("잘못된 Service Token은 일반 플로우로 진행")
+        void shouldFallbackToNormalFlowWhenInvalidServiceToken() throws Exception {
+            // given
+            String invalidToken = "wrong-token";
+            when(request.getHeader("X-Service-Token")).thenReturn(invalidToken);
+            when(serviceTokenProperties.isValidToken(invalidToken)).thenReturn(false);
+            when(request.getHeader("X-Tenant-Id")).thenReturn(null);
+            when(request.getHeader("Authorization")).thenReturn(null);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
+            verify(request).getHeader("X-Tenant-Id");
+        }
+
+        @Test
+        @DisplayName("Service Token 헤더가 없으면 일반 플로우로 진행")
+        void shouldFallbackToNormalFlowWhenNoServiceTokenHeader() throws Exception {
+            // given
+            when(request.getHeader("X-Service-Token")).thenReturn(null);
+            when(serviceTokenProperties.isValidToken(null)).thenReturn(false);
+            when(request.getHeader("X-Tenant-Id")).thenReturn(null);
+            when(request.getHeader("Authorization")).thenReturn(null);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
+            verify(request).getHeader("X-Tenant-Id");
+        }
+
+        @Test
+        @DisplayName("Service Token이 Gateway 헤더보다 우선순위가 높음")
+        void serviceTokenShouldTakePriorityOverGatewayHeaders() throws Exception {
+            // given
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            // Gateway 헤더가 설정되어 있어도 Service Token이 우선
+            when(request.getHeader("X-Tenant-Id")).thenReturn(TEST_TENANT_ID);
+            when(request.getHeader("X-User-Roles")).thenReturn("ADMIN");
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
+            // Service Token이 유효하면 Gateway 헤더 처리를 건너뜀
+            // (request.getHeader("X-Tenant-Id")는 Service Token 검증 전에 호출될 수 있지만
+            // UserContext는 SYSTEM으로 생성됨)
+        }
     }
 }

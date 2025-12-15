@@ -11,18 +11,34 @@ api:
   error:
     include-stacktrace: true
 
-# Security Settings for Local Development
+
+# ===============================================
+# Security Configuration (CORS)
+# ===============================================
+# CORS 기본 설정 - 환경별 오버라이드는 bootstrap에서
+# @see com.ryuqq.crawlinghub.adapter.in.rest.auth.config.CorsProperties
 security:
   cors:
-    allowed-origins:
-      - http://localhost:3000
-      - http://localhost:8080
+    # 허용할 Origin (환경변수로 오버라이드 가능)
+    # 로컬: localhost 자동 포함, 운영: CORS_ALLOWED_ORIGINS 환경변수 필수
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000}
+
+    # 허용할 HTTP 메서드
     allowed-methods:
       - GET
       - POST
       - PUT
+      - PATCH
       - DELETE
       - OPTIONS
-    allowed-headers:
-      - "*"
+
+    # 허용할 헤더 (환경변수로 오버라이드 가능)
+    allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+
+    # 노출할 응답 헤더
+    exposed-headers:
+      - X-Total-Count
+      - X-Trace-Id
+
+    # 자격 증명 허용 (쿠키, Authorization 헤더)
     allow-credentials: true

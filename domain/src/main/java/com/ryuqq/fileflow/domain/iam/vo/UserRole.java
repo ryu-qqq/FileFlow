@@ -8,15 +8,19 @@ import com.ryuqq.fileflow.domain.session.vo.FileSize;
  * <p><strong>비즈니스 규칙</strong>:
  *
  * <ul>
+ *   <li>SYSTEM: 서버 간 내부 호출 (최상위 권한, namespace: connectly)
  *   <li>SUPER_ADMIN: 시스템 전체 관리자 (namespace: connectly, 무제한)
  *   <li>ADMIN: 테넌트 관리자 (namespace: connectly, 무제한)
  *   <li>SELLER: 제한적 업로드 (namespace: setof, 최대 5GB)
  *   <li>DEFAULT: 기본 업로드 (namespace: setof, 최대 1GB)
  * </ul>
  *
- * <p><strong>역할 우선순위</strong>: SUPER_ADMIN > ADMIN > SELLER > DEFAULT
+ * <p><strong>역할 우선순위</strong>: SYSTEM > SUPER_ADMIN > ADMIN > SELLER > DEFAULT
  */
 public enum UserRole {
+    /** 시스템 내부 호출 (서버 간 통신, 최상위 권한) */
+    SYSTEM("connectly", 5L * 1024 * 1024 * 1024 * 1024), // 5TB (실질적 무제한)
+
     SUPER_ADMIN("connectly", 5L * 1024 * 1024 * 1024 * 1024), // 5TB (실질적 무제한)
     ADMIN("connectly", 5L * 1024 * 1024 * 1024 * 1024), // 5TB (실질적 무제한)
     SELLER("setof", 5L * 1024 * 1024 * 1024), // 5GB
@@ -90,12 +94,21 @@ public enum UserRole {
     }
 
     /**
+     * 시스템 호출인지 확인한다.
+     *
+     * @return SYSTEM이면 true
+     */
+    public boolean isSystem() {
+        return this == SYSTEM;
+    }
+
+    /**
      * 관리자 권한인지 확인한다.
      *
-     * @return SUPER_ADMIN 또는 ADMIN이면 true
+     * @return SYSTEM, SUPER_ADMIN 또는 ADMIN이면 true
      */
     public boolean isAdmin() {
-        return this == SUPER_ADMIN || this == ADMIN;
+        return this == SYSTEM || this == SUPER_ADMIN || this == ADMIN;
     }
 
     /**
@@ -139,7 +152,7 @@ public enum UserRole {
      *
      * <p>대소문자 구분 없이 매칭하며, 매칭되지 않으면 DEFAULT를 반환한다.
      *
-     * @param roleStr 역할 문자열 (예: "SUPER_ADMIN", "admin", "SELLER")
+     * @param roleStr 역할 문자열 (예: "SYSTEM", "SUPER_ADMIN", "admin", "SELLER")
      * @return 매칭되는 UserRole, 없으면 DEFAULT
      */
     public static UserRole fromString(String roleStr) {
@@ -159,7 +172,7 @@ public enum UserRole {
     /**
      * 역할 목록에서 가장 높은 우선순위의 역할을 반환한다.
      *
-     * <p>우선순위: SUPER_ADMIN > ADMIN > SELLER > DEFAULT
+     * <p>우선순위: SYSTEM > SUPER_ADMIN > ADMIN > SELLER > DEFAULT
      *
      * @param roles 역할 문자열 목록
      * @return 가장 높은 우선순위의 UserRole

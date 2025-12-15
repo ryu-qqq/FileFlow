@@ -88,7 +88,8 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                         1L,
                         null,
                         "admin@test.com",
-                        "PRODUCT");
+                        "PRODUCT",
+                        null);
 
         InitSingleUploadResponse response =
                 InitSingleUploadResponse.of(
@@ -128,6 +129,11 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                                 .optional(),
                                         fieldWithPath("uploadCategory")
                                                 .description("업로드 카테고리 (Admin/Seller 필수)")
+                                                .optional(),
+                                        fieldWithPath("customPath")
+                                                .description(
+                                                        "커스텀 S3 경로 (SYSTEM 전용, uploadCategory와 동시"
+                                                                + " 사용 불가)")
                                                 .optional()),
                                 responseFields(
                                         fieldWithPath("success").description("성공 여부"),
@@ -156,7 +162,8 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                         1L,
                         1L,
                         null,
-                        "admin@test.com");
+                        "admin@test.com",
+                        null);
 
         List<InitMultipartUploadResponse.PartInfo> parts =
                 List.of(
@@ -203,6 +210,9 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                                 .optional(),
                                         fieldWithPath("userEmail")
                                                 .description("사용자 이메일 (Admin/Seller 전용)")
+                                                .optional(),
+                                        fieldWithPath("customPath")
+                                                .description("커스텀 S3 경로 (SYSTEM 전용)")
                                                 .optional()),
                                 responseFields(
                                         fieldWithPath("success").description("성공 여부"),

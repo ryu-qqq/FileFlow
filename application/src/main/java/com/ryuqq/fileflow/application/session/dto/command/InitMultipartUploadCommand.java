@@ -16,6 +16,7 @@ package com.ryuqq.fileflow.application.session.dto.command;
  *   <li>organizationId: 양수
  *   <li>userId: 양수 (Customer), null 가능 (Admin/Seller는 email 사용)
  *   <li>userEmail: null 가능 (Customer는 userId 사용)
+ *   <li>customPath: SYSTEM 전용, S3 경로 직접 지정
  * </ul>
  *
  * @param fileName 파일명 (확장자 포함)
@@ -26,6 +27,7 @@ package com.ryuqq.fileflow.application.session.dto.command;
  * @param organizationId 조직 ID
  * @param userId 사용자 ID (Customer 전용, null 가능)
  * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
+ * @param customPath 커스텀 S3 경로 (SYSTEM 전용)
  */
 public record InitMultipartUploadCommand(
         String fileName,
@@ -35,7 +37,8 @@ public record InitMultipartUploadCommand(
         long tenantId,
         long organizationId,
         Long userId,
-        String userEmail) {
+        String userEmail,
+        String customPath) {
 
     /**
      * 값 기반 생성.
@@ -48,6 +51,7 @@ public record InitMultipartUploadCommand(
      * @param organizationId 조직 ID
      * @param userId 사용자 ID (null 가능)
      * @param userEmail 사용자 이메일 (null 가능)
+     * @param customPath 커스텀 S3 경로 (null 가능)
      * @return InitMultipartUploadCommand
      */
     public static InitMultipartUploadCommand of(
@@ -58,7 +62,8 @@ public record InitMultipartUploadCommand(
             long tenantId,
             long organizationId,
             Long userId,
-            String userEmail) {
+            String userEmail,
+            String customPath) {
         return new InitMultipartUploadCommand(
                 fileName,
                 fileSize,
@@ -67,6 +72,7 @@ public record InitMultipartUploadCommand(
                 tenantId,
                 organizationId,
                 userId,
-                userEmail);
+                userEmail,
+                customPath);
     }
 }

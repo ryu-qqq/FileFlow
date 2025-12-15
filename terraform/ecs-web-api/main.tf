@@ -45,6 +45,13 @@ data "aws_ssm_parameter" "service_discovery_namespace_id" {
   name = "/shared/service-discovery/namespace-id"
 }
 
+# ========================================
+# Service Token Secret (for internal service communication)
+# ========================================
+data "aws_ssm_parameter" "service_token_secret" {
+  name = "/shared/security/service-token-secret"
+}
+
 # VPC data source for internal communication
 data "aws_vpc" "main" {
   id = local.vpc_id
@@ -406,12 +413,16 @@ module "ecs_service" {
     { name = "DB_NAME", value = local.rds_dbname },
     { name = "DB_USER", value = local.rds_username },
     { name = "REDIS_HOST", value = local.redis_host },
-    { name = "REDIS_PORT", value = tostring(local.redis_port) }
+    { name = "REDIS_PORT", value = tostring(local.redis_port) },
+    # Service Token 인증 활성화 (서버 간 내부 통신용)
+    { name = "SECURITY_SERVICE_TOKEN_ENABLED", value = "true" }
   ]
 
   # Container Secrets
   container_secrets = [
-    { name = "DB_PASSWORD", valueFrom = "${data.aws_secretsmanager_secret.rds.arn}:password::" }
+    { name = "DB_PASSWORD", valueFrom = "${data.aws_secretsmanager_secret.rds.arn}:password::" },
+    # Service Token Secret (서버 간 내부 통신 인증용)
+    { name = "SECURITY_SERVICE_TOKEN_SECRET", valueFrom = data.aws_ssm_parameter.service_token_secret.arn }
   ]
 
   # Health Check

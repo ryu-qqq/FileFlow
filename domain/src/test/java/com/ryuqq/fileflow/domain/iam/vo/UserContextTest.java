@@ -763,6 +763,164 @@ class UserContextTest {
     }
 
     @Nested
+    @DisplayName("generateS3KeyWithCustomPath 테스트")
+    class GenerateS3KeyWithCustomPathTest {
+
+        @Test
+        @DisplayName("SYSTEM 토큰으로 customPath 사용 시 internal prefix가 추가된다")
+        void systemToken_withCustomPath_shouldAddInternalPrefix() {
+            // given
+            UserContext systemContext = UserContext.system();
+            String customPath = "applications/seller-123/documents";
+            String fileName = "business-license.pdf";
+
+            // when
+            S3Key result = systemContext.generateS3KeyWithCustomPath(customPath, fileName);
+
+            // then
+            assertThat(result.key())
+                    .isEqualTo("internal/applications/seller-123/documents/business-license.pdf");
+        }
+
+        @Test
+        @DisplayName("customPath가 슬래시로 끝나도 정상 처리된다")
+        void customPath_withTrailingSlash_shouldNormalize() {
+            // given
+            UserContext systemContext = UserContext.system();
+            String customPath = "applications/seller-123/documents/";
+            String fileName = "business-license.pdf";
+
+            // when
+            S3Key result = systemContext.generateS3KeyWithCustomPath(customPath, fileName);
+
+            // then
+            assertThat(result.key())
+                    .isEqualTo("internal/applications/seller-123/documents/business-license.pdf");
+        }
+
+        @Test
+        @DisplayName("SYSTEM이 아닌 토큰으로 customPath 사용 시 예외 발생")
+        void nonSystemToken_withCustomPath_shouldThrowException() {
+            // given
+            UserContext adminContext = UserContext.admin("admin@test.com");
+
+            // when & then
+            assertThatThrownBy(() -> adminContext.generateS3KeyWithCustomPath("path", "file.pdf"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("SYSTEM");
+        }
+
+        @Test
+        @DisplayName("Seller 토큰으로 customPath 사용 시 예외 발생")
+        void sellerToken_withCustomPath_shouldThrowException() {
+            // given
+            OrganizationId orgId = OrganizationId.generate();
+            UserContext sellerContext = UserContext.seller(orgId, "Company", "seller@test.com");
+
+            // when & then
+            assertThatThrownBy(() -> sellerContext.generateS3KeyWithCustomPath("path", "file.pdf"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("SYSTEM");
+        }
+
+        @Test
+        @DisplayName("customPath가 null이면 예외 발생")
+        void nullCustomPath_shouldThrowException() {
+            // given
+            UserContext systemContext = UserContext.system();
+
+            // when & then
+            assertThatThrownBy(() -> systemContext.generateS3KeyWithCustomPath(null, "file.pdf"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("customPath");
+        }
+
+        @Test
+        @DisplayName("customPath가 빈 문자열이면 예외 발생")
+        void emptyCustomPath_shouldThrowException() {
+            // given
+            UserContext systemContext = UserContext.system();
+
+            // when & then
+            assertThatThrownBy(() -> systemContext.generateS3KeyWithCustomPath("", "file.pdf"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("customPath");
+        }
+
+        @Test
+        @DisplayName("customPath가 공백 문자열이면 예외 발생")
+        void blankCustomPath_shouldThrowException() {
+            // given
+            UserContext systemContext = UserContext.system();
+
+            // when & then
+            assertThatThrownBy(() -> systemContext.generateS3KeyWithCustomPath("   ", "file.pdf"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("customPath");
+        }
+
+        @Test
+        @DisplayName("customPath에 '..'이 포함되면 예외 발생")
+        void pathTraversal_shouldThrowException() {
+            // given
+            UserContext systemContext = UserContext.system();
+
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    systemContext.generateS3KeyWithCustomPath(
+                                            "applications/../secrets", "file.pdf"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("..");
+        }
+
+        @Test
+        @DisplayName("customPath가 '/'로 시작하면 예외 발생")
+        void absolutePath_shouldThrowException() {
+            // given
+            UserContext systemContext = UserContext.system();
+
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    systemContext.generateS3KeyWithCustomPath(
+                                            "/applications/seller-123", "file.pdf"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("/");
+        }
+
+        @Test
+        @DisplayName("fileName이 null이면 예외 발생")
+        void nullFileName_shouldThrowException() {
+            // given
+            UserContext systemContext = UserContext.system();
+
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    systemContext.generateS3KeyWithCustomPath(
+                                            "applications/seller-123", null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("파일명");
+        }
+
+        @Test
+        @DisplayName("fileName이 빈 문자열이면 예외 발생")
+        void emptyFileName_shouldThrowException() {
+            // given
+            UserContext systemContext = UserContext.system();
+
+            // when & then
+            assertThatThrownBy(
+                            () ->
+                                    systemContext.generateS3KeyWithCustomPath(
+                                            "applications/seller-123", ""))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("파일명");
+        }
+    }
+
+    @Nested
     @DisplayName("getPrimaryRole 테스트")
     class GetPrimaryRoleTest {
 

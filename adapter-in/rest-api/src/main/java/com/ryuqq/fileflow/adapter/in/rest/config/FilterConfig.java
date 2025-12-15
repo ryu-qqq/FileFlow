@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.in.rest.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.in.rest.common.filter.RequestResponseLoggingFilter;
 import com.ryuqq.fileflow.adapter.in.rest.common.filter.UserContextFilter;
+import com.ryuqq.fileflow.adapter.in.rest.config.properties.ServiceTokenProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,9 +30,11 @@ public class FilterConfig {
     private static final int LOGGING_FILTER_ORDER = 1;
 
     private final ObjectMapper objectMapper;
+    private final ServiceTokenProperties serviceTokenProperties;
 
-    public FilterConfig(ObjectMapper objectMapper) {
+    public FilterConfig(ObjectMapper objectMapper, ServiceTokenProperties serviceTokenProperties) {
         this.objectMapper = objectMapper;
+        this.serviceTokenProperties = serviceTokenProperties;
     }
 
     /**
@@ -59,7 +62,7 @@ public class FilterConfig {
      */
     @Bean
     public UserContextFilter userContextFilter() {
-        return new UserContextFilter(objectMapper);
+        return new UserContextFilter(objectMapper, serviceTokenProperties);
     }
 
     /**

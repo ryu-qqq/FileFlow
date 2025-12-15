@@ -74,7 +74,8 @@ class UploadSessionApiMapperTest {
                             100L,
                             12345L,
                             "admin@test.com",
-                            "PRODUCT");
+                            "PRODUCT",
+                            null);
 
             // when
             InitSingleUploadCommand command = mapper.toInitSingleUploadCommand(request);
@@ -103,6 +104,7 @@ class UploadSessionApiMapperTest {
                             "application/pdf",
                             1L,
                             100L,
+                            null,
                             null,
                             null,
                             null);
@@ -136,7 +138,8 @@ class UploadSessionApiMapperTest {
                             1L,
                             100L,
                             12345L,
-                            "admin@test.com");
+                            "admin@test.com",
+                            null);
 
             // when
             InitMultipartUploadCommand command = mapper.toInitMultipartUploadCommand(request);

@@ -141,6 +141,7 @@ public class UploadSessionCommandFactory {
      *
      * @param command 초기화 명령
      * @return 신규 SingleUploadSession (status: PREPARING)
+     * @throws IllegalArgumentException customPath와 uploadCategory를 동시에 사용한 경우
      */
     public SingleUploadSession createSingleUploadSession(InitSingleUploadCommand command) {
         Clock clock = clockHolder.getClock();
@@ -155,16 +156,12 @@ public class UploadSessionCommandFactory {
         FileSize fileSize = FileSize.of(command.fileSize());
         ContentType contentType = ContentType.of(command.contentType());
 
-        // uploadCategory 변환 (String → Enum)
-        // Customer는 uploadCategory를 전달하지 않음 (null), Admin/Seller는 필수
-        UploadCategory uploadCategory = null;
-        if (command.uploadCategory() != null && !command.uploadCategory().isBlank()) {
-            uploadCategory = UploadCategory.fromPath(command.uploadCategory());
-        }
+        // customPath와 uploadCategory 동시 사용 검증
+        validateCustomPathExclusivity(command.customPath(), command.uploadCategory());
 
-        // S3 경로 생성 (UserContext 기반)
+        // S3 경로 생성 (UserContext 기반, customPath 우선)
         S3Bucket bucket = userContext.getS3Bucket();
-        S3Key s3Key = userContext.generateS3KeyToday(uploadCategory, command.fileName());
+        S3Key s3Key = resolveS3KeyForSingleUpload(userContext, command);
 
         // 만료 시각 계산 (15분 후)
         ExpirationTime expirationTime =
@@ -201,9 +198,9 @@ public class UploadSessionCommandFactory {
         // ThreadLocal에서 UserContext 조회
         UserContext userContext = userContextSupplier.get();
 
-        // S3 경로 생성 (UserContext 기반)
+        // S3 경로 생성 (UserContext 기반, customPath 우선)
         S3Bucket bucket = userContext.getS3Bucket();
-        S3Key s3Key = userContext.generateS3KeyToday(null, command.fileName());
+        S3Key s3Key = resolveS3KeyForMultipartUpload(userContext, command);
 
         // Content-Type
         ContentType contentType = ContentType.of(command.contentType());
@@ -229,10 +226,9 @@ public class UploadSessionCommandFactory {
         FileSize fileSize = FileSize.of(command.fileSize());
         ContentType contentType = ContentType.of(command.contentType());
 
-        // S3 경로 생성 (UserContext 기반)
+        // S3 경로 생성 (UserContext 기반, customPath 우선)
         S3Bucket bucket = userContext.getS3Bucket();
-        S3Key s3Key =
-                userContext.generateS3KeyToday(null, command.fileName()); // Customer는 category null
+        S3Key s3Key = resolveS3KeyForMultipartUpload(userContext, command);
 
         // Part 크기 및 개수 계산
         PartSize partSize = PartSize.of(command.partSize());
@@ -290,5 +286,63 @@ public class UploadSessionCommandFactory {
     @FunctionalInterface
     public interface PartPresignedUrlGenerator {
         String generate(S3Bucket bucket, S3Key s3Key, String uploadId, int partNumber);
+    }
+
+    // ==================== Private Helper Methods ====================
+
+    /**
+     * customPath와 uploadCategory 동시 사용 여부를 검증합니다.
+     *
+     * @param customPath 커스텀 경로
+     * @param uploadCategory 업로드 카테고리
+     * @throws IllegalArgumentException 둘 다 값이 있는 경우
+     */
+    private void validateCustomPathExclusivity(String customPath, String uploadCategory) {
+        if (hasValue(customPath) && hasValue(uploadCategory)) {
+            throw new IllegalArgumentException("customPath와 uploadCategory는 동시에 사용할 수 없습니다.");
+        }
+    }
+
+    /**
+     * SingleUploadCommand에서 S3Key를 결정합니다.
+     *
+     * <p>customPath가 있으면 SYSTEM 전용 경로, 없으면 uploadCategory 기반 경로를 사용합니다.
+     */
+    private S3Key resolveS3KeyForSingleUpload(
+            UserContext userContext, InitSingleUploadCommand command) {
+        if (hasValue(command.customPath())) {
+            return userContext.generateS3KeyWithCustomPath(
+                    command.customPath(), command.fileName());
+        }
+
+        UploadCategory uploadCategory = null;
+        if (hasValue(command.uploadCategory())) {
+            uploadCategory = UploadCategory.fromPath(command.uploadCategory());
+        }
+        return userContext.generateS3KeyToday(uploadCategory, command.fileName());
+    }
+
+    /**
+     * MultipartUploadCommand에서 S3Key를 결정합니다.
+     *
+     * <p>customPath가 있으면 SYSTEM 전용 경로, 없으면 기본 경로를 사용합니다.
+     */
+    private S3Key resolveS3KeyForMultipartUpload(
+            UserContext userContext, InitMultipartUploadCommand command) {
+        if (hasValue(command.customPath())) {
+            return userContext.generateS3KeyWithCustomPath(
+                    command.customPath(), command.fileName());
+        }
+        return userContext.generateS3KeyToday(null, command.fileName());
+    }
+
+    /**
+     * 문자열이 유효한 값인지 확인합니다.
+     *
+     * @param value 확인할 문자열
+     * @return null이 아니고 비어있지 않으면 true
+     */
+    private boolean hasValue(String value) {
+        return value != null && !value.isBlank();
     }
 }

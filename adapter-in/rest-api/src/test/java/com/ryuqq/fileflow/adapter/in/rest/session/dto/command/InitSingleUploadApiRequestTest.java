@@ -61,7 +61,8 @@ class InitSingleUploadApiRequestTest {
                             organizationId,
                             userId,
                             userEmail,
-                            uploadCategory);
+                            uploadCategory,
+                            null);
 
             // then
             assertThat(request.idempotencyKey()).isEqualTo(idempotencyKey);
@@ -89,11 +90,38 @@ class InitSingleUploadApiRequestTest {
                             1L,
                             null,
                             null,
+                            null,
                             null);
 
             // then
             assertThat(request.userId()).isNull();
             assertThat(request.userEmail()).isNull();
+            assertThat(request.uploadCategory()).isNull();
+            assertThat(request.customPath()).isNull();
+        }
+
+        @Test
+        @DisplayName("customPath로 요청을 생성할 수 있다")
+        void create_WithCustomPath_ShouldSucceed() {
+            // given
+            String customPath = "applications/seller-123/documents";
+
+            // when
+            InitSingleUploadApiRequest request =
+                    new InitSingleUploadApiRequest(
+                            "idempotency-key",
+                            "file.txt",
+                            1024L,
+                            "text/plain",
+                            1L,
+                            1L,
+                            null,
+                            null,
+                            null,
+                            customPath);
+
+            // then
+            assertThat(request.customPath()).isEqualTo(customPath);
             assertThat(request.uploadCategory()).isNull();
         }
     }
@@ -132,6 +160,7 @@ class InitSingleUploadApiRequestTest {
                             1L,
                             null,
                             null,
+                            null,
                             null);
 
             // when
@@ -152,7 +181,7 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key", fileName, 1024L, "text/plain", 1L, 1L, null, null, null);
+                            "key", fileName, 1024L, "text/plain", 1L, 1L, null, null, null, null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -170,7 +199,16 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key", "file.txt", fileSize, "text/plain", 1L, 1L, null, null, null);
+                            "key",
+                            "file.txt",
+                            fileSize,
+                            "text/plain",
+                            1L,
+                            1L,
+                            null,
+                            null,
+                            null,
+                            null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -189,7 +227,7 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key", "file.txt", 1024L, contentType, 1L, 1L, null, null, null);
+                            "key", "file.txt", 1024L, contentType, 1L, 1L, null, null, null, null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -207,7 +245,16 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key", "file.txt", 1024L, "text/plain", null, 1L, null, null, null);
+                            "key",
+                            "file.txt",
+                            1024L,
+                            "text/plain",
+                            null,
+                            1L,
+                            null,
+                            null,
+                            null,
+                            null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -225,7 +272,16 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key", "file.txt", 1024L, "text/plain", tenantId, 1L, null, null, null);
+                            "key",
+                            "file.txt",
+                            1024L,
+                            "text/plain",
+                            tenantId,
+                            1L,
+                            null,
+                            null,
+                            null,
+                            null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -242,7 +298,16 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key", "file.txt", 1024L, "text/plain", 1L, null, null, null, null);
+                            "key",
+                            "file.txt",
+                            1024L,
+                            "text/plain",
+                            1L,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -273,7 +338,8 @@ class InitSingleUploadApiRequestTest {
                             1L,
                             100L,
                             "email",
-                            "PRODUCT");
+                            "PRODUCT",
+                            null);
             InitSingleUploadApiRequest request2 =
                     new InitSingleUploadApiRequest(
                             "key",
@@ -284,7 +350,8 @@ class InitSingleUploadApiRequestTest {
                             1L,
                             100L,
                             "email",
-                            "PRODUCT");
+                            "PRODUCT",
+                            null);
 
             // when & then
             assertThat(request1).isEqualTo(request2);
@@ -313,11 +380,12 @@ class InitSingleUploadApiRequestTest {
                 100L,
                 12345L,
                 "user@example.com",
-                "PRODUCT");
+                "PRODUCT",
+                null);
     }
 
     private InitSingleUploadApiRequest createRequestWithIdempotencyKey(String idempotencyKey) {
         return new InitSingleUploadApiRequest(
-                idempotencyKey, "file.txt", 1024L, "text/plain", 1L, 1L, null, null, null);
+                idempotencyKey, "file.txt", 1024L, "text/plain", 1L, 1L, null, null, null, null);
     }
 }
