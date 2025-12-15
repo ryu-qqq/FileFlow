@@ -127,8 +127,7 @@ class ProcessedFileAssetQueryDslRepositoryTest {
             when(jpaQuery.fetch()).thenReturn(List.of());
 
             // when
-            List<ProcessedFileAssetJpaEntity> result =
-                    repository.findByParentAssetId("not-exist");
+            List<ProcessedFileAssetJpaEntity> result = repository.findByParentAssetId("not-exist");
 
             // then
             assertThat(result).isEmpty();

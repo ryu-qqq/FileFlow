@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -28,6 +29,10 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -42,7 +47,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  *   <li>X-Tenant-Id: 테넌트 ID (UUIDv7)
  *   <li>X-Organization-Id: 조직 ID (UUIDv7)
  *   <li>X-User-Roles: 역할 목록 (콤마 구분, 예: "SUPER_ADMIN,ADMIN")
- *   <li>X-Permissions: 권한 목록 (콤마 구분, 예: "file:read,file:write")
+ *   <li>X-User-Permissions: 권한 목록 (콤마 구분, 예: "file:read,file:write")
  * </ul>
  *
  * <p><strong>JWT Payload 필드</strong> (이름 정보 추출용):
@@ -80,7 +85,7 @@ public class UserContextFilter extends OncePerRequestFilter {
     private static final String HEADER_TENANT_ID = "X-Tenant-Id";
     private static final String HEADER_ORGANIZATION_ID = "X-Organization-Id";
     private static final String HEADER_ROLES = "X-User-Roles";
-    private static final String HEADER_PERMISSIONS = "X-Permissions";
+    private static final String HEADER_PERMISSIONS = "X-User-Permissions";
 
     // JWT Payload Claims
     private static final String CLAIM_USER_ID = "sub";
@@ -154,6 +159,9 @@ public class UserContextFilter extends OncePerRequestFilter {
 
             UserContextHolder.set(userContext);
 
+            // Spring Security Context 동기화 (roles + permissions)
+            synchronizeWithSpringSecurityContext(userContext);
+
             // MDC 설정
             setMdc(userContext);
 
@@ -164,6 +172,7 @@ public class UserContextFilter extends OncePerRequestFilter {
         } finally {
             // ThreadLocal 및 MDC 정리
             UserContextHolder.clear();
+            SecurityContextHolder.clearContext();
             clearMdc();
         }
     }
@@ -324,8 +333,7 @@ public class UserContextFilter extends OncePerRequestFilter {
     /**
      * Roles 콤마 구분 문자열을 파싱합니다.
      *
-     * <p>Gateway에서 콤마로 구분된 역할 문자열을 파싱합니다.
-     * ROLE_ prefix가 있으면 제거합니다 (UserRole enum은 prefix 없이 매칭).
+     * <p>Gateway에서 콤마로 구분된 역할 문자열을 파싱합니다. ROLE_ prefix가 있으면 제거합니다 (UserRole enum은 prefix 없이 매칭).
      *
      * @param rolesStr 콤마 구분 문자열 (예: "SUPER_ADMIN,ADMIN" 또는 "ROLE_SUPER_ADMIN")
      * @return 역할 목록 (prefix 없이)
@@ -442,6 +450,49 @@ public class UserContextFilter extends OncePerRequestFilter {
         MDC.remove(MDC_TENANT_ID);
         MDC.remove(MDC_ORGANIZATION_ID);
         MDC.remove(MDC_ROLES);
+    }
+
+    /**
+     * UserContext를 Spring Security Context와 동기화합니다.
+     *
+     * <p>Roles를 GrantedAuthority로 변환하여 Spring Security에 설정합니다. 이를 통해 @PreAuthorize 어노테이션이 작동합니다.
+     *
+     * <p>Authority 매핑:
+     *
+     * <ul>
+     *   <li>Roles: "ROLE_" prefix 추가 (예: ADMIN → ROLE_ADMIN)
+     *   <li>Permissions: 그대로 사용 (예: file:read)
+     * </ul>
+     *
+     * @param userContext 사용자 컨텍스트
+     */
+    private void synchronizeWithSpringSecurityContext(UserContext userContext) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        // Roles를 ROLE_ prefix와 함께 GrantedAuthority로 변환
+        userContext.roles().stream()
+                .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                .map(SimpleGrantedAuthority::new)
+                .forEach(authorities::add);
+
+        // Permissions를 GrantedAuthority로 변환
+        userContext.permissions().stream()
+                .map(SimpleGrantedAuthority::new)
+                .forEach(authorities::add);
+
+        // Principal: userId 또는 email
+        String principal = userContext.getUserIdentifier();
+
+        // Authentication 생성 및 설정
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(principal, null, authorities);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        log.debug(
+                "Spring Security Context 설정 완료: principal={}, authorities={}",
+                principal,
+                authorities.size());
     }
 
     /**

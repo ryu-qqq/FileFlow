@@ -33,6 +33,10 @@ public record Organization(OrganizationId id, String name, String namespace, Use
     private static final String CONNECTLY_NAMESPACE = "connectly";
     private static final String SETOF_NAMESPACE = "setof";
 
+    // S3 경로 접두사 상수
+    private static final String PUBLIC_PREFIX = "uploads/";
+    private static final String INTERNAL_PREFIX = "internal/";
+
     /** Compact Constructor (검증 로직). */
     public Organization {
         if (name == null || name.isBlank()) {
@@ -194,6 +198,52 @@ public record Organization(OrganizationId id, String name, String namespace, Use
         } else {
             return namespace + "/customer/"; // "setof/customer/"
         }
+    }
+
+    /**
+     * CDN 접근용 Public S3 경로 prefix를 반환한다.
+     *
+     * <p>CloudFront CDN(cdn.set-of.com)을 통해 공개 접근이 가능한 경로입니다. {@code uploads/} prefix 하위에 저장되며,
+     * CDN을 통해 직접 접근 가능합니다.
+     *
+     * <p><strong>사용 대상 카테고리</strong>: BANNER, PRODUCT_IMAGE, HTML
+     *
+     * <p><strong>경로 구조</strong>:
+     *
+     * <ul>
+     *   <li>Admin: "uploads/connectly/"
+     *   <li>Seller: "uploads/setof/seller-{organizationId}/"
+     *   <li>Customer: "uploads/setof/customer/"
+     * </ul>
+     *
+     * @return CDN 접근용 S3 경로 prefix
+     */
+    public String getPublicS3PathPrefix() {
+        return PUBLIC_PREFIX + getS3PathPrefix();
+    }
+
+    /**
+     * 내부 전용 S3 경로 prefix를 반환한다.
+     *
+     * <p>CDN을 통해 접근할 수 없는 내부 전용 파일 경로입니다. {@code internal/} prefix 하위에 저장되며, 서명된 URL 또는 내부 서비스를
+     * 통해서만 접근 가능합니다.
+     *
+     * <p><strong>사용 대상 카테고리</strong>: EXCEL, SALES_MATERIAL, DOCUMENT
+     *
+     * <p><strong>사용 대상 변형</strong>: ORIGINAL (원본 파일)
+     *
+     * <p><strong>경로 구조</strong>:
+     *
+     * <ul>
+     *   <li>Admin: "internal/connectly/"
+     *   <li>Seller: "internal/setof/seller-{organizationId}/"
+     *   <li>Customer: "internal/setof/customer/"
+     * </ul>
+     *
+     * @return 내부 전용 S3 경로 prefix
+     */
+    public String getInternalS3PathPrefix() {
+        return INTERNAL_PREFIX + getS3PathPrefix();
     }
 
     /**

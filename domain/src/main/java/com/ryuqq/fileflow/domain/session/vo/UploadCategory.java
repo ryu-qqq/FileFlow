@@ -43,6 +43,10 @@ public enum UploadCategory {
     private static final Set<UploadCategory> IMAGE_PROCESSING_REQUIRED =
             Set.of(BANNER, PRODUCT_IMAGE, HTML);
 
+    /** CDN 접근이 필요한 카테고리 집합 (uploads/ prefix 경로 사용). */
+    private static final Set<UploadCategory> CDN_ACCESS_REQUIRED =
+            Set.of(BANNER, PRODUCT_IMAGE, HTML);
+
     private final String path;
     private final String description;
 
@@ -142,5 +146,21 @@ public enum UploadCategory {
      */
     public boolean requiresImageProcessing() {
         return IMAGE_PROCESSING_REQUIRED.contains(this);
+    }
+
+    /**
+     * CDN 접근이 필요한 카테고리인지 확인한다.
+     *
+     * <p>CDN(cdn.set-of.com)을 통해 공개 접근이 가능해야 하는 카테고리입니다. {@code uploads/} prefix 경로에 저장되어
+     * CloudFront를 통해 접근 가능합니다.
+     *
+     * <p><strong>CDN 접근 필요</strong>: BANNER, PRODUCT_IMAGE, HTML
+     *
+     * <p><strong>내부 전용</strong>: EXCEL, SALES_MATERIAL, DOCUMENT (internal/ prefix)
+     *
+     * @return CDN 접근이 필요하면 true
+     */
+    public boolean requiresCdnAccess() {
+        return CDN_ACCESS_REQUIRED.contains(this);
     }
 }

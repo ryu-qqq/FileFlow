@@ -72,6 +72,11 @@ subprojects {
     tasks.named('test') {
         useJUnitPlatform()
 
+        // 특정 패턴으로 필터링 시 매칭되는 테스트가 없어도 빌드 실패하지 않음
+        filter {
+            failOnNoMatchingTests = false
+        }
+
         // Test Coverage Requirements
         finalizedBy 'jacocoTestReport'
     }
