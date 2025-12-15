@@ -33,4 +33,18 @@
         <Class name="~.*Configuration"/>
         <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>
+
+    <Match>
+        <Class name="~.*Config"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- ========================================
+         Spring Bean에서 주입받는 공유 객체 (ObjectMapper 등)
+         Spring에서 관리되는 싱글톤 Bean은 thread-safe하게 사용됨
+         ======================================== -->
+    <Match>
+        <Class name="~.*Config"/>
+        <Bug pattern="EI2"/>
+    </Match>
 </FindBugsFilter>

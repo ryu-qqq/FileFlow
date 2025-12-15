@@ -171,7 +171,8 @@ class ExternalDownloadCommandFactoryTest {
             // given
             ExternalDownload download = ExternalDownloadFixture.processingExternalDownload();
             byte[] content = "test image content".getBytes();
-            DownloadResult downloadResult = new DownloadResult(content, "image/jpeg", content.length);
+            DownloadResult downloadResult =
+                    new DownloadResult(content, "image/jpeg", content.length);
 
             given(clockHolder.getClock()).willReturn(ClockFixture.defaultClock());
 
@@ -192,7 +193,8 @@ class ExternalDownloadCommandFactoryTest {
             // given
             ExternalDownload download = ExternalDownloadFixture.processingExternalDownload();
             byte[] content = "test png content".getBytes();
-            DownloadResult downloadResult = new DownloadResult(content, "image/png", content.length);
+            DownloadResult downloadResult =
+                    new DownloadResult(content, "image/png", content.length);
 
             given(clockHolder.getClock()).willReturn(ClockFixture.defaultClock());
 

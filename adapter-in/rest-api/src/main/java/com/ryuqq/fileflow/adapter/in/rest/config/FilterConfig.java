@@ -10,12 +10,15 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Filter 설정 Configuration.
  *
- * <p>Filter 순서:
+ * <p>Filter 구성:
  *
- * <ol>
- *   <li>RequestResponseLoggingFilter (Order: 1) - 요청/응답 로깅, MDC 기본 정보
- *   <li>UserContextFilter (Order: 2) - JWT 파싱, UserContext 설정
- * </ol>
+ * <ul>
+ *   <li>RequestResponseLoggingFilter - Servlet Container에 등록 (요청/응답 로깅, MDC 기본 정보)
+ *   <li>UserContextFilter - Spring Security Filter Chain에 등록 (JWT 파싱, UserContext 설정)
+ * </ul>
+ *
+ * <p>UserContextFilter는 SecurityConfig에서 Spring Security Filter Chain에 등록되므로
+ * FilterRegistrationBean으로 중복 등록하지 않습니다.
  *
  * @author development-team
  * @since 1.0.0
@@ -24,7 +27,6 @@ import org.springframework.context.annotation.Configuration;
 public class FilterConfig {
 
     private static final int LOGGING_FILTER_ORDER = 1;
-    private static final int USER_CONTEXT_FILTER_ORDER = 2;
 
     private final ObjectMapper objectMapper;
 
@@ -49,17 +51,31 @@ public class FilterConfig {
     }
 
     /**
-     * UserContext Filter 등록.
+     * UserContext Filter Bean 등록.
      *
-     * @return FilterRegistrationBean
+     * <p>Spring Security Filter Chain에서 사용합니다. SecurityConfig에서 addFilterBefore()로 등록됩니다.
+     *
+     * @return UserContextFilter
      */
     @Bean
-    public FilterRegistrationBean<UserContextFilter> userContextFilter() {
+    public UserContextFilter userContextFilter() {
+        return new UserContextFilter(objectMapper);
+    }
+
+    /**
+     * UserContextFilter의 Servlet Container 자동 등록을 비활성화합니다.
+     *
+     * <p>Spring Security Filter Chain에서 관리하므로 Servlet Container에 중복 등록을 방지합니다.
+     *
+     * @param filter UserContextFilter
+     * @return FilterRegistrationBean (enabled=false)
+     */
+    @Bean
+    public FilterRegistrationBean<UserContextFilter> userContextFilterRegistration(
+            UserContextFilter filter) {
         FilterRegistrationBean<UserContextFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new UserContextFilter(objectMapper));
-        registrationBean.addUrlPatterns("/api/*");
-        registrationBean.setOrder(USER_CONTEXT_FILTER_ORDER);
-        registrationBean.setName("userContextFilter");
+        registrationBean.setFilter(filter);
+        registrationBean.setEnabled(false);
         return registrationBean;
     }
 }

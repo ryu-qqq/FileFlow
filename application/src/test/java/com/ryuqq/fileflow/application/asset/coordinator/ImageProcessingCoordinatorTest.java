@@ -3,7 +3,6 @@ package com.ryuqq.fileflow.application.asset.coordinator;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -48,7 +47,8 @@ class ImageProcessingCoordinatorTest {
     @BeforeEach
     void setUp() {
         coordinator =
-                new ImageProcessingCoordinator(imageDownloader, metadataExtractor, resizingProcessor);
+                new ImageProcessingCoordinator(
+                        imageDownloader, metadataExtractor, resizingProcessor);
     }
 
     @Nested
@@ -65,7 +65,8 @@ class ImageProcessingCoordinatorTest {
 
             given(imageDownloader.download(fileAsset)).willReturn(imageData);
             doNothing().when(metadataExtractor).extractAndUpdateDimension(fileAsset, imageData);
-            given(resizingProcessor.processAndUpload(fileAsset, imageData)).willReturn(expectedResults);
+            given(resizingProcessor.processAndUpload(fileAsset, imageData))
+                    .willReturn(expectedResults);
 
             // when
             List<UploadedImage> results = coordinator.process(fileAsset);
@@ -88,7 +89,8 @@ class ImageProcessingCoordinatorTest {
 
             given(imageDownloader.download(fileAsset)).willReturn(imageData);
             doNothing().when(metadataExtractor).extractAndUpdateDimension(fileAsset, imageData);
-            given(resizingProcessor.processAndUpload(fileAsset, imageData)).willReturn(expectedResults);
+            given(resizingProcessor.processAndUpload(fileAsset, imageData))
+                    .willReturn(expectedResults);
 
             // when
             coordinator.process(fileAsset);
@@ -152,7 +154,8 @@ class ImageProcessingCoordinatorTest {
 
             given(imageDownloader.download(fileAsset)).willReturn(imageData);
             doNothing().when(metadataExtractor).extractAndUpdateDimension(fileAsset, imageData);
-            given(resizingProcessor.processAndUpload(fileAsset, imageData)).willThrow(resizingException);
+            given(resizingProcessor.processAndUpload(fileAsset, imageData))
+                    .willThrow(resizingException);
 
             // when & then
             assertThatThrownBy(() -> coordinator.process(fileAsset))
@@ -179,7 +182,8 @@ class ImageProcessingCoordinatorTest {
 
             given(imageDownloader.download(fileAsset)).willReturn(imageData);
             doNothing().when(metadataExtractor).extractAndUpdateDimension(fileAsset, imageData);
-            given(resizingProcessor.processAndUpload(fileAsset, imageData)).willReturn(expectedResults);
+            given(resizingProcessor.processAndUpload(fileAsset, imageData))
+                    .willReturn(expectedResults);
 
             // when
             List<UploadedImage> results = coordinator.process(fileAsset);
@@ -198,7 +202,8 @@ class ImageProcessingCoordinatorTest {
 
             given(imageDownloader.download(fileAsset)).willReturn(imageData);
             doNothing().when(metadataExtractor).extractAndUpdateDimension(fileAsset, imageData);
-            given(resizingProcessor.processAndUpload(fileAsset, imageData)).willReturn(emptyResults);
+            given(resizingProcessor.processAndUpload(fileAsset, imageData))
+                    .willReturn(emptyResults);
 
             // when
             List<UploadedImage> results = coordinator.process(fileAsset);
@@ -217,7 +222,8 @@ class ImageProcessingCoordinatorTest {
 
             given(imageDownloader.download(fileAsset)).willReturn(imageData);
             doNothing().when(metadataExtractor).extractAndUpdateDimension(fileAsset, imageData);
-            given(resizingProcessor.processAndUpload(fileAsset, imageData)).willReturn(expectedResults);
+            given(resizingProcessor.processAndUpload(fileAsset, imageData))
+                    .willReturn(expectedResults);
 
             // when
             List<UploadedImage> results = coordinator.process(fileAsset);

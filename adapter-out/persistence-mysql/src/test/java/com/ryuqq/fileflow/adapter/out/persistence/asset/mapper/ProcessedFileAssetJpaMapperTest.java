@@ -53,7 +53,8 @@ class ProcessedFileAssetJpaMapperTest {
 
             // then
             assertThat(entity.getId()).isEqualTo(domain.getId().value());
-            assertThat(entity.getOriginalAssetId()).isEqualTo(domain.getOriginalAssetId().value().toString());
+            assertThat(entity.getOriginalAssetId())
+                    .isEqualTo(domain.getOriginalAssetId().value().toString());
             assertThat(entity.getParentAssetId()).isNull();
             assertThat(entity.getVariantType()).isEqualTo(domain.getVariant().type());
             assertThat(entity.getFormatType()).isEqualTo(domain.getFormat().type());
@@ -78,7 +79,8 @@ class ProcessedFileAssetJpaMapperTest {
 
             // then
             assertThat(entity.getParentAssetId()).isNotNull();
-            assertThat(entity.getParentAssetId()).isEqualTo(domain.getParentAssetId().value().toString());
+            assertThat(entity.getParentAssetId())
+                    .isEqualTo(domain.getParentAssetId().value().toString());
         }
 
         @Test
@@ -145,7 +147,8 @@ class ProcessedFileAssetJpaMapperTest {
 
             // then
             assertThat(domain.getId().value()).isEqualTo(entity.getId());
-            assertThat(domain.getOriginalAssetId().value().toString()).isEqualTo(entity.getOriginalAssetId());
+            assertThat(domain.getOriginalAssetId().value().toString())
+                    .isEqualTo(entity.getOriginalAssetId());
             assertThat(domain.getParentAssetId()).isNull();
             assertThat(domain.getVariant().type()).isEqualTo(entity.getVariantType());
             assertThat(domain.getFormat().type()).isEqualTo(entity.getFormatType());
@@ -190,10 +193,14 @@ class ProcessedFileAssetJpaMapperTest {
         @DisplayName("모든 ImageVariantType을 Domain으로 변환할 수 있다")
         void shouldConvertAllVariantTypesToDomain() {
             // given
-            ProcessedFileAssetJpaEntity originalEntity = createEntityWithVariantType(ImageVariantType.ORIGINAL);
-            ProcessedFileAssetJpaEntity largeEntity = createEntityWithVariantType(ImageVariantType.LARGE);
-            ProcessedFileAssetJpaEntity mediumEntity = createEntityWithVariantType(ImageVariantType.MEDIUM);
-            ProcessedFileAssetJpaEntity thumbnailEntity = createEntityWithVariantType(ImageVariantType.THUMBNAIL);
+            ProcessedFileAssetJpaEntity originalEntity =
+                    createEntityWithVariantType(ImageVariantType.ORIGINAL);
+            ProcessedFileAssetJpaEntity largeEntity =
+                    createEntityWithVariantType(ImageVariantType.LARGE);
+            ProcessedFileAssetJpaEntity mediumEntity =
+                    createEntityWithVariantType(ImageVariantType.MEDIUM);
+            ProcessedFileAssetJpaEntity thumbnailEntity =
+                    createEntityWithVariantType(ImageVariantType.THUMBNAIL);
 
             // when
             ProcessedFileAsset originalDomain = mapper.toDomain(originalEntity);
@@ -212,8 +219,10 @@ class ProcessedFileAssetJpaMapperTest {
         @DisplayName("모든 ImageFormatType을 Domain으로 변환할 수 있다")
         void shouldConvertAllFormatTypesToDomain() {
             // given
-            ProcessedFileAssetJpaEntity webpEntity = createEntityWithFormatType(ImageFormatType.WEBP);
-            ProcessedFileAssetJpaEntity jpegEntity = createEntityWithFormatType(ImageFormatType.JPEG);
+            ProcessedFileAssetJpaEntity webpEntity =
+                    createEntityWithFormatType(ImageFormatType.WEBP);
+            ProcessedFileAssetJpaEntity jpegEntity =
+                    createEntityWithFormatType(ImageFormatType.JPEG);
             ProcessedFileAssetJpaEntity pngEntity = createEntityWithFormatType(ImageFormatType.PNG);
 
             // when
@@ -244,16 +253,19 @@ class ProcessedFileAssetJpaMapperTest {
 
             // then
             assertThat(restored.getId().value()).isEqualTo(original.getId().value());
-            assertThat(restored.getOriginalAssetId().value()).isEqualTo(original.getOriginalAssetId().value());
+            assertThat(restored.getOriginalAssetId().value())
+                    .isEqualTo(original.getOriginalAssetId().value());
             assertThat(restored.getParentAssetId()).isEqualTo(original.getParentAssetId());
             assertThat(restored.getVariant()).isEqualTo(original.getVariant());
             assertThat(restored.getFormat()).isEqualTo(original.getFormat());
             assertThat(restored.getFileName().name()).isEqualTo(original.getFileName().name());
             assertThat(restored.getFileSize().size()).isEqualTo(original.getFileSize().size());
-            assertThat(restored.getBucket().bucketName()).isEqualTo(original.getBucket().bucketName());
+            assertThat(restored.getBucket().bucketName())
+                    .isEqualTo(original.getBucket().bucketName());
             assertThat(restored.getS3Key().key()).isEqualTo(original.getS3Key().key());
             assertThat(restored.getUserId().value()).isEqualTo(original.getUserId().value());
-            assertThat(restored.getOrganizationId().value()).isEqualTo(original.getOrganizationId().value());
+            assertThat(restored.getOrganizationId().value())
+                    .isEqualTo(original.getOrganizationId().value());
             assertThat(restored.getTenantId().value()).isEqualTo(original.getTenantId().value());
             assertThat(restored.getCreatedAt()).isEqualTo(original.getCreatedAt());
         }
@@ -270,14 +282,16 @@ class ProcessedFileAssetJpaMapperTest {
 
             // then
             assertThat(restored.hasParentAsset()).isTrue();
-            assertThat(restored.getParentAssetId().value()).isEqualTo(original.getParentAssetId().value());
+            assertThat(restored.getParentAssetId().value())
+                    .isEqualTo(original.getParentAssetId().value());
         }
 
         @Test
         @DisplayName("THUMBNAIL + PNG 조합이 양방향 변환 시 보존된다")
         void shouldPreserveThumbnailPngInRoundTrip() {
             // given
-            ProcessedFileAsset original = createDomainWithVariantAndFormat(ImageVariant.THUMBNAIL, ImageFormat.PNG);
+            ProcessedFileAsset original =
+                    createDomainWithVariantAndFormat(ImageVariant.THUMBNAIL, ImageFormat.PNG);
 
             // when
             ProcessedFileAssetJpaEntity entity = mapper.toEntity(original);
@@ -376,7 +390,8 @@ class ProcessedFileAssetJpaMapperTest {
                 fixedClock.instant());
     }
 
-    private ProcessedFileAsset createDomainWithVariantAndFormat(ImageVariant variant, ImageFormat format) {
+    private ProcessedFileAsset createDomainWithVariantAndFormat(
+            ImageVariant variant, ImageFormat format) {
         return ProcessedFileAsset.reconstitute(
                 new ProcessedFileAssetId(UUID.randomUUID()),
                 new FileAssetId(UUID.randomUUID()),

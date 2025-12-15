@@ -145,7 +145,8 @@ public class ProcessedFileAssetFixture {
      * @param format 이미지 포맷
      * @return ProcessedFileAsset
      */
-    public static ProcessedFileAsset processedFileAssetWith(ImageVariant variant, ImageFormat format) {
+    public static ProcessedFileAsset processedFileAssetWith(
+            ImageVariant variant, ImageFormat format) {
         return ProcessedFileAsset.reconstitute(
                 new ProcessedFileAssetId(UUID.randomUUID()),
                 new FileAssetId(UUID.randomUUID()),

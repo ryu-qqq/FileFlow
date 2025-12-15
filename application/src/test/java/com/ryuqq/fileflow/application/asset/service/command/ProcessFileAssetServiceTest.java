@@ -75,13 +75,16 @@ class ProcessFileAssetServiceTest {
             String fileAssetId = fileAsset.getId().getValue();
             ProcessFileAssetCommand command = new ProcessFileAssetCommand(fileAssetId);
 
-            FileAssetStatusHistory startHistory = FileAssetStatusHistoryFixture.aProcessingHistory();
+            FileAssetStatusHistory startHistory =
+                    FileAssetStatusHistoryFixture.aProcessingHistory();
             FileAssetStatusHistory resizedHistory = FileAssetStatusHistoryFixture.aResizedHistory();
             FileAssetUpdateResult startResult = new FileAssetUpdateResult(fileAsset, startHistory);
-            FileAssetUpdateResult resizedResult = new FileAssetUpdateResult(fileAsset, resizedHistory);
+            FileAssetUpdateResult resizedResult =
+                    new FileAssetUpdateResult(fileAsset, resizedHistory);
 
             List<UploadedImage> uploadedImages = List.of(uploadedImage);
-            ProcessedFileAsset processedAsset = ProcessedFileAssetFixture.defaultProcessedFileAsset();
+            ProcessedFileAsset processedAsset =
+                    ProcessedFileAssetFixture.defaultProcessedFileAsset();
             List<ProcessedFileAsset> processedAssets = List.of(processedAsset);
 
             ProcessFileAssetResponse expectedResponse =
@@ -98,7 +101,8 @@ class ProcessFileAssetServiceTest {
             given(fileAssetUpdateService.markResized(fileAsset, 1)).willReturn(resizedResult);
             given(processingFacade.completeProcessingWithResults(any(), any(), any()))
                     .willReturn(fileAsset.getId());
-            given(assembler.toResponseForProcess(eq(fileAsset), any())).willReturn(expectedResponse);
+            given(assembler.toResponseForProcess(eq(fileAsset), any()))
+                    .willReturn(expectedResponse);
 
             // when
             ProcessFileAssetResponse result = service.execute(command);
@@ -141,10 +145,12 @@ class ProcessFileAssetServiceTest {
             String fileAssetId = fileAsset.getId().getValue();
             ProcessFileAssetCommand command = new ProcessFileAssetCommand(fileAssetId);
 
-            FileAssetStatusHistory startHistory = FileAssetStatusHistoryFixture.aProcessingHistory();
+            FileAssetStatusHistory startHistory =
+                    FileAssetStatusHistoryFixture.aProcessingHistory();
             FileAssetStatusHistory failedHistory = FileAssetStatusHistoryFixture.aFailedHistory();
             FileAssetUpdateResult startResult = new FileAssetUpdateResult(fileAsset, startHistory);
-            FileAssetUpdateResult failedResult = new FileAssetUpdateResult(fileAsset, failedHistory);
+            FileAssetUpdateResult failedResult =
+                    new FileAssetUpdateResult(fileAsset, failedHistory);
 
             RuntimeException processingException = new RuntimeException("이미지 처리 실패");
 
@@ -173,17 +179,21 @@ class ProcessFileAssetServiceTest {
             String fileAssetId = fileAsset.getId().getValue();
             ProcessFileAssetCommand command = new ProcessFileAssetCommand(fileAssetId);
 
-            FileAssetStatusHistory startHistory = FileAssetStatusHistoryFixture.aProcessingHistory();
+            FileAssetStatusHistory startHistory =
+                    FileAssetStatusHistoryFixture.aProcessingHistory();
             FileAssetStatusHistory resizedHistory = FileAssetStatusHistoryFixture.aResizedHistory();
             FileAssetUpdateResult startResult = new FileAssetUpdateResult(fileAsset, startHistory);
-            FileAssetUpdateResult resizedResult = new FileAssetUpdateResult(fileAsset, resizedHistory);
+            FileAssetUpdateResult resizedResult =
+                    new FileAssetUpdateResult(fileAsset, resizedHistory);
 
             UploadedImage uploadedImage1 = uploadedImage;
             UploadedImage uploadedImage2 = uploadedImage;
             UploadedImage uploadedImage3 = uploadedImage;
-            List<UploadedImage> uploadedImages = List.of(uploadedImage1, uploadedImage2, uploadedImage3);
+            List<UploadedImage> uploadedImages =
+                    List.of(uploadedImage1, uploadedImage2, uploadedImage3);
 
-            ProcessedFileAsset processedAsset = ProcessedFileAssetFixture.defaultProcessedFileAsset();
+            ProcessedFileAsset processedAsset =
+                    ProcessedFileAssetFixture.defaultProcessedFileAsset();
             ProcessFileAssetResponse expectedResponse =
                     new ProcessFileAssetResponse(fileAssetId, "RESIZED", List.of(), 3);
 
@@ -197,7 +207,8 @@ class ProcessFileAssetServiceTest {
             given(fileAssetUpdateService.markResized(fileAsset, 3)).willReturn(resizedResult);
             given(processingFacade.completeProcessingWithResults(any(), any(), any()))
                     .willReturn(fileAsset.getId());
-            given(assembler.toResponseForProcess(eq(fileAsset), any())).willReturn(expectedResponse);
+            given(assembler.toResponseForProcess(eq(fileAsset), any()))
+                    .willReturn(expectedResponse);
 
             // when
             ProcessFileAssetResponse result = service.execute(command);
@@ -215,10 +226,12 @@ class ProcessFileAssetServiceTest {
             String fileAssetId = fileAsset.getId().getValue();
             ProcessFileAssetCommand command = new ProcessFileAssetCommand(fileAssetId);
 
-            FileAssetStatusHistory startHistory = FileAssetStatusHistoryFixture.aProcessingHistory();
+            FileAssetStatusHistory startHistory =
+                    FileAssetStatusHistoryFixture.aProcessingHistory();
             FileAssetStatusHistory resizedHistory = FileAssetStatusHistoryFixture.aResizedHistory();
             FileAssetUpdateResult startResult = new FileAssetUpdateResult(fileAsset, startHistory);
-            FileAssetUpdateResult resizedResult = new FileAssetUpdateResult(fileAsset, resizedHistory);
+            FileAssetUpdateResult resizedResult =
+                    new FileAssetUpdateResult(fileAsset, resizedHistory);
 
             List<UploadedImage> emptyUploadedImages = Collections.emptyList();
             ProcessFileAssetResponse expectedResponse =
@@ -233,7 +246,8 @@ class ProcessFileAssetServiceTest {
             given(fileAssetUpdateService.markResized(fileAsset, 0)).willReturn(resizedResult);
             given(processingFacade.completeProcessingWithResults(any(), any(), any()))
                     .willReturn(fileAsset.getId());
-            given(assembler.toResponseForProcess(eq(fileAsset), any())).willReturn(expectedResponse);
+            given(assembler.toResponseForProcess(eq(fileAsset), any()))
+                    .willReturn(expectedResponse);
 
             // when
             ProcessFileAssetResponse result = service.execute(command);

@@ -43,7 +43,8 @@ class FileAssetStatusHistoryJpaMapperTest {
 
             // then
             assertThat(entity.getId()).isEqualTo(domain.getId().value());
-            assertThat(entity.getFileAssetId()).isEqualTo(domain.getFileAssetId().value().toString());
+            assertThat(entity.getFileAssetId())
+                    .isEqualTo(domain.getFileAssetId().value().toString());
             assertThat(entity.getFromStatus()).isEqualTo(domain.getFromStatus());
             assertThat(entity.getToStatus()).isEqualTo(domain.getToStatus());
             assertThat(entity.getMessage()).isEqualTo(domain.getMessage());
@@ -109,7 +110,8 @@ class FileAssetStatusHistoryJpaMapperTest {
 
             // then
             assertThat(domain.getId().value()).isEqualTo(entity.getId());
-            assertThat(domain.getFileAssetId().value().toString()).isEqualTo(entity.getFileAssetId());
+            assertThat(domain.getFileAssetId().value().toString())
+                    .isEqualTo(entity.getFileAssetId());
             assertThat(domain.getFromStatus()).isEqualTo(entity.getFromStatus());
             assertThat(domain.getToStatus()).isEqualTo(entity.getToStatus());
             assertThat(domain.getMessage()).isEqualTo(entity.getMessage());
@@ -163,7 +165,8 @@ class FileAssetStatusHistoryJpaMapperTest {
 
             // then
             assertThat(restored.getId().value()).isEqualTo(original.getId().value());
-            assertThat(restored.getFileAssetId().value()).isEqualTo(original.getFileAssetId().value());
+            assertThat(restored.getFileAssetId().value())
+                    .isEqualTo(original.getFileAssetId().value());
             assertThat(restored.getFromStatus()).isEqualTo(original.getFromStatus());
             assertThat(restored.getToStatus()).isEqualTo(original.getToStatus());
             assertThat(restored.getMessage()).isEqualTo(original.getMessage());

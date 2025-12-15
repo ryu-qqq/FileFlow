@@ -88,38 +88,32 @@ class FilterConfigTest {
     class UserContextFilterBeanTest {
 
         @Test
-        @DisplayName("UserContextFilter를 등록할 수 있다")
+        @DisplayName("UserContextFilter Bean을 생성할 수 있다")
         void createFilter_ShouldSucceed() {
             // when
+            UserContextFilter filter = filterConfig.userContextFilter();
+
+            // then
+            assertThat(filter).isNotNull();
+            assertThat(filter).isInstanceOf(UserContextFilter.class);
+        }
+
+        @Test
+        @DisplayName(
+                "UserContextFilter는 Spring Security Filter Chain에서 관리되므로 Servlet Container 등록이"
+                        + " 비활성화된다")
+        void filterRegistration_ShouldBeDisabled() {
+            // given
+            UserContextFilter filter = filterConfig.userContextFilter();
+
+            // when
             FilterRegistrationBean<UserContextFilter> registrationBean =
-                    filterConfig.userContextFilter();
+                    filterConfig.userContextFilterRegistration(filter);
 
             // then
             assertThat(registrationBean).isNotNull();
-            assertThat(registrationBean.getFilter()).isNotNull();
-            assertThat(registrationBean.getFilter()).isInstanceOf(UserContextFilter.class);
-        }
-
-        @Test
-        @DisplayName("URL 패턴이 /api/*로 설정된다")
-        void createFilter_ShouldHaveCorrectUrlPattern() {
-            // when
-            FilterRegistrationBean<UserContextFilter> registrationBean =
-                    filterConfig.userContextFilter();
-
-            // then
-            assertThat(registrationBean.getUrlPatterns()).contains("/api/*");
-        }
-
-        @Test
-        @DisplayName("Order가 2로 설정된다 (loggingFilter 이후)")
-        void createFilter_ShouldHaveCorrectOrder() {
-            // when
-            FilterRegistrationBean<UserContextFilter> registrationBean =
-                    filterConfig.userContextFilter();
-
-            // then
-            assertThat(registrationBean.getOrder()).isEqualTo(2);
+            assertThat(registrationBean.isEnabled()).isFalse();
+            assertThat(registrationBean.getFilter()).isEqualTo(filter);
         }
     }
 
@@ -128,16 +122,29 @@ class FilterConfigTest {
     class FilterOrderTest {
 
         @Test
-        @DisplayName("loggingFilter가 userContextFilter보다 먼저 실행된다")
-        void loggingFilter_ShouldExecuteBeforeUserContextFilter() {
+        @DisplayName("loggingFilter는 Servlet Container에 등록되어 먼저 실행된다")
+        void loggingFilter_ShouldBeRegisteredWithServletContainer() {
             // when
             FilterRegistrationBean<RequestResponseLoggingFilter> loggingFilter =
                     filterConfig.requestResponseLoggingFilter();
-            FilterRegistrationBean<UserContextFilter> userContextFilter =
-                    filterConfig.userContextFilter();
 
             // then
-            assertThat(loggingFilter.getOrder()).isLessThan(userContextFilter.getOrder());
+            assertThat(loggingFilter.isEnabled()).isTrue();
+            assertThat(loggingFilter.getOrder()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("userContextFilter는 Spring Security Filter Chain에서 관리되므로 Servlet 등록이 비활성화된다")
+        void userContextFilter_ShouldBeDisabledFromServletContainer() {
+            // given
+            UserContextFilter filter = filterConfig.userContextFilter();
+
+            // when
+            FilterRegistrationBean<UserContextFilter> registrationBean =
+                    filterConfig.userContextFilterRegistration(filter);
+
+            // then
+            assertThat(registrationBean.isEnabled()).isFalse();
         }
     }
 }
