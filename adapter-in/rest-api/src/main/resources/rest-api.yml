@@ -9,6 +9,18 @@
 # @see com.ryuqq.fileflow.adapter.in.rest.auth.paths.SecurityPaths
 # ===============================================
 
+# ===============================================
+# Springdoc (Swagger/OpenAPI) 설정
+# Gateway를 통해 접근 시 /file prefix 필요
+# ===============================================
+springdoc:
+  api-docs:
+    path: /file/v3/api-docs
+  swagger-ui:
+    path: /file/swagger-ui
+    # Swagger UI에서 API 호출 시 사용할 서버 URL
+    urls-primary-name: "FileFlow API"
+
 # Error 설정
 api:
   error:

@@ -54,18 +54,26 @@ public final class SecurityPaths {
      * API 문서 경로 (Swagger, REST Docs)
      *
      * <p>인증된 사용자면 접근 가능한 API 문서 경로입니다.
+     *
+     * <p>Gateway prefix(/file) 적용 경로와 직접 접근용 경로 모두 포함합니다.
      */
     public static final class Docs {
 
         /** API 문서 경로 목록 */
         public static final List<String> PATTERNS =
                 List.of(
+                        // Gateway prefix 적용 경로
                         ApiPaths.OpenApi.SWAGGER_REDIRECT,
                         ApiPaths.OpenApi.SWAGGER_UI,
                         ApiPaths.OpenApi.SWAGGER_UI_HTML,
                         ApiPaths.OpenApi.DOCS,
                         ApiPaths.Docs.BASE,
-                        ApiPaths.Docs.ALL);
+                        ApiPaths.Docs.ALL,
+                        // 직접 접근용 경로 (로컬 개발 시)
+                        ApiPaths.OpenApi.LOCAL_SWAGGER_UI,
+                        ApiPaths.OpenApi.LOCAL_DOCS,
+                        ApiPaths.Docs.LOCAL_BASE,
+                        ApiPaths.Docs.LOCAL_ALL);
 
         private Docs() {}
     }

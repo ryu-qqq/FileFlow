@@ -64,10 +64,6 @@ public class UploadSessionApiMapper {
                 request.fileName(),
                 request.fileSize(),
                 request.contentType(),
-                request.tenantId(),
-                request.organizationId(),
-                request.userId(),
-                request.userEmail(),
                 request.uploadCategory(),
                 request.customPath());
     }
@@ -85,10 +81,6 @@ public class UploadSessionApiMapper {
                 request.fileSize(),
                 request.contentType(),
                 request.partSize(),
-                request.tenantId(),
-                request.organizationId(),
-                request.userId(),
-                request.userEmail(),
                 request.customPath());
     }
 

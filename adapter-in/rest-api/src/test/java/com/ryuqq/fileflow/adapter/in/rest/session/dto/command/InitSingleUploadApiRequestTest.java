@@ -44,35 +44,18 @@ class InitSingleUploadApiRequestTest {
             String fileName = "image.jpg";
             long fileSize = 1024000L;
             String contentType = "image/jpeg";
-            Long tenantId = 1L;
-            Long organizationId = 100L;
-            Long userId = 12345L;
-            String userEmail = "user@example.com";
             String uploadCategory = "PRODUCT";
 
             // when
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            idempotencyKey,
-                            fileName,
-                            fileSize,
-                            contentType,
-                            tenantId,
-                            organizationId,
-                            userId,
-                            userEmail,
-                            uploadCategory,
-                            null);
+                            idempotencyKey, fileName, fileSize, contentType, uploadCategory, null);
 
             // then
             assertThat(request.idempotencyKey()).isEqualTo(idempotencyKey);
             assertThat(request.fileName()).isEqualTo(fileName);
             assertThat(request.fileSize()).isEqualTo(fileSize);
             assertThat(request.contentType()).isEqualTo(contentType);
-            assertThat(request.tenantId()).isEqualTo(tenantId);
-            assertThat(request.organizationId()).isEqualTo(organizationId);
-            assertThat(request.userId()).isEqualTo(userId);
-            assertThat(request.userEmail()).isEqualTo(userEmail);
             assertThat(request.uploadCategory()).isEqualTo(uploadCategory);
         }
 
@@ -82,20 +65,9 @@ class InitSingleUploadApiRequestTest {
             // when
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "idempotency-key",
-                            "file.txt",
-                            1024L,
-                            "text/plain",
-                            1L,
-                            1L,
-                            null,
-                            null,
-                            null,
-                            null);
+                            "idempotency-key", "file.txt", 1024L, "text/plain", null, null);
 
             // then
-            assertThat(request.userId()).isNull();
-            assertThat(request.userEmail()).isNull();
             assertThat(request.uploadCategory()).isNull();
             assertThat(request.customPath()).isNull();
         }
@@ -109,16 +81,7 @@ class InitSingleUploadApiRequestTest {
             // when
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "idempotency-key",
-                            "file.txt",
-                            1024L,
-                            "text/plain",
-                            1L,
-                            1L,
-                            null,
-                            null,
-                            null,
-                            customPath);
+                            "idempotency-key", "file.txt", 1024L, "text/plain", null, customPath);
 
             // then
             assertThat(request.customPath()).isEqualTo(customPath);
@@ -152,16 +115,7 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            idempotencyKey,
-                            "file.txt",
-                            1024L,
-                            "text/plain",
-                            1L,
-                            1L,
-                            null,
-                            null,
-                            null,
-                            null);
+                            idempotencyKey, "file.txt", 1024L, "text/plain", null, null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -181,7 +135,7 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key", fileName, 1024L, "text/plain", 1L, 1L, null, null, null, null);
+                            "key", fileName, 1024L, "text/plain", null, null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -199,16 +153,7 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key",
-                            "file.txt",
-                            fileSize,
-                            "text/plain",
-                            1L,
-                            1L,
-                            null,
-                            null,
-                            null,
-                            null);
+                            "key", "file.txt", fileSize, "text/plain", null, null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -227,7 +172,7 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request =
                     new InitSingleUploadApiRequest(
-                            "key", "file.txt", 1024L, contentType, 1L, 1L, null, null, null, null);
+                            "key", "file.txt", 1024L, contentType, null, null);
 
             // when
             Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
@@ -237,86 +182,6 @@ class InitSingleUploadApiRequestTest {
             assertThat(violations).isNotEmpty();
             assertThat(violations)
                     .anyMatch(v -> v.getPropertyPath().toString().equals("contentType"));
-        }
-
-        @Test
-        @DisplayName("테넌트 ID가 null이면 검증에 실패한다")
-        void validate_WithNullTenantId_ShouldFail() {
-            // given
-            InitSingleUploadApiRequest request =
-                    new InitSingleUploadApiRequest(
-                            "key",
-                            "file.txt",
-                            1024L,
-                            "text/plain",
-                            null,
-                            1L,
-                            null,
-                            null,
-                            null,
-                            null);
-
-            // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
-                    validator.validate(request);
-
-            // then
-            assertThat(violations).isNotEmpty();
-            assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("tenantId"));
-        }
-
-        @ParameterizedTest
-        @ValueSource(longs = {0L, -1L, -100L})
-        @DisplayName("테넌트 ID가 양수가 아니면 검증에 실패한다")
-        void validate_WithNonPositiveTenantId_ShouldFail(long tenantId) {
-            // given
-            InitSingleUploadApiRequest request =
-                    new InitSingleUploadApiRequest(
-                            "key",
-                            "file.txt",
-                            1024L,
-                            "text/plain",
-                            tenantId,
-                            1L,
-                            null,
-                            null,
-                            null,
-                            null);
-
-            // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
-                    validator.validate(request);
-
-            // then
-            assertThat(violations).isNotEmpty();
-            assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("tenantId"));
-        }
-
-        @Test
-        @DisplayName("조직 ID가 null이면 검증에 실패한다")
-        void validate_WithNullOrganizationId_ShouldFail() {
-            // given
-            InitSingleUploadApiRequest request =
-                    new InitSingleUploadApiRequest(
-                            "key",
-                            "file.txt",
-                            1024L,
-                            "text/plain",
-                            1L,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null);
-
-            // when
-            Set<ConstraintViolation<InitSingleUploadApiRequest>> violations =
-                    validator.validate(request);
-
-            // then
-            assertThat(violations).isNotEmpty();
-            assertThat(violations)
-                    .anyMatch(v -> v.getPropertyPath().toString().equals("organizationId"));
         }
     }
 
@@ -330,28 +195,10 @@ class InitSingleUploadApiRequestTest {
             // given
             InitSingleUploadApiRequest request1 =
                     new InitSingleUploadApiRequest(
-                            "key",
-                            "file.txt",
-                            1024L,
-                            "text/plain",
-                            1L,
-                            1L,
-                            100L,
-                            "email",
-                            "PRODUCT",
-                            null);
+                            "key", "file.txt", 1024L, "text/plain", "PRODUCT", null);
             InitSingleUploadApiRequest request2 =
                     new InitSingleUploadApiRequest(
-                            "key",
-                            "file.txt",
-                            1024L,
-                            "text/plain",
-                            1L,
-                            1L,
-                            100L,
-                            "email",
-                            "PRODUCT",
-                            null);
+                            "key", "file.txt", 1024L, "text/plain", "PRODUCT", null);
 
             // when & then
             assertThat(request1).isEqualTo(request2);
@@ -376,16 +223,12 @@ class InitSingleUploadApiRequestTest {
                 "image.jpg",
                 1024000L,
                 "image/jpeg",
-                1L,
-                100L,
-                12345L,
-                "user@example.com",
                 "PRODUCT",
                 null);
     }
 
     private InitSingleUploadApiRequest createRequestWithIdempotencyKey(String idempotencyKey) {
         return new InitSingleUploadApiRequest(
-                idempotencyKey, "file.txt", 1024L, "text/plain", 1L, 1L, null, null, null, null);
+                idempotencyKey, "file.txt", 1024L, "text/plain", null, null);
     }
 }

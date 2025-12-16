@@ -12,33 +12,20 @@ package com.ryuqq.fileflow.application.session.dto.command;
  *   <li>fileSize: 5MB ~ 5TB
  *   <li>contentType: 허용된 MIME 타입만 가능
  *   <li>partSize: 5MB ~ 5GB (기본값: 5MB)
- *   <li>tenantId: 양수
- *   <li>organizationId: 양수
- *   <li>userId: 양수 (Customer), null 가능 (Admin/Seller는 email 사용)
- *   <li>userEmail: null 가능 (Customer는 userId 사용)
  *   <li>customPath: SYSTEM 전용, S3 경로 직접 지정
  * </ul>
+ *
+ * <p><strong>참고</strong>: tenantId, organizationId, userId, userEmail은 UserContext(ThreadLocal)에서
+ * 가져옵니다.
  *
  * @param fileName 파일명 (확장자 포함)
  * @param fileSize 파일 크기 (바이트)
  * @param contentType Content-Type (MIME 타입)
  * @param partSize 각 Part 크기 (바이트, 기본: 5MB)
- * @param tenantId 테넌트 ID
- * @param organizationId 조직 ID
- * @param userId 사용자 ID (Customer 전용, null 가능)
- * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
  * @param customPath 커스텀 S3 경로 (SYSTEM 전용)
  */
 public record InitMultipartUploadCommand(
-        String fileName,
-        long fileSize,
-        String contentType,
-        long partSize,
-        long tenantId,
-        long organizationId,
-        Long userId,
-        String userEmail,
-        String customPath) {
+        String fileName, long fileSize, String contentType, long partSize, String customPath) {
 
     /**
      * 값 기반 생성.
@@ -47,32 +34,12 @@ public record InitMultipartUploadCommand(
      * @param fileSize 파일 크기 (바이트)
      * @param contentType Content-Type
      * @param partSize 각 Part 크기 (바이트)
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
-     * @param userId 사용자 ID (null 가능)
-     * @param userEmail 사용자 이메일 (null 가능)
      * @param customPath 커스텀 S3 경로 (null 가능)
      * @return InitMultipartUploadCommand
      */
     public static InitMultipartUploadCommand of(
-            String fileName,
-            long fileSize,
-            String contentType,
-            long partSize,
-            long tenantId,
-            long organizationId,
-            Long userId,
-            String userEmail,
-            String customPath) {
+            String fileName, long fileSize, String contentType, long partSize, String customPath) {
         return new InitMultipartUploadCommand(
-                fileName,
-                fileSize,
-                contentType,
-                partSize,
-                tenantId,
-                organizationId,
-                userId,
-                userEmail,
-                customPath);
+                fileName, fileSize, contentType, partSize, customPath);
     }
 }

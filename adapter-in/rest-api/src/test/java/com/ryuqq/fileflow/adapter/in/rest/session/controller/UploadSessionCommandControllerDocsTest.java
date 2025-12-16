@@ -84,10 +84,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                         "image.jpg",
                         1024000L,
                         "image/jpeg",
-                        1L,
-                        1L,
-                        null,
-                        "admin@test.com",
                         "PRODUCT",
                         null);
 
@@ -119,14 +115,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("fileSize").description("파일 크기 (bytes)"),
                                         fieldWithPath("contentType")
                                                 .description("Content-Type (MIME 타입)"),
-                                        fieldWithPath("tenantId").description("테넌트 ID"),
-                                        fieldWithPath("organizationId").description("조직 ID"),
-                                        fieldWithPath("userId")
-                                                .description("사용자 ID (Customer 전용)")
-                                                .optional(),
-                                        fieldWithPath("userEmail")
-                                                .description("사용자 이메일 (Admin/Seller 전용)")
-                                                .optional(),
                                         fieldWithPath("uploadCategory")
                                                 .description("업로드 카테고리 (Admin/Seller 필수)")
                                                 .optional(),
@@ -155,15 +143,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
         // given
         InitMultipartUploadApiRequest request =
                 new InitMultipartUploadApiRequest(
-                        "large-file.zip",
-                        104857600L,
-                        "application/zip",
-                        5242880L,
-                        1L,
-                        1L,
-                        null,
-                        "admin@test.com",
-                        null);
+                        "large-file.zip", 104857600L, "application/zip", 5242880L, null);
 
         List<InitMultipartUploadResponse.PartInfo> parts =
                 List.of(
@@ -203,14 +183,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                                 .description("Content-Type (MIME 타입)"),
                                         fieldWithPath("partSize")
                                                 .description("각 Part 크기 (bytes, 기본: 5MB)"),
-                                        fieldWithPath("tenantId").description("테넌트 ID"),
-                                        fieldWithPath("organizationId").description("조직 ID"),
-                                        fieldWithPath("userId")
-                                                .description("사용자 ID (Customer 전용)")
-                                                .optional(),
-                                        fieldWithPath("userEmail")
-                                                .description("사용자 이메일 (Admin/Seller 전용)")
-                                                .optional(),
                                         fieldWithPath("customPath")
                                                 .description("커스텀 S3 경로 (SYSTEM 전용)")
                                                 .optional()),
