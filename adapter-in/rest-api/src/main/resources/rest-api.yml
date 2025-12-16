@@ -11,15 +11,13 @@
 
 # ===============================================
 # Springdoc (Swagger/OpenAPI) 설정
-# Gateway를 통해 접근 시 /file prefix 필요
+# Gateway 라우팅: /api/v1/file/** → FileFlow
 # ===============================================
 springdoc:
   api-docs:
-    path: /file/v3/api-docs
+    path: /api/v1/file/v3/api-docs
   swagger-ui:
-    path: /file/swagger-ui
-    # Swagger UI에서 API 호출 시 사용할 서버 URL
-    urls-primary-name: "FileFlow API"
+    path: /api/v1/file/swagger-ui
 
 # Error 설정
 api:

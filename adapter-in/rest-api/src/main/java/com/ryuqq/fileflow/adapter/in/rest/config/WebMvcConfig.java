@@ -20,18 +20,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
     /**
      * REST Docs 정적 리소스 핸들러 등록
      *
-     * <p>Gateway를 통해 접근 시:
+     * <p>Gateway 라우팅: /api/v1/file/** → FileFlow
      *
      * <ul>
-     *   <li>/file/docs/** -> classpath:/static/docs/
+     *   <li>/api/v1/file/docs/** -> classpath:/static/docs/
      * </ul>
      *
      * @param registry 리소스 핸들러 레지스트리
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // REST Docs - Gateway prefix 적용
-        registry.addResourceHandler("/file/docs/**")
+        // REST Docs - Gateway 라우팅 경로
+        registry.addResourceHandler("/api/v1/file/docs/**")
                 .addResourceLocations("classpath:/static/docs/");
 
         // 직접 접근용 (로컬 개발 시)
