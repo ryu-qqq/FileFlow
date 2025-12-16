@@ -12,22 +12,17 @@ package com.ryuqq.fileflow.application.session.dto.command;
  *   <li>fileName: null 불가, 빈 문자열 불가
  *   <li>fileSize: 1 ~ 5GB (5,368,709,120 bytes)
  *   <li>contentType: 허용된 MIME 타입만 가능
- *   <li>tenantId: 양수
- *   <li>organizationId: 양수
- *   <li>userId: 양수 (Customer), null 가능 (Admin/Seller는 email 사용)
- *   <li>userEmail: null 가능 (Customer는 userId 사용)
  *   <li>uploadCategory: Admin/Seller 필수, Customer는 null
  *   <li>customPath: SYSTEM 전용, uploadCategory와 동시 사용 불가
  * </ul>
+ *
+ * <p><strong>참고</strong>: tenantId, organizationId, userId, userEmail은 UserContext(ThreadLocal)에서
+ * 가져옵니다.
  *
  * @param idempotencyKey 멱등성 키 (클라이언트 제공 UUID)
  * @param fileName 파일명 (확장자 포함)
  * @param fileSize 파일 크기 (바이트)
  * @param contentType Content-Type (MIME 타입)
- * @param tenantId 테넌트 ID
- * @param organizationId 조직 ID
- * @param userId 사용자 ID (Customer 전용, null 가능)
- * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
  * @param uploadCategory 업로드 카테고리 (Admin/Seller 필수, Customer는 null)
  * @param customPath 커스텀 S3 경로 (SYSTEM 전용, uploadCategory와 배타적)
  */
@@ -36,10 +31,6 @@ public record InitSingleUploadCommand(
         String fileName,
         long fileSize,
         String contentType,
-        long tenantId,
-        long organizationId,
-        Long userId,
-        String userEmail,
         String uploadCategory,
         String customPath) {
 
@@ -50,10 +41,6 @@ public record InitSingleUploadCommand(
      * @param fileName 파일명
      * @param fileSize 파일 크기 (바이트)
      * @param contentType Content-Type
-     * @param tenantId 테넌트 ID
-     * @param organizationId 조직 ID
-     * @param userId 사용자 ID (null 가능)
-     * @param userEmail 사용자 이메일 (null 가능)
      * @param uploadCategory 업로드 카테고리 (null 가능)
      * @param customPath 커스텀 S3 경로 (null 가능)
      * @return InitSingleUploadCommand
@@ -63,22 +50,9 @@ public record InitSingleUploadCommand(
             String fileName,
             long fileSize,
             String contentType,
-            long tenantId,
-            long organizationId,
-            Long userId,
-            String userEmail,
             String uploadCategory,
             String customPath) {
         return new InitSingleUploadCommand(
-                idempotencyKey,
-                fileName,
-                fileSize,
-                contentType,
-                tenantId,
-                organizationId,
-                userId,
-                userEmail,
-                uploadCategory,
-                customPath);
+                idempotencyKey, fileName, fileSize, contentType, uploadCategory, customPath);
     }
 }
