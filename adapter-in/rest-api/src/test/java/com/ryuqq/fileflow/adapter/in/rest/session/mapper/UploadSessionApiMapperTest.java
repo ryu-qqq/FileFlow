@@ -70,10 +70,6 @@ class UploadSessionApiMapperTest {
                             "image.jpg",
                             1024000L,
                             "image/jpeg",
-                            1L,
-                            100L,
-                            12345L,
-                            "admin@test.com",
                             "PRODUCT",
                             null);
 
@@ -85,10 +81,6 @@ class UploadSessionApiMapperTest {
             assertThat(command.fileName()).isEqualTo("image.jpg");
             assertThat(command.fileSize()).isEqualTo(1024000L);
             assertThat(command.contentType()).isEqualTo("image/jpeg");
-            assertThat(command.tenantId()).isEqualTo(1L);
-            assertThat(command.organizationId()).isEqualTo(100L);
-            assertThat(command.userId()).isEqualTo(12345L);
-            assertThat(command.userEmail()).isEqualTo("admin@test.com");
             assertThat(command.uploadCategory()).isEqualTo("PRODUCT");
         }
 
@@ -102,10 +94,6 @@ class UploadSessionApiMapperTest {
                             "document.pdf",
                             2048000L,
                             "application/pdf",
-                            1L,
-                            100L,
-                            null,
-                            null,
                             null,
                             null);
 
@@ -115,9 +103,8 @@ class UploadSessionApiMapperTest {
             // then
             assertThat(command.idempotencyKey()).isEqualTo("idempotency-key-456");
             assertThat(command.fileName()).isEqualTo("document.pdf");
-            assertThat(command.userId()).isNull();
-            assertThat(command.userEmail()).isNull();
             assertThat(command.uploadCategory()).isNull();
+            assertThat(command.customPath()).isNull();
         }
     }
 
@@ -131,15 +118,7 @@ class UploadSessionApiMapperTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "large-file.zip",
-                            104857600L,
-                            "application/zip",
-                            5242880L,
-                            1L,
-                            100L,
-                            12345L,
-                            "admin@test.com",
-                            null);
+                            "large-file.zip", 104857600L, "application/zip", 5242880L, null);
 
             // when
             InitMultipartUploadCommand command = mapper.toInitMultipartUploadCommand(request);
@@ -149,10 +128,7 @@ class UploadSessionApiMapperTest {
             assertThat(command.fileSize()).isEqualTo(104857600L);
             assertThat(command.contentType()).isEqualTo("application/zip");
             assertThat(command.partSize()).isEqualTo(5242880L);
-            assertThat(command.tenantId()).isEqualTo(1L);
-            assertThat(command.organizationId()).isEqualTo(100L);
-            assertThat(command.userId()).isEqualTo(12345L);
-            assertThat(command.userEmail()).isEqualTo("admin@test.com");
+            assertThat(command.customPath()).isNull();
         }
     }
 

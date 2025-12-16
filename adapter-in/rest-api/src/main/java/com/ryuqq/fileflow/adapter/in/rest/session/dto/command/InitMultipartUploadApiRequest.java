@@ -2,7 +2,6 @@ package com.ryuqq.fileflow.adapter.in.rest.session.dto.command;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 /**
@@ -10,14 +9,13 @@ import jakarta.validation.constraints.Positive;
  *
  * <p>대용량 파일을 Part 단위로 나누어 업로드하기 위한 세션 생성 요청 정보를 담습니다.
  *
+ * <p><strong>참고</strong>: tenantId, organizationId, userId, userEmail은 인증 정보(UserContext)에서 자동으로
+ * 추출됩니다.
+ *
  * @param fileName 파일명 (확장자 포함)
  * @param fileSize 파일 크기 (바이트)
  * @param contentType Content-Type (MIME 타입)
  * @param partSize 각 Part 크기 (바이트, 기본: 5MB)
- * @param tenantId 테넌트 ID
- * @param organizationId 조직 ID
- * @param userId 사용자 ID (Customer 전용, null 가능)
- * @param userEmail 사용자 이메일 (Admin/Seller 전용, null 가능)
  * @param customPath 커스텀 S3 경로 (SYSTEM 전용)
  * @author development-team
  * @since 1.0.0
@@ -48,21 +46,6 @@ public record InitMultipartUploadApiRequest(
                         requiredMode = Schema.RequiredMode.REQUIRED)
                 @Positive(message = "Part 크기는 양수여야 합니다")
                 long partSize,
-        @Schema(description = "테넌트 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-                @NotNull(message = "테넌트 ID는 필수입니다")
-                @Positive(message = "테넌트 ID는 양수여야 합니다")
-                Long tenantId,
-        @Schema(description = "조직 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-                @NotNull(message = "조직 ID는 필수입니다")
-                @Positive(message = "조직 ID는 양수여야 합니다")
-                Long organizationId,
-        @Schema(description = "사용자 ID (Customer 전용)", example = "12345", nullable = true)
-                Long userId,
-        @Schema(
-                        description = "사용자 이메일 (Admin/Seller 전용)",
-                        example = "user@example.com",
-                        nullable = true)
-                String userEmail,
         @Schema(
                         description = "커스텀 S3 경로 (SYSTEM 전용)",
                         example = "applications/seller-123/documents",
