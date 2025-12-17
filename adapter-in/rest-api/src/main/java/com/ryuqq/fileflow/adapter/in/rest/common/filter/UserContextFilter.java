@@ -35,6 +35,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -79,6 +80,8 @@ public class UserContextFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(UserContextFilter.class);
 
+    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
+
     // Authorization Header
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -118,6 +121,21 @@ public class UserContextFilter extends OncePerRequestFilter {
             ObjectMapper objectMapper, ServiceTokenProperties serviceTokenProperties) {
         this.objectMapper = objectMapper;
         this.serviceTokenProperties = serviceTokenProperties;
+    }
+
+    /**
+     * Public 경로는 필터를 건너뜁니다.
+     *
+     * <p>Actuator, 헬스체크, 에러 페이지 등 인증이 필요 없는 경로는 필터링하지 않습니다.
+     *
+     * @param request HTTP 요청
+     * @return true면 필터 건너뜀
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return SecurityPaths.Public.PATTERNS.stream()
+                .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 
     @Override
