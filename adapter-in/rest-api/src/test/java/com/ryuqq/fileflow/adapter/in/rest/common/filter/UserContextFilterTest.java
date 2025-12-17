@@ -194,35 +194,54 @@ class UserContextFilterTest {
     }
 
     @Nested
-    @DisplayName("개발 모드 (헤더/토큰 없음)")
-    class DevelopmentMode {
+    @DisplayName("인증 실패 (헤더/토큰 없음)")
+    class MissingAuthentication {
 
         @Test
-        @DisplayName("X-Tenant-Id 헤더가 없으면 개발 모드로 기본 Admin 생성")
-        void shouldCreateDefaultAdminWhenNoTenantIdHeader() throws Exception {
+        @DisplayName("X-Tenant-Id 헤더와 JWT 토큰 모두 없으면 401 Unauthorized")
+        void shouldReturn401WhenNoTenantIdHeaderAndNoToken() throws Exception {
             // given
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+
             when(request.getHeader("X-Tenant-Id")).thenReturn(null);
             when(request.getHeader("Authorization")).thenReturn(null);
+            when(request.getHeader("X-Service-Token")).thenReturn(null);
+            when(request.getRequestURI()).thenReturn("/api/v1/file/test");
+            when(request.getQueryString()).thenReturn(null);
+            when(response.getWriter()).thenReturn(printWriter);
 
             // when
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(request, response);
+            verify(response).setStatus(401);
+            verify(filterChain, never()).doFilter(any(), any());
+
+            String responseBody = stringWriter.toString();
+            assertThat(responseBody).contains("MISSING_AUTHENTICATION");
         }
 
         @Test
-        @DisplayName("빈 X-Tenant-Id 헤더는 개발 모드로 처리")
-        void shouldTreatEmptyTenantIdAsDevelopmentMode() throws Exception {
+        @DisplayName("빈 X-Tenant-Id 헤더와 JWT 토큰 없으면 401 Unauthorized")
+        void shouldReturn401WhenEmptyTenantIdAndNoToken() throws Exception {
             // given
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+
             when(request.getHeader("X-Tenant-Id")).thenReturn("");
             when(request.getHeader("Authorization")).thenReturn(null);
+            when(request.getHeader("X-Service-Token")).thenReturn(null);
+            when(request.getRequestURI()).thenReturn("/api/v1/file/test");
+            when(request.getQueryString()).thenReturn(null);
+            when(response.getWriter()).thenReturn(printWriter);
 
             // when
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            verify(filterChain).doFilter(request, response);
+            verify(response).setStatus(401);
+            verify(filterChain, never()).doFilter(any(), any());
         }
     }
 
@@ -319,8 +338,8 @@ class UserContextFilterTest {
         }
 
         @Test
-        @DisplayName("JWT에 tid(tenantId) 누락 시 개발 모드로 처리")
-        void shouldUseDevelopmentModeWhenJwtMissingTenantId() throws Exception {
+        @DisplayName("JWT에 tid(tenantId) 누락 시 기본 Connectly 테넌트로 처리")
+        void shouldUseConnectlyTenantWhenJwtMissingTenantId() throws Exception {
             // given
             when(request.getHeader("X-Tenant-Id")).thenReturn(null);
 
@@ -340,7 +359,7 @@ class UserContextFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // then
-            // JWT 파싱 실패 시 개발 모드로 fallback
+            // JWT에 tenantId 없으면 기본 Connectly 테넌트 사용
             verify(filterChain).doFilter(request, response);
         }
     }
@@ -349,12 +368,15 @@ class UserContextFilterTest {
     @DisplayName("MDC 설정")
     class MdcSettings {
 
+        private static final String VALID_SERVICE_TOKEN = "test-service-token-secret";
+
         @Test
         @DisplayName("필터 완료 후 MDC 정리")
         void shouldClearMdcAfterFilter() throws Exception {
-            // given
-            when(request.getHeader("X-Tenant-Id")).thenReturn(null);
-            when(request.getHeader("Authorization")).thenReturn(null);
+            // given - Service Token으로 인증 (유효한 인증 정보 필요)
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(false);
 
             // when
             filter.doFilterInternal(request, response, filterChain);
@@ -368,9 +390,10 @@ class UserContextFilterTest {
         @Test
         @DisplayName("예외 발생 시에도 MDC 정리")
         void shouldClearMdcEvenOnException() throws Exception {
-            // given
-            when(request.getHeader("X-Tenant-Id")).thenReturn(null);
-            when(request.getHeader("Authorization")).thenReturn(null);
+            // given - Service Token으로 인증
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(false);
             org.mockito.Mockito.doThrow(new RuntimeException("Test exception"))
                     .when(filterChain)
                     .doFilter(request, response);
@@ -392,12 +415,15 @@ class UserContextFilterTest {
     @DisplayName("UserContextHolder 정리")
     class UserContextHolderCleanup {
 
+        private static final String VALID_SERVICE_TOKEN = "test-service-token-secret";
+
         @Test
         @DisplayName("필터 완료 후 UserContextHolder 정리")
         void shouldClearUserContextHolderAfterFilter() throws Exception {
-            // given
-            when(request.getHeader("X-Tenant-Id")).thenReturn(null);
-            when(request.getHeader("Authorization")).thenReturn(null);
+            // given - Service Token으로 인증 (유효한 인증 정보 필요)
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(false);
 
             // when
             filter.doFilterInternal(request, response, filterChain);
@@ -463,55 +489,76 @@ class UserContextFilterTest {
         }
 
         @Test
-        @DisplayName("Service Token 비활성화 시 일반 플로우로 진행")
+        @DisplayName("Service Token 비활성화 시 일반 플로우로 진행 - 인증 없으면 401")
         void shouldFallbackToNormalFlowWhenServiceTokenDisabled() throws Exception {
             // given
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+
             when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
             when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(false);
             when(request.getHeader("X-Tenant-Id")).thenReturn(null);
             when(request.getHeader("Authorization")).thenReturn(null);
+            when(request.getRequestURI()).thenReturn("/api/v1/file/test");
+            when(request.getQueryString()).thenReturn(null);
+            when(response.getWriter()).thenReturn(printWriter);
 
             // when
             filter.doFilterInternal(request, response, filterChain);
 
-            // then
-            verify(filterChain).doFilter(request, response);
+            // then - 인증 정보 없으면 401
+            verify(response).setStatus(401);
+            verify(filterChain, never()).doFilter(any(), any());
             // Service Token이 비활성화되면 Gateway 헤더 체크 진행
             verify(request).getHeader("X-Tenant-Id");
         }
 
         @Test
-        @DisplayName("잘못된 Service Token은 일반 플로우로 진행")
+        @DisplayName("잘못된 Service Token은 일반 플로우로 진행 - 인증 없으면 401")
         void shouldFallbackToNormalFlowWhenInvalidServiceToken() throws Exception {
             // given
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+
             String invalidToken = "wrong-token";
             when(request.getHeader("X-Service-Token")).thenReturn(invalidToken);
             when(serviceTokenProperties.isValidToken(invalidToken)).thenReturn(false);
             when(request.getHeader("X-Tenant-Id")).thenReturn(null);
             when(request.getHeader("Authorization")).thenReturn(null);
+            when(request.getRequestURI()).thenReturn("/api/v1/file/test");
+            when(request.getQueryString()).thenReturn(null);
+            when(response.getWriter()).thenReturn(printWriter);
 
             // when
             filter.doFilterInternal(request, response, filterChain);
 
-            // then
-            verify(filterChain).doFilter(request, response);
+            // then - 인증 정보 없으면 401
+            verify(response).setStatus(401);
+            verify(filterChain, never()).doFilter(any(), any());
             verify(request).getHeader("X-Tenant-Id");
         }
 
         @Test
-        @DisplayName("Service Token 헤더가 없으면 일반 플로우로 진행")
+        @DisplayName("Service Token 헤더가 없으면 일반 플로우로 진행 - 인증 없으면 401")
         void shouldFallbackToNormalFlowWhenNoServiceTokenHeader() throws Exception {
             // given
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+
             when(request.getHeader("X-Service-Token")).thenReturn(null);
             when(serviceTokenProperties.isValidToken(null)).thenReturn(false);
             when(request.getHeader("X-Tenant-Id")).thenReturn(null);
             when(request.getHeader("Authorization")).thenReturn(null);
+            when(request.getRequestURI()).thenReturn("/api/v1/file/test");
+            when(request.getQueryString()).thenReturn(null);
+            when(response.getWriter()).thenReturn(printWriter);
 
             // when
             filter.doFilterInternal(request, response, filterChain);
 
-            // then
-            verify(filterChain).doFilter(request, response);
+            // then - 인증 정보 없으면 401
+            verify(response).setStatus(401);
+            verify(filterChain, never()).doFilter(any(), any());
             verify(request).getHeader("X-Tenant-Id");
         }
 
@@ -533,6 +580,153 @@ class UserContextFilterTest {
             // Service Token이 유효하면 Gateway 헤더 처리를 건너뜀
             // (request.getHeader("X-Tenant-Id")는 Service Token 검증 전에 호출될 수 있지만
             // UserContext는 SYSTEM으로 생성됨)
+        }
+    }
+
+    @Nested
+    @DisplayName("Service Token + X-Service-Name 헤더 처리")
+    class ServiceNameHeaderHandling {
+
+        private static final String VALID_SERVICE_TOKEN = "test-service-token-secret";
+        private static final String SERVICE_NAME = "setof-server";
+
+        @Test
+        @DisplayName("X-Service-Name 헤더가 있으면 serviceName이 설정된다")
+        void shouldSetServiceNameWhenHeaderPresent() throws Exception {
+            // given
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(request.getHeader("X-Service-Name")).thenReturn(SERVICE_NAME);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isAllowedService(SERVICE_NAME)).thenReturn(true);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
+            verify(request).getHeader("X-Service-Name");
+        }
+
+        @Test
+        @DisplayName("X-Service-Name 헤더가 없어도 requireServiceName=false면 통과")
+        void shouldPassWithoutServiceNameWhenNotRequired() throws Exception {
+            // given
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(request.getHeader("X-Service-Name")).thenReturn(null);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(false);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
+        }
+
+        @Test
+        @DisplayName("requireServiceName=true일 때 X-Service-Name 헤더가 없으면 400 응답")
+        void shouldReturn400WhenServiceNameRequiredButMissing() throws Exception {
+            // given
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(request.getHeader("X-Service-Name")).thenReturn(null);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(true);
+            when(request.getRequestURI()).thenReturn("/api/v1/test");
+            when(request.getQueryString()).thenReturn(null);
+            when(response.getWriter()).thenReturn(printWriter);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(response).setStatus(400);
+            verify(filterChain, never()).doFilter(any(), any());
+        }
+
+        @Test
+        @DisplayName("requireServiceName=true일 때 X-Service-Name 헤더가 빈 문자열이면 400 응답")
+        void shouldReturn400WhenServiceNameRequiredButEmpty() throws Exception {
+            // given
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(request.getHeader("X-Service-Name")).thenReturn("");
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(true);
+            when(request.getRequestURI()).thenReturn("/api/v1/test");
+            when(request.getQueryString()).thenReturn(null);
+            when(response.getWriter()).thenReturn(printWriter);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(response).setStatus(400);
+            verify(filterChain, never()).doFilter(any(), any());
+        }
+
+        @Test
+        @DisplayName("허용되지 않은 서비스 이름이면 403 응답")
+        void shouldReturn403WhenServiceNotAllowed() throws Exception {
+            // given
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+            String unknownService = "unknown-service";
+
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(request.getHeader("X-Service-Name")).thenReturn(unknownService);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(false);
+            when(serviceTokenProperties.isAllowedService(unknownService)).thenReturn(false);
+            when(request.getRequestURI()).thenReturn("/api/v1/test");
+            when(request.getQueryString()).thenReturn(null);
+            when(response.getWriter()).thenReturn(printWriter);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(response).setStatus(403);
+            verify(filterChain, never()).doFilter(any(), any());
+        }
+
+        @Test
+        @DisplayName("허용된 서비스 이름이면 정상 통과")
+        void shouldPassWhenServiceAllowed() throws Exception {
+            // given
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(request.getHeader("X-Service-Name")).thenReturn(SERVICE_NAME);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(false);
+            when(serviceTokenProperties.isAllowedService(SERVICE_NAME)).thenReturn(true);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
+        }
+
+        @Test
+        @DisplayName("allowedServices가 비어있으면 모든 서비스 허용")
+        void shouldAllowAllServicesWhenWhitelistEmpty() throws Exception {
+            // given
+            String anyService = "any-service";
+            when(request.getHeader("X-Service-Token")).thenReturn(VALID_SERVICE_TOKEN);
+            when(request.getHeader("X-Service-Name")).thenReturn(anyService);
+            when(serviceTokenProperties.isValidToken(VALID_SERVICE_TOKEN)).thenReturn(true);
+            when(serviceTokenProperties.isRequireServiceName()).thenReturn(false);
+            when(serviceTokenProperties.isAllowedService(anyService)).thenReturn(true);
+
+            // when
+            filter.doFilterInternal(request, response, filterChain);
+
+            // then
+            verify(filterChain).doFilter(request, response);
         }
     }
 }

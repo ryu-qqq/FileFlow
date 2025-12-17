@@ -69,6 +69,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  *   <li>tenantId: 테넌트 ID
  *   <li>organizationId: 조직 ID
  *   <li>roles: 역할 목록
+ *   <li>serviceName: 호출 서비스 이름 (Service Token 인증 시에만 설정)
  * </ul>
  *
  * @author development-team
@@ -82,8 +83,9 @@ public class UserContextFilter extends OncePerRequestFilter {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    // Service Token Header (서버 간 내부 통신용)
+    // Service Token Headers (서버 간 내부 통신용)
     private static final String HEADER_SERVICE_TOKEN = SecurityPaths.Headers.SERVICE_TOKEN;
+    private static final String HEADER_SERVICE_NAME = SecurityPaths.Headers.SERVICE_NAME;
 
     // Gateway Headers
     private static final String HEADER_USER_ID = "X-User-Id";
@@ -107,6 +109,7 @@ public class UserContextFilter extends OncePerRequestFilter {
     private static final String MDC_TENANT_ID = "tenantId";
     private static final String MDC_ORGANIZATION_ID = "organizationId";
     private static final String MDC_ROLES = "roles";
+    private static final String MDC_SERVICE_NAME = "serviceName";
 
     private final ObjectMapper objectMapper;
     private final ServiceTokenProperties serviceTokenProperties;
@@ -128,8 +131,39 @@ public class UserContextFilter extends OncePerRequestFilter {
             // 1. Service Token 확인 (서버 간 내부 통신)
             String serviceToken = request.getHeader(HEADER_SERVICE_TOKEN);
             if (serviceTokenProperties.isValidToken(serviceToken)) {
-                userContext = createSystemContext();
-                log.debug("Service Token 인증 성공 - SYSTEM UserContext 사용");
+                String serviceName = request.getHeader(HEADER_SERVICE_NAME);
+
+                // Phase 2: X-Service-Name 필수 검증 (requireServiceName=true인 경우)
+                if (serviceTokenProperties.isRequireServiceName()
+                        && (serviceName == null || serviceName.isBlank())) {
+                    log.warn("Service Token 인증 실패 - X-Service-Name 헤더가 필수입니다.");
+                    sendErrorResponse(
+                            request,
+                            response,
+                            HttpStatus.BAD_REQUEST,
+                            "MISSING_SERVICE_NAME",
+                            "X-Service-Name 헤더가 필수입니다.");
+                    return;
+                }
+
+                // 화이트리스트 검증 (allowedServices가 설정된 경우)
+                if (serviceName != null
+                        && !serviceName.isBlank()
+                        && !serviceTokenProperties.isAllowedService(serviceName)) {
+                    log.warn("Service Token 인증 실패 - 허용되지 않은 서비스: {}", serviceName);
+                    sendErrorResponse(
+                            request,
+                            response,
+                            HttpStatus.FORBIDDEN,
+                            "UNKNOWN_SERVICE",
+                            "허용되지 않은 서비스입니다: " + serviceName);
+                    return;
+                }
+
+                userContext = createSystemContext(serviceName);
+                log.debug(
+                        "Service Token 인증 성공 - SYSTEM UserContext 사용 (serviceName={})",
+                        serviceName != null ? serviceName : "unknown");
             }
             // 2. Gateway 헤더 확인
             else {
@@ -150,25 +184,30 @@ public class UserContextFilter extends OncePerRequestFilter {
                         return;
                     }
                 } else {
-                    // Gateway 미경유: 개발 모드 또는 JWT 직접 파싱
+                    // Gateway 미경유: JWT 직접 파싱
                     String token = extractToken(request);
                     if (token == null) {
-                        // 개발 모드: 기본 Admin UserContext 생성
-                        userContext = createDefaultAdminContext();
-                        log.warn("헤더/토큰 없음 - 개발용 기본 Admin UserContext 사용: {}", userContext.email());
-                    } else {
-                        try {
-                            userContext = parseTokenAndCreateUserContext(token);
-                        } catch (IllegalArgumentException e) {
-                            log.warn("JWT 토큰 파싱 실패: {}", e.getMessage());
-                            sendErrorResponse(
-                                    request,
-                                    response,
-                                    HttpStatus.BAD_REQUEST,
-                                    "INVALID_TOKEN",
-                                    e.getMessage());
-                            return;
-                        }
+                        // 인증 정보 없음: 401 Unauthorized 응답
+                        log.warn("인증 실패 - Gateway 헤더 또는 JWT 토큰이 필요합니다.");
+                        sendErrorResponse(
+                                request,
+                                response,
+                                HttpStatus.UNAUTHORIZED,
+                                "MISSING_AUTHENTICATION",
+                                "인증 정보가 필요합니다. Gateway 헤더 또는 JWT 토큰을 제공해주세요.");
+                        return;
+                    }
+                    try {
+                        userContext = parseTokenAndCreateUserContext(token);
+                    } catch (IllegalArgumentException e) {
+                        log.warn("JWT 토큰 파싱 실패: {}", e.getMessage());
+                        sendErrorResponse(
+                                request,
+                                response,
+                                HttpStatus.BAD_REQUEST,
+                                "INVALID_TOKEN",
+                                e.getMessage());
+                        return;
                     }
                 }
             }
@@ -435,25 +474,17 @@ public class UserContextFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 개발용 기본 Admin UserContext를 생성합니다.
-     *
-     * @return 기본 Admin UserContext
-     */
-    private UserContext createDefaultAdminContext() {
-        return UserContext.admin(
-                "master@connectly.com",
-                List.of("SUPER_ADMIN"),
-                List.of("file:read", "file:write", "file:delete"));
-    }
-
-    /**
      * System 내부 호출용 UserContext를 생성합니다.
      *
      * <p>Service Token 인증 성공 시 사용됩니다. 최상위 권한을 가지며 모든 리소스에 접근 가능합니다.
      *
+     * @param serviceName 호출 서비스 이름 (nullable, X-Service-Name 헤더 값)
      * @return System UserContext
      */
-    private UserContext createSystemContext() {
+    private UserContext createSystemContext(String serviceName) {
+        if (serviceName != null && !serviceName.isBlank()) {
+            return UserContext.system(serviceName);
+        }
         return UserContext.system();
     }
 
@@ -470,6 +501,12 @@ public class UserContextFilter extends OncePerRequestFilter {
         MDC.put(MDC_ORGANIZATION_ID, orgId != null ? orgId.value() : "N/A");
 
         MDC.put(MDC_ROLES, String.join(",", userContext.roles()));
+
+        // Service Name 추가 (서비스 호출 추적용)
+        String serviceName = userContext.getServiceName();
+        if (serviceName != null && !serviceName.isBlank()) {
+            MDC.put(MDC_SERVICE_NAME, serviceName);
+        }
     }
 
     /** MDC를 정리합니다. */
@@ -478,6 +515,7 @@ public class UserContextFilter extends OncePerRequestFilter {
         MDC.remove(MDC_TENANT_ID);
         MDC.remove(MDC_ORGANIZATION_ID);
         MDC.remove(MDC_ROLES);
+        MDC.remove(MDC_SERVICE_NAME);
     }
 
     /**
