@@ -67,6 +67,7 @@ public final class SecurityPaths {
                         ApiPaths.OpenApi.SWAGGER_UI,
                         ApiPaths.OpenApi.SWAGGER_UI_HTML,
                         ApiPaths.OpenApi.DOCS,
+                        ApiPaths.OpenApi.DOCS_ALL,
                         ApiPaths.Docs.BASE,
                         ApiPaths.Docs.ALL,
                         // 직접 접근용 경로 (로컬 개발 시)
