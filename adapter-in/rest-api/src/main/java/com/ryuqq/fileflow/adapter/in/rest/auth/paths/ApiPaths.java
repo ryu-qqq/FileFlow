@@ -124,7 +124,8 @@ public final class ApiPaths {
         public static final String SWAGGER_UI = "/api/v1/file/swagger-ui/**";
         public static final String SWAGGER_UI_HTML = "/api/v1/file/swagger-ui.html";
         public static final String SWAGGER_REDIRECT = "/api/v1/file/swagger-ui/index.html";
-        public static final String DOCS = "/api/v1/file/v3/api-docs/**";
+        public static final String DOCS = "/api/v1/file/docs";
+        public static final String DOCS_ALL = "/api/v1/file/docs/**";
 
         /** 직접 접근용 (로컬 개발 시) */
         public static final String LOCAL_SWAGGER_UI = "/swagger-ui/**";
