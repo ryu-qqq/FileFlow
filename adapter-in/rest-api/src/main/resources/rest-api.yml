@@ -17,11 +17,26 @@
 springdoc:
   api-docs:
     enabled: ${SPRINGDOC_ENABLED:true}
-    path: /api/v1/file/docs
+    path: /api/v1/file/api-docs
   swagger-ui:
     enabled: ${SPRINGDOC_ENABLED:true}
-    path: /api/v1/file/swagger-ui
+    path: /api/v1/file/swagger-ui.html
     urls-primary-name: "FileFlow API"
+    # 태그/오퍼레이션 정렬
+    tags-sorter: alpha
+    operations-sorter: alpha
+    # 기본 펼침 상태
+    doc-expansion: list
+    # 요청 시간 표시
+    display-request-duration: true
+    # 모델 펼침 깊이
+    default-models-expand-depth: 2
+    default-model-expand-depth: 2
+    # 검색 필터 활성화
+    filter: true
+  # 기본 Content-Type
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
 # Error 설정
 api:
