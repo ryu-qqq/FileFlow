@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
 import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
+import com.ryuqq.fileflow.domain.download.event.ExternalDownloadWebhookTriggeredEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
@@ -229,6 +230,13 @@ public class ExternalDownload {
         ExternalDownloadFileCreatedEvent event =
                 createFileCreatedEvent(contentType, contentLength, s3Key, etag, clock);
         registerEvent(event);
+
+        // Webhook 이벤트 등록 (webhookUrl이 존재하는 경우)
+        if (hasWebhook()) {
+            registerEvent(
+                    ExternalDownloadWebhookTriggeredEvent.forCompleted(
+                            id, webhookUrl, fileAssetId, Instant.now(clock)));
+        }
     }
 
     /**
@@ -285,6 +293,13 @@ public class ExternalDownload {
         this.errorMessage = errorMessage;
         this.fileAssetId = defaultFileAssetId;
         this.updatedAt = Instant.now(clock);
+
+        // Webhook 이벤트 등록 (webhookUrl이 존재하는 경우)
+        if (hasWebhook()) {
+            registerEvent(
+                    ExternalDownloadWebhookTriggeredEvent.forFailed(
+                            id, webhookUrl, errorMessage, Instant.now(clock)));
+        }
     }
 
     /**

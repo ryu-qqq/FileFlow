@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
+import com.ryuqq.fileflow.domain.download.event.ExternalDownloadWebhookTriggeredEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
@@ -514,6 +515,111 @@ class ExternalDownloadTest {
         }
     }
 
+    @Nested
+    @DisplayName("Webhook 이벤트 테스트")
+    class WebhookEventTest {
+
+        @Test
+        @DisplayName("complete() 호출 시 webhookUrl이 있으면 WebhookTriggeredEvent가 등록된다")
+        void complete_WithWebhook_ShouldRegisterWebhookTriggeredEvent() {
+            // given
+            ExternalDownload download = createProcessingDownloadWithWebhook();
+            download.clearDomainEvents(); // 기존 이벤트 초기화
+
+            // when
+            download.complete(
+                    "image/jpeg",
+                    1024L,
+                    com.ryuqq.fileflow.domain.session.vo.S3Key.of("test/image.jpg"),
+                    com.ryuqq.fileflow.domain.session.vo.ETag.of("etag123"),
+                    FIXED_CLOCK);
+
+            // then
+            assertThat(download.getDomainEvents())
+                    .hasSize(2); // FileCreatedEvent + WebhookTriggeredEvent
+
+            boolean hasWebhookEvent =
+                    download.getDomainEvents().stream()
+                            .anyMatch(e -> e instanceof ExternalDownloadWebhookTriggeredEvent);
+            assertThat(hasWebhookEvent).isTrue();
+
+            ExternalDownloadWebhookTriggeredEvent webhookEvent =
+                    download.getDomainEvents().stream()
+                            .filter(e -> e instanceof ExternalDownloadWebhookTriggeredEvent)
+                            .map(e -> (ExternalDownloadWebhookTriggeredEvent) e)
+                            .findFirst()
+                            .orElseThrow();
+
+            assertThat(webhookEvent.isCompleted()).isTrue();
+            assertThat(webhookEvent.downloadId()).isEqualTo(download.getId());
+            assertThat(webhookEvent.webhookUrl()).isEqualTo(download.getWebhookUrl());
+        }
+
+        @Test
+        @DisplayName("complete() 호출 시 webhookUrl이 없으면 WebhookTriggeredEvent가 등록되지 않는다")
+        void complete_WithoutWebhook_ShouldNotRegisterWebhookTriggeredEvent() {
+            // given
+            ExternalDownload download = createProcessingDownload();
+            download.clearDomainEvents();
+
+            // when
+            download.complete(
+                    "image/jpeg",
+                    1024L,
+                    com.ryuqq.fileflow.domain.session.vo.S3Key.of("test/image.jpg"),
+                    com.ryuqq.fileflow.domain.session.vo.ETag.of("etag123"),
+                    FIXED_CLOCK);
+
+            // then
+            assertThat(download.getDomainEvents()).hasSize(1); // FileCreatedEvent만
+
+            boolean hasWebhookEvent =
+                    download.getDomainEvents().stream()
+                            .anyMatch(e -> e instanceof ExternalDownloadWebhookTriggeredEvent);
+            assertThat(hasWebhookEvent).isFalse();
+        }
+
+        @Test
+        @DisplayName("fail() 호출 시 webhookUrl이 있으면 WebhookTriggeredEvent가 등록된다")
+        void fail_WithWebhook_ShouldRegisterWebhookTriggeredEvent() {
+            // given
+            ExternalDownload download = createProcessingDownloadWithWebhook();
+            download.clearDomainEvents();
+            String errorMessage = "다운로드 실패";
+            FileAssetId defaultFileAssetId = FileAssetId.forNew();
+
+            // when
+            download.fail(errorMessage, defaultFileAssetId, FIXED_CLOCK);
+
+            // then
+            assertThat(download.getDomainEvents()).hasSize(1); // WebhookTriggeredEvent만
+
+            ExternalDownloadWebhookTriggeredEvent webhookEvent =
+                    (ExternalDownloadWebhookTriggeredEvent) download.getDomainEvents().get(0);
+
+            assertThat(webhookEvent.isFailed()).isTrue();
+            assertThat(webhookEvent.downloadId()).isEqualTo(download.getId());
+            assertThat(webhookEvent.webhookUrl()).isEqualTo(download.getWebhookUrl());
+            assertThat(webhookEvent.errorMessage()).isEqualTo(errorMessage);
+        }
+
+        @Test
+        @DisplayName("fail() 호출 시 webhookUrl이 없으면 WebhookTriggeredEvent가 등록되지 않는다")
+        void fail_WithoutWebhook_ShouldNotRegisterWebhookTriggeredEvent() {
+            // given
+            ExternalDownload download = createProcessingDownload();
+            download.clearDomainEvents();
+            String errorMessage = "다운로드 실패";
+            FileAssetId defaultFileAssetId = FileAssetId.forNew();
+
+            // when
+            download.fail(errorMessage, defaultFileAssetId, FIXED_CLOCK);
+
+            // then
+            assertThat(download.getDomainEvents()).isEmpty();
+        }
+    }
+
     // Helper methods
     private ExternalDownload createPendingDownload() {
         return ExternalDownload.forNew(
@@ -539,6 +645,23 @@ class ExternalDownloadTest {
                 null,
                 null,
                 null,
+                Instant.parse("2025-11-26T10:00:00Z"),
+                Instant.parse("2025-11-26T11:00:00Z"));
+    }
+
+    private ExternalDownload createProcessingDownloadWithWebhook() {
+        return ExternalDownload.of(
+                ExternalDownloadId.of("00000000-0000-0000-0000-000000000002"),
+                SourceUrl.of("https://example.com/image.jpg"),
+                TenantId.generate(),
+                OrganizationId.generate(),
+                DEFAULT_S3_BUCKET,
+                DEFAULT_S3_PATH_PREFIX,
+                ExternalDownloadStatus.PROCESSING,
+                RetryCount.initial(),
+                null,
+                null,
+                WebhookUrl.of("https://callback.example.com/webhook"),
                 Instant.parse("2025-11-26T10:00:00Z"),
                 Instant.parse("2025-11-26T11:00:00Z"));
     }

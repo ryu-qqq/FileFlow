@@ -56,6 +56,17 @@ class OutboxRetryLockKeyTest {
             assertThat(lockKey.domain()).isEqualTo("external-download");
             assertThat(lockKey.value()).isEqualTo("lock:outbox:retry:external-download");
         }
+
+        @Test
+        @DisplayName("webhook() 팩토리 메서드")
+        void webhook_ShouldCreateCorrectLockKey() {
+            // when
+            OutboxRetryLockKey lockKey = OutboxRetryLockKey.webhook();
+
+            // then
+            assertThat(lockKey.domain()).isEqualTo("webhook");
+            assertThat(lockKey.value()).isEqualTo("lock:outbox:retry:webhook");
+        }
     }
 
     @Nested

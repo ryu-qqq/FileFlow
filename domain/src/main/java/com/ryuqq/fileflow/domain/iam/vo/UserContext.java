@@ -21,6 +21,13 @@ import java.util.List;
  *   <li>X-Permissions: 권한 목록 (콤마 구분, 예: "file:read,file:write")
  * </ul>
  *
+ * <p><strong>서비스 간 호출 헤더</strong>:
+ *
+ * <ul>
+ *   <li>X-Service-Token: 서비스 인증 토큰
+ *   <li>X-Service-Name: 호출 서비스 식별자 (예: "setof-server", "partner-admin")
+ * </ul>
+ *
  * <p><strong>JWT Payload에서 추가 추출</strong>:
  *
  * <ul>
@@ -39,6 +46,7 @@ import java.util.List;
  *   <li>roles는 불변 리스트로 저장된다.
  *   <li>permissions는 불변 리스트로 저장된다.
  *   <li>S3 경로는 조직/역할/날짜/카테고리 기반으로 자동 생성된다.
+ *   <li>serviceName은 서비스 간 호출 시에만 설정된다 (일반 사용자 요청은 null).
  * </ul>
  *
  * @param tenant 테넌트 정보
@@ -47,6 +55,7 @@ import java.util.List;
  * @param userId 사용자 ID (UUIDv7 기반)
  * @param roles 역할 목록 (불변, 예: ["SUPER_ADMIN", "ADMIN"])
  * @param permissions 권한 목록 (불변, 예: ["file:read", "file:write"])
+ * @param serviceName 호출 서비스 이름 (서비스 간 호출 시에만 설정, 일반 사용자 요청은 null)
  */
 public record UserContext(
         Tenant tenant,
@@ -54,7 +63,14 @@ public record UserContext(
         String email,
         UserId userId,
         List<String> roles,
-        List<String> permissions) {
+        List<String> permissions,
+        String serviceName) {
+
+    // Well-Known System 사용자 ID (UUIDv7)
+    private static final String SYSTEM_USER_ID = "019b2b35-3979-75ba-a981-84ae15f0572a";
+
+    // Well-Known System 사용자 이메일
+    private static final String SYSTEM_USER_EMAIL = "master@connectly.co.kr";
 
     /** Compact Constructor (검증 로직). */
     public UserContext {
@@ -94,7 +110,8 @@ public record UserContext(
                 email,
                 null,
                 List.of("ADMIN"),
-                Collections.emptyList());
+                Collections.emptyList(),
+                null);
     }
 
     /**
@@ -111,7 +128,7 @@ public record UserContext(
             throw new IllegalArgumentException("Admin 이메일은 null이거나 빈 문자열일 수 없습니다.");
         }
         return new UserContext(
-                Tenant.connectly(), Organization.admin(), email, null, roles, permissions);
+                Tenant.connectly(), Organization.admin(), email, null, roles, permissions, null);
     }
 
     /**
@@ -119,16 +136,40 @@ public record UserContext(
      *
      * <p>서버 간 통신에서 Service Token 인증 시 사용된다. 최상위 권한을 가지며, 모든 리소스에 접근 가능하다.
      *
-     * @return System UserContext
+     * <p>serviceName이 없는 레거시 호출에 사용됩니다. 신규 코드에서는 {@link #system(String)}을 사용하세요.
+     *
+     * @return System UserContext (serviceName=null)
      */
     public static UserContext system() {
         return new UserContext(
                 Tenant.connectly(),
                 Organization.system(),
-                "system@internal",
-                null,
+                SYSTEM_USER_EMAIL,
+                UserId.of(SYSTEM_USER_ID),
                 List.of("SYSTEM"),
-                Collections.emptyList());
+                Collections.emptyList(),
+                null);
+    }
+
+    /**
+     * System 내부 호출 컨텍스트 생성 (서비스명 포함).
+     *
+     * <p>서버 간 통신에서 Service Token 인증 시 사용된다. 최상위 권한을 가지며, 모든 리소스에 접근 가능하다.
+     *
+     * <p>serviceName을 통해 어떤 서비스에서 호출했는지 추적할 수 있습니다.
+     *
+     * @param serviceName 호출 서비스 이름 (예: "setof-server", "partner-admin")
+     * @return System UserContext
+     */
+    public static UserContext system(String serviceName) {
+        return new UserContext(
+                Tenant.connectly(),
+                Organization.system(),
+                SYSTEM_USER_EMAIL,
+                UserId.of(SYSTEM_USER_ID),
+                List.of("SYSTEM"),
+                Collections.emptyList(),
+                serviceName);
     }
 
     /**
@@ -151,7 +192,8 @@ public record UserContext(
                 email,
                 null,
                 List.of("SELLER"),
-                Collections.emptyList());
+                Collections.emptyList(),
+                null);
     }
 
     /**
@@ -180,7 +222,8 @@ public record UserContext(
                 email,
                 null,
                 roles,
-                permissions);
+                permissions,
+                null);
     }
 
     /**
@@ -200,7 +243,8 @@ public record UserContext(
                 null,
                 userId,
                 List.of("DEFAULT"),
-                Collections.emptyList());
+                Collections.emptyList(),
+                null);
     }
 
     /**
@@ -218,7 +262,13 @@ public record UserContext(
             throw new IllegalArgumentException("Customer userId는 null일 수 없습니다.");
         }
         return new UserContext(
-                Tenant.connectly(), Organization.customer(), null, userId, roles, permissions);
+                Tenant.connectly(),
+                Organization.customer(),
+                null,
+                userId,
+                roles,
+                permissions,
+                null);
     }
 
     /**
@@ -238,11 +288,12 @@ public record UserContext(
                 email,
                 userId,
                 Collections.emptyList(),
-                Collections.emptyList());
+                Collections.emptyList(),
+                null);
     }
 
     /**
-     * 전체 필드를 받는 일반 생성 메서드.
+     * 전체 필드를 받는 일반 생성 메서드 (serviceName 제외).
      *
      * @param tenant 테넌트
      * @param organization 조직
@@ -259,7 +310,31 @@ public record UserContext(
             UserId userId,
             List<String> roles,
             List<String> permissions) {
-        return new UserContext(tenant, organization, email, userId, roles, permissions);
+        return new UserContext(tenant, organization, email, userId, roles, permissions, null);
+    }
+
+    /**
+     * 전체 필드를 받는 일반 생성 메서드 (serviceName 포함).
+     *
+     * @param tenant 테넌트
+     * @param organization 조직
+     * @param email 이메일 (선택적)
+     * @param userId 사용자 ID (선택적)
+     * @param roles 역할 목록
+     * @param permissions 권한 목록
+     * @param serviceName 호출 서비스 이름 (선택적)
+     * @return UserContext
+     */
+    public static UserContext of(
+            Tenant tenant,
+            Organization organization,
+            String email,
+            UserId userId,
+            List<String> roles,
+            List<String> permissions,
+            String serviceName) {
+        return new UserContext(
+                tenant, organization, email, userId, roles, permissions, serviceName);
     }
 
     /**
@@ -305,6 +380,28 @@ public record UserContext(
      */
     public boolean isCustomer() {
         return organization.isCustomer();
+    }
+
+    /**
+     * 서비스 간 호출인지 확인한다.
+     *
+     * <p>serviceName이 설정되어 있으면 서비스 간 호출로 판단한다.
+     *
+     * @return 서비스 간 호출이면 true
+     */
+    public boolean isServiceCall() {
+        return serviceName != null && !serviceName.isBlank();
+    }
+
+    /**
+     * 호출 서비스 이름을 반환한다.
+     *
+     * <p>서비스 간 호출이 아닌 경우 null을 반환한다.
+     *
+     * @return 서비스 이름 (nullable)
+     */
+    public String getServiceName() {
+        return serviceName;
     }
 
     /**
