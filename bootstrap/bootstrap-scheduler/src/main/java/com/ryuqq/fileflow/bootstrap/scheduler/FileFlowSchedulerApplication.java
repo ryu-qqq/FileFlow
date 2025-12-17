@@ -32,6 +32,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
             "com.ryuqq.fileflow.adapter.out.aws.s3",
             "com.ryuqq.fileflow.adapter.out.aws.sqs",
             "com.ryuqq.fileflow.adapter.out.redis",
+            "com.ryuqq.fileflow.adapter.out.http",
             "com.ryuqq.fileflow.application",
             "com.ryuqq.fileflow.domain"
         })
