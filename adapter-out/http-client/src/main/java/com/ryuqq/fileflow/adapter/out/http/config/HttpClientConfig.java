@@ -70,4 +70,41 @@ public class HttpClientConfig {
                                         .maxInMemorySize(maxInMemorySizeMb * 1024 * 1024))
                 .build();
     }
+
+    /**
+     * Webhook 호출용 WebClient Bean.
+     *
+     * <p>Webhook은 작은 JSON 페이로드를 전송하므로 다운로드보다 짧은 타임아웃 사용.
+     *
+     * @param connectTimeoutMs 연결 타임아웃 (밀리초)
+     * @param readTimeoutSec 읽기 타임아웃 (초)
+     * @param writeTimeoutSec 쓰기 타임아웃 (초)
+     * @param responseTimeoutSec 응답 타임아웃 (초)
+     * @return WebClient
+     */
+    @Bean
+    public WebClient webhookWebClient(
+            @Value("${http.client.webhook.connect-timeout-ms:3000}") int connectTimeoutMs,
+            @Value("${http.client.webhook.read-timeout-sec:10}") int readTimeoutSec,
+            @Value("${http.client.webhook.write-timeout-sec:10}") int writeTimeoutSec,
+            @Value("${http.client.webhook.response-timeout-sec:30}") int responseTimeoutSec) {
+
+        HttpClient httpClient =
+                HttpClient.create()
+                        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMs)
+                        .responseTimeout(Duration.ofSeconds(responseTimeoutSec))
+                        .doOnConnected(
+                                conn ->
+                                        conn.addHandlerLast(
+                                                        new ReadTimeoutHandler(
+                                                                readTimeoutSec, TimeUnit.SECONDS))
+                                                .addHandlerLast(
+                                                        new WriteTimeoutHandler(
+                                                                writeTimeoutSec,
+                                                                TimeUnit.SECONDS)));
+
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
 }

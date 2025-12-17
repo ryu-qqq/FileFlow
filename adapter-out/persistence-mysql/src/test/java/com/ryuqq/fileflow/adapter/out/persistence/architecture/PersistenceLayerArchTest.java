@@ -377,6 +377,8 @@ class PersistenceLayerArchTest {
                         .resideInAPackage(REPOSITORY_PATTERN)
                         .and()
                         .haveSimpleNameNotContaining("Test")
+                        .and()
+                        .areNotAnonymousClasses()
                         .should()
                         .haveSimpleNameEndingWith("Repository")
                         .orShould()

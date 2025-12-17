@@ -108,7 +108,7 @@ public final class ApiPaths {
 
     /** API 문서 경로 (Spring REST Docs) - Gateway prefix 적용 */
     public static final class Docs {
-        public static final String BASE = "/file/docs";
+        public static final String BASE = "/api/v1/file/docs";
         public static final String ALL = BASE + "/**";
 
         /** 직접 접근용 (로컬 개발 시) */
@@ -121,10 +121,10 @@ public final class ApiPaths {
 
     /** OpenAPI/Swagger 경로 - Gateway prefix 적용 */
     public static final class OpenApi {
-        public static final String SWAGGER_UI = "/file/swagger-ui/**";
-        public static final String SWAGGER_UI_HTML = "/file/swagger-ui.html";
-        public static final String SWAGGER_REDIRECT = "/file/swagger-ui/index.html";
-        public static final String DOCS = "/file/v3/api-docs/**";
+        public static final String SWAGGER_UI = "/api/v1/file/swagger-ui/**";
+        public static final String SWAGGER_UI_HTML = "/api/v1/file/swagger-ui.html";
+        public static final String SWAGGER_REDIRECT = "/api/v1/file/swagger-ui/index.html";
+        public static final String DOCS = "/api/v1/file/v3/api-docs/**";
 
         /** 직접 접근용 (로컬 개발 시) */
         public static final String LOCAL_SWAGGER_UI = "/swagger-ui/**";

@@ -44,6 +44,15 @@ public record OutboxRetryLockKey(String domain) implements LockKey {
         return new OutboxRetryLockKey("external-download");
     }
 
+    /**
+     * Webhook Outbox 재시도용 락 키 생성.
+     *
+     * @return Webhook Outbox 재시도 작업용 락 키
+     */
+    public static OutboxRetryLockKey webhook() {
+        return new OutboxRetryLockKey("webhook");
+    }
+
     @Override
     public String value() {
         return PREFIX + domain;

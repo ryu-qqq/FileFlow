@@ -17,9 +17,9 @@ package com.ryuqq.fileflow.domain.iam.vo;
  */
 public record Tenant(TenantId id, String name) {
 
-    // Connectly 테넌트의 Well-Known ID (시스템 부팅 시 한 번 생성됨)
-    private static final String CONNECTLY_TENANT_ID = "01912345-6789-7abc-8000-000000000001";
-    private static final String CONNECTLY_NAME = "Connectly";
+    // Connectly 테넌트의 Well-Known ID (UUIDv7 형식, 시스템에서 고정값 사용)
+    private static final String CONNECTLY_TENANT_ID = "b77f45da-d64b-71f0-ac37-02d75368c93d";
+    private static final String CONNECTLY_NAME = "connectly";
 
     /** Compact Constructor (검증 로직). */
     public Tenant {

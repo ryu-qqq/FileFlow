@@ -110,6 +110,15 @@ public final class SecurityPaths {
          */
         public static final String SERVICE_TOKEN = "X-Service-Token";
 
+        /**
+         * Service Name 헤더 - 호출하는 서비스 식별용.
+         *
+         * <p>Service Token과 함께 사용되어 어떤 서비스에서 호출했는지 식별합니다. 감사 로그 및 추적에 활용됩니다.
+         *
+         * <p>예시: "setof-server", "partner-admin", "batch-worker"
+         */
+        public static final String SERVICE_NAME = "X-Service-Name";
+
         private Headers() {}
     }
 

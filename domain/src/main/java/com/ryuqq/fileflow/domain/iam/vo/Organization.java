@@ -30,6 +30,9 @@ package com.ryuqq.fileflow.domain.iam.vo;
  */
 public record Organization(OrganizationId id, String name, String namespace, UserRole role) {
 
+    // Well-Known System 조직 ID (UUIDv7)
+    private static final String SYSTEM_ORG_ID = "019b2b35-3979-7112-a980-e234d424f5cd";
+
     // 네임스페이스 상수
     private static final String CONNECTLY_NAMESPACE = "connectly";
     private static final String SETOF_NAMESPACE = "setof";
@@ -73,12 +76,16 @@ public record Organization(OrganizationId id, String name, String namespace, Use
     /**
      * System 조직 생성 (서버 간 내부 호출용).
      *
-     * <p>System은 시스템 정의 조직이므로 OrganizationId가 없다.
+     * <p>System은 Well-Known SYSTEM_ORG_ID를 사용하는 시스템 정의 조직이다.
      *
-     * @return System Organization (id=null, namespace=connectly)
+     * @return System Organization (id=SYSTEM_ORG_ID, namespace=connectly)
      */
     public static Organization system() {
-        return new Organization(null, "System Internal", CONNECTLY_NAMESPACE, UserRole.SYSTEM);
+        return new Organization(
+                OrganizationId.of(SYSTEM_ORG_ID),
+                "System Internal",
+                CONNECTLY_NAMESPACE,
+                UserRole.SYSTEM);
     }
 
     /**
@@ -282,13 +289,15 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      */
     private static void validateRoleNamespaceConsistency(
             UserRole role, String namespace, OrganizationId id) {
-        // System 조직: role=SYSTEM, namespace=connectly, id=null
+        // System 조직: role=SYSTEM, namespace=connectly, id=Well-Known ID만 허용
         if (role == UserRole.SYSTEM) {
             if (!CONNECTLY_NAMESPACE.equals(namespace)) {
                 throw new IllegalArgumentException("System 조직은 connectly namespace여야 합니다.");
             }
-            if (id != null) {
-                throw new IllegalArgumentException("System 조직은 OrganizationId를 가질 수 없습니다.");
+            // Well-Known SYSTEM_ORG_ID만 허용 (null도 레거시 호환성을 위해 허용)
+            if (id != null && !SYSTEM_ORG_ID.equals(id.value())) {
+                throw new IllegalArgumentException(
+                        "System 조직은 Well-Known SYSTEM_ORG_ID만 가질 수 있습니다.");
             }
         }
 

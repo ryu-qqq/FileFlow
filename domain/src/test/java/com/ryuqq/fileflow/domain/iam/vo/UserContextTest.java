@@ -94,7 +94,8 @@ class UserContextTest {
                                             "admin@test.com",
                                             null,
                                             List.of("ADMIN"),
-                                            Collections.emptyList()))
+                                            Collections.emptyList(),
+                                            null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("테넌트는 null일 수 없습니다");
         }
@@ -110,7 +111,8 @@ class UserContextTest {
                                             "admin@test.com",
                                             null,
                                             List.of("ADMIN"),
-                                            Collections.emptyList()))
+                                            Collections.emptyList(),
+                                            null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("조직은 null일 수 없습니다");
         }
@@ -162,7 +164,8 @@ class UserContextTest {
                                             "admin@test.com",
                                             UserId.generate(),
                                             List.of("ADMIN"),
-                                            Collections.emptyList()))
+                                            Collections.emptyList(),
+                                            null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("ADMIN 사용자는 userId를 가질 수 없습니다");
         }
@@ -178,7 +181,8 @@ class UserContextTest {
                                             "test@test.com",
                                             UserId.generate(),
                                             List.of("DEFAULT"),
-                                            Collections.emptyList()))
+                                            Collections.emptyList(),
+                                            null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("DEFAULT 사용자는 email을 가질 수 없습니다");
         }
@@ -971,6 +975,112 @@ class UserContextTest {
             assertThat(admin.getPrimaryRole()).isEqualTo(UserRole.ADMIN);
             assertThat(seller.getPrimaryRole()).isEqualTo(UserRole.SELLER);
             assertThat(customer.getPrimaryRole()).isEqualTo(UserRole.DEFAULT);
+        }
+    }
+
+    @Nested
+    @DisplayName("serviceName 필드 테스트")
+    class ServiceNameTest {
+
+        @Test
+        @DisplayName("system() 메서드는 serviceName이 null인 SYSTEM 컨텍스트를 생성한다")
+        void system_ShouldCreateSystemContextWithNullServiceName() {
+            // when
+            UserContext context = UserContext.system();
+
+            // then
+            assertThat(context.organization().isSystem()).isTrue();
+            assertThat(context.email()).isEqualTo("master@connectly.co.kr");
+            assertThat(context.userId()).isNotNull();
+            assertThat(context.userId().value()).isEqualTo("019b2b35-3979-75ba-a981-84ae15f0572a");
+            assertThat(context.getServiceName()).isNull();
+            assertThat(context.isServiceCall()).isFalse();
+        }
+
+        @Test
+        @DisplayName("system(serviceName) 메서드는 serviceName이 포함된 SYSTEM 컨텍스트를 생성한다")
+        void systemWithServiceName_ShouldCreateSystemContextWithServiceName() {
+            // given
+            String serviceName = "setof-server";
+
+            // when
+            UserContext context = UserContext.system(serviceName);
+
+            // then
+            assertThat(context.organization().isSystem()).isTrue();
+            assertThat(context.email()).isEqualTo("master@connectly.co.kr");
+            assertThat(context.userId()).isNotNull();
+            assertThat(context.userId().value()).isEqualTo("019b2b35-3979-75ba-a981-84ae15f0572a");
+            assertThat(context.getServiceName()).isEqualTo("setof-server");
+            assertThat(context.isServiceCall()).isTrue();
+        }
+
+        @Test
+        @DisplayName("isServiceCall은 serviceName이 있을 때만 true를 반환한다")
+        void isServiceCall_ShouldReturnTrueOnlyWhenServiceNameExists() {
+            // given
+            UserContext withService = UserContext.system("batch-worker");
+            UserContext withoutService = UserContext.system();
+            UserContext admin = UserContext.admin("admin@test.com");
+
+            // then
+            assertThat(withService.isServiceCall()).isTrue();
+            assertThat(withoutService.isServiceCall()).isFalse();
+            assertThat(admin.isServiceCall()).isFalse();
+        }
+
+        @Test
+        @DisplayName("getServiceName은 serviceName 값을 반환한다")
+        void getServiceName_ShouldReturnServiceNameValue() {
+            // given
+            UserContext context1 = UserContext.system("partner-admin");
+            UserContext context2 = UserContext.system();
+
+            // then
+            assertThat(context1.getServiceName()).isEqualTo("partner-admin");
+            assertThat(context2.getServiceName()).isNull();
+        }
+
+        @Test
+        @DisplayName("다른 팩토리 메서드로 생성된 컨텍스트는 serviceName이 null이다")
+        void otherFactoryMethods_ShouldHaveNullServiceName() {
+            // given
+            UserContext admin = UserContext.admin("admin@test.com");
+            UserContext seller =
+                    UserContext.seller(OrganizationId.generate(), "Company", "seller@test.com");
+            UserContext customer = UserContext.customer(UserId.generate());
+
+            // then
+            assertThat(admin.getServiceName()).isNull();
+            assertThat(admin.isServiceCall()).isFalse();
+
+            assertThat(seller.getServiceName()).isNull();
+            assertThat(seller.isServiceCall()).isFalse();
+
+            assertThat(customer.getServiceName()).isNull();
+            assertThat(customer.isServiceCall()).isFalse();
+        }
+
+        @Test
+        @DisplayName("serviceName이 빈 문자열이면 isServiceCall은 false를 반환한다")
+        void emptyServiceName_ShouldNotBeConsideredServiceCall() {
+            // given - 빈 문자열로 system 생성
+            UserContext context = UserContext.system("");
+
+            // then
+            assertThat(context.isServiceCall()).isFalse();
+            assertThat(context.email()).isEqualTo("master@connectly.co.kr");
+        }
+
+        @Test
+        @DisplayName("serviceName이 공백 문자열이면 isServiceCall은 false를 반환한다")
+        void blankServiceName_ShouldNotBeConsideredServiceCall() {
+            // given - 공백 문자열로 system 생성
+            UserContext context = UserContext.system("   ");
+
+            // then
+            assertThat(context.isServiceCall()).isFalse();
+            assertThat(context.email()).isEqualTo("master@connectly.co.kr");
         }
     }
 }

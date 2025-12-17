@@ -304,14 +304,15 @@ class TransactionManagerArchTest {
     class MethodRules {
 
         @Test
-        @DisplayName("[필수] TransactionManager는 persist* 메서드만 가져야 한다")
-        void transactionManager_MustOnlyHavePersistMethod() {
+        @DisplayName("[필수] TransactionManager는 persist* 또는 update* 메서드만 가져야 한다")
+        void transactionManager_MustOnlyHavePersistOrUpdateMethod() {
             assumeTrue(hasTransactionManagerClasses, "TransactionManager 클래스가 없어 테스트를 스킵합니다");
 
             for (JavaClass txManager : transactionManagerClasses) {
                 List<JavaMethod> invalidMethods =
                         txManager.getMethods().stream()
                                 .filter(method -> !method.getName().startsWith("persist"))
+                                .filter(method -> !method.getName().startsWith("update"))
                                 .filter(
                                         method ->
                                                 !method.getName()
@@ -336,7 +337,7 @@ class TransactionManagerArchTest {
                                     .collect(Collectors.joining(", "));
                     fail(
                             txManager.getSimpleName()
-                                    + "는 persist* 메서드만 가져야 합니다. "
+                                    + "는 persist* 또는 update* 메서드만 가져야 합니다. "
                                     + "허용되지 않는 메서드: "
                                     + methodNames
                                     + ". "

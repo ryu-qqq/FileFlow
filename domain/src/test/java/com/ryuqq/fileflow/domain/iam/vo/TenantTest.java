@@ -49,7 +49,7 @@ class TenantTest {
 
             // then
             assertThat(tenant.id()).isNotNull();
-            assertThat(tenant.name()).isEqualTo("Connectly");
+            assertThat(tenant.name()).isEqualTo("connectly");
         }
 
         @Test
