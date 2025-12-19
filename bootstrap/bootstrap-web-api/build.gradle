@@ -63,6 +63,15 @@ tasks.jacocoTestCoverageVerification {
 bootJar {
     archiveBaseName = 'fileflow-api'
     archiveVersion = project.version
+
+    // REST Docs를 bootJar에 포함 (운영 배포용)
+    // copyDocs task가 먼저 실행되어야 함
+    dependsOn ':adapter-in:rest-api:copyDocs'
+
+    // REST Docs 정적 파일을 JAR에 포함
+    from("${project(':adapter-in:rest-api').buildDir}/resources/main/static") {
+        into 'BOOT-INF/classes/static'
+    }
 }
 
 jar {
