@@ -85,6 +85,7 @@ tasks.test {
 // ========================================
 ext {
     snippetsDir = file('build/generated-snippets')
+    generatedDocsDir = file('build/generated-docs')
 }
 
 test {
@@ -94,14 +95,9 @@ test {
 asciidoctor {
     dependsOn test
 
-    // snippetsDir이 존재할 때만 입력으로 사용 (CI 환경에서 테스트 스니펫이 없을 수 있음)
-    inputs.dir(snippetsDir).optional()
-
-    // snippetsDir이 없으면 빈 디렉토리 생성 (asciidoctor 실패 방지)
-    doFirst {
-        if (!snippetsDir.exists()) {
-            snippetsDir.mkdirs()
-        }
+    // snippetsDir이 존재하고 내용이 있을 때만 실행
+    onlyIf {
+        snippetsDir.exists() && snippetsDir.listFiles()?.length > 0
     }
 
     baseDirFollowsSourceFile()
@@ -109,15 +105,22 @@ asciidoctor {
     sources {
         include '**/index.adoc'
     }
+
+    // 출력을 별도 디렉토리로 (jacoco 충돌 방지)
+    outputDir = generatedDocsDir
 }
 
 // ========================================
 // Copy REST Docs to static resources (for deployment)
 // ========================================
-// copyDocs task is intended to be run explicitly or in CI/CD pipeline
-// after the build is complete: ./gradlew build copyDocs
 tasks.register('copyDocs', Copy) {
     dependsOn asciidoctor
-    from asciidoctor.outputDir
-    into layout.buildDirectory.dir('resources/main/static/docs')
+
+    // asciidoctor가 스킵되면 copyDocs도 스킵
+    onlyIf {
+        generatedDocsDir.exists() && generatedDocsDir.listFiles()?.length > 0
+    }
+
+    from generatedDocsDir
+    into layout.buildDirectory.dir('generated-static/docs')
 }
