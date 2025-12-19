@@ -10,8 +10,8 @@ import java.util.List;
  * <p>경로 분류:
  *
  * <ul>
- *   <li>PUBLIC: 인증 불필요 (헬스체크, 에러 페이지)
- *   <li>DOCS: 인증된 사용자면 접근 가능 (API 문서)
+ *   <li>PUBLIC: 인증 불필요 (헬스체크, Actuator, 에러 페이지)
+ *   <li>DOCS: 인증 필요 (API 문서 - Service Token 또는 JWT로 접근)
  *   <li>AUTHENTICATED: 인증된 사용자 + @PreAuthorize 권한 검사 (파일 API)
  * </ul>
  *
@@ -53,7 +53,7 @@ public final class SecurityPaths {
     /**
      * API 문서 경로 (Swagger, REST Docs)
      *
-     * <p>인증된 사용자면 접근 가능한 API 문서 경로입니다.
+     * <p>인증이 필요한 API 문서 경로입니다. Service Token 또는 JWT로 인증해야 접근 가능합니다.
      *
      * <p>Gateway prefix(/file) 적용 경로와 직접 접근용 경로 모두 포함합니다.
      */
