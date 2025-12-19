@@ -30,8 +30,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * <p><strong>엔드포인트 권한 분류</strong> (SecurityPaths 참조):
  *
  * <ul>
- *   <li>PUBLIC: 인증 불필요 (헬스체크, 에러 페이지)
- *   <li>DOCS: 인증된 사용자면 접근 가능 (API 문서)
+ *   <li>PUBLIC: 인증 불필요 (헬스체크, Actuator, 에러 페이지)
+ *   <li>DOCS: 인증 필요 (API 문서 - Service Token 또는 JWT로 접근)
  *   <li>AUTHENTICATED: 인증된 사용자 + @PreAuthorize 권한 검사 (파일 API)
  * </ul>
  *
@@ -98,17 +98,26 @@ public class SecurityConfig {
      *
      * <p>SecurityPaths에서 정의된 경로별 권한을 설정합니다. API의 세부 권한은 @PreAuthorize 어노테이션으로 처리됩니다.
      *
+     * <p><strong>권한 분류</strong>:
+     *
+     * <ul>
+     *   <li>PUBLIC: 인증 불필요 (헬스체크, Actuator, 에러 페이지)
+     *   <li>DOCS: 인증 필요 (API 문서 - Service Token 또는 JWT로 접근)
+     *   <li>AUTHENTICATED: 인증 필요 + @PreAuthorize 권한 검사 (파일 API)
+     * </ul>
+     *
      * @param auth AuthorizationManagerRequestMatcherRegistry
      */
     private void configureAuthorization(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
                     auth) {
 
-        // PUBLIC 엔드포인트 설정 (인증 불필요)
+        // PUBLIC 엔드포인트 설정 (인증 불필요 - 헬스체크, Actuator, 에러 페이지)
         auth.requestMatchers(SecurityPaths.Public.PATTERNS.toArray(String[]::new)).permitAll();
 
-        // DOCS 엔드포인트 설정 (개발 환경에서 API 문서 접근 가능)
-        auth.requestMatchers(SecurityPaths.Docs.PATTERNS.toArray(String[]::new)).permitAll();
+        // DOCS 엔드포인트는 인증 필요 (Service Token 또는 JWT)
+        // UserContextFilter에서 인증 처리 후 접근 가능
+        // anyRequest().authenticated()에 포함되어 처리됨
 
         // 그 외 모든 요청은 인증 필요 + @PreAuthorize로 세부 권한 검사
         // UserContextFilter에서 Spring Security Authentication을 설정하면 통과
