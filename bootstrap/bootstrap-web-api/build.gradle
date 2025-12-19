@@ -64,15 +64,13 @@ bootJar {
     archiveBaseName = 'fileflow-api'
     archiveVersion = project.version
 
-    // REST Docs를 bootJar에 포함 (운영 배포용)
-    // copyDocs task가 먼저 실행되어야 함 (스니펫이 없으면 스킵됨)
-    dependsOn ':adapter-in:rest-api:copyDocs'
-
-    // REST Docs 정적 파일을 JAR에 포함 (존재하는 경우에만)
+    // REST Docs 정적 파일을 JAR에 포함
+    // 디렉토리가 존재하지 않으면 from()은 자동으로 무시됨
     def restDocsDir = file("${project(':adapter-in:rest-api').buildDir}/generated-static/docs")
-    from(restDocsDir) {
-        into 'BOOT-INF/classes/static/docs'
-        onlyIf { restDocsDir.exists() }
+    if (restDocsDir.exists()) {
+        from(restDocsDir) {
+            into 'BOOT-INF/classes/static/docs'
+        }
     }
 }
 
