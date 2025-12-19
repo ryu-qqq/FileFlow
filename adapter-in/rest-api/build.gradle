@@ -90,6 +90,12 @@ ext {
 
 test {
     outputs.dir snippetsDir
+    // snippetsDir이 없으면 생성 (asciidoctor inputs 검증 통과용)
+    doFirst {
+        if (!snippetsDir.exists()) {
+            snippetsDir.mkdirs()
+        }
+    }
 }
 
 asciidoctor {
@@ -99,6 +105,10 @@ asciidoctor {
     onlyIf {
         snippetsDir.exists() && snippetsDir.listFiles()?.length > 0
     }
+
+    // inputs.dir 제거 - 플러그인 기본 설정이 검증 에러 유발
+    // snippetsDir은 attributes로만 전달
+    attributes 'snippets': snippetsDir
 
     baseDirFollowsSourceFile()
 
