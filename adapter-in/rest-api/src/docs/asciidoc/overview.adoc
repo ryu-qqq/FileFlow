@@ -98,11 +98,17 @@ FileFlow는 파일 업로드, 다운로드, 관리를 위한 REST API를 제공�
 [source,json]
 ----
 {
-  "type": "https://api.fileflow.io/errors/invalid-request",
-  "title": "Invalid Request",
+  "type": "about:blank",
+  "title": "Bad Request",
   "status": 400,
-  "detail": "파일 크기가 최대 허용 크기를 초과했습니다.",
-  "instance": "/api/v1/file/upload-sessions"
+  "detail": "Validation failed for request",
+  "instance": "/api/v1/file/upload-sessions",
+  "timestamp": "2025-01-15T01:30:00.000Z",
+  "code": "VALIDATION_FAILED",
+  "errors": {
+    "fileName": "파일명은 필수입니다",
+    "fileSize": "파일 크기는 0보다 커야 합니다"
+  }
 }
 ----
 
@@ -128,4 +134,62 @@ FileFlow는 파일 업로드, 다운로드, 관리를 위한 REST API를 제공�
 | `instance`
 | String
 | 에러가 발생한 요청 경로
+
+| `timestamp`
+| String
+| 에러 발생 시각 (ISO 8601)
+
+| `code`
+| String
+| 에러 코드 (클라이언트 분기 처리용)
+
+| `errors`
+| Object
+| 필드별 유효성 검사 오류 (Validation 에러 시에만 포함)
+|===
+
+===== 에러 코드 목록
+
+|===
+| 에러 코드 | HTTP 상태 | 설명
+
+| `VALIDATION_FAILED`
+| 400
+| 요청 데이터 유효성 검사 실패
+
+| `INVALID_ARGUMENT`
+| 400
+| 잘못된 인자
+
+| `INVALID_REQUEST_BODY`
+| 400
+| 요청 본문 파싱 실패 (JSON 형식 오류 등)
+
+| `TYPE_MISMATCH`
+| 400
+| 파라미터 타입 불일치
+
+| `MISSING_PARAMETER`
+| 400
+| 필수 파라미터 누락
+
+| `RESOURCE_NOT_FOUND`
+| 404
+| 요청한 리소스 없음
+
+| `METHOD_NOT_ALLOWED`
+| 405
+| 지원하지 않는 HTTP 메서드
+
+| `STATE_CONFLICT`
+| 409
+| 상태 충돌
+
+| `INTERNAL_ERROR`
+| 500
+| 서버 내부 오류
+
+| _(도메인별 코드)_
+| _다양_
+| DomainException에서 정의된 비즈니스 에러 코드
 |===
