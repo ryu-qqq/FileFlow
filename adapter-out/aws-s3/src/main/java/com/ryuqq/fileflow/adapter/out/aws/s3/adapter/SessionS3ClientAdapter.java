@@ -96,8 +96,7 @@ public class SessionS3ClientAdapter implements SessionS3ClientPort {
                         .uploadPartRequest(uploadPartRequest)
                         .build();
 
-        PresignedUploadPartRequest presignedRequest =
-                s3Presigner.presignUploadPart(presignRequest);
+        PresignedUploadPartRequest presignedRequest = s3Presigner.presignUploadPart(presignRequest);
         return presignedRequest.url().toString();
     }
 

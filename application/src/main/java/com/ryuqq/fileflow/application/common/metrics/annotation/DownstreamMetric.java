@@ -12,11 +12,13 @@ import java.lang.annotation.Target;
  * <p>외부 시스템(S3, Redis, HTTP) 호출 메트릭을 AOP로 수집합니다.
  *
  * <p>수집 메트릭:
+ *
  * <ul>
- *   <li>downstream.{target}.latency - 외부 시스템 레이턴시</li>
+ *   <li>downstream.{target}.latency - 외부 시스템 레이턴시
  * </ul>
  *
  * <p>사용 예시:
+ *
  * <pre>{@code
  * @DownstreamMetric(target = "s3", operation = "upload")
  * public void uploadObject(Bucket bucket, S3Key key, byte[] content) {

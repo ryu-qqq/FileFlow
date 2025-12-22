@@ -12,13 +12,15 @@ import java.lang.annotation.Target;
  * <p>에셋 처리 메트릭을 AOP로 수집합니다.
  *
  * <p>수집 메트릭:
+ *
  * <ul>
- *   <li>asset.{operation}.count - 작업 카운터</li>
- *   <li>asset.duration - 작업 소요시간</li>
- *   <li>asset.bytes.total - 처리된 바이트 수 (recordBytes=true 시)</li>
+ *   <li>asset.{operation}.count - 작업 카운터
+ *   <li>asset.duration - 작업 소요시간
+ *   <li>asset.bytes.total - 처리된 바이트 수 (recordBytes=true 시)
  * </ul>
  *
  * <p>사용 예시:
+ *
  * <pre>{@code
  * @FileAssetMetric(operation = "process", recordBytes = true)
  * public ProcessFileAssetResponse execute(ProcessFileAssetCommand command) {

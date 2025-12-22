@@ -16,9 +16,10 @@ import org.springframework.stereotype.Component;
  * <p>{@link FileAssetMetric} 어노테이션이 적용된 메서드의 메트릭을 자동으로 수집합니다.
  *
  * <p>수집 항목:
+ *
  * <ul>
- *   <li>작업 성공 시: asset.{operation}.count 증가, asset.duration 기록</li>
- *   <li>작업 실패 시: asset.duration (operation-failed) 기록</li>
+ *   <li>작업 성공 시: asset.{operation}.count 증가, asset.duration 기록
+ *   <li>작업 실패 시: asset.duration (operation-failed) 기록
  * </ul>
  */
 @Aspect
@@ -34,8 +35,8 @@ public class FileAssetMetricAspect {
     }
 
     @Around("@annotation(fileAssetMetric)")
-    public Object recordFileAssetMetric(ProceedingJoinPoint joinPoint, FileAssetMetric fileAssetMetric)
-            throws Throwable {
+    public Object recordFileAssetMetric(
+            ProceedingJoinPoint joinPoint, FileAssetMetric fileAssetMetric) throws Throwable {
         String operation = fileAssetMetric.operation();
 
         Timer.Sample sample = fileAssetMetrics.startTimer();

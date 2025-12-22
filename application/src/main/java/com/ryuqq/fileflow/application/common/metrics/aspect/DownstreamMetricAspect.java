@@ -16,10 +16,11 @@ import org.springframework.stereotype.Component;
  * <p>{@link DownstreamMetric} 어노테이션이 적용된 메서드의 메트릭을 자동으로 수집합니다.
  *
  * <p>지원 대상:
+ *
  * <ul>
- *   <li>s3: S3 작업 레이턴시</li>
- *   <li>redis: Redis 작업 레이턴시</li>
- *   <li>external-api: 외부 API 호출 레이턴시</li>
+ *   <li>s3: S3 작업 레이턴시
+ *   <li>redis: Redis 작업 레이턴시
+ *   <li>external-api: 외부 API 호출 레이턴시
  * </ul>
  */
 @Aspect

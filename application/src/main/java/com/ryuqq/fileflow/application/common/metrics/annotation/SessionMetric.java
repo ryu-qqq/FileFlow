@@ -12,12 +12,14 @@ import java.lang.annotation.Target;
  * <p>세션 라이프사이클 메트릭을 AOP로 수집합니다.
  *
  * <p>수집 메트릭:
+ *
  * <ul>
- *   <li>session.{operation}.count - 작업 카운터</li>
- *   <li>session.duration - 작업 소요시간</li>
+ *   <li>session.{operation}.count - 작업 카운터
+ *   <li>session.duration - 작업 소요시간
  * </ul>
  *
  * <p>사용 예시:
+ *
  * <pre>{@code
  * @SessionMetric(operation = "complete", type = "single")
  * public CompleteSingleUploadResponse execute(CompleteSingleUploadCommand command) {
@@ -44,8 +46,6 @@ public @interface SessionMetric {
      */
     String type();
 
-    /**
-     * 실패 시 abort 메트릭 기록 여부.
-     */
+    /** 실패 시 abort 메트릭 기록 여부. */
     boolean recordAbortOnFailure() default true;
 }

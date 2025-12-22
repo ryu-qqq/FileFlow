@@ -72,8 +72,7 @@ public class AssetS3ClientAdapter implements AssetS3ClientPort {
                         .getObjectRequest(getObjectRequest)
                         .build();
 
-        PresignedGetObjectRequest presignedRequest =
-                s3Presigner.presignGetObject(presignRequest);
+        PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
         return presignedRequest.url().toString();
     }
 }
