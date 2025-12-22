@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetCriteria;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,5 +71,41 @@ public class FileAssetReadManager {
     @Transactional(readOnly = true)
     public long countByCriteria(FileAssetCriteria criteria) {
         return fileAssetQueryPort.countByCriteria(criteria);
+    }
+
+    /**
+     * 상태별 FileAsset 개수 조회.
+     *
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @return 상태별 개수
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Long> countByStatus(String organizationId, String tenantId) {
+        return fileAssetQueryPort.countByStatus(organizationId, tenantId);
+    }
+
+    /**
+     * 카테고리별 FileAsset 개수 조회.
+     *
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @return 카테고리별 개수
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Long> countByCategory(String organizationId, String tenantId) {
+        return fileAssetQueryPort.countByCategory(organizationId, tenantId);
+    }
+
+    /**
+     * 전체 FileAsset 개수 조회.
+     *
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @return 전체 개수
+     */
+    @Transactional(readOnly = true)
+    public long countTotal(String organizationId, String tenantId) {
+        return fileAssetQueryPort.countTotal(organizationId, tenantId);
     }
 }

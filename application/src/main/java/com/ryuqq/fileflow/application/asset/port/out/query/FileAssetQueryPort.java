@@ -48,4 +48,31 @@ public interface FileAssetQueryPort {
      * @return 전체 개수
      */
     long countByCriteria(FileAssetCriteria criteria);
+
+    /**
+     * 상태별 FileAsset 개수 조회.
+     *
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @return 상태별 개수 (상태명 → 개수)
+     */
+    java.util.Map<String, Long> countByStatus(String organizationId, String tenantId);
+
+    /**
+     * 카테고리별 FileAsset 개수 조회.
+     *
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @return 카테고리별 개수 (카테고리명 → 개수)
+     */
+    java.util.Map<String, Long> countByCategory(String organizationId, String tenantId);
+
+    /**
+     * 전체 FileAsset 개수 조회.
+     *
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @return 전체 개수
+     */
+    long countTotal(String organizationId, String tenantId);
 }

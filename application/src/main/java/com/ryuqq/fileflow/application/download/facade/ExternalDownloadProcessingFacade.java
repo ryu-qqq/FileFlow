@@ -111,7 +111,7 @@ public class ExternalDownloadProcessingFacade {
      *
      * @param downloadId 외부 다운로드 ID
      * @param clock 시간 소스
-     * @return ExternalDownload
+     * @return ExternalDownload (version 갱신됨)
      */
     private ExternalDownload startProcessing(String downloadId, Clock clock) {
         ExternalDownload download =
@@ -123,12 +123,13 @@ public class ExternalDownloadProcessingFacade {
                                                 "ExternalDownload not found: " + downloadId));
 
         download.startProcessing(clock);
-        externalDownloadTransactionManager.persist(download);
-        return download;
+        return externalDownloadTransactionManager.persist(download);
     }
 
     /**
      * 5단계: 완료 처리 (PROCESSING → COMPLETED) 및 도메인 이벤트 발행.
+     *
+     * <p>도메인 이벤트는 트랜잭션 내에서 등록되어 커밋 후 발행됩니다.
      *
      * @param download ExternalDownload
      * @param result 다운로드 결과
@@ -142,9 +143,8 @@ public class ExternalDownloadProcessingFacade {
         // 도메인 비즈니스 로직 실행 (이벤트 자동 등록됨)
         download.complete(result.contentType(), result.contentLength(), s3Key, etag, clock);
 
-        // 영속화 및 도메인 이벤트 등록 (커밋 후 발행, APP-ER-002, APP-ER-005)
-        externalDownloadTransactionManager.persist(download);
-        download.getDomainEvents().forEach(transactionEventRegistry::registerForPublish);
-        download.clearDomainEvents();
+        // 영속화 + 이벤트 등록 (트랜잭션 내에서 이벤트 등록, 커밋 후 발행)
+        // persistWithEvents는 트랜잭션 내에서 이벤트를 등록하여 AFTER_COMMIT 리스너가 정상 작동
+        externalDownloadTransactionManager.persistWithEvents(download, transactionEventRegistry);
     }
 }

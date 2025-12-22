@@ -3,6 +3,8 @@ package com.ryuqq.fileflow.application.download.manager.query;
 import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
+import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,5 +44,22 @@ public class ExternalDownloadReadManager {
     @Transactional(readOnly = true)
     public boolean existsById(ExternalDownloadId id) {
         return externalDownloadQueryPort.existsById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExternalDownload> findByCriteria(
+            String organizationId,
+            String tenantId,
+            ExternalDownloadStatus status,
+            long offset,
+            int limit) {
+        return externalDownloadQueryPort.findByCriteria(
+                organizationId, tenantId, status, offset, limit);
+    }
+
+    @Transactional(readOnly = true)
+    public long countByCriteria(
+            String organizationId, String tenantId, ExternalDownloadStatus status) {
+        return externalDownloadQueryPort.countByCriteria(organizationId, tenantId, status);
     }
 }

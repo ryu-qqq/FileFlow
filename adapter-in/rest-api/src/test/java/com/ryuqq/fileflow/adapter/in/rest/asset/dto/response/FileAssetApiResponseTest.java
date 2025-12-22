@@ -37,7 +37,8 @@ class FileAssetApiResponseTest {
                             "etag-abc123",
                             "COMPLETED",
                             createdAt,
-                            processedAt);
+                            processedAt,
+                            null);
 
             // then
             assertThat(response.id()).isEqualTo("file-asset-123");
@@ -52,6 +53,7 @@ class FileAssetApiResponseTest {
             assertThat(response.status()).isEqualTo("COMPLETED");
             assertThat(response.createdAt()).isEqualTo(createdAt);
             assertThat(response.processedAt()).isEqualTo(processedAt);
+            assertThat(response.lastErrorMessage()).isNull();
         }
 
         @Test
@@ -74,6 +76,7 @@ class FileAssetApiResponseTest {
                             null,
                             "PENDING",
                             createdAt,
+                            null,
                             null);
 
             // then
@@ -99,6 +102,7 @@ class FileAssetApiResponseTest {
                             null,
                             "PROCESSING",
                             Instant.now(),
+                            null,
                             null);
 
             // then
@@ -128,7 +132,8 @@ class FileAssetApiResponseTest {
                             "etag",
                             "COMPLETED",
                             Instant.now(),
-                            Instant.now());
+                            Instant.now(),
+                            null);
 
             // then
             assertThat(response.category()).isEqualTo(category);
@@ -157,7 +162,8 @@ class FileAssetApiResponseTest {
                             "COMPLETED".equals(status) ? "etag" : null,
                             status,
                             Instant.now(),
-                            "COMPLETED".equals(status) ? Instant.now() : null);
+                            "COMPLETED".equals(status) ? Instant.now() : null,
+                            "FAILED".equals(status) ? "Processing failed" : null);
 
             // then
             assertThat(response.status()).isEqualTo(status);
@@ -269,7 +275,8 @@ class FileAssetApiResponseTest {
                             "etag",
                             "COMPLETED",
                             createdAt,
-                            processedAt);
+                            processedAt,
+                            null);
 
             FileAssetApiResponse response2 =
                     new FileAssetApiResponse(
@@ -284,7 +291,8 @@ class FileAssetApiResponseTest {
                             "etag",
                             "COMPLETED",
                             createdAt,
-                            processedAt);
+                            processedAt,
+                            null);
 
             // when & then
             assertThat(response1).isEqualTo(response2);
@@ -321,7 +329,8 @@ class FileAssetApiResponseTest {
                             "etag",
                             "COMPLETED",
                             now,
-                            now);
+                            now,
+                            null);
 
             FileAssetApiResponse response2 =
                     new FileAssetApiResponse(
@@ -336,6 +345,7 @@ class FileAssetApiResponseTest {
                             "etag",
                             "PROCESSING",
                             now,
+                            null,
                             null);
 
             // when & then
@@ -357,7 +367,8 @@ class FileAssetApiResponseTest {
                 "etag",
                 "COMPLETED",
                 Instant.now(),
-                Instant.now());
+                Instant.now(),
+                null);
     }
 
     private FileAssetApiResponse createResponseWithSize(long size) {
@@ -373,7 +384,8 @@ class FileAssetApiResponseTest {
                 "etag",
                 "COMPLETED",
                 Instant.now(),
-                Instant.now());
+                Instant.now(),
+                null);
     }
 
     private FileAssetApiResponse createFullResponse(String id, Instant now) {
@@ -389,6 +401,7 @@ class FileAssetApiResponseTest {
                 "etag",
                 "COMPLETED",
                 now,
-                now);
+                now,
+                null);
     }
 }

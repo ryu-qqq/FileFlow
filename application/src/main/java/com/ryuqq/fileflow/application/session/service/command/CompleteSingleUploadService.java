@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.session.service.command;
 
+import com.ryuqq.fileflow.application.common.metrics.annotation.SessionMetric;
 import com.ryuqq.fileflow.application.session.dto.command.CompleteSingleUploadCommand;
 import com.ryuqq.fileflow.application.session.dto.response.CompleteSingleUploadResponse;
 import com.ryuqq.fileflow.application.session.facade.UploadSessionFacade;
@@ -59,6 +60,7 @@ public class CompleteSingleUploadService implements CompleteSingleUploadUseCase 
     }
 
     @Override
+    @SessionMetric(operation = "complete", type = "single")
     public CompleteSingleUploadResponse execute(CompleteSingleUploadCommand command) {
         // 1. SessionId로 세션 조회
         UploadSessionId sessionId = UploadSessionId.of(command.sessionId());

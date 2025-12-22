@@ -65,6 +65,7 @@ public class ExternalDownload {
     private final WebhookUrl webhookUrl;
     private final Instant createdAt;
     private Instant updatedAt;
+    private final Long version;
 
     /** 도메인 이벤트 컬렉션 (발행 전 임시 저장). */
     private final List<DomainEvent> domainEvents = new ArrayList<>();
@@ -82,7 +83,8 @@ public class ExternalDownload {
             String errorMessage,
             WebhookUrl webhookUrl,
             Instant createdAt,
-            Instant updatedAt) {
+            Instant updatedAt,
+            Long version) {
         Objects.requireNonNull(sourceUrl, "sourceUrl must not be null");
         Objects.requireNonNull(tenantId, "tenantId must not be null");
         // organizationId는 Seller만 가짐 (Admin/Customer는 null 허용)
@@ -104,6 +106,7 @@ public class ExternalDownload {
         this.webhookUrl = webhookUrl;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.version = version;
     }
 
     /**
@@ -140,7 +143,8 @@ public class ExternalDownload {
                 null,
                 webhookUrl,
                 now,
-                now);
+                now,
+                null);
     }
 
     /**
@@ -159,6 +163,7 @@ public class ExternalDownload {
      * @param webhookUrl 콜백 URL (nullable)
      * @param createdAt 생성 시간
      * @param updatedAt 수정 시간
+     * @param version 낙관적 락 버전
      * @return 재구성된 ExternalDownload
      */
     public static ExternalDownload of(
@@ -174,7 +179,8 @@ public class ExternalDownload {
             String errorMessage,
             WebhookUrl webhookUrl,
             Instant createdAt,
-            Instant updatedAt) {
+            Instant updatedAt,
+            Long version) {
         return new ExternalDownload(
                 id,
                 sourceUrl,
@@ -188,7 +194,8 @@ public class ExternalDownload {
                 errorMessage,
                 webhookUrl,
                 createdAt,
-                updatedAt);
+                updatedAt,
+                version);
     }
 
     /**
@@ -485,6 +492,10 @@ public class ExternalDownload {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     // ========================================

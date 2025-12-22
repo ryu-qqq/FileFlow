@@ -24,7 +24,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
     @Column(name = "id", nullable = false, updatable = false, length = 36)
     private String id;
 
-    @Column(name = "session_id", nullable = false, length = 36)
+    @Column(name = "session_id", length = 36)
     private String sessionId;
 
     @Column(name = "file_name", nullable = false, length = 255)
@@ -74,6 +74,9 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    @Column(name = "last_error_message", length = 2000)
+    private String lastErrorMessage;
+
     protected FileAssetJpaEntity() {
         super();
     }
@@ -96,6 +99,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
             FileAssetStatus status,
             Instant processedAt,
             Instant deletedAt,
+            String lastErrorMessage,
             Instant createdAt,
             Instant updatedAt) {
         super(createdAt, updatedAt);
@@ -116,6 +120,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
         this.status = status;
         this.processedAt = processedAt;
         this.deletedAt = deletedAt;
+        this.lastErrorMessage = lastErrorMessage;
     }
 
     public static FileAssetJpaEntity of(
@@ -136,6 +141,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
             FileAssetStatus status,
             Instant processedAt,
             Instant deletedAt,
+            String lastErrorMessage,
             Instant createdAt,
             Instant updatedAt) {
         return new FileAssetJpaEntity(
@@ -156,6 +162,7 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
                 status,
                 processedAt,
                 deletedAt,
+                lastErrorMessage,
                 createdAt,
                 updatedAt);
     }
@@ -228,6 +235,10 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
         return deletedAt;
     }
 
+    public String getLastErrorMessage() {
+        return lastErrorMessage;
+    }
+
     /**
      * Entity 상태 업데이트.
      *
@@ -236,10 +247,27 @@ public class FileAssetJpaEntity extends BaseAuditEntity {
      * @param status 새로운 상태
      * @param processedAt 처리 완료 시각 (nullable)
      * @param deletedAt 삭제 시각 (nullable)
+     * @param lastErrorMessage 마지막 에러 메시지 (nullable)
      */
-    public void update(FileAssetStatus status, Instant processedAt, Instant deletedAt) {
+    public void update(
+            FileAssetStatus status,
+            Instant processedAt,
+            Instant deletedAt,
+            String lastErrorMessage) {
         this.status = status;
         this.processedAt = processedAt;
         this.deletedAt = deletedAt;
+        this.lastErrorMessage = lastErrorMessage;
+    }
+
+    /**
+     * 에러 메시지만 업데이트.
+     *
+     * <p>처리 실패 시 에러 메시지를 기록합니다.
+     *
+     * @param errorMessage 에러 메시지
+     */
+    public void updateErrorMessage(String errorMessage) {
+        this.lastErrorMessage = errorMessage;
     }
 }

@@ -82,7 +82,12 @@ public class MultipartUploadSessionJpaMapper {
      */
     public CompletedPartJpaEntity toPartEntity(String sessionId, CompletedPart domain) {
         // id가 있으면 reconstitute (업데이트), 없으면 of (신규 생성)
-        // createdAt/updatedAt은 uploadedAt을 사용
+        // createdAt/updatedAt은 uploadedAt을 사용, 단 Instant.MIN인 경우 현재 시간 사용
+        java.time.Instant now = java.time.Instant.now();
+        java.time.Instant uploadedAt = domain.getUploadedAt();
+        java.time.Instant effectiveUploadedAt =
+                (uploadedAt == null || uploadedAt.equals(java.time.Instant.MIN)) ? now : uploadedAt;
+
         if (domain.getId() != null) {
             return CompletedPartJpaEntity.reconstitute(
                     domain.getId(),
@@ -91,9 +96,9 @@ public class MultipartUploadSessionJpaMapper {
                     domain.getPresignedUrlValue(),
                     domain.getETagValue(),
                     domain.getSize(),
-                    domain.getUploadedAt(),
-                    domain.getUploadedAt(),
-                    domain.getUploadedAt());
+                    effectiveUploadedAt,
+                    effectiveUploadedAt,
+                    effectiveUploadedAt);
         }
 
         return CompletedPartJpaEntity.of(
@@ -102,9 +107,9 @@ public class MultipartUploadSessionJpaMapper {
                 domain.getPresignedUrlValue(),
                 domain.getETagValue(),
                 domain.getSize(),
-                domain.getUploadedAt(),
-                domain.getUploadedAt(),
-                domain.getUploadedAt());
+                effectiveUploadedAt,
+                effectiveUploadedAt,
+                effectiveUploadedAt);
     }
 
     /**

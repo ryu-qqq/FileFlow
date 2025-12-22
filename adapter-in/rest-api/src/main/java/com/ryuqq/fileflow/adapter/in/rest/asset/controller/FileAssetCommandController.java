@@ -1,23 +1,33 @@
 package com.ryuqq.fileflow.adapter.in.rest.asset.controller;
 
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.BatchDeleteFileAssetApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.BatchGenerateDownloadUrlApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.DeleteFileAssetApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.GenerateDownloadUrlApiRequest;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.RetryFailedFileAssetApiRequest;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.BatchDeleteFileAssetApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.BatchDownloadUrlApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.DeleteFileAssetApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.DownloadUrlApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.RetryFailedFileAssetApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.mapper.FileAssetApiMapper;
 import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
+import com.ryuqq.fileflow.application.asset.dto.command.BatchDeleteFileAssetCommand;
 import com.ryuqq.fileflow.application.asset.dto.command.BatchGenerateDownloadUrlCommand;
 import com.ryuqq.fileflow.application.asset.dto.command.DeleteFileAssetCommand;
 import com.ryuqq.fileflow.application.asset.dto.command.GenerateDownloadUrlCommand;
+import com.ryuqq.fileflow.application.asset.dto.command.RetryFailedFileAssetCommand;
+import com.ryuqq.fileflow.application.asset.dto.response.BatchDeleteFileAssetResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.BatchDownloadUrlResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.DeleteFileAssetResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.DownloadUrlResponse;
+import com.ryuqq.fileflow.application.asset.dto.response.RetryFailedFileAssetResponse;
+import com.ryuqq.fileflow.application.asset.port.in.command.BatchDeleteFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.command.BatchGenerateDownloadUrlUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.command.DeleteFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.command.GenerateDownloadUrlUseCase;
+import com.ryuqq.fileflow.application.asset.port.in.command.RetryFailedFileAssetUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
@@ -69,26 +79,34 @@ import org.springframework.web.bind.annotation.RestController;
 public class FileAssetCommandController {
 
     private final DeleteFileAssetUseCase deleteFileAssetUseCase;
+    private final BatchDeleteFileAssetUseCase batchDeleteFileAssetUseCase;
     private final GenerateDownloadUrlUseCase generateDownloadUrlUseCase;
     private final BatchGenerateDownloadUrlUseCase batchGenerateDownloadUrlUseCase;
+    private final RetryFailedFileAssetUseCase retryFailedFileAssetUseCase;
     private final FileAssetApiMapper fileAssetApiMapper;
 
     /**
      * FileAssetCommandController 생성자.
      *
      * @param deleteFileAssetUseCase 파일 자산 삭제 UseCase
+     * @param batchDeleteFileAssetUseCase 파일 자산 일괄 삭제 UseCase
      * @param generateDownloadUrlUseCase Download URL 생성 UseCase
      * @param batchGenerateDownloadUrlUseCase Batch Download URL 생성 UseCase
+     * @param retryFailedFileAssetUseCase 실패한 파일 재처리 UseCase
      * @param fileAssetApiMapper FileAsset API Mapper
      */
     public FileAssetCommandController(
             DeleteFileAssetUseCase deleteFileAssetUseCase,
+            BatchDeleteFileAssetUseCase batchDeleteFileAssetUseCase,
             GenerateDownloadUrlUseCase generateDownloadUrlUseCase,
             BatchGenerateDownloadUrlUseCase batchGenerateDownloadUrlUseCase,
+            RetryFailedFileAssetUseCase retryFailedFileAssetUseCase,
             FileAssetApiMapper fileAssetApiMapper) {
         this.deleteFileAssetUseCase = deleteFileAssetUseCase;
+        this.batchDeleteFileAssetUseCase = batchDeleteFileAssetUseCase;
         this.generateDownloadUrlUseCase = generateDownloadUrlUseCase;
         this.batchGenerateDownloadUrlUseCase = batchGenerateDownloadUrlUseCase;
+        this.retryFailedFileAssetUseCase = retryFailedFileAssetUseCase;
         this.fileAssetApiMapper = fileAssetApiMapper;
     }
 
@@ -133,6 +151,49 @@ public class FileAssetCommandController {
 
         DeleteFileAssetApiResponse apiResponse =
                 fileAssetApiMapper.toDeleteApiResponse(useCaseResponse);
+
+        return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
+    }
+
+    /**
+     * 파일 자산 일괄 삭제.
+     *
+     * <p>여러 파일 자산을 한 번에 논리적으로 삭제합니다. 부분 성공을 지원합니다.
+     *
+     * @param request 일괄 삭제 요청 (파일 ID 목록, 삭제 사유)
+     * @return 삭제 결과 (성공/실패 목록)
+     */
+    @Operation(
+            summary = "파일 자산 일괄 삭제",
+            description =
+                    "여러 파일 자산을 한 번에 논리적으로 삭제합니다. 최대 100개까지 요청 가능합니다.\n\n"
+                            + "**부분 성공 지원**: 일부 파일 삭제 실패 시에도 나머지 파일은 정상 처리됩니다.\n\n"
+                            + "**필요 권한**: `file:delete`",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "일괄 삭제 처리 완료 (부분 성공 포함)"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "잘못된 요청")
+    })
+    @PreAuthorize("@access.canDelete()")
+    @PostMapping(ApiPaths.FileAsset.BATCH_DELETE)
+    public ResponseEntity<ApiResponse<BatchDeleteFileAssetApiResponse>> batchDeleteFileAssets(
+            @Valid @RequestBody BatchDeleteFileAssetApiRequest request) {
+
+        UserContext userContext = UserContextHolder.getRequired();
+        String tenantId = userContext.tenant().id().value();
+        String organizationId = userContext.getOrganizationId().value();
+
+        BatchDeleteFileAssetCommand command =
+                fileAssetApiMapper.toBatchDeleteFileAssetCommand(request, tenantId, organizationId);
+
+        BatchDeleteFileAssetResponse useCaseResponse = batchDeleteFileAssetUseCase.execute(command);
+
+        BatchDeleteFileAssetApiResponse apiResponse =
+                fileAssetApiMapper.toBatchDeleteApiResponse(useCaseResponse);
 
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
@@ -222,6 +283,56 @@ public class FileAssetCommandController {
 
         BatchDownloadUrlApiResponse apiResponse =
                 fileAssetApiMapper.toBatchDownloadUrlApiResponse(useCaseResponse);
+
+        return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
+    }
+
+    /**
+     * 실패한 파일 자산 재처리.
+     *
+     * <p>FAILED 상태인 파일 자산을 PENDING 상태로 변경하여 재처리를 시작합니다.
+     *
+     * @param id 파일 자산 ID
+     * @param request 재처리 요청 (사유 선택적)
+     * @return 재처리 결과 (200 OK)
+     */
+    @Operation(
+            summary = "실패한 파일 재처리",
+            description =
+                    "FAILED 상태인 파일 자산을 PENDING 상태로 변경하여 재처리를 시작합니다.\n\n"
+                            + "**필요 권한**: `file:write`",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "재처리 요청 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "FAILED 상태가 아닌 경우"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "파일 자산을 찾을 수 없음")
+    })
+    @PreAuthorize("@access.canWrite()")
+    @PostMapping(ApiPaths.FileAsset.RETRY)
+    public ResponseEntity<ApiResponse<RetryFailedFileAssetApiResponse>> retryFailedFileAsset(
+            @Parameter(description = "파일 자산 ID", required = true, example = "asset-123")
+                    @PathVariable
+                    @NotBlank
+                    String id,
+            @Valid @RequestBody(required = false) RetryFailedFileAssetApiRequest request) {
+
+        UserContext userContext = UserContextHolder.getRequired();
+        String tenantId = userContext.tenant().id().value();
+        String organizationId = userContext.getOrganizationId().value();
+
+        RetryFailedFileAssetCommand command =
+                fileAssetApiMapper.toRetryFailedFileAssetCommand(id, tenantId, organizationId);
+
+        RetryFailedFileAssetResponse useCaseResponse = retryFailedFileAssetUseCase.execute(command);
+
+        RetryFailedFileAssetApiResponse apiResponse =
+                fileAssetApiMapper.toRetryApiResponse(useCaseResponse);
 
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }

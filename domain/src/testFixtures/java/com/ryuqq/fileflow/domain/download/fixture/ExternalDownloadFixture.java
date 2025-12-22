@@ -76,7 +76,8 @@ public final class ExternalDownloadFixture {
                 null,
                 null,
                 Instant.parse("2025-11-26T10:00:00Z"),
-                Instant.parse("2025-11-26T10:00:00Z"));
+                Instant.parse("2025-11-26T10:00:00Z"),
+                0L);
     }
 
     /** PROCESSING 상태의 ExternalDownload 생성. */
@@ -94,7 +95,8 @@ public final class ExternalDownloadFixture {
                 null,
                 null,
                 Instant.parse("2025-11-26T10:00:00Z"),
-                Instant.parse("2025-11-26T11:00:00Z"));
+                Instant.parse("2025-11-26T11:00:00Z"),
+                0L);
     }
 
     /** COMPLETED 상태의 ExternalDownload 생성. */
@@ -112,7 +114,8 @@ public final class ExternalDownloadFixture {
                 null,
                 null,
                 Instant.parse("2025-11-26T10:00:00Z"),
-                Instant.parse("2025-11-26T12:00:00Z"));
+                Instant.parse("2025-11-26T12:00:00Z"),
+                0L);
     }
 
     /** FAILED 상태의 ExternalDownload 생성. */
@@ -130,7 +133,8 @@ public final class ExternalDownloadFixture {
                 "다운로드 실패: Connection timeout",
                 null,
                 Instant.parse("2025-11-26T10:00:00Z"),
-                Instant.parse("2025-11-26T12:00:00Z"));
+                Instant.parse("2025-11-26T12:00:00Z"),
+                0L);
     }
 
     /** Webhook URL을 포함한 ExternalDownload 생성. */
@@ -148,7 +152,8 @@ public final class ExternalDownloadFixture {
                 null,
                 WebhookUrl.of("https://callback.example.com/webhook"),
                 Instant.parse("2025-11-26T10:00:00Z"),
-                Instant.parse("2025-11-26T10:00:00Z"));
+                Instant.parse("2025-11-26T10:00:00Z"),
+                0L);
     }
 
     /** 커스텀 ExternalDownload 생성. */
@@ -177,7 +182,8 @@ public final class ExternalDownloadFixture {
                 errorMessage,
                 webhookUrl,
                 Instant.parse("2025-11-26T10:00:00Z"),
-                Instant.parse("2025-11-26T10:00:00Z"));
+                Instant.parse("2025-11-26T10:00:00Z"),
+                0L);
     }
 
     /** Builder 패턴으로 ExternalDownload 생성. */
@@ -316,7 +322,8 @@ public final class ExternalDownloadFixture {
                     errorMessage,
                     webhook,
                     Instant.parse("2025-11-26T10:00:00Z"),
-                    Instant.parse("2025-11-26T10:00:00Z"));
+                    Instant.parse("2025-11-26T10:00:00Z"),
+                    0L);
         }
     }
 }

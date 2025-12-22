@@ -16,6 +16,8 @@ import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
+import jakarta.persistence.EntityManager;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +36,8 @@ class ExternalDownloadPersistenceAdapterTest {
 
     @Mock private ExternalDownloadJpaMapper mapper;
 
+    @Mock private EntityManager entityManager;
+
     private ExternalDownloadPersistenceAdapter adapter;
 
     // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
@@ -41,8 +45,13 @@ class ExternalDownloadPersistenceAdapterTest {
     private static final String TEST_ORG_ID = OrganizationId.generate().value();
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         adapter = new ExternalDownloadPersistenceAdapter(jpaRepository, mapper);
+        // @PersistenceContext로 주입되는 EntityManager를 리플렉션으로 설정
+        Field entityManagerField =
+                ExternalDownloadPersistenceAdapter.class.getDeclaredField("entityManager");
+        entityManagerField.setAccessible(true);
+        entityManagerField.set(adapter, entityManager);
     }
 
     @Nested
@@ -50,23 +59,26 @@ class ExternalDownloadPersistenceAdapterTest {
     class PersistTest {
 
         @Test
-        @DisplayName("Domain을 Entity로 변환하고 저장한 후 ID를 반환한다")
-        void shouldConvertAndSaveAndReturnId() {
+        @DisplayName("Domain을 Entity로 변환하고 저장한 후 Domain을 반환한다")
+        void shouldConvertAndSaveAndReturnDomain() {
             // given
             UUID id = UUID.randomUUID();
             ExternalDownload domain = createDomain();
             ExternalDownloadJpaEntity entity = createEntity(id);
+            ExternalDownload savedDomain = createDomainWithId(id);
 
             given(mapper.toEntity(domain)).willReturn(entity);
-            given(jpaRepository.save(entity)).willReturn(entity);
+            given(jpaRepository.saveAndFlush(entity)).willReturn(entity);
+            given(mapper.toDomain(entity)).willReturn(savedDomain);
 
             // when
-            ExternalDownloadId result = adapter.persist(domain);
+            ExternalDownload result = adapter.persist(domain);
 
             // then
-            assertThat(result.value()).isEqualTo(id);
+            assertThat(result.getId().value()).isEqualTo(id);
             verify(mapper).toEntity(domain);
-            verify(jpaRepository).save(entity);
+            verify(jpaRepository).saveAndFlush(entity);
+            verify(mapper).toDomain(entity);
         }
 
         @Test
@@ -76,9 +88,11 @@ class ExternalDownloadPersistenceAdapterTest {
             UUID id = UUID.randomUUID();
             ExternalDownload domain = createDomain();
             ExternalDownloadJpaEntity entity = createEntity(id);
+            ExternalDownload savedDomain = createDomainWithId(id);
 
             given(mapper.toEntity(domain)).willReturn(entity);
-            given(jpaRepository.save(any())).willReturn(entity);
+            given(jpaRepository.saveAndFlush(any())).willReturn(entity);
+            given(mapper.toDomain(entity)).willReturn(savedDomain);
 
             // when
             adapter.persist(domain);
@@ -94,20 +108,22 @@ class ExternalDownloadPersistenceAdapterTest {
             UUID id = UUID.randomUUID();
             ExternalDownload domain = createDomain();
             ExternalDownloadJpaEntity entity = createEntity(id);
+            ExternalDownload savedDomain = createDomainWithId(id);
 
             given(mapper.toEntity(domain)).willReturn(entity);
-            given(jpaRepository.save(entity)).willReturn(entity);
+            given(jpaRepository.saveAndFlush(entity)).willReturn(entity);
+            given(mapper.toDomain(entity)).willReturn(savedDomain);
 
             // when
             adapter.persist(domain);
 
             // then
-            verify(jpaRepository).save(entity);
+            verify(jpaRepository).saveAndFlush(entity);
         }
 
         @Test
-        @DisplayName("신규 Domain 저장 시 생성된 ID를 반환한다")
-        void shouldReturnGeneratedIdForNewDomain() {
+        @DisplayName("신규 Domain 저장 시 생성된 ID가 포함된 Domain을 반환한다")
+        void shouldReturnDomainWithGeneratedIdForNewDomain() {
             // given
             ExternalDownload newDomain =
                     ExternalDownload.of(
@@ -123,25 +139,28 @@ class ExternalDownloadPersistenceAdapterTest {
                             null,
                             null,
                             Instant.now(),
-                            Instant.now());
+                            Instant.now(),
+                            0L);
 
             UUID savedId = UUID.randomUUID();
             ExternalDownloadJpaEntity entityWithoutId = createEntity(null);
             ExternalDownloadJpaEntity savedEntity = createEntity(savedId);
+            ExternalDownload savedDomain = createDomainWithId(savedId);
 
             given(mapper.toEntity(newDomain)).willReturn(entityWithoutId);
-            given(jpaRepository.save(entityWithoutId)).willReturn(savedEntity);
+            given(jpaRepository.saveAndFlush(entityWithoutId)).willReturn(savedEntity);
+            given(mapper.toDomain(savedEntity)).willReturn(savedDomain);
 
             // when
-            ExternalDownloadId result = adapter.persist(newDomain);
+            ExternalDownload result = adapter.persist(newDomain);
 
             // then
-            assertThat(result.value()).isEqualTo(savedId);
+            assertThat(result.getId().value()).isEqualTo(savedId);
         }
 
         @Test
-        @DisplayName("기존 Domain 업데이트 시 동일한 ID를 반환한다")
-        void shouldReturnSameIdForExistingDomain() {
+        @DisplayName("기존 Domain 업데이트 시 동일한 ID가 포함된 Domain을 반환한다")
+        void shouldReturnDomainWithSameIdForExistingDomain() {
             // given
             UUID existingId = UUID.randomUUID();
             ExternalDownload existingDomain =
@@ -158,18 +177,21 @@ class ExternalDownloadPersistenceAdapterTest {
                             null,
                             null,
                             Instant.now(),
-                            Instant.now());
+                            Instant.now(),
+                            0L);
 
             ExternalDownloadJpaEntity entity = createEntity(existingId);
+            ExternalDownload savedDomain = createDomainWithId(existingId);
 
             given(mapper.toEntity(existingDomain)).willReturn(entity);
-            given(jpaRepository.save(entity)).willReturn(entity);
+            given(jpaRepository.saveAndFlush(entity)).willReturn(entity);
+            given(mapper.toDomain(entity)).willReturn(savedDomain);
 
             // when
-            ExternalDownloadId result = adapter.persist(existingDomain);
+            ExternalDownload result = adapter.persist(existingDomain);
 
             // then
-            assertThat(result.value()).isEqualTo(existingId);
+            assertThat(result.getId().value()).isEqualTo(existingId);
         }
     }
 
@@ -189,7 +211,26 @@ class ExternalDownloadPersistenceAdapterTest {
                 null,
                 null,
                 Instant.now(),
-                Instant.now());
+                Instant.now(),
+                0L);
+    }
+
+    private ExternalDownload createDomainWithId(UUID id) {
+        return ExternalDownload.of(
+                ExternalDownloadId.of(id),
+                SourceUrl.of("https://example.com/file.jpg"),
+                TenantId.of(TEST_TENANT_ID),
+                OrganizationId.of(TEST_ORG_ID),
+                S3Bucket.of("test-bucket"),
+                "downloads/",
+                ExternalDownloadStatus.PENDING,
+                RetryCount.initial(),
+                null,
+                null,
+                null,
+                Instant.now(),
+                Instant.now(),
+                0L);
     }
 
     private ExternalDownloadJpaEntity createEntity(UUID id) {

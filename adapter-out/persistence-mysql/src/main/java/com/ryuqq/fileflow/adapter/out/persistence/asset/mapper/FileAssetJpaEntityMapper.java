@@ -53,6 +53,7 @@ public class FileAssetJpaEntityMapper {
                 domain.getStatus(),
                 domain.getProcessedAt(),
                 domain.getDeletedAt(),
+                domain.getLastErrorMessage(),
                 domain.getCreatedAt(),
                 domain.getCreatedAt());
     }
@@ -73,7 +74,7 @@ public class FileAssetJpaEntityMapper {
 
         return FileAsset.reconstitute(
                 FileAssetId.of(entity.getId()),
-                UploadSessionId.of(UUID.fromString(entity.getSessionId())),
+                toSessionId(entity.getSessionId()),
                 FileName.of(entity.getFileName()),
                 FileSize.of(entity.getFileSize()),
                 ContentType.of(entity.getContentType()),
@@ -88,11 +89,16 @@ public class FileAssetJpaEntityMapper {
                 entity.getStatus(),
                 entity.getCreatedAt(),
                 entity.getProcessedAt(),
-                entity.getDeletedAt());
+                entity.getDeletedAt(),
+                entity.getLastErrorMessage());
     }
 
     private UserId toUserId(String userId) {
         return userId != null ? UserId.of(userId) : null;
+    }
+
+    private UploadSessionId toSessionId(String sessionId) {
+        return sessionId != null ? UploadSessionId.of(UUID.fromString(sessionId)) : null;
     }
 
     /**

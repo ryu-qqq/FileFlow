@@ -45,7 +45,8 @@ public class FileAssetQueryAssembler {
                 fileAsset.getEtagValue(),
                 fileAsset.getStatus() != null ? fileAsset.getStatus().name() : null,
                 fileAsset.getCreatedAt(),
-                fileAsset.getProcessedAt());
+                fileAsset.getProcessedAt(),
+                fileAsset.getLastErrorMessage());
     }
 
     /**

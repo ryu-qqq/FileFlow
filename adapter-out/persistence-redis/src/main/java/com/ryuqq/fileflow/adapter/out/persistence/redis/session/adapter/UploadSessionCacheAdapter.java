@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.redis.session.adapter;
 
+import com.ryuqq.fileflow.application.common.metrics.annotation.DownstreamMetric;
 import com.ryuqq.fileflow.application.session.port.out.command.UploadSessionCachePersistencePort;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
@@ -54,6 +55,7 @@ public class UploadSessionCacheAdapter implements UploadSessionCachePersistenceP
      * @param ttl Time-To-Live (만료 시간)
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "set")
     public void persist(SingleUploadSession session, Duration ttl) {
         String key = generateSingleUploadKey(session.getIdValue());
         redisTemplate.opsForValue().set(key, session, ttl);
@@ -66,6 +68,7 @@ public class UploadSessionCacheAdapter implements UploadSessionCachePersistenceP
      * @param ttl Time-To-Live (만료 시간)
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "set")
     public void persist(MultipartUploadSession session, Duration ttl) {
         String key = generateMultipartUploadKey(session.getId().value().toString());
         redisTemplate.opsForValue().set(key, session, ttl);
@@ -79,6 +82,7 @@ public class UploadSessionCacheAdapter implements UploadSessionCachePersistenceP
      * @param sessionId 삭제할 세션 ID
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "delete")
     public void deleteSingleUploadSession(UploadSessionId sessionId) {
         String key = generateSingleUploadKey(sessionId.getValue());
         redisTemplate.delete(key);
@@ -92,6 +96,7 @@ public class UploadSessionCacheAdapter implements UploadSessionCachePersistenceP
      * @param sessionId 삭제할 세션 ID
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "delete")
     public void deleteMultipartUploadSession(UploadSessionId sessionId) {
         String key = generateMultipartUploadKey(sessionId.getValue());
         redisTemplate.delete(key);

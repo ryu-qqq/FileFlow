@@ -132,7 +132,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.expiresAt").description("세션 만료 시각"),
                                         fieldWithPath("data.bucket").description("S3 버킷명"),
                                         fieldWithPath("data.key").description("S3 객체 키"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -143,7 +142,7 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
         // given
         InitMultipartUploadApiRequest request =
                 new InitMultipartUploadApiRequest(
-                        "large-file.zip", 104857600L, "application/zip", 5242880L, null);
+                        "large-file.zip", 104857600L, "application/zip", 5242880L, "PRODUCT", null);
 
         List<InitMultipartUploadResponse.PartInfo> parts =
                 List.of(
@@ -183,6 +182,11 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                                 .description("Content-Type (MIME 타입)"),
                                         fieldWithPath("partSize")
                                                 .description("각 Part 크기 (bytes, 기본: 5MB)"),
+                                        fieldWithPath("uploadCategory")
+                                                .description(
+                                                        "업로드 카테고리 (Admin/Seller 필수,"
+                                                            + " PRODUCT/BANNER/EXCEL/DOCUMENT 등)")
+                                                .optional(),
                                         fieldWithPath("customPath")
                                                 .description("커스텀 S3 경로 (SYSTEM 전용)")
                                                 .optional()),
@@ -204,7 +208,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                                 .description("Part 번호 (1-based)"),
                                         fieldWithPath("data.parts[].presignedUrl")
                                                 .description("Part Presigned URL"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -253,7 +256,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.key").description("S3 객체 키"),
                                         fieldWithPath("data.etag").description("S3 ETag"),
                                         fieldWithPath("data.completedAt").description("완료 시각"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -328,7 +330,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.completedParts[].uploadedAt")
                                                 .description("Part 업로드 시각"),
                                         fieldWithPath("data.completedAt").description("완료 시각"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -372,7 +373,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.partNumber").description("Part 번호"),
                                         fieldWithPath("data.etag").description("Part ETag"),
                                         fieldWithPath("data.uploadedAt").description("업로드 시각"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -409,7 +409,6 @@ class UploadSessionCommandControllerDocsTest extends RestDocsTestSupport {
                                                 .description("세션 상태 (CANCELLED)"),
                                         fieldWithPath("data.bucket").description("S3 버킷명"),
                                         fieldWithPath("data.key").description("S3 객체 키"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }

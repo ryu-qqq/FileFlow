@@ -193,8 +193,12 @@ public class UploadSessionCommandFactory {
      *
      * @param command 초기화 명령
      * @return S3 업로드 메타데이터 (Bucket, S3Key, ContentType)
+     * @throws IllegalArgumentException customPath와 uploadCategory를 동시에 사용한 경우
      */
     public S3UploadMetadata createS3UploadMetadata(InitMultipartUploadCommand command) {
+        // customPath와 uploadCategory 동시 사용 검증
+        validateCustomPathExclusivity(command.customPath(), command.uploadCategory());
+
         // ThreadLocal에서 UserContext 조회
         UserContext userContext = userContextSupplier.get();
 
@@ -325,7 +329,7 @@ public class UploadSessionCommandFactory {
     /**
      * MultipartUploadCommand에서 S3Key를 결정합니다.
      *
-     * <p>customPath가 있으면 SYSTEM 전용 경로, 없으면 기본 경로를 사용합니다.
+     * <p>customPath가 있으면 SYSTEM 전용 경로, 없으면 uploadCategory 기반 경로를 사용합니다.
      */
     private S3Key resolveS3KeyForMultipartUpload(
             UserContext userContext, InitMultipartUploadCommand command) {
@@ -333,7 +337,12 @@ public class UploadSessionCommandFactory {
             return userContext.generateS3KeyWithCustomPath(
                     command.customPath(), command.fileName());
         }
-        return userContext.generateS3KeyToday(null, command.fileName());
+
+        UploadCategory uploadCategory = null;
+        if (hasValue(command.uploadCategory())) {
+            uploadCategory = UploadCategory.fromPath(command.uploadCategory());
+        }
+        return userContext.generateS3KeyToday(uploadCategory, command.fileName());
     }
 
     /**

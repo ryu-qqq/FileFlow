@@ -62,6 +62,9 @@ public class FileAsset {
     private Instant processedAt;
     private Instant deletedAt;
 
+    // 에러 정보 (처리 실패 시 마지막 에러 메시지)
+    private String lastErrorMessage;
+
     /**
      * 신규 FileAsset 생성용 팩토리 메서드.
      *
@@ -111,6 +114,7 @@ public class FileAsset {
                 FileAssetStatus.PENDING,
                 clock.instant(),
                 null,
+                null,
                 null);
     }
 
@@ -132,7 +136,8 @@ public class FileAsset {
             FileAssetStatus status,
             Instant createdAt,
             Instant processedAt,
-            Instant deletedAt) {
+            Instant deletedAt,
+            String lastErrorMessage) {
         return new FileAsset(
                 id,
                 sessionId,
@@ -150,7 +155,8 @@ public class FileAsset {
                 status,
                 createdAt,
                 processedAt,
-                deletedAt);
+                deletedAt,
+                lastErrorMessage);
     }
 
     private FileAsset(
@@ -170,7 +176,8 @@ public class FileAsset {
             FileAssetStatus status,
             Instant createdAt,
             Instant processedAt,
-            Instant deletedAt) {
+            Instant deletedAt,
+            String lastErrorMessage) {
         validateNotNull(id, "FileAssetId");
         // sessionId는 ExternalDownload의 경우 null 허용
         validateNotNull(fileName, "FileName");
@@ -186,6 +193,7 @@ public class FileAsset {
         validateNotNull(status, "Status");
         validateNotNull(createdAt, "CreatedAt");
         // dimension은 이미지가 아닌 경우 null 허용
+        // lastErrorMessage는 실패 시에만 설정
 
         this.id = id;
         this.sessionId = sessionId;
@@ -204,6 +212,7 @@ public class FileAsset {
         this.createdAt = createdAt;
         this.processedAt = processedAt;
         this.deletedAt = deletedAt;
+        this.lastErrorMessage = lastErrorMessage;
     }
 
     private void validateNotNull(Object value, String fieldName) {
@@ -280,6 +289,51 @@ public class FileAsset {
     }
 
     /**
+     * 처리 중 발생한 에러를 기록한다.
+     *
+     * <p>실패 시점의 상세 에러 메시지를 저장하여 디버깅에 활용합니다. 재시도 시 새로운 에러로 덮어씌워집니다.
+     *
+     * @param errorMessage 에러 메시지 (null이면 무시)
+     */
+    public void recordError(String errorMessage) {
+        if (errorMessage != null && !errorMessage.isBlank()) {
+            this.lastErrorMessage = truncateIfNeeded(errorMessage, 2000);
+        }
+    }
+
+    /**
+     * 에러 메시지를 초기화한다.
+     *
+     * <p>처리 성공 시 호출하여 이전 에러 메시지를 제거합니다.
+     */
+    public void clearError() {
+        this.lastErrorMessage = null;
+    }
+
+    /**
+     * 실패한 파일 자산을 재처리 대기 상태로 변경한다.
+     *
+     * <p>FAILED 상태인 파일만 재처리할 수 있습니다. 상태를 PENDING으로 변경하고 에러 메시지를 초기화합니다.
+     *
+     * @throws IllegalStateException FAILED 상태가 아닌 경우
+     */
+    public void retry() {
+        if (this.status != FileAssetStatus.FAILED) {
+            throw new IllegalStateException("FAILED 상태인 파일만 재처리할 수 있습니다. 현재 상태: " + this.status);
+        }
+        this.status = FileAssetStatus.PENDING;
+        this.processedAt = null;
+        clearError();
+    }
+
+    private String truncateIfNeeded(String message, int maxLength) {
+        if (message.length() <= maxLength) {
+            return message;
+        }
+        return message.substring(0, maxLength - 3) + "...";
+    }
+
+    /**
      * Soft Delete 처리.
      *
      * <p>DELETED 상태가 아닌 경우에만 삭제 가능합니다.
@@ -310,7 +364,7 @@ public class FileAsset {
     }
 
     public String getSessionIdValue() {
-        return sessionId.value().toString();
+        return sessionId != null ? sessionId.value().toString() : null;
     }
 
     public FileName getFileName() {
@@ -446,5 +500,14 @@ public class FileAsset {
 
     public Instant getDeletedAt() {
         return deletedAt;
+    }
+
+    /**
+     * 마지막 에러 메시지를 반환한다.
+     *
+     * @return 에러 메시지 (에러가 없으면 null)
+     */
+    public String getLastErrorMessage() {
+        return lastErrorMessage;
     }
 }

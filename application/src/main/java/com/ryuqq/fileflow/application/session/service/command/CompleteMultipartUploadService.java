@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.session.service.command;
 
+import com.ryuqq.fileflow.application.common.metrics.annotation.SessionMetric;
 import com.ryuqq.fileflow.application.session.dto.command.CompleteMultipartUploadCommand;
 import com.ryuqq.fileflow.application.session.dto.response.CompleteMultipartUploadResponse;
 import com.ryuqq.fileflow.application.session.facade.UploadSessionFacade;
@@ -49,6 +50,7 @@ public class CompleteMultipartUploadService implements CompleteMultipartUploadUs
     }
 
     @Override
+    @SessionMetric(operation = "complete", type = "multipart")
     public CompleteMultipartUploadResponse execute(CompleteMultipartUploadCommand command) {
         // 1. SessionId로 세션 조회
         UploadSessionId sessionId = UploadSessionId.of(command.sessionId());

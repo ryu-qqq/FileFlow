@@ -247,7 +247,8 @@ class ExternalDownloadQueryAdapterTest {
                 null,
                 null,
                 Instant.now(),
-                Instant.now());
+                Instant.now(),
+                0L);
     }
 
     private ExternalDownloadJpaEntity createEntity(UUID id) {

@@ -24,6 +24,15 @@ spring:
       - classpath:redis.yml
       - classpath:s3.yml
       - classpath:sqs-listener.yml
+      - classpath:sqs-publish.yml
+
+# ===============================================
+# SQS Publish Configuration (Override)
+# ===============================================
+# download-worker는 FileProcessing SQS 메시지 발행 필요
+sqs:
+  publish:
+    enabled: ${SQS_PUBLISH_ENABLED:true}
 
 # ===============================================
 # SQS Listener Configuration

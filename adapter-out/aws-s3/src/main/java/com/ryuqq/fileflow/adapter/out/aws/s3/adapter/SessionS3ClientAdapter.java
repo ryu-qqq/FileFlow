@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.aws.s3.adapter;
 
+import com.ryuqq.fileflow.application.common.metrics.annotation.DownstreamMetric;
 import com.ryuqq.fileflow.application.session.port.out.client.SessionS3ClientPort;
 import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
 import com.ryuqq.fileflow.domain.session.vo.ContentType;
@@ -31,6 +32,8 @@ import software.amazon.awssdk.services.s3.presigner.model.UploadPartPresignReque
  * 세션/업로드 전용 S3 Client Adapter.
  *
  * <p>Presigned URL 발급 및 Multipart Upload 관리를 담당합니다.
+ *
+ * <p><strong>메트릭</strong>: 모든 S3 작업에 대해 {@code downstream.s3.latency} 메트릭을 수집합니다.
  */
 @Component
 public class SessionS3ClientAdapter implements SessionS3ClientPort {
@@ -44,6 +47,7 @@ public class SessionS3ClientAdapter implements SessionS3ClientPort {
     }
 
     @Override
+    @DownstreamMetric(target = "s3", operation = "presign-put")
     public String generatePresignedPutUrl(
             S3Bucket bucket, S3Key s3Key, ContentType contentType, Duration duration) {
         PutObjectPresignRequest presignRequest =
@@ -61,6 +65,7 @@ public class SessionS3ClientAdapter implements SessionS3ClientPort {
     }
 
     @Override
+    @DownstreamMetric(target = "s3", operation = "initiate")
     public String initiateMultipartUpload(S3Bucket bucket, S3Key s3Key, ContentType contentType) {
         CreateMultipartUploadRequest request =
                 CreateMultipartUploadRequest.builder()
@@ -74,6 +79,7 @@ public class SessionS3ClientAdapter implements SessionS3ClientPort {
     }
 
     @Override
+    @DownstreamMetric(target = "s3", operation = "presign-part")
     public String generatePresignedUploadPartUrl(
             S3Bucket bucket, S3Key s3Key, String uploadId, int partNumber, Duration duration) {
         UploadPartRequest uploadPartRequest =
@@ -95,6 +101,7 @@ public class SessionS3ClientAdapter implements SessionS3ClientPort {
     }
 
     @Override
+    @DownstreamMetric(target = "s3", operation = "head")
     public Optional<ETag> getObjectETag(S3Bucket bucket, S3Key s3Key) {
         try {
             HeadObjectRequest request =
@@ -112,6 +119,7 @@ public class SessionS3ClientAdapter implements SessionS3ClientPort {
     }
 
     @Override
+    @DownstreamMetric(target = "s3", operation = "complete")
     public ETag completeMultipartUpload(
             S3Bucket bucket, S3Key s3Key, String uploadId, List<CompletedPart> completedParts) {
         List<software.amazon.awssdk.services.s3.model.CompletedPart> sdkParts =
@@ -142,6 +150,7 @@ public class SessionS3ClientAdapter implements SessionS3ClientPort {
     }
 
     @Override
+    @DownstreamMetric(target = "s3", operation = "abort")
     public void abortMultipartUpload(S3Bucket bucket, S3Key s3Key, String uploadId) {
         AbortMultipartUploadRequest request =
                 AbortMultipartUploadRequest.builder()

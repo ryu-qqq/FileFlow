@@ -39,7 +39,7 @@ public class ExternalDownloadJpaMapper {
                 domain.getFileAssetId() != null ? domain.getFileAssetId().getValue() : null,
                 domain.getErrorMessage(),
                 domain.hasWebhook() ? domain.getWebhookUrl().value() : null,
-                null, // version은 JPA가 관리
+                domain.getVersion(),
                 domain.getCreatedAt(),
                 domain.getUpdatedAt());
     }
@@ -66,6 +66,7 @@ public class ExternalDownloadJpaMapper {
                 entity.getErrorMessage(),
                 entity.getWebhookUrl() != null ? WebhookUrl.of(entity.getWebhookUrl()) : null,
                 entity.getCreatedAt(),
-                entity.getUpdatedAt());
+                entity.getUpdatedAt(),
+                entity.getVersion());
     }
 }

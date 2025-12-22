@@ -135,7 +135,8 @@ class FileAssetCommandAdapterTest {
                 FileAssetStatus.COMPLETED,
                 Instant.now(fixedClock),
                 null,
-                null);
+                null,
+                null); // lastErrorMessage
     }
 
     private FileAssetJpaEntity createEntity(String id) {
@@ -156,8 +157,9 @@ class FileAssetCommandAdapterTest {
                 TEST_ORG_ID,
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
-                null,
-                null,
+                null, // processedAt
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }

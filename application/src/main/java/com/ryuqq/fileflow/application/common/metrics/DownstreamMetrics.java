@@ -183,4 +183,21 @@ public class DownstreamMetrics {
                         .publishPercentiles(0.5, 0.95, 0.99)
                         .register(meterRegistry));
     }
+
+    /**
+     * Timer.Sample을 종료하고 External API latency로 기록합니다.
+     *
+     * @param sample Timer.Sample
+     * @param service 서비스명
+     * @param endpoint 엔드포인트
+     */
+    public void stopExternalApiTimer(Timer.Sample sample, String service, String endpoint) {
+        sample.stop(
+                Timer.builder(METRIC_PREFIX + ".external.api.latency")
+                        .description("External API call latency")
+                        .tag("service", service)
+                        .tag("endpoint", endpoint)
+                        .publishPercentiles(0.5, 0.95, 0.99)
+                        .register(meterRegistry));
+    }
 }

@@ -23,11 +23,15 @@ dependencies {
     implementation libs.spring.context
     implementation libs.spring.tx
 
+    // Spring AOP (for metrics aspect)
+    implementation libs.spring.boot.starter.aop
+
     // Validation
     implementation libs.spring.boot.starter.validation
 
     // Metrics (for SchedulerMetrics, DownstreamMetrics)
-    implementation libs.micrometer.core
+    // API로 노출하여 adapter-out 모듈에서 Timer.Sample 사용 가능하게 함
+    api libs.micrometer.core
 
     // ========================================
     // Test Dependencies

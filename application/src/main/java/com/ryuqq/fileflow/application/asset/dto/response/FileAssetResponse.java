@@ -20,6 +20,7 @@ import java.time.Instant;
  * @param status 상태 (enum name as String)
  * @param createdAt 생성 시각
  * @param processedAt 처리 완료 시각
+ * @param lastErrorMessage 마지막 에러 메시지 (실패 시)
  */
 public record FileAssetResponse(
         String id,
@@ -33,7 +34,8 @@ public record FileAssetResponse(
         String etag,
         String status,
         Instant createdAt,
-        Instant processedAt) {
+        Instant processedAt,
+        String lastErrorMessage) {
 
     public static FileAssetResponse of(
             String id,
@@ -47,7 +49,8 @@ public record FileAssetResponse(
             String etag,
             String status,
             Instant createdAt,
-            Instant processedAt) {
+            Instant processedAt,
+            String lastErrorMessage) {
         return new FileAssetResponse(
                 id,
                 sessionId,
@@ -60,6 +63,7 @@ public record FileAssetResponse(
                 etag,
                 status,
                 createdAt,
-                processedAt);
+                processedAt,
+                lastErrorMessage);
     }
 }

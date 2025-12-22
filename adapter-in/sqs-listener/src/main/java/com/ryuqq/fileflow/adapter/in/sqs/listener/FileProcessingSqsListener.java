@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.adapter.in.sqs.metrics.FileProcessingMetrics;
 import com.ryuqq.fileflow.application.asset.dto.command.ProcessFileAssetCommand;
 import com.ryuqq.fileflow.application.asset.dto.message.FileProcessingMessage;
 import com.ryuqq.fileflow.application.asset.port.in.command.ProcessFileAssetUseCase;
+import com.ryuqq.fileflow.application.asset.port.in.command.RecordFileAssetErrorUseCase;
 import com.ryuqq.fileflow.application.common.lock.DistributedLockExecutor;
 import com.ryuqq.fileflow.application.common.lock.LockType;
 import io.awspring.cloud.sqs.annotation.SqsListener;
@@ -66,14 +67,17 @@ public class FileProcessingSqsListener {
 
     private final DistributedLockExecutor lockExecutor;
     private final ProcessFileAssetUseCase processFileAssetUseCase;
+    private final RecordFileAssetErrorUseCase recordFileAssetErrorUseCase;
     private final FileProcessingMetrics metrics;
 
     public FileProcessingSqsListener(
             DistributedLockExecutor lockExecutor,
             ProcessFileAssetUseCase processFileAssetUseCase,
+            RecordFileAssetErrorUseCase recordFileAssetErrorUseCase,
             FileProcessingMetrics metrics) {
         this.lockExecutor = lockExecutor;
         this.processFileAssetUseCase = processFileAssetUseCase;
+        this.recordFileAssetErrorUseCase = recordFileAssetErrorUseCase;
         this.metrics = metrics;
     }
 
@@ -180,11 +184,24 @@ public class FileProcessingSqsListener {
      * 예외 처리.
      *
      * <p>ACK를 전송하지 않아 SQS가 재시도하도록 합니다. 3회 실패 시 DLQ로 이동됩니다.
+     *
+     * <p>에러 메시지를 FileAsset에 저장하여 디버깅에 활용합니다.
      */
     private void handleException(String fileAssetId, long startTime, Exception e) {
         long totalDuration = System.currentTimeMillis() - startTime;
         metrics.recordFailure();
         metrics.recordProcessingDuration(totalDuration);
+
+        // 에러 메시지를 FileAsset에 저장 (디버깅용)
+        String errorMessage = buildErrorMessage(e);
+        try {
+            recordFileAssetErrorUseCase.recordError(fileAssetId, errorMessage);
+        } catch (Exception recordError) {
+            log.warn(
+                    "[FileProcessing] 에러 메시지 저장 실패: fileAssetId={}, recordError={}",
+                    fileAssetId,
+                    recordError.getMessage());
+        }
 
         log.error(
                 "[FileProcessing] 실패 (SQS 재시도 예정): fileAssetId={}, durationMs={}, error={}",
@@ -194,5 +211,42 @@ public class FileProcessingSqsListener {
                 e);
 
         throw new FileProcessingException("File processing failed: fileAssetId=" + fileAssetId, e);
+    }
+
+    /**
+     * 예외로부터 상세 에러 메시지를 생성합니다.
+     *
+     * <p>root cause와 stack trace 정보를 포함합니다.
+     */
+    private String buildErrorMessage(Exception e) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(e.getClass().getSimpleName()).append(": ").append(e.getMessage());
+
+        Throwable cause = e.getCause();
+        if (cause != null) {
+            sb.append(" | Caused by: ")
+                    .append(cause.getClass().getSimpleName())
+                    .append(": ")
+                    .append(cause.getMessage());
+        }
+
+        // Stack trace의 첫 3줄만 포함 (디버깅에 도움)
+        StackTraceElement[] stackTrace = e.getStackTrace();
+        if (stackTrace.length > 0) {
+            sb.append(" | at ");
+            int limit = Math.min(3, stackTrace.length);
+            for (int i = 0; i < limit; i++) {
+                if (i > 0) {
+                    sb.append(" -> ");
+                }
+                sb.append(stackTrace[i].getClassName())
+                        .append(".")
+                        .append(stackTrace[i].getMethodName())
+                        .append(":")
+                        .append(stackTrace[i].getLineNumber());
+            }
+        }
+
+        return sb.toString();
     }
 }

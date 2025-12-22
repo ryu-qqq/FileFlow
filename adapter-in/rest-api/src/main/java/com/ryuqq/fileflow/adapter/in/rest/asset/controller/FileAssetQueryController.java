@@ -2,13 +2,17 @@ package com.ryuqq.fileflow.adapter.in.rest.asset.controller;
 
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.FileAssetApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.FileAssetStatisticsApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.mapper.FileAssetApiMapper;
 import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.PageApiResponse;
 import com.ryuqq.fileflow.application.asset.dto.query.GetFileAssetQuery;
+import com.ryuqq.fileflow.application.asset.dto.query.GetFileAssetStatisticsQuery;
 import com.ryuqq.fileflow.application.asset.dto.query.ListFileAssetsQuery;
 import com.ryuqq.fileflow.application.asset.dto.response.FileAssetResponse;
+import com.ryuqq.fileflow.application.asset.dto.response.FileAssetStatisticsResponse;
+import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetStatisticsUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetsUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
@@ -53,6 +57,7 @@ public class FileAssetQueryController {
 
     private final GetFileAssetUseCase getFileAssetUseCase;
     private final GetFileAssetsUseCase getFileAssetsUseCase;
+    private final GetFileAssetStatisticsUseCase getFileAssetStatisticsUseCase;
     private final FileAssetApiMapper fileAssetApiMapper;
 
     /**
@@ -60,14 +65,17 @@ public class FileAssetQueryController {
      *
      * @param getFileAssetUseCase 파일 자산 단건 조회 UseCase
      * @param getFileAssetsUseCase 파일 자산 목록 조회 UseCase
+     * @param getFileAssetStatisticsUseCase 파일 자산 통계 조회 UseCase
      * @param fileAssetApiMapper FileAsset API Mapper
      */
     public FileAssetQueryController(
             GetFileAssetUseCase getFileAssetUseCase,
             GetFileAssetsUseCase getFileAssetsUseCase,
+            GetFileAssetStatisticsUseCase getFileAssetStatisticsUseCase,
             FileAssetApiMapper fileAssetApiMapper) {
         this.getFileAssetUseCase = getFileAssetUseCase;
         this.getFileAssetsUseCase = getFileAssetsUseCase;
+        this.getFileAssetStatisticsUseCase = getFileAssetStatisticsUseCase;
         this.fileAssetApiMapper = fileAssetApiMapper;
     }
 
@@ -142,6 +150,39 @@ public class FileAssetQueryController {
 
         PageApiResponse<FileAssetApiResponse> apiResponse =
                 PageApiResponse.from(useCaseResponse, fileAssetApiMapper::toApiResponse);
+
+        return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
+    }
+
+    /**
+     * 파일 자산 통계 조회
+     *
+     * @return 파일 자산 통계 (상태별, 카테고리별 개수)
+     */
+    @Operation(
+            summary = "파일 자산 통계 조회",
+            description = "파일 자산의 상태별/카테고리별 통계를 조회합니다.\n\n**필요 권한**: `file:read`",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "조회 성공")
+    })
+    @PreAuthorize("@access.canRead()")
+    @GetMapping(ApiPaths.FileAsset.STATISTICS)
+    public ResponseEntity<ApiResponse<FileAssetStatisticsApiResponse>> getFileAssetStatistics() {
+
+        UserContext userContext = UserContextHolder.getRequired();
+        String organizationId = userContext.getOrganizationId().value();
+        String tenantId = userContext.tenant().id().value();
+
+        GetFileAssetStatisticsQuery query =
+                fileAssetApiMapper.toGetStatisticsQuery(organizationId, tenantId);
+
+        FileAssetStatisticsResponse useCaseResponse = getFileAssetStatisticsUseCase.execute(query);
+
+        FileAssetStatisticsApiResponse apiResponse =
+                fileAssetApiMapper.toStatisticsApiResponse(useCaseResponse);
 
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }

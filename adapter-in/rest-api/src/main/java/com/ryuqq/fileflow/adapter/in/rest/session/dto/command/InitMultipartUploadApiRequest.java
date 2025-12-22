@@ -16,7 +16,8 @@ import jakarta.validation.constraints.Positive;
  * @param fileSize 파일 크기 (바이트)
  * @param contentType Content-Type (MIME 타입)
  * @param partSize 각 Part 크기 (바이트, 기본: 5MB)
- * @param customPath 커스텀 S3 경로 (SYSTEM 전용)
+ * @param uploadCategory 업로드 카테고리 (Admin/Seller 필수, Customer는 null)
+ * @param customPath 커스텀 S3 경로 (SYSTEM 전용, uploadCategory와 동시 사용 불가)
  * @author development-team
  * @since 1.0.0
  */
@@ -46,8 +47,10 @@ public record InitMultipartUploadApiRequest(
                         requiredMode = Schema.RequiredMode.REQUIRED)
                 @Positive(message = "Part 크기는 양수여야 합니다")
                 long partSize,
+        @Schema(description = "업로드 카테고리 (Admin/Seller 필수)", example = "PRODUCT", nullable = true)
+                String uploadCategory,
         @Schema(
-                        description = "커스텀 S3 경로 (SYSTEM 전용)",
+                        description = "커스텀 S3 경로 (SYSTEM 전용, uploadCategory와 동시 사용 불가)",
                         example = "applications/seller-123/documents",
                         nullable = true)
                 String customPath) {}

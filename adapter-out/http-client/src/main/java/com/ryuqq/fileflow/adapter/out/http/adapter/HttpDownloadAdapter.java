@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.http.adapter;
 
+import com.ryuqq.fileflow.application.common.metrics.annotation.DownstreamMetric;
 import com.ryuqq.fileflow.application.download.dto.DownloadResult;
 import com.ryuqq.fileflow.application.download.port.out.client.HttpDownloadPort;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
@@ -31,6 +32,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
  *   <li>4xx/5xx 응답: IllegalStateException
  *   <li>타임아웃: WebClientException
  * </ul>
+ *
+ * <p><strong>메트릭</strong>: {@code downstream.external.api.latency{service=http-download}} 메트릭을
+ * 수집합니다.
  */
 @Component
 public class HttpDownloadAdapter implements HttpDownloadPort {
@@ -45,6 +49,7 @@ public class HttpDownloadAdapter implements HttpDownloadPort {
     }
 
     @Override
+    @DownstreamMetric(target = "external-api", operation = "download", service = "http-download")
     public DownloadResult download(SourceUrl sourceUrl) {
         String url = sourceUrl.value();
         log.info("HTTP 다운로드 시작: url={}", url);

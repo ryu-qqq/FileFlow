@@ -8,6 +8,7 @@ import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetCriteria;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +52,11 @@ public class FileAssetQueryAdapter implements FileAssetQueryPort {
                         criteria.tenantId(),
                         criteria.status(),
                         criteria.category(),
+                        criteria.fileName(),
+                        criteria.createdAtFrom(),
+                        criteria.createdAtTo(),
+                        criteria.sortBy(),
+                        criteria.isAscending(),
                         criteria.offset(),
                         criteria.limit());
 
@@ -63,6 +69,24 @@ public class FileAssetQueryAdapter implements FileAssetQueryPort {
                 criteria.organizationId(),
                 criteria.tenantId(),
                 criteria.status(),
-                criteria.category());
+                criteria.category(),
+                criteria.fileName(),
+                criteria.createdAtFrom(),
+                criteria.createdAtTo());
+    }
+
+    @Override
+    public Map<String, Long> countByStatus(String organizationId, String tenantId) {
+        return fileAssetQueryDslRepository.countByStatus(organizationId, tenantId);
+    }
+
+    @Override
+    public Map<String, Long> countByCategory(String organizationId, String tenantId) {
+        return fileAssetQueryDslRepository.countByCategory(organizationId, tenantId);
+    }
+
+    @Override
+    public long countTotal(String organizationId, String tenantId) {
+        return fileAssetQueryDslRepository.countTotal(organizationId, tenantId);
     }
 }

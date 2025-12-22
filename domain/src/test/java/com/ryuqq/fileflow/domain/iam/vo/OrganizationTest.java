@@ -130,15 +130,17 @@ class OrganizationTest {
         }
 
         @Test
-        @DisplayName("Admin 조직에 OrganizationId가 있으면 예외가 발생한다")
-        void adminWithId_ShouldThrowException() {
+        @DisplayName("Admin 조직에 OrganizationId가 있어도 정상 생성된다")
+        void adminWithId_ShouldSucceed() {
             // given
             OrganizationId orgId = OrganizationId.generate();
 
-            // when & then
-            assertThatThrownBy(() -> new Organization(orgId, "Test", "connectly", UserRole.ADMIN))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Admin 조직은 OrganizationId를 가질 수 없습니다");
+            // when
+            Organization org = new Organization(orgId, "Test", "connectly", UserRole.ADMIN);
+
+            // then - AuthHub JWT의 oid 클레임으로 OrganizationId가 전달되는 경우 허용
+            assertThat(org.id()).isEqualTo(orgId);
+            assertThat(org.role()).isEqualTo(UserRole.ADMIN);
         }
 
         @Test

@@ -52,28 +52,27 @@ class ExternalDownloadFacadeTest {
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.defaultOutbox();
             ExternalDownloadBundle bundle = new ExternalDownloadBundle(download, outbox);
 
-            ExternalDownloadId downloadId =
-                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
+            ExternalDownload savedDownload = ExternalDownloadFixture.pendingExternalDownload();
             ExternalDownloadOutboxId outboxId =
                     ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
 
-            given(externalDownloadTransactionManager.persist(download)).willReturn(downloadId);
+            given(externalDownloadTransactionManager.persist(download)).willReturn(savedDownload);
             given(outboxTransactionManager.persist(outbox)).willReturn(outboxId);
 
             // when
             ExternalDownloadId result = facade.saveAndPublishEvent(bundle);
 
             // then
-            assertThat(result).isEqualTo(downloadId);
+            assertThat(result).isEqualTo(savedDownload.getId());
 
             InOrder inOrder =
                     inOrder(
+                            transactionEventRegistry,
                             externalDownloadTransactionManager,
-                            outboxTransactionManager,
-                            transactionEventRegistry);
+                            outboxTransactionManager);
+            inOrder.verify(transactionEventRegistry).registerForPublish(any(DomainEvent.class));
             inOrder.verify(externalDownloadTransactionManager).persist(download);
             inOrder.verify(outboxTransactionManager).persist(outbox);
-            inOrder.verify(transactionEventRegistry).registerForPublish(any(DomainEvent.class));
         }
 
         @Test
@@ -87,12 +86,11 @@ class ExternalDownloadFacadeTest {
             ExternalDownloadOutbox outbox = ExternalDownloadOutboxFixture.defaultOutbox();
             ExternalDownloadBundle bundle = new ExternalDownloadBundle(download, outbox);
 
-            ExternalDownloadId downloadId =
-                    ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
+            ExternalDownload savedDownload = ExternalDownloadFixture.pendingExternalDownload();
             ExternalDownloadOutboxId outboxId =
                     ExternalDownloadOutboxId.of("00000000-0000-0000-0000-000000000001");
 
-            given(externalDownloadTransactionManager.persist(download)).willReturn(downloadId);
+            given(externalDownloadTransactionManager.persist(download)).willReturn(savedDownload);
             given(outboxTransactionManager.persist(outbox)).willReturn(outboxId);
 
             // when

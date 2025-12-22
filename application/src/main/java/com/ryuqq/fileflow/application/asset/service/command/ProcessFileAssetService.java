@@ -10,6 +10,7 @@ import com.ryuqq.fileflow.application.asset.manager.query.FileAssetReadManager;
 import com.ryuqq.fileflow.application.asset.port.in.command.ProcessFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.out.client.ImageProcessingPort;
 import com.ryuqq.fileflow.application.asset.service.assembler.FileAssetProcessingAssembler;
+import com.ryuqq.fileflow.application.common.metrics.annotation.FileAssetMetric;
 import com.ryuqq.fileflow.domain.asset.aggregate.FileAsset;
 import com.ryuqq.fileflow.domain.asset.aggregate.ProcessedFileAsset;
 import com.ryuqq.fileflow.domain.asset.exception.FileAssetNotFoundException;
@@ -76,6 +77,7 @@ public class ProcessFileAssetService implements ProcessFileAssetUseCase {
     }
 
     @Override
+    @FileAssetMetric(operation = "process", recordBytes = true)
     public ProcessFileAssetResponse execute(ProcessFileAssetCommand command) {
         log.info("파일 처리 시작: fileAssetId={}", command.fileAssetId());
 

@@ -85,7 +85,8 @@ public class GlobalExceptionHandler {
 
         var res =
                 build(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed for request", req);
-        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "VALIDATION_FAILED");
+        res.getBody().setProperty("errors", errors);
         log.warn("MethodArgumentNotValid: errors={}", errors);
         return res;
     }
@@ -100,7 +101,8 @@ public class GlobalExceptionHandler {
         }
         var res =
                 build(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed for request", req);
-        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "VALIDATION_FAILED");
+        res.getBody().setProperty("errors", errors);
         log.warn("BindException: errors={}", errors);
         return res;
     }
@@ -116,7 +118,8 @@ public class GlobalExceptionHandler {
         }
         var res =
                 build(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed for request", req);
-        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "VALIDATION_FAILED");
+        res.getBody().setProperty("errors", errors);
         log.warn("ConstraintViolation: errors={}", errors);
         return res;
     }
@@ -126,11 +129,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleIllegalArgumentException(
             IllegalArgumentException ex, HttpServletRequest req) {
         log.warn("IllegalArgument: {}", ex.getMessage());
-        return build(
-                HttpStatus.BAD_REQUEST,
-                "Bad Request",
-                Optional.ofNullable(ex.getMessage()).orElse("Invalid argument"),
-                req);
+        var res =
+                build(
+                        HttpStatus.BAD_REQUEST,
+                        "Bad Request",
+                        Optional.ofNullable(ex.getMessage()).orElse("Invalid argument"),
+                        req);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "INVALID_ARGUMENT");
+        return res;
     }
 
     // ======= 400 - 본문 파싱 실패 =======
@@ -140,7 +146,10 @@ public class GlobalExceptionHandler {
         // 과도한 내부 파서 메시지 노출 방지 (보안/UX)
         ex.getMostSpecificCause();
         log.warn("HttpMessageNotReadable: {}", ex.getMostSpecificCause().getMessage());
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", "잘못된 요청 형식입니다. JSON 형식을 확인해주세요.", req);
+        var res =
+                build(HttpStatus.BAD_REQUEST, "Bad Request", "잘못된 요청 형식입니다. JSON 형식을 확인해주세요.", req);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "INVALID_REQUEST_BODY");
+        return res;
     }
 
     // ======= 400 - 파라미터 타입 불일치 =======
@@ -156,7 +165,9 @@ public class GlobalExceptionHandler {
                         .formatted(name, String.valueOf(value), required);
 
         log.warn("TypeMismatch: parameter={}, value={}, requiredType={}", name, value, required);
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", msg, req);
+        var res = build(HttpStatus.BAD_REQUEST, "Bad Request", msg, req);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "TYPE_MISMATCH");
+        return res;
     }
 
     // ======= 400 - 필수 파라미터 누락 =======
@@ -167,7 +178,9 @@ public class GlobalExceptionHandler {
         String msg = "필수 파라미터 '%s'가 누락되었습니다".formatted(param);
 
         log.warn("MissingParam: parameter={}, type={}", param, ex.getParameterType());
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", msg, req);
+        var res = build(HttpStatus.BAD_REQUEST, "Bad Request", msg, req);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "MISSING_PARAMETER");
+        return res;
     }
 
     // ======= 404 - 리소스 없음 =======
@@ -175,7 +188,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleNoResource(
             NoResourceFoundException ex, HttpServletRequest req) {
         log.warn("NoResourceFound: resourcePath={}", ex.getResourcePath());
-        return build(HttpStatus.NOT_FOUND, "Not Found", "요청한 리소스를 찾을 수 없습니다", req);
+        var res = build(HttpStatus.NOT_FOUND, "Not Found", "요청한 리소스를 찾을 수 없습니다", req);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "RESOURCE_NOT_FOUND");
+        return res;
     }
 
     // ======= 405 - 지원하지 않는 메서드 (Allow 헤더 포함) =======
@@ -199,6 +214,7 @@ public class GlobalExceptionHandler {
 
         // ProblemDetail + Allow 헤더 세팅
         var entity = build(HttpStatus.METHOD_NOT_ALLOWED, "Method Not Allowed", message, req);
+        Objects.requireNonNull(entity.getBody()).setProperty("code", "METHOD_NOT_ALLOWED");
 
         HttpHeaders headers = new HttpHeaders();
         if (!supported.isEmpty()) headers.setAllow(supported);
@@ -214,18 +230,23 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleIllegalState(
             IllegalStateException ex, HttpServletRequest req) {
         String msg = Optional.ofNullable(ex.getMessage()).orElse("State conflict");
-        return build(HttpStatus.CONFLICT, "Conflict", msg, req);
+        var res = build(HttpStatus.CONFLICT, "Conflict", msg, req);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "STATE_CONFLICT");
+        return res;
     }
 
     // ======= 500 - 나머지 잡기 =======
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGlobal(Exception ex, HttpServletRequest req) {
         log.error("Unexpected error occurred", ex);
-        return build(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Internal Server Error",
-                "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-                req);
+        var res =
+                build(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Internal Server Error",
+                        "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                        req);
+        Objects.requireNonNull(res.getBody()).setProperty("code", "INTERNAL_ERROR");
+        return res;
     }
 
     /**

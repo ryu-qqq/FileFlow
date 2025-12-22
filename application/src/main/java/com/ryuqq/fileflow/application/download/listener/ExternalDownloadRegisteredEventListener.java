@@ -4,11 +4,13 @@ import com.ryuqq.fileflow.application.download.factory.command.ExternalDownloadC
 import com.ryuqq.fileflow.application.download.manager.ExternalDownloadMessageManager;
 import com.ryuqq.fileflow.application.download.manager.command.ExternalDownloadOutboxTransactionManager;
 import com.ryuqq.fileflow.application.download.manager.query.ExternalDownloadOutboxReadManager;
+import com.ryuqq.fileflow.application.download.port.out.client.ExternalDownloadSqsPublishPort;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -31,10 +33,15 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *   <li>발행 실패 시 로그 기록 (재시도 스케줄러에서 처리)
  * </ol>
  *
- * <p><strong>활성화 조건</strong>: {@code sqs.publish.enabled=true}
+ * <p><strong>활성화 조건</strong>: {@code sqs.publish.enabled=true} AND {@code
+ * ExternalDownloadSqsPublishPort} 빈이 존재해야 함
+ *
+ * <p><strong>주의</strong>: download-worker에서는 ExternalDownloadSqsPublishPort가 없으므로 이 리스너가 활성화되지
+ * 않습니다.
  */
 @Component
 @ConditionalOnProperty(name = "sqs.publish.enabled", havingValue = "true")
+@ConditionalOnBean(ExternalDownloadSqsPublishPort.class)
 public class ExternalDownloadRegisteredEventListener {
 
     private static final Logger log =

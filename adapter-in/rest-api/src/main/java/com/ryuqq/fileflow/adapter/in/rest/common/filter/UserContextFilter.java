@@ -82,6 +82,14 @@ public class UserContextFilter extends OncePerRequestFilter {
 
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
 
+    /**
+     * JWT Payload 파싱 전용 ObjectMapper.
+     *
+     * <p>Spring 기본 ObjectMapper는 polymorphic type handling (@class 필드)이 활성화되어 있어 일반 JWT payload 파싱에
+     * 사용할 수 없습니다. 따라서 기본 설정의 ObjectMapper를 별도로 사용합니다.
+     */
+    private static final ObjectMapper JWT_OBJECT_MAPPER = new ObjectMapper();
+
     // Authorization Header
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -378,7 +386,7 @@ public class UserContextFilter extends OncePerRequestFilter {
             String payload =
                     new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
 
-            return objectMapper.readValue(payload, Map.class);
+            return JWT_OBJECT_MAPPER.readValue(payload, Map.class);
         } catch (Exception e) {
             log.error("JWT 토큰 파싱 실패: {}", e.getMessage());
             throw new IllegalArgumentException("JWT 토큰 파싱에 실패했습니다.", e);
@@ -397,7 +405,13 @@ public class UserContextFilter extends OncePerRequestFilter {
             OrganizationId organizationId, String organizationName, UserRole role) {
         return switch (role) {
             case SYSTEM -> Organization.system();
-            case SUPER_ADMIN, ADMIN -> Organization.admin();
+            case SUPER_ADMIN, ADMIN -> {
+                // AuthHub JWT에서 전달된 organizationId가 있으면 사용
+                if (organizationId != null) {
+                    yield Organization.admin(organizationId, organizationName);
+                }
+                yield Organization.admin();
+            }
             case SELLER -> {
                 if (organizationId == null) {
                     throw new IllegalArgumentException("Seller는 OrganizationId가 필수입니다.");

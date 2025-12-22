@@ -1,6 +1,6 @@
 # AWS Distro for OpenTelemetry (ADOT) Collector Configuration
 # Service: fileflow-download-worker (port 8080)
-# Updated for ADOT v0.45.1
+# Fixed for ADOT v0.46.0 - added resourcedetection for unique instance identification
 
 receivers:
   otlp:
@@ -17,7 +17,7 @@ receivers:
         scrape_timeout: 10s
 
       scrape_configs:
-        - job_name: 'application-metrics'
+        - job_name: 'fileflow-worker-metrics'
           scrape_interval: 30s
           static_configs:
             - targets: ['localhost:8082']
@@ -43,6 +43,22 @@ processors:
     check_interval: 5s
     limit_mib: 410
     spike_limit_mib: 128
+
+  # ECS 태스크 메타데이터 자동 감지 - 각 태스크별 고유 식별자 부여
+  resourcedetection:
+    detectors: [env, ecs]
+    timeout: 5s
+    override: true
+    ecs:
+      resource_attributes:
+        aws.ecs.task.arn:
+          enabled: true
+        aws.ecs.cluster.arn:
+          enabled: true
+        aws.ecs.task.id:
+          enabled: true
+        cloud.availability_zone:
+          enabled: true
 
   resource:
     attributes:
@@ -118,6 +134,7 @@ service:
         - awsecscontainermetrics
       processors:
         - memory_limiter
+        - resourcedetection
         - resource
         - metricstransform
         - batch
@@ -129,6 +146,7 @@ service:
         - otlp
       processors:
         - memory_limiter
+        - resourcedetection
         - resource
         - batch
       exporters:

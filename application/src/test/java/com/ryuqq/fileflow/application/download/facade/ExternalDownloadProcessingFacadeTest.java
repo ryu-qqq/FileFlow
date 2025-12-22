@@ -17,7 +17,6 @@ import com.ryuqq.fileflow.application.download.manager.query.ExternalDownloadRea
 import com.ryuqq.fileflow.application.download.port.out.client.DownloadS3ClientPort;
 import com.ryuqq.fileflow.application.download.port.out.client.HttpDownloadPort;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
-import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
@@ -99,15 +98,22 @@ class ExternalDownloadProcessingFacadeTest {
 
             given(externalDownloadReadManager.findById(ExternalDownloadId.of(downloadId)))
                     .willReturn(Optional.of(download));
+            given(externalDownloadTransactionManager.persist(any(ExternalDownload.class)))
+                    .willReturn(download);
+            given(
+                            externalDownloadTransactionManager.persistWithEvents(
+                                    any(ExternalDownload.class),
+                                    any(TransactionEventRegistry.class)))
+                    .willReturn(download);
             given(httpDownloadPort.download(download.getSourceUrl())).willReturn(downloadResult);
-            given(commandFactory.createS3UploadResponse(download, downloadResult))
+            given(commandFactory.createS3UploadResponse(any(), eq(downloadResult)))
                     .willReturn(uploadResponse);
             given(
                             downloadS3ClientPort.putObject(
-                                    download.getS3Bucket(),
-                                    uploadResponse.s3Key(),
-                                    uploadResponse.contentType(),
-                                    uploadResponse.content()))
+                                    any(),
+                                    eq(uploadResponse.s3Key()),
+                                    eq(uploadResponse.contentType()),
+                                    eq(uploadResponse.content())))
                     .willReturn(etag);
 
             // when
@@ -115,18 +121,18 @@ class ExternalDownloadProcessingFacadeTest {
 
             // then
             verify(externalDownloadReadManager).findById(ExternalDownloadId.of(downloadId));
-            verify(httpDownloadPort).download(download.getSourceUrl());
-            verify(commandFactory).createS3UploadResponse(download, downloadResult);
+            verify(httpDownloadPort).download(any());
+            verify(commandFactory).createS3UploadResponse(any(), eq(downloadResult));
             verify(downloadS3ClientPort)
                     .putObject(
-                            download.getS3Bucket(),
-                            uploadResponse.s3Key(),
-                            uploadResponse.contentType(),
-                            uploadResponse.content());
-            verify(externalDownloadTransactionManager, org.mockito.Mockito.times(2))
-                    .persist(download);
-            verify(transactionEventRegistry)
-                    .registerForPublish(any(ExternalDownloadFileCreatedEvent.class));
+                            any(),
+                            eq(uploadResponse.s3Key()),
+                            eq(uploadResponse.contentType()),
+                            eq(uploadResponse.content()));
+            // startProcessing에서 persist 1회, completeProcessing에서 persistWithEvents 1회
+            verify(externalDownloadTransactionManager).persist(any(ExternalDownload.class));
+            verify(externalDownloadTransactionManager)
+                    .persistWithEvents(any(ExternalDownload.class), eq(transactionEventRegistry));
         }
 
         @Test
@@ -154,6 +160,13 @@ class ExternalDownloadProcessingFacadeTest {
 
             given(externalDownloadReadManager.findById(ExternalDownloadId.of(downloadId)))
                     .willReturn(Optional.of(download));
+            given(externalDownloadTransactionManager.persist(any(ExternalDownload.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+            given(
+                            externalDownloadTransactionManager.persistWithEvents(
+                                    any(ExternalDownload.class),
+                                    any(TransactionEventRegistry.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
             given(httpDownloadPort.download(any())).willReturn(downloadResult);
             given(commandFactory.createS3UploadResponse(any(), any())).willReturn(uploadResponse);
             given(downloadS3ClientPort.putObject(any(), any(), any(), any())).willReturn(etag);
@@ -164,9 +177,12 @@ class ExternalDownloadProcessingFacadeTest {
             // then
             ArgumentCaptor<ExternalDownload> captor =
                     ArgumentCaptor.forClass(ExternalDownload.class);
-            verify(externalDownloadTransactionManager, org.mockito.Mockito.times(2))
-                    .persist(captor.capture());
+            // startProcessing에서 persist, completeProcessing에서 persistWithEvents
+            verify(externalDownloadTransactionManager).persist(captor.capture());
+            verify(externalDownloadTransactionManager)
+                    .persistWithEvents(captor.capture(), eq(transactionEventRegistry));
 
+            // 두 번째 캡처가 완료 상태
             ExternalDownload savedDownload = captor.getAllValues().get(1);
             assertThat(savedDownload.getStatus()).isEqualTo(ExternalDownloadStatus.COMPLETED);
         }
@@ -189,7 +205,7 @@ class ExternalDownloadProcessingFacadeTest {
         }
 
         @Test
-        @DisplayName("5단계: 완료 처리 시 도메인 이벤트가 발행되고 클리어된다")
+        @DisplayName("5단계: 완료 처리 시 persistWithEvents를 통해 이벤트가 등록된다")
         void shouldPublishEventAndClearAfterCompletion() {
             // given
             String downloadId = "00000000-0000-0000-0000-000000000001";
@@ -210,18 +226,24 @@ class ExternalDownloadProcessingFacadeTest {
 
             given(externalDownloadReadManager.findById(ExternalDownloadId.of(downloadId)))
                     .willReturn(Optional.of(download));
-            given(httpDownloadPort.download(download.getSourceUrl())).willReturn(downloadResult);
-            given(commandFactory.createS3UploadResponse(download, downloadResult))
-                    .willReturn(uploadResponse);
+            given(externalDownloadTransactionManager.persist(any(ExternalDownload.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+            given(
+                            externalDownloadTransactionManager.persistWithEvents(
+                                    any(ExternalDownload.class),
+                                    any(TransactionEventRegistry.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+            given(httpDownloadPort.download(any())).willReturn(downloadResult);
+            given(commandFactory.createS3UploadResponse(any(), any())).willReturn(uploadResponse);
             given(downloadS3ClientPort.putObject(any(), any(), any(), any())).willReturn(etag);
 
             // when
             facade.process(downloadId);
 
             // then
-            verify(transactionEventRegistry)
-                    .registerForPublish(any(ExternalDownloadFileCreatedEvent.class));
-            assertThat(download.getDomainEvents()).isEmpty();
+            // persistWithEvents 호출 시 내부에서 이벤트 등록 + 클리어가 수행됨
+            verify(externalDownloadTransactionManager)
+                    .persistWithEvents(any(ExternalDownload.class), eq(transactionEventRegistry));
         }
 
         @Test
@@ -247,26 +269,24 @@ class ExternalDownloadProcessingFacadeTest {
 
             given(externalDownloadReadManager.findById(eq(ExternalDownloadId.of(downloadId))))
                     .willReturn(Optional.of(download));
-            given(httpDownloadPort.download(download.getSourceUrl())).willReturn(downloadResult);
-            given(commandFactory.createS3UploadResponse(download, downloadResult))
-                    .willReturn(uploadResponse);
+            given(externalDownloadTransactionManager.persist(any(ExternalDownload.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
             given(
-                            downloadS3ClientPort.putObject(
-                                    download.getS3Bucket(),
-                                    s3Key,
-                                    uploadResponse.contentType(),
-                                    content))
-                    .willReturn(etag);
+                            externalDownloadTransactionManager.persistWithEvents(
+                                    any(ExternalDownload.class),
+                                    any(TransactionEventRegistry.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+            given(httpDownloadPort.download(any())).willReturn(downloadResult);
+            given(commandFactory.createS3UploadResponse(any(), any())).willReturn(uploadResponse);
+            given(downloadS3ClientPort.putObject(any(), any(), any(), any())).willReturn(etag);
 
             // when
             facade.process(downloadId);
 
             // then
-            verify(httpDownloadPort).download(download.getSourceUrl());
-            verify(commandFactory).createS3UploadResponse(download, downloadResult);
-            verify(downloadS3ClientPort)
-                    .putObject(
-                            download.getS3Bucket(), s3Key, uploadResponse.contentType(), content);
+            verify(httpDownloadPort).download(any());
+            verify(commandFactory).createS3UploadResponse(any(), any());
+            verify(downloadS3ClientPort).putObject(any(), eq(s3Key), any(), any());
         }
     }
 }

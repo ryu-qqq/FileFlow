@@ -81,6 +81,7 @@ public class UploadSessionApiMapper {
                 request.fileSize(),
                 request.contentType(),
                 request.partSize(),
+                request.uploadCategory(),
                 request.customPath());
     }
 
