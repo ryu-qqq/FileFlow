@@ -1,22 +1,32 @@
 package com.ryuqq.fileflow.adapter.in.rest.asset.mapper;
 
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.BatchDeleteFileAssetApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.BatchGenerateDownloadUrlApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.DeleteFileAssetApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.GenerateDownloadUrlApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.BatchDeleteFileAssetApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.BatchDownloadUrlApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.DeleteFileAssetApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.DownloadUrlApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.FileAssetApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.FileAssetStatisticsApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.RetryFailedFileAssetApiResponse;
+import com.ryuqq.fileflow.application.asset.dto.command.BatchDeleteFileAssetCommand;
 import com.ryuqq.fileflow.application.asset.dto.command.BatchGenerateDownloadUrlCommand;
 import com.ryuqq.fileflow.application.asset.dto.command.DeleteFileAssetCommand;
 import com.ryuqq.fileflow.application.asset.dto.command.GenerateDownloadUrlCommand;
+import com.ryuqq.fileflow.application.asset.dto.command.RetryFailedFileAssetCommand;
 import com.ryuqq.fileflow.application.asset.dto.query.GetFileAssetQuery;
+import com.ryuqq.fileflow.application.asset.dto.query.GetFileAssetStatisticsQuery;
 import com.ryuqq.fileflow.application.asset.dto.query.ListFileAssetsQuery;
+import com.ryuqq.fileflow.application.asset.dto.response.BatchDeleteFileAssetResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.BatchDownloadUrlResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.DeleteFileAssetResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.DownloadUrlResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.FileAssetResponse;
+import com.ryuqq.fileflow.application.asset.dto.response.FileAssetStatisticsResponse;
+import com.ryuqq.fileflow.application.asset.dto.response.RetryFailedFileAssetResponse;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -56,9 +66,22 @@ public class FileAssetApiMapper {
             FileAssetSearchApiRequest request, String organizationId, String tenantId) {
         String status = request.status() != null ? request.status().name() : null;
         String category = request.category() != null ? request.category().name() : null;
+        String sortBy = request.sortBy() != null ? request.sortBy().name() : null;
+        String sortDirection =
+                request.sortDirection() != null ? request.sortDirection().name() : null;
 
         return ListFileAssetsQuery.of(
-                organizationId, tenantId, status, category, request.page(), request.size());
+                organizationId,
+                tenantId,
+                status,
+                category,
+                request.fileName(),
+                request.createdAtFrom(),
+                request.createdAtTo(),
+                sortBy,
+                sortDirection,
+                request.page(),
+                request.size());
     }
 
     /**
@@ -80,7 +103,8 @@ public class FileAssetApiMapper {
                 response.etag(),
                 response.status(),
                 response.createdAt(),
-                response.processedAt());
+                response.processedAt(),
+                response.lastErrorMessage());
     }
 
     /**
@@ -180,5 +204,95 @@ public class FileAssetApiMapper {
                         .toList();
 
         return BatchDownloadUrlApiResponse.of(downloadUrls, failures);
+    }
+
+    /**
+     * 통계 조회 Query 생성.
+     *
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @return GetFileAssetStatisticsQuery
+     */
+    public GetFileAssetStatisticsQuery toGetStatisticsQuery(
+            String organizationId, String tenantId) {
+        return GetFileAssetStatisticsQuery.of(organizationId, tenantId);
+    }
+
+    /**
+     * 통계 UseCase Response → API Response 변환.
+     *
+     * @param response UseCase Response
+     * @return FileAssetStatisticsApiResponse
+     */
+    public FileAssetStatisticsApiResponse toStatisticsApiResponse(
+            FileAssetStatisticsResponse response) {
+        return new FileAssetStatisticsApiResponse(
+                response.totalCount(), response.statusCounts(), response.categoryCounts());
+    }
+
+    /**
+     * 재처리 Command 변환.
+     *
+     * @param fileAssetId 파일 자산 ID
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @return RetryFailedFileAssetCommand
+     */
+    public RetryFailedFileAssetCommand toRetryFailedFileAssetCommand(
+            String fileAssetId, String tenantId, String organizationId) {
+        return RetryFailedFileAssetCommand.of(fileAssetId, tenantId, organizationId);
+    }
+
+    /**
+     * 재처리 UseCase Response → API Response 변환.
+     *
+     * @param response UseCase Response
+     * @return RetryFailedFileAssetApiResponse
+     */
+    public RetryFailedFileAssetApiResponse toRetryApiResponse(
+            RetryFailedFileAssetResponse response) {
+        return RetryFailedFileAssetApiResponse.of(
+                response.fileAssetId(), response.status(), response.message());
+    }
+
+    /**
+     * 일괄 삭제 Command 변환.
+     *
+     * @param request API Request
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @return BatchDeleteFileAssetCommand
+     */
+    public BatchDeleteFileAssetCommand toBatchDeleteFileAssetCommand(
+            BatchDeleteFileAssetApiRequest request, String tenantId, String organizationId) {
+        return BatchDeleteFileAssetCommand.of(
+                request.fileAssetIds(), tenantId, organizationId, request.reason());
+    }
+
+    /**
+     * 일괄 삭제 UseCase Response → API Response 변환.
+     *
+     * @param response UseCase Response
+     * @return BatchDeleteFileAssetApiResponse
+     */
+    public BatchDeleteFileAssetApiResponse toBatchDeleteApiResponse(
+            BatchDeleteFileAssetResponse response) {
+        List<BatchDeleteFileAssetApiResponse.DeletedAsset> deletedAssets =
+                response.deletedAssets().stream()
+                        .map(
+                                d ->
+                                        BatchDeleteFileAssetApiResponse.DeletedAsset.of(
+                                                d.fileAssetId(), d.deletedAt()))
+                        .toList();
+
+        List<BatchDeleteFileAssetApiResponse.FailedDelete> failures =
+                response.failures().stream()
+                        .map(
+                                f ->
+                                        BatchDeleteFileAssetApiResponse.FailedDelete.of(
+                                                f.fileAssetId(), f.errorCode(), f.errorMessage()))
+                        .toList();
+
+        return BatchDeleteFileAssetApiResponse.of(deletedAssets, failures);
     }
 }

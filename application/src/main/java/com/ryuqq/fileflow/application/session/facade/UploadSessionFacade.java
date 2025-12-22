@@ -235,14 +235,14 @@ public class UploadSessionFacade {
             uploadSessionCacheManager.deleteSingleUploadSession(session.getId());
         }
 
-        // 4. 이벤트 등록 (커밋 후 발행)
+        // 4. 이벤트 발행 (트랜잭션 커밋 완료 후 즉시 발행)
         for (FileUploadCompletedEvent event : events) {
             log.info(
-                    "Registering FileUploadCompletedEvent: sessionId={}, bucket={}, key={}",
+                    "Publishing FileUploadCompletedEvent: sessionId={}, bucket={}, key={}",
                     event.sessionId().getValue(),
                     event.bucket().bucketName(),
                     event.s3Key().key());
-            transactionEventRegistry.registerObjectForPublish(event);
+            transactionEventRegistry.publish(event);
         }
 
         return savedSession;
@@ -264,9 +264,9 @@ public class UploadSessionFacade {
         MultipartUploadSession savedSession =
                 multipartUploadSessionTransactionManager.persist(session);
 
-        // 3. 이벤트 등록 (커밋 후 발행)
+        // 3. 이벤트 발행 (트랜잭션 커밋 완료 후 즉시 발행)
         for (FileUploadCompletedEvent event : events) {
-            transactionEventRegistry.registerObjectForPublish(event);
+            transactionEventRegistry.publish(event);
         }
 
         return savedSession;

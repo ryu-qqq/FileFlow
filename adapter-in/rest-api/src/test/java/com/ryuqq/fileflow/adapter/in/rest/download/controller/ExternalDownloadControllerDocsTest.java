@@ -8,18 +8,19 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ryuqq.fileflow.adapter.in.rest.common.RestDocsTestSupport;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.command.RequestExternalDownloadApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.download.mapper.ExternalDownloadApiMapper;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
+import com.ryuqq.fileflow.application.common.dto.response.PageResponse;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadDetailResponse;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
 import com.ryuqq.fileflow.application.download.port.in.command.RequestExternalDownloadUseCase;
 import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownloadUseCase;
+import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownloadsUseCase;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import java.time.Instant;
@@ -51,6 +52,7 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
 
     @MockitoBean private RequestExternalDownloadUseCase requestExternalDownloadUseCase;
     @MockitoBean private GetExternalDownloadUseCase getExternalDownloadUseCase;
+    @MockitoBean private GetExternalDownloadsUseCase getExternalDownloadsUseCase;
 
     @BeforeEach
     void setUpUserContext() {
@@ -100,7 +102,6 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.id").description("외부 다운로드 ID"),
                                         fieldWithPath("data.status").description("다운로드 상태"),
                                         fieldWithPath("data.createdAt").description("생성 시각"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -152,7 +153,97 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
                                                 .optional(),
                                         fieldWithPath("data.createdAt").description("생성 시각"),
                                         fieldWithPath("data.updatedAt").description("수정 시각"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
+                                        fieldWithPath("timestamp").description("응답 시각"),
+                                        fieldWithPath("requestId").description("요청 ID"))));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/file/external-downloads - 외부 다운로드 목록 조회 API 문서")
+    void getExternalDownloads() throws Exception {
+        // given
+        Instant now = Instant.now();
+        ExternalDownloadDetailResponse item1 =
+                new ExternalDownloadDetailResponse(
+                        "00000000-0000-0000-0000-000000000001",
+                        "https://example.com/image1.jpg",
+                        "COMPLETED",
+                        "asset-123",
+                        null,
+                        0,
+                        null,
+                        now,
+                        now);
+
+        ExternalDownloadDetailResponse item2 =
+                new ExternalDownloadDetailResponse(
+                        "00000000-0000-0000-0000-000000000002",
+                        "https://example.com/image2.jpg",
+                        "PENDING",
+                        null,
+                        null,
+                        0,
+                        "https://webhook.example.com/callback",
+                        now,
+                        now);
+
+        PageResponse<ExternalDownloadDetailResponse> response =
+                PageResponse.of(java.util.List.of(item1, item2), 0, 20, 2L, 1, true, true);
+
+        given(getExternalDownloadsUseCase.execute(any())).willReturn(response);
+
+        // when & then
+        mockMvc.perform(
+                        get("/api/v1/file/external-downloads")
+                                .param("status", "COMPLETED")
+                                .param("page", "0")
+                                .param("size", "20"))
+                .andExpect(status().isOk())
+                .andDo(
+                        document(
+                                "external-download-list",
+                                preprocessRequest(prettyPrint()),
+                                preprocessResponse(prettyPrint()),
+                                queryParameters(
+                                        parameterWithName("status")
+                                                .description(
+                                                        "상태 필터 (PENDING, PROCESSING, COMPLETED,"
+                                                                + " FAILED)")
+                                                .optional(),
+                                        parameterWithName("page")
+                                                .description("페이지 번호 (0부터 시작)")
+                                                .optional(),
+                                        parameterWithName("size").description("페이지 크기").optional()),
+                                responseFields(
+                                        fieldWithPath("success").description("성공 여부"),
+                                        fieldWithPath("data").description("응답 데이터"),
+                                        fieldWithPath("data.content").description("외부 다운로드 목록"),
+                                        fieldWithPath("data.content[].id")
+                                                .description("외부 다운로드 ID"),
+                                        fieldWithPath("data.content[].sourceUrl")
+                                                .description("원본 URL"),
+                                        fieldWithPath("data.content[].status")
+                                                .description("다운로드 상태"),
+                                        fieldWithPath("data.content[].fileAssetId")
+                                                .description("생성된 파일 자산 ID")
+                                                .optional(),
+                                        fieldWithPath("data.content[].errorMessage")
+                                                .description("에러 메시지")
+                                                .optional(),
+                                        fieldWithPath("data.content[].retryCount")
+                                                .description("재시도 횟수"),
+                                        fieldWithPath("data.content[].webhookUrl")
+                                                .description("웹훅 URL")
+                                                .optional(),
+                                        fieldWithPath("data.content[].createdAt")
+                                                .description("생성 시각"),
+                                        fieldWithPath("data.content[].updatedAt")
+                                                .description("수정 시각"),
+                                        fieldWithPath("data.page").description("현재 페이지 번호"),
+                                        fieldWithPath("data.size").description("페이지 크기"),
+                                        fieldWithPath("data.totalElements").description("전체 요소 수"),
+                                        fieldWithPath("data.totalPages").description("전체 페이지 수"),
+                                        fieldWithPath("data.first").description("첫 페이지 여부"),
+                                        fieldWithPath("data.last").description("마지막 페이지 여부"),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }

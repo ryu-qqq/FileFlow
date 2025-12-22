@@ -12,7 +12,8 @@ package com.ryuqq.fileflow.application.session.dto.command;
  *   <li>fileSize: 5MB ~ 5TB
  *   <li>contentType: 허용된 MIME 타입만 가능
  *   <li>partSize: 5MB ~ 5GB (기본값: 5MB)
- *   <li>customPath: SYSTEM 전용, S3 경로 직접 지정
+ *   <li>uploadCategory: Admin/Seller 필수, Customer는 null
+ *   <li>customPath: SYSTEM 전용, uploadCategory와 동시 사용 불가
  * </ul>
  *
  * <p><strong>참고</strong>: tenantId, organizationId, userId, userEmail은 UserContext(ThreadLocal)에서
@@ -22,10 +23,16 @@ package com.ryuqq.fileflow.application.session.dto.command;
  * @param fileSize 파일 크기 (바이트)
  * @param contentType Content-Type (MIME 타입)
  * @param partSize 각 Part 크기 (바이트, 기본: 5MB)
- * @param customPath 커스텀 S3 경로 (SYSTEM 전용)
+ * @param uploadCategory 업로드 카테고리 (Admin/Seller 필수, Customer는 null)
+ * @param customPath 커스텀 S3 경로 (SYSTEM 전용, uploadCategory와 배타적)
  */
 public record InitMultipartUploadCommand(
-        String fileName, long fileSize, String contentType, long partSize, String customPath) {
+        String fileName,
+        long fileSize,
+        String contentType,
+        long partSize,
+        String uploadCategory,
+        String customPath) {
 
     /**
      * 값 기반 생성.
@@ -34,12 +41,18 @@ public record InitMultipartUploadCommand(
      * @param fileSize 파일 크기 (바이트)
      * @param contentType Content-Type
      * @param partSize 각 Part 크기 (바이트)
+     * @param uploadCategory 업로드 카테고리 (null 가능)
      * @param customPath 커스텀 S3 경로 (null 가능)
      * @return InitMultipartUploadCommand
      */
     public static InitMultipartUploadCommand of(
-            String fileName, long fileSize, String contentType, long partSize, String customPath) {
+            String fileName,
+            long fileSize,
+            String contentType,
+            long partSize,
+            String uploadCategory,
+            String customPath) {
         return new InitMultipartUploadCommand(
-                fileName, fileSize, contentType, partSize, customPath);
+                fileName, fileSize, contentType, partSize, uploadCategory, customPath);
     }
 }

@@ -47,6 +47,11 @@ public class FileAssetQueryFactory {
                 query.tenantId(),
                 status,
                 category,
+                query.fileName(),
+                query.createdAtFrom(),
+                query.createdAtTo(),
+                query.sortBy(),
+                query.sortDirection(),
                 query.offset(),
                 query.size());
     }

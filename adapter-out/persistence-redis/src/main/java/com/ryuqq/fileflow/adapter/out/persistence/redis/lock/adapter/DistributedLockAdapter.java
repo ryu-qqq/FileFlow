@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.redis.lock.adapter;
 
+import com.ryuqq.fileflow.application.common.metrics.annotation.DownstreamMetric;
 import com.ryuqq.fileflow.application.common.port.out.DistributedLockPort;
 import com.ryuqq.fileflow.domain.common.vo.LockKey;
 import java.util.concurrent.TimeUnit;
@@ -49,6 +50,7 @@ public class DistributedLockAdapter implements DistributedLockPort {
     }
 
     @Override
+    @DownstreamMetric(target = "redis", operation = "lock")
     public boolean tryLock(LockKey key, long waitTime, long leaseTime, TimeUnit unit) {
         String lockKey = key.value();
         RLock lock = redissonClient.getLock(lockKey);
@@ -68,6 +70,7 @@ public class DistributedLockAdapter implements DistributedLockPort {
     }
 
     @Override
+    @DownstreamMetric(target = "redis", operation = "unlock")
     public void unlock(LockKey key) {
         String lockKey = key.value();
         RLock lock = redissonClient.getLock(lockKey);

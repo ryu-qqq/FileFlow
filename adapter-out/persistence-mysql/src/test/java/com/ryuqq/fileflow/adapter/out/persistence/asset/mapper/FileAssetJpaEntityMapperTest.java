@@ -352,7 +352,8 @@ class FileAssetJpaEntityMapperTest {
                 status,
                 now,
                 processedAt,
-                deletedAt);
+                deletedAt,
+                null); // lastErrorMessage
     }
 
     private FileAsset createDomainWithCategory(FileCategory category) {
@@ -375,7 +376,8 @@ class FileAssetJpaEntityMapperTest {
                 FileAssetStatus.PENDING,
                 now,
                 null,
-                null);
+                null,
+                null); // lastErrorMessage
     }
 
     private FileAsset createDomainWithNullUserId() {
@@ -398,7 +400,8 @@ class FileAssetJpaEntityMapperTest {
                 FileAssetStatus.PENDING,
                 now,
                 null,
-                null);
+                null,
+                null); // lastErrorMessage
     }
 
     private FileAsset createCompletedDomain() {
@@ -422,7 +425,8 @@ class FileAssetJpaEntityMapperTest {
                 FileAssetStatus.COMPLETED,
                 createdAt,
                 now,
-                null);
+                null,
+                null); // lastErrorMessage
     }
 
     private FileAsset createDomainWithFileInfo(
@@ -446,7 +450,8 @@ class FileAssetJpaEntityMapperTest {
                 FileAssetStatus.PENDING,
                 now,
                 null,
-                null);
+                null,
+                null); // lastErrorMessage
     }
 
     private FileAssetJpaEntity createEntity(FileAssetStatus status) {
@@ -475,6 +480,7 @@ class FileAssetJpaEntityMapperTest {
                 status,
                 processedAt,
                 deletedAt,
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -498,8 +504,9 @@ class FileAssetJpaEntityMapperTest {
                 TEST_ORG_ID,
                 TEST_TENANT_ID,
                 FileAssetStatus.PENDING,
-                null,
-                null,
+                null, // processedAt
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -523,8 +530,9 @@ class FileAssetJpaEntityMapperTest {
                 TEST_ORG_ID,
                 TEST_TENANT_ID,
                 FileAssetStatus.PENDING,
-                null,
-                null,
+                null, // processedAt
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -549,8 +557,9 @@ class FileAssetJpaEntityMapperTest {
                 TEST_ORG_ID,
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
-                now,
-                null,
+                now, // processedAt
+                null, // deletedAt
+                null, // lastErrorMessage
                 createdAt,
                 now);
     }

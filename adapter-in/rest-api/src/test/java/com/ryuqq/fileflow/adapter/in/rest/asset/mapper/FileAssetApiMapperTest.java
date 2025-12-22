@@ -8,6 +8,8 @@ import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.GenerateDownloadUrlA
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest.FileAssetStatusFilter;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest.FileCategoryFilter;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest.SortDirection;
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.query.FileAssetSearchApiRequest.SortField;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.BatchDownloadUrlApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.DeleteFileAssetApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.response.DownloadUrlApiResponse;
@@ -87,9 +89,19 @@ class FileAssetApiMapperTest {
         @DisplayName("모든 필터 조건으로 목록 조회 Query를 생성할 수 있다")
         void toListFileAssetsQuery_WithAllFilters_ShouldCreateQuery() {
             // given
+            Instant createdAtFrom = Instant.parse("2024-01-01T00:00:00Z");
+            Instant createdAtTo = Instant.parse("2024-12-31T23:59:59Z");
             FileAssetSearchApiRequest request =
                     new FileAssetSearchApiRequest(
-                            FileAssetStatusFilter.COMPLETED, FileCategoryFilter.IMAGE, 0, 20);
+                            FileAssetStatusFilter.COMPLETED,
+                            FileCategoryFilter.IMAGE,
+                            "test",
+                            createdAtFrom,
+                            createdAtTo,
+                            SortField.CREATED_AT,
+                            SortDirection.DESC,
+                            0,
+                            20);
             String organizationId = TEST_ORG_ID;
             String tenantId = TEST_TENANT_ID;
 
@@ -102,6 +114,11 @@ class FileAssetApiMapperTest {
             assertThat(query.tenantId()).isEqualTo(tenantId);
             assertThat(query.status()).isEqualTo("COMPLETED");
             assertThat(query.category()).isEqualTo("IMAGE");
+            assertThat(query.fileName()).isEqualTo("test");
+            assertThat(query.createdAtFrom()).isEqualTo(createdAtFrom);
+            assertThat(query.createdAtTo()).isEqualTo(createdAtTo);
+            assertThat(query.sortBy()).isEqualTo("CREATED_AT");
+            assertThat(query.sortDirection()).isEqualTo("DESC");
             assertThat(query.page()).isEqualTo(0);
             assertThat(query.size()).isEqualTo(20);
         }
@@ -111,7 +128,8 @@ class FileAssetApiMapperTest {
         void toListFileAssetsQuery_WithoutFilters_ShouldCreateQuery() {
             // given
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(null, null, null, null);
+                    new FileAssetSearchApiRequest(
+                            null, null, null, null, null, null, null, null, null);
             String organizationId = TEST_ORG_ID;
             String tenantId = TEST_TENANT_ID;
 
@@ -124,6 +142,11 @@ class FileAssetApiMapperTest {
             assertThat(query.tenantId()).isEqualTo(tenantId);
             assertThat(query.status()).isNull();
             assertThat(query.category()).isNull();
+            assertThat(query.fileName()).isNull();
+            assertThat(query.createdAtFrom()).isNull();
+            assertThat(query.createdAtTo()).isNull();
+            assertThat(query.sortBy()).isEqualTo("CREATED_AT"); // 기본값
+            assertThat(query.sortDirection()).isEqualTo("DESC"); // 기본값
             assertThat(query.page()).isEqualTo(0); // 기본값
             assertThat(query.size()).isEqualTo(20); // 기본값
         }
@@ -133,7 +156,16 @@ class FileAssetApiMapperTest {
         void toListFileAssetsQuery_WithStatusOnly_ShouldCreateQuery() {
             // given
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(FileAssetStatusFilter.PROCESSING, null, 1, 10);
+                    new FileAssetSearchApiRequest(
+                            FileAssetStatusFilter.PROCESSING,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            1,
+                            10);
 
             // when
             ListFileAssetsQuery query =
@@ -151,7 +183,8 @@ class FileAssetApiMapperTest {
         void toListFileAssetsQuery_WithCategoryOnly_ShouldCreateQuery() {
             // given
             FileAssetSearchApiRequest request =
-                    new FileAssetSearchApiRequest(null, FileCategoryFilter.VIDEO, 2, 50);
+                    new FileAssetSearchApiRequest(
+                            null, FileCategoryFilter.VIDEO, null, null, null, null, null, 2, 50);
 
             // when
             ListFileAssetsQuery query =
@@ -162,6 +195,31 @@ class FileAssetApiMapperTest {
             assertThat(query.category()).isEqualTo("VIDEO");
             assertThat(query.page()).isEqualTo(2);
             assertThat(query.size()).isEqualTo(50);
+        }
+
+        @Test
+        @DisplayName("정렬 옵션으로 Query를 생성할 수 있다")
+        void toListFileAssetsQuery_WithSortOptions_ShouldCreateQuery() {
+            // given
+            FileAssetSearchApiRequest request =
+                    new FileAssetSearchApiRequest(
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            SortField.FILE_NAME,
+                            SortDirection.ASC,
+                            0,
+                            20);
+
+            // when
+            ListFileAssetsQuery query =
+                    mapper.toListFileAssetsQuery(request, TEST_TENANT_ID, TEST_TENANT_ID);
+
+            // then
+            assertThat(query.sortBy()).isEqualTo("FILE_NAME");
+            assertThat(query.sortDirection()).isEqualTo("ASC");
         }
     }
 
@@ -189,7 +247,8 @@ class FileAssetApiMapperTest {
                             "etag-abc123",
                             "COMPLETED",
                             createdAt,
-                            processedAt);
+                            processedAt,
+                            null);
 
             // when
             FileAssetApiResponse apiResponse = mapper.toApiResponse(response);
@@ -207,6 +266,7 @@ class FileAssetApiMapperTest {
             assertThat(apiResponse.status()).isEqualTo("COMPLETED");
             assertThat(apiResponse.createdAt()).isEqualTo(createdAt);
             assertThat(apiResponse.processedAt()).isEqualTo(processedAt);
+            assertThat(apiResponse.lastErrorMessage()).isNull();
         }
 
         @Test
@@ -228,6 +288,7 @@ class FileAssetApiMapperTest {
                             null,
                             "PENDING",
                             createdAt,
+                            null,
                             null);
 
             // when
@@ -278,7 +339,8 @@ class FileAssetApiMapperTest {
                 "etag",
                 "COMPLETED",
                 createdAt,
-                createdAt);
+                createdAt,
+                null);
     }
 
     @Nested

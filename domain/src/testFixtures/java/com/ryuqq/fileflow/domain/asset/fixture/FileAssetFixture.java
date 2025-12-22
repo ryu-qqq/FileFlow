@@ -125,7 +125,8 @@ public class FileAssetFixture {
                 FileAssetStatus.COMPLETED,
                 Instant.now().minusSeconds(3600),
                 Instant.now(),
-                null);
+                null,
+                null); // lastErrorMessage
     }
 
     /** Custom FileAsset Fixture */

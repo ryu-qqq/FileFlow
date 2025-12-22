@@ -150,18 +150,18 @@ trap cleanup SIGINT SIGTERM
 
 # RDS 포트 포워딩
 if [ -n "$RDS_ENDPOINT" ]; then
-    echo "RDS 포트 포워딩 시작 (localhost:13307 -> ${RDS_ENDPOINT}:3306)..."
+    echo "RDS 포트 포워딩 시작 (localhost:13308 -> ${RDS_ENDPOINT}:3306)..."
     aws ssm start-session \
         --region $AWS_REGION \
         --target $BASTION_INSTANCE_ID \
         --document-name AWS-StartPortForwardingSessionToRemoteHost \
-        --parameters "{\"host\":[\"${RDS_ENDPOINT}\"],\"portNumber\":[\"3306\"],\"localPortNumber\":[\"13307\"]}" \
+        --parameters "{\"host\":[\"${RDS_ENDPOINT}\"],\"portNumber\":[\"3306\"],\"localPortNumber\":[\"13308\"]}" \
         > /dev/null 2>&1 &
-    
+
     RDS_PID=$!
     echo $RDS_PID > $PID_DIR/rds.pid
     echo -e "${GREEN}✅ RDS 포트 포워딩 시작 (PID: ${RDS_PID})${NC}"
-    echo "   로컬 접속: mysql -h 127.0.0.1 -P 13307 -u admin -p"
+    echo "   로컬 접속: mysql -h 127.0.0.1 -P 13308 -u admin -p"
 fi
 
 # Redis 포트 포워딩

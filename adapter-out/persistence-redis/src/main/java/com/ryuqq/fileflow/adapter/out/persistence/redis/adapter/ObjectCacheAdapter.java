@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.redis.adapter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.redis.common.exception.CacheSerializationException;
+import com.ryuqq.fileflow.application.common.metrics.annotation.DownstreamMetric;
 import com.ryuqq.fileflow.application.common.port.out.CachePort;
 import com.ryuqq.fileflow.domain.common.vo.CacheKey;
 import java.time.Duration;
@@ -91,6 +92,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      * <p>객체를 JSON으로 직렬화하여 저장합니다.
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "set")
     public void set(CacheKey key, Object value, Duration ttl) {
         redisTemplate.opsForValue().set(key.value(), value, ttl);
     }
@@ -101,6 +103,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      * <p>저장된 객체를 그대로 반환합니다. 타입 변환이 필요한 경우 {@link #get(CacheKey, Class)}를 사용하세요.
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "get")
     public Optional<Object> get(CacheKey key) {
         Object value = redisTemplate.opsForValue().get(key.value());
         return Optional.ofNullable(value);
@@ -114,6 +117,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      * @throws CacheSerializationException JSON 역직렬화 실패 시
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "get")
     public Optional<Object> get(CacheKey key, Class<Object> clazz) {
         Object value = redisTemplate.opsForValue().get(key.value());
 
@@ -126,6 +130,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
 
     /** {@inheritDoc} */
     @Override
+    @DownstreamMetric(target = "redis", operation = "delete")
     public void evict(CacheKey key) {
         redisTemplate.delete(key.value());
     }
@@ -138,6 +143,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      * <p>KEYS 명령어 대신 SCAN을 사용하여 블로킹 없이 안전하게 키를 삭제합니다.
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "delete-pattern")
     public void evictByPattern(String pattern) {
         Set<String> keysToDelete = scanKeys(pattern);
 
@@ -148,6 +154,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
 
     /** {@inheritDoc} */
     @Override
+    @DownstreamMetric(target = "redis", operation = "exists")
     public boolean exists(CacheKey key) {
         Boolean result = redisTemplate.hasKey(key.value());
         return Boolean.TRUE.equals(result);
@@ -155,6 +162,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
 
     /** {@inheritDoc} */
     @Override
+    @DownstreamMetric(target = "redis", operation = "get-ttl")
     public Duration getTtl(CacheKey key) {
         Long ttlSeconds = redisTemplate.getExpire(key.value(), TimeUnit.SECONDS);
 
@@ -175,6 +183,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      * @param <T> 대상 타입 파라미터
      * @return Optional<T>
      */
+    @DownstreamMetric(target = "redis", operation = "get")
     public <T> Optional<T> getAs(CacheKey key, Class<T> clazz) {
         Object value = redisTemplate.opsForValue().get(key.value());
 

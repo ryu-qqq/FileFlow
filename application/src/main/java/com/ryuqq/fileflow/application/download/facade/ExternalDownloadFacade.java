@@ -70,30 +70,28 @@ public class ExternalDownloadFacade {
 
         log.info("ExternalDownload 저장 및 이벤트 발행 시작: sourceUrl={}", download.getSourceUrl().value());
 
-        // 1. ExternalDownload 저장 (ID 할당)
-        ExternalDownloadId savedId = externalDownloadTransactionManager.persist(download);
+        // 1. 도메인 이벤트 등록 (커밋 후 발행, APP-ER-002, APP-ER-005)
+        // 이벤트는 원래 download 객체에서 가져옴 (persist 후 새 객체에는 이벤트 없음)
+        int eventCount = download.getDomainEvents().size();
+        for (DomainEvent event : download.getDomainEvents()) {
+            log.debug("Registering event for publish: type={}", event.getClass().getSimpleName());
+            transactionEventRegistry.registerForPublish(event);
+        }
+        download.clearDomainEvents();
+
+        // 2. ExternalDownload 저장
+        ExternalDownload savedDownload = externalDownloadTransactionManager.persist(download);
+        ExternalDownloadId savedId = savedDownload.getId();
         log.debug("ExternalDownload 저장 완료: downloadId={}", savedId.value());
 
-        // 2. Outbox 저장
+        // 3. Outbox 저장
         outboxTransactionManager.persist(bundle.outbox());
         log.debug("Outbox 저장 완료: downloadId={}", savedId.value());
 
-        // 3. 도메인 이벤트 등록 (커밋 후 발행, APP-ER-002, APP-ER-005)
-        int eventCount = download.getDomainEvents().size();
-        log.info("도메인 이벤트 등록: downloadId={}, eventCount={}", savedId.value(), eventCount);
-
-        for (DomainEvent event : download.getDomainEvents()) {
-            log.debug(
-                    "Registering event for publish: type={}, downloadId={}",
-                    event.getClass().getSimpleName(),
-                    savedId.value());
-            transactionEventRegistry.registerForPublish(event);
-        }
-
-        // 4. 도메인 이벤트 클리어
-        download.clearDomainEvents();
-
-        log.info("ExternalDownload 저장 및 이벤트 발행 완료: downloadId={}", savedId.value());
+        log.info(
+                "ExternalDownload 저장 및 이벤트 발행 완료: downloadId={}, eventCount={}",
+                savedId.value(),
+                eventCount);
         return savedId;
     }
 }

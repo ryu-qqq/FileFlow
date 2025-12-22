@@ -33,7 +33,6 @@ class ApiResponseTest {
             // then
             assertThat(response.success()).isTrue();
             assertThat(response.data()).isEqualTo("테스트 데이터");
-            assertThat(response.error()).isNull();
             assertThat(response.timestamp()).isNotNull();
             assertThat(response.requestId()).isNotNull().startsWith("req-");
         }
@@ -64,47 +63,8 @@ class ApiResponseTest {
             // then
             assertThat(response.success()).isTrue();
             assertThat(response.data()).isNull();
-            assertThat(response.error()).isNull();
             assertThat(response.timestamp()).isNotNull();
             assertThat(response.requestId()).isNotNull();
-        }
-    }
-
-    @Nested
-    @DisplayName("ofFailure - 실패 응답 생성")
-    class OfFailure {
-
-        @Test
-        @DisplayName("ErrorInfo로 실패 응답 생성")
-        void shouldCreateFailureResponseWithErrorInfo() {
-            // given
-            ErrorInfo errorInfo = new ErrorInfo("TEST_ERROR", "테스트 에러 메시지");
-
-            // when
-            ApiResponse<Void> response = ApiResponse.ofFailure(errorInfo);
-
-            // then
-            assertThat(response.success()).isFalse();
-            assertThat(response.data()).isNull();
-            assertThat(response.error()).isNotNull();
-            assertThat(response.error().errorCode()).isEqualTo("TEST_ERROR");
-            assertThat(response.error().message()).isEqualTo("테스트 에러 메시지");
-            assertThat(response.timestamp()).isNotNull();
-            assertThat(response.requestId()).isNotNull();
-        }
-
-        @Test
-        @DisplayName("에러 코드와 메시지로 실패 응답 생성")
-        void shouldCreateFailureResponseWithCodeAndMessage() {
-            // when
-            ApiResponse<Void> response = ApiResponse.ofFailure("USER_NOT_FOUND", "사용자를 찾을 수 없습니다");
-
-            // then
-            assertThat(response.success()).isFalse();
-            assertThat(response.data()).isNull();
-            assertThat(response.error()).isNotNull();
-            assertThat(response.error().errorCode()).isEqualTo("USER_NOT_FOUND");
-            assertThat(response.error().message()).isEqualTo("사용자를 찾을 수 없습니다");
         }
     }
 
@@ -138,7 +98,6 @@ class ApiResponseTest {
             // then
             assertThat(result).contains("success=true");
             assertThat(result).contains("data=테스트");
-            assertThat(result).contains("error=null");
             assertThat(result).contains("timestamp=");
             assertThat(result).contains("requestId=");
         }

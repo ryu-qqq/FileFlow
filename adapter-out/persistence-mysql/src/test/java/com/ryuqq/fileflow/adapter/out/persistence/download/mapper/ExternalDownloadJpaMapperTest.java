@@ -116,7 +116,8 @@ class ExternalDownloadJpaMapperTest {
                             null,
                             null,
                             instant,
-                            instant);
+                            instant,
+                            0L);
 
             // when
             ExternalDownloadJpaEntity entity = mapper.toEntity(domain);
@@ -250,7 +251,8 @@ class ExternalDownloadJpaMapperTest {
                             null,
                             null,
                             Instant.now(),
-                            Instant.now());
+                            Instant.now(),
+                            0L);
 
             // when
             ExternalDownloadJpaEntity entity = mapper.toEntity(original);
@@ -280,7 +282,8 @@ class ExternalDownloadJpaMapperTest {
                             null,
                             WebhookUrl.of("https://webhook.example.com"),
                             Instant.now(),
-                            Instant.now());
+                            Instant.now(),
+                            0L);
 
             // when
             ExternalDownloadJpaEntity entity = mapper.toEntity(original);
@@ -309,7 +312,8 @@ class ExternalDownloadJpaMapperTest {
                 null,
                 WebhookUrl.of("https://webhook.example.com"),
                 Instant.now(),
-                Instant.now());
+                Instant.now(),
+                0L);
     }
 
     private ExternalDownload createNewDomain() {
@@ -326,7 +330,8 @@ class ExternalDownloadJpaMapperTest {
                 null,
                 null,
                 Instant.now(),
-                Instant.now());
+                Instant.now(),
+                0L);
     }
 
     private ExternalDownload createDomainWithoutWebhook() {
@@ -343,7 +348,8 @@ class ExternalDownloadJpaMapperTest {
                 null,
                 null,
                 Instant.now(),
-                Instant.now());
+                Instant.now(),
+                0L);
     }
 
     private ExternalDownloadJpaEntity createEntity(UUID id) {

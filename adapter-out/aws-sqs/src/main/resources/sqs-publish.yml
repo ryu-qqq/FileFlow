@@ -24,6 +24,8 @@ aws:
       # ========================================
       # ExternalDownload Queue: sends download tasks
       external-download-queue-url: ${SQS_EXTERNAL_DOWNLOAD_QUEUE_URL:}
+      # FileProcessing Queue: sends resizing tasks to worker
+      file-processing-queue-url: ${SQS_FILE_PROCESSING_QUEUE_URL:}
 
 logging:
   level:

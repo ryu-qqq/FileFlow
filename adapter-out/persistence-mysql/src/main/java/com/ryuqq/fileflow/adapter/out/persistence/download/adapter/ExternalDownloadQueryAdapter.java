@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.adapter.out.persistence.download.repository.ExternalDo
 import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
+import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 
@@ -39,5 +41,25 @@ public class ExternalDownloadQueryAdapter implements ExternalDownloadQueryPort {
     @Override
     public boolean existsById(ExternalDownloadId id) {
         return queryDslRepository.existsById(id.value());
+    }
+
+    @Override
+    public List<ExternalDownload> findByCriteria(
+            String organizationId,
+            String tenantId,
+            ExternalDownloadStatus status,
+            long offset,
+            int limit) {
+        return queryDslRepository
+                .findByCriteria(organizationId, tenantId, status, offset, limit)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long countByCriteria(
+            String organizationId, String tenantId, ExternalDownloadStatus status) {
+        return queryDslRepository.countByCriteria(organizationId, tenantId, status);
     }
 }

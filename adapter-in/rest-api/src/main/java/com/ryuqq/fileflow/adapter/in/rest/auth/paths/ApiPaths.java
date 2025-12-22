@@ -71,8 +71,11 @@ public final class ApiPaths {
         public static final String BASE = FILE_SERVICE_BASE + "/file-assets";
         public static final String BY_ID = "/{id}";
         public static final String DELETE = "/{id}/delete";
+        public static final String BATCH_DELETE = "/batch-delete";
+        public static final String RETRY = "/{id}/retry";
         public static final String DOWNLOAD_URL = "/{id}/download-url";
         public static final String BATCH_DOWNLOAD_URL = "/batch-download-url";
+        public static final String STATISTICS = "/statistics";
 
         private FileAsset() {}
     }

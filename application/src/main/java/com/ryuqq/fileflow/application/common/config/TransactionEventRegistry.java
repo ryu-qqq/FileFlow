@@ -48,14 +48,15 @@ public class TransactionEventRegistry {
      *
      * <p>트랜잭션 커밋 후 Event가 발행됩니다. 롤백 시에는 발행되지 않습니다.
      *
+     * <p>트랜잭션 컨텍스트가 없는 경우 즉시 발행합니다 (Fallback).
+     *
      * @param event 발행할 Domain Event
-     * @throws IllegalStateException 트랜잭션 컨텍스트가 없을 경우
      */
     public void registerForPublish(DomainEvent event) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            throw new IllegalStateException(
-                    "Transaction synchronization is not active. "
-                            + "registerForPublish() must be called within @Transactional context.");
+            log.debug("트랜잭션 컨텍스트 없음, 즉시 Event 발행: eventType={}", event.getClass().getSimpleName());
+            eventPublisher.publishEvent(event);
+            return;
         }
 
         log.debug("Event 등록 (커밋 후 발행 예정): eventType={}", event.getClass().getSimpleName());
@@ -89,18 +90,33 @@ public class TransactionEventRegistry {
     }
 
     /**
+     * Event를 즉시 발행합니다.
+     *
+     * <p>트랜잭션 커밋 대기 없이 바로 발행합니다. 이미 트랜잭션이 커밋된 후 호출하는 경우 사용합니다.
+     *
+     * @param event 발행할 Event (모든 타입)
+     */
+    public void publish(Object event) {
+        log.debug("Event 즉시 발행: eventType={}", event.getClass().getSimpleName());
+        eventPublisher.publishEvent(event);
+    }
+
+    /**
      * Object 타입 Event를 커밋 후 발행하도록 등록합니다.
      *
      * <p>DomainEvent 인터페이스를 구현하지 않은 Event도 지원합니다.
      *
+     * <p>트랜잭션 컨텍스트가 없는 경우 즉시 발행합니다 (Fallback).
+     *
      * @param event 발행할 Event (모든 타입)
-     * @throws IllegalStateException 트랜잭션 컨텍스트가 없을 경우
      */
     public void registerObjectForPublish(Object event) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            throw new IllegalStateException(
-                    "Transaction synchronization is not active. registerObjectForPublish() must be"
-                            + " called within @Transactional context.");
+            log.debug(
+                    "트랜잭션 컨텍스트 없음, 즉시 Object Event 발행: eventType={}",
+                    event.getClass().getSimpleName());
+            eventPublisher.publishEvent(event);
+            return;
         }
 
         log.debug("Object Event 등록 (커밋 후 발행 예정): eventType={}", event.getClass().getSimpleName());

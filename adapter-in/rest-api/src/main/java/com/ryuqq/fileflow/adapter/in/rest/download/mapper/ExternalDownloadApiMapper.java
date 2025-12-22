@@ -1,10 +1,12 @@
 package com.ryuqq.fileflow.adapter.in.rest.download.mapper;
 
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.command.RequestExternalDownloadApiRequest;
+import com.ryuqq.fileflow.adapter.in.rest.download.dto.query.ExternalDownloadSearchApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.response.ExternalDownloadApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.response.ExternalDownloadDetailApiResponse;
 import com.ryuqq.fileflow.application.download.dto.command.RequestExternalDownloadCommand;
 import com.ryuqq.fileflow.application.download.dto.query.GetExternalDownloadQuery;
+import com.ryuqq.fileflow.application.download.dto.query.ListExternalDownloadsQuery;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadDetailResponse;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
 import org.springframework.stereotype.Component;
@@ -71,5 +73,19 @@ public class ExternalDownloadApiMapper {
                 response.webhookUrl(),
                 response.createdAt(),
                 response.updatedAt());
+    }
+
+    /**
+     * 목록 조회용 Query를 생성합니다.
+     *
+     * @param request API Request
+     * @param organizationId 조직 ID (UUIDv7 문자열)
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @return ListExternalDownloadsQuery
+     */
+    public ListExternalDownloadsQuery toListQuery(
+            ExternalDownloadSearchApiRequest request, String organizationId, String tenantId) {
+        return ListExternalDownloadsQuery.of(
+                organizationId, tenantId, request.status(), request.page(), request.size());
     }
 }
