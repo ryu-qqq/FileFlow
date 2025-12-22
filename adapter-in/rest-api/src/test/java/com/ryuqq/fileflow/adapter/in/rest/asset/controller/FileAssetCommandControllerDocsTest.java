@@ -12,17 +12,21 @@ import static org.springframework.restdocs.request.RequestDocumentation.paramete
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.BatchDeleteFileAssetApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.BatchGenerateDownloadUrlApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.DeleteFileAssetApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.dto.command.GenerateDownloadUrlApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.asset.mapper.FileAssetApiMapper;
 import com.ryuqq.fileflow.adapter.in.rest.common.RestDocsTestSupport;
+import com.ryuqq.fileflow.application.asset.dto.response.BatchDeleteFileAssetResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.BatchDownloadUrlResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.DeleteFileAssetResponse;
 import com.ryuqq.fileflow.application.asset.dto.response.DownloadUrlResponse;
+import com.ryuqq.fileflow.application.asset.port.in.command.BatchDeleteFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.command.BatchGenerateDownloadUrlUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.command.DeleteFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.command.GenerateDownloadUrlUseCase;
+import com.ryuqq.fileflow.application.asset.port.in.command.RetryFailedFileAssetUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
@@ -56,8 +60,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
 
     @MockitoBean private DeleteFileAssetUseCase deleteFileAssetUseCase;
+    @MockitoBean private BatchDeleteFileAssetUseCase batchDeleteFileAssetUseCase;
     @MockitoBean private GenerateDownloadUrlUseCase generateDownloadUrlUseCase;
     @MockitoBean private BatchGenerateDownloadUrlUseCase batchGenerateDownloadUrlUseCase;
+    @MockitoBean private RetryFailedFileAssetUseCase retryFailedFileAssetUseCase;
 
     @BeforeEach
     void setUpUserContext() {
@@ -103,7 +109,66 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data").description("응답 데이터"),
                                         fieldWithPath("data.id").description("파일 자산 ID"),
                                         fieldWithPath("data.deletedAt").description("삭제 시각"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
+                                        fieldWithPath("timestamp").description("응답 시각"),
+                                        fieldWithPath("requestId").description("요청 ID"))));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/file/file-assets/batch-delete - 파일 자산 일괄 삭제 API 문서")
+    void batchDeleteFileAssets() throws Exception {
+        // given
+        BatchDeleteFileAssetApiRequest request =
+                new BatchDeleteFileAssetApiRequest(
+                        List.of("asset-123", "asset-456", "asset-789"), "더 이상 필요하지 않음");
+
+        BatchDeleteFileAssetResponse response =
+                BatchDeleteFileAssetResponse.of(
+                        List.of(
+                                BatchDeleteFileAssetResponse.DeletedAsset.of(
+                                        "asset-123", Instant.now()),
+                                BatchDeleteFileAssetResponse.DeletedAsset.of(
+                                        "asset-456", Instant.now())),
+                        List.of(
+                                BatchDeleteFileAssetResponse.FailedDelete.of(
+                                        "asset-789", "NOT_FOUND", "FileAsset을 찾을 수 없습니다")));
+
+        given(batchDeleteFileAssetUseCase.execute(any())).willReturn(response);
+
+        // when & then
+        mockMvc.perform(
+                        post("/api/v1/file/file-assets/batch-delete")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andDo(
+                        document(
+                                "file-asset-batch-delete",
+                                preprocessRequest(prettyPrint()),
+                                preprocessResponse(prettyPrint()),
+                                requestFields(
+                                        fieldWithPath("fileAssetIds")
+                                                .description("삭제할 파일 자산 ID 목록 (최대 100개)"),
+                                        fieldWithPath("reason")
+                                                .description("삭제 사유 (선택적)")
+                                                .optional()),
+                                responseFields(
+                                        fieldWithPath("success").description("성공 여부"),
+                                        fieldWithPath("data").description("응답 데이터"),
+                                        fieldWithPath("data.deletedAssets")
+                                                .description("삭제 성공한 자산 목록"),
+                                        fieldWithPath("data.deletedAssets[].fileAssetId")
+                                                .description("파일 자산 ID"),
+                                        fieldWithPath("data.deletedAssets[].deletedAt")
+                                                .description("삭제 시각"),
+                                        fieldWithPath("data.successCount").description("성공 건수"),
+                                        fieldWithPath("data.failureCount").description("실패 건수"),
+                                        fieldWithPath("data.failures").description("실패한 항목 목록"),
+                                        fieldWithPath("data.failures[].fileAssetId")
+                                                .description("파일 자산 ID"),
+                                        fieldWithPath("data.failures[].errorCode")
+                                                .description("에러 코드"),
+                                        fieldWithPath("data.failures[].errorMessage")
+                                                .description("에러 메시지"),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -152,7 +217,6 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.contentType").description("컨텐츠 타입"),
                                         fieldWithPath("data.fileSize").description("파일 크기 (bytes)"),
                                         fieldWithPath("data.expiresAt").description("URL 만료 시각"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -224,7 +288,6 @@ class FileAssetCommandControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.successCount").description("성공 건수"),
                                         fieldWithPath("data.failureCount").description("실패 건수"),
                                         fieldWithPath("data.failures").description("실패한 항목 목록"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }

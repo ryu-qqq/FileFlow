@@ -1,8 +1,11 @@
 package com.ryuqq.fileflow.adapter.out.persistence.download.repository;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownloadJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.QExternalDownloadJpaEntity;
+import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
@@ -62,5 +65,62 @@ public class ExternalDownloadQueryDslRepository {
         Integer result =
                 queryFactory.selectOne().from(download).where(download.id.eq(id)).fetchFirst();
         return result != null;
+    }
+
+    /**
+     * 조건에 맞는 ExternalDownload 목록을 조회한다.
+     *
+     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID
+     * @param status 상태 필터 (nullable)
+     * @param offset 오프셋
+     * @param limit 조회 개수
+     * @return ExternalDownloadJpaEntity 목록
+     */
+    public List<ExternalDownloadJpaEntity> findByCriteria(
+            String organizationId,
+            String tenantId,
+            ExternalDownloadStatus status,
+            long offset,
+            int limit) {
+        BooleanBuilder whereClause = buildWhereClause(organizationId, tenantId, status);
+
+        return queryFactory
+                .selectFrom(download)
+                .where(whereClause)
+                .orderBy(download.createdAt.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 조건에 맞는 ExternalDownload 개수를 조회한다.
+     *
+     * @param organizationId 조직 ID
+     * @param tenantId 테넌트 ID
+     * @param status 상태 필터 (nullable)
+     * @return 총 개수
+     */
+    public long countByCriteria(
+            String organizationId, String tenantId, ExternalDownloadStatus status) {
+        BooleanBuilder whereClause = buildWhereClause(organizationId, tenantId, status);
+
+        Long count =
+                queryFactory.select(download.count()).from(download).where(whereClause).fetchOne();
+        return count != null ? count : 0L;
+    }
+
+    private BooleanBuilder buildWhereClause(
+            String organizationId, String tenantId, ExternalDownloadStatus status) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(download.organizationId.eq(organizationId));
+        builder.and(download.tenantId.eq(tenantId));
+
+        if (status != null) {
+            builder.and(download.status.eq(status));
+        }
+
+        return builder;
     }
 }

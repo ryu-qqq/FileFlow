@@ -57,7 +57,8 @@ class FileAssetJpaEntityTest {
                             tenantId,
                             FileAssetStatus.COMPLETED,
                             processedAt,
-                            null,
+                            null, // deletedAt
+                            null, // lastErrorMessage
                             createdAt,
                             updatedAt);
 
@@ -359,7 +360,8 @@ class FileAssetJpaEntityTest {
                             TEST_TENANT_ID,
                             FileAssetStatus.COMPLETED,
                             Instant.now(),
-                            null,
+                            null, // deletedAt
+                            null, // lastErrorMessage
                             createdAt,
                             updatedAt);
 
@@ -390,7 +392,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -414,7 +417,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 processedAt,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -438,7 +442,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 status,
                 status == FileAssetStatus.COMPLETED ? now : null,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -463,7 +468,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 status,
                 processedAt,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -487,7 +493,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -512,7 +519,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -536,7 +544,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -560,7 +569,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -584,7 +594,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -608,7 +619,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }
@@ -632,7 +644,8 @@ class FileAssetJpaEntityTest {
                 TEST_TENANT_ID,
                 FileAssetStatus.COMPLETED,
                 now,
-                null,
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }

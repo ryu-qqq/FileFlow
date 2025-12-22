@@ -3,16 +3,20 @@ package com.ryuqq.fileflow.adapter.in.rest.download.controller;
 import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.command.RequestExternalDownloadApiRequest;
+import com.ryuqq.fileflow.adapter.in.rest.download.dto.query.ExternalDownloadSearchApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.response.ExternalDownloadApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.response.ExternalDownloadDetailApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.download.mapper.ExternalDownloadApiMapper;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
+import com.ryuqq.fileflow.application.common.dto.response.PageResponse;
 import com.ryuqq.fileflow.application.download.dto.command.RequestExternalDownloadCommand;
 import com.ryuqq.fileflow.application.download.dto.query.GetExternalDownloadQuery;
+import com.ryuqq.fileflow.application.download.dto.query.ListExternalDownloadsQuery;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadDetailResponse;
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadResponse;
 import com.ryuqq.fileflow.application.download.port.in.command.RequestExternalDownloadUseCase;
 import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownloadUseCase;
+import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownloadsUseCase;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -40,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <ul>
  *   <li>POST /api/v1/file/external-downloads - 외부 다운로드 요청
+ *   <li>GET /api/v1/file/external-downloads - 외부 다운로드 목록 조회
  *   <li>GET /api/v1/file/external-downloads/{id} - 외부 다운로드 상태 조회
  * </ul>
  *
@@ -54,6 +59,7 @@ public class ExternalDownloadController {
 
     private final RequestExternalDownloadUseCase requestExternalDownloadUseCase;
     private final GetExternalDownloadUseCase getExternalDownloadUseCase;
+    private final GetExternalDownloadsUseCase getExternalDownloadsUseCase;
     private final ExternalDownloadApiMapper externalDownloadApiMapper;
 
     /**
@@ -61,14 +67,17 @@ public class ExternalDownloadController {
      *
      * @param requestExternalDownloadUseCase 외부 다운로드 요청 UseCase
      * @param getExternalDownloadUseCase 외부 다운로드 조회 UseCase
+     * @param getExternalDownloadsUseCase 외부 다운로드 목록 조회 UseCase
      * @param externalDownloadApiMapper ExternalDownload API Mapper
      */
     public ExternalDownloadController(
             RequestExternalDownloadUseCase requestExternalDownloadUseCase,
             GetExternalDownloadUseCase getExternalDownloadUseCase,
+            GetExternalDownloadsUseCase getExternalDownloadsUseCase,
             ExternalDownloadApiMapper externalDownloadApiMapper) {
         this.requestExternalDownloadUseCase = requestExternalDownloadUseCase;
         this.getExternalDownloadUseCase = getExternalDownloadUseCase;
+        this.getExternalDownloadsUseCase = getExternalDownloadsUseCase;
         this.externalDownloadApiMapper = externalDownloadApiMapper;
     }
 
@@ -111,6 +120,63 @@ public class ExternalDownloadController {
                 externalDownloadApiMapper.toApiResponse(useCaseResponse);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ofSuccess(apiResponse));
+    }
+
+    /**
+     * 외부 다운로드 목록 조회
+     *
+     * <p>조건에 맞는 외부 다운로드 요청 목록을 페이징하여 조회합니다.
+     *
+     * @param status 상태 필터 (nullable)
+     * @param page 페이지 번호
+     * @param size 페이지 크기
+     * @return 외부 다운로드 목록 (200 OK)
+     */
+    @Operation(
+            summary = "외부 다운로드 목록 조회",
+            description = "조건에 맞는 외부 다운로드 요청 목록을 페이징하여 조회합니다.\n\n**필요 권한**: `file:read`",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "조회 성공")
+    })
+    @PreAuthorize("@access.canRead()")
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponse<ExternalDownloadDetailApiResponse>>>
+            getExternalDownloads(
+                    @Parameter(
+                                    description = "상태 필터 (PENDING, PROCESSING, COMPLETED, FAILED)",
+                                    example = "COMPLETED")
+                            String status,
+                    @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") Integer page,
+                    @Parameter(description = "페이지 크기", example = "20") Integer size) {
+
+        UserContext userContext = UserContextHolder.getRequired();
+        String tenantId = userContext.tenant().id().value();
+        String organizationId = userContext.getOrganizationId().value();
+
+        ExternalDownloadSearchApiRequest request =
+                new ExternalDownloadSearchApiRequest(status, page, size);
+        ListExternalDownloadsQuery query =
+                externalDownloadApiMapper.toListQuery(request, organizationId, tenantId);
+
+        PageResponse<ExternalDownloadDetailResponse> useCaseResponse =
+                getExternalDownloadsUseCase.execute(query);
+
+        PageResponse<ExternalDownloadDetailApiResponse> apiResponse =
+                PageResponse.of(
+                        useCaseResponse.content().stream()
+                                .map(externalDownloadApiMapper::toDetailApiResponse)
+                                .toList(),
+                        useCaseResponse.page(),
+                        useCaseResponse.size(),
+                        useCaseResponse.totalElements(),
+                        useCaseResponse.totalPages(),
+                        useCaseResponse.first(),
+                        useCaseResponse.last());
+
+        return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
 
     /**

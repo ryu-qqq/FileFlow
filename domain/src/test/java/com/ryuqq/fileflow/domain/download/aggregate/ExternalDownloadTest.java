@@ -124,7 +124,8 @@ class ExternalDownloadTest {
                             errorMessage,
                             webhookUrl,
                             createdAt,
-                            updatedAt);
+                            updatedAt,
+                            0L);
 
             // then
             assertThat(download.getId()).isEqualTo(id);
@@ -258,7 +259,8 @@ class ExternalDownloadTest {
                             null,
                             null,
                             Instant.now(),
-                            Instant.now());
+                            Instant.now(),
+                            0L);
 
             // when & then
             assertThatThrownBy(() -> download.retry(FIXED_CLOCK))
@@ -331,7 +333,8 @@ class ExternalDownloadTest {
                             null,
                             null,
                             Instant.now(),
-                            Instant.now());
+                            Instant.now(),
+                            0L);
 
             // when & then
             assertThat(download.canRetry()).isFalse();
@@ -389,7 +392,8 @@ class ExternalDownloadTest {
                             null,
                             null,
                             Instant.now(),
-                            Instant.now());
+                            Instant.now(),
+                            0L);
 
             // when & then
             assertThat(download.getIdValue()).isEqualTo(expectedUuid);
@@ -646,7 +650,8 @@ class ExternalDownloadTest {
                 null,
                 null,
                 Instant.parse("2025-11-26T10:00:00Z"),
-                Instant.parse("2025-11-26T11:00:00Z"));
+                Instant.parse("2025-11-26T11:00:00Z"),
+                0L);
     }
 
     private ExternalDownload createProcessingDownloadWithWebhook() {
@@ -663,6 +668,7 @@ class ExternalDownloadTest {
                 null,
                 WebhookUrl.of("https://callback.example.com/webhook"),
                 Instant.parse("2025-11-26T10:00:00Z"),
-                Instant.parse("2025-11-26T11:00:00Z"));
+                Instant.parse("2025-11-26T11:00:00Z"),
+                0L);
     }
 }

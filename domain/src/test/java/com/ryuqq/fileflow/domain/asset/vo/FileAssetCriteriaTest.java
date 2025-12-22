@@ -57,13 +57,25 @@ class FileAssetCriteriaTest {
             // when
             FileAssetCriteria criteria =
                     new FileAssetCriteria(
-                            organizationId, tenantId, status, category, offset, limit);
+                            organizationId,
+                            tenantId,
+                            status,
+                            category,
+                            null,
+                            null,
+                            null,
+                            "CREATED_AT",
+                            "DESC",
+                            offset,
+                            limit);
 
             // then
             assertThat(criteria.organizationId()).isEqualTo(organizationId);
             assertThat(criteria.tenantId()).isEqualTo(tenantId);
             assertThat(criteria.status()).isEqualTo(status);
             assertThat(criteria.category()).isEqualTo(category);
+            assertThat(criteria.sortBy()).isEqualTo("CREATED_AT");
+            assertThat(criteria.sortDirection()).isEqualTo("DESC");
             assertThat(criteria.offset()).isEqualTo(offset);
             assertThat(criteria.limit()).isEqualTo(limit);
         }

@@ -48,7 +48,7 @@ class InitMultipartUploadApiRequestTest {
             // when
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            fileName, fileSize, contentType, partSize, null);
+                            fileName, fileSize, contentType, partSize, "PRODUCT", null);
 
             // then
             assertThat(request.fileName()).isEqualTo(fileName);
@@ -63,10 +63,11 @@ class InitMultipartUploadApiRequestTest {
             // when
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", 5242880L, null);
+                            "file.zip", 104857600L, "application/zip", 5242880L, null, null);
 
             // then
             assertThat(request.customPath()).isNull();
+            assertThat(request.uploadCategory()).isNull();
         }
 
         @Test
@@ -78,7 +79,7 @@ class InitMultipartUploadApiRequestTest {
             // when
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", 5242880L, customPath);
+                            "file.zip", 104857600L, "application/zip", 5242880L, null, customPath);
 
             // then
             assertThat(request.customPath()).isEqualTo(customPath);
@@ -111,7 +112,7 @@ class InitMultipartUploadApiRequestTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            fileName, 104857600L, "application/zip", 5242880L, null);
+                            fileName, 104857600L, "application/zip", 5242880L, "PRODUCT", null);
 
             // when
             Set<ConstraintViolation<InitMultipartUploadApiRequest>> violations =
@@ -129,7 +130,7 @@ class InitMultipartUploadApiRequestTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", fileSize, "application/zip", 5242880L, null);
+                            "file.zip", fileSize, "application/zip", 5242880L, "PRODUCT", null);
 
             // when
             Set<ConstraintViolation<InitMultipartUploadApiRequest>> violations =
@@ -148,7 +149,7 @@ class InitMultipartUploadApiRequestTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, contentType, 5242880L, null);
+                            "file.zip", 104857600L, contentType, 5242880L, "PRODUCT", null);
 
             // when
             Set<ConstraintViolation<InitMultipartUploadApiRequest>> violations =
@@ -167,7 +168,7 @@ class InitMultipartUploadApiRequestTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", partSize, null);
+                            "file.zip", 104857600L, "application/zip", partSize, "PRODUCT", null);
 
             // when
             Set<ConstraintViolation<InitMultipartUploadApiRequest>> violations =
@@ -192,7 +193,12 @@ class InitMultipartUploadApiRequestTest {
             // when
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", defaultPartSize, null);
+                            "file.zip",
+                            104857600L,
+                            "application/zip",
+                            defaultPartSize,
+                            "PRODUCT",
+                            null);
 
             // then
             assertThat(request.partSize()).isEqualTo(5242880L);
@@ -211,6 +217,7 @@ class InitMultipartUploadApiRequestTest {
                             5L * 1024 * 1024 * 1024 * 1024, // 5TB file
                             "application/zip",
                             maxPartSize,
+                            "PRODUCT",
                             null);
 
             // then
@@ -228,10 +235,10 @@ class InitMultipartUploadApiRequestTest {
             // given
             InitMultipartUploadApiRequest request1 =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", 5242880L, null);
+                            "file.zip", 104857600L, "application/zip", 5242880L, "PRODUCT", null);
             InitMultipartUploadApiRequest request2 =
                     new InitMultipartUploadApiRequest(
-                            "file.zip", 104857600L, "application/zip", 5242880L, null);
+                            "file.zip", 104857600L, "application/zip", 5242880L, "PRODUCT", null);
 
             // when & then
             assertThat(request1).isEqualTo(request2);
@@ -263,16 +270,16 @@ class InitMultipartUploadApiRequestTest {
 
     private InitMultipartUploadApiRequest createValidRequest() {
         return new InitMultipartUploadApiRequest(
-                "large-file.zip", 104857600L, "application/zip", 5242880L, null);
+                "large-file.zip", 104857600L, "application/zip", 5242880L, "PRODUCT", null);
     }
 
     private InitMultipartUploadApiRequest createRequestWithFileName(String fileName) {
         return new InitMultipartUploadApiRequest(
-                fileName, 104857600L, "application/zip", 5242880L, null);
+                fileName, 104857600L, "application/zip", 5242880L, "PRODUCT", null);
     }
 
     private InitMultipartUploadApiRequest createRequestWithPartSize(long partSize) {
         return new InitMultipartUploadApiRequest(
-                "file.zip", 104857600L, "application/zip", partSize, null);
+                "file.zip", 104857600L, "application/zip", partSize, "PRODUCT", null);
     }
 }

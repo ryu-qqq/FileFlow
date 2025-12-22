@@ -133,7 +133,6 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.completedAt")
                                                 .description("완료 시각")
                                                 .optional(),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -216,7 +215,6 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.completedAt")
                                                 .description("완료 시각")
                                                 .optional(),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -310,7 +308,6 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.nextCursor")
                                                 .description("다음 커서")
                                                 .optional(),
-                                        fieldWithPath("error").description("에러 정보").optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }

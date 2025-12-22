@@ -53,3 +53,79 @@ FileFlow는 파일 업로드, 다운로드, 관리를 위한 REST API를 제공�
 | `500 Internal Server Error`
 | 서버 내부 오류
 |===
+
+[[overview-response-format]]
+=== 응답 형식
+
+==== 성공 응답
+
+모든 성공 응답은 다음 형식을 따릅니다:
+
+[source,json]
+----
+{
+  "success": true,
+  "data": { ... },
+  "timestamp": "2025-01-15T10:30:00",
+  "requestId": "req-1234567890"
+}
+----
+
+|===
+| 필드 | 타입 | 설명
+
+| `success`
+| Boolean
+| 요청 성공 여부 (항상 `true`)
+
+| `data`
+| Object
+| 응답 데이터 (API에 따라 다름)
+
+| `timestamp`
+| String
+| 응답 생성 시각 (ISO 8601)
+
+| `requestId`
+| String
+| 요청 추적 ID
+|===
+
+==== 에러 응답
+
+에러 응답은 RFC 7807 (Problem Details for HTTP APIs) 형식을 따릅니다:
+
+[source,json]
+----
+{
+  "type": "https://api.fileflow.io/errors/invalid-request",
+  "title": "Invalid Request",
+  "status": 400,
+  "detail": "파일 크기가 최대 허용 크기를 초과했습니다.",
+  "instance": "/api/v1/file/upload-sessions"
+}
+----
+
+|===
+| 필드 | 타입 | 설명
+
+| `type`
+| String
+| 에러 유형을 식별하는 URI
+
+| `title`
+| String
+| 에러 유형의 간단한 제목
+
+| `status`
+| Number
+| HTTP 상태 코드
+
+| `detail`
+| String
+| 에러에 대한 상세 설명
+
+| `instance`
+| String
+| 에러가 발생한 요청 경로
+|===

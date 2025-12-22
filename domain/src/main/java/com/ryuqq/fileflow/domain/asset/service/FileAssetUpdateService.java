@@ -105,6 +105,7 @@ public class FileAssetUpdateService {
         FileAssetStatus fromStatus = fileAsset.getStatus();
 
         fileAsset.failProcessing(clockHolder.getClock());
+        fileAsset.recordError(errorMessage);
 
         String message = String.format(FAILED_MESSAGE_FORMAT, errorMessage);
         FileAssetStatusHistory statusHistory =

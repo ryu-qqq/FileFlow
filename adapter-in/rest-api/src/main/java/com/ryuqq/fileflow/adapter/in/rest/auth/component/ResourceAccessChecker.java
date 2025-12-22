@@ -105,7 +105,7 @@ public class ResourceAccessChecker {
     /**
      * 특정 권한 보유 여부를 확인합니다.
      *
-     * <p>SUPER_ADMIN은 모든 권한을 가집니다.
+     * <p>SUPER_ADMIN 또는 SYSTEM은 모든 권한을 가집니다.
      *
      * @param permission 확인할 권한 (예: file:read, file:write)
      * @return 권한이 있으면 true
@@ -115,7 +115,7 @@ public class ResourceAccessChecker {
         if (context == null) {
             return false;
         }
-        if (context.isSuperAdmin()) {
+        if (context.isSuperAdmin() || context.isSystem()) {
             return true;
         }
         return context.hasPermission(permission);

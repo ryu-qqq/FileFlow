@@ -1,8 +1,8 @@
 package com.ryuqq.fileflow.application.download.manager.command;
 
+import com.ryuqq.fileflow.application.common.config.TransactionEventRegistry;
 import com.ryuqq.fileflow.application.download.port.out.command.ExternalDownloadPersistencePort;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
-import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,9 +33,27 @@ public class ExternalDownloadTransactionManager {
      * ExternalDownload를 저장합니다.
      *
      * @param externalDownload 저장할 ExternalDownload
-     * @return 생성된 ExternalDownloadId
+     * @return 저장된 ExternalDownload (version 갱신됨)
      */
-    public ExternalDownloadId persist(ExternalDownload externalDownload) {
+    public ExternalDownload persist(ExternalDownload externalDownload) {
+        return persistencePort.persist(externalDownload);
+    }
+
+    /**
+     * ExternalDownload를 저장하고 도메인 이벤트를 트랜잭션 커밋 후 발행하도록 등록합니다.
+     *
+     * <p>이벤트 등록이 persist 트랜잭션 내에서 이루어져 AFTER_COMMIT 리스너가 정상 작동합니다.
+     *
+     * @param externalDownload 저장할 ExternalDownload (도메인 이벤트 포함)
+     * @param eventRegistry 이벤트 레지스트리
+     * @return 저장된 ExternalDownload (version 갱신됨)
+     */
+    public ExternalDownload persistWithEvents(
+            ExternalDownload externalDownload, TransactionEventRegistry eventRegistry) {
+        // 트랜잭션 내에서 이벤트 등록 (AFTER_COMMIT 시 발행됨)
+        externalDownload.getDomainEvents().forEach(eventRegistry::registerForPublish);
+        externalDownload.clearDomainEvents();
+
         return persistencePort.persist(externalDownload);
     }
 }

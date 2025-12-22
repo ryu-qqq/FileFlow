@@ -121,7 +121,17 @@ class FileAssetQueryAdapterTest {
             FileAsset domain2 = createFileAsset(id2, TEST_ORG_ID, TEST_TENANT_ID);
 
             when(fileAssetQueryDslRepository.findByCriteria(
-                            TEST_ORG_ID, TEST_TENANT_ID, status, category, 0, 10))
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
+                            status,
+                            category,
+                            null,
+                            null,
+                            null,
+                            "CREATED_AT",
+                            false,
+                            0,
+                            10))
                     .thenReturn(List.of(entity1, entity2));
             when(fileAssetJpaEntityMapper.toDomain(entity1)).thenReturn(domain1);
             when(fileAssetJpaEntityMapper.toDomain(entity2)).thenReturn(domain2);
@@ -143,7 +153,17 @@ class FileAssetQueryAdapterTest {
                     FileAssetCriteria.of(TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10);
 
             when(fileAssetQueryDslRepository.findByCriteria(
-                            TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10))
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "CREATED_AT",
+                            false,
+                            0,
+                            10))
                     .thenReturn(List.of());
 
             // when
@@ -175,7 +195,10 @@ class FileAssetQueryAdapterTest {
                             TEST_ORG_ID,
                             TEST_TENANT_ID,
                             FileAssetStatus.COMPLETED,
-                            FileCategory.IMAGE))
+                            FileCategory.IMAGE,
+                            null,
+                            null,
+                            null))
                     .thenReturn(5L);
 
             // when
@@ -193,7 +216,7 @@ class FileAssetQueryAdapterTest {
                     FileAssetCriteria.of(TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10);
 
             when(fileAssetQueryDslRepository.countByCriteria(
-                            TEST_ORG_ID, TEST_TENANT_ID, null, null))
+                            TEST_ORG_ID, TEST_TENANT_ID, null, null, null, null, null))
                     .thenReturn(0L);
 
             // when
@@ -224,7 +247,8 @@ class FileAssetQueryAdapterTest {
                 FileAssetStatus.COMPLETED,
                 Instant.now(fixedClock),
                 null,
-                null);
+                null,
+                null); // lastErrorMessage
     }
 
     private FileAssetJpaEntity createEntity(String id, String organizationId, String tenantId) {
@@ -245,8 +269,9 @@ class FileAssetQueryAdapterTest {
                 organizationId,
                 tenantId,
                 FileAssetStatus.COMPLETED,
-                null,
-                null,
+                null, // processedAt
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }

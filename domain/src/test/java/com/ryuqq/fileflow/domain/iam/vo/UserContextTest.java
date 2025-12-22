@@ -154,20 +154,25 @@ class UserContextTest {
         }
 
         @Test
-        @DisplayName("Admin에 userId가 있으면 예외가 발생한다")
-        void adminWithUserId_ShouldThrowException() {
-            assertThatThrownBy(
-                            () ->
-                                    new UserContext(
-                                            Tenant.connectly(),
-                                            Organization.admin(),
-                                            "admin@test.com",
-                                            UserId.generate(),
-                                            List.of("ADMIN"),
-                                            Collections.emptyList(),
-                                            null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("ADMIN 사용자는 userId를 가질 수 없습니다");
+        @DisplayName("Admin에 userId가 있어도 정상 생성된다")
+        void adminWithUserId_ShouldSucceed() {
+            // given
+            UserId userId = UserId.generate();
+
+            // when
+            UserContext context =
+                    new UserContext(
+                            Tenant.connectly(),
+                            Organization.admin(),
+                            "admin@test.com",
+                            userId,
+                            List.of("ADMIN"),
+                            Collections.emptyList(),
+                            null);
+
+            // then
+            assertThat(context.userId()).isEqualTo(userId);
+            assertThat(context.email()).isEqualTo("admin@test.com");
         }
 
         @Test

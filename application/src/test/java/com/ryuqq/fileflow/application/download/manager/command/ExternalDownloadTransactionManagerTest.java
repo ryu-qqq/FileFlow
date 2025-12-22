@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import com.ryuqq.fileflow.application.download.port.out.command.ExternalDownloadPersistencePort;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
-import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,20 +24,19 @@ class ExternalDownloadTransactionManagerTest {
     @InjectMocks private ExternalDownloadTransactionManager manager;
 
     @Test
-    @DisplayName("ExternalDownload를 저장하고 ID를 반환한다")
-    void shouldPersistAndReturnId() {
+    @DisplayName("ExternalDownload를 저장하고 저장된 Domain을 반환한다")
+    void shouldPersistAndReturnDomain() {
         // given
         ExternalDownload download = ExternalDownloadFixture.pendingExternalDownload();
-        ExternalDownloadId expectedId =
-                ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
+        ExternalDownload savedDownload = ExternalDownloadFixture.pendingExternalDownload();
 
-        given(persistencePort.persist(download)).willReturn(expectedId);
+        given(persistencePort.persist(download)).willReturn(savedDownload);
 
         // when
-        ExternalDownloadId result = manager.persist(download);
+        ExternalDownload result = manager.persist(download);
 
         // then
-        assertThat(result).isEqualTo(expectedId);
+        assertThat(result).isEqualTo(savedDownload);
         verify(persistencePort).persist(download);
     }
 
@@ -47,17 +45,16 @@ class ExternalDownloadTransactionManagerTest {
     void shouldPersistNewExternalDownload() {
         // given
         ExternalDownload newDownload = ExternalDownloadFixture.pendingDownload();
-        ExternalDownloadId generatedId =
-                ExternalDownloadId.of("00000000-0000-0000-0000-0000000003e7");
+        ExternalDownload savedDownload = ExternalDownloadFixture.pendingExternalDownload();
 
-        given(persistencePort.persist(any(ExternalDownload.class))).willReturn(generatedId);
+        given(persistencePort.persist(any(ExternalDownload.class))).willReturn(savedDownload);
 
         // when
-        ExternalDownloadId result = manager.persist(newDownload);
+        ExternalDownload result = manager.persist(newDownload);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.getValue()).isEqualTo("00000000-0000-0000-0000-0000000003e7");
+        assertThat(result.getId()).isNotNull();
         verify(persistencePort).persist(newDownload);
     }
 
@@ -66,16 +63,15 @@ class ExternalDownloadTransactionManagerTest {
     void shouldPersistProcessingExternalDownload() {
         // given
         ExternalDownload processingDownload = ExternalDownloadFixture.processingExternalDownload();
-        ExternalDownloadId expectedId =
-                ExternalDownloadId.of("00000000-0000-0000-0000-000000000002");
+        ExternalDownload savedDownload = ExternalDownloadFixture.processingExternalDownload();
 
-        given(persistencePort.persist(processingDownload)).willReturn(expectedId);
+        given(persistencePort.persist(processingDownload)).willReturn(savedDownload);
 
         // when
-        ExternalDownloadId result = manager.persist(processingDownload);
+        ExternalDownload result = manager.persist(processingDownload);
 
         // then
-        assertThat(result).isEqualTo(expectedId);
+        assertThat(result).isEqualTo(savedDownload);
         verify(persistencePort).persist(processingDownload);
     }
 }

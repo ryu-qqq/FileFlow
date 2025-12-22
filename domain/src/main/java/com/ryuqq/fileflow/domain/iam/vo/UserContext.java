@@ -676,13 +676,11 @@ public record UserContext(
             return;
         }
         if (role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN || role == UserRole.SELLER) {
-            // SuperAdmin/Admin/Seller는 email 필수
+            // SuperAdmin/Admin/Seller는 email 필수, userId는 선택적
             if (email == null || email.isBlank()) {
                 throw new IllegalArgumentException(role + " 사용자는 email이 필수입니다.");
             }
-            if (userId != null) {
-                throw new IllegalArgumentException(role + " 사용자는 userId를 가질 수 없습니다.");
-            }
+            // userId는 AuthHub JWT의 sub 클레임으로 전달되므로 허용
         } else if (role == UserRole.DEFAULT) {
             // Customer는 userId 필수
             if (userId == null) {

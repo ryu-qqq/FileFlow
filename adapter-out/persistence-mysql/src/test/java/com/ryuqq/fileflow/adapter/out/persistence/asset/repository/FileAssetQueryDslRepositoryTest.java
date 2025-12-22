@@ -120,7 +120,17 @@ class FileAssetQueryDslRepositoryTest {
             // when
             List<FileAssetJpaEntity> result =
                     repository.findByCriteria(
-                            organizationId, tenantId, status, category, offset, limit);
+                            organizationId,
+                            tenantId,
+                            status,
+                            category,
+                            null,
+                            null,
+                            null,
+                            "CREATED_AT",
+                            false,
+                            offset,
+                            limit);
 
             // then
             assertThat(result).hasSize(2);
@@ -141,7 +151,18 @@ class FileAssetQueryDslRepositoryTest {
 
             // when
             List<FileAssetJpaEntity> result =
-                    repository.findByCriteria(TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10);
+                    repository.findByCriteria(
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "CREATED_AT",
+                            false,
+                            0,
+                            10);
 
             // then
             assertThat(result).isEmpty();
@@ -163,7 +184,51 @@ class FileAssetQueryDslRepositoryTest {
 
             // when
             List<FileAssetJpaEntity> result =
-                    repository.findByCriteria(TEST_ORG_ID, TEST_TENANT_ID, null, null, 0, 10);
+                    repository.findByCriteria(
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "CREATED_AT",
+                            false,
+                            0,
+                            10);
+
+            // then
+            assertThat(result).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("파일명으로 정렬하여 조회할 수 있다")
+        void findByCriteria_WithFileNameSort_ShouldReturnSortedEntities() {
+            // given
+            List<FileAssetJpaEntity> entities =
+                    List.of(createEntity("asset-1", TEST_ORG_ID, TEST_TENANT_ID));
+
+            when(queryFactory.selectFrom(fileAssetJpaEntity)).thenReturn(jpaQuery);
+            when(jpaQuery.where(any(Predicate[].class))).thenReturn(jpaQuery);
+            when(jpaQuery.orderBy(any(OrderSpecifier.class))).thenReturn(jpaQuery);
+            when(jpaQuery.offset(0L)).thenReturn(jpaQuery);
+            when(jpaQuery.limit(10)).thenReturn(jpaQuery);
+            when(jpaQuery.fetch()).thenReturn(entities);
+
+            // when
+            List<FileAssetJpaEntity> result =
+                    repository.findByCriteria(
+                            TEST_ORG_ID,
+                            TEST_TENANT_ID,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "FILE_NAME",
+                            true,
+                            0,
+                            10);
 
             // then
             assertThat(result).hasSize(1);
@@ -189,7 +254,9 @@ class FileAssetQueryDslRepositoryTest {
             when(countQuery.fetchOne()).thenReturn(5L);
 
             // when
-            long result = repository.countByCriteria(organizationId, tenantId, status, category);
+            long result =
+                    repository.countByCriteria(
+                            organizationId, tenantId, status, category, null, null, null);
 
             // then
             assertThat(result).isEqualTo(5L);
@@ -205,7 +272,9 @@ class FileAssetQueryDslRepositoryTest {
             when(countQuery.fetchOne()).thenReturn(null);
 
             // when
-            long result = repository.countByCriteria(TEST_ORG_ID, TEST_TENANT_ID, null, null);
+            long result =
+                    repository.countByCriteria(
+                            TEST_ORG_ID, TEST_TENANT_ID, null, null, null, null, null);
 
             // then
             assertThat(result).isEqualTo(0L);
@@ -226,7 +295,10 @@ class FileAssetQueryDslRepositoryTest {
                             TEST_ORG_ID,
                             TEST_TENANT_ID,
                             FileAssetStatus.PENDING,
-                            FileCategory.VIDEO);
+                            FileCategory.VIDEO,
+                            null,
+                            null,
+                            null);
 
             // then
             assertThat(result).isEqualTo(0L);
@@ -253,8 +325,9 @@ class FileAssetQueryDslRepositoryTest {
                 organizationId,
                 tenantId,
                 FileAssetStatus.COMPLETED,
-                null,
-                null,
+                null, // processedAt
+                null, // deletedAt
+                null, // lastErrorMessage
                 now,
                 now);
     }

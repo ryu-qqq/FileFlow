@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.application.download.manager;
 import com.ryuqq.fileflow.application.download.dto.ExternalDownloadMessage;
 import com.ryuqq.fileflow.application.download.port.out.client.ExternalDownloadSqsPublishPort;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -18,10 +19,15 @@ import org.springframework.stereotype.Component;
  *   <li>SQS 발행 포트를 통한 메시지 발행
  * </ul>
  *
- * <p><strong>활성화 조건</strong>: {@code sqs.publish.enabled=true}
+ * <p><strong>활성화 조건</strong>: {@code sqs.publish.enabled=true} AND {@code
+ * ExternalDownloadSqsPublishPort} 빈이 존재해야 함
+ *
+ * <p><strong>주의</strong>: download-worker에서는 ExternalDownloadSqsPublishPort가 없으므로 이 Manager가 활성화되지
+ * 않습니다.
  */
 @Component
 @ConditionalOnProperty(name = "sqs.publish.enabled", havingValue = "true")
+@ConditionalOnBean(ExternalDownloadSqsPublishPort.class)
 public class ExternalDownloadMessageManager {
 
     private final ExternalDownloadSqsPublishPort externalDownloadSqsPublishPort;

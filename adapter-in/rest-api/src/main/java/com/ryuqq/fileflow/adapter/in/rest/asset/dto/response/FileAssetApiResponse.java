@@ -18,6 +18,7 @@ import java.time.Instant;
  * @param status 상태
  * @param createdAt 생성 시각
  * @param processedAt 처리 완료 시각
+ * @param lastErrorMessage 마지막 에러 메시지 (실패 시)
  * @author development-team
  * @since 1.0.0
  */
@@ -34,4 +35,8 @@ public record FileAssetApiResponse(
         @Schema(description = "ETag", example = "abc123") String etag,
         @Schema(description = "상태", example = "COMPLETED") String status,
         @Schema(description = "생성 시각") Instant createdAt,
-        @Schema(description = "처리 완료 시각") Instant processedAt) {}
+        @Schema(description = "처리 완료 시각") Instant processedAt,
+        @Schema(
+                        description = "마지막 에러 메시지 (실패 시)",
+                        example = "Image processing failed: unsupported format")
+                String lastErrorMessage) {}

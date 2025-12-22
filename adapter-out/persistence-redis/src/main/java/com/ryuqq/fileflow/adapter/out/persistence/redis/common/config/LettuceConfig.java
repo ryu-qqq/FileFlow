@@ -188,7 +188,9 @@ public class LettuceConfig {
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(
-            RedisConnectionFactory connectionFactory, ObjectMapper redisObjectMapper) {
+            RedisConnectionFactory connectionFactory,
+            @org.springframework.beans.factory.annotation.Qualifier("redisObjectMapper")
+                    ObjectMapper redisObjectMapper) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
@@ -211,9 +213,12 @@ public class LettuceConfig {
      *
      * <p>Java 8 날짜/시간 지원 및 타입 정보를 포함합니다.
      *
+     * <p><strong>주의:</strong> Redis 전용 ObjectMapper로, @Primary 사용 금지. @Primary 사용 시 Spring MVC의
+     * HTTP 요청/응답 직렬화에도 영향을 미쳐 API 호출 시 @class 타입 정보를 요구하게 됩니다.
+     *
      * @return ObjectMapper 인스턴스
      */
-    @Bean
+    @Bean("redisObjectMapper")
     public ObjectMapper redisObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 

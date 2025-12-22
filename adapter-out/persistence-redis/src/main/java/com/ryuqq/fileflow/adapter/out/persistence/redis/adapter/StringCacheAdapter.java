@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -70,7 +71,8 @@ public class StringCacheAdapter implements CachePort<String> {
     private final ObjectMapper objectMapper;
 
     public StringCacheAdapter(
-            RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
+            RedisTemplate<String, Object> redisTemplate,
+            @Qualifier("redisObjectMapper") ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
     }

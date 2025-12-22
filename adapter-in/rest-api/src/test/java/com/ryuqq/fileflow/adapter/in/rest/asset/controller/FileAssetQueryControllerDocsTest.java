@@ -13,6 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.ryuqq.fileflow.adapter.in.rest.asset.mapper.FileAssetApiMapper;
 import com.ryuqq.fileflow.adapter.in.rest.common.RestDocsTestSupport;
 import com.ryuqq.fileflow.application.asset.dto.response.FileAssetResponse;
+import com.ryuqq.fileflow.application.asset.dto.response.FileAssetStatisticsResponse;
+import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetStatisticsUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetUseCase;
 import com.ryuqq.fileflow.application.asset.port.in.query.GetFileAssetsUseCase;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
@@ -21,6 +23,7 @@ import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +51,7 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
 
     @MockitoBean private GetFileAssetUseCase getFileAssetUseCase;
     @MockitoBean private GetFileAssetsUseCase getFileAssetsUseCase;
+    @MockitoBean private GetFileAssetStatisticsUseCase getFileAssetStatisticsUseCase;
 
     @BeforeEach
     void setUpUserContext() {
@@ -80,7 +84,8 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                         "etag-abc123",
                         "COMPLETED",
                         Instant.now(),
-                        Instant.now());
+                        Instant.now(),
+                        null);
 
         given(getFileAssetUseCase.execute(any())).willReturn(response);
 
@@ -109,7 +114,9 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                                         fieldWithPath("data.status").description("상태"),
                                         fieldWithPath("data.createdAt").description("생성 시각"),
                                         fieldWithPath("data.processedAt").description("처리 완료 시각"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
+                                        fieldWithPath("data.lastErrorMessage")
+                                                .description("마지막 에러 메시지 (실패 시)")
+                                                .optional(),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }
@@ -132,7 +139,8 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                                 "etag-abc123",
                                 "COMPLETED",
                                 Instant.now(),
-                                Instant.now()),
+                                Instant.now(),
+                                null),
                         new FileAssetResponse(
                                 "asset-456",
                                 "session-456",
@@ -145,7 +153,8 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                                 "etag-def456",
                                 "COMPLETED",
                                 Instant.now(),
-                                Instant.now()));
+                                Instant.now(),
+                                null));
 
         PageResponse<FileAssetResponse> response =
                 new PageResponse<>(content, 0, 10, 2, 1, true, false);
@@ -157,7 +166,10 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                         get("/api/v1/file/file-assets")
                                 .param("page", "0")
                                 .param("size", "10")
-                                .param("status", "COMPLETED"))
+                                .param("status", "COMPLETED")
+                                .param("fileName", "example")
+                                .param("createdAtFrom", "2024-01-01T00:00:00Z")
+                                .param("createdAtTo", "2024-12-31T23:59:59Z"))
                 .andExpect(status().isOk())
                 .andDo(
                         document(
@@ -171,6 +183,15 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                                         parameterWithName("size").description("페이지 크기").optional(),
                                         parameterWithName("status")
                                                 .description("파일 상태 필터")
+                                                .optional(),
+                                        parameterWithName("fileName")
+                                                .description("파일명 검색 (부분 매칭)")
+                                                .optional(),
+                                        parameterWithName("createdAtFrom")
+                                                .description("생성일 시작 (ISO 8601 형식)")
+                                                .optional(),
+                                        parameterWithName("createdAtTo")
+                                                .description("생성일 종료 (ISO 8601 형식)")
                                                 .optional()),
                                 responseFields(
                                         fieldWithPath("success").description("성공 여부"),
@@ -195,13 +216,67 @@ class FileAssetQueryControllerDocsTest extends RestDocsTestSupport {
                                                 .description("생성 시각"),
                                         fieldWithPath("data.content[].processedAt")
                                                 .description("처리 완료 시각"),
+                                        fieldWithPath("data.content[].lastErrorMessage")
+                                                .description("마지막 에러 메시지 (실패 시)")
+                                                .optional(),
                                         fieldWithPath("data.page").description("현재 페이지 번호"),
                                         fieldWithPath("data.size").description("페이지 크기"),
                                         fieldWithPath("data.totalElements").description("전체 요소 수"),
                                         fieldWithPath("data.totalPages").description("전체 페이지 수"),
                                         fieldWithPath("data.first").description("첫 페이지 여부"),
                                         fieldWithPath("data.last").description("마지막 페이지 여부"),
-                                        fieldWithPath("error").description("에러 정보").optional(),
+                                        fieldWithPath("timestamp").description("응답 시각"),
+                                        fieldWithPath("requestId").description("요청 ID"))));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/file/file-assets/statistics - 파일 자산 통계 조회 API 문서")
+    void getFileAssetStatistics() throws Exception {
+        // given
+        Map<String, Long> statusCounts =
+                Map.of(
+                        "PENDING", 100L,
+                        "PROCESSING", 50L,
+                        "COMPLETED", 800L,
+                        "FAILED", 30L);
+
+        Map<String, Long> categoryCounts =
+                Map.of(
+                        "IMAGE", 500L,
+                        "VIDEO", 200L,
+                        "DOCUMENT", 150L,
+                        "AUDIO", 80L,
+                        "OTHER", 50L);
+
+        FileAssetStatisticsResponse response =
+                FileAssetStatisticsResponse.of(980L, statusCounts, categoryCounts);
+
+        given(getFileAssetStatisticsUseCase.execute(any())).willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/file/file-assets/statistics"))
+                .andExpect(status().isOk())
+                .andDo(
+                        document(
+                                "file-asset-statistics",
+                                preprocessRequest(prettyPrint()),
+                                preprocessResponse(prettyPrint()),
+                                responseFields(
+                                        fieldWithPath("success").description("성공 여부"),
+                                        fieldWithPath("data").description("응답 데이터"),
+                                        fieldWithPath("data.totalCount").description("전체 파일 수"),
+                                        fieldWithPath("data.statusCounts")
+                                                .description(
+                                                        "상태별 파일 수 (PENDING, PROCESSING, COMPLETED,"
+                                                                + " FAILED 등)"),
+                                        fieldWithPath("data.statusCounts.*")
+                                                .description("각 상태의 파일 개수"),
+                                        fieldWithPath("data.categoryCounts")
+                                                .description(
+                                                        "카테고리별 파일 수 (IMAGE, VIDEO, DOCUMENT, AUDIO,"
+                                                                + " OTHER)"),
+                                        fieldWithPath("data.categoryCounts.*")
+                                                .description("각 카테고리의 파일 개수"),
                                         fieldWithPath("timestamp").description("응답 시각"),
                                         fieldWithPath("requestId").description("요청 ID"))));
     }

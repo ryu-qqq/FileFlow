@@ -118,7 +118,12 @@ class UploadSessionApiMapperTest {
             // given
             InitMultipartUploadApiRequest request =
                     new InitMultipartUploadApiRequest(
-                            "large-file.zip", 104857600L, "application/zip", 5242880L, null);
+                            "large-file.zip",
+                            104857600L,
+                            "application/zip",
+                            5242880L,
+                            "PRODUCT",
+                            null);
 
             // when
             InitMultipartUploadCommand command = mapper.toInitMultipartUploadCommand(request);
@@ -128,6 +133,7 @@ class UploadSessionApiMapperTest {
             assertThat(command.fileSize()).isEqualTo(104857600L);
             assertThat(command.contentType()).isEqualTo("application/zip");
             assertThat(command.partSize()).isEqualTo(5242880L);
+            assertThat(command.uploadCategory()).isEqualTo("PRODUCT");
             assertThat(command.customPath()).isNull();
         }
     }

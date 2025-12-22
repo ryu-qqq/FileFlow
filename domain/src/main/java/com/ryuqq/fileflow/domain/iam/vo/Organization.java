@@ -16,14 +16,15 @@ package com.ryuqq.fileflow.domain.iam.vo;
  *
  * <ul>
  *   <li>조직 유형은 UserRole로만 판단한다 (ID 비교 없음).
- *   <li>Seller 조직만 OrganizationId를 가진다 (UUIDv7).
- *   <li>System/Admin/Customer 조직은 시스템 정의 조직이라 OrganizationId가 null이다.
+ *   <li>Seller 조직은 OrganizationId가 필수이다 (UUIDv7).
+ *   <li>Admin 조직은 OrganizationId가 선택적이다 (AuthHub JWT의 oid 클레임).
+ *   <li>System/Customer 조직은 시스템 정의 조직이라 OrganizationId가 null이다.
  *   <li>조직명은 null이거나 빈 문자열일 수 없다.
  *   <li>System/Admin 조직은 namespace=connectly.
  *   <li>Seller/Customer 조직은 namespace=setof.
  * </ul>
  *
- * @param id 조직 ID (Seller만 UUIDv7, System/Admin/Customer는 null)
+ * @param id 조직 ID (Seller 필수, Admin 선택적, System/Customer는 null)
  * @param name 조직명 (예: "System Internal", "Connectly Admin", "입점사A", "Customer")
  * @param namespace S3 버킷 네임스페이스 (connectly 또는 setof)
  * @param role 조직 역할 (SYSTEM, ADMIN, SELLER, DEFAULT)
@@ -31,7 +32,7 @@ package com.ryuqq.fileflow.domain.iam.vo;
 public record Organization(OrganizationId id, String name, String namespace, UserRole role) {
 
     // Well-Known System 조직 ID (UUIDv7)
-    private static final String SYSTEM_ORG_ID = "019b2b35-3979-7112-a980-e234d424f5cd";
+    private static final String SYSTEM_ORG_ID = "019b350c-71cb-766e-b95f-931c32302471";
 
     // 네임스페이스 상수
     private static final String CONNECTLY_NAMESPACE = "connectly";
@@ -89,7 +90,7 @@ public record Organization(OrganizationId id, String name, String namespace, Use
     }
 
     /**
-     * Admin 조직 생성.
+     * Admin 조직 생성 (OrganizationId 없음).
      *
      * <p>Admin은 시스템 정의 조직이므로 OrganizationId가 없다.
      *
@@ -97,6 +98,19 @@ public record Organization(OrganizationId id, String name, String namespace, Use
      */
     public static Organization admin() {
         return new Organization(null, "Connectly Admin", CONNECTLY_NAMESPACE, UserRole.ADMIN);
+    }
+
+    /**
+     * Admin 조직 생성 (OrganizationId 포함).
+     *
+     * <p>AuthHub JWT에서 전달된 조직 정보를 사용하는 Admin 조직.
+     *
+     * @param id 조직 ID (UUIDv7)
+     * @param organizationName 조직명
+     * @return Admin Organization (namespace=connectly)
+     */
+    public static Organization admin(OrganizationId id, String organizationName) {
+        return new Organization(id, organizationName, CONNECTLY_NAMESPACE, UserRole.ADMIN);
     }
 
     /**
@@ -301,14 +315,13 @@ public record Organization(OrganizationId id, String name, String namespace, Use
             }
         }
 
-        // SuperAdmin/Admin 조직: role=SUPER_ADMIN/ADMIN, namespace=connectly, id=null
+        // SuperAdmin/Admin 조직: role=SUPER_ADMIN/ADMIN, namespace=connectly, id=선택적
+        // AuthHub JWT에서 oid가 전달되는 경우 OrganizationId를 가질 수 있음
         if (role == UserRole.SUPER_ADMIN || role == UserRole.ADMIN) {
             if (!CONNECTLY_NAMESPACE.equals(namespace)) {
                 throw new IllegalArgumentException("Admin 조직은 connectly namespace여야 합니다.");
             }
-            if (id != null) {
-                throw new IllegalArgumentException("Admin 조직은 OrganizationId를 가질 수 없습니다.");
-            }
+            // id는 AuthHub JWT의 oid 클레임으로 전달되므로 허용
         }
 
         // Seller 조직: role=SELLER, namespace=setof, id=필수
