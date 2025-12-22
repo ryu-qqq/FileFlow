@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.http.adapter;
 
+import com.ryuqq.fileflow.application.common.metrics.annotation.DownstreamMetric;
 import com.ryuqq.fileflow.application.download.dto.WebhookPayload;
 import com.ryuqq.fileflow.application.download.port.out.client.WebhookPort;
 import com.ryuqq.fileflow.domain.download.vo.WebhookUrl;
@@ -30,6 +31,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
  *   <li>타임아웃: WebClientException
  *   <li>연결 실패: IllegalStateException
  * </ul>
+ *
+ * <p><strong>메트릭</strong>: {@code downstream.external.api.latency{service=webhook}} 메트릭을 수집합니다.
  */
 @Component
 public class WebhookAdapter implements WebhookPort {
@@ -43,6 +46,7 @@ public class WebhookAdapter implements WebhookPort {
     }
 
     @Override
+    @DownstreamMetric(target = "external-api", operation = "call", service = "webhook")
     public void call(WebhookUrl webhookUrl, WebhookPayload payload) {
         String url = webhookUrl.value();
         log.info(

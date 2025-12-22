@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.redis.adapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ryuqq.fileflow.application.common.metrics.annotation.DownstreamMetric;
 import com.ryuqq.fileflow.application.common.port.out.CachePort;
 import com.ryuqq.fileflow.domain.common.vo.CacheKey;
 import java.time.Duration;
@@ -89,12 +90,14 @@ public class StringCacheAdapter implements CachePort<String> {
 
     /** {@inheritDoc} */
     @Override
+    @DownstreamMetric(target = "redis", operation = "set")
     public void set(CacheKey key, String value, Duration ttl) {
         redisTemplate.opsForValue().set(key.value(), value, ttl);
     }
 
     /** {@inheritDoc} */
     @Override
+    @DownstreamMetric(target = "redis", operation = "get")
     public Optional<String> get(CacheKey key) {
         Object value = redisTemplate.opsForValue().get(key.value());
         if (value == null) {
@@ -115,6 +118,7 @@ public class StringCacheAdapter implements CachePort<String> {
 
     /** {@inheritDoc} */
     @Override
+    @DownstreamMetric(target = "redis", operation = "delete")
     public void evict(CacheKey key) {
         redisTemplate.delete(key.value());
     }
@@ -134,6 +138,7 @@ public class StringCacheAdapter implements CachePort<String> {
      * </pre>
      */
     @Override
+    @DownstreamMetric(target = "redis", operation = "delete-pattern")
     public void evictByPattern(String pattern) {
         Set<String> keysToDelete = scanKeys(pattern);
 
@@ -144,6 +149,7 @@ public class StringCacheAdapter implements CachePort<String> {
 
     /** {@inheritDoc} */
     @Override
+    @DownstreamMetric(target = "redis", operation = "exists")
     public boolean exists(CacheKey key) {
         Boolean result = redisTemplate.hasKey(key.value());
         return Boolean.TRUE.equals(result);
@@ -151,6 +157,7 @@ public class StringCacheAdapter implements CachePort<String> {
 
     /** {@inheritDoc} */
     @Override
+    @DownstreamMetric(target = "redis", operation = "get-ttl")
     public Duration getTtl(CacheKey key) {
         Long ttlSeconds = redisTemplate.getExpire(key.value(), TimeUnit.SECONDS);
 
