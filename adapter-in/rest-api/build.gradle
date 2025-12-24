@@ -157,12 +157,12 @@ tasks.register('scanPermissions', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
 
     args = [
-            '--output', "${buildDir}/permissions/permissions.json",
+            '--output', layout.buildDirectory.file('permissions/permissions.json').get().asFile.path,
             '--service', 'fileflow',
             '--package', 'com.ryuqq.fileflow.adapter.in.rest'
     ]
 
     doFirst {
-        mkdir "${buildDir}/permissions"
+        mkdir layout.buildDirectory.dir('permissions').get().asFile
     }
 }

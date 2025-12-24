@@ -111,7 +111,7 @@ class UserContextSupplierConfigTest {
             // then
             assertThat(actualContext).isEqualTo(sellerContext);
             assertThat(actualContext.isSeller()).isTrue();
-            assertThat(actualContext.organizationIdValue()).isEqualTo(organizationId);
+            assertThat(actualContext.getOrganizationIdAsVO()).isEqualTo(organizationId);
         }
 
         @Test

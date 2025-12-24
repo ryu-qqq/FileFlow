@@ -521,6 +521,8 @@ class SecurityArchTest {
          *
          * <p>예외: ResourceAccessChecker는 @PreAuthorize SpEL에서 사용되며, UserContext를 통해 권한을 검사해야 하므로
          * Application Layer의 UserContextHolder를 통해 Domain의 UserContext에 간접 접근이 필요합니다.
+         *
+         * <p>ResourceAccessChecker의 내부 클래스(SecurityContextAdapter 등)도 동일한 이유로 Domain 접근이 필요합니다.
          */
         @Test
         @DisplayName("[금지] Security Layer는 Domain Layer를 직접 의존하지 않아야 한다")
@@ -531,6 +533,8 @@ class SecurityArchTest {
                             .resideInAPackage("..auth..")
                             .and()
                             .haveSimpleNameNotEndingWith("ResourceAccessChecker")
+                            .and()
+                            .haveNameNotMatching(".*ResourceAccessChecker\\$.*")
                             .should()
                             .dependOnClassesThat()
                             .resideInAnyPackage(DOMAIN_ALL)

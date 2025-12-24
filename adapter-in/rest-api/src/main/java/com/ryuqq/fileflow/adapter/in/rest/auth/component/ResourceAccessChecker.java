@@ -65,13 +65,16 @@ public class ResourceAccessChecker extends BaseAccessChecker {
     /**
      * 현재 스레드의 SecurityContext를 반환합니다.
      *
-     * <p>fileflow 프로젝트의 UserContextHolder를 사용합니다.
+     * <p>fileflow 프로젝트의 UserContextHolder에서 UserContext를 가져와 SecurityContextAdapter로 감싸서 반환합니다.
      *
-     * @return SecurityContext (UserContext) 또는 null
+     * <p>이 패턴은 Domain Layer의 순수성을 유지하면서 AuthHub와의 호환성을 보장합니다.
+     *
+     * @return SecurityContext (SecurityContextAdapter) 또는 null
      */
     @Override
     protected SecurityContext getSecurityContext() {
-        return UserContextHolder.get();
+        UserContext userContext = UserContextHolder.get();
+        return userContext != null ? new SecurityContextAdapter(userContext) : null;
     }
 
     /**
@@ -331,5 +334,75 @@ public class ResourceAccessChecker extends BaseAccessChecker {
             return false;
         }
         return Objects.equals(context.userId().value(), userId);
+    }
+
+    // ========================================
+    // SecurityContext Adapter (내부 클래스)
+    // ========================================
+
+    /**
+     * Domain Layer의 UserContext를 AuthHub의 SecurityContext로 변환하는 어댑터.
+     *
+     * <p>Domain Layer의 순수성을 유지하면서 AuthHub와의 호환성을 보장합니다.
+     * UserContext는 SecurityContext를 구현하지 않고, 이 어댑터가 Adapter Layer에서 변환을 담당합니다.
+     *
+     * <p>내부 클래스로 구현하여 ArchUnit 규칙을 준수합니다:
+     * <ul>
+     *   <li>ResourceAccessChecker는 Domain 의존성 규칙에서 제외됨
+     *   <li>별도 @Component가 필요 없음
+     * </ul>
+     */
+    private static class SecurityContextAdapter implements SecurityContext {
+
+        private final UserContext userContext;
+
+        SecurityContextAdapter(UserContext userContext) {
+            this.userContext = userContext;
+        }
+
+        @Override
+        public String getUserId() {
+            return userContext.getUserId();
+        }
+
+        @Override
+        public String getTenantId() {
+            return userContext.getTenantId();
+        }
+
+        @Override
+        public String getOrganizationId() {
+            return userContext.getOrganizationId();
+        }
+
+        @Override
+        public boolean hasRole(String role) {
+            return userContext.hasRole(role);
+        }
+
+        @Override
+        public java.util.Set<String> getRoles() {
+            return new java.util.HashSet<>(userContext.getRoles());
+        }
+
+        @Override
+        public boolean hasPermission(String permission) {
+            return userContext.hasPermission(permission);
+        }
+
+        @Override
+        public java.util.Set<String> getPermissions() {
+            return new java.util.HashSet<>(userContext.getPermissions());
+        }
+
+        @Override
+        public boolean isAuthenticated() {
+            return userContext.isAuthenticated();
+        }
+
+        @Override
+        public boolean isServiceAccount() {
+            return userContext.isServiceAccount();
+        }
     }
 }

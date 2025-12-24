@@ -366,7 +366,7 @@ public class MultipartUploadSession implements UploadSession {
      * @return 조직 ID (nullable - Admin/Customer는 null)
      */
     public OrganizationId getOrganizationId() {
-        return userContext.organizationIdValue();
+        return userContext.getOrganizationIdAsVO();
     }
 
     public FileName getFileName() {

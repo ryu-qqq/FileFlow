@@ -1,6 +1,5 @@
 package com.ryuqq.fileflow.domain.iam.vo;
 
-import com.ryuqq.auth.common.context.SecurityContext;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.UploadCategory;
@@ -8,7 +7,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * 사용자 컨텍스트 Value Object (Gateway 헤더 기반).
@@ -66,8 +64,7 @@ public record UserContext(
         UserId userId,
         List<String> roles,
         List<String> permissions,
-        String serviceName)
-        implements SecurityContext {
+        String serviceName) {
 
     // Well-Known System 사용자 ID (UUIDv7)
     private static final String SYSTEM_USER_ID = "019b2b35-3979-75ba-a981-84ae15f0572a";
@@ -570,7 +567,7 @@ public record UserContext(
      *
      * @return 조직 ID Value Object (nullable)
      */
-    public OrganizationId organizationIdValue() {
+    public OrganizationId getOrganizationIdAsVO() {
         return organization.id();
     }
 
@@ -579,38 +576,17 @@ public record UserContext(
      *
      * @return 테넌트 ID Value Object
      */
-    public TenantId tenantIdValue() {
+    public TenantId getTenantIdAsVO() {
         return tenant.id();
     }
 
-    // ===== SecurityContext Interface Implementation =====
-
-    /**
-     * 권한 목록을 Set으로 반환한다.
-     *
-     * @return 권한 집합
-     */
-    @Override
-    public Set<String> getPermissions() {
-        return Set.copyOf(permissions);
-    }
-
-    /**
-     * 역할 목록을 Set으로 반환한다.
-     *
-     * @return 역할 집합
-     */
-    @Override
-    public Set<String> getRoles() {
-        return Set.copyOf(roles);
-    }
+    // ===== ID 문자열 변환 메서드 (편의용) =====
 
     /**
      * 사용자 ID를 문자열로 반환한다.
      *
      * @return 사용자 ID 문자열 (없으면 null)
      */
-    @Override
     public String getUserId() {
         return userId != null ? userId.value() : null;
     }
@@ -620,7 +596,6 @@ public record UserContext(
      *
      * @return 테넌트 ID 문자열 (없으면 null)
      */
-    @Override
     public String getTenantId() {
         return tenant != null && tenant.id() != null ? tenant.id().value() : null;
     }
@@ -630,20 +605,11 @@ public record UserContext(
      *
      * @return 조직 ID 문자열 (없으면 null)
      */
-    @Override
     public String getOrganizationId() {
         return organization != null && organization.id() != null ? organization.id().value() : null;
     }
 
-    /**
-     * 서비스 계정(System) 여부를 반환한다.
-     *
-     * @return 서비스 계정이면 true
-     */
-    @Override
-    public boolean isServiceAccount() {
-        return isSystem();
-    }
+    // ===== 인증/권한 확인 메서드 =====
 
     /**
      * 인증 여부를 반환한다.
@@ -652,7 +618,6 @@ public record UserContext(
      *
      * @return 인증되었으면 true
      */
-    @Override
     public boolean isAuthenticated() {
         return (email != null && !email.isBlank()) || userId != null;
     }
@@ -663,7 +628,6 @@ public record UserContext(
      * @param role 역할 문자열 (예: "SUPER_ADMIN", "ADMIN")
      * @return 해당 역할을 가지고 있으면 true
      */
-    @Override
     public boolean hasRole(String role) {
         if (role == null || role.isBlank()) {
             return false;
@@ -677,7 +641,6 @@ public record UserContext(
      * @param permission 권한 문자열 (예: "file:read", "file:write")
      * @return 해당 권한을 가지고 있으면 true
      */
-    @Override
     public boolean hasPermission(String permission) {
         if (permission == null || permission.isBlank()) {
             return false;
@@ -728,6 +691,39 @@ public record UserContext(
      */
     public boolean isSuperAdmin() {
         return hasRole("SUPER_ADMIN");
+    }
+
+    /**
+     * 서비스 계정인지 확인한다.
+     *
+     * <p>SYSTEM 역할은 서비스 간 통신에 사용되는 서비스 계정이다.
+     *
+     * @return 서비스 계정이면 true
+     */
+    public boolean isServiceAccount() {
+        return isSystem();
+    }
+
+    /**
+     * 역할 목록을 반환한다.
+     *
+     * <p>roles() record accessor의 별칭 메서드이다.
+     *
+     * @return 역할 목록
+     */
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    /**
+     * 권한 목록을 반환한다.
+     *
+     * <p>permissions() record accessor의 별칭 메서드이다.
+     *
+     * @return 권한 목록
+     */
+    public List<String> getPermissions() {
+        return permissions;
     }
 
     /**

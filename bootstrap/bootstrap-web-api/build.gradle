@@ -66,7 +66,7 @@ bootJar {
 
     // REST Docs 정적 파일을 JAR에 포함
     // 디렉토리가 존재하지 않으면 from()은 자동으로 무시됨
-    def restDocsDir = file("${project(':adapter-in:rest-api').buildDir}/generated-static/docs")
+    def restDocsDir = project(':adapter-in:rest-api').layout.buildDirectory.dir('generated-static/docs').get().asFile
     if (restDocsDir.exists()) {
         from(restDocsDir) {
             into 'BOOT-INF/classes/static/docs'

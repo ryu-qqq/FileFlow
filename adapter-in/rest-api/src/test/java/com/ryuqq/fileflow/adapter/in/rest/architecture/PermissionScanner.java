@@ -71,29 +71,66 @@ public class PermissionScanner {
         String outputPath = "build/permissions/permissions.json";
         String serviceName = "unknown-service";
         String packageName = "com.ryuqq";
+        List<String> errors = new ArrayList<>();
+
+        // Check for help
+        for (String arg : args) {
+            if ("--help".equals(arg) || "-h".equals(arg)) {
+                printUsage();
+                System.exit(0);
+            }
+        }
 
         // Parse arguments
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
                 case "--output":
-                    if (i + 1 < args.length) {
+                    if (i + 1 >= args.length || args[i + 1].startsWith("-")) {
+                        errors.add("--output requires a value");
+                    } else {
                         outputPath = args[++i];
+                        if (outputPath.isBlank()) {
+                            errors.add("--output value cannot be blank");
+                        }
                     }
                     break;
                 case "--service":
-                    if (i + 1 < args.length) {
+                    if (i + 1 >= args.length || args[i + 1].startsWith("-")) {
+                        errors.add("--service requires a value");
+                    } else {
                         serviceName = args[++i];
+                        if (serviceName.isBlank()) {
+                            errors.add("--service value cannot be blank");
+                        }
                     }
                     break;
                 case "--package":
-                    if (i + 1 < args.length) {
+                    if (i + 1 >= args.length || args[i + 1].startsWith("-")) {
+                        errors.add("--package requires a value");
+                    } else {
                         packageName = args[++i];
+                        if (packageName.isBlank()) {
+                            errors.add("--package value cannot be blank");
+                        }
                     }
                     break;
                 default:
-                    // ignore unknown args
+                    if (args[i].startsWith("-")) {
+                        errors.add("Unknown option: " + args[i]);
+                    }
                     break;
             }
+        }
+
+        // Report validation errors
+        if (!errors.isEmpty()) {
+            System.err.println("Error: Invalid arguments");
+            for (String error : errors) {
+                System.err.println("  - " + error);
+            }
+            System.err.println();
+            printUsage();
+            System.exit(1);
         }
 
         try {
@@ -105,6 +142,19 @@ public class PermissionScanner {
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    private static void printUsage() {
+        System.out.println("Usage: PermissionScanner [options]");
+        System.out.println();
+        System.out.println("Options:");
+        System.out.println("  --output <path>   Output JSON file path (default: build/permissions/permissions.json)");
+        System.out.println("  --service <name>  Service name for the output (default: unknown-service)");
+        System.out.println("  --package <pkg>   Base package to scan (default: com.ryuqq)");
+        System.out.println("  --help, -h        Show this help message");
+        System.out.println();
+        System.out.println("Example:");
+        System.out.println("  PermissionScanner --output out.json --service fileflow --package com.ryuqq.fileflow");
     }
 
     /**

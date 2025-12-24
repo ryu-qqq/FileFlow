@@ -197,8 +197,9 @@ class PermissionNamingArchTest {
         System.out.printf("║  Total: %-48d ║%n", allPermissions.size());
         System.out.println("╚══════════════════════════════════════════════════════════╝\n");
 
-        // 항상 성공 (정보 출력용)
-        assertThat(true).isTrue();
+        // 정보 출력용 테스트 - 권한 목록이 비어있어도 성공
+        // CI/CD에서 권한 목록을 확인하기 위한 용도
+        assertThat(allPermissions).as("권한 목록 수집 완료 (0개도 정상)").isNotNull();
     }
 
     /**

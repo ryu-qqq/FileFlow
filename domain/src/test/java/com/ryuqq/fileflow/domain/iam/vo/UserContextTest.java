@@ -517,8 +517,22 @@ class UserContextTest {
     class OrganizationIdGetterTest {
 
         @Test
-        @DisplayName("getOrganizationId는 조직 ID를 반환한다")
-        void getOrganizationId_ShouldReturnOrgId() {
+        @DisplayName("getOrganizationIdAsVO는 조직 ID Value Object를 반환한다")
+        void getOrganizationIdAsVO_ShouldReturnOrgIdVO() {
+            // given
+            OrganizationId orgId = OrganizationId.generate();
+            UserId userId = UserId.generate();
+
+            // when & then
+            assertThat(UserContext.admin("admin@test.com").getOrganizationIdAsVO()).isNull();
+            assertThat(UserContext.seller(orgId, "Company", "seller@test.com").getOrganizationIdAsVO())
+                    .isEqualTo(orgId);
+            assertThat(UserContext.customer(userId).getOrganizationIdAsVO()).isNull();
+        }
+
+        @Test
+        @DisplayName("getOrganizationId는 조직 ID 문자열을 반환한다")
+        void getOrganizationId_ShouldReturnOrgIdString() {
             // given
             OrganizationId orgId = OrganizationId.generate();
             UserId userId = UserId.generate();
