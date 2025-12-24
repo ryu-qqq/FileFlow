@@ -102,14 +102,14 @@ public class ExternalDownloadController {
                 responseCode = "400",
                 description = "잘못된 요청")
     })
-    @PreAuthorize("@access.canDownload()")
+    @PreAuthorize("@access.hasPermission('file:download')")
     @PostMapping
     public ResponseEntity<ApiResponse<ExternalDownloadApiResponse>> requestExternalDownload(
             @RequestBody @Valid RequestExternalDownloadApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
-        String organizationId = userContext.getOrganizationId().value();
+        String organizationId = userContext.getOrganizationId();
 
         RequestExternalDownloadCommand command =
                 externalDownloadApiMapper.toCommand(request, tenantId, organizationId);
@@ -141,7 +141,7 @@ public class ExternalDownloadController {
                 responseCode = "200",
                 description = "조회 성공")
     })
-    @PreAuthorize("@access.canRead()")
+    @PreAuthorize("@access.hasPermission('file:read')")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ExternalDownloadDetailApiResponse>>>
             getExternalDownloads(
@@ -154,7 +154,7 @@ public class ExternalDownloadController {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
-        String organizationId = userContext.getOrganizationId().value();
+        String organizationId = userContext.getOrganizationId();
 
         ExternalDownloadSearchApiRequest request =
                 new ExternalDownloadSearchApiRequest(status, page, size);
@@ -199,7 +199,7 @@ public class ExternalDownloadController {
                 responseCode = "404",
                 description = "외부 다운로드를 찾을 수 없음")
     })
-    @PreAuthorize("@access.canRead()")
+    @PreAuthorize("@access.hasPermission('file:read')")
     @GetMapping(ApiPaths.ExternalDownload.BY_ID)
     public ResponseEntity<ApiResponse<ExternalDownloadDetailApiResponse>> getExternalDownload(
             @Parameter(description = "외부 다운로드 ID", required = true, example = "download-123")

@@ -194,9 +194,8 @@ public class UserContextFilter extends OncePerRequestFilter {
                 log.debug(
                         "Service Token 인증 성공 - SYSTEM UserContext 사용 (serviceName={})",
                         serviceName != null ? serviceName : "unknown");
-            }
-            // 2. Gateway 헤더 확인
-            else {
+            } else {
+                // 2. Gateway 헤더 확인
                 String headerTenantId = request.getHeader(HEADER_TENANT_ID);
 
                 if (headerTenantId != null && !headerTenantId.isBlank()) {
@@ -531,10 +530,10 @@ public class UserContextFilter extends OncePerRequestFilter {
      */
     private void setMdc(UserContext userContext) {
         MDC.put(MDC_USER_ID, userContext.getUserIdentifier());
-        MDC.put(MDC_TENANT_ID, userContext.getTenantId().value());
+        MDC.put(MDC_TENANT_ID, userContext.getTenantId());
 
-        OrganizationId orgId = userContext.getOrganizationId();
-        MDC.put(MDC_ORGANIZATION_ID, orgId != null ? orgId.value() : "N/A");
+        String orgId = userContext.getOrganizationId();
+        MDC.put(MDC_ORGANIZATION_ID, orgId != null ? orgId : "N/A");
 
         MDC.put(MDC_ROLES, String.join(",", userContext.roles()));
 

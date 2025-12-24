@@ -131,7 +131,7 @@ public class FileAssetCommandController {
                 responseCode = "404",
                 description = "파일 자산을 찾을 수 없음")
     })
-    @PreAuthorize("@access.canDelete()")
+    @PreAuthorize("@access.hasPermission('file:delete')")
     @PatchMapping(ApiPaths.FileAsset.DELETE)
     public ResponseEntity<ApiResponse<DeleteFileAssetApiResponse>> deleteFileAsset(
             @Parameter(description = "파일 자산 ID", required = true, example = "asset-123")
@@ -142,7 +142,7 @@ public class FileAssetCommandController {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
-        String organizationId = userContext.getOrganizationId().value();
+        String organizationId = userContext.getOrganizationId();
 
         DeleteFileAssetCommand command =
                 fileAssetApiMapper.toDeleteFileAssetCommand(id, request, tenantId, organizationId);
@@ -178,14 +178,14 @@ public class FileAssetCommandController {
                 responseCode = "400",
                 description = "잘못된 요청")
     })
-    @PreAuthorize("@access.canDelete()")
+    @PreAuthorize("@access.hasPermission('file:delete')")
     @PostMapping(ApiPaths.FileAsset.BATCH_DELETE)
     public ResponseEntity<ApiResponse<BatchDeleteFileAssetApiResponse>> batchDeleteFileAssets(
             @Valid @RequestBody BatchDeleteFileAssetApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
-        String organizationId = userContext.getOrganizationId().value();
+        String organizationId = userContext.getOrganizationId();
 
         BatchDeleteFileAssetCommand command =
                 fileAssetApiMapper.toBatchDeleteFileAssetCommand(request, tenantId, organizationId);
@@ -219,7 +219,7 @@ public class FileAssetCommandController {
                 responseCode = "404",
                 description = "파일 자산을 찾을 수 없음")
     })
-    @PreAuthorize("@access.canDownload()")
+    @PreAuthorize("@access.hasPermission('file:download')")
     @PostMapping(ApiPaths.FileAsset.DOWNLOAD_URL)
     public ResponseEntity<ApiResponse<DownloadUrlApiResponse>> generateDownloadUrl(
             @Parameter(description = "파일 자산 ID", required = true, example = "asset-123")
@@ -230,7 +230,7 @@ public class FileAssetCommandController {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
-        String organizationId = userContext.getOrganizationId().value();
+        String organizationId = userContext.getOrganizationId();
 
         GenerateDownloadUrlCommand command =
                 fileAssetApiMapper.toGenerateDownloadUrlCommand(
@@ -266,14 +266,14 @@ public class FileAssetCommandController {
                 responseCode = "400",
                 description = "잘못된 요청")
     })
-    @PreAuthorize("@access.canDownload()")
+    @PreAuthorize("@access.hasPermission('file:download')")
     @PostMapping(ApiPaths.FileAsset.BATCH_DOWNLOAD_URL)
     public ResponseEntity<ApiResponse<BatchDownloadUrlApiResponse>> batchGenerateDownloadUrl(
             @Valid @RequestBody BatchGenerateDownloadUrlApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
-        String organizationId = userContext.getOrganizationId().value();
+        String organizationId = userContext.getOrganizationId();
 
         BatchGenerateDownloadUrlCommand command =
                 fileAssetApiMapper.toBatchGenerateDownloadUrlCommand(
@@ -313,7 +313,7 @@ public class FileAssetCommandController {
                 responseCode = "404",
                 description = "파일 자산을 찾을 수 없음")
     })
-    @PreAuthorize("@access.canWrite()")
+    @PreAuthorize("@access.hasPermission('file:write')")
     @PostMapping(ApiPaths.FileAsset.RETRY)
     public ResponseEntity<ApiResponse<RetryFailedFileAssetApiResponse>> retryFailedFileAsset(
             @Parameter(description = "파일 자산 ID", required = true, example = "asset-123")
@@ -324,7 +324,7 @@ public class FileAssetCommandController {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
-        String organizationId = userContext.getOrganizationId().value();
+        String organizationId = userContext.getOrganizationId();
 
         RetryFailedFileAssetCommand command =
                 fileAssetApiMapper.toRetryFailedFileAssetCommand(id, tenantId, organizationId);

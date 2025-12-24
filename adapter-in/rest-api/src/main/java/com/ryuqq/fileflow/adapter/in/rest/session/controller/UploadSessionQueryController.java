@@ -94,7 +94,7 @@ public class UploadSessionQueryController {
                 responseCode = "404",
                 description = "세션을 찾을 수 없음")
     })
-    @PreAuthorize("@access.canRead()")
+    @PreAuthorize("@access.hasPermission('file:read')")
     @GetMapping(ApiPaths.UploadSession.BY_ID)
     public ResponseEntity<ApiResponse<UploadSessionDetailApiResponse>> getUploadSession(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
@@ -133,14 +133,14 @@ public class UploadSessionQueryController {
                 responseCode = "200",
                 description = "조회 성공")
     })
-    @PreAuthorize("@access.canRead()")
+    @PreAuthorize("@access.hasPermission('file:read')")
     @GetMapping
     public ResponseEntity<ApiResponse<SliceApiResponse<UploadSessionApiResponse>>>
             getUploadSessions(@Valid UploadSessionSearchApiRequest request) {
 
         UserContext userContext = UserContextHolder.getRequired();
         String tenantId = userContext.tenant().id().value();
-        String organizationId = userContext.getOrganizationId().value();
+        String organizationId = userContext.getOrganizationId();
 
         ListUploadSessionsQuery query =
                 uploadSessionApiMapper.toListUploadSessionsQuery(request, tenantId, organizationId);
