@@ -212,8 +212,7 @@ public class ResourceAccessChecker {
         if (context.isSuperAdmin()) {
             return true;
         }
-        return context.getTenantId() != null
-                && Objects.equals(context.getTenantId().value(), tenantId);
+        return Objects.equals(context.getTenantId(), tenantId);
     }
 
     /**
@@ -232,8 +231,7 @@ public class ResourceAccessChecker {
         if (context.isSuperAdmin() || context.isAdmin()) {
             return true;
         }
-        return context.getOrganizationId() != null
-                && Objects.equals(context.getOrganizationId().value(), organizationId);
+        return Objects.equals(context.getOrganizationId(), organizationId);
     }
 
     /**

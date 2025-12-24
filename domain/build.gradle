@@ -23,6 +23,10 @@ dependencies {
     // UUID Creator (UUID v7 support)
     implementation 'com.github.f4b6a3:uuid-creator:6.1.1'
 
+    // AuthHub Common Auth Library (SecurityContext interface only - no Spring dependencies)
+    // api로 선언: UserContext가 SecurityContext를 구현하므로 전이 의존성 필요
+    api 'com.github.ryu-qqq:AuthHub:v1.0.1'
+
     // Validation API (JSR-380) - Pure annotations, no implementation
     implementation libs.jakarta.validation.api
 

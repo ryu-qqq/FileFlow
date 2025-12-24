@@ -444,7 +444,7 @@ public class SingleUploadSession implements UploadSession {
      * @return 조직 ID (nullable - Admin/Customer는 null)
      */
     public OrganizationId getOrganizationId() {
-        return userContext.getOrganizationId();
+        return userContext.organizationIdValue();
     }
 
     public FileName getFileName() {

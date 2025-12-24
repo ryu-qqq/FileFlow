@@ -531,10 +531,10 @@ public class UserContextFilter extends OncePerRequestFilter {
      */
     private void setMdc(UserContext userContext) {
         MDC.put(MDC_USER_ID, userContext.getUserIdentifier());
-        MDC.put(MDC_TENANT_ID, userContext.getTenantId().value());
+        MDC.put(MDC_TENANT_ID, userContext.getTenantId());
 
-        OrganizationId orgId = userContext.getOrganizationId();
-        MDC.put(MDC_ORGANIZATION_ID, orgId != null ? orgId.value() : "N/A");
+        String orgId = userContext.getOrganizationId();
+        MDC.put(MDC_ORGANIZATION_ID, orgId != null ? orgId : "N/A");
 
         MDC.put(MDC_ROLES, String.join(",", userContext.roles()));
 

@@ -129,7 +129,7 @@ public class UploadSessionCommandController {
                 responseCode = "400",
                 description = "잘못된 요청")
     })
-    @PreAuthorize("@access.canWrite()")
+    @PreAuthorize("@access.hasPermission('file:write')")
     @PostMapping(ApiPaths.UploadSession.SINGLE_INIT)
     public ResponseEntity<ApiResponse<InitSingleUploadApiResponse>> initSingleUpload(
             @RequestBody @Valid InitSingleUploadApiRequest request) {
@@ -162,7 +162,7 @@ public class UploadSessionCommandController {
                 responseCode = "400",
                 description = "잘못된 요청")
     })
-    @PreAuthorize("@access.canWrite()")
+    @PreAuthorize("@access.hasPermission('file:write')")
     @PostMapping(ApiPaths.UploadSession.MULTIPART_INIT)
     public ResponseEntity<ApiResponse<InitMultipartUploadApiResponse>> initMultipartUpload(
             @RequestBody @Valid InitMultipartUploadApiRequest request) {
@@ -197,7 +197,7 @@ public class UploadSessionCommandController {
                 responseCode = "404",
                 description = "세션을 찾을 수 없음")
     })
-    @PreAuthorize("@access.canWrite()")
+    @PreAuthorize("@access.hasPermission('file:write')")
     @PatchMapping(ApiPaths.UploadSession.SINGLE_COMPLETE)
     public ResponseEntity<ApiResponse<CompleteSingleUploadApiResponse>> completeSingleUpload(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
@@ -235,7 +235,7 @@ public class UploadSessionCommandController {
                 responseCode = "404",
                 description = "세션을 찾을 수 없음")
     })
-    @PreAuthorize("@access.canWrite()")
+    @PreAuthorize("@access.hasPermission('file:write')")
     @PatchMapping(ApiPaths.UploadSession.MULTIPART_COMPLETE)
     public ResponseEntity<ApiResponse<CompleteMultipartUploadApiResponse>> completeMultipartUpload(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
@@ -274,7 +274,7 @@ public class UploadSessionCommandController {
                 responseCode = "404",
                 description = "세션을 찾을 수 없음")
     })
-    @PreAuthorize("@access.canWrite()")
+    @PreAuthorize("@access.hasPermission('file:write')")
     @PatchMapping(ApiPaths.UploadSession.PARTS)
     public ResponseEntity<ApiResponse<MarkPartUploadedApiResponse>> markPartUploaded(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")
@@ -312,7 +312,7 @@ public class UploadSessionCommandController {
                 responseCode = "404",
                 description = "세션을 찾을 수 없음")
     })
-    @PreAuthorize("@access.canWrite()")
+    @PreAuthorize("@access.hasPermission('file:write')")
     @PatchMapping(ApiPaths.UploadSession.CANCEL)
     public ResponseEntity<ApiResponse<CancelUploadSessionApiResponse>> cancelUploadSession(
             @Parameter(description = "업로드 세션 ID", required = true, example = "session-123")

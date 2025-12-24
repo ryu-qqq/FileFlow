@@ -21,6 +21,9 @@ dependencies {
     api project(':application')
     api project(':domain')
 
+    // AuthHub Common Auth Library (v1.0.1 - SecurityContext interface support)
+    implementation 'com.github.ryu-qqq:AuthHub:v1.0.1'
+
     // Spring Web
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.validation
@@ -133,4 +136,33 @@ tasks.register('copyDocs', Copy) {
 
     from generatedDocsDir
     into layout.buildDirectory.dir('generated-static/docs')
+}
+
+
+// ========================================
+// Permission 스캔 (CI/CD용)
+// ========================================
+// 실행: ./gradlew :adapter-in:rest-api:scanPermissions
+// 출력: build/permissions/permissions.json
+//
+// CI/CD 파이프라인에서 이 파일을 S3/Artifact에 업로드하면
+// AuthHub Admin에서 자동완성 소스로 사용 가능
+tasks.register('scanPermissions', JavaExec) {
+    description = 'Scan @PreAuthorize annotations and output permissions to JSON'
+    group = 'verification'
+
+    dependsOn classes
+
+    mainClass = 'com.ryuqq.fileflow.adapter.in.rest.architecture.PermissionScanner'
+    classpath = sourceSets.test.runtimeClasspath
+
+    args = [
+            '--output', "${buildDir}/permissions/permissions.json",
+            '--service', 'fileflow',
+            '--package', 'com.ryuqq.fileflow.adapter.in.rest'
+    ]
+
+    doFirst {
+        mkdir "${buildDir}/permissions"
+    }
 }

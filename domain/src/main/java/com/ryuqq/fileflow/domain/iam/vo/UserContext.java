@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.iam.vo;
 
+import com.ryuqq.auth.common.context.SecurityContext;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import com.ryuqq.fileflow.domain.session.vo.UploadCategory;
@@ -7,6 +8,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 사용자 컨텍스트 Value Object (Gateway 헤더 기반).
@@ -64,7 +66,7 @@ public record UserContext(
         UserId userId,
         List<String> roles,
         List<String> permissions,
-        String serviceName) {
+        String serviceName) implements SecurityContext {
 
     // Well-Known System 사용자 ID (UUIDv7)
     private static final String SYSTEM_USER_ID = "019b2b35-3979-75ba-a981-84ae15f0572a";
@@ -561,23 +563,97 @@ public record UserContext(
     }
 
     /**
-     * 조직 ID를 반환한다.
+     * 조직 ID Value Object를 반환한다.
      *
      * <p>Admin/Customer는 OrganizationId가 null이므로 null을 반환할 수 있다.
      *
-     * @return 조직 ID (nullable)
+     * @return 조직 ID Value Object (nullable)
      */
-    public OrganizationId getOrganizationId() {
+    public OrganizationId organizationIdValue() {
         return organization.id();
     }
 
     /**
-     * 테넌트 ID를 반환한다.
+     * 테넌트 ID Value Object를 반환한다.
      *
-     * @return 테넌트 ID
+     * @return 테넌트 ID Value Object
      */
-    public TenantId getTenantId() {
+    public TenantId tenantIdValue() {
         return tenant.id();
+    }
+
+    // ===== SecurityContext Interface Implementation =====
+
+    /**
+     * 권한 목록을 Set으로 반환한다.
+     *
+     * @return 권한 집합
+     */
+    @Override
+    public Set<String> getPermissions() {
+        return Set.copyOf(permissions);
+    }
+
+    /**
+     * 역할 목록을 Set으로 반환한다.
+     *
+     * @return 역할 집합
+     */
+    @Override
+    public Set<String> getRoles() {
+        return Set.copyOf(roles);
+    }
+
+    /**
+     * 사용자 ID를 문자열로 반환한다.
+     *
+     * @return 사용자 ID 문자열 (없으면 null)
+     */
+    @Override
+    public String getUserId() {
+        return userId != null ? userId.value() : null;
+    }
+
+    /**
+     * 테넌트 ID를 문자열로 반환한다.
+     *
+     * @return 테넌트 ID 문자열 (없으면 null)
+     */
+    @Override
+    public String getTenantId() {
+        return tenant != null && tenant.id() != null ? tenant.id().value() : null;
+    }
+
+    /**
+     * 조직 ID를 문자열로 반환한다.
+     *
+     * @return 조직 ID 문자열 (없으면 null)
+     */
+    @Override
+    public String getOrganizationId() {
+        return organization != null && organization.id() != null ? organization.id().value() : null;
+    }
+
+    /**
+     * 서비스 계정(System) 여부를 반환한다.
+     *
+     * @return 서비스 계정이면 true
+     */
+    @Override
+    public boolean isServiceAccount() {
+        return isSystem();
+    }
+
+    /**
+     * 인증 여부를 반환한다.
+     *
+     * <p>email 또는 userId가 있으면 인증된 것으로 판단한다.
+     *
+     * @return 인증되었으면 true
+     */
+    @Override
+    public boolean isAuthenticated() {
+        return (email != null && !email.isBlank()) || userId != null;
     }
 
     /**
@@ -586,6 +662,7 @@ public record UserContext(
      * @param role 역할 문자열 (예: "SUPER_ADMIN", "ADMIN")
      * @return 해당 역할을 가지고 있으면 true
      */
+    @Override
     public boolean hasRole(String role) {
         if (role == null || role.isBlank()) {
             return false;
@@ -599,6 +676,7 @@ public record UserContext(
      * @param permission 권한 문자열 (예: "file:read", "file:write")
      * @return 해당 권한을 가지고 있으면 true
      */
+    @Override
     public boolean hasPermission(String permission) {
         if (permission == null || permission.isBlank()) {
             return false;
