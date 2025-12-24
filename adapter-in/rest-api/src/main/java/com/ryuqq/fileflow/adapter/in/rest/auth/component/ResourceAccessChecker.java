@@ -1,13 +1,18 @@
 package com.ryuqq.fileflow.adapter.in.rest.auth.component;
 
+import com.ryuqq.auth.common.access.BaseAccessChecker;
+import com.ryuqq.auth.common.context.SecurityContext;
 import com.ryuqq.fileflow.adapter.in.rest.auth.paths.SecurityPaths;
 import com.ryuqq.fileflow.application.common.context.UserContextHolder;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
+import java.util.Arrays;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 /**
  * 리소스 접근 권한 검사기.
+ *
+ * <p>BaseAccessChecker를 확장하여 공통 권한 검사 로직을 재사용합니다.
  *
  * <p>@PreAuthorize 어노테이션에서 SpEL 함수로 사용합니다.
  *
@@ -51,15 +56,48 @@ import org.springframework.stereotype.Component;
  */
 @Component("access")
 @SuppressWarnings("PMD.TooManyMethods")
-public class ResourceAccessChecker {
+public class ResourceAccessChecker extends BaseAccessChecker {
+
+    // ========================================
+    // SecurityContext Provider (BaseAccessChecker 오버라이드)
+    // ========================================
 
     /**
-     * 인증된 사용자인지 확인합니다.
+     * 현재 스레드의 SecurityContext를 반환합니다.
+     *
+     * <p>fileflow 프로젝트의 UserContextHolder를 사용합니다.
+     *
+     * @return SecurityContext (UserContext) 또는 null
+     */
+    @Override
+    protected SecurityContext getSecurityContext() {
+        return UserContextHolder.get();
+    }
+
+    /**
+     * 현재 스레드의 UserContext를 반환합니다.
+     *
+     * <p>fileflow 도메인 특화 메서드에서 사용합니다.
+     *
+     * @return UserContext 또는 null
+     */
+    protected UserContext getUserContext() {
+        return UserContextHolder.get();
+    }
+
+    // ========================================
+    // BaseAccessChecker 오버라이드 (Null-safe 처리)
+    // ========================================
+
+    /**
+     * 현재 사용자가 인증되었는지 확인합니다.
      *
      * @return 인증되었으면 true
      */
+    @Override
     public boolean authenticated() {
-        return getUserContext() != null;
+        SecurityContext ctx = getSecurityContext();
+        return ctx != null && ctx.isAuthenticated();
     }
 
     /**
@@ -67,9 +105,10 @@ public class ResourceAccessChecker {
      *
      * @return SUPER_ADMIN이면 true
      */
+    @Override
     public boolean superAdmin() {
-        UserContext context = getUserContext();
-        return context != null && context.isSuperAdmin();
+        SecurityContext ctx = getSecurityContext();
+        return ctx != null && ctx.hasRole("SUPER_ADMIN");
     }
 
     /**
@@ -77,10 +116,131 @@ public class ResourceAccessChecker {
      *
      * @return ADMIN이면 true
      */
+    @Override
     public boolean admin() {
         UserContext context = getUserContext();
         return context != null && context.isAdmin();
     }
+
+    /**
+     * 현재 사용자가 특정 역할을 가지고 있는지 확인합니다.
+     *
+     * @param role 확인할 역할
+     * @return 역할이 있으면 true
+     */
+    @Override
+    public boolean hasRole(String role) {
+        SecurityContext ctx = getSecurityContext();
+        return ctx != null && ctx.hasRole(role);
+    }
+
+    /**
+     * 현재 사용자가 주어진 역할 중 하나라도 가지고 있는지 확인합니다.
+     *
+     * @param roles 확인할 역할들
+     * @return 역할 중 하나라도 있으면 true
+     */
+    @Override
+    public boolean hasAnyRole(String... roles) {
+        if (roles == null || roles.length == 0) {
+            return false;
+        }
+        SecurityContext ctx = getSecurityContext();
+        if (ctx == null) {
+            return false;
+        }
+        return Arrays.stream(roles).anyMatch(ctx::hasRole);
+    }
+
+    /**
+     * 현재 사용자가 특정 권한을 가지고 있는지 확인합니다.
+     *
+     * @param permission 확인할 권한
+     * @return 권한이 있으면 true
+     */
+    @Override
+    public boolean hasPermission(String permission) {
+        if (superAdmin()) {
+            return true;
+        }
+        SecurityContext ctx = getSecurityContext();
+        return ctx != null && ctx.hasPermission(permission);
+    }
+
+    /**
+     * 현재 사용자가 주어진 권한 중 하나라도 가지고 있는지 확인합니다.
+     *
+     * @param permissions 확인할 권한들
+     * @return 권한 중 하나라도 있으면 true
+     */
+    @Override
+    public boolean hasAnyPermission(String... permissions) {
+        if (permissions == null || permissions.length == 0) {
+            return false;
+        }
+        if (superAdmin()) {
+            return true;
+        }
+        SecurityContext ctx = getSecurityContext();
+        if (ctx == null) {
+            return false;
+        }
+        return Arrays.stream(permissions).anyMatch(ctx::hasPermission);
+    }
+
+    /**
+     * 현재 사용자가 동일 테넌트에 속하는지 확인합니다.
+     *
+     * @param tenantId 확인할 테넌트 ID
+     * @return 동일 테넌트면 true
+     */
+    @Override
+    public boolean sameTenant(String tenantId) {
+        if (tenantId == null) {
+            return false;
+        }
+        if (superAdmin()) {
+            return true;
+        }
+        SecurityContext ctx = getSecurityContext();
+        return ctx != null && Objects.equals(ctx.getTenantId(), tenantId);
+    }
+
+    /**
+     * 현재 사용자가 동일 조직에 속하는지 확인합니다.
+     *
+     * @param organizationId 확인할 조직 ID
+     * @return 동일 조직이면 true
+     */
+    @Override
+    public boolean sameOrganization(String organizationId) {
+        if (organizationId == null) {
+            return false;
+        }
+        SecurityContext ctx = getSecurityContext();
+        if (ctx == null) {
+            return false;
+        }
+        if (ctx.hasRole("SUPER_ADMIN") || ctx.hasRole("TENANT_ADMIN") || ctx.hasRole("ADMIN")) {
+            return true;
+        }
+        return Objects.equals(ctx.getOrganizationId(), organizationId);
+    }
+
+    /**
+     * 서비스 계정인지 확인합니다.
+     *
+     * @return 서비스 계정이면 true
+     */
+    @Override
+    public boolean serviceAccount() {
+        SecurityContext ctx = getSecurityContext();
+        return ctx != null && ctx.isServiceAccount();
+    }
+
+    // ========================================
+    // 역할 기반 검사 (fileflow 특화)
+    // ========================================
 
     /**
      * 현재 사용자가 SELLER인지 확인합니다.
@@ -102,24 +262,9 @@ public class ResourceAccessChecker {
         return context != null && context.isCustomer();
     }
 
-    /**
-     * 특정 권한 보유 여부를 확인합니다.
-     *
-     * <p>SUPER_ADMIN 또는 SYSTEM은 모든 권한을 가집니다.
-     *
-     * @param permission 확인할 권한 (예: file:read, file:write)
-     * @return 권한이 있으면 true
-     */
-    public boolean hasPermission(String permission) {
-        UserContext context = getUserContext();
-        if (context == null) {
-            return false;
-        }
-        if (context.isSuperAdmin() || context.isSystem()) {
-            return true;
-        }
-        return context.hasPermission(permission);
-    }
+    // ========================================
+    // File 권한 체크 (fileflow 특화)
+    // ========================================
 
     /**
      * 파일 읽기 권한 보유 여부를 확인합니다.
@@ -158,108 +303,6 @@ public class ResourceAccessChecker {
     }
 
     /**
-     * 여러 권한 중 하나라도 보유 여부를 확인합니다.
-     *
-     * @param permissions 확인할 권한들
-     * @return 하나라도 있으면 true
-     */
-    public boolean hasAnyPermission(String... permissions) {
-        UserContext context = getUserContext();
-        if (context == null) {
-            return false;
-        }
-        if (context.isSuperAdmin()) {
-            return true;
-        }
-        return context.hasAnyPermission(permissions);
-    }
-
-    /**
-     * 특정 역할 보유 여부를 확인합니다.
-     *
-     * @param role 확인할 역할
-     * @return 역할이 있으면 true
-     */
-    public boolean hasRole(String role) {
-        UserContext context = getUserContext();
-        return context != null && context.hasRole(role);
-    }
-
-    /**
-     * 여러 역할 중 하나라도 보유 여부를 확인합니다.
-     *
-     * @param roles 확인할 역할들
-     * @return 하나라도 있으면 true
-     */
-    public boolean hasAnyRole(String... roles) {
-        UserContext context = getUserContext();
-        return context != null && context.hasAnyRole(roles);
-    }
-
-    /**
-     * 현재 사용자가 해당 테넌트 소속인지 확인합니다.
-     *
-     * <p>SUPER_ADMIN은 모든 테넌트에 접근 가능합니다.
-     *
-     * @param tenantId 확인할 테넌트 ID
-     * @return 해당 테넌트 소속이거나 SUPER_ADMIN이면 true
-     */
-    public boolean sameTenant(String tenantId) {
-        UserContext context = getUserContext();
-        if (context == null) {
-            return false;
-        }
-        if (context.isSuperAdmin()) {
-            return true;
-        }
-        return Objects.equals(context.getTenantId(), tenantId);
-    }
-
-    /**
-     * 현재 사용자가 해당 조직 소속인지 확인합니다.
-     *
-     * <p>SUPER_ADMIN과 ADMIN은 자기 테넌트 내 모든 조직에 접근 가능합니다.
-     *
-     * @param organizationId 확인할 조직 ID
-     * @return 해당 조직 소속이거나 상위 권한이면 true
-     */
-    public boolean sameOrganization(String organizationId) {
-        UserContext context = getUserContext();
-        if (context == null) {
-            return false;
-        }
-        if (context.isSuperAdmin() || context.isAdmin()) {
-            return true;
-        }
-        return Objects.equals(context.getOrganizationId(), organizationId);
-    }
-
-    /**
-     * 현재 사용자가 요청한 userId 본인인지 확인합니다.
-     *
-     * @param userId 확인할 사용자 ID
-     * @return 본인이면 true
-     */
-    public boolean myself(String userId) {
-        UserContext context = getUserContext();
-        if (context == null || context.userId() == null) {
-            return false;
-        }
-        return Objects.equals(context.userId().value(), userId);
-    }
-
-    /**
-     * 본인이거나 특정 권한이 있는지 확인합니다.
-     *
-     * @param userId 확인할 사용자 ID
-     * @param permission 필요한 권한
-     * @return 본인이거나 권한이 있으면 true
-     */
-    public boolean myselfOr(String userId, String permission) {
-        return myself(userId) || hasPermission(permission);
-    }
-
-    /**
      * 파일 리소스 접근 권한을 확인합니다.
      *
      * <p>자기 테넌트/조직의 파일에 대해 해당 action 권한이 있는지 확인합니다.
@@ -271,12 +314,22 @@ public class ResourceAccessChecker {
         return hasPermission("file:" + action);
     }
 
+    // ========================================
+    // 리소스 격리 (fileflow 특화 - userId 기반)
+    // ========================================
+
     /**
-     * 현재 스레드의 UserContext를 반환합니다.
+     * 현재 사용자가 요청한 userId 본인인지 확인합니다.
      *
-     * @return UserContext 또는 null
+     * @param userId 확인할 사용자 ID
+     * @return 본인이면 true
      */
-    private UserContext getUserContext() {
-        return UserContextHolder.get();
+    @Override
+    public boolean myself(String userId) {
+        UserContext context = getUserContext();
+        if (context == null || context.userId() == null) {
+            return false;
+        }
+        return Objects.equals(context.userId().value(), userId);
     }
 }

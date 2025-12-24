@@ -194,9 +194,8 @@ public class UserContextFilter extends OncePerRequestFilter {
                 log.debug(
                         "Service Token 인증 성공 - SYSTEM UserContext 사용 (serviceName={})",
                         serviceName != null ? serviceName : "unknown");
-            }
-            // 2. Gateway 헤더 확인
-            else {
+            } else {
+                // 2. Gateway 헤더 확인
                 String headerTenantId = request.getHeader(HEADER_TENANT_ID);
 
                 if (headerTenantId != null && !headerTenantId.isBlank()) {

@@ -291,7 +291,8 @@ class PackageStructureArchTest {
                                 "jakarta.annotation..",
                                 "com.github.f4b6a3.uuid..", // UUID 생성 라이브러리
                                 "edu.umd.cs.findbugs.annotations..", // SpotBugs 어노테이션
-                                "com.ryuqq.auth.common.." // AuthHub common-auth 라이브러리 (SecurityContext)
+                                "com.ryuqq.auth.common.." // AuthHub common-auth 라이브러리
+                                // (SecurityContext)
                                 )
                         .allowEmptyShould(true)
                         .because(

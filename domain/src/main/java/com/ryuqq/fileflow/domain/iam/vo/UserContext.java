@@ -66,7 +66,8 @@ public record UserContext(
         UserId userId,
         List<String> roles,
         List<String> permissions,
-        String serviceName) implements SecurityContext {
+        String serviceName)
+        implements SecurityContext {
 
     // Well-Known System 사용자 ID (UUIDv7)
     private static final String SYSTEM_USER_ID = "019b2b35-3979-75ba-a981-84ae15f0572a";
