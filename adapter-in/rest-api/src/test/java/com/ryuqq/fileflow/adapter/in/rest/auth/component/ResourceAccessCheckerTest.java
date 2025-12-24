@@ -327,7 +327,7 @@ class ResourceAccessCheckerTest {
             UserContextHolder.set(userContext);
 
             // when & then - 생성된 컨텍스트의 테넌트 ID로 검증
-            assertThat(checker.sameTenant(userContext.getTenantId().value())).isTrue();
+            assertThat(checker.sameTenant(userContext.getTenantId())).isTrue();
         }
 
         @Test

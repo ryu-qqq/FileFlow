@@ -561,23 +561,65 @@ public record UserContext(
     }
 
     /**
-     * 조직 ID를 반환한다.
+     * 조직 ID Value Object를 반환한다.
      *
      * <p>Admin/Customer는 OrganizationId가 null이므로 null을 반환할 수 있다.
      *
-     * @return 조직 ID (nullable)
+     * @return 조직 ID Value Object (nullable)
      */
-    public OrganizationId getOrganizationId() {
+    public OrganizationId getOrganizationIdAsVO() {
         return organization.id();
     }
 
     /**
-     * 테넌트 ID를 반환한다.
+     * 테넌트 ID Value Object를 반환한다.
      *
-     * @return 테넌트 ID
+     * @return 테넌트 ID Value Object
      */
-    public TenantId getTenantId() {
+    public TenantId getTenantIdAsVO() {
         return tenant.id();
+    }
+
+    // ===== ID 문자열 변환 메서드 (편의용) =====
+
+    /**
+     * 사용자 ID를 문자열로 반환한다.
+     *
+     * @return 사용자 ID 문자열 (없으면 null)
+     */
+    public String getUserId() {
+        return userId != null ? userId.value() : null;
+    }
+
+    /**
+     * 테넌트 ID를 문자열로 반환한다.
+     *
+     * @return 테넌트 ID 문자열 (없으면 null)
+     */
+    public String getTenantId() {
+        return tenant != null && tenant.id() != null ? tenant.id().value() : null;
+    }
+
+    /**
+     * 조직 ID를 문자열로 반환한다.
+     *
+     * @return 조직 ID 문자열 (없으면 null)
+     */
+    public String getOrganizationId() {
+        return organization != null && organization.id() != null ? organization.id().value() : null;
+    }
+
+    // ===== 인증/권한 확인 메서드 =====
+
+    /**
+     * 인증 여부를 반환한다.
+     *
+     * <p>email 또는 userId가 있으면 인증된 것으로 판단한다.
+     *
+     * @return 인증되었으면 true
+     */
+    public boolean isAuthenticated() {
+        return (email != null && !email.isBlank()) || userId != null;
     }
 
     /**
@@ -649,6 +691,39 @@ public record UserContext(
      */
     public boolean isSuperAdmin() {
         return hasRole("SUPER_ADMIN");
+    }
+
+    /**
+     * 서비스 계정인지 확인한다.
+     *
+     * <p>SYSTEM 역할은 서비스 간 통신에 사용되는 서비스 계정이다.
+     *
+     * @return 서비스 계정이면 true
+     */
+    public boolean isServiceAccount() {
+        return isSystem();
+    }
+
+    /**
+     * 역할 목록을 반환한다.
+     *
+     * <p>roles() record accessor의 별칭 메서드이다.
+     *
+     * @return 역할 목록
+     */
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    /**
+     * 권한 목록을 반환한다.
+     *
+     * <p>permissions() record accessor의 별칭 메서드이다.
+     *
+     * @return 권한 목록
+     */
+    public List<String> getPermissions() {
+        return permissions;
     }
 
     /**
