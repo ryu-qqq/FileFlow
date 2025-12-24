@@ -343,10 +343,11 @@ public class ResourceAccessChecker extends BaseAccessChecker {
     /**
      * Domain Layer의 UserContext를 AuthHub의 SecurityContext로 변환하는 어댑터.
      *
-     * <p>Domain Layer의 순수성을 유지하면서 AuthHub와의 호환성을 보장합니다.
-     * UserContext는 SecurityContext를 구현하지 않고, 이 어댑터가 Adapter Layer에서 변환을 담당합니다.
+     * <p>Domain Layer의 순수성을 유지하면서 AuthHub와의 호환성을 보장합니다. UserContext는 SecurityContext를 구현하지 않고, 이
+     * 어댑터가 Adapter Layer에서 변환을 담당합니다.
      *
      * <p>내부 클래스로 구현하여 ArchUnit 규칙을 준수합니다:
+     *
      * <ul>
      *   <li>ResourceAccessChecker는 Domain 의존성 규칙에서 제외됨
      *   <li>별도 @Component가 필요 없음

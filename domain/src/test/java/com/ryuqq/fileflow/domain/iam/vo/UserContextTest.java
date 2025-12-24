@@ -525,7 +525,9 @@ class UserContextTest {
 
             // when & then
             assertThat(UserContext.admin("admin@test.com").getOrganizationIdAsVO()).isNull();
-            assertThat(UserContext.seller(orgId, "Company", "seller@test.com").getOrganizationIdAsVO())
+            assertThat(
+                            UserContext.seller(orgId, "Company", "seller@test.com")
+                                    .getOrganizationIdAsVO())
                     .isEqualTo(orgId);
             assertThat(UserContext.customer(userId).getOrganizationIdAsVO()).isNull();
         }

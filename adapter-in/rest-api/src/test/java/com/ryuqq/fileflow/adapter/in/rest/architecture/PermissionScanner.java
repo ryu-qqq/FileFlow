@@ -148,13 +148,18 @@ public class PermissionScanner {
         System.out.println("Usage: PermissionScanner [options]");
         System.out.println();
         System.out.println("Options:");
-        System.out.println("  --output <path>   Output JSON file path (default: build/permissions/permissions.json)");
-        System.out.println("  --service <name>  Service name for the output (default: unknown-service)");
+        System.out.println(
+                "  --output <path>   Output JSON file path (default:"
+                        + " build/permissions/permissions.json)");
+        System.out.println(
+                "  --service <name>  Service name for the output (default: unknown-service)");
         System.out.println("  --package <pkg>   Base package to scan (default: com.ryuqq)");
         System.out.println("  --help, -h        Show this help message");
         System.out.println();
         System.out.println("Example:");
-        System.out.println("  PermissionScanner --output out.json --service fileflow --package com.ryuqq.fileflow");
+        System.out.println(
+                "  PermissionScanner --output out.json --service fileflow --package"
+                        + " com.ryuqq.fileflow");
     }
 
     /**
