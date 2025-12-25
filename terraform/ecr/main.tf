@@ -39,6 +39,9 @@ module "ecr_web_api" {
   image_tag_mutability = "IMMUTABLE"  # Keep existing state to avoid permission error
   scan_on_push         = true
 
+  # Encryption (existing repo uses AES256)
+  encryption_type = "AES256"
+
   # Lifecycle Policy
   enable_lifecycle_policy    = true
   max_image_count            = 30
@@ -67,6 +70,9 @@ module "ecr_scheduler" {
   name                 = "${var.project_name}-scheduler-${var.environment}"
   image_tag_mutability = "IMMUTABLE"  # Keep existing state to avoid permission error
   scan_on_push         = true
+
+  # Encryption (existing repo uses AES256)
+  encryption_type = "AES256"
 
   # Lifecycle Policy
   enable_lifecycle_policy    = true
@@ -129,6 +135,9 @@ module "ecr_resizing_worker" {
   name                 = "${var.project_name}-resizing-worker-${var.environment}"
   image_tag_mutability = "IMMUTABLE"
   scan_on_push         = true
+
+  # Encryption (existing repo uses AES256)
+  encryption_type = "AES256"
 
   # Lifecycle Policy
   enable_lifecycle_policy    = true
