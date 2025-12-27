@@ -12,14 +12,14 @@
 # ===============================================
 # Springdoc (Swagger/OpenAPI) 설정
 # Gateway 라우팅 패턴(/api/v1/file/**)에 맞춰 경로 설정
-# 환경변수로 운영 환경에서 비활성화 가능
+# 인증 필요 (Service Token 또는 JWT) - 항상 활성화
 # ===============================================
 springdoc:
   api-docs:
-    enabled: ${SPRINGDOC_ENABLED:true}
+    enabled: true
     path: /api/v1/file/api-docs
   swagger-ui:
-    enabled: ${SPRINGDOC_ENABLED:true}
+    enabled: true
     path: /api/v1/file/swagger-ui.html
     urls-primary-name: "FileFlow API"
     # 태그/오퍼레이션 정렬

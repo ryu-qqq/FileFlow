@@ -7,6 +7,7 @@ import com.ryuqq.fileflow.application.download.dto.query.GetExternalDownloadQuer
 import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadDetailResponse;
 import com.ryuqq.fileflow.application.download.manager.query.ExternalDownloadReadManager;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.exception.ExternalDownloadNotFoundException;
 import com.ryuqq.fileflow.domain.download.fixture.ExternalDownloadFixture;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
@@ -168,7 +169,7 @@ class GetExternalDownloadServiceTest {
 
             // when & then
             assertThatThrownBy(() -> service.execute(query))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ExternalDownloadNotFoundException.class)
                     .hasMessageContaining("0000000003e7");
         }
 
@@ -188,7 +189,7 @@ class GetExternalDownloadServiceTest {
 
             // when & then
             assertThatThrownBy(() -> service.execute(query))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(ExternalDownloadNotFoundException.class);
         }
     }
 }
