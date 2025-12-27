@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.download.mapper;
 
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownloadJpaEntity;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.RetryCount;
@@ -29,6 +30,7 @@ public class ExternalDownloadJpaMapper {
     public ExternalDownloadJpaEntity toEntity(ExternalDownload domain) {
         return ExternalDownloadJpaEntity.of(
                 domain.getId().isNew() ? null : domain.getId().value(),
+                domain.getIdempotencyKey().getValue(),
                 domain.getSourceUrl().value(),
                 domain.getTenantId().value(),
                 domain.getOrganizationId() != null ? domain.getOrganizationId().value() : null,
@@ -53,6 +55,7 @@ public class ExternalDownloadJpaMapper {
     public ExternalDownload toDomain(ExternalDownloadJpaEntity entity) {
         return ExternalDownload.of(
                 ExternalDownloadId.of(entity.getId()),
+                IdempotencyKey.fromString(entity.getIdempotencyKey()),
                 SourceUrl.of(entity.getSourceUrl()),
                 TenantId.of(entity.getTenantId()),
                 entity.getOrganizationId() != null

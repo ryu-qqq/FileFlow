@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.domain.session.aggregate;
 
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
@@ -11,7 +12,6 @@ import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.ExpirationTime;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
-import com.ryuqq.fileflow.domain.session.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.session.vo.PresignedUrl;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;

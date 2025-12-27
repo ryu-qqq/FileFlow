@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.domain.download.aggregate;
 import static org.assertj.core.api.Assertions.*;
 
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadWebhookTriggeredEvent;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
@@ -37,6 +38,7 @@ class ExternalDownloadTest {
         @DisplayName("forNew()로 신규 ExternalDownload를 생성할 수 있다")
         void forNew_ShouldCreateNewExternalDownload() {
             // given
+            IdempotencyKey idempotencyKey = IdempotencyKey.forNew();
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/image.jpg");
             TenantId tenantId = TenantId.generate();
             OrganizationId organizationId = OrganizationId.generate();
@@ -44,6 +46,7 @@ class ExternalDownloadTest {
             // when
             ExternalDownload download =
                     ExternalDownload.forNew(
+                            idempotencyKey,
                             sourceUrl,
                             tenantId,
                             organizationId,
@@ -54,6 +57,7 @@ class ExternalDownloadTest {
 
             // then
             assertThat(download.getId().isNew()).isFalse(); // UUID는 항상 값이 있음
+            assertThat(download.getIdempotencyKey()).isEqualTo(idempotencyKey);
             assertThat(download.getSourceUrl()).isEqualTo(sourceUrl);
             assertThat(download.getTenantId()).isEqualTo(tenantId);
             assertThat(download.getOrganizationId()).isEqualTo(organizationId);
@@ -72,6 +76,7 @@ class ExternalDownloadTest {
         @DisplayName("forNew()에 WebhookUrl을 전달하면 설정된다")
         void forNew_WithWebhookUrl_ShouldSetWebhookUrl() {
             // given
+            IdempotencyKey idempotencyKey = IdempotencyKey.forNew();
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/image.jpg");
             WebhookUrl webhookUrl = WebhookUrl.of("https://callback.example.com/webhook");
             TenantId tenantId = TenantId.generate();
@@ -80,6 +85,7 @@ class ExternalDownloadTest {
             // when
             ExternalDownload download =
                     ExternalDownload.forNew(
+                            idempotencyKey,
                             sourceUrl,
                             tenantId,
                             organizationId,
@@ -98,6 +104,7 @@ class ExternalDownloadTest {
         void of_ShouldReconstituteExternalDownload() {
             // given
             ExternalDownloadId id = ExternalDownloadId.of("00000000-0000-0000-0000-000000000001");
+            IdempotencyKey idempotencyKey = IdempotencyKey.forNew();
             SourceUrl sourceUrl = SourceUrl.of("https://example.com/image.jpg");
             TenantId tenantId = TenantId.generate();
             OrganizationId organizationId = OrganizationId.generate();
@@ -113,6 +120,7 @@ class ExternalDownloadTest {
             ExternalDownload download =
                     ExternalDownload.of(
                             id,
+                            idempotencyKey,
                             sourceUrl,
                             tenantId,
                             organizationId,
@@ -129,6 +137,7 @@ class ExternalDownloadTest {
 
             // then
             assertThat(download.getId()).isEqualTo(id);
+            assertThat(download.getIdempotencyKey()).isEqualTo(idempotencyKey);
             assertThat(download.getSourceUrl()).isEqualTo(sourceUrl);
             assertThat(download.getTenantId()).isEqualTo(tenantId);
             assertThat(download.getOrganizationId()).isEqualTo(organizationId);
@@ -145,6 +154,7 @@ class ExternalDownloadTest {
         @DisplayName("forNew()에 sourceUrl이 null이면 예외가 발생한다")
         void forNew_WithNullSourceUrl_ShouldThrowException() {
             // given
+            IdempotencyKey idempotencyKey = IdempotencyKey.forNew();
             TenantId tenantId = TenantId.generate();
             OrganizationId organizationId = OrganizationId.generate();
 
@@ -152,6 +162,7 @@ class ExternalDownloadTest {
             assertThatThrownBy(
                             () ->
                                     ExternalDownload.forNew(
+                                            idempotencyKey,
                                             null,
                                             tenantId,
                                             organizationId,
@@ -248,6 +259,7 @@ class ExternalDownloadTest {
             ExternalDownload download =
                     ExternalDownload.of(
                             ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/image.jpg"),
                             tenantId,
                             organizationId,
@@ -322,6 +334,7 @@ class ExternalDownloadTest {
             ExternalDownload download =
                     ExternalDownload.of(
                             ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/image.jpg"),
                             tenantId,
                             organizationId,
@@ -348,6 +361,7 @@ class ExternalDownloadTest {
             OrganizationId organizationId = OrganizationId.generate();
             ExternalDownload download =
                     ExternalDownload.forNew(
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/image.jpg"),
                             tenantId,
                             organizationId,
@@ -381,6 +395,7 @@ class ExternalDownloadTest {
             ExternalDownload download =
                     ExternalDownload.of(
                             ExternalDownloadId.of(uuidString),
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/image.jpg"),
                             tenantId,
                             organizationId,
@@ -426,6 +441,7 @@ class ExternalDownloadTest {
             OrganizationId organizationId = OrganizationId.generate();
             ExternalDownload download =
                     ExternalDownload.forNew(
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/image.jpg"),
                             tenantId,
                             organizationId,
@@ -627,6 +643,7 @@ class ExternalDownloadTest {
     // Helper methods
     private ExternalDownload createPendingDownload() {
         return ExternalDownload.forNew(
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -639,6 +656,7 @@ class ExternalDownloadTest {
     private ExternalDownload createProcessingDownload() {
         return ExternalDownload.of(
                 ExternalDownloadId.of("00000000-0000-0000-0000-000000000001"),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -657,6 +675,7 @@ class ExternalDownloadTest {
     private ExternalDownload createProcessingDownloadWithWebhook() {
         return ExternalDownload.of(
                 ExternalDownloadId.of("00000000-0000-0000-0000-000000000002"),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 TenantId.generate(),
                 OrganizationId.generate(),

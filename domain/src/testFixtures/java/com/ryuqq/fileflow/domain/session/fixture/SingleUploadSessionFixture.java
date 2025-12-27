@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.session.fixture;
 
 import com.ryuqq.fileflow.domain.common.fixture.ClockFixture;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.iam.fixture.UserContextFixture;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import com.ryuqq.fileflow.domain.session.vo.*;

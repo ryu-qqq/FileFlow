@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.mapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSessionJpaEntity;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
@@ -15,7 +16,6 @@ import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.ExpirationTime;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
-import com.ryuqq.fileflow.domain.session.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.session.vo.PresignedUrl;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;

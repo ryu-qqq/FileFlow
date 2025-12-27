@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
@@ -18,14 +19,25 @@ import java.util.UUID;
  * <p>외부 다운로드 요청 정보를 저장합니다.
  *
  * <p>ID는 UUID v7 (Time-Ordered) 사용.
+ *
+ * <p>tenant_id + idempotency_key 조합으로 멱등성 보장.
  */
 @Entity
-@Table(name = "external_download")
+@Table(
+        name = "external_download",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_external_download_tenant_idempotency",
+                    columnNames = {"tenant_id", "idempotency_key"})
+        })
 public class ExternalDownloadJpaEntity extends BaseAuditEntity {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
+
+    @Column(name = "idempotency_key", nullable = false, length = 36)
+    private String idempotencyKey;
 
     @Column(name = "source_url", nullable = false, length = 2048)
     private String sourceUrl;
@@ -68,6 +80,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
 
     private ExternalDownloadJpaEntity(
             UUID id,
+            String idempotencyKey,
             String sourceUrl,
             String tenantId,
             String organizationId,
@@ -83,6 +96,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
             Instant updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
+        this.idempotencyKey = idempotencyKey;
         this.sourceUrl = sourceUrl;
         this.tenantId = tenantId;
         this.organizationId = organizationId;
@@ -98,6 +112,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
 
     public static ExternalDownloadJpaEntity of(
             UUID id,
+            String idempotencyKey,
             String sourceUrl,
             String tenantId,
             String organizationId,
@@ -113,6 +128,7 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
             Instant updatedAt) {
         return new ExternalDownloadJpaEntity(
                 id,
+                idempotencyKey,
                 sourceUrl,
                 tenantId,
                 organizationId,
@@ -174,5 +190,9 @@ public class ExternalDownloadJpaEntity extends BaseAuditEntity {
 
     public Long getVersion() {
         return version;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
     }
 }

@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.domain.download.fixture;
 
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
@@ -28,6 +29,7 @@ public final class ExternalDownloadFixture {
     /** 기본 ExternalDownload 생성 (PENDING 상태). */
     public static ExternalDownload defaultExternalDownload() {
         return ExternalDownload.forNew(
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -40,6 +42,7 @@ public final class ExternalDownloadFixture {
     /** PENDING 상태의 ExternalDownload 생성 (ID 없음, 신규 생성). */
     public static ExternalDownload pendingDownload() {
         return ExternalDownload.forNew(
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -52,6 +55,7 @@ public final class ExternalDownloadFixture {
     /** PENDING 상태의 ExternalDownload 생성 (WebhookUrl 포함, ID 없음, 신규 생성). */
     public static ExternalDownload pendingDownloadWithWebhook() {
         return ExternalDownload.forNew(
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -65,6 +69,7 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload pendingExternalDownload() {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -84,6 +89,7 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload processingExternalDownload() {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.png"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -103,6 +109,7 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload completedExternalDownload() {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.gif"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -122,6 +129,7 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload failedExternalDownload() {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.webp"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -141,6 +149,7 @@ public final class ExternalDownloadFixture {
     public static ExternalDownload externalDownloadWithWebhook() {
         return ExternalDownload.of(
                 ExternalDownloadIdFixture.newExternalDownloadId(),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/image.jpg"),
                 TenantId.generate(),
                 OrganizationId.generate(),
@@ -159,6 +168,7 @@ public final class ExternalDownloadFixture {
     /** 커스텀 ExternalDownload 생성. */
     public static ExternalDownload customExternalDownload(
             ExternalDownloadId id,
+            IdempotencyKey idempotencyKey,
             SourceUrl sourceUrl,
             TenantId tenantId,
             OrganizationId organizationId,
@@ -171,6 +181,7 @@ public final class ExternalDownloadFixture {
             WebhookUrl webhookUrl) {
         return ExternalDownload.of(
                 id,
+                idempotencyKey,
                 sourceUrl,
                 tenantId,
                 organizationId,
@@ -201,6 +212,7 @@ public final class ExternalDownloadFixture {
         private static final String DEFAULT_FILE_ASSET_ID = "550e8400-e29b-41d4-a716-446655440000";
 
         private String id;
+        private IdempotencyKey idempotencyKey = IdempotencyKey.forNew();
         private String sourceUrl = "https://example.com/image.jpg";
         private TenantId tenantId = TenantId.generate();
         private OrganizationId organizationId = OrganizationId.generate();
@@ -216,6 +228,11 @@ public final class ExternalDownloadFixture {
 
         public Builder id(String id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder idempotencyKey(IdempotencyKey idempotencyKey) {
+            this.idempotencyKey = idempotencyKey;
             return this;
         }
 
@@ -311,6 +328,7 @@ public final class ExternalDownloadFixture {
 
             return ExternalDownload.of(
                     externalDownloadId,
+                    idempotencyKey,
                     SourceUrl.of(sourceUrl),
                     tenantId,
                     organizationId,

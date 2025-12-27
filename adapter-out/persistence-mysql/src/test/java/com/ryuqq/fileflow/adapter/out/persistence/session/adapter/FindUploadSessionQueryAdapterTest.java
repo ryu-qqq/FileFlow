@@ -11,6 +11,7 @@ import com.ryuqq.fileflow.adapter.out.persistence.session.entity.SingleUploadSes
 import com.ryuqq.fileflow.adapter.out.persistence.session.mapper.MultipartUploadSessionJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.session.mapper.SingleUploadSessionJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.session.repository.SessionQueryDslRepository;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.iam.vo.Organization;
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.Tenant;
@@ -24,7 +25,6 @@ import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ExpirationTime;
 import com.ryuqq.fileflow.domain.session.vo.FileName;
 import com.ryuqq.fileflow.domain.session.vo.FileSize;
-import com.ryuqq.fileflow.domain.session.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.session.vo.PartSize;
 import com.ryuqq.fileflow.domain.session.vo.PresignedUrl;
 import com.ryuqq.fileflow.domain.session.vo.S3Bucket;

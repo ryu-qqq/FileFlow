@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownloadJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.download.mapper.ExternalDownloadJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.download.repository.ExternalDownloadQueryDslRepository;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
@@ -177,6 +178,162 @@ class ExternalDownloadQueryAdapterTest {
     }
 
     @Nested
+    @DisplayName("findByTenantIdAndIdempotencyKey 메서드")
+    class FindByTenantIdAndIdempotencyKeyTest {
+
+        @Test
+        @DisplayName("테넌트ID와 멱등성키로 조회 시 존재하면 Domain을 반환한다")
+        void shouldReturnDomainWhenExists() {
+            // given
+            UUID id = UUID.randomUUID();
+            TenantId tenantId = TenantId.of(TEST_TENANT_ID);
+            IdempotencyKey idempotencyKey = IdempotencyKey.forNew();
+            ExternalDownloadJpaEntity entity = createEntity(id);
+            ExternalDownload domain = createDomain(id);
+
+            given(
+                            queryDslRepository.findByTenantIdAndIdempotencyKey(
+                                    tenantId.value(), idempotencyKey.getValue()))
+                    .willReturn(Optional.of(entity));
+            given(mapper.toDomain(entity)).willReturn(domain);
+
+            // when
+            Optional<ExternalDownload> result =
+                    adapter.findByTenantIdAndIdempotencyKey(tenantId, idempotencyKey);
+
+            // then
+            assertThat(result).isPresent();
+            assertThat(result.get().getId().value()).isEqualTo(id);
+            verify(queryDslRepository)
+                    .findByTenantIdAndIdempotencyKey(tenantId.value(), idempotencyKey.getValue());
+            verify(mapper).toDomain(entity);
+        }
+
+        @Test
+        @DisplayName("테넌트ID와 멱등성키로 조회 시 존재하지 않으면 빈 Optional을 반환한다")
+        void shouldReturnEmptyWhenNotExists() {
+            // given
+            TenantId tenantId = TenantId.of(TEST_TENANT_ID);
+            IdempotencyKey idempotencyKey = IdempotencyKey.forNew();
+
+            given(
+                            queryDslRepository.findByTenantIdAndIdempotencyKey(
+                                    tenantId.value(), idempotencyKey.getValue()))
+                    .willReturn(Optional.empty());
+
+            // when
+            Optional<ExternalDownload> result =
+                    adapter.findByTenantIdAndIdempotencyKey(tenantId, idempotencyKey);
+
+            // then
+            assertThat(result).isEmpty();
+            verify(queryDslRepository)
+                    .findByTenantIdAndIdempotencyKey(tenantId.value(), idempotencyKey.getValue());
+        }
+    }
+
+    @Nested
+    @DisplayName("findByCriteria 메서드")
+    class FindByCriteriaTest {
+
+        @Test
+        @DisplayName("조회 결과가 있으면 Domain 목록을 반환한다")
+        void shouldReturnDomainListWhenResultsExist() {
+            // given
+            UUID id1 = UUID.randomUUID();
+            UUID id2 = UUID.randomUUID();
+            String orgId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
+            ExternalDownloadStatus status = ExternalDownloadStatus.PENDING;
+            long offset = 0L;
+            int limit = 10;
+
+            ExternalDownloadJpaEntity entity1 = createEntity(id1);
+            ExternalDownloadJpaEntity entity2 = createEntity(id2);
+            ExternalDownload domain1 = createDomain(id1);
+            ExternalDownload domain2 = createDomain(id2);
+
+            given(queryDslRepository.findByCriteria(orgId, tenantId, status, offset, limit))
+                    .willReturn(java.util.List.of(entity1, entity2));
+            given(mapper.toDomain(entity1)).willReturn(domain1);
+            given(mapper.toDomain(entity2)).willReturn(domain2);
+
+            // when
+            java.util.List<ExternalDownload> result =
+                    adapter.findByCriteria(orgId, tenantId, status, offset, limit);
+
+            // then
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).getId().value()).isEqualTo(id1);
+            assertThat(result.get(1).getId().value()).isEqualTo(id2);
+            verify(queryDslRepository).findByCriteria(orgId, tenantId, status, offset, limit);
+        }
+
+        @Test
+        @DisplayName("조회 결과가 없으면 빈 목록을 반환한다")
+        void shouldReturnEmptyListWhenNoResults() {
+            // given
+            String orgId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
+            ExternalDownloadStatus status = ExternalDownloadStatus.PENDING;
+            long offset = 0L;
+            int limit = 10;
+
+            given(queryDslRepository.findByCriteria(orgId, tenantId, status, offset, limit))
+                    .willReturn(java.util.List.of());
+
+            // when
+            java.util.List<ExternalDownload> result =
+                    adapter.findByCriteria(orgId, tenantId, status, offset, limit);
+
+            // then
+            assertThat(result).isEmpty();
+            verify(queryDslRepository).findByCriteria(orgId, tenantId, status, offset, limit);
+        }
+    }
+
+    @Nested
+    @DisplayName("countByCriteria 메서드")
+    class CountByCriteriaTest {
+
+        @Test
+        @DisplayName("조회 결과 개수를 반환한다")
+        void shouldReturnCount() {
+            // given
+            String orgId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
+            ExternalDownloadStatus status = ExternalDownloadStatus.PENDING;
+
+            given(queryDslRepository.countByCriteria(orgId, tenantId, status)).willReturn(5L);
+
+            // when
+            long result = adapter.countByCriteria(orgId, tenantId, status);
+
+            // then
+            assertThat(result).isEqualTo(5L);
+            verify(queryDslRepository).countByCriteria(orgId, tenantId, status);
+        }
+
+        @Test
+        @DisplayName("결과가 없으면 0을 반환한다")
+        void shouldReturnZeroWhenNoResults() {
+            // given
+            String orgId = TEST_ORG_ID;
+            String tenantId = TEST_TENANT_ID;
+            ExternalDownloadStatus status = ExternalDownloadStatus.FAILED;
+
+            given(queryDslRepository.countByCriteria(orgId, tenantId, status)).willReturn(0L);
+
+            // when
+            long result = adapter.countByCriteria(orgId, tenantId, status);
+
+            // then
+            assertThat(result).isZero();
+            verify(queryDslRepository).countByCriteria(orgId, tenantId, status);
+        }
+    }
+
+    @Nested
     @DisplayName("existsById 메서드")
     class ExistsByIdTest {
 
@@ -236,6 +393,7 @@ class ExternalDownloadQueryAdapterTest {
     private ExternalDownload createDomain(UUID id) {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
                 TenantId.of(TEST_TENANT_ID),
                 OrganizationId.of(TEST_ORG_ID),
@@ -255,6 +413,7 @@ class ExternalDownloadQueryAdapterTest {
         Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 id,
+                UUID.randomUUID().toString(),
                 "https://example.com/file.jpg",
                 TEST_TENANT_ID,
                 TEST_ORG_ID,

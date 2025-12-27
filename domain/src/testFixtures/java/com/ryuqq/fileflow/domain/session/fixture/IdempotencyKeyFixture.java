@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.domain.session.fixture;
 
-import com.ryuqq.fileflow.domain.session.vo.IdempotencyKey;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import java.util.UUID;
 
 /**

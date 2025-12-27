@@ -7,6 +7,7 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,6 +24,8 @@ class RequestExternalDownloadApiRequestTest {
 
     private static Validator validator;
 
+    private static final String VALID_IDEMPOTENCY_KEY = UUID.randomUUID().toString();
+
     @BeforeAll
     static void setUpValidator() {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
@@ -35,17 +38,19 @@ class RequestExternalDownloadApiRequestTest {
     class CreateTest {
 
         @Test
-        @DisplayName("sourceUrl과 webhookUrl로 요청을 생성할 수 있다")
-        void create_WithSourceUrlAndWebhookUrl_ShouldSucceed() {
+        @DisplayName("idempotencyKey, sourceUrl, webhookUrl로 요청을 생성할 수 있다")
+        void create_WithAllParameters_ShouldSucceed() {
             // given
+            String idempotencyKey = UUID.randomUUID().toString();
             String sourceUrl = "https://example.com/image.jpg";
             String webhookUrl = "https://myservice.com/webhook";
 
             // when
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest(sourceUrl, webhookUrl);
+                    new RequestExternalDownloadApiRequest(idempotencyKey, sourceUrl, webhookUrl);
 
             // then
+            assertThat(request.idempotencyKey()).isEqualTo(idempotencyKey);
             assertThat(request.sourceUrl()).isEqualTo(sourceUrl);
             assertThat(request.webhookUrl()).isEqualTo(webhookUrl);
         }
@@ -54,13 +59,15 @@ class RequestExternalDownloadApiRequestTest {
         @DisplayName("webhookUrl 없이 요청을 생성할 수 있다")
         void create_WithoutWebhookUrl_ShouldSucceed() {
             // given
+            String idempotencyKey = UUID.randomUUID().toString();
             String sourceUrl = "https://example.com/image.jpg";
 
             // when
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest(sourceUrl, null);
+                    new RequestExternalDownloadApiRequest(idempotencyKey, sourceUrl, null);
 
             // then
+            assertThat(request.idempotencyKey()).isEqualTo(idempotencyKey);
             assertThat(request.sourceUrl()).isEqualTo(sourceUrl);
             assertThat(request.webhookUrl()).isNull();
         }
@@ -76,7 +83,9 @@ class RequestExternalDownloadApiRequestTest {
             // given
             RequestExternalDownloadApiRequest request =
                     new RequestExternalDownloadApiRequest(
-                            "https://example.com/image.jpg", "https://webhook.com/notify");
+                            VALID_IDEMPOTENCY_KEY,
+                            "https://example.com/image.jpg",
+                            "https://webhook.com/notify");
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -91,7 +100,8 @@ class RequestExternalDownloadApiRequestTest {
         void validate_WithoutWebhookUrl_ShouldPass() {
             // given
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest("https://example.com/image.jpg", null);
+                    new RequestExternalDownloadApiRequest(
+                            VALID_IDEMPOTENCY_KEY, "https://example.com/image.jpg", null);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -102,11 +112,45 @@ class RequestExternalDownloadApiRequestTest {
         }
 
         @Test
+        @DisplayName("idempotencyKey가 null이면 검증 실패한다")
+        void validate_NullIdempotencyKey_ShouldFail() {
+            // given
+            RequestExternalDownloadApiRequest request =
+                    new RequestExternalDownloadApiRequest(
+                            null, "https://example.com/image.jpg", null);
+
+            // when
+            Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
+                    validator.validate(request);
+
+            // then
+            assertThat(violations).isNotEmpty();
+            assertThat(violations.iterator().next().getMessage()).contains("필수");
+        }
+
+        @Test
+        @DisplayName("idempotencyKey가 UUID 형식이 아니면 검증 실패한다")
+        void validate_InvalidIdempotencyKeyFormat_ShouldFail() {
+            // given
+            RequestExternalDownloadApiRequest request =
+                    new RequestExternalDownloadApiRequest(
+                            "not-a-uuid", "https://example.com/image.jpg", null);
+
+            // when
+            Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
+                    validator.validate(request);
+
+            // then
+            assertThat(violations).isNotEmpty();
+            assertThat(violations.iterator().next().getMessage()).contains("UUID");
+        }
+
+        @Test
         @DisplayName("sourceUrl이 null이면 검증 실패한다")
         void validate_NullSourceUrl_ShouldFail() {
             // given
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest(null, null);
+                    new RequestExternalDownloadApiRequest(VALID_IDEMPOTENCY_KEY, null, null);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -122,7 +166,7 @@ class RequestExternalDownloadApiRequestTest {
         void validate_EmptySourceUrl_ShouldFail() {
             // given
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest("", null);
+                    new RequestExternalDownloadApiRequest(VALID_IDEMPOTENCY_KEY, "", null);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -137,7 +181,7 @@ class RequestExternalDownloadApiRequestTest {
         void validate_BlankSourceUrl_ShouldFail() {
             // given
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest("   ", null);
+                    new RequestExternalDownloadApiRequest(VALID_IDEMPOTENCY_KEY, "   ", null);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -155,7 +199,7 @@ class RequestExternalDownloadApiRequestTest {
             String longPath = "a".repeat(2048 - baseUrl.length());
             String sourceUrl = baseUrl + longPath;
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest(sourceUrl, null);
+                    new RequestExternalDownloadApiRequest(VALID_IDEMPOTENCY_KEY, sourceUrl, null);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -171,7 +215,7 @@ class RequestExternalDownloadApiRequestTest {
             // given
             String longUrl = "https://example.com/" + "a".repeat(2049);
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest(longUrl, null);
+                    new RequestExternalDownloadApiRequest(VALID_IDEMPOTENCY_KEY, longUrl, null);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -191,7 +235,7 @@ class RequestExternalDownloadApiRequestTest {
             String webhookUrl = baseUrl + longPath;
             RequestExternalDownloadApiRequest request =
                     new RequestExternalDownloadApiRequest(
-                            "https://example.com/image.jpg", webhookUrl);
+                            VALID_IDEMPOTENCY_KEY, "https://example.com/image.jpg", webhookUrl);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -208,7 +252,7 @@ class RequestExternalDownloadApiRequestTest {
             String longWebhookUrl = "https://webhook.com/" + "b".repeat(2049);
             RequestExternalDownloadApiRequest request =
                     new RequestExternalDownloadApiRequest(
-                            "https://example.com/image.jpg", longWebhookUrl);
+                            VALID_IDEMPOTENCY_KEY, "https://example.com/image.jpg", longWebhookUrl);
 
             // when
             Set<ConstraintViolation<RequestExternalDownloadApiRequest>> violations =
@@ -228,12 +272,13 @@ class RequestExternalDownloadApiRequestTest {
         @DisplayName("같은 값을 가진 요청은 동등하다")
         void equals_WithSameValues_ShouldBeEqual() {
             // given
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadApiRequest request1 =
                     new RequestExternalDownloadApiRequest(
-                            "https://example.com/image.jpg", "https://webhook.com");
+                            idempotencyKey, "https://example.com/image.jpg", "https://webhook.com");
             RequestExternalDownloadApiRequest request2 =
                     new RequestExternalDownloadApiRequest(
-                            "https://example.com/image.jpg", "https://webhook.com");
+                            idempotencyKey, "https://example.com/image.jpg", "https://webhook.com");
 
             // when & then
             assertThat(request1).isEqualTo(request2);
@@ -241,13 +286,31 @@ class RequestExternalDownloadApiRequestTest {
         }
 
         @Test
+        @DisplayName("다른 idempotencyKey를 가진 요청은 동등하지 않다")
+        void equals_WithDifferentIdempotencyKey_ShouldNotBeEqual() {
+            // given
+            RequestExternalDownloadApiRequest request1 =
+                    new RequestExternalDownloadApiRequest(
+                            UUID.randomUUID().toString(), "https://example.com/image.jpg", null);
+            RequestExternalDownloadApiRequest request2 =
+                    new RequestExternalDownloadApiRequest(
+                            UUID.randomUUID().toString(), "https://example.com/image.jpg", null);
+
+            // when & then
+            assertThat(request1).isNotEqualTo(request2);
+        }
+
+        @Test
         @DisplayName("다른 sourceUrl을 가진 요청은 동등하지 않다")
         void equals_WithDifferentSourceUrl_ShouldNotBeEqual() {
             // given
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadApiRequest request1 =
-                    new RequestExternalDownloadApiRequest("https://example.com/image1.jpg", null);
+                    new RequestExternalDownloadApiRequest(
+                            idempotencyKey, "https://example.com/image1.jpg", null);
             RequestExternalDownloadApiRequest request2 =
-                    new RequestExternalDownloadApiRequest("https://example.com/image2.jpg", null);
+                    new RequestExternalDownloadApiRequest(
+                            idempotencyKey, "https://example.com/image2.jpg", null);
 
             // when & then
             assertThat(request1).isNotEqualTo(request2);
@@ -257,12 +320,17 @@ class RequestExternalDownloadApiRequestTest {
         @DisplayName("다른 webhookUrl을 가진 요청은 동등하지 않다")
         void equals_WithDifferentWebhookUrl_ShouldNotBeEqual() {
             // given
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadApiRequest request1 =
                     new RequestExternalDownloadApiRequest(
-                            "https://example.com/image.jpg", "https://webhook1.com");
+                            idempotencyKey,
+                            "https://example.com/image.jpg",
+                            "https://webhook1.com");
             RequestExternalDownloadApiRequest request2 =
                     new RequestExternalDownloadApiRequest(
-                            "https://example.com/image.jpg", "https://webhook2.com");
+                            idempotencyKey,
+                            "https://example.com/image.jpg",
+                            "https://webhook2.com");
 
             // when & then
             assertThat(request1).isNotEqualTo(request2);
@@ -272,10 +340,13 @@ class RequestExternalDownloadApiRequestTest {
         @DisplayName("null webhookUrl 요청들은 동등하다")
         void equals_WithNullWebhookUrl_ShouldBeEqual() {
             // given
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadApiRequest request1 =
-                    new RequestExternalDownloadApiRequest("https://example.com/image.jpg", null);
+                    new RequestExternalDownloadApiRequest(
+                            idempotencyKey, "https://example.com/image.jpg", null);
             RequestExternalDownloadApiRequest request2 =
-                    new RequestExternalDownloadApiRequest("https://example.com/image.jpg", null);
+                    new RequestExternalDownloadApiRequest(
+                            idempotencyKey, "https://example.com/image.jpg", null);
 
             // when & then
             assertThat(request1).isEqualTo(request2);

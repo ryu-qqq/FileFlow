@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.application.download.dto.command.RequestExternalDownlo
 import com.ryuqq.fileflow.application.download.dto.response.S3UploadResponse;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.common.util.ClockHolder;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownloadOutbox;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
@@ -109,6 +110,7 @@ public class ExternalDownloadCommandFactory {
 
     private ExternalDownload createExternalDownload(
             RequestExternalDownloadCommand command, Clock clock) {
+        IdempotencyKey idempotencyKey = IdempotencyKey.fromString(command.idempotencyKey());
         SourceUrl sourceUrl = SourceUrl.of(command.sourceUrl());
         WebhookUrl webhookUrl = toWebhookUrl(command.webhookUrl());
 
@@ -124,7 +126,14 @@ public class ExternalDownloadCommandFactory {
         OrganizationId organizationId = OrganizationId.of(command.organizationId());
 
         return ExternalDownload.forNew(
-                sourceUrl, tenantId, organizationId, s3Bucket, s3PathPrefix, webhookUrl, clock);
+                idempotencyKey,
+                sourceUrl,
+                tenantId,
+                organizationId,
+                s3Bucket,
+                s3PathPrefix,
+                webhookUrl,
+                clock);
     }
 
     private WebhookUrl toWebhookUrl(String webhookUrl) {

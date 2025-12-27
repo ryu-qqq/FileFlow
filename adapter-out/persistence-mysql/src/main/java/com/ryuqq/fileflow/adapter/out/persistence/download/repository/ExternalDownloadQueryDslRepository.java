@@ -68,6 +68,25 @@ public class ExternalDownloadQueryDslRepository {
     }
 
     /**
+     * 테넌트 ID와 멱등성 키로 ExternalDownload를 조회한다.
+     *
+     * @param tenantId 테넌트 ID (UUIDv7 문자열)
+     * @param idempotencyKey 멱등성 키 (UUID 문자열)
+     * @return ExternalDownloadJpaEntity Optional
+     */
+    public Optional<ExternalDownloadJpaEntity> findByTenantIdAndIdempotencyKey(
+            String tenantId, String idempotencyKey) {
+        ExternalDownloadJpaEntity result =
+                queryFactory
+                        .selectFrom(download)
+                        .where(
+                                download.tenantId.eq(tenantId),
+                                download.idempotencyKey.eq(idempotencyKey))
+                        .fetchOne();
+        return Optional.ofNullable(result);
+    }
+
+    /**
      * 조건에 맞는 ExternalDownload 목록을 조회한다.
      *
      * @param organizationId 조직 ID

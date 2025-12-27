@@ -13,6 +13,7 @@ import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import com.ryuqq.fileflow.domain.iam.vo.UserId;
 import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -46,9 +47,12 @@ class ExternalDownloadApiMapperTest {
         @DisplayName("API Request를 Command로 변환할 수 있다")
         void toCommand_WithValidRequest_ShouldSucceed() {
             // given
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadApiRequest request =
                     new RequestExternalDownloadApiRequest(
-                            "https://example.com/image.jpg", "https://webhook.com/notify");
+                            idempotencyKey,
+                            "https://example.com/image.jpg",
+                            "https://webhook.com/notify");
             String tenantId = TEST_TENANT_ID;
             String organizationId = TEST_ORG_ID;
 
@@ -57,6 +61,7 @@ class ExternalDownloadApiMapperTest {
                     mapper.toCommand(request, tenantId, organizationId);
 
             // then
+            assertThat(command.idempotencyKey()).isEqualTo(idempotencyKey);
             assertThat(command.sourceUrl()).isEqualTo("https://example.com/image.jpg");
             assertThat(command.tenantId()).isEqualTo(tenantId);
             assertThat(command.organizationId()).isEqualTo(organizationId);
@@ -67,8 +72,10 @@ class ExternalDownloadApiMapperTest {
         @DisplayName("webhookUrl이 null인 경우도 변환할 수 있다")
         void toCommand_WithNullWebhookUrl_ShouldSucceed() {
             // given
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadApiRequest request =
-                    new RequestExternalDownloadApiRequest("https://example.com/image.jpg", null);
+                    new RequestExternalDownloadApiRequest(
+                            idempotencyKey, "https://example.com/image.jpg", null);
             String tenantId = TEST_ORG_ID;
             String organizationId = TEST_USER_ID;
 
@@ -77,6 +84,7 @@ class ExternalDownloadApiMapperTest {
                     mapper.toCommand(request, tenantId, organizationId);
 
             // then
+            assertThat(command.idempotencyKey()).isEqualTo(idempotencyKey);
             assertThat(command.sourceUrl()).isEqualTo("https://example.com/image.jpg");
             assertThat(command.webhookUrl()).isNull();
         }

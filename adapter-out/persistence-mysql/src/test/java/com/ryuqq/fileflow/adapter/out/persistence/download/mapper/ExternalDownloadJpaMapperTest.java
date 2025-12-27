@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownloadJpaEntity;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
@@ -105,6 +106,7 @@ class ExternalDownloadJpaMapperTest {
             ExternalDownload domain =
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/file.jpg"),
                             TenantId.of(TEST_TENANT_ID),
                             OrganizationId.of(TEST_ORG_ID),
@@ -187,6 +189,7 @@ class ExternalDownloadJpaMapperTest {
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
+                            UUID.randomUUID().toString(),
                             "https://example.com/file.jpg",
                             tenantId,
                             organizationId,
@@ -240,6 +243,7 @@ class ExternalDownloadJpaMapperTest {
             ExternalDownload original =
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/file.jpg"),
                             TenantId.of(TEST_TENANT_ID),
                             OrganizationId.of(TEST_ORG_ID),
@@ -271,6 +275,7 @@ class ExternalDownloadJpaMapperTest {
             ExternalDownload original =
                     ExternalDownload.of(
                             ExternalDownloadId.of(UUID.randomUUID()),
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/file.jpg"),
                             TenantId.of(TEST_TENANT_ID),
                             OrganizationId.of(TEST_ORG_ID),
@@ -301,6 +306,7 @@ class ExternalDownloadJpaMapperTest {
     private ExternalDownload createDomainWithId(UUID id) {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
                 TenantId.of(TEST_TENANT_ID),
                 OrganizationId.of(TEST_ORG_ID),
@@ -319,6 +325,7 @@ class ExternalDownloadJpaMapperTest {
     private ExternalDownload createNewDomain() {
         return ExternalDownload.of(
                 ExternalDownloadId.forNew(),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
                 TenantId.of(TEST_TENANT_ID),
                 OrganizationId.of(TEST_ORG_ID),
@@ -337,6 +344,7 @@ class ExternalDownloadJpaMapperTest {
     private ExternalDownload createDomainWithoutWebhook() {
         return ExternalDownload.of(
                 ExternalDownloadId.of(UUID.randomUUID()),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
                 TenantId.of(TEST_TENANT_ID),
                 OrganizationId.of(TEST_ORG_ID),
@@ -356,6 +364,7 @@ class ExternalDownloadJpaMapperTest {
         Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 id,
+                UUID.randomUUID().toString(),
                 "https://example.com/file.jpg",
                 TEST_TENANT_ID,
                 TEST_ORG_ID,
@@ -375,6 +384,7 @@ class ExternalDownloadJpaMapperTest {
         Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
+                UUID.randomUUID().toString(),
                 "https://example.com/file.jpg",
                 TEST_TENANT_ID,
                 TEST_ORG_ID,
@@ -394,6 +404,7 @@ class ExternalDownloadJpaMapperTest {
         Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
+                UUID.randomUUID().toString(),
                 "https://example.com/file.jpg",
                 TEST_TENANT_ID,
                 TEST_ORG_ID,

@@ -59,10 +59,17 @@ tasks.jacocoTestCoverageVerification {
     }
 }
 
+// jar 활성화 (integration-test에서 의존성으로 사용하기 위함)
+jar {
+    enabled = true
+    archiveClassifier = ''
+}
+
 // Spring Boot Application 설정
 bootJar {
     archiveBaseName = 'fileflow-api'
     archiveVersion = project.version
+    archiveClassifier = 'boot'
 
     // REST Docs 정적 파일을 JAR에 포함
     // 디렉토리가 존재하지 않으면 from()은 자동으로 무시됨
@@ -72,8 +79,4 @@ bootJar {
             into 'BOOT-INF/classes/static/docs'
         }
     }
-}
-
-jar {
-    enabled = false
 }

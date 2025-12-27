@@ -1,8 +1,10 @@
 package com.ryuqq.fileflow.application.download.port.out.query;
 
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +39,16 @@ public interface ExternalDownloadQueryPort {
      * @return 존재하면 true
      */
     boolean existsById(ExternalDownloadId id);
+
+    /**
+     * 테넌트 ID와 멱등성 키로 ExternalDownload 조회.
+     *
+     * @param tenantId 테넌트 ID (Value Object)
+     * @param idempotencyKey 멱등성 키 (Value Object)
+     * @return ExternalDownload Domain (없으면 empty)
+     */
+    Optional<ExternalDownload> findByTenantIdAndIdempotencyKey(
+            TenantId tenantId, IdempotencyKey idempotencyKey);
 
     /**
      * 조건에 맞는 ExternalDownload 목록을 조회합니다.

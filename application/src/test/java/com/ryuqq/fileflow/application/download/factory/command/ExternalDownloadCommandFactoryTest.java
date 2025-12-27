@@ -23,6 +23,7 @@ import com.ryuqq.fileflow.domain.session.vo.ContentType;
 import com.ryuqq.fileflow.domain.session.vo.ETag;
 import com.ryuqq.fileflow.domain.session.vo.S3Key;
 import java.time.Clock;
+import java.util.UUID;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -75,8 +76,10 @@ class ExternalDownloadCommandFactoryTest {
             // given
             TenantId tenantId = TenantId.generate();
             OrganizationId organizationId = OrganizationId.generate();
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadCommand command =
                     new RequestExternalDownloadCommand(
+                            idempotencyKey,
                             "https://example.com/image.jpg",
                             tenantId.value(),
                             organizationId.value(),
@@ -102,6 +105,7 @@ class ExternalDownloadCommandFactoryTest {
             assertThat(download.getTenantId()).isEqualTo(tenantId);
             assertThat(download.getOrganizationId()).isEqualTo(organizationId);
             assertThat(download.getStatus()).isEqualTo(ExternalDownloadStatus.PENDING);
+            assertThat(download.getIdempotencyKey().value().toString()).isEqualTo(idempotencyKey);
         }
 
         @Test
@@ -110,8 +114,10 @@ class ExternalDownloadCommandFactoryTest {
             // given
             TenantId tenantId = TenantId.generate();
             OrganizationId organizationId = OrganizationId.generate();
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadCommand command =
                     new RequestExternalDownloadCommand(
+                            idempotencyKey,
                             "https://example.com/image.jpg",
                             tenantId.value(),
                             organizationId.value(),
@@ -139,8 +145,10 @@ class ExternalDownloadCommandFactoryTest {
             // given
             TenantId tenantId = TenantId.generate();
             OrganizationId organizationId = OrganizationId.generate();
+            String idempotencyKey = UUID.randomUUID().toString();
             RequestExternalDownloadCommand command =
                     new RequestExternalDownloadCommand(
+                            idempotencyKey,
                             "https://example.com/image.jpg",
                             tenantId.value(),
                             organizationId.value(),

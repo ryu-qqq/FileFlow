@@ -1,0 +1,81 @@
+# ===============================================
+# Integration Test Configuration
+# ===============================================
+# 이 설정은 TestContainers와 함께 사용됩니다.
+# 대부분의 설정은 @DynamicPropertySource로 주입됩니다.
+
+spring:
+  application:
+    name: fileflow-integration-test
+
+  # Redisson 비활성화 (테스트에서는 Spring Data Redis 사용)
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+
+  # JPA Configuration
+  jpa:
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        default_batch_fetch_size: 100
+
+  # Flyway Configuration (실제 마이그레이션 사용)
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # DataSource (TestContainers에서 동적으로 설정됨)
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 10000
+      pool-name: IntegrationTestPool
+
+  # Spring Cloud AWS (통합 테스트용 - region은 DynamicPropertySource에서 설정됨)
+  cloud:
+    aws:
+      region:
+        static: us-east-1
+
+# Redisson 비활성화
+redisson:
+  enabled: false
+
+# SQS Publish 비활성화 (통합 테스트에서는 SQS 발행 불필요)
+sqs:
+  publish:
+    enabled: false
+
+# Server Configuration
+server:
+  port: 0  # 랜덤 포트 사용
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.web: DEBUG
+    org.testcontainers: INFO
+    com.github.dockerjava: WARN
+
+# Management (Actuator)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

@@ -24,6 +24,7 @@ import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownload
 import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
 import com.ryuqq.fileflow.domain.iam.vo.UserContext;
 import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -70,9 +71,12 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
     @DisplayName("POST /api/v1/file/external-downloads - 외부 다운로드 요청 API 문서")
     void requestExternalDownload() throws Exception {
         // given
+        String idempotencyKey = UUID.randomUUID().toString();
         RequestExternalDownloadApiRequest request =
                 new RequestExternalDownloadApiRequest(
-                        "https://example.com/image.jpg", "product-images");
+                        idempotencyKey,
+                        "https://example.com/image.jpg",
+                        "https://webhook.example.com/callback");
 
         ExternalDownloadResponse response =
                 new ExternalDownloadResponse(
@@ -92,6 +96,8 @@ class ExternalDownloadControllerDocsTest extends RestDocsTestSupport {
                                 preprocessRequest(prettyPrint()),
                                 preprocessResponse(prettyPrint()),
                                 requestFields(
+                                        fieldWithPath("idempotencyKey")
+                                                .description("멱등성 보장을 위한 UUID 키"),
                                         fieldWithPath("sourceUrl").description("다운로드할 외부 URL"),
                                         fieldWithPath("webhookUrl")
                                                 .description("완료 시 호출할 웹훅 URL (선택적)")

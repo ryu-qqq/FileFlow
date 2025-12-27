@@ -1,0 +1,66 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+description = 'FileFlow SDK Spring Boot Starter - Auto-configuration for FileFlow SDK'
+
+dependencies {
+    // SDK Core
+    api project(':sdk:fileflow-sdk-core')
+
+    // Spring Boot Auto-Configuration
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // Optional: Spring Security integration
+    compileOnly 'org.springframework.security:spring-security-core'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+// JitPack Publishing Configuration
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            groupId = 'com.github.ryu-qqq.fileflow'
+            artifactId = 'fileflow-sdk-spring-boot-starter'
+            version = project.version
+
+            pom {
+                name = 'FileFlow SDK Spring Boot Starter'
+                description = 'Spring Boot auto-configuration for FileFlow SDK'
+                url = 'https://github.com/ryu-qqq/fileflow'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'ryu-qqq'
+                        name = 'Sangwon Ryu'
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Source/Javadoc JAR for JitPack
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+tasks.named('javadoc') {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+}

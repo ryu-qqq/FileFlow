@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.download.dto.response.ExternalDownloadDeta
 import com.ryuqq.fileflow.application.download.manager.query.ExternalDownloadReadManager;
 import com.ryuqq.fileflow.application.download.port.in.query.GetExternalDownloadUseCase;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
+import com.ryuqq.fileflow.domain.download.exception.ExternalDownloadNotFoundException;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import org.springframework.stereotype.Service;
 
@@ -29,10 +30,7 @@ public class GetExternalDownloadService implements GetExternalDownloadUseCase {
         ExternalDownload externalDownload =
                 externalDownloadReadManager
                         .findByIdAndTenantId(externalDownloadId, query.tenantId())
-                        .orElseThrow(
-                                () ->
-                                        new IllegalArgumentException(
-                                                "ExternalDownload를 찾을 수 없습니다: id=" + query.id()));
+                        .orElseThrow(() -> new ExternalDownloadNotFoundException(query.id()));
 
         return toDetailResponse(externalDownload);
     }

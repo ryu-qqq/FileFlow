@@ -25,9 +25,11 @@ public class ErrorMapperRegistry {
     }
 
     public ErrorMapper.MappedError defaultMapping(DomainException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.httpStatus());
+        String title = status.getReasonPhrase();
         return new ErrorMapper.MappedError(
-                HttpStatus.BAD_REQUEST,
-                "Bad Request",
+                status,
+                title,
                 ex.getMessage() != null ? ex.getMessage() : "Invalid request",
                 URI.create("about:blank"));
     }

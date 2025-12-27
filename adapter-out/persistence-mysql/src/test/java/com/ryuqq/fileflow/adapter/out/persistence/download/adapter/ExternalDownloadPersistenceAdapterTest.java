@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.ExternalDownloadJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.download.mapper.ExternalDownloadJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.download.repository.ExternalDownloadJpaRepository;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
@@ -128,6 +129,7 @@ class ExternalDownloadPersistenceAdapterTest {
             ExternalDownload newDomain =
                     ExternalDownload.of(
                             ExternalDownloadId.forNew(),
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/new-file.jpg"),
                             TenantId.of(TEST_TENANT_ID),
                             OrganizationId.of(TEST_ORG_ID),
@@ -166,6 +168,7 @@ class ExternalDownloadPersistenceAdapterTest {
             ExternalDownload existingDomain =
                     ExternalDownload.of(
                             ExternalDownloadId.of(existingId),
+                            IdempotencyKey.forNew(),
                             SourceUrl.of("https://example.com/existing-file.jpg"),
                             TenantId.of(TEST_TENANT_ID),
                             OrganizationId.of(TEST_ORG_ID),
@@ -200,6 +203,7 @@ class ExternalDownloadPersistenceAdapterTest {
     private ExternalDownload createDomain() {
         return ExternalDownload.of(
                 ExternalDownloadId.forNew(),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
                 TenantId.of(TEST_TENANT_ID),
                 OrganizationId.of(TEST_ORG_ID),
@@ -218,6 +222,7 @@ class ExternalDownloadPersistenceAdapterTest {
     private ExternalDownload createDomainWithId(UUID id) {
         return ExternalDownload.of(
                 ExternalDownloadId.of(id),
+                IdempotencyKey.forNew(),
                 SourceUrl.of("https://example.com/file.jpg"),
                 TenantId.of(TEST_TENANT_ID),
                 OrganizationId.of(TEST_ORG_ID),
@@ -237,6 +242,7 @@ class ExternalDownloadPersistenceAdapterTest {
         Instant now = Instant.now();
         return ExternalDownloadJpaEntity.of(
                 id,
+                UUID.randomUUID().toString(),
                 "https://example.com/file.jpg",
                 TEST_TENANT_ID,
                 TEST_ORG_ID,

@@ -183,7 +183,8 @@ subprojects {
                               project.name == 'rest-api' ? 0.25 :
                               project.name.startsWith('bootstrap-') ? 0.50 :
                               project.name == 'persistence-redis' ? 0.0 :
-                              project.name.startsWith('adapter-') ? 0.70 : 0.70
+                              project.name.startsWith('adapter-') ? 0.70 :
+                              project.name == 'fileflow-sdk-core' ? 0.30 : 0.70
                 }
             }
 
@@ -208,7 +209,9 @@ subprojects {
                     '*.session.*',
                     '*.common.*',
                     // Redis adapter 클래스 - 통합 테스트로 커버리지 확보 예정
-                    '*.redis.*'
+                    '*.redis.*',
+                    // SDK 클래스 - WireMock 통합 테스트로 커버리지 확보
+                    'com.ryuqq.fileflow.sdk.*'
                 ]
             }
         }
