@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.session.vo;
+package com.ryuqq.fileflow.domain.common.vo;
 
 import static org.assertj.core.api.Assertions.*;
 

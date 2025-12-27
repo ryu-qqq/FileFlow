@@ -18,10 +18,21 @@ public record PresignedUrl(String value) {
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("Presigned URL은 null 또는 빈 문자열일 수 없습니다.");
         }
-        if (!url.startsWith("https://")) {
+        if (!isValidProtocol(url)) {
             throw new IllegalArgumentException("Presigned URL은 HTTPS로 시작해야 합니다.");
         }
         return new PresignedUrl(url);
+    }
+
+    private static boolean isValidProtocol(String url) {
+        if (url.startsWith("https://")) {
+            return true;
+        }
+        // LocalStack, MinIO 등 로컬 테스트 환경에서는 HTTP 허용
+        if (url.startsWith("http://localhost") || url.startsWith("http://127.0.0.1")) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -30,6 +41,6 @@ public record PresignedUrl(String value) {
      * @return 유효하면 true
      */
     public boolean isValid() {
-        return value != null && !value.isBlank() && value.startsWith("https://");
+        return value != null && !value.isBlank() && isValidProtocol(value);
     }
 }

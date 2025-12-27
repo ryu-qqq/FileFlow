@@ -40,9 +40,11 @@ class ExternalDownloadJpaEntityTest {
             Instant now = Instant.now();
 
             // when
+            String idempotencyKey = UUID.randomUUID().toString();
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             id,
+                            idempotencyKey,
                             sourceUrl,
                             tenantId,
                             organizationId,
@@ -79,6 +81,7 @@ class ExternalDownloadJpaEntityTest {
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             null,
+                            UUID.randomUUID().toString(),
                             "https://example.com/file.jpg",
                             TEST_ORG_ID,
                             TEST_USER_ID,
@@ -112,6 +115,7 @@ class ExternalDownloadJpaEntityTest {
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
+                            UUID.randomUUID().toString(),
                             "https://example.com/processing.jpg",
                             TEST_ORG_ID,
                             TEST_USER_ID,
@@ -142,6 +146,7 @@ class ExternalDownloadJpaEntityTest {
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
+                            UUID.randomUUID().toString(),
                             "https://example.com/failed.jpg",
                             TEST_ORG_ID,
                             TEST_USER_ID,
@@ -194,6 +199,7 @@ class ExternalDownloadJpaEntityTest {
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
+                            UUID.randomUUID().toString(),
                             "https://example.com/file.jpg",
                             TEST_ORG_ID,
                             TEST_USER_ID,
@@ -220,6 +226,7 @@ class ExternalDownloadJpaEntityTest {
             ExternalDownloadJpaEntity entity =
                     ExternalDownloadJpaEntity.of(
                             UUID.randomUUID(),
+                            UUID.randomUUID().toString(),
                             "https://example.com/file.jpg",
                             TEST_ORG_ID,
                             TEST_USER_ID,
@@ -244,6 +251,7 @@ class ExternalDownloadJpaEntityTest {
     private ExternalDownloadJpaEntity createEntity(Instant timestamp) {
         return ExternalDownloadJpaEntity.of(
                 UUID.randomUUID(),
+                UUID.randomUUID().toString(),
                 "https://example.com/file.jpg",
                 TEST_ORG_ID,
                 TEST_USER_ID,

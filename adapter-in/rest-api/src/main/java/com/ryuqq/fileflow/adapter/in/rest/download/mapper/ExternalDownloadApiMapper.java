@@ -30,7 +30,11 @@ public class ExternalDownloadApiMapper {
     public RequestExternalDownloadCommand toCommand(
             RequestExternalDownloadApiRequest request, String tenantId, String organizationId) {
         return new RequestExternalDownloadCommand(
-                request.sourceUrl(), tenantId, organizationId, request.webhookUrl());
+                request.idempotencyKey(),
+                request.sourceUrl(),
+                tenantId,
+                organizationId,
+                request.webhookUrl());
     }
 
     /**

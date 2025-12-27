@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.application.session.port.out.query;
 
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import com.ryuqq.fileflow.domain.session.aggregate.UploadSession;
-import com.ryuqq.fileflow.domain.session.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
 import com.ryuqq.fileflow.domain.session.vo.UploadSessionSearchCriteria;
 import java.time.Instant;

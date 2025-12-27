@@ -37,6 +37,8 @@ public class S3ClientConfig {
 
         if (!endpoint.isEmpty()) {
             builder.endpointOverride(URI.create(endpoint));
+            // LocalStack 등 S3 호환 서비스를 위한 path-style 설정
+            builder.forcePathStyle(true);
         }
 
         if (!accessKey.isEmpty() && !secretKey.isEmpty()) {
@@ -54,6 +56,12 @@ public class S3ClientConfig {
 
         if (!endpoint.isEmpty()) {
             builder.endpointOverride(URI.create(endpoint));
+            // LocalStack 등 S3 호환 서비스를 위한 path-style 설정
+            software.amazon.awssdk.services.s3.S3Configuration serviceConfig =
+                    software.amazon.awssdk.services.s3.S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build();
+            builder.serviceConfiguration(serviceConfig);
         }
 
         if (!accessKey.isEmpty() && !secretKey.isEmpty()) {

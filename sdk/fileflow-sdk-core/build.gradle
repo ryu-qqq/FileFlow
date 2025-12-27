@@ -1,0 +1,91 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+description = 'FileFlow SDK Core - Client library for FileFlow API'
+
+dependencies {
+    // HTTP Client
+    api 'org.springframework:spring-web'
+    api 'org.springframework:spring-webflux'
+    api 'org.springframework:spring-context'
+
+    // Apache HttpClient 5 (for PATCH method support)
+    api 'org.apache.httpcomponents.client5:httpclient5'
+
+    // Reactor (for async client)
+    api 'io.projectreactor:reactor-core'
+    api 'io.projectreactor.netty:reactor-netty-http'
+
+    // JSON Processing
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // Validation (optional)
+    compileOnly 'jakarta.validation:jakarta.validation-api'
+
+    // Annotations
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.bundles.testing.basic
+    testImplementation libs.wiremock
+    testImplementation 'io.projectreactor:reactor-test'
+}
+
+// JitPack Publishing Configuration
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            groupId = 'com.github.ryu-qqq.fileflow'
+            artifactId = 'fileflow-sdk-core'
+            version = project.version
+
+            // 의존성 버전을 resolved version으로 사용
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+
+            pom {
+                name = 'FileFlow SDK Core'
+                description = 'Client library for FileFlow file management service'
+                url = 'https://github.com/ryu-qqq/fileflow'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'ryu-qqq'
+                        name = 'Sangwon Ryu'
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Source/Javadoc JAR for JitPack
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+tasks.named('javadoc') {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+}

@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.domain.download.aggregate;
 import com.ryuqq.fileflow.domain.asset.vo.FileAssetId;
 import com.ryuqq.fileflow.domain.asset.vo.FileCategory;
 import com.ryuqq.fileflow.domain.common.event.DomainEvent;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadFileCreatedEvent;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadRegisteredEvent;
 import com.ryuqq.fileflow.domain.download.event.ExternalDownloadWebhookTriggeredEvent;
@@ -53,6 +54,7 @@ import java.util.UUID;
 public class ExternalDownload {
 
     private final ExternalDownloadId id;
+    private final IdempotencyKey idempotencyKey;
     private final SourceUrl sourceUrl;
     private final TenantId tenantId;
     private final OrganizationId organizationId;
@@ -72,6 +74,7 @@ public class ExternalDownload {
 
     private ExternalDownload(
             ExternalDownloadId id,
+            IdempotencyKey idempotencyKey,
             SourceUrl sourceUrl,
             TenantId tenantId,
             OrganizationId organizationId,
@@ -85,6 +88,7 @@ public class ExternalDownload {
             Instant createdAt,
             Instant updatedAt,
             Long version) {
+        Objects.requireNonNull(idempotencyKey, "idempotencyKey must not be null");
         Objects.requireNonNull(sourceUrl, "sourceUrl must not be null");
         Objects.requireNonNull(tenantId, "tenantId must not be null");
         // organizationId는 Seller만 가짐 (Admin/Customer는 null 허용)
@@ -94,6 +98,7 @@ public class ExternalDownload {
         Objects.requireNonNull(retryCount, "retryCount must not be null");
 
         this.id = id;
+        this.idempotencyKey = idempotencyKey;
         this.sourceUrl = sourceUrl;
         this.tenantId = tenantId;
         this.organizationId = organizationId;
@@ -112,6 +117,7 @@ public class ExternalDownload {
     /**
      * 새 ExternalDownload 생성 (ID null, PENDING 상태).
      *
+     * @param idempotencyKey 멱등성 키
      * @param sourceUrl 외부 이미지 URL
      * @param tenantId 테넌트 ID - UUIDv7
      * @param organizationId 조직 ID (Seller만, Admin/Customer는 null) - UUIDv7
@@ -122,6 +128,7 @@ public class ExternalDownload {
      * @return 신규 ExternalDownload
      */
     public static ExternalDownload forNew(
+            IdempotencyKey idempotencyKey,
             SourceUrl sourceUrl,
             TenantId tenantId,
             OrganizationId organizationId,
@@ -132,6 +139,7 @@ public class ExternalDownload {
         Instant now = Instant.now(clock);
         return new ExternalDownload(
                 ExternalDownloadId.forNew(),
+                idempotencyKey,
                 sourceUrl,
                 tenantId,
                 organizationId,
@@ -151,6 +159,7 @@ public class ExternalDownload {
      * 기존 ExternalDownload 재구성 (조회용).
      *
      * @param id 다운로드 ID
+     * @param idempotencyKey 멱등성 키
      * @param sourceUrl 외부 이미지 URL
      * @param tenantId 테넌트 ID - UUIDv7
      * @param organizationId 조직 ID (Seller만, Admin/Customer는 null) - UUIDv7
@@ -168,6 +177,7 @@ public class ExternalDownload {
      */
     public static ExternalDownload of(
             ExternalDownloadId id,
+            IdempotencyKey idempotencyKey,
             SourceUrl sourceUrl,
             TenantId tenantId,
             OrganizationId organizationId,
@@ -183,6 +193,7 @@ public class ExternalDownload {
             Long version) {
         return new ExternalDownload(
                 id,
+                idempotencyKey,
                 sourceUrl,
                 tenantId,
                 organizationId,
@@ -435,6 +446,10 @@ public class ExternalDownload {
 
     public UUID getIdValue() {
         return id.value();
+    }
+
+    public IdempotencyKey getIdempotencyKey() {
+        return idempotencyKey;
     }
 
     public SourceUrl getSourceUrl() {

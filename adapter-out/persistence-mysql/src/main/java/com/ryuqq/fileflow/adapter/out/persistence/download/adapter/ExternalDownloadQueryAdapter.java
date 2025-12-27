@@ -3,9 +3,11 @@ package com.ryuqq.fileflow.adapter.out.persistence.download.adapter;
 import com.ryuqq.fileflow.adapter.out.persistence.download.mapper.ExternalDownloadJpaMapper;
 import com.ryuqq.fileflow.adapter.out.persistence.download.repository.ExternalDownloadQueryDslRepository;
 import com.ryuqq.fileflow.application.download.port.out.query.ExternalDownloadQueryPort;
+import com.ryuqq.fileflow.domain.common.vo.IdempotencyKey;
 import com.ryuqq.fileflow.domain.download.aggregate.ExternalDownload;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadId;
 import com.ryuqq.fileflow.domain.download.vo.ExternalDownloadStatus;
+import com.ryuqq.fileflow.domain.iam.vo.TenantId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
@@ -41,6 +43,14 @@ public class ExternalDownloadQueryAdapter implements ExternalDownloadQueryPort {
     @Override
     public boolean existsById(ExternalDownloadId id) {
         return queryDslRepository.existsById(id.value());
+    }
+
+    @Override
+    public Optional<ExternalDownload> findByTenantIdAndIdempotencyKey(
+            TenantId tenantId, IdempotencyKey idempotencyKey) {
+        return queryDslRepository
+                .findByTenantIdAndIdempotencyKey(tenantId.value(), idempotencyKey.getValue())
+                .map(mapper::toDomain);
     }
 
     @Override

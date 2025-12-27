@@ -1,0 +1,84 @@
+plugins {
+    id 'java'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+}
+
+// ========================================
+// Integration Test Configuration
+// ========================================
+// This module contains integration tests that run against real containers.
+// Tests are executed separately from unit tests.
+
+dependencies {
+    // ========================================
+    // Bootstrap Modules (Test Targets)
+    // ========================================
+    testImplementation project(':bootstrap:bootstrap-web-api')
+
+    // ========================================
+    // Domain & Application TestFixtures
+    // ========================================
+    testImplementation testFixtures(project(':domain'))
+    testImplementation testFixtures(project(':application'))
+
+    // ========================================
+    // Spring Boot Test
+    // ========================================
+    testImplementation libs.spring.boot.starter.test
+    testImplementation libs.spring.boot.starter.web
+    testImplementation libs.spring.boot.starter.data.jpa
+
+    // ========================================
+    // TestContainers
+    // ========================================
+    testImplementation libs.testcontainers.junit
+    testImplementation libs.testcontainers.mysql
+    testImplementation libs.testcontainers.localstack
+    testImplementation libs.testcontainers.redis
+
+    // ========================================
+    // External Service Mocking
+    // ========================================
+    testImplementation libs.wiremock
+
+    // ========================================
+    // Testing Utilities
+    // ========================================
+    testImplementation libs.rest.assured
+    testImplementation libs.awaitility
+    testImplementation libs.assertj.core
+    testImplementation libs.junit.jupiter
+
+    // ========================================
+    // Database
+    // ========================================
+    testRuntimeOnly libs.mysql.connector
+
+    // ========================================
+    // AWS S3 (for LocalStack bucket creation)
+    // ========================================
+    testImplementation platform(libs.aws.bom)
+    testImplementation libs.aws.s3
+}
+
+test {
+    useJUnitPlatform()
+
+    // Integration tests can be slow, increase timeout
+    systemProperty 'junit.jupiter.execution.timeout.default', '5m'
+
+    // Show test output
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+}

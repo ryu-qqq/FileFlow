@@ -31,6 +31,17 @@ include 'bootstrap:bootstrap-download-worker'
 include 'bootstrap:bootstrap-resizing-worker'
 
 // ========================================
+// SDK Modules (Client Library)
+// ========================================
+include 'sdk:fileflow-sdk-core'
+include 'sdk:fileflow-sdk-spring-boot-starter'
+
+// ========================================
+// Integration Test Module
+// ========================================
+include 'integration-test'
+
+// ========================================
 // Project Structure
 // ========================================
 project(':domain').projectDir = file('domain')
@@ -50,3 +61,8 @@ project(':bootstrap:bootstrap-web-api').projectDir = file('bootstrap/bootstrap-w
 project(':bootstrap:bootstrap-scheduler').projectDir = file('bootstrap/bootstrap-scheduler')
 project(':bootstrap:bootstrap-download-worker').projectDir = file('bootstrap/bootstrap-download-worker')
 project(':bootstrap:bootstrap-resizing-worker').projectDir = file('bootstrap/bootstrap-resizing-worker')
+
+project(':sdk:fileflow-sdk-core').projectDir = file('sdk/fileflow-sdk-core')
+project(':sdk:fileflow-sdk-spring-boot-starter').projectDir = file('sdk/fileflow-sdk-spring-boot-starter')
+
+project(':integration-test').projectDir = file('integration-test')
