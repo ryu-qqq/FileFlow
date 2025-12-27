@@ -72,11 +72,11 @@ bootJar {
     archiveClassifier = 'boot'
 
     // REST Docs 정적 파일을 JAR에 포함
-    // 디렉토리가 존재하지 않으면 from()은 자동으로 무시됨
+    // copyDocs 태스크가 완료된 후 실행되도록 의존성 설정
+    dependsOn ':adapter-in:rest-api:copyDocs'
+
     def restDocsDir = project(':adapter-in:rest-api').layout.buildDirectory.dir('generated-static/docs').get().asFile
-    if (restDocsDir.exists()) {
-        from(restDocsDir) {
-            into 'BOOT-INF/classes/static/docs'
-        }
+    from(restDocsDir) {
+        into 'BOOT-INF/classes/static/docs'
     }
 }
