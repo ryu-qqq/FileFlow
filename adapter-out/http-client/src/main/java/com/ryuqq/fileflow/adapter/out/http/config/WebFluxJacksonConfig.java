@@ -39,7 +39,7 @@ public class WebFluxJacksonConfig {
      */
     @Bean
     @Primary
-    @ConditionalOnMissingBean(ObjectMapper.class)
+    @ConditionalOnMissingBean(name = "objectMapper")
     public ObjectMapper webFluxObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 
