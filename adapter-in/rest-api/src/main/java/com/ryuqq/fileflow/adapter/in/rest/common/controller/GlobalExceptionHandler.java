@@ -24,13 +24,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -229,8 +229,7 @@ public class GlobalExceptionHandler {
 
     // ======= 403 - 접근 거부 =======
     @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
-    public ResponseEntity<ProblemDetail> handleAccessDenied(
-            Exception ex, HttpServletRequest req) {
+    public ResponseEntity<ProblemDetail> handleAccessDenied(Exception ex, HttpServletRequest req) {
         log.warn("AccessDenied: {}", ex.getMessage());
         var res = build(HttpStatus.FORBIDDEN, "Forbidden", "해당 리소스에 대한 접근 권한이 없습니다", req);
         Objects.requireNonNull(res.getBody()).setProperty("code", "ACCESS_DENIED");

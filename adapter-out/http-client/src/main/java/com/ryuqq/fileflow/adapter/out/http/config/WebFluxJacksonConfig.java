@@ -21,8 +21,8 @@ import org.springframework.context.annotation.Primary;
  *   <li>rest-api 모듈이 없는 애플리케이션(scheduler, download-worker)을 위한 대체
  * </ul>
  *
- * <p><strong>주의:</strong> rest-api 모듈처럼 자체 @Primary ObjectMapper가 있는 경우,
- * 이 Bean은 생성되지 않습니다 (@ConditionalOnMissingBean).
+ * <p><strong>주의:</strong> rest-api 모듈처럼 자체 @Primary ObjectMapper가 있는 경우, 이 Bean은 생성되지 않습니다
+ * (@ConditionalOnMissingBean).
  *
  * @author Development Team
  * @since 1.0.0
