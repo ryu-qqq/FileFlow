@@ -45,12 +45,12 @@ public class SqsListenerConfig {
      *
      * <p>FAIL_ON_UNKNOWN_PROPERTIES를 disable하여 기존에 @class 필드가 포함된 메시지도 처리할 수 있습니다.
      *
-     * <p>@Primary로 설정하여 Spring Boot 자동 설정(CodecsAutoConfiguration 등)에서 사용할 기본 ObjectMapper로 지정합니다.
+     * <p><strong>주의:</strong> @Primary를 사용하지 않습니다. 기본 ObjectMapper는
+     * WebFluxJacksonConfig(http-client) 또는 JacksonConfig(rest-api)에서 제공합니다.
      *
      * @return SQS 전용 ObjectMapper
      */
-    @Bean
-    @Primary
+    @Bean("sqsObjectMapper")
     public ObjectMapper sqsObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
