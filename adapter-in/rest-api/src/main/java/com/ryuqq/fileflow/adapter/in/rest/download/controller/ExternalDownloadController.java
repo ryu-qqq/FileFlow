@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.in.rest.download.controller;
 
 import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.dto.ApiResponse;
+import com.ryuqq.fileflow.adapter.in.rest.common.dto.PageApiResponse;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.command.RequestExternalDownloadApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.query.ExternalDownloadSearchApiRequest;
 import com.ryuqq.fileflow.adapter.in.rest.download.dto.response.ExternalDownloadApiResponse;
@@ -143,7 +144,7 @@ public class ExternalDownloadController {
     })
     @PreAuthorize("@access.hasPermission('file:read')")
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<ExternalDownloadDetailApiResponse>>>
+    public ResponseEntity<ApiResponse<PageApiResponse<ExternalDownloadDetailApiResponse>>>
             getExternalDownloads(
                     @Parameter(
                                     description = "상태 필터 (PENDING, PROCESSING, COMPLETED, FAILED)",
@@ -164,17 +165,9 @@ public class ExternalDownloadController {
         PageResponse<ExternalDownloadDetailResponse> useCaseResponse =
                 getExternalDownloadsUseCase.execute(query);
 
-        PageResponse<ExternalDownloadDetailApiResponse> apiResponse =
-                PageResponse.of(
-                        useCaseResponse.content().stream()
-                                .map(externalDownloadApiMapper::toDetailApiResponse)
-                                .toList(),
-                        useCaseResponse.page(),
-                        useCaseResponse.size(),
-                        useCaseResponse.totalElements(),
-                        useCaseResponse.totalPages(),
-                        useCaseResponse.first(),
-                        useCaseResponse.last());
+        PageApiResponse<ExternalDownloadDetailApiResponse> apiResponse =
+                PageApiResponse.from(
+                        useCaseResponse, externalDownloadApiMapper::toDetailApiResponse);
 
         return ResponseEntity.ok(ApiResponse.ofSuccess(apiResponse));
     }
