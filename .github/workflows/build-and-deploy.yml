@@ -66,21 +66,71 @@ jobs:
           chmod +x gradlew
           ./gradlew clean test -x jacocoTestCoverageVerification --no-daemon
 
+      - name: Generate REST Docs
+        run: |
+          ./gradlew :adapter-in:rest-api:asciidoctor :adapter-in:rest-api:copyDocs --no-daemon
+
+      - name: Upload REST Docs artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rest-docs
+          path: adapter-in/rest-api/build/generated-static/docs/
+          retention-days: 1
+
   # ============================================================================
   # 빌드 Jobs (병렬 실행)
   # ============================================================================
   build-web-api:
     name: Build web-api
     needs: test
-    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
-    with:
-      ecr-repository: fileflow-web-api-prod
-      component: web-api
-      dockerfile: bootstrap/bootstrap-web-api/Dockerfile
-      gradle-task: ":bootstrap:bootstrap-web-api:bootJar"
-      timeout-minutes: 30
-    secrets:
-      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      image-uri: ${{ steps.build-push.outputs.image-uri }}
+      image-tag: ${{ steps.build-push.outputs.image-tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Download REST Docs artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rest-docs
+          path: adapter-in/rest-api/build/generated-static/docs/
+
+      - name: Build bootJar with REST Docs
+        run: |
+          chmod +x gradlew
+          ./gradlew :bootstrap:bootstrap-web-api:bootJar -x test --no-daemon
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        id: build-push
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: fileflow-web-api-prod
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f bootstrap/bootstrap-web-api/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "image-tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
   build-download-worker:
     name: Build download-worker
