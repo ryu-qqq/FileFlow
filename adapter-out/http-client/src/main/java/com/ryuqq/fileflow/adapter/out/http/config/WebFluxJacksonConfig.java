@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 /**
- * Jackson ObjectMapper 설정.
+ * WebFlux용 Jackson ObjectMapper 설정.
  *
  * <p>WebFlux CodecsAutoConfiguration에서 사용할 기본 ObjectMapper를 제공합니다.
  *
@@ -18,29 +18,29 @@ import org.springframework.context.annotation.Primary;
  *
  * <ul>
  *   <li>WebFlux의 Jackson Codec 기본 설정
- *   <li>다른 모듈에서 @Primary ObjectMapper가 없을 때 대체
+ *   <li>rest-api 모듈이 없는 애플리케이션(scheduler, download-worker)을 위한 대체
  * </ul>
  *
  * <p><strong>주의:</strong> rest-api 모듈처럼 자체 @Primary ObjectMapper가 있는 경우,
- * 해당 모듈의 설정이 우선 적용됩니다.
+ * 이 Bean은 생성되지 않습니다 (@ConditionalOnMissingBean).
  *
  * @author Development Team
  * @since 1.0.0
  */
 @Configuration
-public class JacksonConfig {
+public class WebFluxJacksonConfig {
 
     /**
-     * 기본 ObjectMapper Bean.
+     * WebFlux용 기본 ObjectMapper Bean.
      *
-     * <p>Java 8 날짜/시간 지원 및 일반적인 직렬화 설정을 포함합니다.
+     * <p>rest-api 모듈의 ObjectMapper가 없을 때만 생성됩니다.
      *
      * @return ObjectMapper 인스턴스
      */
     @Bean
     @Primary
-    @ConditionalOnMissingBean(name = "objectMapper")
-    public ObjectMapper objectMapper() {
+    @ConditionalOnMissingBean(ObjectMapper.class)
+    public ObjectMapper webFluxObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // Java 8 날짜/시간 모듈
