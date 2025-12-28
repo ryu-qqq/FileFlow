@@ -18,48 +18,36 @@ import org.springframework.test.context.DynamicPropertySource;
 /**
  * Web API 통합 테스트 베이스 클래스.
  *
- * 이 클래스를 상속받으면 다음이 자동으로 설정됩니다:
- * - MySQL, Redis, LocalStack(S3/SQS) 컨테이너
- * - WireMock 서버 (외부 API 모킹)
- * - TestRestTemplate (실제 HTTP 요청)
- * - DatabaseCleaner (테스트 격리)
- * - TestDataHelper (테스트 데이터 삽입)
+ * <p>이 클래스를 상속받으면 다음이 자동으로 설정됩니다: - MySQL, Redis, LocalStack(S3/SQS) 컨테이너 - WireMock 서버 (외부 API 모킹)
+ * - TestRestTemplate (실제 HTTP 요청) - DatabaseCleaner (테스트 격리) - TestDataHelper (테스트 데이터 삽입)
  *
- * 사용 예시:
- * class MyIntegrationTest extends WebApiIntegrationTest {
- *     @Test
- *     void shouldDoSomething() {
- *         // given
- *         testDataHelper.insertUser(...);
+ * <p>사용 예시: class MyIntegrationTest extends WebApiIntegrationTest { @Test void shouldDoSomething()
+ * { // given testDataHelper.insertUser(...);
  *
- *         // when
- *         ResponseEntity<MyResponse> response = restTemplate.getForEntity(
- *             apiV1Url("/users/1"), MyResponse.class);
+ * <p>// when ResponseEntity<MyResponse> response = restTemplate.getForEntity( apiV1Url("/users/1"),
+ * MyResponse.class);
  *
- *         // then
- *         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
- *     }
- * }
+ * <p>// then assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK); } }
  */
 @SpringBootTest(
-    classes = FileflowApplication.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
-)
+        classes = FileflowApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import({TestContainersConfig.class, WireMockConfig.class, DatabaseCleaner.class, TestDataHelper.class})
+@Import({
+    TestContainersConfig.class,
+    WireMockConfig.class,
+    DatabaseCleaner.class,
+    TestDataHelper.class
+})
 public abstract class WebApiIntegrationTest {
 
-    @LocalServerPort
-    protected int port;
+    @LocalServerPort protected int port;
 
-    @Autowired
-    protected TestRestTemplate restTemplate;
+    @Autowired protected TestRestTemplate restTemplate;
 
-    @Autowired
-    protected DatabaseCleaner databaseCleaner;
+    @Autowired protected DatabaseCleaner databaseCleaner;
 
-    @Autowired
-    protected TestDataHelper testDataHelper;
+    @Autowired protected TestDataHelper testDataHelper;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

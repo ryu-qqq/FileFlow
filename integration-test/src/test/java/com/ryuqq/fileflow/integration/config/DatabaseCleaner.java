@@ -4,30 +4,24 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.metamodel.EntityType;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 테스트 격리를 위한 데이터베이스 정리 컴포넌트.
  *
- * TestRestTemplate은 별도의 스레드에서 실행되므로 @Transactional 롤백이 작동하지 않습니다.
- * 따라서 각 테스트 전에 TRUNCATE를 사용하여 모든 테이블을 정리합니다.
+ * <p>TestRestTemplate은 별도의 스레드에서 실행되므로 @Transactional 롤백이 작동하지 않습니다. 따라서 각 테스트 전에 TRUNCATE를 사용하여 모든
+ * 테이블을 정리합니다.
  *
- * 사용법:
- * @BeforeEach
- * void setUp() {
- *     databaseCleaner.clean();
- * }
+ * <p>사용법: @BeforeEach void setUp() { databaseCleaner.clean(); }
  */
 @Component
 public class DatabaseCleaner {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @PersistenceContext private EntityManager entityManager;
 
     private List<String> tableNames;
 
@@ -38,7 +32,8 @@ public class DatabaseCleaner {
 
         for (EntityType<?> entity : entities) {
             Class<?> javaType = entity.getJavaType();
-            jakarta.persistence.Table tableAnnotation = javaType.getAnnotation(jakarta.persistence.Table.class);
+            jakarta.persistence.Table tableAnnotation =
+                    javaType.getAnnotation(jakarta.persistence.Table.class);
 
             if (tableAnnotation != null && !tableAnnotation.name().isBlank()) {
                 tableNames.add(tableAnnotation.name());

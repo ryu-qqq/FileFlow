@@ -1,7 +1,14 @@
 package com.ryuqq.fileflow.integration.webapi;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ryuqq.fileflow.domain.common.util.UuidV7Generator;
 import com.ryuqq.fileflow.integration.base.WebApiIntegrationTest;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,18 +19,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
  * Upload Session 조회 통합 테스트.
  *
  * <p>업로드 세션 조회 API를 검증합니다:
+ *
  * <ul>
  *   <li>GET /api/v1/file/upload-sessions/{sessionId} - 업로드 세션 상세 조회
  *   <li>GET /api/v1/file/upload-sessions - 업로드 세션 목록 조회
@@ -44,22 +44,22 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
         void shouldGetUploadSessionById() {
             // given - 세션 초기화
             String idempotencyKey = UUID.randomUUID().toString();
-            Map<String, Object> initRequest = Map.of(
-                "idempotencyKey", idempotencyKey,
-                "fileName", "test-image.jpg",
-                "fileSize", 1024L,
-                "contentType", "image/jpeg",
-                "uploadCategory", "PRODUCT"
-            );
+            Map<String, Object> initRequest =
+                    Map.of(
+                            "idempotencyKey", idempotencyKey,
+                            "fileName", "test-image.jpg",
+                            "fileSize", 1024L,
+                            "contentType", "image/jpeg",
+                            "uploadCategory", "PRODUCT");
 
             HttpHeaders headers = sellerHeaders();
 
-            ResponseEntity<Map> initResponse = restTemplate.exchange(
-                url(SINGLE_INIT),
-                HttpMethod.POST,
-                createRequestEntity(initRequest, headers),
-                Map.class
-            );
+            ResponseEntity<Map> initResponse =
+                    restTemplate.exchange(
+                            url(SINGLE_INIT),
+                            HttpMethod.POST,
+                            createRequestEntity(initRequest, headers),
+                            Map.class);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> initData = (Map<String, Object>) initResponse.getBody().get("data");
@@ -68,12 +68,12 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             System.out.println("[DEBUG] Created session ID: " + sessionId);
 
             // when - 세션 상세 조회
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE + "/" + sessionId),
-                HttpMethod.GET,
-                createRequestEntity(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE + "/" + sessionId),
+                            HttpMethod.GET,
+                            createRequestEntity(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Get session status: " + response.getStatusCode());
             System.out.println("[DEBUG] Get session body: " + response.getBody());
@@ -99,22 +99,22 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
         void shouldGetCompletedUploadSession() {
             // given - 세션 초기화 및 완료
             String idempotencyKey = UUID.randomUUID().toString();
-            Map<String, Object> initRequest = Map.of(
-                "idempotencyKey", idempotencyKey,
-                "fileName", "test-image.jpg",
-                "fileSize", 1024L,
-                "contentType", "image/jpeg",
-                "uploadCategory", "PRODUCT"
-            );
+            Map<String, Object> initRequest =
+                    Map.of(
+                            "idempotencyKey", idempotencyKey,
+                            "fileName", "test-image.jpg",
+                            "fileSize", 1024L,
+                            "contentType", "image/jpeg",
+                            "uploadCategory", "PRODUCT");
 
             HttpHeaders headers = sellerHeaders();
 
-            ResponseEntity<Map> initResponse = restTemplate.exchange(
-                url(SINGLE_INIT),
-                HttpMethod.POST,
-                createRequestEntity(initRequest, headers),
-                Map.class
-            );
+            ResponseEntity<Map> initResponse =
+                    restTemplate.exchange(
+                            url(SINGLE_INIT),
+                            HttpMethod.POST,
+                            createRequestEntity(initRequest, headers),
+                            Map.class);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> initData = (Map<String, Object>) initResponse.getBody().get("data");
@@ -128,19 +128,18 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             String completeUrl = UPLOAD_SESSION_BASE + "/" + sessionId + "/single/complete";
 
             restTemplate.exchange(
-                url(completeUrl),
-                HttpMethod.PATCH,
-                createRequestEntity(completeRequest, headers),
-                Map.class
-            );
+                    url(completeUrl),
+                    HttpMethod.PATCH,
+                    createRequestEntity(completeRequest, headers),
+                    Map.class);
 
             // when - 완료된 세션 상세 조회
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE + "/" + sessionId),
-                HttpMethod.GET,
-                createRequestEntity(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE + "/" + sessionId),
+                            HttpMethod.GET,
+                            createRequestEntity(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Completed session status: " + response.getStatusCode());
             System.out.println("[DEBUG] Completed session body: " + response.getBody());
@@ -163,12 +162,12 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             String nonExistentSessionId = UuidV7Generator.generate();
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE + "/" + nonExistentSessionId),
-                HttpMethod.GET,
-                createRequestEntity(null, sellerHeaders()),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE + "/" + nonExistentSessionId),
+                            HttpMethod.GET,
+                            createRequestEntity(null, sellerHeaders()),
+                            Map.class);
 
             System.out.println("[DEBUG] Not found status: " + response.getStatusCode());
             System.out.println("[DEBUG] Not found body: " + response.getBody());
@@ -184,20 +183,20 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             String idempotencyKey = UUID.randomUUID().toString();
             HttpHeaders tenantAHeaders = sellerHeaders();
 
-            Map<String, Object> initRequest = Map.of(
-                "idempotencyKey", idempotencyKey,
-                "fileName", "test-image.jpg",
-                "fileSize", 1024L,
-                "contentType", "image/jpeg",
-                "uploadCategory", "PRODUCT"
-            );
+            Map<String, Object> initRequest =
+                    Map.of(
+                            "idempotencyKey", idempotencyKey,
+                            "fileName", "test-image.jpg",
+                            "fileSize", 1024L,
+                            "contentType", "image/jpeg",
+                            "uploadCategory", "PRODUCT");
 
-            ResponseEntity<Map> initResponse = restTemplate.exchange(
-                url(SINGLE_INIT),
-                HttpMethod.POST,
-                createRequestEntity(initRequest, tenantAHeaders),
-                Map.class
-            );
+            ResponseEntity<Map> initResponse =
+                    restTemplate.exchange(
+                            url(SINGLE_INIT),
+                            HttpMethod.POST,
+                            createRequestEntity(initRequest, tenantAHeaders),
+                            Map.class);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> initData = (Map<String, Object>) initResponse.getBody().get("data");
@@ -206,22 +205,19 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             // when - 다른 테넌트 B로 조회 시도
             HttpHeaders tenantBHeaders = sellerHeaders(); // 새로운 테넌트 ID 생성됨
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE + "/" + sessionId),
-                HttpMethod.GET,
-                createRequestEntity(null, tenantBHeaders),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE + "/" + sessionId),
+                            HttpMethod.GET,
+                            createRequestEntity(null, tenantBHeaders),
+                            Map.class);
 
             System.out.println("[DEBUG] Different tenant status: " + response.getStatusCode());
             System.out.println("[DEBUG] Different tenant body: " + response.getBody());
 
             // then - 404 또는 403 또는 400 허용 (테넌트 격리로 인해 접근 불가)
-            assertThat(response.getStatusCode()).isIn(
-                HttpStatus.NOT_FOUND,
-                HttpStatus.FORBIDDEN,
-                HttpStatus.BAD_REQUEST
-            );
+            assertThat(response.getStatusCode())
+                    .isIn(HttpStatus.NOT_FOUND, HttpStatus.FORBIDDEN, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -236,29 +232,33 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             HttpHeaders headers = sellerHeaders();
 
             for (int i = 0; i < 3; i++) {
-                Map<String, Object> initRequest = Map.of(
-                    "idempotencyKey", UUID.randomUUID().toString(),
-                    "fileName", "test-image-" + i + ".jpg",
-                    "fileSize", 1024L,
-                    "contentType", "image/jpeg",
-                    "uploadCategory", "PRODUCT"
-                );
+                Map<String, Object> initRequest =
+                        Map.of(
+                                "idempotencyKey",
+                                UUID.randomUUID().toString(),
+                                "fileName",
+                                "test-image-" + i + ".jpg",
+                                "fileSize",
+                                1024L,
+                                "contentType",
+                                "image/jpeg",
+                                "uploadCategory",
+                                "PRODUCT");
 
                 restTemplate.exchange(
-                    url(SINGLE_INIT),
-                    HttpMethod.POST,
-                    createRequestEntity(initRequest, headers),
-                    Map.class
-                );
+                        url(SINGLE_INIT),
+                        HttpMethod.POST,
+                        createRequestEntity(initRequest, headers),
+                        Map.class);
             }
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE),
-                HttpMethod.GET,
-                createRequestEntity(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE),
+                            HttpMethod.GET,
+                            createRequestEntity(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] List status: " + response.getStatusCode());
             System.out.println("[DEBUG] List body: " + response.getBody());
@@ -287,20 +287,20 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             HttpHeaders headers = sellerHeaders();
             String idempotencyKey = UUID.randomUUID().toString();
 
-            Map<String, Object> initRequest = Map.of(
-                "idempotencyKey", idempotencyKey,
-                "fileName", "test-image.jpg",
-                "fileSize", 1024L,
-                "contentType", "image/jpeg",
-                "uploadCategory", "PRODUCT"
-            );
+            Map<String, Object> initRequest =
+                    Map.of(
+                            "idempotencyKey", idempotencyKey,
+                            "fileName", "test-image.jpg",
+                            "fileSize", 1024L,
+                            "contentType", "image/jpeg",
+                            "uploadCategory", "PRODUCT");
 
-            ResponseEntity<Map> initResponse = restTemplate.exchange(
-                url(SINGLE_INIT),
-                HttpMethod.POST,
-                createRequestEntity(initRequest, headers),
-                Map.class
-            );
+            ResponseEntity<Map> initResponse =
+                    restTemplate.exchange(
+                            url(SINGLE_INIT),
+                            HttpMethod.POST,
+                            createRequestEntity(initRequest, headers),
+                            Map.class);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> initData = (Map<String, Object>) initResponse.getBody().get("data");
@@ -313,19 +313,18 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             String completeUrl = UPLOAD_SESSION_BASE + "/" + sessionId + "/single/complete";
 
             restTemplate.exchange(
-                url(completeUrl),
-                HttpMethod.PATCH,
-                createRequestEntity(completeRequest, headers),
-                Map.class
-            );
+                    url(completeUrl),
+                    HttpMethod.PATCH,
+                    createRequestEntity(completeRequest, headers),
+                    Map.class);
 
             // when - COMPLETED 상태로 필터링
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE + "?status=COMPLETED"),
-                HttpMethod.GET,
-                createRequestEntity(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE + "?status=COMPLETED"),
+                            HttpMethod.GET,
+                            createRequestEntity(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Filter status: " + response.getStatusCode());
             System.out.println("[DEBUG] Filter body: " + response.getBody());
@@ -350,28 +349,27 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             // given - 단일 업로드 세션 생성
             HttpHeaders headers = sellerHeaders();
 
-            Map<String, Object> initRequest = Map.of(
-                "idempotencyKey", UUID.randomUUID().toString(),
-                "fileName", "test-image.jpg",
-                "fileSize", 1024L,
-                "contentType", "image/jpeg",
-                "uploadCategory", "PRODUCT"
-            );
+            Map<String, Object> initRequest =
+                    Map.of(
+                            "idempotencyKey", UUID.randomUUID().toString(),
+                            "fileName", "test-image.jpg",
+                            "fileSize", 1024L,
+                            "contentType", "image/jpeg",
+                            "uploadCategory", "PRODUCT");
 
             restTemplate.exchange(
-                url(SINGLE_INIT),
-                HttpMethod.POST,
-                createRequestEntity(initRequest, headers),
-                Map.class
-            );
+                    url(SINGLE_INIT),
+                    HttpMethod.POST,
+                    createRequestEntity(initRequest, headers),
+                    Map.class);
 
             // when - SINGLE 타입으로 필터링
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE + "?uploadType=SINGLE"),
-                HttpMethod.GET,
-                createRequestEntity(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE + "?uploadType=SINGLE"),
+                            HttpMethod.GET,
+                            createRequestEntity(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Upload type filter status: " + response.getStatusCode());
             System.out.println("[DEBUG] Upload type filter body: " + response.getBody());
@@ -397,28 +395,32 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
             HttpHeaders headers = sellerHeaders();
 
             for (int i = 0; i < 5; i++) {
-                Map<String, Object> initRequest = Map.of(
-                    "idempotencyKey", UUID.randomUUID().toString(),
-                    "fileName", "test-image-" + i + ".jpg",
-                    "fileSize", 1024L,
-                    "contentType", "image/jpeg",
-                    "uploadCategory", "PRODUCT"
-                );
+                Map<String, Object> initRequest =
+                        Map.of(
+                                "idempotencyKey",
+                                UUID.randomUUID().toString(),
+                                "fileName",
+                                "test-image-" + i + ".jpg",
+                                "fileSize",
+                                1024L,
+                                "contentType",
+                                "image/jpeg",
+                                "uploadCategory",
+                                "PRODUCT");
                 restTemplate.exchange(
-                    url(SINGLE_INIT),
-                    HttpMethod.POST,
-                    createRequestEntity(initRequest, headers),
-                    Map.class
-                );
+                        url(SINGLE_INIT),
+                        HttpMethod.POST,
+                        createRequestEntity(initRequest, headers),
+                        Map.class);
             }
 
             // when - 페이지 크기 2로 조회
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE + "?page=0&size=2"),
-                HttpMethod.GET,
-                createRequestEntity(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE + "?page=0&size=2"),
+                            HttpMethod.GET,
+                            createRequestEntity(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Pagination status: " + response.getStatusCode());
             System.out.println("[DEBUG] Pagination body: " + response.getBody());
@@ -439,12 +441,12 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
         @DisplayName("권한이 없는 사용자는 403 에러를 반환해야 한다")
         void shouldReturn403WhenUserHasNoPermission() {
             // when - file:read 권한 없는 사용자
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(UPLOAD_SESSION_BASE),
-                HttpMethod.GET,
-                createRequestEntity(null, noPermissionHeaders()),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(UPLOAD_SESSION_BASE),
+                            HttpMethod.GET,
+                            createRequestEntity(null, noPermissionHeaders()),
+                            Map.class);
 
             System.out.println("[DEBUG] No permission status: " + response.getStatusCode());
             System.out.println("[DEBUG] No permission body: " + response.getBody());
@@ -458,9 +460,7 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
     // Helper Methods
     // ========================================
 
-    /**
-     * SELLER 역할의 인증 헤더를 생성합니다.
-     */
+    /** SELLER 역할의 인증 헤더를 생성합니다. */
     private HttpHeaders sellerHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -474,13 +474,12 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
         headers.set("X-Organization-Id", organizationId);
         headers.set("X-User-Roles", "SELLER");
         headers.set("X-User-Permissions", "file:read,file:write,file:delete,file:download");
-        headers.set("Authorization", "Bearer " + createTestJwtToken(email, tenantId, organizationId));
+        headers.set(
+                "Authorization", "Bearer " + createTestJwtToken(email, tenantId, organizationId));
         return headers;
     }
 
-    /**
-     * 권한이 없는 사용자의 인증 헤더를 생성합니다.
-     */
+    /** 권한이 없는 사용자의 인증 헤더를 생성합니다. */
     private HttpHeaders noPermissionHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -497,16 +496,12 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
         return headers;
     }
 
-    /**
-     * 요청 엔티티를 생성합니다.
-     */
+    /** 요청 엔티티를 생성합니다. */
     private <T> HttpEntity<T> createRequestEntity(T body, HttpHeaders headers) {
         return new HttpEntity<>(body, headers);
     }
 
-    /**
-     * Presigned URL을 사용하여 S3에 파일을 업로드하고 ETag를 반환합니다.
-     */
+    /** Presigned URL을 사용하여 S3에 파일을 업로드하고 ETag를 반환합니다. */
     private String uploadToS3(String presignedUrl, byte[] content, String contentType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(contentType));
@@ -514,12 +509,9 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
 
         java.net.URI uri = java.net.URI.create(presignedUrl);
 
-        ResponseEntity<String> response = restTemplate.exchange(
-            uri,
-            HttpMethod.PUT,
-            new HttpEntity<>(content, headers),
-            String.class
-        );
+        ResponseEntity<String> response =
+                restTemplate.exchange(
+                        uri, HttpMethod.PUT, new HttpEntity<>(content, headers), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
@@ -529,38 +521,46 @@ class UploadSessionQueryIntegrationTest extends WebApiIntegrationTest {
         return etag.replace("\"", "");
     }
 
-    /**
-     * SELLER/ADMIN 역할용 테스트 JWT 토큰을 생성합니다.
-     */
+    /** SELLER/ADMIN 역할용 테스트 JWT 토큰을 생성합니다. */
     private String createTestJwtToken(String email, String tenantId, String organizationId) {
-        String header = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString("{\"alg\":\"none\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+        String header =
+                Base64.getUrlEncoder()
+                        .withoutPadding()
+                        .encodeToString(
+                                "{\"alg\":\"none\",\"typ\":\"JWT\"}"
+                                        .getBytes(StandardCharsets.UTF_8));
 
-        String payloadJson = String.format(
-            "{\"email\":\"%s\",\"tid\":\"%s\",\"oid\":\"%s\",\"tenant_name\":\"TestTenant\",\"org_name\":\"TestOrg\"}",
-            email, tenantId, organizationId
-        );
-        String payload = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
+        String payloadJson =
+                String.format(
+                        "{\"email\":\"%s\",\"tid\":\"%s\",\"oid\":\"%s\",\"tenant_name\":\"TestTenant\",\"org_name\":\"TestOrg\"}",
+                        email, tenantId, organizationId);
+        String payload =
+                Base64.getUrlEncoder()
+                        .withoutPadding()
+                        .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
 
         String signature = "";
 
         return header + "." + payload + "." + signature;
     }
 
-    /**
-     * DEFAULT(Customer) 역할용 테스트 JWT 토큰을 생성합니다.
-     */
+    /** DEFAULT(Customer) 역할용 테스트 JWT 토큰을 생성합니다. */
     private String createTestJwtTokenForCustomer(String userId, String tenantId) {
-        String header = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString("{\"alg\":\"none\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+        String header =
+                Base64.getUrlEncoder()
+                        .withoutPadding()
+                        .encodeToString(
+                                "{\"alg\":\"none\",\"typ\":\"JWT\"}"
+                                        .getBytes(StandardCharsets.UTF_8));
 
-        String payloadJson = String.format(
-            "{\"sub\":\"%s\",\"tid\":\"%s\",\"tenant_name\":\"TestTenant\"}",
-            userId, tenantId
-        );
-        String payload = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
+        String payloadJson =
+                String.format(
+                        "{\"sub\":\"%s\",\"tid\":\"%s\",\"tenant_name\":\"TestTenant\"}",
+                        userId, tenantId);
+        String payload =
+                Base64.getUrlEncoder()
+                        .withoutPadding()
+                        .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
 
         String signature = "";
 

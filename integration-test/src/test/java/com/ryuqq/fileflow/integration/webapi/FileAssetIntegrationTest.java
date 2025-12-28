@@ -1,7 +1,14 @@
 package com.ryuqq.fileflow.integration.webapi;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.ryuqq.fileflow.domain.common.util.UuidV7Generator;
 import com.ryuqq.fileflow.integration.base.WebApiIntegrationTest;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,18 +19,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
  * FileAsset E2E 통합 테스트.
  *
  * <p>파일 자산 조회 및 다운로드 URL 생성 흐름을 검증합니다:
+ *
  * <ol>
  *   <li>파일 업로드 완료 후 FileAsset 생성 확인
  *   <li>FileAsset 단건 조회
@@ -54,12 +54,12 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             String sessionId = completeUpload(uniqueFileName, headers);
 
             // when - FileAsset 목록 조회
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "?sortBy=CREATED_AT&sortDirection=DESC"),
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "?sortBy=CREATED_AT&sortDirection=DESC"),
+                            HttpMethod.GET,
+                            new HttpEntity<>(headers),
+                            Map.class);
 
             System.out.println("[DEBUG] List FileAssets status: " + response.getStatusCode());
             System.out.println("[DEBUG] List FileAssets body: " + response.getBody());
@@ -107,12 +107,12 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             assertThat(fileAssetId).isNotNull();
 
             // when - FileAsset 단건 조회
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + fileAssetId),
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + fileAssetId),
+                            HttpMethod.GET,
+                            new HttpEntity<>(headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Get FileAsset status: " + response.getStatusCode());
             System.out.println("[DEBUG] Get FileAsset body: " + response.getBody());
@@ -137,17 +137,19 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         void shouldReturn404WhenFileAssetNotFound() {
             // given
             String nonExistentId = UuidV7Generator.generate();
-            HttpHeaders headers = createSellerHeaders(UuidV7Generator.generate(), UuidV7Generator.generate());
+            HttpHeaders headers =
+                    createSellerHeaders(UuidV7Generator.generate(), UuidV7Generator.generate());
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + nonExistentId),
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + nonExistentId),
+                            HttpMethod.GET,
+                            new HttpEntity<>(headers),
+                            Map.class);
 
-            System.out.println("[DEBUG] Get non-existent FileAsset status: " + response.getStatusCode());
+            System.out.println(
+                    "[DEBUG] Get non-existent FileAsset status: " + response.getStatusCode());
             System.out.println("[DEBUG] Get non-existent FileAsset body: " + response.getBody());
 
             // then - 실제 서버 동작에 맞게 수정
@@ -163,12 +165,12 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             HttpHeaders headers = createNoPermissionHeaders();
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + fileAssetId),
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + fileAssetId),
+                            HttpMethod.GET,
+                            new HttpEntity<>(headers),
+                            Map.class);
 
             // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -195,12 +197,12 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             assertThat(fileAssetId).isNotNull();
 
             // when - Download URL 생성
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + fileAssetId + "/download-url"),
-                HttpMethod.POST,
-                new HttpEntity<>(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + fileAssetId + "/download-url"),
+                            HttpMethod.POST,
+                            new HttpEntity<>(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Generate Download URL status: " + response.getStatusCode());
             System.out.println("[DEBUG] Generate Download URL body: " + response.getBody());
@@ -220,8 +222,8 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             // Download URL은 LocalStack 주소를 포함해야 함
             String downloadUrl = (String) data.get("downloadUrl");
             assertThat(downloadUrl.contains("localhost") || downloadUrl.contains("127.0.0.1"))
-                .as("downloadUrl should contain localhost or 127.0.0.1: " + downloadUrl)
-                .isTrue();
+                    .as("downloadUrl should contain localhost or 127.0.0.1: " + downloadUrl)
+                    .isTrue();
         }
 
         @Test
@@ -234,18 +236,19 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             String uniqueFileName = "download-test-" + UUID.randomUUID() + ".jpg";
             String uploadContent = "test content for download";
 
-            String sessionId = completeUploadWithContent(uniqueFileName, uploadContent.getBytes(), headers);
+            String sessionId =
+                    completeUploadWithContent(uniqueFileName, uploadContent.getBytes(), headers);
 
             // FileAsset ID 조회
             String fileAssetId = getFileAssetIdBySessionId(sessionId, headers);
 
             // Download URL 생성
-            ResponseEntity<Map> urlResponse = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + fileAssetId + "/download-url"),
-                HttpMethod.POST,
-                new HttpEntity<>(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> urlResponse =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + fileAssetId + "/download-url"),
+                            HttpMethod.POST,
+                            new HttpEntity<>(null, headers),
+                            Map.class);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> urlData = (Map<String, Object>) urlResponse.getBody().get("data");
@@ -253,16 +256,16 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
 
             // when - Download URL로 실제 다운로드
             java.net.URI uri = java.net.URI.create(downloadUrl);
-            ResponseEntity<byte[]> downloadResponse = restTemplate.exchange(
-                uri,
-                HttpMethod.GET,
-                new HttpEntity<>(new HttpHeaders()),
-                byte[].class
-            );
+            ResponseEntity<byte[]> downloadResponse =
+                    restTemplate.exchange(
+                            uri, HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
 
             System.out.println("[DEBUG] Download status: " + downloadResponse.getStatusCode());
-            System.out.println("[DEBUG] Download content length: " +
-                (downloadResponse.getBody() != null ? downloadResponse.getBody().length : 0));
+            System.out.println(
+                    "[DEBUG] Download content length: "
+                            + (downloadResponse.getBody() != null
+                                    ? downloadResponse.getBody().length
+                                    : 0));
 
             // then
             assertThat(downloadResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -275,17 +278,19 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         void shouldReturn404WhenGeneratingDownloadUrlForNonExistentFileAsset() {
             // given
             String nonExistentId = UuidV7Generator.generate();
-            HttpHeaders headers = createSellerHeaders(UuidV7Generator.generate(), UuidV7Generator.generate());
+            HttpHeaders headers =
+                    createSellerHeaders(UuidV7Generator.generate(), UuidV7Generator.generate());
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + nonExistentId + "/download-url"),
-                HttpMethod.POST,
-                new HttpEntity<>(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + nonExistentId + "/download-url"),
+                            HttpMethod.POST,
+                            new HttpEntity<>(null, headers),
+                            Map.class);
 
-            System.out.println("[DEBUG] Non-existent download URL status: " + response.getStatusCode());
+            System.out.println(
+                    "[DEBUG] Non-existent download URL status: " + response.getStatusCode());
             System.out.println("[DEBUG] Non-existent download URL body: " + response.getBody());
 
             // then - 실제 서버 동작에 맞게 수정
@@ -309,14 +314,15 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             HttpHeaders readOnlyHeaders = createReadOnlyHeadersForTenant(tenantId, organizationId);
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + fileAssetId + "/download-url"),
-                HttpMethod.POST,
-                new HttpEntity<>(null, readOnlyHeaders),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + fileAssetId + "/download-url"),
+                            HttpMethod.POST,
+                            new HttpEntity<>(null, readOnlyHeaders),
+                            Map.class);
 
-            System.out.println("[DEBUG] No download permission status: " + response.getStatusCode());
+            System.out.println(
+                    "[DEBUG] No download permission status: " + response.getStatusCode());
             System.out.println("[DEBUG] No download permission body: " + response.getBody());
 
             // then - 권한이 없으면 403 (FORBIDDEN) 또는 400 (BAD_REQUEST) 에러 반환
@@ -346,12 +352,12 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
 
             // when - FileAsset 삭제
             Map<String, Object> deleteRequest = Map.of("reason", "테스트 삭제");
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + fileAssetId + "/delete"),
-                HttpMethod.PATCH,
-                new HttpEntity<>(deleteRequest, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + fileAssetId + "/delete"),
+                            HttpMethod.PATCH,
+                            new HttpEntity<>(deleteRequest, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Delete FileAsset status: " + response.getStatusCode());
             System.out.println("[DEBUG] Delete FileAsset body: " + response.getBody());
@@ -379,12 +385,12 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             String fileAssetId = getFileAssetIdBySessionId(sessionId, headers);
 
             // when - 사유 없이 삭제
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + fileAssetId + "/delete"),
-                HttpMethod.PATCH,
-                new HttpEntity<>(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + fileAssetId + "/delete"),
+                            HttpMethod.PATCH,
+                            new HttpEntity<>(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Delete without reason status: " + response.getStatusCode());
 
@@ -401,15 +407,16 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         void shouldReturn404WhenDeletingNonExistentFileAsset() {
             // given
             String nonExistentId = UuidV7Generator.generate();
-            HttpHeaders headers = createSellerHeaders(UuidV7Generator.generate(), UuidV7Generator.generate());
+            HttpHeaders headers =
+                    createSellerHeaders(UuidV7Generator.generate(), UuidV7Generator.generate());
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + nonExistentId + "/delete"),
-                HttpMethod.PATCH,
-                new HttpEntity<>(null, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + nonExistentId + "/delete"),
+                            HttpMethod.PATCH,
+                            new HttpEntity<>(null, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Delete non-existent status: " + response.getStatusCode());
             System.out.println("[DEBUG] Delete non-existent body: " + response.getBody());
@@ -431,17 +438,19 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             String fileAssetId = getFileAssetIdBySessionId(sessionId, ownerHeaders);
 
             // 삭제 권한이 없는 사용자 헤더 (file:delete 권한 없음)
-            HttpHeaders noDeleteHeaders = createHeadersWithoutDeletePermission(tenantId, organizationId);
+            HttpHeaders noDeleteHeaders =
+                    createHeadersWithoutDeletePermission(tenantId, organizationId);
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/" + fileAssetId + "/delete"),
-                HttpMethod.PATCH,
-                new HttpEntity<>(null, noDeleteHeaders),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/" + fileAssetId + "/delete"),
+                            HttpMethod.PATCH,
+                            new HttpEntity<>(null, noDeleteHeaders),
+                            Map.class);
 
-            System.out.println("[DEBUG] Delete without permission status: " + response.getStatusCode());
+            System.out.println(
+                    "[DEBUG] Delete without permission status: " + response.getStatusCode());
 
             // then
             assertThat(response.getStatusCode()).isIn(HttpStatus.FORBIDDEN, HttpStatus.BAD_REQUEST);
@@ -473,17 +482,19 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             assertThat(fileAssetId2).isNotNull();
 
             // when - 일괄 삭제
-            Map<String, Object> batchRequest = Map.of(
-                "fileAssetIds", List.of(fileAssetId1, fileAssetId2),
-                "reason", "테스트 일괄 삭제"
-            );
+            Map<String, Object> batchRequest =
+                    Map.of(
+                            "fileAssetIds",
+                            List.of(fileAssetId1, fileAssetId2),
+                            "reason",
+                            "테스트 일괄 삭제");
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/batch-delete"),
-                HttpMethod.POST,
-                new HttpEntity<>(batchRequest, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/batch-delete"),
+                            HttpMethod.POST,
+                            new HttpEntity<>(batchRequest, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Batch delete status: " + response.getStatusCode());
             System.out.println("[DEBUG] Batch delete body: " + response.getBody());
@@ -498,7 +509,8 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             assertThat(data.get("failureCount")).isEqualTo(0);
 
             @SuppressWarnings("unchecked")
-            List<Map<String, Object>> deletedAssets = (List<Map<String, Object>>) data.get("deletedAssets");
+            List<Map<String, Object>> deletedAssets =
+                    (List<Map<String, Object>>) data.get("deletedAssets");
             assertThat(deletedAssets).hasSize(2);
         }
 
@@ -517,16 +529,15 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             String nonExistentId = UuidV7Generator.generate();
 
             // when - 존재하는 파일 + 존재하지 않는 파일 함께 삭제 요청
-            Map<String, Object> batchRequest = Map.of(
-                "fileAssetIds", List.of(existingFileAssetId, nonExistentId)
-            );
+            Map<String, Object> batchRequest =
+                    Map.of("fileAssetIds", List.of(existingFileAssetId, nonExistentId));
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/batch-delete"),
-                HttpMethod.POST,
-                new HttpEntity<>(batchRequest, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/batch-delete"),
+                            HttpMethod.POST,
+                            new HttpEntity<>(batchRequest, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Partial batch delete status: " + response.getStatusCode());
             System.out.println("[DEBUG] Partial batch delete body: " + response.getBody());
@@ -550,19 +561,18 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         @DisplayName("빈 ID 목록으로 요청하면 400 에러를 반환해야 한다")
         void shouldReturn400WhenFileAssetIdsEmpty() {
             // given
-            HttpHeaders headers = createSellerHeaders(UuidV7Generator.generate(), UuidV7Generator.generate());
+            HttpHeaders headers =
+                    createSellerHeaders(UuidV7Generator.generate(), UuidV7Generator.generate());
 
-            Map<String, Object> batchRequest = Map.of(
-                "fileAssetIds", List.of()
-            );
+            Map<String, Object> batchRequest = Map.of("fileAssetIds", List.of());
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/batch-delete"),
-                HttpMethod.POST,
-                new HttpEntity<>(batchRequest, headers),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/batch-delete"),
+                            HttpMethod.POST,
+                            new HttpEntity<>(batchRequest, headers),
+                            Map.class);
 
             System.out.println("[DEBUG] Empty batch delete status: " + response.getStatusCode());
 
@@ -583,21 +593,21 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
             String fileAssetId = getFileAssetIdBySessionId(sessionId, ownerHeaders);
 
             // 삭제 권한이 없는 사용자 헤더
-            HttpHeaders noDeleteHeaders = createHeadersWithoutDeletePermission(tenantId, organizationId);
+            HttpHeaders noDeleteHeaders =
+                    createHeadersWithoutDeletePermission(tenantId, organizationId);
 
-            Map<String, Object> batchRequest = Map.of(
-                "fileAssetIds", List.of(fileAssetId)
-            );
+            Map<String, Object> batchRequest = Map.of("fileAssetIds", List.of(fileAssetId));
 
             // when
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url(FILE_ASSET_BASE + "/batch-delete"),
-                HttpMethod.POST,
-                new HttpEntity<>(batchRequest, noDeleteHeaders),
-                Map.class
-            );
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url(FILE_ASSET_BASE + "/batch-delete"),
+                            HttpMethod.POST,
+                            new HttpEntity<>(batchRequest, noDeleteHeaders),
+                            Map.class);
 
-            System.out.println("[DEBUG] Batch delete without permission status: " + response.getStatusCode());
+            System.out.println(
+                    "[DEBUG] Batch delete without permission status: " + response.getStatusCode());
 
             // then
             assertThat(response.getStatusCode()).isIn(HttpStatus.FORBIDDEN, HttpStatus.BAD_REQUEST);
@@ -608,32 +618,33 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
     // Helper Methods
     // ========================================
 
-    /**
-     * 파일 업로드를 완료하고 sessionId를 반환합니다.
-     */
+    /** 파일 업로드를 완료하고 sessionId를 반환합니다. */
     private String completeUpload(String fileName, HttpHeaders headers) {
         return completeUploadWithContent(fileName, "test content".getBytes(), headers);
     }
 
-    /**
-     * 지정된 콘텐츠로 파일 업로드를 완료하고 sessionId를 반환합니다.
-     */
+    /** 지정된 콘텐츠로 파일 업로드를 완료하고 sessionId를 반환합니다. */
     private String completeUploadWithContent(String fileName, byte[] content, HttpHeaders headers) {
         // 세션 초기화
-        Map<String, Object> initRequest = Map.of(
-            "idempotencyKey", UUID.randomUUID().toString(),
-            "fileName", fileName,
-            "fileSize", (long) content.length,
-            "contentType", "image/jpeg",
-            "uploadCategory", "PRODUCT"
-        );
+        Map<String, Object> initRequest =
+                Map.of(
+                        "idempotencyKey",
+                        UUID.randomUUID().toString(),
+                        "fileName",
+                        fileName,
+                        "fileSize",
+                        (long) content.length,
+                        "contentType",
+                        "image/jpeg",
+                        "uploadCategory",
+                        "PRODUCT");
 
-        ResponseEntity<Map> initResponse = restTemplate.exchange(
-            url(SINGLE_INIT),
-            HttpMethod.POST,
-            new HttpEntity<>(initRequest, headers),
-            Map.class
-        );
+        ResponseEntity<Map> initResponse =
+                restTemplate.exchange(
+                        url(SINGLE_INIT),
+                        HttpMethod.POST,
+                        new HttpEntity<>(initRequest, headers),
+                        Map.class);
 
         assertThat(initResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
@@ -649,28 +660,26 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         Map<String, Object> completeRequest = Map.of("etag", etag);
         String completeUrl = UPLOAD_SESSION_BASE + "/" + sessionId + "/single/complete";
 
-        ResponseEntity<Map> completeResponse = restTemplate.exchange(
-            url(completeUrl),
-            HttpMethod.PATCH,
-            new HttpEntity<>(completeRequest, headers),
-            Map.class
-        );
+        ResponseEntity<Map> completeResponse =
+                restTemplate.exchange(
+                        url(completeUrl),
+                        HttpMethod.PATCH,
+                        new HttpEntity<>(completeRequest, headers),
+                        Map.class);
 
         assertThat(completeResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         return sessionId;
     }
 
-    /**
-     * sessionId로 FileAsset ID를 조회합니다.
-     */
+    /** sessionId로 FileAsset ID를 조회합니다. */
     private String getFileAssetIdBySessionId(String sessionId, HttpHeaders headers) {
-        ResponseEntity<Map> response = restTemplate.exchange(
-            url(FILE_ASSET_BASE + "?sortBy=CREATED_AT&sortDirection=DESC&size=50"),
-            HttpMethod.GET,
-            new HttpEntity<>(headers),
-            Map.class
-        );
+        ResponseEntity<Map> response =
+                restTemplate.exchange(
+                        url(FILE_ASSET_BASE + "?sortBy=CREATED_AT&sortDirection=DESC&size=50"),
+                        HttpMethod.GET,
+                        new HttpEntity<>(headers),
+                        Map.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
@@ -688,9 +697,7 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         return null;
     }
 
-    /**
-     * SELLER 역할의 인증 헤더를 생성합니다.
-     */
+    /** SELLER 역할의 인증 헤더를 생성합니다. */
     private HttpHeaders createSellerHeaders(String tenantId, String organizationId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -702,13 +709,12 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         headers.set("X-Organization-Id", organizationId);
         headers.set("X-User-Roles", "SELLER");
         headers.set("X-User-Permissions", "file:read,file:write,file:delete,file:download");
-        headers.set("Authorization", "Bearer " + createTestJwtToken(email, tenantId, organizationId));
+        headers.set(
+                "Authorization", "Bearer " + createTestJwtToken(email, tenantId, organizationId));
         return headers;
     }
 
-    /**
-     * 읽기 전용 사용자의 인증 헤더를 생성합니다 (file:download 권한 없음).
-     */
+    /** 읽기 전용 사용자의 인증 헤더를 생성합니다 (file:download 권한 없음). */
     private HttpHeaders createReadOnlyHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -725,9 +731,7 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         return headers;
     }
 
-    /**
-     * 특정 tenant의 읽기 전용 사용자의 인증 헤더를 생성합니다 (file:download 권한 없음).
-     */
+    /** 특정 tenant의 읽기 전용 사용자의 인증 헤더를 생성합니다 (file:download 권한 없음). */
     private HttpHeaders createReadOnlyHeadersForTenant(String tenantId, String organizationId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -743,9 +747,7 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         return headers;
     }
 
-    /**
-     * 권한이 없는 사용자의 인증 헤더를 생성합니다.
-     */
+    /** 권한이 없는 사용자의 인증 헤더를 생성합니다. */
     private HttpHeaders createNoPermissionHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -762,10 +764,9 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         return headers;
     }
 
-    /**
-     * 특정 tenant의 삭제 권한이 없는 사용자의 인증 헤더를 생성합니다 (file:delete 권한 없음).
-     */
-    private HttpHeaders createHeadersWithoutDeletePermission(String tenantId, String organizationId) {
+    /** 특정 tenant의 삭제 권한이 없는 사용자의 인증 헤더를 생성합니다 (file:delete 권한 없음). */
+    private HttpHeaders createHeadersWithoutDeletePermission(
+            String tenantId, String organizationId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -775,14 +776,13 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         headers.set("X-Tenant-Id", tenantId);
         headers.set("X-Organization-Id", organizationId);
         headers.set("X-User-Roles", "SELLER");
-        headers.set("X-User-Permissions", "file:read,file:write,file:download"); // file:delete 권한 없음
+        headers.set(
+                "X-User-Permissions", "file:read,file:write,file:download"); // file:delete 권한 없음
         headers.set("Authorization", "Bearer " + createTestJwtTokenForUser(userId, tenantId));
         return headers;
     }
 
-    /**
-     * Presigned URL을 사용하여 S3에 파일을 업로드하고 ETag를 반환합니다.
-     */
+    /** Presigned URL을 사용하여 S3에 파일을 업로드하고 ETag를 반환합니다. */
     private String uploadToS3(String presignedUrl, byte[] content, String contentType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(contentType));
@@ -791,16 +791,13 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         // URI 객체를 사용하여 이미 인코딩된 URL이 다시 인코딩되지 않도록 함
         java.net.URI uri = java.net.URI.create(presignedUrl);
 
-        ResponseEntity<String> response = restTemplate.exchange(
-            uri,
-            HttpMethod.PUT,
-            new HttpEntity<>(content, headers),
-            String.class
-        );
+        ResponseEntity<String> response =
+                restTemplate.exchange(
+                        uri, HttpMethod.PUT, new HttpEntity<>(content, headers), String.class);
 
         assertThat(response.getStatusCode())
-            .as("S3 upload should succeed. Response body: " + response.getBody())
-            .isEqualTo(HttpStatus.OK);
+                .as("S3 upload should succeed. Response body: " + response.getBody())
+                .isEqualTo(HttpStatus.OK);
 
         // S3 응답의 ETag는 "abc123" 형식이므로 따옴표 제거
         String etag = response.getHeaders().getFirst("ETag");
@@ -808,36 +805,44 @@ class FileAssetIntegrationTest extends WebApiIntegrationTest {
         return etag.replace("\"", "");
     }
 
-    /**
-     * SELLER/ADMIN 역할용 테스트 JWT 토큰을 생성합니다.
-     */
+    /** SELLER/ADMIN 역할용 테스트 JWT 토큰을 생성합니다. */
     private String createTestJwtToken(String email, String tenantId, String organizationId) {
-        String header = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString("{\"alg\":\"none\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+        String header =
+                Base64.getUrlEncoder()
+                        .withoutPadding()
+                        .encodeToString(
+                                "{\"alg\":\"none\",\"typ\":\"JWT\"}"
+                                        .getBytes(StandardCharsets.UTF_8));
 
-        String payloadJson = String.format(
-            "{\"email\":\"%s\",\"tid\":\"%s\",\"oid\":\"%s\",\"tenant_name\":\"TestTenant\",\"org_name\":\"TestOrg\"}",
-            email, tenantId, organizationId
-        );
-        String payload = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
+        String payloadJson =
+                String.format(
+                        "{\"email\":\"%s\",\"tid\":\"%s\",\"oid\":\"%s\",\"tenant_name\":\"TestTenant\",\"org_name\":\"TestOrg\"}",
+                        email, tenantId, organizationId);
+        String payload =
+                Base64.getUrlEncoder()
+                        .withoutPadding()
+                        .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
 
         return header + "." + payload + ".";
     }
 
-    /**
-     * 일반 사용자용 테스트 JWT 토큰을 생성합니다.
-     */
+    /** 일반 사용자용 테스트 JWT 토큰을 생성합니다. */
     private String createTestJwtTokenForUser(String userId, String tenantId) {
-        String header = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString("{\"alg\":\"none\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+        String header =
+                Base64.getUrlEncoder()
+                        .withoutPadding()
+                        .encodeToString(
+                                "{\"alg\":\"none\",\"typ\":\"JWT\"}"
+                                        .getBytes(StandardCharsets.UTF_8));
 
-        String payloadJson = String.format(
-            "{\"sub\":\"%s\",\"tid\":\"%s\",\"tenant_name\":\"TestTenant\"}",
-            userId, tenantId
-        );
-        String payload = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
+        String payloadJson =
+                String.format(
+                        "{\"sub\":\"%s\",\"tid\":\"%s\",\"tenant_name\":\"TestTenant\"}",
+                        userId, tenantId);
+        String payload =
+                Base64.getUrlEncoder()
+                        .withoutPadding()
+                        .encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
 
         return header + "." + payload + ".";
     }

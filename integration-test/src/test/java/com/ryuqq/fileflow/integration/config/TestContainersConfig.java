@@ -1,5 +1,8 @@
 package com.ryuqq.fileflow.integration.config;
 
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
+
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
@@ -12,16 +15,11 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 
-import java.net.URI;
-
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
-
 /**
  * TestContainers 설정 클래스.
  *
- * 컨테이너들은 static block에서 한 번만 시작되고 모든 테스트에서 재사용됩니다.
- * withReuse(true)를 사용하여 테스트 실행 간에도 컨테이너를 재사용할 수 있습니다.
+ * <p>컨테이너들은 static block에서 한 번만 시작되고 모든 테스트에서 재사용됩니다. withReuse(true)를 사용하여 테스트 실행 간에도 컨테이너를 재사용할 수
+ * 있습니다.
  */
 @TestConfiguration
 public class TestContainersConfig {
@@ -32,11 +30,12 @@ public class TestContainersConfig {
     public static final MySQLContainer<?> MYSQL_CONTAINER;
 
     static {
-        MYSQL_CONTAINER = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
-            .withDatabaseName("fileflow_test")
-            .withUsername("test")
-            .withPassword("test")
-            .withReuse(true);
+        MYSQL_CONTAINER =
+                new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
+                        .withDatabaseName("fileflow_test")
+                        .withUsername("test")
+                        .withPassword("test")
+                        .withReuse(true);
         MYSQL_CONTAINER.start();
     }
 
@@ -46,9 +45,10 @@ public class TestContainersConfig {
     public static final GenericContainer<?> REDIS_CONTAINER;
 
     static {
-        REDIS_CONTAINER = new GenericContainer<>(DockerImageName.parse("redis:7.2-alpine"))
-            .withExposedPorts(6379)
-            .withReuse(true);
+        REDIS_CONTAINER =
+                new GenericContainer<>(DockerImageName.parse("redis:7.2-alpine"))
+                        .withExposedPorts(6379)
+                        .withReuse(true);
         REDIS_CONTAINER.start();
     }
 
@@ -60,9 +60,10 @@ public class TestContainersConfig {
     public static final String TEST_BUCKET_NAME = "fileflow-uploads-prod";
 
     static {
-        LOCALSTACK_CONTAINER = new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.8"))
-            .withServices(S3, SQS)
-            .withReuse(true);
+        LOCALSTACK_CONTAINER =
+                new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.8"))
+                        .withServices(S3, SQS)
+                        .withReuse(true);
         LOCALSTACK_CONTAINER.start();
 
         // Create S3 bucket
@@ -70,15 +71,17 @@ public class TestContainersConfig {
     }
 
     private static void createTestBucket() {
-        try (S3Client s3Client = S3Client.builder()
-                .endpointOverride(LOCALSTACK_CONTAINER.getEndpoint())
-                .region(Region.of(LOCALSTACK_CONTAINER.getRegion()))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(
-                                LOCALSTACK_CONTAINER.getAccessKey(),
-                                LOCALSTACK_CONTAINER.getSecretKey())))
-                .forcePathStyle(true)
-                .build()) {
+        try (S3Client s3Client =
+                S3Client.builder()
+                        .endpointOverride(LOCALSTACK_CONTAINER.getEndpoint())
+                        .region(Region.of(LOCALSTACK_CONTAINER.getRegion()))
+                        .credentialsProvider(
+                                StaticCredentialsProvider.create(
+                                        AwsBasicCredentials.create(
+                                                LOCALSTACK_CONTAINER.getAccessKey(),
+                                                LOCALSTACK_CONTAINER.getSecretKey())))
+                        .forcePathStyle(true)
+                        .build()) {
             s3Client.createBucket(CreateBucketRequest.builder().bucket(TEST_BUCKET_NAME).build());
         }
     }
