@@ -28,7 +28,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:fileflow}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:fileflow}?useSSL=true&requireSSL=true&verifyServerCertificate=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:root}
     hikari:
