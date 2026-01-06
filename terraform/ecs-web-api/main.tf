@@ -132,6 +132,16 @@ module "web_api_logs" {
 }
 
 # ========================================
+# Log Streaming to OpenSearch (V2 - Kinesis)
+# ========================================
+module "log_streaming" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/log-subscription-filter-v2?ref=main"
+
+  log_group_name = module.web_api_logs.log_group_name
+  service_name   = "${var.project_name}-web-api"
+}
+
+# ========================================
 # Security Groups
 # ========================================
 # NOTE: ALB Security Group removed - API Gateway를 통해서만 접근
