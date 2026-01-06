@@ -251,7 +251,14 @@ public class UserContextFilter extends OncePerRequestFilter {
                     try {
                         userContext = parseTokenAndCreateUserContext(token);
                     } catch (IllegalArgumentException e) {
-                        log.warn("JWT 토큰 파싱 실패: {}", e.getMessage());
+                        log.warn(
+                                "JWT 토큰 파싱 실패 - method={}, uri={}, clientIp={}, userAgent={}, tokenPreview={}, error={}",
+                                request.getMethod(),
+                                request.getRequestURI(),
+                                getClientIp(request),
+                                request.getHeader("User-Agent"),
+                                maskToken(token),
+                                e.getMessage());
                         sendErrorResponse(
                                 request,
                                 response,
@@ -408,8 +415,11 @@ public class UserContextFilter extends OncePerRequestFilter {
                     new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
 
             return JWT_OBJECT_MAPPER.readValue(payload, Map.class);
+        } catch (IllegalArgumentException e) {
+            // 형식 오류는 그대로 전파 (상위에서 상세 로깅)
+            throw e;
         } catch (Exception e) {
-            log.error("JWT 토큰 파싱 실패: {}", e.getMessage());
+            log.error("JWT 토큰 디코딩 실패 - tokenPreview={}, error={}", maskToken(token), e.getMessage());
             throw new IllegalArgumentException("JWT 토큰 파싱에 실패했습니다.", e);
         }
     }
@@ -662,5 +672,44 @@ public class UserContextFilter extends OncePerRequestFilter {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
         objectMapper.writeValue(response.getWriter(), problemDetail);
+    }
+
+    /**
+     * 클라이언트 IP를 추출합니다.
+     *
+     * <p>X-Forwarded-For 헤더를 우선 확인하고, 없으면 RemoteAddr를 사용합니다.
+     *
+     * @param request HTTP 요청
+     * @return 클라이언트 IP
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            // X-Forwarded-For: client, proxy1, proxy2 형식에서 첫 번째가 실제 클라이언트
+            return xff.split(",")[0].trim();
+        }
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isBlank()) {
+            return xRealIp;
+        }
+        return request.getRemoteAddr();
+    }
+
+    /**
+     * 토큰을 마스킹하여 로그에 안전하게 출력합니다.
+     *
+     * <p>토큰의 앞 10자와 뒷 4자만 노출하고 중간은 마스킹합니다.
+     *
+     * @param token JWT 토큰
+     * @return 마스킹된 토큰 (예: "eyJhbGciOi...xxxx")
+     */
+    private String maskToken(String token) {
+        if (token == null) {
+            return "null";
+        }
+        if (token.length() <= 14) {
+            return "***";
+        }
+        return token.substring(0, 10) + "..." + token.substring(token.length() - 4);
     }
 }
