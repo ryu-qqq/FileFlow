@@ -1,3 +1,0 @@
-ERROR in ch.qos.logback.core.model.processor.ImplicitModelHandler - Could not create component [encoder] of type [net.logstash.logback.encoder.LogstashEncoder] java.lang.ClassNotFoundException: net.logstash.logback.encoder.LogstashEncoder
-ERROR in ch.qos.logback.core.ConsoleAppender[JSON_CONSOLE] - No encoder set for the appender named "JSON_CONSOLE".
-Logging system failed to initialize using configuration from 'null'
