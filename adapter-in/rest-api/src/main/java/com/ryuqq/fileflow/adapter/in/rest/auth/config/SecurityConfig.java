@@ -102,7 +102,7 @@ public class SecurityConfig {
      *
      * <ul>
      *   <li>PUBLIC: 인증 불필요 (헬스체크, Actuator, 에러 페이지)
-     *   <li>DOCS: 인증 필요 (API 문서 - Service Token 또는 JWT로 접근)
+     *   <li>DOCS: 인증 불필요 (API 문서 - Swagger, OpenAPI, REST Docs)
      *   <li>AUTHENTICATED: 인증 필요 + @PreAuthorize 권한 검사 (파일 API)
      * </ul>
      *
@@ -115,9 +115,8 @@ public class SecurityConfig {
         // PUBLIC 엔드포인트 설정 (인증 불필요 - 헬스체크, Actuator, 에러 페이지)
         auth.requestMatchers(SecurityPaths.Public.PATTERNS.toArray(String[]::new)).permitAll();
 
-        // DOCS 엔드포인트는 인증 필요 (Service Token 또는 JWT)
-        // UserContextFilter에서 인증 처리 후 접근 가능
-        // anyRequest().authenticated()에 포함되어 처리됨
+        // DOCS 엔드포인트 설정 (인증 불필요 - Swagger, OpenAPI, REST Docs)
+        auth.requestMatchers(SecurityPaths.Docs.PATTERNS.toArray(String[]::new)).permitAll();
 
         // 그 외 모든 요청은 인증 필요 + @PreAuthorize로 세부 권한 검사
         // UserContextFilter에서 Spring Security Authentication을 설정하면 통과

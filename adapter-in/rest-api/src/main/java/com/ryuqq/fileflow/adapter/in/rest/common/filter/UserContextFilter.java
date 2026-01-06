@@ -132,11 +132,9 @@ public class UserContextFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Public 경로만 필터를 건너뜁니다.
+     * Public 및 Docs 경로는 필터를 건너뜁니다.
      *
-     * <p>Actuator, 헬스체크, 에러 페이지 등 인증이 필요 없는 경로만 필터링하지 않습니다.
-     *
-     * <p>API 문서(Swagger, REST Docs)는 인증이 필요하므로 필터를 실행합니다. Service Token 또는 JWT로 인증해야 접근 가능합니다.
+     * <p>Actuator, 헬스체크, 에러 페이지, API 문서(Swagger, REST Docs) 등 인증이 필요 없는 경로는 필터링하지 않습니다.
      *
      * @param request HTTP 요청
      * @return true면 필터 건너뜀
@@ -144,10 +142,15 @@ public class UserContextFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Public 경로만 건너뜀 (헬스체크, Actuator, 에러 페이지)
-        // API 문서(Docs)는 인증 필요하므로 필터 실행
-        return SecurityPaths.Public.PATTERNS.stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, path));
+        // Public 경로 (헬스체크, Actuator, 에러 페이지)
+        boolean isPublic =
+                SecurityPaths.Public.PATTERNS.stream()
+                        .anyMatch(pattern -> pathMatcher.match(pattern, path));
+        // Docs 경로 (Swagger, OpenAPI, REST Docs)
+        boolean isDocs =
+                SecurityPaths.Docs.PATTERNS.stream()
+                        .anyMatch(pattern -> pathMatcher.match(pattern, path));
+        return isPublic || isDocs;
     }
 
     @Override
