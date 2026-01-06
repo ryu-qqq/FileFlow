@@ -132,7 +132,8 @@ public class SecurityConfig {
             auth.requestMatchers(SecurityPaths.Docs.PATTERNS.toArray(String[]::new)).permitAll();
         } else {
             // prod: API 문서 인증 필요 (Service Token 또는 JWT)
-            auth.requestMatchers(SecurityPaths.Docs.PATTERNS.toArray(String[]::new)).authenticated();
+            auth.requestMatchers(SecurityPaths.Docs.PATTERNS.toArray(String[]::new))
+                    .authenticated();
         }
 
         // 그 외 모든 요청은 인증 필요 + @PreAuthorize로 세부 권한 검사
