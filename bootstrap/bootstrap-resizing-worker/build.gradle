@@ -42,6 +42,9 @@ dependencies {
     // Logstash Logback Encoder (JSON 로깅)
     implementation libs.logstash.logback.encoder
 
+    // Micrometer Prometheus (메트릭 수집)
+    implementation libs.micrometer.prometheus
+
     // Test Dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
