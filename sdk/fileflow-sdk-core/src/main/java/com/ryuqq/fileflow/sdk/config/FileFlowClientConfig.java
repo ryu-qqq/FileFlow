@@ -13,6 +13,7 @@ public final class FileFlowClientConfig {
 
     private final String baseUrl;
     private final TokenResolver tokenResolver;
+    private final String serviceName;
     private final Duration connectTimeout;
     private final Duration readTimeout;
     private final Duration writeTimeout;
@@ -22,6 +23,7 @@ public final class FileFlowClientConfig {
         this.baseUrl = Objects.requireNonNull(builder.baseUrl, "baseUrl must not be null");
         this.tokenResolver =
                 Objects.requireNonNull(builder.tokenResolver, "tokenResolver must not be null");
+        this.serviceName = builder.serviceName;
         this.connectTimeout = builder.connectTimeout;
         this.readTimeout = builder.readTimeout;
         this.writeTimeout = builder.writeTimeout;
@@ -44,6 +46,15 @@ public final class FileFlowClientConfig {
      */
     public TokenResolver getTokenResolver() {
         return tokenResolver;
+    }
+
+    /**
+     * Returns the service name for X-Service-Name header.
+     *
+     * @return the service name, or null if not set
+     */
+    public String getServiceName() {
+        return serviceName;
     }
 
     /**
@@ -96,6 +107,7 @@ public final class FileFlowClientConfig {
 
         private String baseUrl;
         private TokenResolver tokenResolver;
+        private String serviceName;
         private Duration connectTimeout = Duration.ofSeconds(5);
         private Duration readTimeout = Duration.ofSeconds(30);
         private Duration writeTimeout = Duration.ofSeconds(30);
@@ -122,6 +134,17 @@ public final class FileFlowClientConfig {
          */
         public Builder tokenResolver(TokenResolver tokenResolver) {
             this.tokenResolver = tokenResolver;
+            return this;
+        }
+
+        /**
+         * Sets the service name for X-Service-Name header.
+         *
+         * @param serviceName the service name
+         * @return this builder
+         */
+        public Builder serviceName(String serviceName) {
+            this.serviceName = serviceName;
             return this;
         }
 

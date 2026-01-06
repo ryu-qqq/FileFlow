@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * fileflow:
  *   base-url: https://fileflow.example.com
  *   service-token: your-service-token
+ *   service-name: my-service
  *   connect-timeout: 5s
  *   read-timeout: 30s
  *   write-timeout: 30s
@@ -29,6 +30,9 @@ public class FileFlowProperties {
      * Service token for authentication. Used as a fallback when no ThreadLocal token is available.
      */
     private String serviceToken;
+
+    /** Service name for X-Service-Name header. Used to identify the calling service. */
+    private String serviceName;
 
     /** Connection timeout. */
     private Duration connectTimeout = Duration.ofSeconds(5);
@@ -62,6 +66,14 @@ public class FileFlowProperties {
 
     public void setServiceToken(String serviceToken) {
         this.serviceToken = serviceToken;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     public Duration getConnectTimeout() {

@@ -312,8 +312,8 @@ class FileAssetApiIntegrationTest extends WireMockTestSupport {
     class AuthenticationTest {
 
         @Test
-        @DisplayName("Bearer 토큰이 Authorization 헤더에 포함된다")
-        void shouldIncludeBearerTokenInAuthorizationHeader() {
+        @DisplayName("서비스 토큰이 X-Service-Token 헤더에 포함된다")
+        void shouldIncludeServiceTokenInHeader() {
             // given
             String fileAssetId = "file-asset-123";
             String responseData =
@@ -331,10 +331,10 @@ class FileAssetApiIntegrationTest extends WireMockTestSupport {
                     }
                     """;
 
-            // Authorization 헤더가 정확히 일치해야만 응답 반환
+            // X-Service-Token 헤더가 정확히 일치해야만 응답 반환
             stubFor(
                     get(urlPathEqualTo("/api/v1/file/file-assets/file-asset-123"))
-                            .withHeader("Authorization", equalTo("Bearer test-service-token"))
+                            .withHeader("X-Service-Token", equalTo("test-service-token"))
                             .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when

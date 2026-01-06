@@ -18,8 +18,7 @@ import org.springframework.http.MediaType;
 abstract class WireMockTestSupport {
 
     protected static final String SERVICE_TOKEN = "test-service-token";
-    protected static final String AUTHORIZATION_HEADER = "Authorization";
-    protected static final String BEARER_PREFIX = "Bearer ";
+    protected static final String SERVICE_TOKEN_HEADER = "X-Service-Token";
 
     /**
      * 성공 응답 스텁을 생성합니다.
@@ -115,6 +114,6 @@ abstract class WireMockTestSupport {
      * @return 인증 헤더가 추가된 MappingBuilder
      */
     protected MappingBuilder withAuth(MappingBuilder builder) {
-        return builder.withHeader(AUTHORIZATION_HEADER, equalTo(BEARER_PREFIX + SERVICE_TOKEN));
+        return builder.withHeader(SERVICE_TOKEN_HEADER, equalTo(SERVICE_TOKEN));
     }
 }

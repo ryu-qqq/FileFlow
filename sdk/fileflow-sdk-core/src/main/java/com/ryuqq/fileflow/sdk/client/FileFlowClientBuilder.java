@@ -43,6 +43,7 @@ public final class FileFlowClientBuilder {
     private String baseUrl;
     private TokenResolver tokenResolver;
     private String serviceToken;
+    private String serviceName;
     private Duration connectTimeout = Duration.ofSeconds(5);
     private Duration readTimeout = Duration.ofSeconds(30);
     private Duration writeTimeout = Duration.ofSeconds(30);
@@ -67,13 +68,26 @@ public final class FileFlowClientBuilder {
      * Sets a static service token for authentication.
      *
      * <p>This creates a {@link ChainTokenResolver} that tries ThreadLocal first, then falls back to
-     * the service token.
+     * the service token. The token will be sent via X-Service-Token header.
      *
      * @param serviceToken the service token
      * @return this builder
      */
     public FileFlowClientBuilder serviceToken(String serviceToken) {
         this.serviceToken = serviceToken;
+        return this;
+    }
+
+    /**
+     * Sets the service name for X-Service-Name header.
+     *
+     * <p>This is used to identify the calling service in server logs and for access control.
+     *
+     * @param serviceName the service name (e.g., "product-service", "order-service")
+     * @return this builder
+     */
+    public FileFlowClientBuilder serviceName(String serviceName) {
+        this.serviceName = serviceName;
         return this;
     }
 
@@ -165,6 +179,7 @@ public final class FileFlowClientBuilder {
         return FileFlowClientConfig.builder()
                 .baseUrl(normalizeBaseUrl(baseUrl))
                 .tokenResolver(resolvedTokenResolver)
+                .serviceName(serviceName)
                 .connectTimeout(connectTimeout)
                 .readTimeout(readTimeout)
                 .writeTimeout(writeTimeout)

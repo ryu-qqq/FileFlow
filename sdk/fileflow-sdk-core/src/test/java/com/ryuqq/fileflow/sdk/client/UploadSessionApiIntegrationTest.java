@@ -249,8 +249,8 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
     class AuthenticationTest {
 
         @Test
-        @DisplayName("Bearer 토큰이 Authorization 헤더에 포함된다")
-        void shouldIncludeBearerTokenInAuthorizationHeader() {
+        @DisplayName("서비스 토큰이 X-Service-Token 헤더에 포함된다")
+        void shouldIncludeServiceTokenInHeader() {
             // given
             InitSingleUploadRequest request =
                     InitSingleUploadRequest.builder()
@@ -268,13 +268,13 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
                     }
                     """;
 
-            // Authorization 헤더가 정확히 일치해야만 응답 반환
+            // X-Service-Token 헤더가 정확히 일치해야만 응답 반환
             stubFor(
                     post(urlPathEqualTo("/api/v1/file/upload-sessions/single/init"))
                             .withHeader(
-                                    "Authorization",
+                                    "X-Service-Token",
                                     com.github.tomakehurst.wiremock.client.WireMock.equalTo(
-                                            "Bearer test-service-token"))
+                                            "test-service-token"))
                             .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when

@@ -27,12 +27,13 @@ import reactor.core.publisher.Mono;
  */
 public final class HttpClientAsyncSupport {
 
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String SERVICE_TOKEN_HEADER = "X-Service-Token";
+    private static final String SERVICE_NAME_HEADER = "X-Service-Name";
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
     private final TokenResolver tokenResolver;
+    private final String serviceName;
 
     /**
      * Creates a new HttpClientAsyncSupport.
@@ -46,6 +47,7 @@ public final class HttpClientAsyncSupport {
         this.webClient = webClient;
         this.objectMapper = objectMapper;
         this.tokenResolver = config.getTokenResolver();
+        this.serviceName = config.getServiceName();
     }
 
     /**
@@ -171,14 +173,10 @@ public final class HttpClientAsyncSupport {
     }
 
     private void addAuthHeader(HttpHeaders headers) {
-        tokenResolver
-                .resolve()
-                .ifPresent(
-                        token -> {
-                            String authValue =
-                                    token.startsWith(BEARER_PREFIX) ? token : BEARER_PREFIX + token;
-                            headers.set(AUTHORIZATION_HEADER, authValue);
-                        });
+        tokenResolver.resolve().ifPresent(token -> headers.set(SERVICE_TOKEN_HEADER, token));
+        if (serviceName != null && !serviceName.isBlank()) {
+            headers.set(SERVICE_NAME_HEADER, serviceName);
+        }
     }
 
     private <T> Mono<T> handleResponse(
