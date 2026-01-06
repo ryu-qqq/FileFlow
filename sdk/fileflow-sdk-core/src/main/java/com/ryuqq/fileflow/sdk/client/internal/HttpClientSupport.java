@@ -191,7 +191,10 @@ public final class HttpClientSupport {
     }
 
     private void addAuthHeader(HttpHeaders headers) {
-        tokenResolver.resolve().ifPresent(token -> headers.set(SERVICE_TOKEN_HEADER, token));
+        tokenResolver
+                .resolve()
+                .filter(token -> !token.isBlank())
+                .ifPresent(token -> headers.set(SERVICE_TOKEN_HEADER, token));
         if (serviceName != null && !serviceName.isBlank()) {
             headers.set(SERVICE_NAME_HEADER, serviceName);
         }

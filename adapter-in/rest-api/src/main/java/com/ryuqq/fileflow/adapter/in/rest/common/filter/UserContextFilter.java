@@ -420,8 +420,7 @@ public class UserContextFilter extends OncePerRequestFilter {
             // 형식 오류는 그대로 전파 (상위에서 상세 로깅)
             throw e;
         } catch (Exception e) {
-            log.error(
-                    "JWT 토큰 디코딩 실패 - tokenPreview={}, error={}", maskToken(token), e.getMessage());
+            // 중복 로깅 제거: 상위 호출자(doFilterInternal)에서 더 풍부한 컨텍스트와 함께 로깅
             throw new IllegalArgumentException("JWT 토큰 파싱에 실패했습니다.", e);
         }
     }
