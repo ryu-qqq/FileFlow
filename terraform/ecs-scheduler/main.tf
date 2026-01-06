@@ -103,7 +103,7 @@ resource "aws_kms_alias" "logs" {
 # CloudWatch Log Group with KMS Encryption
 # ========================================
 module "scheduler_logs" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/cloudwatch-log-group?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/cloudwatch-log-group?ref=main"
 
   name              = "/aws/ecs/${var.project_name}-scheduler/${var.environment}"
   retention_in_days = 30
@@ -123,7 +123,7 @@ module "scheduler_logs" {
 # Log Streaming to OpenSearch (V2 - Kinesis)
 # ========================================
 module "log_streaming" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/log-subscription-filter-v2?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/log-subscription-filter-v2?ref=main"
 
   log_group_name = module.scheduler_logs.log_group_name
   service_name   = "${var.project_name}-scheduler"
@@ -133,7 +133,7 @@ module "log_streaming" {
 # Security Group (using Infrastructure module)
 # ========================================
 module "ecs_security_group" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/security-group?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/security-group?ref=main"
 
   name        = "${var.project_name}-scheduler-sg-${var.environment}"
   description = "Security group for scheduler ECS tasks"
@@ -157,7 +157,7 @@ module "ecs_security_group" {
 # IAM Role for ECS Task Execution (using Infrastructure module)
 # ========================================
 module "scheduler_task_execution_role" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=main"
 
   role_name = "${var.project_name}-scheduler-execution-role-${var.environment}"
 
@@ -224,7 +224,7 @@ module "scheduler_task_execution_role" {
 # IAM Role for ECS Task (using Infrastructure module)
 # ========================================
 module "scheduler_task_role" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=main"
 
   role_name = "${var.project_name}-scheduler-task-role-${var.environment}"
 
@@ -344,7 +344,7 @@ module "scheduler_task_role" {
 # ADOT Sidecar (using Infrastructure module)
 # ========================================
 module "adot_sidecar" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/adot-sidecar?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/adot-sidecar?ref=main"
 
   project_name              = var.project_name
   service_name              = "scheduler"
@@ -363,7 +363,7 @@ module "adot_sidecar" {
 # ECS Service using Infrastructure Module
 # ========================================
 module "scheduler_service" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecs-service?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecs-service?ref=main"
 
   name            = "${var.project_name}-scheduler-${var.environment}"
   cluster_id      = data.aws_ecs_cluster.main.arn

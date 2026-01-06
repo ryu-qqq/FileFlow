@@ -116,7 +116,7 @@ resource "aws_kms_alias" "logs" {
 # CloudWatch Log Group (using Infrastructure module)
 # ========================================
 module "web_api_logs" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/cloudwatch-log-group?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/cloudwatch-log-group?ref=main"
 
   name              = "/aws/ecs/${var.project_name}-web-api-${var.environment}/application"
   retention_in_days = 30
@@ -135,7 +135,7 @@ module "web_api_logs" {
 # Log Streaming to OpenSearch (V2 - Kinesis)
 # ========================================
 module "log_streaming" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/log-subscription-filter-v2?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/log-subscription-filter-v2?ref=main"
 
   log_group_name = module.web_api_logs.log_group_name
   service_name   = "${var.project_name}-web-api"
@@ -148,7 +148,7 @@ module "log_streaming" {
 # ECS Service는 Service Discovery (connectly.local)를 통해 내부 통신만 허용
 
 module "ecs_security_group" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/security-group?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/security-group?ref=main"
 
   name        = "${var.project_name}-web-api-sg-${var.environment}"
   description = "Security group for web-api ECS tasks"
@@ -190,7 +190,7 @@ module "ecs_security_group" {
 
 # ECS Task Execution Role
 module "web_api_task_execution_role" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=main"
 
   role_name = "${var.project_name}-web-api-execution-role-${var.environment}"
 
@@ -255,7 +255,7 @@ module "web_api_task_execution_role" {
 
 # ECS Task Role
 module "web_api_task_role" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/iam-role-policy?ref=main"
 
   role_name = "${var.project_name}-web-api-task-role-${var.environment}"
 
@@ -368,7 +368,7 @@ module "web_api_task_role" {
 # ADOT Sidecar (using Infrastructure module)
 # ========================================
 module "adot_sidecar" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/adot-sidecar?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/adot-sidecar?ref=main"
 
   project_name              = var.project_name
   service_name              = "web-api"
@@ -387,7 +387,7 @@ module "adot_sidecar" {
 # ECS Service (using Infrastructure module)
 # ========================================
 module "ecs_service" {
-  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecs-service?ref=v1.0.0"
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/ecs-service?ref=main"
 
   # Service Configuration
   name            = "${var.project_name}-web-api-${var.environment}"
