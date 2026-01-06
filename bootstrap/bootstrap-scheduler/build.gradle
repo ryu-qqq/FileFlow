@@ -28,9 +28,12 @@ dependencies {
     // Configuration Processor
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-    // Observability
-    implementation libs.micrometer.prometheus
-    implementation libs.logstash.logback.encoder
+    // Observability (Custom Starter - Web, Logging, Metrics)
+    implementation libs.observability.starter
+
+    // Sentry (Error Tracking)
+    implementation libs.sentry.spring.boot
+    implementation libs.sentry.logback
 
     // Test Dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

@@ -46,6 +46,14 @@
     <!-- Production Profile (prod, staging)          -->
     <!-- ============================================ -->
     <springProfile name="prod,staging">
+        <!-- Sentry Appender for Error Tracking -->
+        <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
+            <!-- DSN is configured in application.yml -->
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+        </appender>
+
         <!-- JSON Structured Logging -->
         <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
@@ -86,6 +94,7 @@
 
         <root level="INFO">
             <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="SENTRY"/>
         </root>
 
         <!-- Application-specific logging -->
@@ -98,6 +107,9 @@
         <!-- AWS SDK -->
         <logger name="software.amazon.awssdk" level="WARN"/>
         <logger name="io.awspring.cloud" level="WARN"/>
+
+        <!-- Sentry SDK (Reduce noise from Sentry itself) -->
+        <logger name="io.sentry" level="WARN"/>
     </springProfile>
 
 </configuration>
