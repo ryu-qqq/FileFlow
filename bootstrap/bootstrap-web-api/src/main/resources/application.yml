@@ -34,6 +34,57 @@ server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful
 
+# ===============================================
+# Observability Configuration (SDK)
+# ===============================================
+observability:
+  service-name: ${spring.application.name}
+  http:
+    log-request-body: false
+    log-response-body: false
+    max-body-length: 2000
+    slow-request-threshold-ms: 3000
+    exclude-paths:
+      - /actuator/**
+      - /health
+      - /docs/**
+      - /swagger-ui/**
+      - /v3/api-docs/**
+  masking:
+    enabled: true
+  trace:
+    include-in-response: true
+
+# ===============================================
+# Security Configuration
+# ===============================================
+security:
+  docs:
+    # API 문서 공개 접근 허용 여부 (prod: false, local/test: true)
+    public-access: ${SECURITY_DOCS_PUBLIC_ACCESS:false}
+
+# ===============================================
+# Sentry Configuration (Error Tracking)
+# ===============================================
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SPRING_PROFILES_ACTIVE:local}
+  release: ${APP_VERSION:unknown}
+  server-name: ${HOSTNAME:unknown}
+  # Performance monitoring (트랜잭션 샘플링)
+  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.1}
+  # 민감 정보 전송 비활성화
+  send-default-pii: false
+  # 무시할 예외 타입
+  ignored-exceptions-for-type:
+    - org.springframework.web.HttpRequestMethodNotSupportedException
+    - org.springframework.web.servlet.NoHandlerFoundException
+    - org.springframework.web.servlet.resource.NoResourceFoundException
+  # 로그 연동
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
+
 logging:
   level:
     root: INFO

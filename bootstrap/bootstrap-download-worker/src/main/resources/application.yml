@@ -60,6 +60,38 @@ worker:
   download:
     enabled: ${WORKER_DOWNLOAD_ENABLED:true}
 
+# ===============================================
+# Observability Configuration (SDK)
+# ===============================================
+observability:
+  service-name: ${spring.application.name}
+  http:
+    log-request-body: false
+    log-response-body: false
+    exclude-paths:
+      - /actuator/**
+      - /health
+  message:
+    log-payload: false
+  masking:
+    enabled: true
+  trace:
+    include-in-response: true
+
+# ===============================================
+# Sentry Configuration (Error Tracking)
+# ===============================================
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SPRING_PROFILES_ACTIVE:local}
+  release: ${APP_VERSION:unknown}
+  server-name: ${HOSTNAME:unknown}
+  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.1}
+  send-default-pii: false
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
+
 logging:
   level:
     root: INFO

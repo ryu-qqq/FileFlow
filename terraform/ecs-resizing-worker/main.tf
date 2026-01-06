@@ -119,6 +119,16 @@ module "resizing_worker_logs" {
 }
 
 # ========================================
+# Log Streaming to OpenSearch (V2 - Kinesis)
+# ========================================
+module "log_streaming" {
+  source = "git::https://github.com/ryu-qqq/Infrastructure.git//terraform/modules/log-subscription-filter-v2?ref=main"
+
+  log_group_name = module.resizing_worker_logs.log_group_name
+  service_name   = "${var.project_name}-resizing-worker"
+}
+
+# ========================================
 # Security Group (using Infrastructure module)
 # ========================================
 module "ecs_security_group" {
@@ -445,6 +455,19 @@ module "resizing_worker_service" {
     {
       name  = "FILE_PROCESSING_DLQ_LISTENER_ENABLED"
       value = "true"
+    },
+    # Sentry (Error Tracking)
+    {
+      name  = "SENTRY_DSN"
+      value = local.sentry_dsn
+    },
+    {
+      name  = "SENTRY_ENVIRONMENT"
+      value = var.environment
+    },
+    {
+      name  = "APP_VERSION"
+      value = var.image_tag
     }
   ]
 

@@ -69,8 +69,12 @@ public class GlobalExceptionHandler {
         // tracing(id 존재 시) — Micrometer/Logback MDC 키 관례
         String traceId = MDC.get("traceId");
         String spanId = MDC.get("spanId");
-        if (traceId != null) pd.setProperty("traceId", traceId);
-        if (spanId != null) pd.setProperty("spanId", spanId);
+        if (traceId != null) {
+            pd.setProperty("traceId", traceId);
+        }
+        if (spanId != null) {
+            pd.setProperty("spanId", spanId);
+        }
 
         return ResponseEntity.status(status).body(pd);
     }
@@ -219,7 +223,9 @@ public class GlobalExceptionHandler {
         Objects.requireNonNull(entity.getBody()).setProperty("code", "METHOD_NOT_ALLOWED");
 
         HttpHeaders headers = new HttpHeaders();
-        if (!supported.isEmpty()) headers.setAllow(supported);
+        if (!supported.isEmpty()) {
+            headers.setAllow(supported);
+        }
 
         log.warn("MethodNotAllowed: method={}, supported={}", method, supportedStr);
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)

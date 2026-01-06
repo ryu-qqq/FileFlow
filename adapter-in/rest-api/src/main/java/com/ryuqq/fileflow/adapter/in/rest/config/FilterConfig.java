@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.adapter.in.rest.common.filter.RequestResponseLoggingFilter;
 import com.ryuqq.fileflow.adapter.in.rest.common.filter.UserContextFilter;
 import com.ryuqq.fileflow.adapter.in.rest.config.properties.ServiceTokenProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,10 +32,15 @@ public class FilterConfig {
 
     private final ObjectMapper objectMapper;
     private final ServiceTokenProperties serviceTokenProperties;
+    private final boolean docsPublicAccess;
 
-    public FilterConfig(ObjectMapper objectMapper, ServiceTokenProperties serviceTokenProperties) {
+    public FilterConfig(
+            ObjectMapper objectMapper,
+            ServiceTokenProperties serviceTokenProperties,
+            @Value("${security.docs.public-access:false}") boolean docsPublicAccess) {
         this.objectMapper = objectMapper;
         this.serviceTokenProperties = serviceTokenProperties;
+        this.docsPublicAccess = docsPublicAccess;
     }
 
     /**
@@ -62,7 +68,7 @@ public class FilterConfig {
      */
     @Bean
     public UserContextFilter userContextFilter() {
-        return new UserContextFilter(objectMapper, serviceTokenProperties);
+        return new UserContextFilter(objectMapper, serviceTokenProperties, docsPublicAccess);
     }
 
     /**

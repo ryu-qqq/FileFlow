@@ -28,6 +28,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -124,19 +125,29 @@ public class UserContextFilter extends OncePerRequestFilter {
 
     private final ObjectMapper objectMapper;
     private final ServiceTokenProperties serviceTokenProperties;
+    private final boolean docsPublicAccess;
 
     public UserContextFilter(
-            ObjectMapper objectMapper, ServiceTokenProperties serviceTokenProperties) {
+            ObjectMapper objectMapper,
+            ServiceTokenProperties serviceTokenProperties,
+            @Value("${security.docs.public-access:false}") boolean docsPublicAccess) {
         this.objectMapper = objectMapper;
         this.serviceTokenProperties = serviceTokenProperties;
+        this.docsPublicAccess = docsPublicAccess;
     }
 
     /**
-     * Public 경로만 필터를 건너뜁니다.
+     * Public 경로와 조건부 Docs 경로는 필터를 건너뜁니다.
      *
-     * <p>Actuator, 헬스체크, 에러 페이지 등 인증이 필요 없는 경로만 필터링하지 않습니다.
+     * <p>Actuator, 헬스체크, 에러 페이지는 항상 필터링하지 않습니다. API 문서(Swagger, REST Docs) 경로는
+     * security.docs.public-access 설정에 따라 결정됩니다.
      *
-     * <p>API 문서(Swagger, REST Docs)는 인증이 필요하므로 필터를 실행합니다. Service Token 또는 JWT로 인증해야 접근 가능합니다.
+     * <p>설정별 동작:
+     *
+     * <ul>
+     *   <li>public-access=true (local/test): Docs 경로 필터 건너뜀 → 인증 불필요
+     *   <li>public-access=false (prod): Docs 경로 필터 실행 → 인증 필요
+     * </ul>
      *
      * @param request HTTP 요청
      * @return true면 필터 건너뜀
@@ -144,10 +155,21 @@ public class UserContextFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Public 경로만 건너뜀 (헬스체크, Actuator, 에러 페이지)
-        // API 문서(Docs)는 인증 필요하므로 필터 실행
-        return SecurityPaths.Public.PATTERNS.stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, path));
+        // Public 경로 (헬스체크, Actuator, 에러 페이지) - 항상 필터 건너뜀
+        boolean isPublic =
+                SecurityPaths.Public.PATTERNS.stream()
+                        .anyMatch(pattern -> pathMatcher.match(pattern, path));
+        if (isPublic) {
+            return true;
+        }
+
+        // Docs 경로 (Swagger, OpenAPI, REST Docs) - 환경별 조건부
+        boolean isDocs =
+                SecurityPaths.Docs.PATTERNS.stream()
+                        .anyMatch(pattern -> pathMatcher.match(pattern, path));
+        // docsPublicAccess=true (local/test): Docs 경로 필터 건너뜀
+        // docsPublicAccess=false (prod): Docs 경로 필터 실행 (인증 필요)
+        return isDocs && docsPublicAccess;
     }
 
     @Override
