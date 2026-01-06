@@ -35,6 +35,9 @@ dependencies {
     implementation libs.sentry.spring.boot
     implementation libs.sentry.logback
 
+    // Logstash Logback Encoder (JSON 로깅)
+    implementation libs.logstash.logback.encoder
+
     // Test Dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
