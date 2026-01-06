@@ -417,6 +417,19 @@ module "scheduler_service" {
     {
       name  = "REDIS_PORT"
       value = tostring(local.redis_port)
+    },
+    # Sentry (Error Tracking)
+    {
+      name  = "SENTRY_DSN"
+      value = local.sentry_dsn
+    },
+    {
+      name  = "SENTRY_ENVIRONMENT"
+      value = var.environment
+    },
+    {
+      name  = "APP_VERSION"
+      value = var.image_tag
     }
   ]
 

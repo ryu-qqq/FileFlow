@@ -446,6 +446,19 @@ module "download_worker_service" {
     {
       name  = "SQS_EXTERNAL_DOWNLOAD_DLQ_URL"
       value = data.aws_ssm_parameter.external_download_dlq_url.value
+    },
+    # Sentry (Error Tracking)
+    {
+      name  = "SENTRY_DSN"
+      value = local.sentry_dsn
+    },
+    {
+      name  = "SENTRY_ENVIRONMENT"
+      value = var.environment
+    },
+    {
+      name  = "APP_VERSION"
+      value = var.image_tag
     }
   ]
 
