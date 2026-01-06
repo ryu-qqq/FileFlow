@@ -252,7 +252,8 @@ public class UserContextFilter extends OncePerRequestFilter {
                         userContext = parseTokenAndCreateUserContext(token);
                     } catch (IllegalArgumentException e) {
                         log.warn(
-                                "JWT 토큰 파싱 실패 - method={}, uri={}, clientIp={}, userAgent={}, tokenPreview={}, error={}",
+                                "JWT 토큰 파싱 실패 - method={}, uri={}, clientIp={}, userAgent={},"
+                                        + " tokenPreview={}, error={}",
                                 request.getMethod(),
                                 request.getRequestURI(),
                                 getClientIp(request),
@@ -419,7 +420,8 @@ public class UserContextFilter extends OncePerRequestFilter {
             // 형식 오류는 그대로 전파 (상위에서 상세 로깅)
             throw e;
         } catch (Exception e) {
-            log.error("JWT 토큰 디코딩 실패 - tokenPreview={}, error={}", maskToken(token), e.getMessage());
+            log.error(
+                    "JWT 토큰 디코딩 실패 - tokenPreview={}, error={}", maskToken(token), e.getMessage());
             throw new IllegalArgumentException("JWT 토큰 파싱에 실패했습니다.", e);
         }
     }
