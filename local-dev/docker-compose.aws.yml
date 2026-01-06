@@ -63,8 +63,11 @@ services:
       SECURITY_SERVICE_TOKEN_ENABLED: ${SECURITY_SERVICE_TOKEN_ENABLED:-false}
       SECURITY_SERVICE_TOKEN_SECRET: ${SECURITY_SERVICE_TOKEN_SECRET:-}
 
+      # API Docs (로컬 개발에서는 인증 없이 접근 허용)
+      SECURITY_DOCS_PUBLIC_ACCESS: "true"
+
     ports:
-      - "18080:8080"
+      - "8082:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
@@ -118,7 +121,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
 
     ports:
-      - "18081:8081"
+      - "28081:8081"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
@@ -174,7 +177,7 @@ services:
       SQS_LOG_LEVEL: INFO
 
     ports:
-      - "18082:8082"
+      - "28082:8082"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
@@ -228,7 +231,7 @@ services:
       SQS_LOG_LEVEL: INFO
 
     ports:
-      - "18083:8083"
+      - "28083:8083"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

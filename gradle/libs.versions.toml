@@ -71,6 +71,16 @@ logstashLogback = "7.4"
 micrometer = "1.12.4"
 
 # ========================================
+# Observability (Custom Starter)
+# ========================================
+observabilityStarter = "v1.1.1"
+
+# ========================================
+# Sentry (Error Tracking)
+# ========================================
+sentry = "8.29.0"
+
+# ========================================
 # Utilities
 # ========================================
 commonsLang3 = "3.14.0"
@@ -183,6 +193,17 @@ springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-u
 logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logstashLogback" }
 micrometer-core = { module = "io.micrometer:micrometer-core" }
 micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
+
+# ========================================
+# Observability (Custom Starter from JitPack)
+# ========================================
+observability-starter = { module = "com.github.ryu-qqq.observability-spring-boot-starter:observability-client", version.ref = "observabilityStarter" }
+
+# ========================================
+# Sentry (Error Tracking)
+# ========================================
+sentry-spring-boot = { module = "io.sentry:sentry-spring-boot-starter-jakarta", version.ref = "sentry" }
+sentry-logback = { module = "io.sentry:sentry-logback", version.ref = "sentry" }
 
 # ========================================
 # Utilities

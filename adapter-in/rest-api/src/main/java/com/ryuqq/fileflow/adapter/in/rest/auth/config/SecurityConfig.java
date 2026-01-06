@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.in.rest.auth.config;
 import com.ryuqq.fileflow.adapter.in.rest.auth.handler.SecurityExceptionHandler;
 import com.ryuqq.fileflow.adapter.in.rest.auth.paths.SecurityPaths;
 import com.ryuqq.fileflow.adapter.in.rest.common.filter.UserContextFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -52,12 +53,15 @@ public class SecurityConfig {
 
     private final SecurityExceptionHandler securityExceptionHandler;
     private final UserContextFilter userContextFilter;
+    private final boolean docsPublicAccess;
 
     public SecurityConfig(
             SecurityExceptionHandler securityExceptionHandler,
-            UserContextFilter userContextFilter) {
+            UserContextFilter userContextFilter,
+            @Value("${security.docs.public-access:false}") boolean docsPublicAccess) {
         this.securityExceptionHandler = securityExceptionHandler;
         this.userContextFilter = userContextFilter;
+        this.docsPublicAccess = docsPublicAccess;
     }
 
     /**
@@ -102,8 +106,15 @@ public class SecurityConfig {
      *
      * <ul>
      *   <li>PUBLIC: 인증 불필요 (헬스체크, Actuator, 에러 페이지)
-     *   <li>DOCS: 인증 필요 (API 문서 - Service Token 또는 JWT로 접근)
+     *   <li>DOCS: 환경별 조건부 (local/test: 인증 불필요, prod: 인증 필요)
      *   <li>AUTHENTICATED: 인증 필요 + @PreAuthorize 권한 검사 (파일 API)
+     * </ul>
+     *
+     * <p><strong>API 문서 보안</strong>:
+     *
+     * <ul>
+     *   <li>security.docs.public-access=true: 인증 없이 접근 가능 (local/test용)
+     *   <li>security.docs.public-access=false (기본값): 인증 필요 (prod용)
      * </ul>
      *
      * @param auth AuthorizationManagerRequestMatcherRegistry
@@ -115,9 +126,15 @@ public class SecurityConfig {
         // PUBLIC 엔드포인트 설정 (인증 불필요 - 헬스체크, Actuator, 에러 페이지)
         auth.requestMatchers(SecurityPaths.Public.PATTERNS.toArray(String[]::new)).permitAll();
 
-        // DOCS 엔드포인트는 인증 필요 (Service Token 또는 JWT)
-        // UserContextFilter에서 인증 처리 후 접근 가능
-        // anyRequest().authenticated()에 포함되어 처리됨
+        // DOCS 엔드포인트 설정 (환경별 조건부 - prod에서는 인증 필요)
+        if (docsPublicAccess) {
+            // local/test: API 문서 인증 불필요
+            auth.requestMatchers(SecurityPaths.Docs.PATTERNS.toArray(String[]::new)).permitAll();
+        } else {
+            // prod: API 문서 인증 필요 (Service Token 또는 JWT)
+            auth.requestMatchers(SecurityPaths.Docs.PATTERNS.toArray(String[]::new))
+                    .authenticated();
+        }
 
         // 그 외 모든 요청은 인증 필요 + @PreAuthorize로 세부 권한 검사
         // UserContextFilter에서 Spring Security Authentication을 설정하면 통과
