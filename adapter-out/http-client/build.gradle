@@ -21,6 +21,9 @@ dependencies {
     // Spring WebFlux (WebClient)
     implementation libs.spring.boot.starter.webflux
 
+    // Observability (TraceId propagation)
+    implementation libs.observability.starter
+
     // ========================================
     // Test Dependencies
     // ========================================

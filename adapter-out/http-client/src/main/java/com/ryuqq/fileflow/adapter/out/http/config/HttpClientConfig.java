@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.http.config;
 
+import com.ryuqq.observability.client.webclient.TraceIdExchangeFilterFunction;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
@@ -32,6 +33,7 @@ public class HttpClientConfig {
     /**
      * HTTP 다운로드용 WebClient Bean.
      *
+     * @param traceIdFilter TraceId 전파 필터
      * @param connectTimeoutMs 연결 타임아웃 (밀리초)
      * @param readTimeoutSec 읽기 타임아웃 (초)
      * @param writeTimeoutSec 쓰기 타임아웃 (초)
@@ -41,6 +43,7 @@ public class HttpClientConfig {
      */
     @Bean
     public WebClient downloadWebClient(
+            TraceIdExchangeFilterFunction traceIdFilter,
             @Value("${http.client.download.connect-timeout-ms:5000}") int connectTimeoutMs,
             @Value("${http.client.download.read-timeout-sec:60}") int readTimeoutSec,
             @Value("${http.client.download.write-timeout-sec:10}") int writeTimeoutSec,
@@ -63,6 +66,7 @@ public class HttpClientConfig {
 
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .filter(traceIdFilter)
                 .codecs(
                         configurer ->
                                 configurer
@@ -76,6 +80,7 @@ public class HttpClientConfig {
      *
      * <p>Webhook은 작은 JSON 페이로드를 전송하므로 다운로드보다 짧은 타임아웃 사용.
      *
+     * @param traceIdFilter TraceId 전파 필터
      * @param connectTimeoutMs 연결 타임아웃 (밀리초)
      * @param readTimeoutSec 읽기 타임아웃 (초)
      * @param writeTimeoutSec 쓰기 타임아웃 (초)
@@ -84,6 +89,7 @@ public class HttpClientConfig {
      */
     @Bean
     public WebClient webhookWebClient(
+            TraceIdExchangeFilterFunction traceIdFilter,
             @Value("${http.client.webhook.connect-timeout-ms:3000}") int connectTimeoutMs,
             @Value("${http.client.webhook.read-timeout-sec:10}") int readTimeoutSec,
             @Value("${http.client.webhook.write-timeout-sec:10}") int writeTimeoutSec,
@@ -105,6 +111,7 @@ public class HttpClientConfig {
 
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .filter(traceIdFilter)
                 .build();
     }
 }

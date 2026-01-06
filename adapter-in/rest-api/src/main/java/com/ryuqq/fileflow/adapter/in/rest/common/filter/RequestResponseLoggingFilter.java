@@ -23,6 +23,7 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
  *
  * <ul>
  *   <li>requestId: 고유 요청 ID (UUID)
+ *   <li>spanId: Span ID (OpenTelemetry 미사용 시 자동 생성)
  *   <li>method: HTTP 메서드
  *   <li>uri: 요청 URI
  *   <li>clientIp: 클라이언트 IP 주소
@@ -35,6 +36,14 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
  *   <li>응답: 상태 코드, 처리 시간
  * </ul>
  *
+ * <p><strong>spanId 생성 규칙</strong>:
+ *
+ * <ul>
+ *   <li>X-Span-Id 헤더가 있으면 해당 값 사용
+ *   <li>MDC에 spanId가 이미 설정되어 있으면 유지 (OpenTelemetry Agent 사용 시)
+ *   <li>그 외의 경우 16자리 hex 문자열 생성 (OpenTelemetry 표준 형식)
+ * </ul>
+ *
  * @author development-team
  * @since 1.0.0
  */
@@ -43,12 +52,14 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(RequestResponseLoggingFilter.class);
 
     private static final String MDC_REQUEST_ID = "requestId";
+    private static final String MDC_SPAN_ID = "spanId";
     private static final String MDC_METHOD = "method";
     private static final String MDC_URI = "uri";
     private static final String MDC_CLIENT_IP = "clientIp";
 
     private static final String HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
     private static final String HEADER_X_REQUEST_ID = "X-Request-Id";
+    private static final String HEADER_X_SPAN_ID = "X-Span-Id";
 
     @Override
     protected void doFilterInternal(
@@ -59,6 +70,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
         String requestId = extractOrGenerateRequestId(request);
+        String spanId = extractOrGenerateSpanId(request);
         String method = request.getMethod();
         String uri = request.getRequestURI();
         String queryString = request.getQueryString();
@@ -66,6 +78,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
 
         // MDC 설정
         MDC.put(MDC_REQUEST_ID, requestId);
+        MDC.put(MDC_SPAN_ID, spanId);
         MDC.put(MDC_METHOD, method);
         MDC.put(MDC_URI, uri);
         MDC.put(MDC_CLIENT_IP, clientIp);
@@ -89,6 +102,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
 
             // MDC 정리
             MDC.remove(MDC_REQUEST_ID);
+            MDC.remove(MDC_SPAN_ID);
             MDC.remove(MDC_METHOD);
             MDC.remove(MDC_URI);
             MDC.remove(MDC_CLIENT_IP);
@@ -107,6 +121,50 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             requestId = UUID.randomUUID().toString().substring(0, 8);
         }
         return requestId;
+    }
+
+    /**
+     * Span ID를 추출하거나 생성합니다.
+     *
+     * <p>우선순위:
+     *
+     * <ol>
+     *   <li>X-Span-Id 헤더에서 추출
+     *   <li>MDC에 이미 설정된 spanId 사용 (OpenTelemetry Agent 사용 시)
+     *   <li>새로운 spanId 생성 (16자리 hex, OpenTelemetry 표준 형식)
+     * </ol>
+     *
+     * @param request HTTP 요청
+     * @return Span ID
+     */
+    private String extractOrGenerateSpanId(HttpServletRequest request) {
+        // 1. 헤더에서 추출
+        String spanId = request.getHeader(HEADER_X_SPAN_ID);
+        if (spanId != null && !spanId.isBlank()) {
+            return spanId;
+        }
+
+        // 2. MDC에서 확인 (OpenTelemetry Agent가 설정한 경우)
+        spanId = MDC.get(MDC_SPAN_ID);
+        if (spanId != null && !spanId.isBlank()) {
+            return spanId;
+        }
+
+        // 3. 새로운 spanId 생성 (16자리 hex - OpenTelemetry 표준)
+        return generateSpanId();
+    }
+
+    /**
+     * OpenTelemetry 표준 형식의 Span ID를 생성합니다.
+     *
+     * <p>16자리 hex 문자열 (8바이트)
+     *
+     * @return 생성된 Span ID
+     */
+    private String generateSpanId() {
+        UUID uuid = UUID.randomUUID();
+        // 8바이트(64비트)를 16자리 hex로 변환 (앞쪽 0 패딩 포함)
+        return String.format("%016x", uuid.getMostSignificantBits());
     }
 
     /**

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ryuqq.fileflow.adapter.in.sqs.interceptor.SqsTraceIdMessageInterceptor;
 import io.awspring.cloud.sqs.config.SqsMessageListenerContainerFactory;
 import io.awspring.cloud.sqs.listener.acknowledgement.handler.AcknowledgementMode;
 import io.awspring.cloud.sqs.support.converter.SqsMessagingMessageConverter;
@@ -99,19 +100,22 @@ public class SqsListenerConfig {
     /**
      * SQS 메시지 리스너 컨테이너 팩토리.
      *
-     * <p>커스텀 메시지 변환기를 사용하도록 설정합니다.
+     * <p>커스텀 메시지 변환기와 TraceId 인터셉터를 사용하도록 설정합니다.
      *
      * @param sqsAsyncClient SQS 비동기 클라이언트
      * @param sqsMessagingMessageConverter SQS 메시징 메시지 변환기
+     * @param traceIdInterceptor TraceId 전파 인터셉터
      * @return SqsMessageListenerContainerFactory
      */
     @Bean("defaultSqsListenerContainerFactory")
     @Primary
     public SqsMessageListenerContainerFactory<Object> sqsListenerContainerFactory(
             SqsAsyncClient sqsAsyncClient,
-            SqsMessagingMessageConverter sqsMessagingMessageConverter) {
+            SqsMessagingMessageConverter sqsMessagingMessageConverter,
+            SqsTraceIdMessageInterceptor traceIdInterceptor) {
         return SqsMessageListenerContainerFactory.builder()
                 .sqsAsyncClient(sqsAsyncClient)
+                .messageInterceptor(traceIdInterceptor)
                 .configure(
                         options ->
                                 options.messageConverter(sqsMessagingMessageConverter)
