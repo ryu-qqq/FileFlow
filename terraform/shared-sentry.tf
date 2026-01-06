@@ -1,13 +1,13 @@
 # ============================================================================
-# Shared Infrastructure Reference: Sentry (Error Tracking)
+# Sentry Configuration (Error Tracking)
 # ============================================================================
-# Sentry DSN for error tracking and performance monitoring
-# SSM Parameter must be created manually or via Infrastructure repository:
-#   aws ssm put-parameter --name "/shared/sentry/dsn" --value "YOUR_DSN" --type "String"
+# Sentry DSN for FileFlow project error tracking and performance monitoring
+# SSM Parameter must be created manually:
+#   aws ssm put-parameter --name "/fileflow/sentry/dsn" --value "YOUR_DSN" --type "String"
 # ============================================================================
 
 data "aws_ssm_parameter" "sentry_dsn" {
-  name = "/shared/sentry/dsn"
+  name = "/fileflow/sentry/dsn"
 }
 
 # Output for use in ECS services
