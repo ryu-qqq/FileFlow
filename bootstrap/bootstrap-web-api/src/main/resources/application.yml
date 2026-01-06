@@ -56,6 +56,14 @@ observability:
     include-in-response: true
 
 # ===============================================
+# Security Configuration
+# ===============================================
+security:
+  docs:
+    # API 문서 공개 접근 허용 여부 (prod: false, local/test: true)
+    public-access: ${SECURITY_DOCS_PUBLIC_ACCESS:false}
+
+# ===============================================
 # Sentry Configuration (Error Tracking)
 # ===============================================
 sentry:

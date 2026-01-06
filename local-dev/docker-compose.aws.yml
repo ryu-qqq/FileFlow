@@ -63,6 +63,9 @@ services:
       SECURITY_SERVICE_TOKEN_ENABLED: ${SECURITY_SERVICE_TOKEN_ENABLED:-false}
       SECURITY_SERVICE_TOKEN_SECRET: ${SECURITY_SERVICE_TOKEN_SECRET:-}
 
+      # API Docs (로컬 개발에서는 인증 없이 접근 허용)
+      SECURITY_DOCS_PUBLIC_ACCESS: "true"
+
     ports:
       - "8082:8080"
     extra_hosts:
