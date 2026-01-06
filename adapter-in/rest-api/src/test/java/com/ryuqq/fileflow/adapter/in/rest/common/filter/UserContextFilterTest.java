@@ -65,7 +65,7 @@ class UserContextFilterTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        filter = new UserContextFilter(objectMapper, serviceTokenProperties);
+        filter = new UserContextFilter(objectMapper, serviceTokenProperties, false);
     }
 
     @AfterEach

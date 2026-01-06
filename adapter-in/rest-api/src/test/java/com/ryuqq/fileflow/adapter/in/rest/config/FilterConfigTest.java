@@ -32,7 +32,7 @@ class FilterConfigTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         serviceTokenProperties = mock(ServiceTokenProperties.class);
-        filterConfig = new FilterConfig(objectMapper, serviceTokenProperties);
+        filterConfig = new FilterConfig(objectMapper, serviceTokenProperties, false);
     }
 
     @Nested
