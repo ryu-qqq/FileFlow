@@ -73,7 +73,7 @@ micrometer = "1.12.4"
 # ========================================
 # Observability (Custom Starter)
 # ========================================
-observabilityStarter = "v1.1.0"
+observabilityStarter = "v1.1.1"
 
 # ========================================
 # Sentry (Error Tracking)
@@ -197,7 +197,7 @@ micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus
 # ========================================
 # Observability (Custom Starter from JitPack)
 # ========================================
-observability-starter = { module = "com.github.ryu-qqq:observability-spring-boot-starter", version.ref = "observabilityStarter" }
+observability-starter = { module = "com.github.ryu-qqq.observability-spring-boot-starter:observability-client", version.ref = "observabilityStarter" }
 
 # ========================================
 # Sentry (Error Tracking)
