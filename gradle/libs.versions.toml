@@ -73,7 +73,7 @@ micrometer = "1.12.4"
 # ========================================
 # Observability (Custom Starter)
 # ========================================
-observabilityStarter = "v1.1.1"
+observabilityStarter = "v1.3.0"
 
 # ========================================
 # Sentry (Error Tracking)

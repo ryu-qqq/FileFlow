@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.sqs.interceptor;
 
+import com.ryuqq.fileflow.application.common.util.TraceUtils;
 import io.awspring.cloud.sqs.listener.interceptor.MessageInterceptor;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -93,7 +93,7 @@ public class SqsTraceIdMessageInterceptor implements MessageInterceptor<Object> 
         }
 
         // 3. 새로운 TraceId 생성
-        String newTraceId = UUID.randomUUID().toString();
+        String newTraceId = TraceUtils.generateTraceId();
         log.debug("[SQS TraceId] 새로운 TraceId 생성: {}", newTraceId);
         return newTraceId;
     }
@@ -118,7 +118,7 @@ public class SqsTraceIdMessageInterceptor implements MessageInterceptor<Object> 
         }
 
         // 3. 새로운 SpanId 생성 (16자리 hex - OpenTelemetry 표준)
-        String newSpanId = generateSpanId();
+        String newSpanId = TraceUtils.generateSpanId();
         log.debug("[SQS Context] 새로운 SpanId 생성: {}", newSpanId);
         return newSpanId;
     }
@@ -135,18 +135,5 @@ public class SqsTraceIdMessageInterceptor implements MessageInterceptor<Object> 
             return messageId.toString();
         }
         return null;
-    }
-
-    /**
-     * OpenTelemetry 표준 형식의 Span ID를 생성합니다.
-     *
-     * <p>16자리 hex 문자열 (8바이트)
-     *
-     * @return 생성된 Span ID
-     */
-    private String generateSpanId() {
-        UUID uuid = UUID.randomUUID();
-        // 8바이트(64비트)를 16자리 hex로 변환 (앞쪽 0 패딩 포함)
-        return String.format("%016x", uuid.getMostSignificantBits());
     }
 }

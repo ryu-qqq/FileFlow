@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.filter;
 
+import com.ryuqq.fileflow.application.common.util.TraceUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -151,20 +152,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         }
 
         // 3. 새로운 spanId 생성 (16자리 hex - OpenTelemetry 표준)
-        return generateSpanId();
-    }
-
-    /**
-     * OpenTelemetry 표준 형식의 Span ID를 생성합니다.
-     *
-     * <p>16자리 hex 문자열 (8바이트)
-     *
-     * @return 생성된 Span ID
-     */
-    private String generateSpanId() {
-        UUID uuid = UUID.randomUUID();
-        // 8바이트(64비트)를 16자리 hex로 변환 (앞쪽 0 패딩 포함)
-        return String.format("%016x", uuid.getMostSignificantBits());
+        return TraceUtils.generateSpanId();
     }
 
     /**
