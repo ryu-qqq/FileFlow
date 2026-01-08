@@ -339,7 +339,7 @@ FileAssetStatisticsResponse stats = client.fileAssets().getStatistics();
 
 System.out.println("Total Files: " + stats.getTotalCount());
 System.out.println("Total Size: " + stats.getTotalSize());
-System.out.println("By Status: " + stats.getCountByStatus());
+System.out.println("By Status: " + stats.getStatusCounts());
 ```
 
 ---
@@ -444,7 +444,7 @@ System.out.println("File Name: " + detail.getFileName());
 UploadSessionSearchRequest searchRequest = UploadSessionSearchRequest.builder()
     .page(0)
     .size(20)
-    .status(UploadSessionSearchRequest.SessionStatus.PENDING)
+    .status(SessionStatus.PENDING)
     .build();
 
 PageResponse<UploadSessionResponse> sessions = client.uploadSessions().list(searchRequest);
@@ -474,11 +474,10 @@ System.out.println("Status: " + response.getStatus());
 
 ```java
 // 기본 요청
-Long downloadId = client.externalDownloads()
+String downloadId = client.externalDownloads()
     .request(
-        "https://example.com/files/document.pdf",  // 소스 URL
-        "document.pdf",                             // 저장할 파일명
-        "documents"                                 // 카테고리
+        "550e8400-e29b-41d4-a716-446655440000",     // 멱등성 키 (UUID)
+        "https://example.com/files/document.pdf"    // 소스 URL
     );
 
 System.out.println("Download ID: " + downloadId);
@@ -488,11 +487,10 @@ System.out.println("Download ID: " + downloadId);
 
 ```java
 // 다운로드 완료 시 webhook으로 알림 받기
-Long downloadId = client.externalDownloads()
+String downloadId = client.externalDownloads()
     .request(
-        "https://example.com/files/video.mp4",
-        "video.mp4",
-        "videos",
+        "550e8400-e29b-41d4-a716-446655440001",            // 멱등성 키 (UUID)
+        "https://example.com/files/video.mp4",             // 소스 URL
         "https://my-server.com/webhook/download-complete"  // Webhook URL
     );
 ```
@@ -503,7 +501,7 @@ Long downloadId = client.externalDownloads()
 // 단일 다운로드 요청 상세 조회
 ExternalDownloadDetailResponse detail = client.externalDownloads().get(downloadId);
 
-System.out.println("Download ID: " + detail.getDownloadId());
+System.out.println("Download ID: " + detail.getId());
 System.out.println("Status: " + detail.getStatus());
 System.out.println("Source URL: " + detail.getSourceUrl());
 System.out.println("File Asset ID: " + detail.getFileAssetId());  // 완료 시
@@ -512,13 +510,13 @@ System.out.println("File Asset ID: " + detail.getFileAssetId());  // 완료 시
 ExternalDownloadSearchRequest searchRequest = ExternalDownloadSearchRequest.builder()
     .page(0)
     .size(20)
-    .status(ExternalDownloadSearchRequest.DownloadStatus.COMPLETED)
+    .status("COMPLETED")
     .build();
 
 PageResponse<ExternalDownloadResponse> downloads = client.externalDownloads().list(searchRequest);
 
 for (ExternalDownloadResponse download : downloads.getContent()) {
-    System.out.println("- " + download.getDownloadId() + ": " + download.getStatus());
+    System.out.println("- " + download.getId() + ": " + download.getStatus());
 }
 ```
 
@@ -831,8 +829,8 @@ public class GlobalExceptionHandler {
 
 | 메서드 | 반환 타입 | 설명 |
 |--------|----------|------|
-| `request(sourceUrl, filename, category)` | Long | 외부 URL 다운로드 요청 |
-| `request(sourceUrl, filename, category, webhookUrl)` | Long | Webhook 포함 다운로드 요청 |
+| `request(idempotencyKey, sourceUrl)` | String | 외부 URL 다운로드 요청 |
+| `request(idempotencyKey, sourceUrl, webhookUrl)` | String | Webhook 포함 다운로드 요청 |
 | `get(downloadId)` | ExternalDownloadDetailResponse | 다운로드 상세 조회 |
 | `list(request)` | PageResponse | 다운로드 목록 조회 |
 
