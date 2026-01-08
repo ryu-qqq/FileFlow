@@ -1,15 +1,16 @@
 package com.ryuqq.fileflow.sdk.model.session;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.time.Instant;
-import java.util.List;
 
 /**
  * Response for multipart upload session initialization.
  *
- * <p>Contains the session information and presigned URLs for each part.
+ * <p>
+ * Contains the session information and presigned URLs for each part.
  */
 public final class InitMultipartUploadResponse {
 
@@ -35,14 +36,10 @@ public final class InitMultipartUploadResponse {
      * @param parts the list of part information
      */
     @JsonCreator
-    public InitMultipartUploadResponse(
-            @JsonProperty("sessionId") String sessionId,
-            @JsonProperty("uploadId") String uploadId,
-            @JsonProperty("totalParts") int totalParts,
-            @JsonProperty("partSize") long partSize,
-            @JsonProperty("expiresAt") Instant expiresAt,
-            @JsonProperty("bucket") String bucket,
-            @JsonProperty("key") String key,
+    public InitMultipartUploadResponse(@JsonProperty("sessionId") String sessionId,
+            @JsonProperty("uploadId") String uploadId, @JsonProperty("totalParts") int totalParts,
+            @JsonProperty("partSize") long partSize, @JsonProperty("expiresAt") Instant expiresAt,
+            @JsonProperty("bucket") String bucket, @JsonProperty("key") String key,
             @JsonProperty("parts") List<PartInfo> parts) {
         this.sessionId = sessionId;
         this.uploadId = uploadId;
@@ -51,7 +48,7 @@ public final class InitMultipartUploadResponse {
         this.expiresAt = expiresAt;
         this.bucket = bucket;
         this.key = key;
-        this.parts = parts;
+        this.parts = parts != null ? new ArrayList<>(parts) : new ArrayList<>();
     }
 
     public String getSessionId() {
@@ -83,7 +80,7 @@ public final class InitMultipartUploadResponse {
     }
 
     public List<PartInfo> getParts() {
-        return parts;
+        return new ArrayList<>(parts);
     }
 
     /**
@@ -101,8 +98,7 @@ public final class InitMultipartUploadResponse {
          * @param presignedUrl the presigned URL for uploading this part
          */
         @JsonCreator
-        public PartInfo(
-                @JsonProperty("partNumber") int partNumber,
+        public PartInfo(@JsonProperty("partNumber") int partNumber,
                 @JsonProperty("presignedUrl") String presignedUrl) {
             this.partNumber = partNumber;
             this.presignedUrl = presignedUrl;

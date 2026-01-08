@@ -8,9 +8,11 @@ import org.springframework.stereotype.Component;
 /**
  * CORS 설정 Properties
  *
- * <p>application.yml에서 CORS 관련 설정을 로드합니다.
+ * <p>
+ * application.yml에서 CORS 관련 설정을 로드합니다.
  *
- * <p>설정 예시:
+ * <p>
+ * 설정 예시:
  *
  * <pre>{@code
  * security:
@@ -54,35 +56,39 @@ public class CorsProperties {
     private boolean allowCredentials = true;
 
     public List<String> getAllowedOrigins() {
-        return allowedOrigins;
+        return new ArrayList<>(allowedOrigins);
     }
 
     public void setAllowedOrigins(List<String> allowedOrigins) {
-        this.allowedOrigins = allowedOrigins;
+        this.allowedOrigins =
+                allowedOrigins != null ? new ArrayList<>(allowedOrigins) : new ArrayList<>();
     }
 
     public List<String> getAllowedMethods() {
-        return allowedMethods;
+        return new ArrayList<>(allowedMethods);
     }
 
     public void setAllowedMethods(List<String> allowedMethods) {
-        this.allowedMethods = allowedMethods;
+        this.allowedMethods =
+                allowedMethods != null ? new ArrayList<>(allowedMethods) : new ArrayList<>();
     }
 
     public List<String> getAllowedHeaders() {
-        return allowedHeaders;
+        return new ArrayList<>(allowedHeaders);
     }
 
     public void setAllowedHeaders(List<String> allowedHeaders) {
-        this.allowedHeaders = allowedHeaders;
+        this.allowedHeaders =
+                allowedHeaders != null ? new ArrayList<>(allowedHeaders) : new ArrayList<>();
     }
 
     public List<String> getExposedHeaders() {
-        return exposedHeaders;
+        return new ArrayList<>(exposedHeaders);
     }
 
     public void setExposedHeaders(List<String> exposedHeaders) {
-        this.exposedHeaders = exposedHeaders;
+        this.exposedHeaders =
+                exposedHeaders != null ? new ArrayList<>(exposedHeaders) : new ArrayList<>();
     }
 
     public boolean isAllowCredentials() {

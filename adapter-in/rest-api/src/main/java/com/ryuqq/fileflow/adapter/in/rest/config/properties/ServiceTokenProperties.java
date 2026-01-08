@@ -145,7 +145,7 @@ public class ServiceTokenProperties {
      * @return 허용된 서비스 이름 목록 (비어있으면 모든 서비스 허용)
      */
     public List<String> getAllowedServices() {
-        return allowedServices;
+        return new ArrayList<>(allowedServices);
     }
 
     /**

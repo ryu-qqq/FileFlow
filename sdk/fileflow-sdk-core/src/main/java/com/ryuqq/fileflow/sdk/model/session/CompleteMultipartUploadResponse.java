@@ -1,15 +1,16 @@
 package com.ryuqq.fileflow.sdk.model.session;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.time.Instant;
-import java.util.List;
 
 /**
  * Response for completing a multipart upload session.
  *
- * <p>Contains the completed session information and merged part list.
+ * <p>
+ * Contains the completed session information and merged part list.
  */
 public final class CompleteMultipartUploadResponse {
 
@@ -35,12 +36,9 @@ public final class CompleteMultipartUploadResponse {
      * @param completedAt the completion timestamp
      */
     @JsonCreator
-    public CompleteMultipartUploadResponse(
-            @JsonProperty("sessionId") String sessionId,
-            @JsonProperty("status") String status,
-            @JsonProperty("bucket") String bucket,
-            @JsonProperty("key") String key,
-            @JsonProperty("uploadId") String uploadId,
+    public CompleteMultipartUploadResponse(@JsonProperty("sessionId") String sessionId,
+            @JsonProperty("status") String status, @JsonProperty("bucket") String bucket,
+            @JsonProperty("key") String key, @JsonProperty("uploadId") String uploadId,
             @JsonProperty("totalParts") int totalParts,
             @JsonProperty("completedParts") List<CompletedPartInfo> completedParts,
             @JsonProperty("completedAt") Instant completedAt) {
@@ -50,7 +48,8 @@ public final class CompleteMultipartUploadResponse {
         this.key = key;
         this.uploadId = uploadId;
         this.totalParts = totalParts;
-        this.completedParts = completedParts;
+        this.completedParts =
+                completedParts != null ? new ArrayList<>(completedParts) : new ArrayList<>();
         this.completedAt = completedAt;
     }
 
@@ -79,7 +78,7 @@ public final class CompleteMultipartUploadResponse {
     }
 
     public List<CompletedPartInfo> getCompletedParts() {
-        return completedParts;
+        return new ArrayList<>(completedParts);
     }
 
     public Instant getCompletedAt() {
@@ -105,10 +104,8 @@ public final class CompleteMultipartUploadResponse {
          * @param uploadedAt the upload timestamp
          */
         @JsonCreator
-        public CompletedPartInfo(
-                @JsonProperty("partNumber") int partNumber,
-                @JsonProperty("etag") String etag,
-                @JsonProperty("size") long size,
+        public CompletedPartInfo(@JsonProperty("partNumber") int partNumber,
+                @JsonProperty("etag") String etag, @JsonProperty("size") long size,
                 @JsonProperty("uploadedAt") Instant uploadedAt) {
             this.partNumber = partNumber;
             this.etag = etag;
