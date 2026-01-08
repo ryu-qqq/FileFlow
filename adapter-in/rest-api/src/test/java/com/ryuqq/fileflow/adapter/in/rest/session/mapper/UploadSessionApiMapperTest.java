@@ -522,14 +522,14 @@ class UploadSessionApiMapperTest {
         void toListUploadSessionsQuery_WithStatusOnly_ShouldCreateQuery() {
             // given
             UploadSessionSearchApiRequest request =
-                    new UploadSessionSearchApiRequest(SessionStatusFilter.IN_PROGRESS, null, 1, 10);
+                    new UploadSessionSearchApiRequest(SessionStatusFilter.ACTIVE, null, 1, 10);
 
             // when
             ListUploadSessionsQuery query =
                     mapper.toListUploadSessionsQuery(request, TEST_TENANT_ID, TEST_ORG_ID);
 
             // then
-            assertThat(query.status()).isEqualTo("IN_PROGRESS");
+            assertThat(query.status()).isEqualTo("ACTIVE");
             assertThat(query.uploadType()).isNull();
             assertThat(query.page()).isEqualTo(1);
             assertThat(query.size()).isEqualTo(10);

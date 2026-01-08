@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.sdk.model.common;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,7 +40,7 @@ public final class PageResponse<T> {
             @JsonProperty("totalPages") int totalPages,
             @JsonProperty("first") boolean first,
             @JsonProperty("last") boolean last) {
-        this.content = content;
+        this.content = content != null ? new ArrayList<>(content) : new ArrayList<>();
         this.page = page;
         this.size = size;
         this.totalElements = totalElements;
@@ -49,7 +50,7 @@ public final class PageResponse<T> {
     }
 
     public List<T> getContent() {
-        return content;
+        return new ArrayList<>(content);
     }
 
     public int getPage() {

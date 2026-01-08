@@ -13,6 +13,7 @@ import com.ryuqq.fileflow.sdk.exception.FileFlowServerException;
 import com.ryuqq.fileflow.sdk.exception.FileFlowUnauthorizedException;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +31,7 @@ public final class HttpClientSupport {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String SERVICE_TOKEN_HEADER = "X-Service-Token";
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
@@ -193,9 +195,12 @@ public final class HttpClientSupport {
                 .resolve()
                 .ifPresent(
                         token -> {
-                            String authValue =
-                                    token.startsWith(BEARER_PREFIX) ? token : BEARER_PREFIX + token;
-                            headers.set(AUTHORIZATION_HEADER, authValue);
+                            String rawToken =
+                                    token.startsWith(BEARER_PREFIX)
+                                            ? token.substring(BEARER_PREFIX.length())
+                                            : token;
+                            headers.set(AUTHORIZATION_HEADER, BEARER_PREFIX + rawToken);
+                            headers.set(SERVICE_TOKEN_HEADER, rawToken);
                         });
     }
 
@@ -209,7 +214,7 @@ public final class HttpClientSupport {
 
         try {
             statusCode = response.getStatusCode().value();
-            body = new String(response.getBody().readAllBytes());
+            body = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new FileFlowException(
                     500, "IO_ERROR", "Failed to read error response: " + e.getMessage());

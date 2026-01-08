@@ -158,6 +158,8 @@ public class ResourceAccessChecker extends BaseAccessChecker {
     /**
      * 현재 사용자가 특정 권한을 가지고 있는지 확인합니다.
      *
+     * <p>SUPER_ADMIN 또는 SERVICE_ACCOUNT(SYSTEM)는 모든 권한을 자동으로 가집니다.
+     *
      * @param permission 확인할 권한
      * @return 권한이 있으면 true
      */
@@ -166,12 +168,17 @@ public class ResourceAccessChecker extends BaseAccessChecker {
         if (superAdmin()) {
             return true;
         }
+        if (serviceAccount()) {
+            return true;
+        }
         SecurityContext ctx = getSecurityContext();
         return ctx != null && ctx.hasPermission(permission);
     }
 
     /**
      * 현재 사용자가 주어진 권한 중 하나라도 가지고 있는지 확인합니다.
+     *
+     * <p>SUPER_ADMIN 또는 SERVICE_ACCOUNT(SYSTEM)는 모든 권한을 자동으로 가집니다.
      *
      * @param permissions 확인할 권한들
      * @return 권한 중 하나라도 있으면 true
@@ -182,6 +189,9 @@ public class ResourceAccessChecker extends BaseAccessChecker {
             return false;
         }
         if (superAdmin()) {
+            return true;
+        }
+        if (serviceAccount()) {
             return true;
         }
         SecurityContext ctx = getSecurityContext();

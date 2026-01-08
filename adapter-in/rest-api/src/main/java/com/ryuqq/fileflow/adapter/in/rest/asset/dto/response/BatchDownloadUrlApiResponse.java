@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.asset.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,6 +22,15 @@ public record BatchDownloadUrlApiResponse(
         @Schema(description = "성공 건수", example = "5") int successCount,
         @Schema(description = "실패 건수", example = "1") int failureCount,
         @Schema(description = "실패한 파일 자산 목록") List<FailedDownloadUrl> failures) {
+    /** 생성자에서 방어적 복사 수행. */
+    public BatchDownloadUrlApiResponse {
+        if (downloadUrls != null) {
+            downloadUrls = new ArrayList<>(downloadUrls);
+        }
+        if (failures != null) {
+            failures = new ArrayList<>(failures);
+        }
+    }
 
     /**
      * 성공한 URL 목록으로 응답 생성.

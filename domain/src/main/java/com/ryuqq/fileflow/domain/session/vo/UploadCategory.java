@@ -74,19 +74,34 @@ public enum UploadCategory {
     }
 
     /**
-     * 경로 문자열로부터 UploadCategory를 찾는다.
+     * 경로 문자열 또는 enum 이름으로부터 UploadCategory를 찾는다.
      *
-     * @param path 경로 문자열 (예: "banner", "excel")
+     * <p>다음 순서로 매칭을 시도합니다:
+     *
+     * <ol>
+     *   <li>경로 값으로 매칭 (예: "banner", "product")
+     *   <li>enum 이름으로 매칭 (예: "BANNER", "PRODUCT_IMAGE")
+     * </ol>
+     *
+     * @param value 경로 문자열 또는 enum 이름 (예: "banner", "BANNER", "product", "PRODUCT_IMAGE")
      * @return UploadCategory
      * @throws IllegalArgumentException 일치하는 카테고리가 없는 경우
      */
-    public static UploadCategory fromPath(String path) {
-        if (path == null || path.isBlank()) {
+    public static UploadCategory fromPath(String value) {
+        if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("경로 문자열은 null이거나 빈 문자열일 수 없습니다.");
         }
 
+        // 1. 경로 값으로 매칭 시도
         for (UploadCategory category : values()) {
-            if (category.path.equalsIgnoreCase(path)) {
+            if (category.path.equalsIgnoreCase(value)) {
+                return category;
+            }
+        }
+
+        // 2. enum 이름으로 매칭 시도
+        for (UploadCategory category : values()) {
+            if (category.name().equalsIgnoreCase(value)) {
                 return category;
             }
         }
@@ -100,7 +115,7 @@ public enum UploadCategory {
                                 .toArray(String[]::new));
 
         throw new IllegalArgumentException(
-                "유효하지 않은 업로드 카테고리입니다. 입력값: '" + path + "', 가능한 값: " + validValues);
+                "유효하지 않은 업로드 카테고리입니다. 입력값: '" + value + "', 가능한 값: " + validValues);
     }
 
     /**

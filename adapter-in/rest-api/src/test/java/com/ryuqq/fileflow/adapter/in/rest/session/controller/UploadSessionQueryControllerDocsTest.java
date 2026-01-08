@@ -260,7 +260,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                         get("/api/v1/file/upload-sessions")
                                 .param("page", "0")
                                 .param("size", "20")
-                                .param("status", "PENDING"))
+                                .param("status", "PREPARING"))
                 .andExpect(status().isOk())
                 .andDo(
                         document(
@@ -277,7 +277,7 @@ class UploadSessionQueryControllerDocsTest extends RestDocsTestSupport {
                                         parameterWithName("status")
                                                 .description(
                                                         "세션 상태 필터"
-                                                            + " (PENDING/IN_PROGRESS/COMPLETED/EXPIRED/CANCELLED)")
+                                                            + " (PREPARING/ACTIVE/COMPLETED/EXPIRED/FAILED)")
                                                 .optional(),
                                         parameterWithName("uploadType")
                                                 .description("업로드 타입 필터 (SINGLE/MULTIPART)")
