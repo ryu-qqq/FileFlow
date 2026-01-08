@@ -1,14 +1,13 @@
 package com.ryuqq.fileflow.adapter.in.rest.asset.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Presigned Download URL 일괄 생성 응답 DTO.
  *
- * <p>
- * 여러 파일에 대해 생성된 S3 Presigned URL 목록을 반환합니다.
+ * <p>여러 파일에 대해 생성된 S3 Presigned URL 목록을 반환합니다.
  *
  * @param downloadUrls 생성된 Download URL 목록
  * @param successCount 성공 건수
@@ -23,9 +22,7 @@ public record BatchDownloadUrlApiResponse(
         @Schema(description = "성공 건수", example = "5") int successCount,
         @Schema(description = "실패 건수", example = "1") int failureCount,
         @Schema(description = "실패한 파일 자산 목록") List<FailedDownloadUrl> failures) {
-    /**
-     * 생성자에서 방어적 복사 수행.
-     */
+    /** 생성자에서 방어적 복사 수행. */
     public BatchDownloadUrlApiResponse {
         if (downloadUrls != null) {
             downloadUrls = new ArrayList<>(downloadUrls);
@@ -52,10 +49,10 @@ public record BatchDownloadUrlApiResponse(
      * @param failures 실패 정보 목록
      * @return BatchDownloadUrlApiResponse
      */
-    public static BatchDownloadUrlApiResponse of(List<DownloadUrlApiResponse> downloadUrls,
-            List<FailedDownloadUrl> failures) {
-        return new BatchDownloadUrlApiResponse(downloadUrls, downloadUrls.size(), failures.size(),
-                failures);
+    public static BatchDownloadUrlApiResponse of(
+            List<DownloadUrlApiResponse> downloadUrls, List<FailedDownloadUrl> failures) {
+        return new BatchDownloadUrlApiResponse(
+                downloadUrls, downloadUrls.size(), failures.size(), failures);
     }
 
     /**
@@ -79,8 +76,8 @@ public record BatchDownloadUrlApiResponse(
          * @param errorMessage 에러 메시지
          * @return FailedDownloadUrl
          */
-        public static FailedDownloadUrl of(String fileAssetId, String errorCode,
-                String errorMessage) {
+        public static FailedDownloadUrl of(
+                String fileAssetId, String errorCode, String errorMessage) {
             return new FailedDownloadUrl(fileAssetId, errorCode, errorMessage);
         }
     }

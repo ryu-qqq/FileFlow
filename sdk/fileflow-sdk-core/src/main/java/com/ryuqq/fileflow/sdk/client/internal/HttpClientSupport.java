@@ -1,14 +1,5 @@
 package com.ryuqq.fileflow.sdk.client.internal;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,12 +12,20 @@ import com.ryuqq.fileflow.sdk.exception.FileFlowNotFoundException;
 import com.ryuqq.fileflow.sdk.exception.FileFlowServerException;
 import com.ryuqq.fileflow.sdk.exception.FileFlowUnauthorizedException;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.RestClient;
 
 /**
  * Internal HTTP client support for making API requests.
  *
- * <p>
- * Handles authentication, error mapping, and response parsing.
+ * <p>Handles authentication, error mapping, and response parsing.
  */
 public final class HttpClientSupport {
 
@@ -45,8 +44,8 @@ public final class HttpClientSupport {
      * @param objectMapper the ObjectMapper for JSON processing
      * @param config the client configuration
      */
-    public HttpClientSupport(RestClient restClient, ObjectMapper objectMapper,
-            FileFlowClientConfig config) {
+    public HttpClientSupport(
+            RestClient restClient, ObjectMapper objectMapper, FileFlowClientConfig config) {
         this.restClient = restClient;
         this.objectMapper = objectMapper;
         this.tokenResolver = config.getTokenResolver();
@@ -61,8 +60,14 @@ public final class HttpClientSupport {
      * @return the response data
      */
     public <T> T get(String path, ParameterizedTypeReference<ApiResponse<T>> responseType) {
-        ApiResponse<T> response = restClient.get().uri(path).headers(this::addAuthHeader).retrieve()
-                .onStatus(this::isError, this::handleError).body(responseType);
+        ApiResponse<T> response =
+                restClient
+                        .get()
+                        .uri(path)
+                        .headers(this::addAuthHeader)
+                        .retrieve()
+                        .onStatus(this::isError, this::handleError)
+                        .body(responseType);
 
         return extractData(response);
     }
@@ -76,18 +81,28 @@ public final class HttpClientSupport {
      * @param <T> the response data type
      * @return the response data
      */
-    public <T> T get(String path, Map<String, Object> queryParams,
+    public <T> T get(
+            String path,
+            Map<String, Object> queryParams,
             ParameterizedTypeReference<ApiResponse<T>> responseType) {
-        ApiResponse<T> response = restClient.get().uri(uriBuilder -> {
-            var builder = uriBuilder.path(path);
-            queryParams.forEach((key, value) -> {
-                if (value != null) {
-                    builder.queryParam(key, value);
-                }
-            });
-            return builder.build();
-        }).headers(this::addAuthHeader).retrieve().onStatus(this::isError, this::handleError)
-                .body(responseType);
+        ApiResponse<T> response =
+                restClient
+                        .get()
+                        .uri(
+                                uriBuilder -> {
+                                    var builder = uriBuilder.path(path);
+                                    queryParams.forEach(
+                                            (key, value) -> {
+                                                if (value != null) {
+                                                    builder.queryParam(key, value);
+                                                }
+                                            });
+                                    return builder.build();
+                                })
+                        .headers(this::addAuthHeader)
+                        .retrieve()
+                        .onStatus(this::isError, this::handleError)
+                        .body(responseType);
 
         return extractData(response);
     }
@@ -101,11 +116,17 @@ public final class HttpClientSupport {
      * @param <T> the response data type
      * @return the response data
      */
-    public <T> T post(String path, Object body,
-            ParameterizedTypeReference<ApiResponse<T>> responseType) {
+    public <T> T post(
+            String path, Object body, ParameterizedTypeReference<ApiResponse<T>> responseType) {
         ApiResponse<T> response =
-                restClient.post().uri(path).headers(this::addAuthHeader).body(body).retrieve()
-                        .onStatus(this::isError, this::handleError).body(responseType);
+                restClient
+                        .post()
+                        .uri(path)
+                        .headers(this::addAuthHeader)
+                        .body(body)
+                        .retrieve()
+                        .onStatus(this::isError, this::handleError)
+                        .body(responseType);
 
         return extractData(response);
     }
@@ -119,8 +140,14 @@ public final class HttpClientSupport {
      * @return the response data
      */
     public <T> T post(String path, ParameterizedTypeReference<ApiResponse<T>> responseType) {
-        ApiResponse<T> response = restClient.post().uri(path).headers(this::addAuthHeader)
-                .retrieve().onStatus(this::isError, this::handleError).body(responseType);
+        ApiResponse<T> response =
+                restClient
+                        .post()
+                        .uri(path)
+                        .headers(this::addAuthHeader)
+                        .retrieve()
+                        .onStatus(this::isError, this::handleError)
+                        .body(responseType);
 
         return extractData(response);
     }
@@ -134,8 +161,8 @@ public final class HttpClientSupport {
      * @param <T> the response data type
      * @return the response data
      */
-    public <T> T patch(String path, Object body,
-            ParameterizedTypeReference<ApiResponse<T>> responseType) {
+    public <T> T patch(
+            String path, Object body, ParameterizedTypeReference<ApiResponse<T>> responseType) {
         var request = restClient.patch().uri(path).headers(this::addAuthHeader);
 
         if (body != null) {
@@ -154,18 +181,27 @@ public final class HttpClientSupport {
      * @param path the API path
      */
     public void delete(String path) {
-        restClient.delete().uri(path).headers(this::addAuthHeader).retrieve()
-                .onStatus(this::isError, this::handleError).toBodilessEntity();
+        restClient
+                .delete()
+                .uri(path)
+                .headers(this::addAuthHeader)
+                .retrieve()
+                .onStatus(this::isError, this::handleError)
+                .toBodilessEntity();
     }
 
     private void addAuthHeader(HttpHeaders headers) {
-        tokenResolver.resolve().ifPresent(token -> {
-            String rawToken =
-                    token.startsWith(BEARER_PREFIX) ? token.substring(BEARER_PREFIX.length())
-                            : token;
-            headers.set(AUTHORIZATION_HEADER, BEARER_PREFIX + rawToken);
-            headers.set(SERVICE_TOKEN_HEADER, rawToken);
-        });
+        tokenResolver
+                .resolve()
+                .ifPresent(
+                        token -> {
+                            String rawToken =
+                                    token.startsWith(BEARER_PREFIX)
+                                            ? token.substring(BEARER_PREFIX.length())
+                                            : token;
+                            headers.set(AUTHORIZATION_HEADER, BEARER_PREFIX + rawToken);
+                            headers.set(SERVICE_TOKEN_HEADER, rawToken);
+                        });
     }
 
     private boolean isError(HttpStatusCode status) {
@@ -180,8 +216,8 @@ public final class HttpClientSupport {
             statusCode = response.getStatusCode().value();
             body = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new FileFlowException(500, "IO_ERROR",
-                    "Failed to read error response: " + e.getMessage());
+            throw new FileFlowException(
+                    500, "IO_ERROR", "Failed to read error response: " + e.getMessage());
         }
 
         String errorCode = "UNKNOWN";

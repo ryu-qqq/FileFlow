@@ -1,15 +1,14 @@
 package com.ryuqq.fileflow.sdk.model.asset;
 
-import java.util.HashMap;
-import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Response for file asset statistics.
  *
- * <p>
- * Contains aggregated counts by status and category.
+ * <p>Contains aggregated counts by status and category.
  */
 public final class FileAssetStatisticsResponse {
 
@@ -25,7 +24,8 @@ public final class FileAssetStatisticsResponse {
      * @param categoryCounts counts grouped by category (IMAGE, VIDEO, DOCUMENT, etc.)
      */
     @JsonCreator
-    public FileAssetStatisticsResponse(@JsonProperty("totalCount") long totalCount,
+    public FileAssetStatisticsResponse(
+            @JsonProperty("totalCount") long totalCount,
             @JsonProperty("statusCounts") Map<String, Long> statusCounts,
             @JsonProperty("categoryCounts") Map<String, Long> categoryCounts) {
         this.totalCount = totalCount;

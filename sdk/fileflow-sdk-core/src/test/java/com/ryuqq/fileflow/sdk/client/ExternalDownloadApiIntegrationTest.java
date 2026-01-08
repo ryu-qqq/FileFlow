@@ -50,10 +50,18 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
             String sourceUrl = "https://example.com/file.pdf";
             String webhookUrl = "https://my-service.com/webhook";
 
+            String responseData =
+                    """
+                    {
+                        "id": "ext-download-123",
+                        "status": "PENDING",
+                        "createdAt": "2024-01-01T00:00:00Z"
+                    }
+                    """;
+
             stubFor(
                     withAuth(post(urlPathEqualTo("/api/v1/file/external-downloads")))
-                            .willReturn(
-                                    successResponse(wrapSuccessResponse("\"ext-download-123\""))));
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
             String downloadId = externalDownloadApi.request(idempotencyKey, sourceUrl, webhookUrl);
@@ -69,10 +77,18 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
             String idempotencyKey = "550e8400-e29b-41d4-a716-446655440001";
             String sourceUrl = "https://example.com/file.pdf";
 
+            String responseData =
+                    """
+                    {
+                        "id": "ext-download-456",
+                        "status": "PENDING",
+                        "createdAt": "2024-01-01T00:00:00Z"
+                    }
+                    """;
+
             stubFor(
                     withAuth(post(urlPathEqualTo("/api/v1/file/external-downloads")))
-                            .willReturn(
-                                    successResponse(wrapSuccessResponse("\"ext-download-456\""))));
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
             String downloadId = externalDownloadApi.request(idempotencyKey, sourceUrl);
@@ -88,10 +104,18 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
             String idempotencyKey = "550e8400-e29b-41d4-a716-446655440002";
             String sourceUrl = "https://example.com/file.pdf";
 
+            String responseData =
+                    """
+                    {
+                        "id": "ext-download-789",
+                        "status": "PENDING",
+                        "createdAt": "2024-01-01T00:00:00Z"
+                    }
+                    """;
+
             stubFor(
                     withAuth(post(urlPathEqualTo("/api/v1/file/external-downloads")))
-                            .willReturn(
-                                    successResponse(wrapSuccessResponse("\"ext-download-789\""))));
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
             externalDownloadApi.request(idempotencyKey, sourceUrl);
@@ -136,12 +160,18 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
             String expectedDownloadId = "ext-download-same";
 
             // 동일한 idempotencyKey로 요청하면 항상 같은 ID 반환
+            String responseData =
+                    """
+                    {
+                        "id": "ext-download-same",
+                        "status": "PENDING",
+                        "createdAt": "2024-01-01T00:00:00Z"
+                    }
+                    """;
+
             stubFor(
                     withAuth(post(urlPathEqualTo("/api/v1/file/external-downloads")))
-                            .willReturn(
-                                    successResponse(
-                                            wrapSuccessResponse(
-                                                    "\"" + expectedDownloadId + "\""))));
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when - 첫 번째 요청
             String firstResult = externalDownloadApi.request(idempotencyKey, sourceUrl);
@@ -167,11 +197,19 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
             String sourceUrl = "https://example.com/file.pdf";
 
             // Authorization 헤더가 정확히 일치해야만 응답 반환
+            String responseData =
+                    """
+                    {
+                        "id": "ext-download-auth",
+                        "status": "PENDING",
+                        "createdAt": "2024-01-01T00:00:00Z"
+                    }
+                    """;
+
             stubFor(
                     post(urlPathEqualTo("/api/v1/file/external-downloads"))
                             .withHeader("Authorization", equalTo("Bearer test-service-token"))
-                            .willReturn(
-                                    successResponse(wrapSuccessResponse("\"ext-download-auth\""))));
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
             String downloadId = externalDownloadApi.request(idempotencyKey, sourceUrl);
@@ -193,11 +231,18 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
             String sourceUrl = "https://example.com/file.pdf";
             String webhookUrl = "https://my-service.com/webhook";
 
+            String responseData =
+                    """
+                    {
+                        "id": "ext-download-webhook",
+                        "status": "PENDING",
+                        "createdAt": "2024-01-01T00:00:00Z"
+                    }
+                    """;
+
             stubFor(
                     withAuth(post(urlPathEqualTo("/api/v1/file/external-downloads")))
-                            .willReturn(
-                                    successResponse(
-                                            wrapSuccessResponse("\"ext-download-webhook\""))));
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
             externalDownloadApi.request(idempotencyKey, sourceUrl, webhookUrl);
@@ -215,11 +260,18 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
             String idempotencyKey = "550e8400-e29b-41d4-a716-446655440007";
             String sourceUrl = "https://example.com/file.pdf";
 
+            String responseData =
+                    """
+                    {
+                        "id": "ext-download-no-webhook",
+                        "status": "PENDING",
+                        "createdAt": "2024-01-01T00:00:00Z"
+                    }
+                    """;
+
             stubFor(
                     withAuth(post(urlPathEqualTo("/api/v1/file/external-downloads")))
-                            .willReturn(
-                                    successResponse(
-                                            wrapSuccessResponse("\"ext-download-no-webhook\""))));
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
             externalDownloadApi.request(idempotencyKey, sourceUrl, null);
@@ -255,7 +307,10 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
                     """;
 
             stubFor(
-                    withAuth(get(urlPathEqualTo("/api/v1/file/external-downloads/ext-download-123")))
+                    withAuth(
+                                    get(
+                                            urlPathEqualTo(
+                                                    "/api/v1/file/external-downloads/ext-download-123")))
                             .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
@@ -280,9 +335,7 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
                     withAuth(get(urlPathEqualTo("/api/v1/file/external-downloads/non-existent-id")))
                             .willReturn(
                                     errorResponse(
-                                            404,
-                                            "NOT_FOUND",
-                                            "External download not found")));
+                                            404, "NOT_FOUND", "External download not found")));
 
             // when & then
             assertThatThrownBy(() -> externalDownloadApi.get(id))
@@ -299,10 +352,7 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
         void shouldListExternalDownloads() {
             // given
             ExternalDownloadSearchRequest request =
-                    ExternalDownloadSearchRequest.builder()
-                            .page(0)
-                            .size(10)
-                            .build();
+                    ExternalDownloadSearchRequest.builder().page(0).size(10).build();
 
             String responseData =
                     """

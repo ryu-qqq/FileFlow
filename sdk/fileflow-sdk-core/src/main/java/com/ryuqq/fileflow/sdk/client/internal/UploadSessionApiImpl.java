@@ -101,7 +101,8 @@ public final class UploadSessionApiImpl implements UploadSessionApi {
 
         return httpClient.get(
                 path.toString(),
-                new ParameterizedTypeReference<ApiResponse<PageResponse<UploadSessionResponse>>>() {});
+                new ParameterizedTypeReference<
+                        ApiResponse<PageResponse<UploadSessionResponse>>>() {});
     }
 
     @Override

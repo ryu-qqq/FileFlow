@@ -1,15 +1,14 @@
 package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Multipart 파일 업로드 완료 API Response.
  *
- * <p>
- * 완료된 세션 정보와 병합된 Part 목록을 반환합니다.
+ * <p>완료된 세션 정보와 병합된 Part 목록을 반환합니다.
  *
  * @param sessionId 세션 ID
  * @param status 세션 상태 (COMPLETED)
@@ -32,9 +31,7 @@ public record CompleteMultipartUploadApiResponse(
         @Schema(description = "전체 Part 개수", example = "5") int totalParts,
         @Schema(description = "완료된 Part 목록") List<CompletedPartInfoApiResponse> completedParts,
         @Schema(description = "완료 시각") Instant completedAt) {
-    /**
-     * 생성자에서 방어적 복사 수행.
-     */
+    /** 생성자에서 방어적 복사 수행. */
     public CompleteMultipartUploadApiResponse {
         if (completedParts != null) {
             completedParts = new ArrayList<>(completedParts);
@@ -52,8 +49,8 @@ public record CompleteMultipartUploadApiResponse(
     @Schema(description = "완료된 Part 정보")
     public record CompletedPartInfoApiResponse(
             @Schema(description = "Part 번호 (1-based)", example = "1") int partNumber,
-            @Schema(description = "Part ETag",
-                    example = "\"d41d8cd98f00b204e9800998ecf8427e\"") String etag,
+            @Schema(description = "Part ETag", example = "\"d41d8cd98f00b204e9800998ecf8427e\"")
+                    String etag,
             @Schema(description = "Part 크기 (bytes)", example = "5242880") long size,
             @Schema(description = "업로드 시각") Instant uploadedAt) {
 
@@ -66,8 +63,8 @@ public record CompleteMultipartUploadApiResponse(
          * @param uploadedAt 업로드 시각
          * @return CompletedPartInfoApiResponse
          */
-        public static CompletedPartInfoApiResponse of(int partNumber, String etag, long size,
-                Instant uploadedAt) {
+        public static CompletedPartInfoApiResponse of(
+                int partNumber, String etag, long size, Instant uploadedAt) {
             return new CompletedPartInfoApiResponse(partNumber, etag, size, uploadedAt);
         }
     }
@@ -85,10 +82,16 @@ public record CompleteMultipartUploadApiResponse(
      * @param completedAt 완료 시각
      * @return CompleteMultipartUploadApiResponse
      */
-    public static CompleteMultipartUploadApiResponse of(String sessionId, String status,
-            String bucket, String key, String uploadId, int totalParts,
-            List<CompletedPartInfoApiResponse> completedParts, Instant completedAt) {
-        return new CompleteMultipartUploadApiResponse(sessionId, status, bucket, key, uploadId,
-                totalParts, completedParts, completedAt);
+    public static CompleteMultipartUploadApiResponse of(
+            String sessionId,
+            String status,
+            String bucket,
+            String key,
+            String uploadId,
+            int totalParts,
+            List<CompletedPartInfoApiResponse> completedParts,
+            Instant completedAt) {
+        return new CompleteMultipartUploadApiResponse(
+                sessionId, status, bucket, key, uploadId, totalParts, completedParts, completedAt);
     }
 }

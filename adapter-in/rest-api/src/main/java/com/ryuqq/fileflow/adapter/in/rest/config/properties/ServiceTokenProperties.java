@@ -38,9 +38,8 @@ import org.springframework.stereotype.Component;
  *     private final ServiceTokenProperties serviceTokenProperties;
  *
  *     public boolean isValidServiceToken(String token) {
- *         return serviceTokenProperties.isEnabled()
- *             && serviceTokenProperties.getSecret() != null
- *             && serviceTokenProperties.getSecret().equals(token);
+ *         return serviceTokenProperties.isEnabled() && serviceTokenProperties.getSecret() != null
+ *                 && serviceTokenProperties.getSecret().equals(token);
  *     }
  * }
  * }</pre>

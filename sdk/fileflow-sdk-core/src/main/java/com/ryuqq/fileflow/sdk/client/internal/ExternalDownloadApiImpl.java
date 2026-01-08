@@ -35,8 +35,12 @@ public final class ExternalDownloadApiImpl implements ExternalDownloadApi {
             request.put("webhookUrl", webhookUrl);
         }
 
-        return httpClient.post(
-                BASE_PATH, request, new ParameterizedTypeReference<ApiResponse<String>>() {});
+        ExternalDownloadResponse response =
+                httpClient.post(
+                        BASE_PATH,
+                        request,
+                        new ParameterizedTypeReference<ApiResponse<ExternalDownloadResponse>>() {});
+        return response.getId();
     }
 
     @Override

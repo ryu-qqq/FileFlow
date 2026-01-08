@@ -52,10 +52,10 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
             // given
             InitSingleUploadRequest request =
                     InitSingleUploadRequest.builder()
-                            .filename("document.pdf")
+                            .fileName("document.pdf")
                             .contentType("application/pdf")
                             .fileSize(1024L)
-                            .category("DOCUMENT")
+                            .uploadCategory("DOCUMENT")
                             .build();
 
             String responseData =
@@ -89,7 +89,7 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
         void shouldInitializeWithRequiredFieldsOnly() {
             // given
             InitSingleUploadRequest request =
-                    InitSingleUploadRequest.builder().filename("test.txt").build();
+                    InitSingleUploadRequest.builder().fileName("test.txt").build();
 
             String responseData =
                     """
@@ -118,7 +118,7 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
         void shouldThrowClientExceptionOnBadRequest() {
             // given
             InitSingleUploadRequest request =
-                    InitSingleUploadRequest.builder().filename("").build();
+                    InitSingleUploadRequest.builder().fileName("").build();
 
             stubFor(
                     withAuth(post(urlPathEqualTo("/api/v1/file/upload-sessions/single")))
@@ -281,7 +281,7 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
             // given
             InitSingleUploadRequest request =
                     InitSingleUploadRequest.builder()
-                            .filename("auth-test.pdf")
+                            .fileName("auth-test.pdf")
                             .contentType("application/pdf")
                             .build();
 
@@ -332,20 +332,20 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
 
             String responseData =
                     """
-                    {
-                        "sessionId": "multipart-session-123",
-                        "uploadId": "s3-upload-id-abc",
-                        "totalParts": 10,
-                        "partSize": 10000000,
-                        "expiresAt": "2025-01-15T12:00:00Z",
-                        "bucket": "fileflow-bucket",
-                        "key": "uploads/large-video.mp4",
-                        "parts": [
-                            {"partNumber": 1, "presignedUrl": "https://s3.amazonaws.com/bucket/part1"},
-                            {"partNumber": 2, "presignedUrl": "https://s3.amazonaws.com/bucket/part2"}
-                        ]
-                    }
-                    """;
+{
+    "sessionId": "multipart-session-123",
+    "uploadId": "s3-upload-id-abc",
+    "totalParts": 10,
+    "partSize": 10000000,
+    "expiresAt": "2025-01-15T12:00:00Z",
+    "bucket": "fileflow-bucket",
+    "key": "uploads/large-video.mp4",
+    "parts": [
+        {"partNumber": 1, "presignedUrl": "https://s3.amazonaws.com/bucket/part1"},
+        {"partNumber": 2, "presignedUrl": "https://s3.amazonaws.com/bucket/part2"}
+    ]
+}
+""";
 
             stubFor(
                     withAuth(post(urlPathEqualTo("/api/v1/file/upload-sessions/multipart")))
@@ -392,11 +392,15 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
                     """;
 
             stubFor(
-                    withAuth(patch(urlPathEqualTo("/api/v1/file/upload-sessions/multipart-session-123/parts")))
+                    withAuth(
+                                    patch(
+                                            urlPathEqualTo(
+                                                    "/api/v1/file/upload-sessions/multipart-session-123/parts")))
                             .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
-            MarkPartUploadedResponse response = uploadSessionApi.markPartUploaded(sessionId, request);
+            MarkPartUploadedResponse response =
+                    uploadSessionApi.markPartUploaded(sessionId, request);
 
             // then
             assertThat(response).isNotNull();
@@ -418,26 +422,30 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
 
             String responseData =
                     """
-                    {
-                        "sessionId": "multipart-session-123",
-                        "status": "COMPLETED",
-                        "bucket": "fileflow-bucket",
-                        "key": "uploads/large-video.mp4",
-                        "uploadId": "s3-upload-id-abc",
-                        "totalParts": 10,
-                        "completedParts": [
-                            {"partNumber": 1, "etag": "abc123", "size": 10000000, "uploadedAt": "2025-01-15T10:30:00Z"}
-                        ],
-                        "completedAt": "2025-01-15T11:00:00Z"
-                    }
-                    """;
+{
+    "sessionId": "multipart-session-123",
+    "status": "COMPLETED",
+    "bucket": "fileflow-bucket",
+    "key": "uploads/large-video.mp4",
+    "uploadId": "s3-upload-id-abc",
+    "totalParts": 10,
+    "completedParts": [
+        {"partNumber": 1, "etag": "abc123", "size": 10000000, "uploadedAt": "2025-01-15T10:30:00Z"}
+    ],
+    "completedAt": "2025-01-15T11:00:00Z"
+}
+""";
 
             stubFor(
-                    withAuth(patch(urlPathEqualTo("/api/v1/file/upload-sessions/multipart-session-123/multipart/complete")))
+                    withAuth(
+                                    patch(
+                                            urlPathEqualTo(
+                                                    "/api/v1/file/upload-sessions/multipart-session-123/multipart/complete")))
                             .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when
-            CompleteMultipartUploadResponse response = uploadSessionApi.completeMultipart(sessionId);
+            CompleteMultipartUploadResponse response =
+                    uploadSessionApi.completeMultipart(sessionId);
 
             // then
             assertThat(response).isNotNull();
@@ -502,8 +510,13 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
             String sessionId = "non-existent-session";
 
             stubFor(
-                    withAuth(get(urlPathEqualTo("/api/v1/file/upload-sessions/non-existent-session")))
-                            .willReturn(errorResponse(404, "SESSION_NOT_FOUND", "Upload session not found")));
+                    withAuth(
+                                    get(
+                                            urlPathEqualTo(
+                                                    "/api/v1/file/upload-sessions/non-existent-session")))
+                            .willReturn(
+                                    errorResponse(
+                                            404, "SESSION_NOT_FOUND", "Upload session not found")));
 
             // when & then
             assertThatThrownBy(() -> uploadSessionApi.get(sessionId))
@@ -520,10 +533,7 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
         void shouldListUploadSessions() {
             // given
             UploadSessionSearchRequest request =
-                    UploadSessionSearchRequest.builder()
-                            .page(0)
-                            .size(10)
-                            .build();
+                    UploadSessionSearchRequest.builder().page(0).size(10).build();
 
             String responseData =
                     """
@@ -591,7 +601,10 @@ class UploadSessionApiIntegrationTest extends WireMockTestSupport {
                     """;
 
             stubFor(
-                    withAuth(get(urlEqualTo("/api/v1/file/upload-sessions?page=0&size=10&status=COMPLETED")))
+                    withAuth(
+                                    get(
+                                            urlEqualTo(
+                                                    "/api/v1/file/upload-sessions?page=0&size=10&status=COMPLETED")))
                             .willReturn(successResponse(wrapSuccessResponse(responseData))));
 
             // when

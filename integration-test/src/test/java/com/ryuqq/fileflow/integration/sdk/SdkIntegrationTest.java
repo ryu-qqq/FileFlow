@@ -17,9 +17,10 @@ public abstract class SdkIntegrationTest extends WebApiIntegrationTest {
 
     @BeforeEach
     void setUpSdk() {
-        fileFlowClient = FileFlowClient.builder()
-                .baseUrl(baseUrl() + "/api/v1/file")
-                .serviceToken(TEST_SERVICE_TOKEN)
-                .build();
+        fileFlowClient =
+                FileFlowClient.builder()
+                        .baseUrl(baseUrl())
+                        .serviceToken(TEST_SERVICE_TOKEN)
+                        .build();
     }
 }

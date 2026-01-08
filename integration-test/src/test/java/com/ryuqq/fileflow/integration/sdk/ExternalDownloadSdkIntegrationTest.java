@@ -104,8 +104,11 @@ class ExternalDownloadSdkIntegrationTest extends SdkIntegrationTest {
         @Test
         @DisplayName("존재하지 않는 ID로 조회하면 NotFoundException이 발생한다")
         void shouldThrowNotFoundExceptionWhenNotExists() {
+            // given - 존재하지 않는 UUID
+            String nonExistentId = UUID.randomUUID().toString();
+
             // when & then
-            assertThatThrownBy(() -> externalDownloadApi.get("non-existent-id"))
+            assertThatThrownBy(() -> externalDownloadApi.get(nonExistentId))
                     .isInstanceOf(FileFlowNotFoundException.class);
         }
     }
@@ -118,14 +121,14 @@ class ExternalDownloadSdkIntegrationTest extends SdkIntegrationTest {
         @DisplayName("외부 다운로드 목록을 페이지네이션으로 조회할 수 있다")
         void shouldListExternalDownloads() {
             // given - 테스트 데이터 생성
-            externalDownloadApi.request(UUID.randomUUID().toString(), "https://example.com/list-test-1.pdf");
-            externalDownloadApi.request(UUID.randomUUID().toString(), "https://example.com/list-test-2.pdf");
+            externalDownloadApi.request(
+                    UUID.randomUUID().toString(), "https://example.com/list-test-1.pdf");
+            externalDownloadApi.request(
+                    UUID.randomUUID().toString(), "https://example.com/list-test-2.pdf");
 
             // when
-            ExternalDownloadSearchRequest request = ExternalDownloadSearchRequest.builder()
-                    .page(0)
-                    .size(10)
-                    .build();
+            ExternalDownloadSearchRequest request =
+                    ExternalDownloadSearchRequest.builder().page(0).size(10).build();
 
             PageResponse<ExternalDownloadResponse> response = externalDownloadApi.list(request);
 
@@ -139,22 +142,23 @@ class ExternalDownloadSdkIntegrationTest extends SdkIntegrationTest {
         @DisplayName("상태 필터로 외부 다운로드를 조회할 수 있다")
         void shouldListExternalDownloadsWithStatusFilter() {
             // given
-            externalDownloadApi.request(UUID.randomUUID().toString(), "https://example.com/status-test.pdf");
+            externalDownloadApi.request(
+                    UUID.randomUUID().toString(), "https://example.com/status-test.pdf");
 
             // when
-            ExternalDownloadSearchRequest request = ExternalDownloadSearchRequest.builder()
-                    .page(0)
-                    .size(10)
-                    .status("PENDING")
-                    .build();
+            ExternalDownloadSearchRequest request =
+                    ExternalDownloadSearchRequest.builder()
+                            .page(0)
+                            .size(10)
+                            .status("PENDING")
+                            .build();
 
             PageResponse<ExternalDownloadResponse> response = externalDownloadApi.list(request);
 
             // then
             assertThat(response).isNotNull();
-            assertThat(response.getContent()).allSatisfy(download ->
-                    assertThat(download.getStatus()).isEqualTo("PENDING")
-            );
+            assertThat(response.getContent())
+                    .allSatisfy(download -> assertThat(download.getStatus()).isEqualTo("PENDING"));
         }
     }
 }

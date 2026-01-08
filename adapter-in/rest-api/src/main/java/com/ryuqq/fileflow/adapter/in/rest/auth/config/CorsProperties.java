@@ -8,11 +8,9 @@ import org.springframework.stereotype.Component;
 /**
  * CORS 설정 Properties
  *
- * <p>
- * application.yml에서 CORS 관련 설정을 로드합니다.
+ * <p>application.yml에서 CORS 관련 설정을 로드합니다.
  *
- * <p>
- * 설정 예시:
+ * <p>설정 예시:
  *
  * <pre>{@code
  * security:

@@ -63,7 +63,8 @@ public interface UploadSessionAsyncApi {
      * @param request the part upload information
      * @return Mono emitting the part upload confirmation
      */
-    Mono<MarkPartUploadedResponse> markPartUploaded(String sessionId, MarkPartUploadedRequest request);
+    Mono<MarkPartUploadedResponse> markPartUploaded(
+            String sessionId, MarkPartUploadedRequest request);
 
     /**
      * Completes a multipart upload session.

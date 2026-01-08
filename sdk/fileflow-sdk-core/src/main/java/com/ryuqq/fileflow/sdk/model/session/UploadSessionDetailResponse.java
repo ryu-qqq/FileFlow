@@ -1,16 +1,15 @@
 package com.ryuqq.fileflow.sdk.model.session;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Response containing detailed upload session information.
  *
- * <p>
- * For multipart sessions, includes part information.
+ * <p>For multipart sessions, includes part information.
  */
 public final class UploadSessionDetailResponse {
 
@@ -52,15 +51,20 @@ public final class UploadSessionDetailResponse {
      * @param completedAt the completion timestamp (null if not completed)
      */
     @JsonCreator
-    public UploadSessionDetailResponse(@JsonProperty("sessionId") String sessionId,
-            @JsonProperty("fileName") String fileName, @JsonProperty("fileSize") long fileSize,
+    public UploadSessionDetailResponse(
+            @JsonProperty("sessionId") String sessionId,
+            @JsonProperty("fileName") String fileName,
+            @JsonProperty("fileSize") long fileSize,
             @JsonProperty("contentType") String contentType,
-            @JsonProperty("uploadType") String uploadType, @JsonProperty("status") String status,
-            @JsonProperty("bucket") String bucket, @JsonProperty("key") String key,
+            @JsonProperty("uploadType") String uploadType,
+            @JsonProperty("status") String status,
+            @JsonProperty("bucket") String bucket,
+            @JsonProperty("key") String key,
             @JsonProperty("uploadId") String uploadId,
             @JsonProperty("totalParts") Integer totalParts,
             @JsonProperty("uploadedParts") Integer uploadedParts,
-            @JsonProperty("parts") List<PartDetail> parts, @JsonProperty("etag") String etag,
+            @JsonProperty("parts") List<PartDetail> parts,
+            @JsonProperty("etag") String etag,
             @JsonProperty("createdAt") Instant createdAt,
             @JsonProperty("expiresAt") Instant expiresAt,
             @JsonProperty("completedAt") Instant completedAt) {
@@ -155,9 +159,7 @@ public final class UploadSessionDetailResponse {
         return "MULTIPART".equals(uploadType);
     }
 
-    /**
-     * Part detail information.
-     */
+    /** Part detail information. */
     public static final class PartDetail {
 
         private final int partNumber;
@@ -174,8 +176,10 @@ public final class UploadSessionDetailResponse {
          * @param uploadedAt the upload timestamp
          */
         @JsonCreator
-        public PartDetail(@JsonProperty("partNumber") int partNumber,
-                @JsonProperty("etag") String etag, @JsonProperty("size") long size,
+        public PartDetail(
+                @JsonProperty("partNumber") int partNumber,
+                @JsonProperty("etag") String etag,
+                @JsonProperty("size") long size,
                 @JsonProperty("uploadedAt") Instant uploadedAt) {
             this.partNumber = partNumber;
             this.etag = etag;

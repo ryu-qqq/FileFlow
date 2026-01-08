@@ -20,8 +20,9 @@ import org.springframework.context.annotation.Configuration;
 @DisplayName("FileFlowAutoConfiguration 테스트")
 class FileFlowAutoConfigurationTest {
 
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(FileFlowAutoConfiguration.class));
+    private final ApplicationContextRunner contextRunner =
+            new ApplicationContextRunner()
+                    .withConfiguration(AutoConfigurations.of(FileFlowAutoConfiguration.class));
 
     @Nested
     @DisplayName("FileFlowClient 빈 생성")
@@ -33,12 +34,12 @@ class FileFlowAutoConfigurationTest {
             contextRunner
                     .withPropertyValues(
                             "fileflow.base-url=http://localhost:8080/api/v1/file",
-                            "fileflow.service-token=test-token"
-                    )
-                    .run(context -> {
-                        assertThat(context).hasSingleBean(FileFlowClient.class);
-                        assertThat(context).doesNotHaveBean(FileFlowAsyncClient.class);
-                    });
+                            "fileflow.service-token=test-token")
+                    .run(
+                            context -> {
+                                assertThat(context).hasSingleBean(FileFlowClient.class);
+                                assertThat(context).doesNotHaveBean(FileFlowAsyncClient.class);
+                            });
         }
 
         @Test
@@ -46,10 +47,11 @@ class FileFlowAutoConfigurationTest {
         void shouldNotCreateBeanWhenBaseUrlIsMissing() {
             contextRunner
                     .withPropertyValues("fileflow.service-token=test-token")
-                    .run(context -> {
-                        assertThat(context).doesNotHaveBean(FileFlowClient.class);
-                        assertThat(context).doesNotHaveBean(FileFlowAsyncClient.class);
-                    });
+                    .run(
+                            context -> {
+                                assertThat(context).doesNotHaveBean(FileFlowClient.class);
+                                assertThat(context).doesNotHaveBean(FileFlowAsyncClient.class);
+                            });
         }
 
         @Test
@@ -59,12 +61,12 @@ class FileFlowAutoConfigurationTest {
                     .withPropertyValues(
                             "fileflow.base-url=http://localhost:8080/api/v1/file",
                             "fileflow.service-token=test-token",
-                            "fileflow.async=false"
-                    )
-                    .run(context -> {
-                        assertThat(context).hasSingleBean(FileFlowClient.class);
-                        assertThat(context).doesNotHaveBean(FileFlowAsyncClient.class);
-                    });
+                            "fileflow.async=false")
+                    .run(
+                            context -> {
+                                assertThat(context).hasSingleBean(FileFlowClient.class);
+                                assertThat(context).doesNotHaveBean(FileFlowAsyncClient.class);
+                            });
         }
     }
 
@@ -79,12 +81,12 @@ class FileFlowAutoConfigurationTest {
                     .withPropertyValues(
                             "fileflow.base-url=http://localhost:8080/api/v1/file",
                             "fileflow.service-token=test-token",
-                            "fileflow.async=true"
-                    )
-                    .run(context -> {
-                        assertThat(context).hasSingleBean(FileFlowAsyncClient.class);
-                        assertThat(context).doesNotHaveBean(FileFlowClient.class);
-                    });
+                            "fileflow.async=true")
+                    .run(
+                            context -> {
+                                assertThat(context).hasSingleBean(FileFlowAsyncClient.class);
+                                assertThat(context).doesNotHaveBean(FileFlowClient.class);
+                            });
         }
     }
 
@@ -99,13 +101,13 @@ class FileFlowAutoConfigurationTest {
                     .withUserConfiguration(CustomFileFlowClientConfig.class)
                     .withPropertyValues(
                             "fileflow.base-url=http://localhost:8080/api/v1/file",
-                            "fileflow.service-token=test-token"
-                    )
-                    .run(context -> {
-                        assertThat(context).hasSingleBean(FileFlowClient.class);
-                        assertThat(context.getBean(FileFlowClient.class))
-                                .isSameAs(context.getBean("customFileFlowClient"));
-                    });
+                            "fileflow.service-token=test-token")
+                    .run(
+                            context -> {
+                                assertThat(context).hasSingleBean(FileFlowClient.class);
+                                assertThat(context.getBean(FileFlowClient.class))
+                                        .isSameAs(context.getBean("customFileFlowClient"));
+                            });
         }
 
         @Test
@@ -116,13 +118,13 @@ class FileFlowAutoConfigurationTest {
                     .withPropertyValues(
                             "fileflow.base-url=http://localhost:8080/api/v1/file",
                             "fileflow.service-token=test-token",
-                            "fileflow.async=true"
-                    )
-                    .run(context -> {
-                        assertThat(context).hasSingleBean(FileFlowAsyncClient.class);
-                        assertThat(context.getBean(FileFlowAsyncClient.class))
-                                .isSameAs(context.getBean("customFileFlowAsyncClient"));
-                    });
+                            "fileflow.async=true")
+                    .run(
+                            context -> {
+                                assertThat(context).hasSingleBean(FileFlowAsyncClient.class);
+                                assertThat(context.getBean(FileFlowAsyncClient.class))
+                                        .isSameAs(context.getBean("customFileFlowAsyncClient"));
+                            });
         }
     }
 
@@ -139,17 +141,19 @@ class FileFlowAutoConfigurationTest {
                             "fileflow.service-token=test-token",
                             "fileflow.connect-timeout=10s",
                             "fileflow.read-timeout=60s",
-                            "fileflow.write-timeout=45s"
-                    )
-                    .run(context -> {
-                        assertThat(context).hasSingleBean(FileFlowClient.class);
-                        assertThat(context).hasSingleBean(FileFlowProperties.class);
+                            "fileflow.write-timeout=45s")
+                    .run(
+                            context -> {
+                                assertThat(context).hasSingleBean(FileFlowClient.class);
+                                assertThat(context).hasSingleBean(FileFlowProperties.class);
 
-                        FileFlowProperties properties = context.getBean(FileFlowProperties.class);
-                        assertThat(properties.getConnectTimeout().getSeconds()).isEqualTo(10);
-                        assertThat(properties.getReadTimeout().getSeconds()).isEqualTo(60);
-                        assertThat(properties.getWriteTimeout().getSeconds()).isEqualTo(45);
-                    });
+                                FileFlowProperties properties =
+                                        context.getBean(FileFlowProperties.class);
+                                assertThat(properties.getConnectTimeout().getSeconds())
+                                        .isEqualTo(10);
+                                assertThat(properties.getReadTimeout().getSeconds()).isEqualTo(60);
+                                assertThat(properties.getWriteTimeout().getSeconds()).isEqualTo(45);
+                            });
         }
 
         @Test
@@ -159,14 +163,15 @@ class FileFlowAutoConfigurationTest {
                     .withPropertyValues(
                             "fileflow.base-url=http://localhost:8080/api/v1/file",
                             "fileflow.service-token=test-token",
-                            "fileflow.log-requests=true"
-                    )
-                    .run(context -> {
-                        assertThat(context).hasSingleBean(FileFlowProperties.class);
+                            "fileflow.log-requests=true")
+                    .run(
+                            context -> {
+                                assertThat(context).hasSingleBean(FileFlowProperties.class);
 
-                        FileFlowProperties properties = context.getBean(FileFlowProperties.class);
-                        assertThat(properties.isLogRequests()).isTrue();
-                    });
+                                FileFlowProperties properties =
+                                        context.getBean(FileFlowProperties.class);
+                                assertThat(properties.isLogRequests()).isTrue();
+                            });
         }
     }
 

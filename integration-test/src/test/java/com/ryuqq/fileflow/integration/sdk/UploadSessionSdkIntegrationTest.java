@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.sdk.model.session.InitSingleUploadResponse;
 import com.ryuqq.fileflow.sdk.model.session.UploadSessionResponse;
 import com.ryuqq.fileflow.sdk.model.session.UploadSessionSearchRequest;
 import com.ryuqq.fileflow.sdk.model.session.UploadSessionSearchRequest.SessionStatus;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -37,12 +38,14 @@ class UploadSessionSdkIntegrationTest extends SdkIntegrationTest {
         @DisplayName("단일 파일 업로드 세션을 초기화할 수 있다")
         void shouldInitSingleUploadSession() {
             // given
-            InitSingleUploadRequest request = InitSingleUploadRequest.builder()
-                    .filename("test-file.pdf")
-                    .fileSize(1024L)
-                    .contentType("application/pdf")
-                    .category("DOCUMENT")
-                    .build();
+            InitSingleUploadRequest request =
+                    InitSingleUploadRequest.builder()
+                            .idempotencyKey(UUID.randomUUID().toString())
+                            .fileName("test-file.pdf")
+                            .fileSize(1024L)
+                            .contentType("application/pdf")
+                            .uploadCategory("DOCUMENT")
+                            .build();
 
             // when
             InitSingleUploadResponse response = uploadSessionApi.initSingle(request);
@@ -65,26 +68,24 @@ class UploadSessionSdkIntegrationTest extends SdkIntegrationTest {
             // given - 테스트 데이터 생성
             uploadSessionApi.initSingle(
                     InitSingleUploadRequest.builder()
-                            .filename("list-test-1.pdf")
+                            .idempotencyKey(UUID.randomUUID().toString())
+                            .fileName("list-test-1.pdf")
                             .fileSize(1024L)
                             .contentType("application/pdf")
-                            .category("DOCUMENT")
-                            .build()
-            );
+                            .uploadCategory("DOCUMENT")
+                            .build());
             uploadSessionApi.initSingle(
                     InitSingleUploadRequest.builder()
-                            .filename("list-test-2.jpg")
+                            .idempotencyKey(UUID.randomUUID().toString())
+                            .fileName("list-test-2.jpg")
                             .fileSize(2048L)
                             .contentType("image/jpeg")
-                            .category("IMAGE")
-                            .build()
-            );
+                            .uploadCategory("PRODUCT_IMAGE")
+                            .build());
 
             // when
-            UploadSessionSearchRequest request = UploadSessionSearchRequest.builder()
-                    .page(0)
-                    .size(10)
-                    .build();
+            UploadSessionSearchRequest request =
+                    UploadSessionSearchRequest.builder().page(0).size(10).build();
 
             PageResponse<UploadSessionResponse> response = uploadSessionApi.list(request);
 
@@ -101,27 +102,27 @@ class UploadSessionSdkIntegrationTest extends SdkIntegrationTest {
             // given - 테스트 데이터 생성
             uploadSessionApi.initSingle(
                     InitSingleUploadRequest.builder()
-                            .filename("pending-test.pdf")
+                            .idempotencyKey(UUID.randomUUID().toString())
+                            .fileName("pending-test.pdf")
                             .fileSize(1024L)
                             .contentType("application/pdf")
-                            .category("DOCUMENT")
-                            .build()
-            );
+                            .uploadCategory("DOCUMENT")
+                            .build());
 
             // when
-            UploadSessionSearchRequest request = UploadSessionSearchRequest.builder()
-                    .page(0)
-                    .size(10)
-                    .status(SessionStatus.PENDING)
-                    .build();
+            UploadSessionSearchRequest request =
+                    UploadSessionSearchRequest.builder()
+                            .page(0)
+                            .size(10)
+                            .status(SessionStatus.ACTIVE)
+                            .build();
 
             PageResponse<UploadSessionResponse> response = uploadSessionApi.list(request);
 
             // then
             assertThat(response).isNotNull();
-            assertThat(response.getContent()).allSatisfy(session ->
-                    assertThat(session.getStatus()).isEqualTo("PENDING")
-            );
+            assertThat(response.getContent())
+                    .allSatisfy(session -> assertThat(session.getStatus()).isEqualTo("ACTIVE"));
         }
     }
 
@@ -133,14 +134,15 @@ class UploadSessionSdkIntegrationTest extends SdkIntegrationTest {
         @DisplayName("세션 ID로 업로드 세션을 조회할 수 있다")
         void shouldGetUploadSessionById() {
             // given
-            InitSingleUploadResponse initResponse = uploadSessionApi.initSingle(
-                    InitSingleUploadRequest.builder()
-                            .filename("get-test.pdf")
-                            .fileSize(1024L)
-                            .contentType("application/pdf")
-                            .category("DOCUMENT")
-                            .build()
-            );
+            InitSingleUploadResponse initResponse =
+                    uploadSessionApi.initSingle(
+                            InitSingleUploadRequest.builder()
+                                    .idempotencyKey(UUID.randomUUID().toString())
+                                    .fileName("get-test.pdf")
+                                    .fileSize(1024L)
+                                    .contentType("application/pdf")
+                                    .uploadCategory("DOCUMENT")
+                                    .build());
 
             // when
             var detailResponse = uploadSessionApi.get(initResponse.getSessionId());
@@ -162,21 +164,22 @@ class UploadSessionSdkIntegrationTest extends SdkIntegrationTest {
         @DisplayName("업로드 세션을 취소할 수 있다")
         void shouldCancelUploadSession() {
             // given
-            InitSingleUploadResponse initResponse = uploadSessionApi.initSingle(
-                    InitSingleUploadRequest.builder()
-                            .filename("cancel-test.pdf")
-                            .fileSize(1024L)
-                            .contentType("application/pdf")
-                            .category("DOCUMENT")
-                            .build()
-            );
+            InitSingleUploadResponse initResponse =
+                    uploadSessionApi.initSingle(
+                            InitSingleUploadRequest.builder()
+                                    .idempotencyKey(UUID.randomUUID().toString())
+                                    .fileName("cancel-test.pdf")
+                                    .fileSize(1024L)
+                                    .contentType("application/pdf")
+                                    .uploadCategory("DOCUMENT")
+                                    .build());
 
             // when
             uploadSessionApi.cancel(initResponse.getSessionId());
 
             // then
             var detailResponse = uploadSessionApi.get(initResponse.getSessionId());
-            assertThat(detailResponse.getStatus()).isEqualTo("CANCELLED");
+            assertThat(detailResponse.getStatus()).isEqualTo("FAILED");
         }
     }
 }

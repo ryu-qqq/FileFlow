@@ -5,9 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ryuqq.fileflow.sdk.api.FileAssetApi;
 import com.ryuqq.fileflow.sdk.exception.FileFlowNotFoundException;
+import com.ryuqq.fileflow.sdk.model.asset.FileAssetResponse;
 import com.ryuqq.fileflow.sdk.model.asset.FileAssetStatisticsResponse;
 import com.ryuqq.fileflow.sdk.model.common.PageResponse;
-import com.ryuqq.fileflow.sdk.model.asset.FileAssetResponse;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -52,8 +53,11 @@ class FileAssetSdkIntegrationTest extends SdkIntegrationTest {
         @Test
         @DisplayName("존재하지 않는 파일 ID로 조회하면 NotFoundException이 발생한다")
         void shouldThrowNotFoundExceptionWhenFileNotExists() {
+            // given - 존재하지 않는 UUID
+            String nonExistentId = UUID.randomUUID().toString();
+
             // when & then
-            assertThatThrownBy(() -> fileAssetApi.get("non-existent-file-id"))
+            assertThatThrownBy(() -> fileAssetApi.get(nonExistentId))
                     .isInstanceOf(FileFlowNotFoundException.class);
         }
     }
@@ -83,8 +87,11 @@ class FileAssetSdkIntegrationTest extends SdkIntegrationTest {
         @Test
         @DisplayName("존재하지 않는 파일 ID로 다운로드 URL 생성 시 NotFoundException이 발생한다")
         void shouldThrowNotFoundExceptionWhenGeneratingDownloadUrlForNonExistentFile() {
+            // given - 존재하지 않는 UUID
+            String nonExistentId = UUID.randomUUID().toString();
+
             // when & then
-            assertThatThrownBy(() -> fileAssetApi.generateDownloadUrl("non-existent-file-id"))
+            assertThatThrownBy(() -> fileAssetApi.generateDownloadUrl(nonExistentId))
                     .isInstanceOf(FileFlowNotFoundException.class);
         }
     }
@@ -96,8 +103,11 @@ class FileAssetSdkIntegrationTest extends SdkIntegrationTest {
         @Test
         @DisplayName("존재하지 않는 파일 ID로 삭제 시 NotFoundException이 발생한다")
         void shouldThrowNotFoundExceptionWhenDeletingNonExistentFile() {
+            // given - 존재하지 않는 UUID
+            String nonExistentId = UUID.randomUUID().toString();
+
             // when & then
-            assertThatThrownBy(() -> fileAssetApi.delete("non-existent-file-id"))
+            assertThatThrownBy(() -> fileAssetApi.delete(nonExistentId))
                     .isInstanceOf(FileFlowNotFoundException.class);
         }
     }

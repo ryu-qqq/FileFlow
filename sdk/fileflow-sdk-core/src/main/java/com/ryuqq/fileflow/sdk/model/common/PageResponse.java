@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.sdk.model.common;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Paginated response wrapper.
@@ -32,9 +32,13 @@ public final class PageResponse<T> {
      * @param last whether this is the last page
      */
     @JsonCreator
-    public PageResponse(@JsonProperty("content") List<T> content, @JsonProperty("page") int page,
-            @JsonProperty("size") int size, @JsonProperty("totalElements") long totalElements,
-            @JsonProperty("totalPages") int totalPages, @JsonProperty("first") boolean first,
+    public PageResponse(
+            @JsonProperty("content") List<T> content,
+            @JsonProperty("page") int page,
+            @JsonProperty("size") int size,
+            @JsonProperty("totalElements") long totalElements,
+            @JsonProperty("totalPages") int totalPages,
+            @JsonProperty("first") boolean first,
             @JsonProperty("last") boolean last) {
         this.content = content != null ? new ArrayList<>(content) : new ArrayList<>();
         this.page = page;

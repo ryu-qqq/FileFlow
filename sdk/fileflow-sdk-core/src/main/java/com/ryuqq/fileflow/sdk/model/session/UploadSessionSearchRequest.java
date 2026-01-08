@@ -52,11 +52,11 @@ public final class UploadSessionSearchRequest {
 
     /** Session status filter. */
     public enum SessionStatus {
-        PENDING,
-        IN_PROGRESS,
+        PREPARING,
+        ACTIVE,
         COMPLETED,
         EXPIRED,
-        CANCELLED
+        FAILED
     }
 
     /** Upload type filter. */

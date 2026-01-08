@@ -1,16 +1,15 @@
 package com.ryuqq.fileflow.sdk.model.session;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Response for completing a multipart upload session.
  *
- * <p>
- * Contains the completed session information and merged part list.
+ * <p>Contains the completed session information and merged part list.
  */
 public final class CompleteMultipartUploadResponse {
 
@@ -36,9 +35,12 @@ public final class CompleteMultipartUploadResponse {
      * @param completedAt the completion timestamp
      */
     @JsonCreator
-    public CompleteMultipartUploadResponse(@JsonProperty("sessionId") String sessionId,
-            @JsonProperty("status") String status, @JsonProperty("bucket") String bucket,
-            @JsonProperty("key") String key, @JsonProperty("uploadId") String uploadId,
+    public CompleteMultipartUploadResponse(
+            @JsonProperty("sessionId") String sessionId,
+            @JsonProperty("status") String status,
+            @JsonProperty("bucket") String bucket,
+            @JsonProperty("key") String key,
+            @JsonProperty("uploadId") String uploadId,
             @JsonProperty("totalParts") int totalParts,
             @JsonProperty("completedParts") List<CompletedPartInfo> completedParts,
             @JsonProperty("completedAt") Instant completedAt) {
@@ -85,9 +87,7 @@ public final class CompleteMultipartUploadResponse {
         return completedAt;
     }
 
-    /**
-     * Information about a completed part.
-     */
+    /** Information about a completed part. */
     public static final class CompletedPartInfo {
 
         private final int partNumber;
@@ -104,8 +104,10 @@ public final class CompleteMultipartUploadResponse {
          * @param uploadedAt the upload timestamp
          */
         @JsonCreator
-        public CompletedPartInfo(@JsonProperty("partNumber") int partNumber,
-                @JsonProperty("etag") String etag, @JsonProperty("size") long size,
+        public CompletedPartInfo(
+                @JsonProperty("partNumber") int partNumber,
+                @JsonProperty("etag") String etag,
+                @JsonProperty("size") long size,
                 @JsonProperty("uploadedAt") Instant uploadedAt) {
             this.partNumber = partNumber;
             this.etag = etag;
