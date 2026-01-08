@@ -2,6 +2,10 @@ package com.ryuqq.fileflow.sdk.client.internal;
 
 import com.ryuqq.fileflow.sdk.api.ExternalDownloadAsyncApi;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
+import com.ryuqq.fileflow.sdk.model.common.PageResponse;
+import com.ryuqq.fileflow.sdk.model.download.ExternalDownloadDetailResponse;
+import com.ryuqq.fileflow.sdk.model.download.ExternalDownloadResponse;
+import com.ryuqq.fileflow.sdk.model.download.ExternalDownloadSearchRequest;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.core.ParameterizedTypeReference;
@@ -34,5 +38,29 @@ public final class ExternalDownloadAsyncApiImpl implements ExternalDownloadAsync
 
         return httpClient.post(
                 BASE_PATH, request, new ParameterizedTypeReference<ApiResponse<String>>() {});
+    }
+
+    @Override
+    public Mono<ExternalDownloadDetailResponse> get(String id) {
+        return httpClient.get(
+                BASE_PATH + "/" + id,
+                new ParameterizedTypeReference<ApiResponse<ExternalDownloadDetailResponse>>() {});
+    }
+
+    @Override
+    public Mono<PageResponse<ExternalDownloadResponse>> list(
+            ExternalDownloadSearchRequest request) {
+        StringBuilder path = new StringBuilder(BASE_PATH);
+        path.append("?page=").append(request.getPage());
+        path.append("&size=").append(request.getSize());
+
+        if (request.getStatus() != null) {
+            path.append("&status=").append(request.getStatus());
+        }
+
+        return httpClient.get(
+                path.toString(),
+                new ParameterizedTypeReference<
+                        ApiResponse<PageResponse<ExternalDownloadResponse>>>() {});
     }
 }

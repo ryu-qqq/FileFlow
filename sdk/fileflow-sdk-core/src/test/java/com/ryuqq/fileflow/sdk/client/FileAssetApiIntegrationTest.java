@@ -15,6 +15,7 @@ import com.ryuqq.fileflow.sdk.api.FileAssetApi;
 import com.ryuqq.fileflow.sdk.exception.FileFlowNotFoundException;
 import com.ryuqq.fileflow.sdk.model.asset.DownloadUrlResponse;
 import com.ryuqq.fileflow.sdk.model.asset.FileAssetResponse;
+import com.ryuqq.fileflow.sdk.model.asset.FileAssetStatisticsResponse;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -304,6 +305,50 @@ class FileAssetApiIntegrationTest extends WireMockTestSupport {
 
             // when & then - 예외가 발생하지 않으면 성공
             fileAssetApi.retry(fileAssetId);
+        }
+    }
+
+    @Nested
+    @DisplayName("getStatistics 메서드")
+    class GetStatisticsTest {
+
+        @Test
+        @DisplayName("파일 에셋 통계를 조회할 수 있다")
+        void shouldGetFileAssetStatistics() {
+            // given
+            String responseData =
+                    """
+                    {
+                        "totalCount": 150,
+                        "statusCounts": {
+                            "PENDING": 10,
+                            "PROCESSING": 5,
+                            "COMPLETED": 120,
+                            "FAILED": 15
+                        },
+                        "categoryCounts": {
+                            "IMAGE": 80,
+                            "VIDEO": 30,
+                            "DOCUMENT": 25,
+                            "AUDIO": 15
+                        }
+                    }
+                    """;
+
+            stubFor(
+                    withAuth(get(urlPathEqualTo("/api/v1/file/file-assets/statistics")))
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
+
+            // when
+            FileAssetStatisticsResponse response = fileAssetApi.getStatistics();
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.getTotalCount()).isEqualTo(150);
+            assertThat(response.getStatusCounts()).containsEntry("COMPLETED", 120L);
+            assertThat(response.getStatusCounts()).containsEntry("FAILED", 15L);
+            assertThat(response.getCategoryCounts()).containsEntry("IMAGE", 80L);
+            assertThat(response.getCategoryCounts()).containsEntry("DOCUMENT", 25L);
         }
     }
 

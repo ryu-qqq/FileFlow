@@ -2,9 +2,11 @@ package com.ryuqq.fileflow.sdk.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,6 +16,11 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.ryuqq.fileflow.sdk.api.ExternalDownloadApi;
 import com.ryuqq.fileflow.sdk.exception.FileFlowBadRequestException;
+import com.ryuqq.fileflow.sdk.exception.FileFlowNotFoundException;
+import com.ryuqq.fileflow.sdk.model.common.PageResponse;
+import com.ryuqq.fileflow.sdk.model.download.ExternalDownloadDetailResponse;
+import com.ryuqq.fileflow.sdk.model.download.ExternalDownloadResponse;
+import com.ryuqq.fileflow.sdk.model.download.ExternalDownloadSearchRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -219,6 +226,169 @@ class ExternalDownloadApiIntegrationTest extends WireMockTestSupport {
 
             // then - 요청이 성공적으로 처리됨
             verify(postRequestedFor(urlPathEqualTo("/api/v1/file/external-downloads")));
+        }
+    }
+
+    @Nested
+    @DisplayName("get 메서드")
+    class GetTest {
+
+        @Test
+        @DisplayName("ID로 외부 다운로드 상세 정보를 조회할 수 있다")
+        void shouldGetExternalDownloadDetail() {
+            // given
+            String id = "ext-download-123";
+
+            String responseData =
+                    """
+                    {
+                        "id": "ext-download-123",
+                        "sourceUrl": "https://example.com/file.pdf",
+                        "status": "COMPLETED",
+                        "fileAssetId": "file-asset-456",
+                        "errorMessage": null,
+                        "retryCount": 0,
+                        "webhookUrl": "https://my-service.com/webhook",
+                        "createdAt": "2025-01-15T10:00:00Z",
+                        "updatedAt": "2025-01-15T10:05:00Z"
+                    }
+                    """;
+
+            stubFor(
+                    withAuth(get(urlPathEqualTo("/api/v1/file/external-downloads/ext-download-123")))
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
+
+            // when
+            ExternalDownloadDetailResponse response = externalDownloadApi.get(id);
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.getId()).isEqualTo("ext-download-123");
+            assertThat(response.getSourceUrl()).isEqualTo("https://example.com/file.pdf");
+            assertThat(response.getStatus()).isEqualTo("COMPLETED");
+            assertThat(response.getFileAssetId()).isEqualTo("file-asset-456");
+            assertThat(response.getRetryCount()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 ID로 조회하면 예외가 발생한다")
+        void shouldThrowNotFoundExceptionWhenNotExists() {
+            // given
+            String id = "non-existent-id";
+
+            stubFor(
+                    withAuth(get(urlPathEqualTo("/api/v1/file/external-downloads/non-existent-id")))
+                            .willReturn(
+                                    errorResponse(
+                                            404,
+                                            "NOT_FOUND",
+                                            "External download not found")));
+
+            // when & then
+            assertThatThrownBy(() -> externalDownloadApi.get(id))
+                    .isInstanceOf(FileFlowNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("list 메서드")
+    class ListTest {
+
+        @Test
+        @DisplayName("외부 다운로드 목록을 페이지네이션으로 조회할 수 있다")
+        void shouldListExternalDownloads() {
+            // given
+            ExternalDownloadSearchRequest request =
+                    ExternalDownloadSearchRequest.builder()
+                            .page(0)
+                            .size(10)
+                            .build();
+
+            String responseData =
+                    """
+                    {
+                        "content": [
+                            {
+                                "id": "ext-download-1",
+                                "status": "COMPLETED",
+                                "createdAt": "2025-01-15T10:00:00Z"
+                            },
+                            {
+                                "id": "ext-download-2",
+                                "status": "PROCESSING",
+                                "createdAt": "2025-01-15T10:05:00Z"
+                            }
+                        ],
+                        "page": 0,
+                        "size": 10,
+                        "totalElements": 2,
+                        "totalPages": 1,
+                        "first": true,
+                        "last": true
+                    }
+                    """;
+
+            stubFor(
+                    withAuth(get(urlEqualTo("/api/v1/file/external-downloads?page=0&size=10")))
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
+
+            // when
+            PageResponse<ExternalDownloadResponse> response = externalDownloadApi.list(request);
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.getContent()).hasSize(2);
+            assertThat(response.getContent().get(0).getId()).isEqualTo("ext-download-1");
+            assertThat(response.getContent().get(0).getStatus()).isEqualTo("COMPLETED");
+            assertThat(response.getContent().get(1).getId()).isEqualTo("ext-download-2");
+            assertThat(response.getPage()).isEqualTo(0);
+            assertThat(response.getTotalElements()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("상태 필터로 외부 다운로드를 조회할 수 있다")
+        void shouldListExternalDownloadsWithStatusFilter() {
+            // given
+            ExternalDownloadSearchRequest request =
+                    ExternalDownloadSearchRequest.builder()
+                            .page(0)
+                            .size(10)
+                            .status("COMPLETED")
+                            .build();
+
+            String responseData =
+                    """
+                    {
+                        "content": [
+                            {
+                                "id": "ext-download-1",
+                                "status": "COMPLETED",
+                                "createdAt": "2025-01-15T10:00:00Z"
+                            }
+                        ],
+                        "page": 0,
+                        "size": 10,
+                        "totalElements": 1,
+                        "totalPages": 1,
+                        "first": true,
+                        "last": true
+                    }
+                    """;
+
+            stubFor(
+                    withAuth(
+                                    get(
+                                            urlEqualTo(
+                                                    "/api/v1/file/external-downloads?page=0&size=10&status=COMPLETED")))
+                            .willReturn(successResponse(wrapSuccessResponse(responseData))));
+
+            // when
+            PageResponse<ExternalDownloadResponse> response = externalDownloadApi.list(request);
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getStatus()).isEqualTo("COMPLETED");
         }
     }
 }
