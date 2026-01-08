@@ -331,6 +331,17 @@ client.fileAssets().batchDelete(fileIds);
 client.fileAssets().retry("file-asset-id");
 ```
 
+#### 파일 통계 조회
+
+```java
+// 파일 자산 통계 조회
+FileAssetStatisticsResponse stats = client.fileAssets().getStatistics();
+
+System.out.println("Total Files: " + stats.getTotalCount());
+System.out.println("Total Size: " + stats.getTotalSize());
+System.out.println("By Status: " + stats.getCountByStatus());
+```
+
 ---
 
 ### UploadSession API
@@ -373,11 +384,84 @@ System.out.println("Expires At: " + session.getExpiresAt());
 client.uploadSessions().completeSingle(session.getSessionId());
 ```
 
+#### 멀티파트 업로드 (대용량 파일)
+
+5MB 이상의 대용량 파일은 멀티파트 업로드를 사용합니다.
+
+```java
+import com.ryuqq.fileflow.sdk.model.session.*;
+
+// 1. 멀티파트 업로드 세션 초기화
+InitMultipartUploadRequest request = InitMultipartUploadRequest.builder()
+    .fileName("large-video.mp4")
+    .fileSize(500_000_000L)     // 500MB
+    .contentType("video/mp4")
+    .partSize(10_000_000L)      // 파트당 10MB
+    .uploadCategory("videos")
+    .build();
+
+InitMultipartUploadResponse session = client.uploadSessions().initMultipart(request);
+
+System.out.println("Session ID: " + session.getSessionId());
+System.out.println("Upload ID: " + session.getUploadId());
+System.out.println("Total Parts: " + session.getTotalParts());
+
+// 2. 각 파트에 대한 Presigned URL로 업로드
+for (var part : session.getParts()) {
+    System.out.println("Part " + part.getPartNumber() + ": " + part.getPresignedUrl());
+    // HTTP PUT으로 각 파트 업로드
+}
+
+// 3. 파트 업로드 완료 표시
+MarkPartUploadedRequest partRequest = MarkPartUploadedRequest.builder()
+    .partNumber(1)
+    .etag("\"abc123def456\"")  // S3 응답의 ETag
+    .size(10_000_000L)
+    .build();
+
+client.uploadSessions().markPartUploaded(session.getSessionId(), partRequest);
+
+// 4. 멀티파트 업로드 완료
+CompleteMultipartUploadResponse result = client.uploadSessions()
+    .completeMultipart(session.getSessionId());
+
+System.out.println("Status: " + result.getStatus());
+System.out.println("Completed At: " + result.getCompletedAt());
+```
+
+#### 업로드 세션 조회
+
+```java
+// 단일 세션 상세 조회
+UploadSessionDetailResponse detail = client.uploadSessions().get("session-id");
+
+System.out.println("Session ID: " + detail.getSessionId());
+System.out.println("Status: " + detail.getStatus());
+System.out.println("Upload Type: " + detail.getUploadType());
+System.out.println("File Name: " + detail.getFileName());
+
+// 세션 목록 조회 (페이징)
+UploadSessionSearchRequest searchRequest = UploadSessionSearchRequest.builder()
+    .page(0)
+    .size(20)
+    .status(UploadSessionSearchRequest.SessionStatus.PENDING)
+    .build();
+
+PageResponse<UploadSessionResponse> sessions = client.uploadSessions().list(searchRequest);
+
+for (UploadSessionResponse session : sessions.getContent()) {
+    System.out.println("- " + session.getSessionId() + ": " + session.getStatus());
+}
+```
+
 #### 업로드 취소
 
 ```java
 // 업로드 세션 취소
-client.uploadSessions().cancel(session.getSessionId());
+CancelUploadSessionResponse response = client.uploadSessions().cancel("session-id");
+
+System.out.println("Cancelled Session: " + response.getSessionId());
+System.out.println("Status: " + response.getStatus());
 ```
 
 ---
@@ -390,7 +474,7 @@ client.uploadSessions().cancel(session.getSessionId());
 
 ```java
 // 기본 요청
-String downloadId = client.externalDownloads()
+Long downloadId = client.externalDownloads()
     .request(
         "https://example.com/files/document.pdf",  // 소스 URL
         "document.pdf",                             // 저장할 파일명
@@ -404,13 +488,38 @@ System.out.println("Download ID: " + downloadId);
 
 ```java
 // 다운로드 완료 시 webhook으로 알림 받기
-String downloadId = client.externalDownloads()
+Long downloadId = client.externalDownloads()
     .request(
         "https://example.com/files/video.mp4",
         "video.mp4",
         "videos",
         "https://my-server.com/webhook/download-complete"  // Webhook URL
     );
+```
+
+#### 다운로드 요청 조회
+
+```java
+// 단일 다운로드 요청 상세 조회
+ExternalDownloadDetailResponse detail = client.externalDownloads().get(downloadId);
+
+System.out.println("Download ID: " + detail.getDownloadId());
+System.out.println("Status: " + detail.getStatus());
+System.out.println("Source URL: " + detail.getSourceUrl());
+System.out.println("File Asset ID: " + detail.getFileAssetId());  // 완료 시
+
+// 다운로드 요청 목록 조회 (페이징)
+ExternalDownloadSearchRequest searchRequest = ExternalDownloadSearchRequest.builder()
+    .page(0)
+    .size(20)
+    .status(ExternalDownloadSearchRequest.DownloadStatus.COMPLETED)
+    .build();
+
+PageResponse<ExternalDownloadResponse> downloads = client.externalDownloads().list(searchRequest);
+
+for (ExternalDownloadResponse download : downloads.getContent()) {
+    System.out.println("- " + download.getDownloadId() + ": " + download.getStatus());
+}
 ```
 
 ---
@@ -703,21 +812,29 @@ public class GlobalExceptionHandler {
 | `delete(fileAssetId)` | void | 파일 삭제 |
 | `batchDelete(fileAssetIds)` | void | 배치 삭제 |
 | `retry(fileAssetId)` | void | 처리 재시도 |
+| `getStatistics()` | FileAssetStatisticsResponse | 파일 통계 조회 |
 
 ### UploadSessionApi
 
 | 메서드 | 반환 타입 | 설명 |
 |--------|----------|------|
 | `initSingle(request)` | InitSingleUploadResponse | 단일 업로드 세션 초기화 |
-| `completeSingle(sessionId)` | void | 업로드 완료 처리 |
-| `cancel(sessionId)` | void | 업로드 취소 |
+| `completeSingle(sessionId)` | void | 단일 업로드 완료 처리 |
+| `initMultipart(request)` | InitMultipartUploadResponse | 멀티파트 업로드 세션 초기화 |
+| `markPartUploaded(sessionId, request)` | MarkPartUploadedResponse | 파트 업로드 완료 표시 |
+| `completeMultipart(sessionId)` | CompleteMultipartUploadResponse | 멀티파트 업로드 완료 |
+| `get(sessionId)` | UploadSessionDetailResponse | 세션 상세 조회 |
+| `list(request)` | PageResponse | 세션 목록 조회 |
+| `cancel(sessionId)` | CancelUploadSessionResponse | 업로드 취소 |
 
 ### ExternalDownloadApi
 
 | 메서드 | 반환 타입 | 설명 |
 |--------|----------|------|
-| `request(sourceUrl, filename, category)` | String | 외부 URL 다운로드 요청 |
-| `request(sourceUrl, filename, category, webhookUrl)` | String | Webhook 포함 다운로드 요청 |
+| `request(sourceUrl, filename, category)` | Long | 외부 URL 다운로드 요청 |
+| `request(sourceUrl, filename, category, webhookUrl)` | Long | Webhook 포함 다운로드 요청 |
+| `get(downloadId)` | ExternalDownloadDetailResponse | 다운로드 상세 조회 |
+| `list(request)` | PageResponse | 다운로드 목록 조회 |
 
 ---
 
