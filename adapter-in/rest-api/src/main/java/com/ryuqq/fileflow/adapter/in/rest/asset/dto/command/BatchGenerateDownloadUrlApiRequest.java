@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,6 +39,9 @@ public record BatchGenerateDownloadUrlApiRequest(
      * @param expirationMinutes URL 유효 기간 (null인 경우 60분 기본값)
      */
     public BatchGenerateDownloadUrlApiRequest {
+        if (fileAssetIds != null) {
+            fileAssetIds = new ArrayList<>(fileAssetIds);
+        }
         expirationMinutes = expirationMinutes == null ? 60 : expirationMinutes;
     }
 }

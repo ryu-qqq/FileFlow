@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.in.rest.asset.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -20,4 +21,14 @@ public record FileAssetStatisticsApiResponse(
         @Schema(
                         description = "카테고리별 파일 수",
                         example = "{\"IMAGE\": 500, \"VIDEO\": 300, \"DOCUMENT\": 100}")
-                Map<String, Long> categoryCounts) {}
+                Map<String, Long> categoryCounts) {
+    /** 생성자에서 방어적 복사 수행. */
+    public FileAssetStatisticsApiResponse {
+        if (statusCounts != null) {
+            statusCounts = new HashMap<>(statusCounts);
+        }
+        if (categoryCounts != null) {
+            categoryCounts = new HashMap<>(categoryCounts);
+        }
+    }
+}

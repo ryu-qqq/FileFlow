@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.in.rest.asset.dto.command;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,4 +20,11 @@ public record BatchDeleteFileAssetApiRequest(
                 @NotEmpty(message = "삭제할 파일 ID 목록이 필요합니다")
                 @Size(max = 100, message = "최대 100개까지 삭제할 수 있습니다")
                 List<String> fileAssetIds,
-        @Schema(description = "삭제 사유", example = "더 이상 필요하지 않음") String reason) {}
+        @Schema(description = "삭제 사유", example = "더 이상 필요하지 않음") String reason) {
+    /** 생성자에서 방어적 복사 수행. */
+    public BatchDeleteFileAssetApiRequest {
+        if (fileAssetIds != null) {
+            fileAssetIds = new ArrayList<>(fileAssetIds);
+        }
+    }
+}

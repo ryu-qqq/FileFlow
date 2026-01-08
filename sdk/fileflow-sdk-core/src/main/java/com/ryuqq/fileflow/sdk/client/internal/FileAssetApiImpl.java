@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.sdk.api.FileAssetApi;
 import com.ryuqq.fileflow.sdk.model.asset.DownloadUrlRequest;
 import com.ryuqq.fileflow.sdk.model.asset.DownloadUrlResponse;
 import com.ryuqq.fileflow.sdk.model.asset.FileAssetResponse;
+import com.ryuqq.fileflow.sdk.model.asset.FileAssetStatisticsResponse;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
 import com.ryuqq.fileflow.sdk.model.common.PageResponse;
 import java.time.Duration;
@@ -102,5 +103,12 @@ public final class FileAssetApiImpl implements FileAssetApi {
         httpClient.post(
                 BASE_PATH + "/" + fileAssetId + "/retry",
                 new ParameterizedTypeReference<ApiResponse<Void>>() {});
+    }
+
+    @Override
+    public FileAssetStatisticsResponse getStatistics() {
+        return httpClient.get(
+                BASE_PATH + "/statistics",
+                new ParameterizedTypeReference<ApiResponse<FileAssetStatisticsResponse>>() {});
     }
 }

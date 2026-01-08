@@ -38,16 +38,16 @@ public record UploadSessionSearchApiRequest(
     /** 세션 상태 필터. */
     @Schema(description = "세션 상태 필터", enumAsRef = true)
     public enum SessionStatusFilter {
-        @Schema(description = "대기 중")
-        PENDING,
-        @Schema(description = "처리 중")
-        IN_PROGRESS,
+        @Schema(description = "준비 중")
+        PREPARING,
+        @Schema(description = "활성 (업로드 가능)")
+        ACTIVE,
         @Schema(description = "완료")
         COMPLETED,
         @Schema(description = "만료")
         EXPIRED,
-        @Schema(description = "취소")
-        CANCELLED
+        @Schema(description = "실패")
+        FAILED
     }
 
     /** 업로드 타입 필터. */

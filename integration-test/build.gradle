@@ -24,6 +24,11 @@ dependencies {
     testImplementation project(':bootstrap:bootstrap-web-api')
 
     // ========================================
+    // SDK Modules (Client Library Testing)
+    // ========================================
+    testImplementation project(':sdk:fileflow-sdk-core')
+
+    // ========================================
     // Domain & Application TestFixtures
     // ========================================
     testImplementation testFixtures(project(':domain'))

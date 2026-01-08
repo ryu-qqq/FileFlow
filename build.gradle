@@ -92,6 +92,11 @@ subprojects {
         maxWarnings = 100 // TODO: Reduce to 0 after fixing all warnings
     }
 
+    tasks.withType(Checkstyle) {
+        exclude '**/generated/**'
+        exclude '**/Q*.java'
+    }
+
     // ========================================
     // SpotBugs Configuration
     // ========================================

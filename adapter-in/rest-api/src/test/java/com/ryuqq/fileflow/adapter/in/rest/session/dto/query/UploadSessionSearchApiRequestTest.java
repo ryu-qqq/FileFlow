@@ -42,7 +42,7 @@ class UploadSessionSearchApiRequestTest {
         @DisplayName("모든 필드로 요청을 생성할 수 있다")
         void create_WithAllFields_ShouldSucceed() {
             // given
-            SessionStatusFilter status = SessionStatusFilter.PENDING;
+            SessionStatusFilter status = SessionStatusFilter.PREPARING;
             UploadTypeFilter uploadType = UploadTypeFilter.SINGLE;
             Integer page = 1;
             Integer size = 50;
@@ -120,7 +120,7 @@ class UploadSessionSearchApiRequestTest {
             // given
             UploadSessionSearchApiRequest request =
                     new UploadSessionSearchApiRequest(
-                            SessionStatusFilter.PENDING, UploadTypeFilter.SINGLE, 0, 20);
+                            SessionStatusFilter.PREPARING, UploadTypeFilter.SINGLE, 0, 20);
 
             // when
             Set<ConstraintViolation<UploadSessionSearchApiRequest>> violations =
@@ -235,11 +235,11 @@ class UploadSessionSearchApiRequestTest {
             assertThat(SessionStatusFilter.values()).hasSize(5);
             assertThat(SessionStatusFilter.values())
                     .containsExactly(
-                            SessionStatusFilter.PENDING,
-                            SessionStatusFilter.IN_PROGRESS,
+                            SessionStatusFilter.PREPARING,
+                            SessionStatusFilter.ACTIVE,
                             SessionStatusFilter.COMPLETED,
                             SessionStatusFilter.EXPIRED,
-                            SessionStatusFilter.CANCELLED);
+                            SessionStatusFilter.FAILED);
         }
     }
 
@@ -306,10 +306,10 @@ class UploadSessionSearchApiRequestTest {
             // given
             UploadSessionSearchApiRequest request1 =
                     new UploadSessionSearchApiRequest(
-                            SessionStatusFilter.PENDING, UploadTypeFilter.SINGLE, 0, 20);
+                            SessionStatusFilter.PREPARING, UploadTypeFilter.SINGLE, 0, 20);
             UploadSessionSearchApiRequest request2 =
                     new UploadSessionSearchApiRequest(
-                            SessionStatusFilter.PENDING, UploadTypeFilter.SINGLE, 0, 20);
+                            SessionStatusFilter.PREPARING, UploadTypeFilter.SINGLE, 0, 20);
 
             // when & then
             assertThat(request1).isEqualTo(request2);
@@ -321,7 +321,7 @@ class UploadSessionSearchApiRequestTest {
         void equals_WithDifferentStatus_ShouldNotBeEqual() {
             // given
             UploadSessionSearchApiRequest request1 =
-                    new UploadSessionSearchApiRequest(SessionStatusFilter.PENDING, null, 0, 20);
+                    new UploadSessionSearchApiRequest(SessionStatusFilter.PREPARING, null, 0, 20);
             UploadSessionSearchApiRequest request2 =
                     new UploadSessionSearchApiRequest(SessionStatusFilter.COMPLETED, null, 0, 20);
 

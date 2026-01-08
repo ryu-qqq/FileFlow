@@ -4,6 +4,7 @@ import com.ryuqq.fileflow.sdk.api.FileAssetAsyncApi;
 import com.ryuqq.fileflow.sdk.model.asset.DownloadUrlRequest;
 import com.ryuqq.fileflow.sdk.model.asset.DownloadUrlResponse;
 import com.ryuqq.fileflow.sdk.model.asset.FileAssetResponse;
+import com.ryuqq.fileflow.sdk.model.asset.FileAssetStatisticsResponse;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
 import com.ryuqq.fileflow.sdk.model.common.PageResponse;
 import java.time.Duration;
@@ -80,5 +81,12 @@ public final class FileAssetAsyncApiImpl implements FileAssetAsyncApi {
                 BASE_PATH,
                 Map.of("page", page, "size", size),
                 new ParameterizedTypeReference<ApiResponse<PageResponse<FileAssetResponse>>>() {});
+    }
+
+    @Override
+    public Mono<FileAssetStatisticsResponse> getStatistics() {
+        return httpClient.get(
+                BASE_PATH + "/statistics",
+                new ParameterizedTypeReference<ApiResponse<FileAssetStatisticsResponse>>() {});
     }
 }

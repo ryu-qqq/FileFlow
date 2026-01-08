@@ -8,7 +8,7 @@ language: ko-KR
 tone_instructions: "Expert Java/Spring hexagonal arch reviewer. Zero-Tolerance: No Lombok, No getter chain, Long FK, No API in @Transactional, TDD commits, Tidy First."
 
 early_access: true
-enable_free_tier: false
+enable_free_tier: true
 
 reviews:
   profile: assertive

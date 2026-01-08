@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +31,12 @@ public record CompleteMultipartUploadApiResponse(
         @Schema(description = "전체 Part 개수", example = "5") int totalParts,
         @Schema(description = "완료된 Part 목록") List<CompletedPartInfoApiResponse> completedParts,
         @Schema(description = "완료 시각") Instant completedAt) {
+    /** 생성자에서 방어적 복사 수행. */
+    public CompleteMultipartUploadApiResponse {
+        if (completedParts != null) {
+            completedParts = new ArrayList<>(completedParts);
+        }
+    }
 
     /**
      * 완료된 Part 정보 API Response.

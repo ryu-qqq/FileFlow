@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.adapter.in.rest.session.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +31,12 @@ public record InitMultipartUploadApiResponse(
         @Schema(description = "S3 버킷명", example = "fileflow-bucket") String bucket,
         @Schema(description = "S3 객체 키", example = "uploads/file.jpg") String key,
         @Schema(description = "Part 정보 목록") List<PartInfoApiResponse> parts) {
+    /** 생성자에서 방어적 복사 수행. */
+    public InitMultipartUploadApiResponse {
+        if (parts != null) {
+            parts = new ArrayList<>(parts);
+        }
+    }
 
     /**
      * Part 정보 API Response.

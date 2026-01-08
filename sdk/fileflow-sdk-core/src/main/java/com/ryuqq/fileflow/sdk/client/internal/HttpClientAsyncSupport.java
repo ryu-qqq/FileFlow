@@ -29,6 +29,7 @@ public final class HttpClientAsyncSupport {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String SERVICE_TOKEN_HEADER = "X-Service-Token";
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
@@ -175,9 +176,12 @@ public final class HttpClientAsyncSupport {
                 .resolve()
                 .ifPresent(
                         token -> {
-                            String authValue =
-                                    token.startsWith(BEARER_PREFIX) ? token : BEARER_PREFIX + token;
-                            headers.set(AUTHORIZATION_HEADER, authValue);
+                            String rawToken =
+                                    token.startsWith(BEARER_PREFIX)
+                                            ? token.substring(BEARER_PREFIX.length())
+                                            : token;
+                            headers.set(AUTHORIZATION_HEADER, BEARER_PREFIX + rawToken);
+                            headers.set(SERVICE_TOKEN_HEADER, rawToken);
                         });
     }
 

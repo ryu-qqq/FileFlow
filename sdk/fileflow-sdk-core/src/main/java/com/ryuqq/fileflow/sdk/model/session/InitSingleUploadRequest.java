@@ -5,16 +5,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /** Request for initializing a single file upload session. */
 public final class InitSingleUploadRequest {
 
-    private final String filename;
+    private final String idempotencyKey;
+    private final String fileName;
     private final String contentType;
     private final Long fileSize;
-    private final String category;
+    private final String uploadCategory;
+    private final String customPath;
 
     private InitSingleUploadRequest(Builder builder) {
-        this.filename = builder.filename;
+        this.idempotencyKey = builder.idempotencyKey;
+        this.fileName = builder.fileName;
         this.contentType = builder.contentType;
         this.fileSize = builder.fileSize;
-        this.category = builder.category;
+        this.uploadCategory = builder.uploadCategory;
+        this.customPath = builder.customPath;
     }
 
     /**
@@ -26,9 +30,14 @@ public final class InitSingleUploadRequest {
         return new Builder();
     }
 
-    @JsonProperty("filename")
-    public String getFilename() {
-        return filename;
+    @JsonProperty("idempotencyKey")
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    @JsonProperty("fileName")
+    public String getFileName() {
+        return fileName;
     }
 
     @JsonProperty("contentType")
@@ -41,23 +50,35 @@ public final class InitSingleUploadRequest {
         return fileSize;
     }
 
-    @JsonProperty("category")
-    public String getCategory() {
-        return category;
+    @JsonProperty("uploadCategory")
+    public String getUploadCategory() {
+        return uploadCategory;
+    }
+
+    @JsonProperty("customPath")
+    public String getCustomPath() {
+        return customPath;
     }
 
     /** Builder for {@link InitSingleUploadRequest}. */
     public static final class Builder {
 
-        private String filename;
+        private String idempotencyKey;
+        private String fileName;
         private String contentType;
         private Long fileSize;
-        private String category;
+        private String uploadCategory;
+        private String customPath;
 
         private Builder() {}
 
-        public Builder filename(String filename) {
-            this.filename = filename;
+        public Builder idempotencyKey(String idempotencyKey) {
+            this.idempotencyKey = idempotencyKey;
+            return this;
+        }
+
+        public Builder fileName(String fileName) {
+            this.fileName = fileName;
             return this;
         }
 
@@ -71,8 +92,13 @@ public final class InitSingleUploadRequest {
             return this;
         }
 
-        public Builder category(String category) {
-            this.category = category;
+        public Builder uploadCategory(String uploadCategory) {
+            this.uploadCategory = uploadCategory;
+            return this;
+        }
+
+        public Builder customPath(String customPath) {
+            this.customPath = customPath;
             return this;
         }
 

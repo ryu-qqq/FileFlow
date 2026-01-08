@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.sdk.api;
 
 import com.ryuqq.fileflow.sdk.model.asset.DownloadUrlResponse;
 import com.ryuqq.fileflow.sdk.model.asset.FileAssetResponse;
+import com.ryuqq.fileflow.sdk.model.asset.FileAssetStatisticsResponse;
 import com.ryuqq.fileflow.sdk.model.common.PageResponse;
 import java.time.Duration;
 import java.util.List;
@@ -92,4 +93,14 @@ public interface FileAssetApi {
      * @param fileAssetId the file asset ID
      */
     void retry(String fileAssetId);
+
+    /**
+     * Gets file asset statistics.
+     *
+     * <p>Returns aggregated counts by status (PENDING, PROCESSING, COMPLETED, FAILED) and by
+     * category (IMAGE, VIDEO, DOCUMENT, etc.).
+     *
+     * @return the statistics response
+     */
+    FileAssetStatisticsResponse getStatistics();
 }
