@@ -64,6 +64,27 @@ security:
     public-access: ${SECURITY_DOCS_PUBLIC_ACCESS:false}
 
 # ===============================================
+# AuthHub SDK Configuration
+# ===============================================
+authhub:
+  # AuthHub 서버 URL
+  base-url: ${AUTHHUB_BASE_URL:https://auth.example.com}
+  # 서비스 토큰 (M2M 통신용)
+  service-token: ${AUTHHUB_SERVICE_TOKEN:}
+  # 타임아웃 설정
+  timeout:
+    connect: 5s
+    read: 30s
+  # 재시도 설정
+  retry:
+    enabled: true
+    max-attempts: 3
+    delay: 1s
+  # 엔드포인트 자동 동기화 (비활성화 - 필요시 활성화)
+  endpoint-sync:
+    enabled: false
+
+# ===============================================
 # Sentry Configuration (Error Tracking)
 # ===============================================
 sentry:

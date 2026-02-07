@@ -21,8 +21,8 @@ dependencies {
     api project(':application')
     api project(':domain')
 
-    // AuthHub Common Auth Library (v1.0.1 - SecurityContext interface support)
-    implementation 'com.github.ryu-qqq:AuthHub:v1.0.1'
+    // AuthHub SDK (Spring Boot Starter with UserContext, AccessChecker)
+    implementation libs.authhub.sdk.spring.boot.starter
 
     // Spring Web
     implementation libs.spring.boot.starter.web

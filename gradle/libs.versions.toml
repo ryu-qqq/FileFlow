@@ -76,6 +76,11 @@ micrometer = "1.12.4"
 observabilityStarter = "v1.1.1"
 
 # ========================================
+# AuthHub SDK
+# ========================================
+authhub = "v2.0.4"
+
+# ========================================
 # Sentry (Error Tracking)
 # ========================================
 sentry = "8.29.0"
@@ -198,6 +203,11 @@ micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus
 # Observability (Custom Starter from JitPack)
 # ========================================
 observability-starter = { module = "com.github.ryu-qqq.observability-spring-boot-starter:observability-client", version.ref = "observabilityStarter" }
+
+# ========================================
+# AuthHub SDK
+# ========================================
+authhub-sdk-spring-boot-starter = { module = "com.github.ryu-qqq.AuthHub:authhub-sdk-spring-boot-starter", version.ref = "authhub" }
 
 # ========================================
 # Sentry (Error Tracking)
