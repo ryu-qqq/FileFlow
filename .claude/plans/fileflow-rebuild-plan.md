@@ -136,10 +136,10 @@ Phase 0 -> Phase 1 -> Phase 2,3,4 (병렬)
 ## 5. 진행 상태
 
 - [x] Phase 0: 기존 코드 정리 (884 Java files deleted, module scaffolding created)
-- [ ] Phase 1: Domain Common
-- [ ] Phase 2: Domain Session
-- [ ] Phase 3: Domain Asset
-- [ ] Phase 4: Domain Download
+- [x] Phase 1: Domain Common (ErrorCode, DomainException, DomainEvent, AccessType, StorageInfo)
+- [x] Phase 2: Domain Session (SingleUploadSession, MultipartUploadSession, CompletedPart, S3PathResolver)
+- [x] Phase 3: Domain Asset (Asset, FileInfo, FileTypeMetadata, AssetOrigin)
+- [x] Phase 4: Domain Download (DownloadTask, DownloadTaskStatus)
 - [ ] Phase 5: App Common + Session
 - [ ] Phase 6: App Asset
 - [ ] Phase 7: App Download
