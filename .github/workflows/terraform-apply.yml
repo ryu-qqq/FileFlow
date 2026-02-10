@@ -40,28 +40,28 @@ jobs:
         module:
           # 의존성 순서대로 배치
           - name: ecr
-            dir: terraform/ecr
+            dir: terraform/environments/prod/ecr
             order: 0
           # - name: elasticache  # TODO: State migration needed - existing resources don't match module paths
-          #   dir: terraform/elasticache
+          #   dir: terraform/environments/prod/elasticache
           #   order: 1
           - name: s3
-            dir: terraform/s3
+            dir: terraform/environments/prod/s3
             order: 2
           - name: sqs
-            dir: terraform/sqs
+            dir: terraform/environments/prod/sqs
             order: 3
           - name: ecs-web-api
-            dir: terraform/ecs-web-api
+            dir: terraform/environments/prod/ecs-web-api
             order: 4
           - name: ecs-scheduler
-            dir: terraform/ecs-scheduler
+            dir: terraform/environments/prod/ecs-scheduler
             order: 5
           - name: ecs-download-worker
-            dir: terraform/ecs-download-worker
+            dir: terraform/environments/prod/ecs-download-worker
             order: 6
           - name: ecs-resizing-worker
-            dir: terraform/ecs-resizing-worker
+            dir: terraform/environments/prod/ecs-resizing-worker
             order: 7
 
     steps:
