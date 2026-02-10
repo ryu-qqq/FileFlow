@@ -1,0 +1,39 @@
+# ============================================================
+# Scheduler Application 운영 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=prod
+# ============================================================
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:persistence.yml
+      - classpath:persistence-prod.yml
+      - classpath:redis.yml
+      - classpath:redis-prod.yml
+      - classpath:scheduler.yml
+      - classpath:scheduler-prod.yml
+      - optional:classpath:s3.yml
+      - optional:classpath:sqs-publish.yml
+      - optional:classpath:sqs-publish-prod.yml
+      - optional:classpath:http-client.yml
+      - optional:classpath:http-client-prod.yml
+
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: INFO
+    org.hibernate.SQL: WARN
+
+# Sentry 활성화 (운영)
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: production
+  send-default-pii: true
+  attach-stacktrace: true
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info

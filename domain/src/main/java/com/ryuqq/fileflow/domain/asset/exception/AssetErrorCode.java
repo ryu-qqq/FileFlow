@@ -2,20 +2,20 @@ package com.ryuqq.fileflow.domain.asset.exception;
 
 import com.ryuqq.fileflow.domain.common.exception.ErrorCode;
 
-/** FileAsset 도메인 에러 코드. */
 public enum AssetErrorCode implements ErrorCode {
-    ASSET_NOT_FOUND("ASSET-NOT-FOUND", "파일 에셋을 찾을 수 없습니다.", 404),
-    INVALID_ASSET_STATUS("INVALID-ASSET-STATUS", "유효하지 않은 에셋 상태입니다.", 409),
-    PROCESSING_FAILED("PROCESSING-FAILED", "파일 가공에 실패했습니다.", 500);
+    ASSET_NOT_FOUND("ASSET-001", 404, "파일을 찾을 수 없습니다"),
+    ASSET_ALREADY_DELETED("ASSET-002", 409, "이미 삭제된 파일입니다"),
+    ASSET_METADATA_NOT_FOUND("ASSET-003", 404, "파일 메타데이터를 찾을 수 없습니다"),
+    ASSET_ACCESS_DENIED("ASSET-004", 403, "해당 파일에 대한 권한이 없습니다");
 
     private final String code;
-    private final String message;
     private final int httpStatus;
+    private final String message;
 
-    AssetErrorCode(String code, String message, int httpStatus) {
+    AssetErrorCode(String code, int httpStatus, String message) {
         this.code = code;
-        this.message = message;
         this.httpStatus = httpStatus;
+        this.message = message;
     }
 
     @Override
@@ -24,12 +24,12 @@ public enum AssetErrorCode implements ErrorCode {
     }
 
     @Override
-    public String getMessage() {
-        return message;
+    public int getHttpStatus() {
+        return httpStatus;
     }
 
     @Override
-    public int getHttpStatus() {
-        return httpStatus;
+    public String getMessage() {
+        return message;
     }
 }

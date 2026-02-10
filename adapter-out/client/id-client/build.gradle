@@ -1,0 +1,31 @@
+// ========================================
+// Adapter-Out: ID Client
+// ========================================
+// UUIDv7 based ID generator implementation
+// Implements IdGeneratorPort from application layer
+// Technology: uuid-creator library
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Spring Context (@Component)
+    implementation libs.spring.context
+
+    // UUID v7 Generator
+    implementation libs.uuid.creator
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.bundles.testing.basic
+}

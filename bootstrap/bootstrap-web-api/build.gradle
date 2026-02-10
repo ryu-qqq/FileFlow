@@ -8,11 +8,14 @@ dependencies {
     implementation project(':domain')
     implementation project(':application')
     implementation project(':adapter-in:rest-api')
+    implementation project(':adapter-in:redis-consumer')
     implementation project(':adapter-out:persistence-mysql')
     implementation project(':adapter-out:persistence-redis')
-    implementation project(':adapter-out:aws-s3')
-    implementation project(':adapter-out:aws-sqs')
-    implementation project(':adapter-out:http-client')
+    implementation project(':adapter-out:client:s3-client')
+    implementation project(':adapter-out:client:sqs-publisher')
+    implementation project(':adapter-out:client:http-client')
+    implementation project(':adapter-out:client:image-transform-client')
+    implementation project(':adapter-out:client:id-client')
 
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter'

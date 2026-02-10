@@ -1,0 +1,20 @@
+# ============================================================
+# SQS Consumer Layer 운영 환경 설정
+# ============================================================
+# 활성화: bootstrap의 application-prod.yml에서 import
+# ============================================================
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+      sqs:
+        listener:
+          max-concurrent-messages: ${SQS_MAX_CONCURRENT_MESSAGES:10}
+          max-messages-per-poll: ${SQS_MAX_MESSAGES_PER_POLL:10}
+
+logging:
+  level:
+    com.ryuqq.fileflow.adapter.in.sqs: INFO
+    io.awspring.cloud.sqs: INFO

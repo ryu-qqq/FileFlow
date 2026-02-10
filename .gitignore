@@ -63,6 +63,7 @@ langfuse/tests/__pycache__/
 .env.aws
 local-dev/.env.local
 local-dev/.env.aws
+local-dev/.env.aws.*
 local-dev/test-files/
 
 # Terraform

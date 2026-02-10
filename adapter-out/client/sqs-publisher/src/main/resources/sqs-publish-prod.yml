@@ -1,0 +1,11 @@
+# ============================================================
+# SQS Publisher Layer 운영 환경 설정
+# ============================================================
+# 활성화: bootstrap의 application-prod.yml에서 import
+# ============================================================
+
+fileflow:
+  sqs:
+    download-queue: ${SQS_DOWNLOAD_QUEUE}
+    transform-queue: ${SQS_TRANSFORM_QUEUE}
+    region: ${AWS_REGION:ap-northeast-2}

@@ -3,11 +3,40 @@ package com.ryuqq.fileflow.domain.common.exception;
 import java.util.Collections;
 import java.util.Map;
 
-// domain 모듈
+/**
+ * DomainException - Domain Layer 예외의 최상위 클래스
+ *
+ * <p>모든 비즈니스 예외는 이 클래스를 상속해야 합니다.
+ *
+ * <p><strong>설계 원칙:</strong>
+ *
+ * <ul>
+ *   <li>Spring 의존성 금지 (HttpStatus 대신 int 사용)
+ *   <li>ErrorCode 객체 기반 (에러 코드, HTTP 상태, 메시지 캡슐화)
+ *   <li>RuntimeException 상속 (Unchecked Exception)
+ * </ul>
+ *
+ * <p><strong>사용 예시:</strong>
+ *
+ * <pre>{@code
+ * public class SessionNotFoundException extends DomainException {
+ *     public SessionNotFoundException(String sessionId) {
+ *         super(
+ *             SessionErrorCode.SESSION_NOT_FOUND,
+ *             String.format("Session not found: %s", sessionId),
+ *             Map.of("sessionId", sessionId)
+ *         );
+ *     }
+ * }
+ * }</pre>
+ *
+ * @author ryu-qqq
+ * @since 2025-10-31
+ */
 public class DomainException extends RuntimeException {
 
-    private final ErrorCode errorCode; // ex) TENANT_NOT_FOUND
-    private final Map<String, Object> args; // 메시지 템플릿 파라미터 등 (선택)
+    private final ErrorCode errorCode;
+    private final Map<String, Object> args;
 
     /**
      * Constructor - ErrorCode 기반 예외 생성
@@ -57,7 +86,7 @@ public class DomainException extends RuntimeException {
     /**
      * 에러 코드 문자열 반환 (편의 메서드)
      *
-     * @return 에러 코드 문자열 (예: "ORDER-001")
+     * @return 에러 코드 문자열 (예: "SESSION-001")
      */
     public String code() {
         return errorCode.getCode();

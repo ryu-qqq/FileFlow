@@ -16,19 +16,19 @@ package com.ryuqq.fileflow.domain.common.vo;
  * <p><strong>구현 예시:</strong>
  *
  * <pre>{@code
- * public record OrderLockKey(Long orderId) implements LockKey {
+ * public record SessionLockKey(String sessionId) implements LockKey {
  *
- *     private static final String PREFIX = "lock:order:";
+ *     private static final String PREFIX = "lock:session:";
  *
- *     public OrderLockKey {
- *         if (orderId == null || orderId <= 0) {
- *             throw new IllegalArgumentException("orderId must be positive");
+ *     public SessionLockKey {
+ *         if (sessionId == null || sessionId.isBlank()) {
+ *             throw new IllegalArgumentException("sessionId must not be blank");
  *         }
  *     }
  *
  *     @Override
  *     public String value() {
- *         return PREFIX + orderId;
+ *         return PREFIX + sessionId;
  *     }
  * }
  * }</pre>
@@ -36,13 +36,12 @@ package com.ryuqq.fileflow.domain.common.vo;
  * <p><strong>사용 예시:</strong>
  *
  * <pre>{@code
- * OrderLockKey lockKey = new OrderLockKey(orderId);
+ * SessionLockKey lockKey = new SessionLockKey(sessionId);
  * lockPort.tryLock(lockKey, 10, 30, TimeUnit.SECONDS);
  * }</pre>
  *
  * @author Development Team
  * @since 1.0.0
- * @see com.ryuqq.application.common.port.out.DistributedLockPort
  */
 public interface LockKey {
 
@@ -60,9 +59,8 @@ public interface LockKey {
      * <p><strong>예시:</strong>
      *
      * <ul>
-     *   <li>{@code lock:order:123}
-     *   <li>{@code lock:stock:item:456}
-     *   <li>{@code lock:stock:item:456:warehouse:789}
+     *   <li>{@code lock:session:123}
+     *   <li>{@code lock:download:task:456}
      * </ul>
      *
      * @return Redis에서 사용할 Lock Key 문자열

@@ -1,0 +1,14 @@
+# ============================================================
+# HTTP Client Layer 운영 환경 설정
+# ============================================================
+# 활성화: bootstrap의 application-prod.yml에서 import
+# ============================================================
+
+fileflow:
+  http-client:
+    download:
+      connect-timeout: ${HTTP_DOWNLOAD_CONNECT_TIMEOUT:5000}
+      read-timeout: ${HTTP_DOWNLOAD_READ_TIMEOUT:60000}
+    callback:
+      connect-timeout: ${HTTP_CALLBACK_CONNECT_TIMEOUT:3000}
+      read-timeout: ${HTTP_CALLBACK_READ_TIMEOUT:10000}
