@@ -1,17 +1,28 @@
 # ============================================================================
-# FileFlow - Stage Deployment Pipeline
-# ============================================================================
-# stage 브랜치에 머지(push) 시 스테이지 환경에 자동 배포
-# dev → PR → stage (머지 시 자동 배포) → PR → main (prod 배포)
+# FileFlow - Stage Build & Deploy
+#
+# Stage 환경 배포 파이프라인
+# 트리거: stage 브랜치 push
 #
 # 컴포넌트: web-api, download-worker, resizing-worker, scheduler (병렬 빌드/배포)
 # 인프라: ECS Fargate + Service Discovery (ALB 없음)
+#
+# Stage 환경 특징:
+# - Production 미러 환경
+# - 변경 감지(paths-filter)로 변경된 컴포넌트만 빌드/배포
+# - force-all 옵션으로 전체 강제 빌드 가능
 # ============================================================================
 
-name: Deploy to Stage
+name: Stage Build and Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      force-all:
+        description: '모든 서비스 강제 빌드/배포'
+        required: false
+        default: 'false'
+        type: boolean
   push:
     branches:
       - stage
@@ -31,12 +42,76 @@ env:
 
 jobs:
   # ============================================================================
+  # 변경 감지 (Path Filter)
+  # ============================================================================
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      web-api: ${{ steps.filter.outputs.web-api }}
+      download-worker: ${{ steps.filter.outputs.download-worker }}
+      scheduler: ${{ steps.filter.outputs.scheduler }}
+      resizing-worker: ${{ steps.filter.outputs.resizing-worker }}
+      shared: ${{ steps.filter.outputs.shared }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - 'gradle/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/libs.versions.toml'
+              - 'domain/**'
+              - 'application/**'
+              - 'adapter-out/**'
+            web-api:
+              - 'bootstrap/bootstrap-web-api/**'
+              - 'adapter-in/rest-api/**'
+            download-worker:
+              - 'bootstrap/bootstrap-download-worker/**'
+              - 'adapter-in/sqs-consumer/**'
+            scheduler:
+              - 'bootstrap/bootstrap-scheduler/**'
+              - 'adapter-in/scheduler/**'
+            resizing-worker:
+              - 'bootstrap/bootstrap-resizing-worker/**'
+              - 'adapter-in/redis-consumer/**'
+
+      - name: Summary
+        run: |
+          echo "### 🔍 Stage Change Detection Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Shared (gradle/domain/app/adapter-out) | ${{ steps.filter.outputs.shared }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| web-api | ${{ steps.filter.outputs.web-api }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| download-worker | ${{ steps.filter.outputs.download-worker }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| scheduler | ${{ steps.filter.outputs.scheduler }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| resizing-worker | ${{ steps.filter.outputs.resizing-worker }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Force All**: ${{ github.event.inputs.force-all || 'false' }}" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
   # 테스트 (공통 - 한 번만 실행)
   # ============================================================================
   test:
-    name: Run Tests
+    name: Run Tests (Stage)
+    needs: detect-changes
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: |
+      needs.detect-changes.outputs.shared == 'true' ||
+      needs.detect-changes.outputs.web-api == 'true' ||
+      needs.detect-changes.outputs.download-worker == 'true' ||
+      needs.detect-changes.outputs.scheduler == 'true' ||
+      needs.detect-changes.outputs.resizing-worker == 'true' ||
+      github.event.inputs.force-all == 'true'
 
     services:
       redis:
@@ -81,11 +156,17 @@ jobs:
           retention-days: 1
 
   # ============================================================================
-  # 빌드 Jobs (병렬 실행)
+  # 빌드 Jobs (변경 감지 기반 조건부 병렬 실행)
   # ============================================================================
   build-web-api:
     name: Build web-api (stage)
-    needs: test
+    needs: [detect-changes, test]
+    if: |
+      always() &&
+      needs.test.result == 'success' &&
+      (needs.detect-changes.outputs.shared == 'true' ||
+       needs.detect-changes.outputs.web-api == 'true' ||
+       github.event.inputs.force-all == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
@@ -138,7 +219,13 @@ jobs:
 
   build-download-worker:
     name: Build download-worker (stage)
-    needs: test
+    needs: [detect-changes, test]
+    if: |
+      always() &&
+      needs.test.result == 'success' &&
+      (needs.detect-changes.outputs.shared == 'true' ||
+       needs.detect-changes.outputs.download-worker == 'true' ||
+       github.event.inputs.force-all == 'true')
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
     with:
       ecr-repository: fileflow-download-worker-stage
@@ -151,7 +238,13 @@ jobs:
 
   build-scheduler:
     name: Build scheduler (stage)
-    needs: test
+    needs: [detect-changes, test]
+    if: |
+      always() &&
+      needs.test.result == 'success' &&
+      (needs.detect-changes.outputs.shared == 'true' ||
+       needs.detect-changes.outputs.scheduler == 'true' ||
+       github.event.inputs.force-all == 'true')
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
     with:
       ecr-repository: fileflow-scheduler-stage
@@ -164,7 +257,13 @@ jobs:
 
   build-resizing-worker:
     name: Build resizing-worker (stage)
-    needs: test
+    needs: [detect-changes, test]
+    if: |
+      always() &&
+      needs.test.result == 'success' &&
+      (needs.detect-changes.outputs.shared == 'true' ||
+       needs.detect-changes.outputs.resizing-worker == 'true' ||
+       github.event.inputs.force-all == 'true')
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
     with:
       ecr-repository: fileflow-resizing-worker-stage
@@ -176,11 +275,12 @@ jobs:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
   # ============================================================================
-  # 배포 Jobs (병렬 실행)
+  # 배포 Jobs (빌드 성공 시 조건부 병렬 실행)
   # ============================================================================
   deploy-web-api:
     name: Deploy web-api (stage)
     needs: build-web-api
+    if: needs.build-web-api.result == 'success'
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
     with:
       ecs-cluster: fileflow-cluster-stage
@@ -192,6 +292,7 @@ jobs:
   deploy-download-worker:
     name: Deploy download-worker (stage)
     needs: build-download-worker
+    if: needs.build-download-worker.result == 'success'
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
     with:
       ecs-cluster: fileflow-cluster-stage
@@ -203,6 +304,7 @@ jobs:
   deploy-scheduler:
     name: Deploy scheduler (stage)
     needs: build-scheduler
+    if: needs.build-scheduler.result == 'success'
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
     with:
       ecs-cluster: fileflow-cluster-stage
@@ -214,6 +316,7 @@ jobs:
   deploy-resizing-worker:
     name: Deploy resizing-worker (stage)
     needs: build-resizing-worker
+    if: needs.build-resizing-worker.result == 'success'
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
     with:
       ecs-cluster: fileflow-cluster-stage
@@ -223,17 +326,23 @@ jobs:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
   # ============================================================================
-  # Terraform Image Tag 업데이트 (자동화)
+  # Terraform Image Tag 업데이트 (Stage)
   # ============================================================================
   update-terraform-tags:
     name: Update Terraform Image Tags (Stage)
     needs: [build-web-api, build-download-worker, build-scheduler, build-resizing-worker]
+    if: |
+      always() &&
+      (needs.build-web-api.result == 'success' ||
+       needs.build-download-worker.result == 'success' ||
+       needs.build-scheduler.result == 'success' ||
+       needs.build-resizing-worker.result == 'success')
     uses: ./.github/workflows/terraform-apply-stage.yml
     with:
-      web-api-image-tag: ${{ needs.build-web-api.outputs.image-tag }}
-      download-worker-image-tag: ${{ needs.build-download-worker.outputs.image-tag }}
-      scheduler-image-tag: ${{ needs.build-scheduler.outputs.image-tag }}
-      resizing-worker-image-tag: ${{ needs.build-resizing-worker.outputs.image-tag }}
+      web-api-image-tag: ${{ needs.build-web-api.outputs.image-tag || '' }}
+      download-worker-image-tag: ${{ needs.build-download-worker.outputs.image-tag || '' }}
+      scheduler-image-tag: ${{ needs.build-scheduler.outputs.image-tag || '' }}
+      resizing-worker-image-tag: ${{ needs.build-resizing-worker.outputs.image-tag || '' }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
@@ -242,13 +351,21 @@ jobs:
   # ============================================================================
   notify:
     name: Deployment Notification
-    needs: [deploy-web-api, deploy-download-worker, deploy-scheduler, deploy-resizing-worker, update-terraform-tags]
+    needs: [detect-changes, deploy-web-api, deploy-download-worker, deploy-scheduler, deploy-resizing-worker, update-terraform-tags]
     if: always()
     uses: ryu-qqq/Infrastructure/.github/workflows/reusable-notify-slack.yml@main
     with:
       project-name: FileFlow
       environment: stage
-      status: ${{ (needs.deploy-web-api.result == 'success' && needs.deploy-download-worker.result == 'success' && needs.deploy-scheduler.result == 'success' && needs.deploy-resizing-worker.result == 'success' && needs.update-terraform-tags.result == 'success') && 'success' || 'failure' }}
+      status: |
+        ${{
+          (needs.deploy-web-api.result == 'success' || needs.deploy-web-api.result == 'skipped') &&
+          (needs.deploy-download-worker.result == 'success' || needs.deploy-download-worker.result == 'skipped') &&
+          (needs.deploy-scheduler.result == 'success' || needs.deploy-scheduler.result == 'skipped') &&
+          (needs.deploy-resizing-worker.result == 'success' || needs.deploy-resizing-worker.result == 'skipped') &&
+          (needs.update-terraform-tags.result == 'success' || needs.update-terraform-tags.result == 'skipped')
+          && 'success' || 'failure'
+        }}
       components: |
         [
           {"name": "web-api", "status": "${{ needs.deploy-web-api.result }}"},
