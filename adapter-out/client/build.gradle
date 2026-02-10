@@ -1,0 +1,8 @@
+// ========================================
+// Adapter-Out: Client (Parent Module)
+// ========================================
+// Parent module for external client adapters
+// ========================================
+
+dependencies {
+}

@@ -6,32 +6,25 @@ spring:
   application:
     name: fileflow-scheduler
 
+  # Profile 설정
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:prod}
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
   # Graceful Shutdown - Scheduler 작업 종료 대기
   lifecycle:
     timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:30s}
 
-  # Management server runs on separate port (8082)
-  # Main web server is automatically disabled when only management port is configured
-
-
-  # Exclude Redisson auto-configuration (use custom RedissonConfig)
-  autoconfigure:
-    exclude:
-      - org.redisson.spring.starter.RedissonAutoConfigurationV2
-
+  # ========================================
+  # Config Import (Adapter Layer Settings)
+  # ========================================
   config:
     import:
       - classpath:persistence.yml
       - classpath:redis.yml
-      - classpath:s3.yml
-      - classpath:sqs-publish.yml
-
-# Enable Redisson for Redis operations
-redisson:
-  enabled: ${REDISSON_ENABLED:true}
+      - classpath:scheduler.yml
+      - optional:classpath:s3.yml
+      - optional:classpath:sqs-publish.yml
+      - optional:classpath:http-client.yml
 
 # ===============================================
 # Scheduler Configuration
@@ -74,11 +67,17 @@ sentry:
     minimum-event-level: error
     minimum-breadcrumb-level: info
 
+# ===============================================
+# Logging
+# ===============================================
 logging:
   level:
     root: INFO
     com.ryuqq.fileflow: ${LOG_LEVEL:DEBUG}
 
+# ===============================================
+# Management & Actuator
+# ===============================================
 management:
   # Management 전용 포트 (경량 웹 서버)
   server:
@@ -89,6 +88,7 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+
   endpoint:
     health:
       show-details: always
@@ -97,11 +97,10 @@ management:
     prometheus:
       enabled: true
 
-  # Prometheus 메트릭 태그 (서비스 구분용 - Critical!)
   metrics:
     tags:
       application: ${spring.application.name}
-      environment: ${SPRING_PROFILES_ACTIVE:prod}
+      environment: ${SPRING_PROFILES_ACTIVE:local}
     enable:
       hikaricp: true
       jvm: true

@@ -14,6 +14,10 @@ spring:
   application:
     name: fileflow-integration-test
 
+  # Bean 이름 충돌 허용 (download/transform 모듈의 동일 이름 Manager 공존 문제)
+  main:
+    allow-bean-definition-overriding: true
+
   # Redisson 비활성화 (테스트에서는 Spring Data Redis 사용)
   autoconfigure:
     exclude:
@@ -52,13 +56,52 @@ spring:
       region:
         static: us-east-1
 
-# Redisson 비활성화
+# Redisson 설정 (TestContainers Redis - DynamicPropertySource로 address 오버라이드됨)
 redisson:
-  enabled: false
+  enabled: true
 
 # SQS Publish 비활성화 (통합 테스트에서는 SQS 발행 불필요)
 sqs:
   publish:
+    enabled: false
+
+# FileFlow 설정 (DynamicPropertySource로 endpoint/bucket 오버라이드됨)
+fileflow:
+  s3:
+    bucket: fileflow-test-bucket
+    region: us-east-1
+    endpoint: ""
+  # SQS 설정 (통합 테스트용 더미 값 - 실제 SQS 사용하지 않음)
+  sqs:
+    download-queue: test-download-queue
+    transform-queue: test-transform-queue
+    region: us-east-1
+    endpoint: ""
+  # Redis Consumer 설정 (세션 만료 키 접두사)
+  redis:
+    consumer:
+      session-expiration-key-prefix: "session:expiration:"
+
+# Observability 비활성화 (통합 테스트용)
+observability:
+  service-name: fileflow-integration-test
+  http:
+    log-request-body: false
+    log-response-body: false
+  masking:
+    enabled: false
+  trace:
+    include-in-response: false
+
+# Sentry 비활성화
+sentry:
+  dsn: ""
+
+# AuthHub 비활성화 (통합 테스트용)
+authhub:
+  base-url: http://localhost:0
+  service-token: ""
+  endpoint-sync:
     enabled: false
 
 # Server Configuration

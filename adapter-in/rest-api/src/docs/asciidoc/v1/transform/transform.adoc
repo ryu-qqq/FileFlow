@@ -1,0 +1,58 @@
+[[transform-api]]
+= 변환
+
+이미지 파일에 대한 리사이즈, 포맷 변환, 압축, 썸네일 생성 등의 변환 요청 API입니다. 변환 대상은 이미지 파일만 가능하며, 기존 Asset을 기반으로 요청합니다.
+
+`/api/v1/transforms`
+
+[[transform-request-create]]
+== POST 변환 요청 생성
+
+이미지 변환을 요청합니다. 변환 타입에 따라 필수 파라미터가 다릅니다.
+
+|===
+| 변환 타입 | 필수 파라미터 | 설명
+
+| `RESIZE`
+| `width`, `height`
+| 지정된 크기로 리사이즈
+
+| `CONVERT`
+| `targetFormat`
+| 다른 이미지 포맷으로 변환 (예: PNG → JPEG)
+
+| `COMPRESS`
+| `quality`
+| 지정된 품질로 압축 (1-100)
+
+| `THUMBNAIL`
+| `width`, `height`
+| 썸네일 이미지 생성
+|===
+
+include::{snippets}/create-transform-request-test/create-transform-request_success/http-request.adoc[]
+
+=== Request Fields
+include::{snippets}/create-transform-request-test/create-transform-request_success/request-fields.adoc[]
+
+=== Response
+include::{snippets}/create-transform-request-test/create-transform-request_success/http-response.adoc[]
+
+=== Response Fields
+include::{snippets}/create-transform-request-test/create-transform-request_success/response-fields.adoc[]
+
+[[transform-request-get]]
+== GET 변환 요청 조회
+
+변환 요청의 진행 상태를 조회합니다. 완료 시 결과 Asset ID가 포함됩니다.
+
+include::{snippets}/get-transform-request-test/get-transform-request_success/http-request.adoc[]
+
+=== Path Parameters
+include::{snippets}/get-transform-request-test/get-transform-request_success/path-parameters.adoc[]
+
+=== Response
+include::{snippets}/get-transform-request-test/get-transform-request_success/http-response.adoc[]
+
+=== Response Fields
+include::{snippets}/get-transform-request-test/get-transform-request_success/response-fields.adoc[]

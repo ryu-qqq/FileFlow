@@ -1,0 +1,27 @@
+// ========================================
+// Adapter-Out: HTTP Client
+// ========================================
+// FileDownloadClient, CallbackNotificationClient 구현체
+// Technology: RestClient (Spring 6.1+)
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Spring Web (RestClient)
+    implementation libs.spring.boot.starter.web
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.bundles.testing.basic
+}

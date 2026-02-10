@@ -13,8 +13,9 @@ plugins {
 // ========================================
 // Global Configuration
 // ========================================
+group = ''
+
 allprojects {
-    group = 'com.ryuqq.fileflow'
     version = '1.0.0-SNAPSHOT'
 
     repositories {
@@ -27,6 +28,8 @@ allprojects {
 // Subproject Configuration
 // ========================================
 subprojects {
+    group = 'com.ryuqq.fileflow'
+
     apply plugin: 'java'
     apply plugin: 'checkstyle'
     apply plugin: 'com.github.spotbugs'

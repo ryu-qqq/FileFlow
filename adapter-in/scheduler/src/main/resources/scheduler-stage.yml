@@ -1,0 +1,19 @@
+# ============================================================
+# Scheduler Adapter 스테이징 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=stage
+# ============================================================
+
+scheduler:
+  jobs:
+    download-zombie-recovery:
+      # 스테이징: 3분마다
+      cron: "0 */3 * * * *"
+      batch-size: 50
+      timeout-seconds: 180
+
+    transform-zombie-recovery:
+      # 스테이징: 3분마다
+      cron: "0 */3 * * * *"
+      batch-size: 50
+      timeout-seconds: 180

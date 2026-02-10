@@ -1,0 +1,38 @@
+[[download-api]]
+= 다운로드
+
+외부 URL의 파일을 다운로드하여 S3에 저장하는 비동기 다운로드 태스크 API입니다. 태스크 생성 시 SQS 큐에 작업이 등록되며 워커가 비동기로 처리합니다.
+
+`/api/v1/downloads`
+
+[[download-task-create]]
+== POST 다운로드 태스크 생성
+
+외부 URL 파일 다운로드를 요청합니다. 다운로드 완료 시 Asset이 자동으로 생성되며, 콜백 URL이 설정된 경우 결과가 통보됩니다.
+
+include::{snippets}/create-download-task-test/create-download-task_success/http-request.adoc[]
+
+=== Request Fields
+include::{snippets}/create-download-task-test/create-download-task_success/request-fields.adoc[]
+
+=== Response
+include::{snippets}/create-download-task-test/create-download-task_success/http-response.adoc[]
+
+=== Response Fields
+include::{snippets}/create-download-task-test/create-download-task_success/response-fields.adoc[]
+
+[[download-task-get]]
+== GET 다운로드 태스크 조회
+
+다운로드 태스크의 진행 상태를 조회합니다.
+
+include::{snippets}/get-download-task-test/get-download-task_success/http-request.adoc[]
+
+=== Path Parameters
+include::{snippets}/get-download-task-test/get-download-task_success/path-parameters.adoc[]
+
+=== Response
+include::{snippets}/get-download-task-test/get-download-task_success/http-response.adoc[]
+
+=== Response Fields
+include::{snippets}/get-download-task-test/get-download-task_success/response-fields.adoc[]

@@ -1,522 +1,325 @@
 package com.ryuqq.fileflow.domain.session.aggregate;
 
-import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
-import com.ryuqq.fileflow.domain.iam.vo.UserContext;
-import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
-import com.ryuqq.fileflow.domain.session.exception.IncompletePartsException;
-import com.ryuqq.fileflow.domain.session.exception.InvalidSessionStatusException;
-import com.ryuqq.fileflow.domain.session.exception.SessionExpiredException;
-import com.ryuqq.fileflow.domain.session.vo.ContentType;
-import com.ryuqq.fileflow.domain.session.vo.ETag;
-import com.ryuqq.fileflow.domain.session.vo.ExpirationTime;
-import com.ryuqq.fileflow.domain.session.vo.FileName;
-import com.ryuqq.fileflow.domain.session.vo.FileSize;
-import com.ryuqq.fileflow.domain.session.vo.PartSize;
-import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
-import com.ryuqq.fileflow.domain.session.vo.S3Key;
-import com.ryuqq.fileflow.domain.session.vo.S3UploadId;
-import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
-import com.ryuqq.fileflow.domain.session.vo.TotalParts;
-import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.Clock;
+import com.ryuqq.fileflow.domain.common.event.DomainEvent;
+import com.ryuqq.fileflow.domain.common.vo.AccessType;
+import com.ryuqq.fileflow.domain.session.event.UploadCompletedEvent;
+import com.ryuqq.fileflow.domain.session.exception.SessionErrorCode;
+import com.ryuqq.fileflow.domain.session.exception.SessionException;
+import com.ryuqq.fileflow.domain.session.id.MultipartUploadSessionId;
+import com.ryuqq.fileflow.domain.session.vo.CompletedPart;
+import com.ryuqq.fileflow.domain.session.vo.MultipartSessionStatus;
+import com.ryuqq.fileflow.domain.session.vo.MultipartUploadSessionUpdateData;
+import com.ryuqq.fileflow.domain.session.vo.UploadPurpose;
+import com.ryuqq.fileflow.domain.session.vo.UploadSource;
+import com.ryuqq.fileflow.domain.session.vo.UploadTarget;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Multipart 업로드 세션 Aggregate Root.
+ * 멀티파트 업로드 세션.
  *
- * <p>S3 Multipart Upload를 통한 대용량 파일 업로드를 관리합니다. CompletedPart는 별도 Aggregate로 분리되어 독립적으로 조회/업데이트됩니다.
+ * <p>라이프사이클: INITIATED → UPLOADING → COMPLETED | ABORTED | EXPIRED
  *
- * <p><strong>생명주기</strong>:
- *
- * <ul>
- *   <li>PREPARING: 세션 준비 중 (S3 Multipart Upload ID 발급 전)
- *   <li>ACTIVE: Part별 업로드 진행 중 (Presigned URL 발급 완료)
- *   <li>COMPLETED: 모든 Part 업로드 및 병합 완료
- *   <li>EXPIRED: 세션 만료 (24시간)
- *   <li>FAILED: 업로드 실패
- * </ul>
- *
- * <p><strong>도메인 규칙</strong>:
- *
- * <ul>
- *   <li>Part 크기는 5MB ~ 5GB 사이여야 한다.
- *   <li>Part 개수는 1 ~ 10,000개 사이여야 한다.
- *   <li>세션은 24시간 후 자동 만료된다.
- *   <li>모든 Part가 완료되어야 업로드를 완료할 수 있다.
- * </ul>
+ * <p>S3 CreateMultipartUpload로 시작, 파트별 업로드 후 CompleteMultipartUpload로 완료.
  */
-public class MultipartUploadSession implements UploadSession {
+public class MultipartUploadSession {
 
-    // ==================== 필드 ====================
-
-    private final UploadSessionId id;
-    private final UserContext userContext;
-    private final FileName fileName;
-    private final FileSize fileSize;
-    private final ContentType contentType;
-    private final S3Bucket bucket;
-    private final S3Key s3Key;
-    private final S3UploadId s3UploadId;
-    private final TotalParts totalParts;
-    private final PartSize partSize;
-    private final ExpirationTime expirationTime;
+    private final MultipartUploadSessionId id;
+    private final UploadTarget uploadTarget;
+    private final String uploadId;
+    private final long partSize;
+    private final UploadPurpose purpose;
+    private final UploadSource source;
+    private MultipartSessionStatus status;
+    private final Instant expiresAt;
     private final Instant createdAt;
+    private Instant updatedAt;
+    private final List<CompletedPart> completedParts;
 
-    private SessionStatus status;
-    private Instant completedAt;
-    private ETag mergedETag;
-    private Long version;
+    private final List<DomainEvent> events = new ArrayList<>();
 
-    // 도메인 이벤트
-    private final List<FileUploadCompletedEvent> domainEvents = new ArrayList<>();
-
-    // ==================== 생성 메서드 ====================
-
-    /**
-     * 신규 Multipart 세션 생성 (S3 Multipart Upload ID 발급 후).
-     *
-     * @param userContext 사용자 컨텍스트 (토큰 기반)
-     * @param fileName 파일명
-     * @param fileSize 파일 크기
-     * @param contentType Content-Type
-     * @param bucket S3 버킷
-     * @param s3Key S3 객체 키
-     * @param s3UploadId S3 Multipart Upload ID
-     * @param totalParts 총 Part 개수
-     * @param partSize 각 Part 크기
-     * @param expirationTime 만료 시각 (24시간 후)
-     * @param clock 시간 소스
-     * @return 신규 MultipartUploadSession (status: PREPARING)
-     */
-    public static MultipartUploadSession forNew(
-            UserContext userContext,
-            FileName fileName,
-            FileSize fileSize,
-            ContentType contentType,
-            S3Bucket bucket,
-            S3Key s3Key,
-            S3UploadId s3UploadId,
-            TotalParts totalParts,
-            PartSize partSize,
-            ExpirationTime expirationTime,
-            Clock clock) {
-        Instant now = clock.instant();
-        return new MultipartUploadSession(
-                UploadSessionId.forNew(),
-                userContext,
-                fileName,
-                fileSize,
-                contentType,
-                bucket,
-                s3Key,
-                s3UploadId,
-                totalParts,
-                partSize,
-                expirationTime,
-                now,
-                SessionStatus.PREPARING,
-                null,
-                null); // version: 신규 생성 시 null
+    private MultipartUploadSession(
+            MultipartUploadSessionId id,
+            UploadTarget uploadTarget,
+            String uploadId,
+            long partSize,
+            UploadPurpose purpose,
+            UploadSource source,
+            MultipartSessionStatus status,
+            Instant expiresAt,
+            Instant createdAt,
+            Instant updatedAt,
+            List<CompletedPart> completedParts) {
+        this.id = id;
+        this.uploadTarget = uploadTarget;
+        this.uploadId = uploadId;
+        this.partSize = partSize;
+        this.purpose = purpose;
+        this.source = source;
+        this.status = status;
+        this.expiresAt = expiresAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.completedParts = new ArrayList<>(completedParts);
     }
 
-    /**
-     * 영속성 복원 (Mapper 전용).
-     *
-     * @param id 세션 ID (null 불가)
-     * @param userContext 사용자 컨텍스트
-     * @param fileName 파일명
-     * @param fileSize 파일 크기
-     * @param contentType Content-Type
-     * @param bucket S3 버킷
-     * @param s3Key S3 객체 키
-     * @param s3UploadId S3 Multipart Upload ID
-     * @param totalParts 총 Part 개수
-     * @param partSize 각 Part 크기
-     * @param expirationTime 만료 시각
-     * @param createdAt 생성 시각
-     * @param status 세션 상태
-     * @param completedAt 완료 시각 (선택적)
-     * @param version 낙관락 버전 (선택적)
-     * @return MultipartUploadSession
-     * @throws IllegalArgumentException id가 null인 경우
-     */
-    public static MultipartUploadSession reconstitute(
-            UploadSessionId id,
-            UserContext userContext,
-            FileName fileName,
-            FileSize fileSize,
-            ContentType contentType,
-            S3Bucket bucket,
-            S3Key s3Key,
-            S3UploadId s3UploadId,
-            TotalParts totalParts,
-            PartSize partSize,
-            ExpirationTime expirationTime,
-            Instant createdAt,
-            SessionStatus status,
-            Instant completedAt,
-            Long version) {
-        if (id == null) {
-            throw new IllegalArgumentException("ID는 null일 수 없습니다.");
-        }
+    public static MultipartUploadSession forNew(
+            MultipartUploadSessionId id,
+            UploadTarget uploadTarget,
+            String uploadId,
+            long partSize,
+            String purpose,
+            String source,
+            Instant expiresAt,
+            Instant now) {
         return new MultipartUploadSession(
                 id,
-                userContext,
-                fileName,
-                fileSize,
-                contentType,
-                bucket,
-                s3Key,
-                s3UploadId,
-                totalParts,
+                uploadTarget,
+                uploadId,
                 partSize,
-                expirationTime,
-                createdAt,
-                status,
-                completedAt,
-                version);
+                UploadPurpose.of(purpose),
+                UploadSource.of(source),
+                MultipartSessionStatus.INITIATED,
+                expiresAt,
+                now,
+                now,
+                List.of());
     }
 
-    /** 생성자 (private). */
-    private MultipartUploadSession(
-            UploadSessionId id,
-            UserContext userContext,
-            FileName fileName,
-            FileSize fileSize,
-            ContentType contentType,
-            S3Bucket bucket,
-            S3Key s3Key,
-            S3UploadId s3UploadId,
-            TotalParts totalParts,
-            PartSize partSize,
-            ExpirationTime expirationTime,
+    public static MultipartUploadSession reconstitute(
+            MultipartUploadSessionId id,
+            UploadTarget uploadTarget,
+            String uploadId,
+            long partSize,
+            String purpose,
+            String source,
+            MultipartSessionStatus status,
+            Instant expiresAt,
             Instant createdAt,
-            SessionStatus status,
-            Instant completedAt,
-            Long version) {
-        this.id = id;
-        this.userContext = userContext;
-        this.fileName = fileName;
-        this.fileSize = fileSize;
-        this.contentType = contentType;
-        this.bucket = bucket;
-        this.s3Key = s3Key;
-        this.s3UploadId = s3UploadId;
-        this.totalParts = totalParts;
-        this.partSize = partSize;
-        this.expirationTime = expirationTime;
-        this.createdAt = createdAt;
-        this.status = status;
-        this.completedAt = completedAt;
-        this.version = version;
+            Instant updatedAt,
+            List<CompletedPart> completedParts) {
+        return new MultipartUploadSession(
+                id,
+                uploadTarget,
+                uploadId,
+                partSize,
+                UploadPurpose.of(purpose),
+                UploadSource.of(source),
+                status,
+                expiresAt,
+                createdAt,
+                updatedAt,
+                completedParts);
     }
 
-    // ==================== 비즈니스 메서드 ====================
+    /** 파트 업로드 완료를 기록합니다. */
+    public void addCompletedPart(CompletedPart completedPart) {
+        validateActive();
+        validatePartNotDuplicate(completedPart.partNumber());
 
-    /**
-     * 세션을 활성화한다.
-     *
-     * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
-     */
-    public void activate() {
-        validateStatusTransition(SessionStatus.ACTIVE);
-        this.status = SessionStatus.ACTIVE;
-    }
+        completedParts.add(completedPart);
+        this.updatedAt = completedPart.createdAt();
 
-    /**
-     * Multipart 업로드 완료 처리 (모든 Part 업로드 완료 후 S3 병합 요청).
-     *
-     * @param mergedETag S3에서 반환한 병합된 ETag
-     * @param completedParts 완료된 Part 목록 (검증용)
-     * @param clock 시간 소스
-     * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
-     * @throws SessionExpiredException 세션이 만료된 경우
-     * @throws IncompletePartsException 모든 Part가 완료되지 않은 경우
-     */
-    public void complete(ETag mergedETag, List<CompletedPart> completedParts, Clock clock) {
-        validateStatusTransition(SessionStatus.COMPLETED);
-
-        if (!areAllPartsCompleted(completedParts)) {
-            int completedCount =
-                    (int) completedParts.stream().filter(CompletedPart::isCompleted).count();
-            throw new IncompletePartsException(completedCount, totalParts.value());
-        }
-
-        this.status = SessionStatus.COMPLETED;
-        this.completedAt = clock.instant();
-        this.mergedETag = mergedETag;
-
-        // 도메인 이벤트 생성
-        domainEvents.add(
-                FileUploadCompletedEvent.of(
-                        this.id,
-                        this.fileName,
-                        this.fileSize,
-                        this.contentType,
-                        this.bucket,
-                        this.s3Key,
-                        this.mergedETag,
-                        this.userContext.userId(),
-                        this.userContext.organization().id(),
-                        this.userContext.tenant().id(),
-                        this.completedAt));
-    }
-
-    /**
-     * 세션 만료 처리.
-     *
-     * @param clock 시간 소스
-     * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
-     */
-    @Override
-    public void expire(Clock clock) {
-        validateStatusTransition(SessionStatus.EXPIRED);
-        this.status = SessionStatus.EXPIRED;
-    }
-
-    /**
-     * 업로드 실패 처리.
-     *
-     * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
-     */
-    public void fail() {
-        validateStatusTransition(SessionStatus.FAILED);
-        this.status = SessionStatus.FAILED;
-    }
-
-    /**
-     * 세션이 만료되지 않았는지 검증한다.
-     *
-     * @param clock 시간 소스
-     * @throws SessionExpiredException 세션이 만료된 경우
-     */
-    public void validateNotExpired(Clock clock) {
-        if (expirationTime.isExpired(clock)) {
-            throw new SessionExpiredException(expirationTime.value());
+        if (this.status == MultipartSessionStatus.INITIATED) {
+            this.status = MultipartSessionStatus.UPLOADING;
         }
     }
 
-    /**
-     * 세션이 활성 상태인지 검증한다.
-     *
-     * @throws InvalidSessionStatusException 상태가 ACTIVE가 아닌 경우
-     */
-    public void validateActiveStatus() {
-        if (this.status != SessionStatus.ACTIVE) {
-            throw new InvalidSessionStatusException(this.status, SessionStatus.ACTIVE);
+    /** 멀티파트 업로드 완료 처리. S3 CompleteMultipartUpload 호출 후 검증된 결과로 이벤트를 발행합니다. */
+    public void complete(MultipartUploadSessionUpdateData updateData, Instant now) {
+        validateActive();
+        validateNotExpired(now);
+
+        if (completedParts.isEmpty()) {
+            throw new SessionException(
+                    SessionErrorCode.INVALID_SESSION_STATUS,
+                    "Cannot complete multipart session without any completed parts");
         }
+
+        this.status = MultipartSessionStatus.COMPLETED;
+        this.updatedAt = now;
+        registerEvent(
+                UploadCompletedEvent.of(
+                        idValue(),
+                        "MULTIPART",
+                        s3Key(),
+                        bucket(),
+                        accessType(),
+                        fileName(),
+                        contentType(),
+                        updateData.totalFileSize(),
+                        updateData.etag(),
+                        purposeValue(),
+                        sourceValue(),
+                        now));
     }
 
-    // ==================== private 검증 메서드 ====================
-
-    /**
-     * 상태 전환이 가능한지 검증한다.
-     *
-     * @param nextStatus 다음 상태
-     * @throws InvalidSessionStatusException 상태 전환 불가능한 경우
-     */
-    private void validateStatusTransition(SessionStatus nextStatus) {
-        if (!this.status.canTransitionTo(nextStatus)) {
-            throw new InvalidSessionStatusException(this.status, nextStatus);
+    /** 업로드를 중단합니다. */
+    public void abort(Instant now) {
+        if (this.status == MultipartSessionStatus.COMPLETED) {
+            throw new SessionException(SessionErrorCode.SESSION_ALREADY_COMPLETED);
         }
+        this.status = MultipartSessionStatus.ABORTED;
+        this.updatedAt = now;
     }
 
-    /**
-     * 모든 Part가 완료되었는지 확인한다.
-     *
-     * @param completedParts 완료된 Part 목록
-     * @return 모든 Part가 완료되었으면 true
-     */
-    private boolean areAllPartsCompleted(List<CompletedPart> completedParts) {
-        if (completedParts == null || completedParts.size() != totalParts.value()) {
-            return false;
+    public void expire(Instant now) {
+        if (this.status == MultipartSessionStatus.COMPLETED
+                || this.status == MultipartSessionStatus.ABORTED) {
+            return;
         }
-        return completedParts.stream().allMatch(CompletedPart::isCompleted);
+        this.status = MultipartSessionStatus.EXPIRED;
+        this.updatedAt = now;
     }
 
-    // ==================== Getter ====================
+    public boolean isExpired(Instant now) {
+        return now.isAfter(expiresAt);
+    }
 
-    public UploadSessionId getId() {
+    /** 파트 업로드가 가능한 상태인지 검증합니다. (상태 + 시간 만료) */
+    public void validateUploadable(Instant now) {
+        validateActive();
+        validateNotExpired(now);
+    }
+
+    // -- query methods --
+
+    public MultipartUploadSessionId id() {
         return id;
     }
 
-    public String getIdValue() {
-        return id.getValue();
+    public String idValue() {
+        return id.value();
     }
 
-    public UserContext getUserContext() {
-        return userContext;
+    public UploadTarget uploadTarget() {
+        return uploadTarget;
     }
 
-    /**
-     * Law of Demeter: 사용자 식별자 반환 (로깅/추적용).
-     *
-     * @return Admin/Seller: email, Customer: "user-{userId}"
-     */
-    public String getUserIdentifier() {
-        return userContext.getUserIdentifier();
+    public String s3Key() {
+        return uploadTarget.s3Key();
     }
 
-    /**
-     * Law of Demeter: 조직 ID 반환.
-     *
-     * @return 조직 ID (nullable - Admin/Customer는 null)
-     */
-    public OrganizationId getOrganizationId() {
-        return userContext.getOrganizationIdAsVO();
+    public String bucket() {
+        return uploadTarget.bucket();
     }
 
-    public FileName getFileName() {
-        return fileName;
+    public AccessType accessType() {
+        return uploadTarget.accessType();
     }
 
-    public String getFileNameValue() {
-        return fileName.name();
+    public String fileName() {
+        return uploadTarget.fileName();
     }
 
-    public FileSize getFileSize() {
-        return fileSize;
+    public String contentType() {
+        return uploadTarget.contentType();
     }
 
-    public long getFileSizeValue() {
-        return fileSize.size();
+    public String uploadId() {
+        return uploadId;
     }
 
-    public ContentType getContentType() {
-        return contentType;
-    }
-
-    public String getContentTypeValue() {
-        return contentType.type();
-    }
-
-    public S3Bucket getBucket() {
-        return bucket;
-    }
-
-    public String getBucketValue() {
-        return bucket.bucketName();
-    }
-
-    public S3Key getS3Key() {
-        return s3Key;
-    }
-
-    public String getS3KeyValue() {
-        return s3Key.key();
-    }
-
-    public S3UploadId getS3UploadId() {
-        return s3UploadId;
-    }
-
-    public String getS3UploadIdValue() {
-        return s3UploadId.value();
-    }
-
-    public TotalParts getTotalParts() {
-        return totalParts;
-    }
-
-    public int getTotalPartsValue() {
-        return totalParts.value();
-    }
-
-    public PartSize getPartSize() {
+    public long partSize() {
         return partSize;
     }
 
-    public long getPartSizeValue() {
-        return partSize.bytes();
+    public UploadPurpose purpose() {
+        return purpose;
     }
 
-    public ExpirationTime getExpirationTime() {
-        return expirationTime;
+    public String purposeValue() {
+        return purpose.value();
     }
 
-    public Instant getExpiresAt() {
-        return expirationTime.value();
+    public UploadSource source() {
+        return source;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
+    public String sourceValue() {
+        return source.value();
     }
 
-    public SessionStatus getStatus() {
+    public MultipartSessionStatus status() {
         return status;
     }
 
-    public Instant getCompletedAt() {
-        return completedAt;
+    public Instant expiresAt() {
+        return expiresAt;
     }
 
-    /**
-     * S3에서 반환한 병합된 ETag를 반환한다.
-     *
-     * @return 병합된 ETag (완료 전이면 null)
-     */
-    public ETag getMergedETag() {
-        return mergedETag;
+    public Instant createdAt() {
+        return createdAt;
     }
 
-    /**
-     * 세션이 완료되었는지 확인한다.
-     *
-     * @return 완료되었으면 true
-     */
-    public boolean isCompleted() {
-        return this.status == SessionStatus.COMPLETED;
+    public Instant updatedAt() {
+        return updatedAt;
     }
 
-    /**
-     * 세션이 활성 상태인지 확인한다.
-     *
-     * @return 활성 상태이면 true
-     */
-    public boolean isActive() {
-        return this.status == SessionStatus.ACTIVE;
+    public List<CompletedPart> completedParts() {
+        return Collections.unmodifiableList(completedParts);
     }
 
-    /**
-     * 세션이 만료되었는지 확인한다.
-     *
-     * @param clock 시간 소스
-     * @return 만료되었으면 true
-     */
-    public boolean isExpired(Clock clock) {
-        return expirationTime.isExpired(clock);
+    public int completedPartCount() {
+        return completedParts.size();
     }
 
-    /**
-     * Part 번호가 유효한지 확인한다.
-     *
-     * @param partNumber Part 번호
-     * @return 유효하면 true
-     */
-    public boolean isValidPartNumber(int partNumber) {
-        return totalParts.isValidPartNumber(partNumber);
+    // -- event management --
+
+    protected void registerEvent(DomainEvent event) {
+        events.add(event);
     }
 
-    /**
-     * 낙관락 버전을 반환한다.
-     *
-     * @return 버전 (신규 생성 시 null)
-     */
-    public Long getVersion() {
-        return version;
+    public List<DomainEvent> pollEvents() {
+        List<DomainEvent> snapshot = Collections.unmodifiableList(new ArrayList<>(events));
+        events.clear();
+        return snapshot;
     }
 
-    /**
-     * 도메인 이벤트를 반환하고 내부 목록을 비운다.
-     *
-     * @return 도메인 이벤트 목록 (수정 불가)
-     */
-    public List<FileUploadCompletedEvent> pollDomainEvents() {
-        List<FileUploadCompletedEvent> events = new ArrayList<>(domainEvents);
-        domainEvents.clear();
-        return Collections.unmodifiableList(events);
+    // -- invariant validation --
+
+    private void validateActive() {
+        if (this.status == MultipartSessionStatus.COMPLETED) {
+            throw new SessionException(SessionErrorCode.SESSION_ALREADY_COMPLETED);
+        }
+        if (this.status == MultipartSessionStatus.ABORTED) {
+            throw new SessionException(SessionErrorCode.SESSION_ALREADY_ABORTED);
+        }
+        if (this.status == MultipartSessionStatus.EXPIRED) {
+            throw new SessionException(SessionErrorCode.SESSION_EXPIRED);
+        }
+    }
+
+    private void validateNotExpired(Instant now) {
+        if (isExpired(now)) {
+            throw new SessionException(SessionErrorCode.SESSION_EXPIRED);
+        }
+    }
+
+    private void validatePartNotDuplicate(int partNumber) {
+        boolean exists = completedParts.stream().anyMatch(p -> p.partNumber() == partNumber);
+        if (exists) {
+            throw new SessionException(
+                    SessionErrorCode.PART_NUMBER_DUPLICATE,
+                    "Part number already exists: " + partNumber);
+        }
+    }
+
+    // -- equals/hashCode ID 기반 --
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MultipartUploadSession that = (MultipartUploadSession) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

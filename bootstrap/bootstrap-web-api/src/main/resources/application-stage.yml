@@ -1,0 +1,49 @@
+# ===============================================
+# Application Configuration - Stage Environment
+# ===============================================
+# 스테이지 환경 전용 설정
+# 공통 설정은 application.yml 참조
+# ===============================================
+
+server:
+  tomcat:
+    threads:
+      max: 100
+
+  # Graceful Shutdown Timeout
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:rest-api.yml
+      - classpath:rest-api-stage.yml
+      - classpath:persistence.yml
+      - classpath:persistence-stage.yml
+      - classpath:redis.yml
+      - classpath:redis-stage.yml
+      - classpath:redis-consumer.yml
+      - classpath:redis-consumer-stage.yml
+      - optional:classpath:s3.yml
+      - optional:classpath:s3-stage.yml
+      - optional:classpath:sqs-publish.yml
+      - optional:classpath:sqs-publish-stage.yml
+      - optional:classpath:http-client.yml
+      - optional:classpath:http-client-stage.yml
+
+# ===============================================
+# Sentry Configuration (Stage - 비활성화)
+# ===============================================
+# Sentry는 prod에서만 활성화 (stage 로그가 운영과 섞이는 것 방지)
+sentry:
+  dsn: ""
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

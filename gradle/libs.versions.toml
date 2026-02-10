@@ -76,6 +76,11 @@ micrometer = "1.12.4"
 observabilityStarter = "v1.1.1"
 
 # ========================================
+# AuthHub SDK
+# ========================================
+authhub = "v2.0.4"
+
+# ========================================
 # Sentry (Error Tracking)
 # ========================================
 sentry = "8.29.0"
@@ -86,7 +91,7 @@ sentry = "8.29.0"
 commonsLang3 = "3.14.0"
 snakeyaml = "2.2"
 jackson = "2.17.0"
-uuidCreator = "6.0.7"
+uuidCreator = "6.1.1"
 
 # ========================================
 # Image Processing
@@ -107,6 +112,7 @@ spring-boot-starter-data-redis = { module = "org.springframework.boot:spring-boo
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-starter-aop = { module = "org.springframework.boot:spring-boot-starter-aop" }
 spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
+spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
 
 # ========================================
 # Spring Framework
@@ -170,6 +176,7 @@ testcontainers-redis = { module = "com.redis:testcontainers-redis", version = "2
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "restAssured" }
 spring-restdocs-mockmvc = { module = "org.springframework.restdocs:spring-restdocs-mockmvc", version.ref = "restdocs" }
+spring-restdocs-asciidoctor = { module = "org.springframework.restdocs:spring-restdocs-asciidoctor", version.ref = "restdocs" }
 wiremock = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
 
 # ========================================
@@ -190,6 +197,7 @@ springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-u
 # ========================================
 # Logging & Monitoring
 # ========================================
+slf4j-api = { module = "org.slf4j:slf4j-api" }
 logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logstashLogback" }
 micrometer-core = { module = "io.micrometer:micrometer-core" }
 micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
@@ -198,6 +206,11 @@ micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus
 # Observability (Custom Starter from JitPack)
 # ========================================
 observability-starter = { module = "com.github.ryu-qqq.observability-spring-boot-starter:observability-client", version.ref = "observabilityStarter" }
+
+# ========================================
+# AuthHub SDK
+# ========================================
+authhub-sdk-spring-boot-starter = { module = "com.github.ryu-qqq.AuthHub:authhub-sdk-spring-boot-starter", version.ref = "authhub" }
 
 # ========================================
 # Sentry (Error Tracking)

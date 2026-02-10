@@ -1,409 +1,630 @@
 package com.ryuqq.fileflow.domain.session.aggregate;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ryuqq.fileflow.domain.common.fixture.ClockFixture;
-import com.ryuqq.fileflow.domain.iam.fixture.UserContextFixture;
-import com.ryuqq.fileflow.domain.session.event.FileUploadCompletedEvent;
-import com.ryuqq.fileflow.domain.session.exception.IncompletePartsException;
-import com.ryuqq.fileflow.domain.session.exception.InvalidSessionStatusException;
-import com.ryuqq.fileflow.domain.session.exception.SessionExpiredException;
-import com.ryuqq.fileflow.domain.session.fixture.*;
-import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
+import com.ryuqq.fileflow.domain.common.event.DomainEvent;
+import com.ryuqq.fileflow.domain.common.vo.AccessType;
+import com.ryuqq.fileflow.domain.session.event.UploadCompletedEvent;
+import com.ryuqq.fileflow.domain.session.exception.SessionErrorCode;
+import com.ryuqq.fileflow.domain.session.exception.SessionException;
+import com.ryuqq.fileflow.domain.session.id.MultipartUploadSessionId;
+import com.ryuqq.fileflow.domain.session.vo.CompletedPart;
+import com.ryuqq.fileflow.domain.session.vo.MultipartSessionStatus;
+import com.ryuqq.fileflow.domain.session.vo.MultipartUploadSessionUpdateData;
+import com.ryuqq.fileflow.domain.session.vo.UploadTargetFixture;
+import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("MultipartUploadSession 단위 테스트")
+@Tag("unit")
+@DisplayName("MultipartUploadSession Aggregate 단위 테스트")
 class MultipartUploadSessionTest {
 
+    private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
+    private static final Instant EXPIRES_AT = NOW.plus(Duration.ofHours(1));
+
+    private MultipartUploadSession createSession() {
+        return MultipartUploadSession.forNew(
+                MultipartUploadSessionId.of("multipart-001"),
+                UploadTargetFixture.anUploadTarget(),
+                "upload-id-001",
+                5_242_880L,
+                "product-image",
+                "commerce-service",
+                EXPIRES_AT,
+                NOW);
+    }
+
     @Nested
-    @DisplayName("생성 테스트")
-    class CreateTest {
+    @DisplayName("forNew - 세션 생성")
+    class ForNew {
 
         @Test
-        @DisplayName("forNew()로 신규 세션을 생성하면 PREPARING 상태여야 한다")
-        void forNew_ShouldCreateSessionWithPreparingStatus() {
-            // given & when
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.defaultMultipartUploadSession();
+        @DisplayName("새 세션 생성 시 상태가 INITIATED이고 completedParts가 비어있다")
+        void createsSessionWithInitiatedStatus() {
+            MultipartUploadSession session = createSession();
 
-            // then
-            assertThat(session.getId()).isNotNull();
-            assertThat(session.getStatus()).isEqualTo(SessionStatus.PREPARING);
-            assertThat(session.getCompletedAt()).isNull();
-            assertThat(session.getMergedETag()).isNull();
-            assertThat(session.getVersion()).isNull();
+            assertThat(session.idValue()).isEqualTo("multipart-001");
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.INITIATED);
+            assertThat(session.uploadId()).isEqualTo("upload-id-001");
+            assertThat(session.partSize()).isEqualTo(5_242_880L);
+            assertThat(session.purposeValue()).isEqualTo("product-image");
+            assertThat(session.sourceValue()).isEqualTo("commerce-service");
+            assertThat(session.expiresAt()).isEqualTo(EXPIRES_AT);
+            assertThat(session.createdAt()).isEqualTo(NOW);
+            assertThat(session.updatedAt()).isEqualTo(NOW);
+            assertThat(session.completedParts()).isEmpty();
+            assertThat(session.completedPartCount()).isZero();
+            assertThat(session.s3Key()).isEqualTo("public/2026/01/file-001.jpg");
+            assertThat(session.bucket()).isEqualTo("fileflow-bucket");
+            assertThat(session.accessType()).isEqualTo(AccessType.PUBLIC);
+            assertThat(session.fileName()).isEqualTo("product-image.jpg");
+            assertThat(session.contentType()).isEqualTo("image/jpeg");
         }
 
         @Test
-        @DisplayName("reconstitute()로 영속성 복원 시 ID가 null이면 예외가 발생한다")
-        void reconstitute_WithNullId_ShouldThrowException() {
-            // given & when & then
-            Instant now = Instant.now(ClockFixture.defaultClock());
-            assertThatThrownBy(
-                            () ->
-                                    MultipartUploadSession.reconstitute(
-                                            null,
-                                            UserContextFixture.defaultAdminUserContext(),
-                                            FileNameFixture.defaultFileName(),
-                                            FileSizeFixture.largeFileSize(),
-                                            ContentTypeFixture.defaultContentType(),
-                                            S3BucketFixture.defaultS3Bucket(),
-                                            S3KeyFixture.defaultS3Key(),
-                                            S3UploadIdFixture.defaultS3UploadId(),
-                                            TotalPartsFixture.defaultTotalParts(),
-                                            PartSizeFixture.defaultPartSize(),
-                                            ExpirationTimeFixture.multipartExpirationTime(),
-                                            now,
-                                            SessionStatus.PREPARING,
-                                            null,
-                                            null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("ID는 null일 수 없습니다");
+        @DisplayName("새 세션 생성 시 이벤트가 발행되지 않는다")
+        void noEventsOnCreation() {
+            MultipartUploadSession session = createSession();
+
+            assertThat(session.pollEvents()).isEmpty();
         }
     }
 
     @Nested
-    @DisplayName("상태 전이 테스트")
-    class StatusTransitionTest {
+    @DisplayName("addCompletedPart - 파트 업로드 완료")
+    class AddCompletedPart {
 
         @Test
-        @DisplayName("PREPARING 상태에서 activate()를 호출하면 ACTIVE 상태로 전환된다")
-        void activate_FromPreparing_ShouldTransitionToActive() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.defaultMultipartUploadSession();
+        @DisplayName("첫 번째 파트 추가 시 INITIATED에서 UPLOADING으로 전환된다")
+        void transitionsToUploadingOnFirstPart() {
+            MultipartUploadSession session = createSession();
+            Instant partTime = NOW.plusSeconds(10);
 
-            // when
-            session.activate();
+            session.addCompletedPart(CompletedPart.of(1, "etag-part-1", 5_242_880L, partTime));
 
-            // then
-            assertThat(session.getStatus()).isEqualTo(SessionStatus.ACTIVE);
-            assertThat(session.isActive()).isTrue();
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.UPLOADING);
+            assertThat(session.completedPartCount()).isEqualTo(1);
+            assertThat(session.completedParts().get(0).partNumber()).isEqualTo(1);
+            assertThat(session.completedParts().get(0).etag()).isEqualTo("etag-part-1");
+            assertThat(session.completedParts().get(0).size()).isEqualTo(5_242_880L);
+            assertThat(session.completedParts().get(0).createdAt()).isEqualTo(partTime);
+            assertThat(session.updatedAt()).isEqualTo(partTime);
         }
 
         @Test
-        @DisplayName("COMPLETED 상태에서 activate()를 호출하면 예외가 발생한다")
-        void activate_FromCompleted_ShouldThrowException() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-            List<CompletedPart> completedParts = createAllCompletedParts(session);
+        @DisplayName("여러 파트를 추가할 수 있다")
+        void addsMultipleParts() {
+            MultipartUploadSession session = createSession();
+
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+            session.addCompletedPart(
+                    CompletedPart.of(2, "etag-2", 5_242_880L, NOW.plusSeconds(20)));
+            session.addCompletedPart(
+                    CompletedPart.of(3, "etag-3", 3_000_000L, NOW.plusSeconds(30)));
+
+            assertThat(session.completedPartCount()).isEqualTo(3);
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.UPLOADING);
+        }
+
+        @Test
+        @DisplayName("중복 partNumber 추가 시 SessionException이 발생한다")
+        void throwsOnDuplicatePartNumber() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+
+            assertThatThrownBy(
+                            () ->
+                                    session.addCompletedPart(
+                                            CompletedPart.of(
+                                                    1,
+                                                    "etag-1-dup",
+                                                    5_242_880L,
+                                                    NOW.plusSeconds(20))))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.PART_NUMBER_DUPLICATE);
+                            });
+        }
+
+        @Test
+        @DisplayName("COMPLETED 상태에서 addCompletedPart 호출 시 SessionException이 발생한다")
+        void throwsWhenCompleted() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
             session.complete(
-                    ETagFixture.multipartETag(), completedParts, ClockFixture.defaultClock());
+                    MultipartUploadSessionUpdateData.of(10_000_000L, "etag-final"),
+                    NOW.plusSeconds(30));
 
-            // when & then
-            assertThatThrownBy(session::activate).isInstanceOf(InvalidSessionStatusException.class);
+            assertThatThrownBy(
+                            () ->
+                                    session.addCompletedPart(
+                                            CompletedPart.of(
+                                                    2, "etag-2", 5_242_880L, NOW.plusSeconds(40))))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_ALREADY_COMPLETED);
+                            });
         }
 
         @Test
-        @DisplayName("ACTIVE 상태에서 expire()를 호출하면 EXPIRED 상태로 전환된다")
-        void expire_FromActive_ShouldTransitionToExpired() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
+        @DisplayName("ABORTED 상태에서 addCompletedPart 호출 시 SessionException이 발생한다")
+        void throwsWhenAborted() {
+            MultipartUploadSession session = createSession();
+            session.abort(NOW.plusSeconds(10));
 
-            // when
-            session.expire(ClockFixture.defaultClock());
-
-            // then
-            assertThat(session.getStatus()).isEqualTo(SessionStatus.EXPIRED);
+            assertThatThrownBy(
+                            () ->
+                                    session.addCompletedPart(
+                                            CompletedPart.of(
+                                                    1, "etag-1", 5_242_880L, NOW.plusSeconds(20))))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_ALREADY_ABORTED);
+                            });
         }
 
         @Test
-        @DisplayName("ACTIVE 상태에서 fail()을 호출하면 FAILED 상태로 전환된다")
-        void fail_FromActive_ShouldTransitionToFailed() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
+        @DisplayName("EXPIRED 상태에서 addCompletedPart 호출 시 SessionException이 발생한다")
+        void throwsWhenExpired() {
+            MultipartUploadSession session = createSession();
+            session.expire(EXPIRES_AT.plusSeconds(1));
 
-            // when
-            session.fail();
-
-            // then
-            assertThat(session.getStatus()).isEqualTo(SessionStatus.FAILED);
+            assertThatThrownBy(
+                            () ->
+                                    session.addCompletedPart(
+                                            CompletedPart.of(
+                                                    1,
+                                                    "etag-1",
+                                                    5_242_880L,
+                                                    EXPIRES_AT.plusSeconds(2))))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_EXPIRED);
+                            });
         }
     }
 
     @Nested
-    @DisplayName("업로드 완료 테스트")
-    class CompleteTest {
+    @DisplayName("complete - 업로드 완료")
+    class Complete {
 
         @Test
-        @DisplayName("모든 Part가 완료되면 업로드를 완료할 수 있다")
-        void complete_WithAllPartsCompleted_ShouldSucceed() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-            List<CompletedPart> completedParts = createAllCompletedParts(session);
+        @DisplayName("UPLOADING 상태에서 complete 호출 시 COMPLETED로 전환된다")
+        void transitionsToCompleted() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+            Instant completeTime = NOW.plusSeconds(30);
 
-            // when
             session.complete(
-                    ETagFixture.multipartETag(), completedParts, ClockFixture.defaultClock());
+                    MultipartUploadSessionUpdateData.of(10_485_760L, "etag-final"), completeTime);
 
-            // then
-            assertThat(session.getStatus()).isEqualTo(SessionStatus.COMPLETED);
-            assertThat(session.isCompleted()).isTrue();
-            assertThat(session.getCompletedAt()).isNotNull();
-            assertThat(session.getMergedETag()).isEqualTo(ETagFixture.multipartETag());
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.COMPLETED);
+            assertThat(session.updatedAt()).isEqualTo(completeTime);
         }
 
         @Test
-        @DisplayName("모든 Part가 완료되지 않으면 예외가 발생한다")
-        void complete_WithIncompleteparts_ShouldThrowException() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-            List<CompletedPart> incompleteParts = createIncompleteparts(session);
+        @DisplayName("complete 호출 시 UploadCompletedEvent가 발행된다")
+        void publishesUploadCompletedEvent() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+            Instant completeTime = NOW.plusSeconds(30);
 
-            // when & then
-            assertThatThrownBy(
-                            () ->
-                                    session.complete(
-                                            ETagFixture.multipartETag(),
-                                            incompleteParts,
-                                            ClockFixture.defaultClock()))
-                    .isInstanceOf(IncompletePartsException.class);
-        }
-
-        @Test
-        @DisplayName("Part 개수가 부족하면 예외가 발생한다")
-        void complete_WithInsufficientParts_ShouldThrowException() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-            List<CompletedPart> insufficientParts = new ArrayList<>();
-            insufficientParts.add(CompletedPartFixture.completedCompletedPart());
-
-            // when & then
-            assertThatThrownBy(
-                            () ->
-                                    session.complete(
-                                            ETagFixture.multipartETag(),
-                                            insufficientParts,
-                                            ClockFixture.defaultClock()))
-                    .isInstanceOf(IncompletePartsException.class);
-        }
-
-        @Test
-        @DisplayName("업로드 완료 시 도메인 이벤트가 발행된다")
-        void complete_ShouldPublishDomainEvent() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-            List<CompletedPart> completedParts = createAllCompletedParts(session);
-
-            // when
             session.complete(
-                    ETagFixture.multipartETag(), completedParts, ClockFixture.defaultClock());
-            List<FileUploadCompletedEvent> events = session.pollDomainEvents();
+                    MultipartUploadSessionUpdateData.of(10_485_760L, "etag-final"), completeTime);
 
-            // then
+            List<DomainEvent> events = session.pollEvents();
             assertThat(events).hasSize(1);
-            FileUploadCompletedEvent event = events.get(0);
-            assertThat(event.sessionId()).isEqualTo(session.getId());
-            assertThat(event.fileName()).isEqualTo(session.getFileName());
-            assertThat(event.etag()).isEqualTo(session.getMergedETag());
+            assertThat(events.get(0)).isInstanceOf(UploadCompletedEvent.class);
+
+            UploadCompletedEvent event = (UploadCompletedEvent) events.get(0);
+            assertThat(event.sessionId()).isEqualTo("multipart-001");
+            assertThat(event.sessionType()).isEqualTo("MULTIPART");
+            assertThat(event.s3Key()).isEqualTo("public/2026/01/file-001.jpg");
+            assertThat(event.bucket()).isEqualTo("fileflow-bucket");
+            assertThat(event.accessType()).isEqualTo(AccessType.PUBLIC);
+            assertThat(event.fileSize()).isEqualTo(10_485_760L);
+            assertThat(event.etag()).isEqualTo("etag-final");
+            assertThat(event.occurredAt()).isEqualTo(completeTime);
         }
 
         @Test
-        @DisplayName("도메인 이벤트를 poll하면 내부 목록이 비워진다")
-        void pollDomainEvents_ShouldClearInternalList() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-            List<CompletedPart> completedParts = createAllCompletedParts(session);
+        @DisplayName("completedParts 없이 complete 호출 시 SessionException이 발생한다")
+        void throwsWhenNoCompletedParts() {
+            MultipartUploadSession session = createSession();
+
+            assertThatThrownBy(
+                            () ->
+                                    session.complete(
+                                            MultipartUploadSessionUpdateData.of(
+                                                    10_000_000L, "etag-final"),
+                                            NOW.plusSeconds(30)))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.INVALID_SESSION_STATUS);
+                            });
+        }
+
+        @Test
+        @DisplayName("COMPLETED 상태에서 complete 호출 시 SessionException이 발생한다")
+        void throwsWhenAlreadyCompleted() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
             session.complete(
-                    ETagFixture.multipartETag(), completedParts, ClockFixture.defaultClock());
+                    MultipartUploadSessionUpdateData.of(10_000_000L, "etag-final"),
+                    NOW.plusSeconds(30));
 
-            // when
-            List<FileUploadCompletedEvent> firstPoll = session.pollDomainEvents();
-            List<FileUploadCompletedEvent> secondPoll = session.pollDomainEvents();
+            assertThatThrownBy(
+                            () ->
+                                    session.complete(
+                                            MultipartUploadSessionUpdateData.of(
+                                                    10_000_000L, "etag-final-2"),
+                                            NOW.plusSeconds(60)))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_ALREADY_COMPLETED);
+                            });
+        }
 
-            // then
+        @Test
+        @DisplayName("시간이 만료된 상태에서 complete 호출 시 SessionException이 발생한다")
+        void throwsWhenTimeExpired() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+
+            assertThatThrownBy(
+                            () ->
+                                    session.complete(
+                                            MultipartUploadSessionUpdateData.of(
+                                                    10_000_000L, "etag-final"),
+                                            EXPIRES_AT.plusSeconds(1)))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_EXPIRED);
+                            });
+        }
+    }
+
+    @Nested
+    @DisplayName("abort - 업로드 중단")
+    class Abort {
+
+        @Test
+        @DisplayName("INITIATED 상태에서 abort 호출 시 ABORTED로 전환된다")
+        void abortsFromInitiated() {
+            MultipartUploadSession session = createSession();
+            Instant abortTime = NOW.plusSeconds(30);
+
+            session.abort(abortTime);
+
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.ABORTED);
+            assertThat(session.updatedAt()).isEqualTo(abortTime);
+        }
+
+        @Test
+        @DisplayName("UPLOADING 상태에서 abort 호출 시 ABORTED로 전환된다")
+        void abortsFromUploading() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+            Instant abortTime = NOW.plusSeconds(30);
+
+            session.abort(abortTime);
+
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.ABORTED);
+            assertThat(session.updatedAt()).isEqualTo(abortTime);
+        }
+
+        @Test
+        @DisplayName("COMPLETED 상태에서 abort 호출 시 SessionException이 발생한다")
+        void throwsWhenCompleted() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+            session.complete(
+                    MultipartUploadSessionUpdateData.of(10_000_000L, "etag-final"),
+                    NOW.plusSeconds(30));
+
+            assertThatThrownBy(() -> session.abort(NOW.plusSeconds(60)))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_ALREADY_COMPLETED);
+                            });
+        }
+    }
+
+    @Nested
+    @DisplayName("expire - 세션 만료")
+    class Expire {
+
+        @Test
+        @DisplayName("INITIATED 상태에서 expire 호출 시 EXPIRED로 전환된다")
+        void expiresFromInitiated() {
+            MultipartUploadSession session = createSession();
+            Instant expireTime = EXPIRES_AT.plusSeconds(1);
+
+            session.expire(expireTime);
+
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.EXPIRED);
+            assertThat(session.updatedAt()).isEqualTo(expireTime);
+        }
+
+        @Test
+        @DisplayName("UPLOADING 상태에서 expire 호출 시 EXPIRED로 전환된다")
+        void expiresFromUploading() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+
+            session.expire(EXPIRES_AT.plusSeconds(1));
+
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.EXPIRED);
+        }
+
+        @Test
+        @DisplayName("COMPLETED 상태에서 expire 호출 시 상태가 변경되지 않는다")
+        void ignoresWhenCompleted() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+            session.complete(
+                    MultipartUploadSessionUpdateData.of(10_000_000L, "etag-final"),
+                    NOW.plusSeconds(30));
+
+            session.expire(EXPIRES_AT.plusSeconds(1));
+
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.COMPLETED);
+        }
+
+        @Test
+        @DisplayName("ABORTED 상태에서 expire 호출 시 상태가 변경되지 않는다")
+        void ignoresWhenAborted() {
+            MultipartUploadSession session = createSession();
+            session.abort(NOW.plusSeconds(10));
+
+            session.expire(EXPIRES_AT.plusSeconds(1));
+
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.ABORTED);
+        }
+    }
+
+    @Nested
+    @DisplayName("isExpired - 만료 여부 확인")
+    class IsExpired {
+
+        @Test
+        @DisplayName("expiresAt 이전이면 false를 반환한다")
+        void returnsFalseBeforeExpiration() {
+            MultipartUploadSession session = createSession();
+
+            assertThat(session.isExpired(NOW.plusSeconds(30))).isFalse();
+        }
+
+        @Test
+        @DisplayName("expiresAt 이후면 true를 반환한다")
+        void returnsTrueAfterExpiration() {
+            MultipartUploadSession session = createSession();
+
+            assertThat(session.isExpired(EXPIRES_AT.plusSeconds(1))).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("pollEvents - 이벤트 폴링")
+    class PollEvents {
+
+        @Test
+        @DisplayName("pollEvents 호출 후 이벤트가 비워진다")
+        void clearsEventsAfterPoll() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+            session.complete(
+                    MultipartUploadSessionUpdateData.of(10_485_760L, "etag-final"),
+                    NOW.plusSeconds(30));
+
+            List<DomainEvent> firstPoll = session.pollEvents();
             assertThat(firstPoll).hasSize(1);
+
+            List<DomainEvent> secondPoll = session.pollEvents();
             assertThat(secondPoll).isEmpty();
         }
     }
 
     @Nested
-    @DisplayName("만료 검증 테스트")
-    class ExpirationTest {
+    @DisplayName("reconstitute - 복원")
+    class Reconstitute {
 
         @Test
-        @DisplayName("만료되지 않은 세션은 검증을 통과한다")
-        void validateNotExpired_WithValidSession_ShouldPass() {
-            // given
+        @DisplayName("reconstitute로 복원된 세션은 이벤트가 없다")
+        void reconstitutedSessionHasNoEvents() {
             MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
+                    MultipartUploadSession.reconstitute(
+                            MultipartUploadSessionId.of("multipart-002"),
+                            UploadTargetFixture.anUploadTarget(),
+                            "upload-id-002",
+                            5_242_880L,
+                            "product-image",
+                            "commerce-service",
+                            MultipartSessionStatus.COMPLETED,
+                            EXPIRES_AT,
+                            NOW,
+                            NOW.plusSeconds(60),
+                            List.of());
 
-            // when & then
-            assertThatCode(() -> session.validateNotExpired(ClockFixture.defaultClock()))
+            assertThat(session.status()).isEqualTo(MultipartSessionStatus.COMPLETED);
+            assertThat(session.pollEvents()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("validateUploadable - 업로드 가능 상태 검증")
+    class ValidateUploadable {
+
+        @Test
+        @DisplayName("INITIATED 상태에서 만료 전이면 예외가 발생하지 않는다")
+        void doesNotThrowWhenInitiatedAndNotExpired() {
+            MultipartUploadSession session = createSession();
+
+            assertThatCode(() -> session.validateUploadable(NOW.plusSeconds(30)))
                     .doesNotThrowAnyException();
         }
 
         @Test
-        @DisplayName("만료된 세션은 예외가 발생한다")
-        void validateNotExpired_WithExpiredSession_ShouldThrowException() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSession.forNew(
-                            UserContextFixture.defaultAdminUserContext(),
-                            FileNameFixture.defaultFileName(),
-                            FileSizeFixture.largeFileSize(),
-                            ContentTypeFixture.defaultContentType(),
-                            S3BucketFixture.defaultS3Bucket(),
-                            S3KeyFixture.defaultS3Key(),
-                            S3UploadIdFixture.defaultS3UploadId(),
-                            TotalPartsFixture.defaultTotalParts(),
-                            PartSizeFixture.defaultPartSize(),
-                            ExpirationTimeFixture.expiredExpirationTime(),
-                            ClockFixture.defaultClock());
+        @DisplayName("UPLOADING 상태에서 만료 전이면 예외가 발생하지 않는다")
+        void doesNotThrowWhenUploadingAndNotExpired() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
 
-            // when & then
-            assertThatThrownBy(() -> session.validateNotExpired(ClockFixture.defaultClock()))
-                    .isInstanceOf(SessionExpiredException.class);
+            assertThatCode(() -> session.validateUploadable(NOW.plusSeconds(30)))
+                    .doesNotThrowAnyException();
         }
 
         @Test
-        @DisplayName("isExpired()로 만료 여부를 확인할 수 있다")
-        void isExpired_ShouldReturnCorrectStatus() {
-            // given
-            MultipartUploadSession activeSession =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-            MultipartUploadSession expiredSession =
-                    MultipartUploadSession.forNew(
-                            UserContextFixture.defaultAdminUserContext(),
-                            FileNameFixture.defaultFileName(),
-                            FileSizeFixture.largeFileSize(),
-                            ContentTypeFixture.defaultContentType(),
-                            S3BucketFixture.defaultS3Bucket(),
-                            S3KeyFixture.defaultS3Key(),
-                            S3UploadIdFixture.defaultS3UploadId(),
-                            TotalPartsFixture.defaultTotalParts(),
-                            PartSizeFixture.defaultPartSize(),
-                            ExpirationTimeFixture.expiredExpirationTime(),
-                            ClockFixture.defaultClock());
+        @DisplayName("COMPLETED 상태에서 호출 시 SessionException이 발생한다")
+        void throwsWhenCompleted() {
+            MultipartUploadSession session = createSession();
+            session.addCompletedPart(
+                    CompletedPart.of(1, "etag-1", 5_242_880L, NOW.plusSeconds(10)));
+            session.complete(
+                    MultipartUploadSessionUpdateData.of(10_000_000L, "etag-final"),
+                    NOW.plusSeconds(30));
 
-            // when & then
-            assertThat(activeSession.isExpired(ClockFixture.defaultClock())).isFalse();
-            assertThat(expiredSession.isExpired(ClockFixture.defaultClock())).isTrue();
+            assertThatThrownBy(() -> session.validateUploadable(NOW.plusSeconds(60)))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_ALREADY_COMPLETED);
+                            });
+        }
+
+        @Test
+        @DisplayName("ABORTED 상태에서 호출 시 SessionException이 발생한다")
+        void throwsWhenAborted() {
+            MultipartUploadSession session = createSession();
+            session.abort(NOW.plusSeconds(10));
+
+            assertThatThrownBy(() -> session.validateUploadable(NOW.plusSeconds(30)))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_ALREADY_ABORTED);
+                            });
+        }
+
+        @Test
+        @DisplayName("EXPIRED 상태에서 호출 시 SessionException이 발생한다")
+        void throwsWhenExpiredStatus() {
+            MultipartUploadSession session = createSession();
+            session.expire(EXPIRES_AT.plusSeconds(1));
+
+            assertThatThrownBy(() -> session.validateUploadable(EXPIRES_AT.plusSeconds(2)))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_EXPIRED);
+                            });
+        }
+
+        @Test
+        @DisplayName("시간이 만료된 경우 호출 시 SessionException이 발생한다")
+        void throwsWhenTimeExpired() {
+            MultipartUploadSession session = createSession();
+
+            assertThatThrownBy(() -> session.validateUploadable(EXPIRES_AT.plusSeconds(1)))
+                    .isInstanceOf(SessionException.class)
+                    .satisfies(
+                            e -> {
+                                SessionException ex = (SessionException) e;
+                                assertThat(ex.getErrorCode())
+                                        .isEqualTo(SessionErrorCode.SESSION_EXPIRED);
+                            });
         }
     }
 
     @Nested
-    @DisplayName("Part 번호 검증 테스트")
-    class PartNumberValidationTest {
+    @DisplayName("equals/hashCode - ID 기반 동등성")
+    class EqualsHashCode {
 
         @Test
-        @DisplayName("유효한 Part 번호는 검증을 통과한다")
-        void isValidPartNumber_WithValidNumber_ShouldReturnTrue() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
+        @DisplayName("동일한 ID를 가진 세션은 동등하다")
+        void equalsByIdOnly() {
+            MultipartUploadSession session1 = createSession();
+            MultipartUploadSession session2 =
+                    MultipartUploadSession.forNew(
+                            MultipartUploadSessionId.of("multipart-001"),
+                            UploadTargetFixture.anInternalUploadTarget(),
+                            "different-upload-id",
+                            10_000_000L,
+                            "different-purpose",
+                            "different-source",
+                            EXPIRES_AT.plus(Duration.ofHours(2)),
+                            NOW.plusSeconds(100));
 
-            // when & then
-            assertThat(session.isValidPartNumber(1)).isTrue();
-            assertThat(session.isValidPartNumber(5)).isTrue();
-        }
-
-        @Test
-        @DisplayName("범위를 벗어난 Part 번호는 검증에 실패한다")
-        void isValidPartNumber_WithInvalidNumber_ShouldReturnFalse() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-
-            // when & then
-            assertThat(session.isValidPartNumber(0)).isFalse();
-            assertThat(session.isValidPartNumber(6)).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("Getter 테스트")
-    class GetterTest {
-
-        @Test
-        @DisplayName("모든 필드를 올바르게 반환한다")
-        void getters_ShouldReturnCorrectValues() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
-
-            // when & then
-            assertThat(session.getId()).isNotNull();
-            assertThat(session.getUserContext()).isNotNull();
-            assertThat(session.getFileName()).isNotNull();
-            assertThat(session.getFileSize()).isNotNull();
-            assertThat(session.getContentType()).isNotNull();
-            assertThat(session.getBucket()).isNotNull();
-            assertThat(session.getS3Key()).isNotNull();
-            assertThat(session.getS3UploadId()).isNotNull();
-            assertThat(session.getTotalParts()).isNotNull();
-            assertThat(session.getPartSize()).isNotNull();
-            assertThat(session.getExpirationTime()).isNotNull();
-            assertThat(session.getCreatedAt()).isNotNull();
+            assertThat(session1).isEqualTo(session2);
+            assertThat(session1.hashCode()).isEqualTo(session2.hashCode());
         }
 
         @Test
-        @DisplayName("Law of Demeter를 준수하는 편의 메서드가 동작한다")
-        void convenienceMethods_ShouldWork() {
-            // given
-            MultipartUploadSession session =
-                    MultipartUploadSessionFixture.activeMultipartUploadSession();
+        @DisplayName("다른 ID를 가진 세션은 동등하지 않다")
+        void notEqualWithDifferentId() {
+            MultipartUploadSession session1 = createSession();
+            MultipartUploadSession session2 =
+                    MultipartUploadSession.forNew(
+                            MultipartUploadSessionId.of("multipart-002"),
+                            UploadTargetFixture.anUploadTarget(),
+                            "upload-id-001",
+                            5_242_880L,
+                            "product-image",
+                            "commerce-service",
+                            EXPIRES_AT,
+                            NOW);
 
-            // when & then
-            assertThat(session.getUserIdentifier()).isNotNull();
-            assertThat(session.getOrganizationId()).isNull(); // Admin org ID is null
-            assertThat(session.getFileNameValue()).isNotBlank();
-            assertThat(session.getFileSizeValue()).isPositive();
-            assertThat(session.getContentTypeValue()).isNotBlank();
-            assertThat(session.getBucketValue()).isNotBlank();
-            assertThat(session.getS3KeyValue()).isNotBlank();
-            assertThat(session.getS3UploadIdValue()).isNotBlank();
-            assertThat(session.getTotalPartsValue()).isPositive();
-            assertThat(session.getPartSizeValue()).isPositive();
-            assertThat(session.getExpiresAt()).isNotNull();
+            assertThat(session1).isNotEqualTo(session2);
         }
-    }
-
-    // ==================== Helper Methods ====================
-
-    private List<CompletedPart> createAllCompletedParts(MultipartUploadSession session) {
-        List<CompletedPart> parts = new ArrayList<>();
-        for (int i = 1; i <= session.getTotalPartsValue(); i++) {
-            CompletedPart part =
-                    CompletedPart.forNew(
-                            session.getId(),
-                            PartNumberFixture.customPartNumber(i),
-                            PresignedUrlFixture.defaultPresignedUrl());
-            part.complete(
-                    ETagFixture.defaultETag(), 10 * 1024 * 1024L, ClockFixture.defaultClock());
-            parts.add(part);
-        }
-        return parts;
-    }
-
-    private List<CompletedPart> createIncompleteparts(MultipartUploadSession session) {
-        List<CompletedPart> parts = new ArrayList<>();
-        for (int i = 1; i <= session.getTotalPartsValue(); i++) {
-            CompletedPart part =
-                    CompletedPart.forNew(
-                            session.getId(),
-                            PartNumberFixture.customPartNumber(i),
-                            PresignedUrlFixture.defaultPresignedUrl());
-            // 첫 번째 Part만 완료하지 않음
-            if (i > 1) {
-                part.complete(
-                        ETagFixture.defaultETag(), 10 * 1024 * 1024L, ClockFixture.defaultClock());
-            }
-            parts.add(part);
-        }
-        return parts;
     }
 }

@@ -1,0 +1,10 @@
+# ============================================================
+# S3 Client Layer 스테이징 환경 설정
+# ============================================================
+# 활성화: bootstrap의 application-stage.yml에서 import
+# ============================================================
+
+fileflow:
+  s3:
+    bucket: ${S3_BUCKET:fileflow-stage}
+    region: ${AWS_REGION:ap-northeast-2}

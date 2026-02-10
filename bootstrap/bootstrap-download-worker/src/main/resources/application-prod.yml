@@ -1,0 +1,40 @@
+# ============================================================
+# Download Worker 운영 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=prod
+# ============================================================
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:persistence.yml
+      - classpath:persistence-prod.yml
+      - classpath:redis.yml
+      - classpath:redis-prod.yml
+      - classpath:s3.yml
+      - classpath:s3-prod.yml
+      - classpath:sqs-consumer.yml
+      - classpath:sqs-consumer-prod.yml
+      - classpath:sqs-publish.yml
+      - classpath:sqs-publish-prod.yml
+      - classpath:http-client.yml
+      - classpath:http-client-prod.yml
+
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: INFO
+    io.awspring.cloud.sqs: WARN
+
+# Sentry 활성화 (운영)
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: production
+  send-default-pii: true
+  attach-stacktrace: true
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info

@@ -28,15 +28,6 @@ package com.ryuqq.fileflow.domain.common.vo;
  *
  * // 첫 페이지
  * PageRequest firstPage = PageRequest.first(20);
- *
- * // Criteria에서 사용
- * OrderSearchCriteria criteria = new OrderSearchCriteria(
- *     memberId,
- *     dateRange,
- *     sortKey,
- *     sortDirection,
- *     PageRequest.of(page, size)
- * );
  * }</pre>
  *
  * @param page 페이지 번호 (0부터 시작)

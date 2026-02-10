@@ -1,0 +1,25 @@
+# ============================================================
+# SQS Consumer Layer 로컬 개발 환경 설정
+# ============================================================
+# 활성화: bootstrap의 application-local.yml에서 import
+# LocalStack 사용
+# ============================================================
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      sqs:
+        endpoint: http://localhost:4566
+        listener:
+          max-concurrent-messages: 5
+          max-messages-per-poll: 5
+      credentials:
+        access-key: test
+        secret-key: test
+
+logging:
+  level:
+    com.ryuqq.fileflow.adapter.in.sqs: DEBUG
+    io.awspring.cloud.sqs: DEBUG

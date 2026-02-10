@@ -1,6 +1,5 @@
 package com.ryuqq.fileflow.adapter.out.persistence.session.entity;
 
-import com.ryuqq.fileflow.adapter.out.persistence.common.entity.BaseAuditEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,139 +8,45 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
-/**
- * CompletedPart JPA Entity.
- *
- * <p>멀티파트 업로드의 완료된 Part 정보를 저장합니다.
- *
- * <p><strong>설계 원칙:</strong>
- *
- * <ul>
- *   <li>No Lombok - Plain Java 사용
- *   <li>Long FK 전략 - sessionId로 MultipartUploadSession 참조
- *   <li>Protected default constructor - JPA 스펙 요구
- *   <li>Private full constructor - of() 팩토리 메서드로만 생성
- *   <li>Getter only - Setter 미제공 (불변성)
- * </ul>
- */
 @Entity
 @Table(name = "completed_part")
-public class CompletedPartJpaEntity extends BaseAuditEntity {
+public class CompletedPartJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
+    @Column(name = "id")
     private Long id;
 
-    @Column(name = "session_id", nullable = false, length = 36)
+    @Column(name = "session_id", length = 36, nullable = false)
     private String sessionId;
 
     @Column(name = "part_number", nullable = false)
-    private Integer partNumber;
+    private int partNumber;
 
-    @Column(name = "presigned_url", nullable = false, length = 2048)
-    private String presignedUrl;
-
-    @Column(name = "etag", nullable = false, length = 64)
+    @Column(name = "etag", length = 255, nullable = false)
     private String etag;
 
     @Column(name = "size", nullable = false)
-    private Long size;
+    private long size;
 
-    @Column(name = "uploaded_at", nullable = false)
-    private Instant uploadedAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
-    /** JPA 스펙 요구 기본 생성자 */
-    protected CompletedPartJpaEntity() {
-        super();
-    }
+    protected CompletedPartJpaEntity() {}
 
-    /** Private 전체 생성자 (신규 생성용 - id 없음) */
     private CompletedPartJpaEntity(
-            String sessionId,
-            Integer partNumber,
-            String presignedUrl,
-            String etag,
-            Long size,
-            Instant uploadedAt,
-            Instant createdAt,
-            Instant updatedAt) {
-        super(createdAt, updatedAt);
+            String sessionId, int partNumber, String etag, long size, Instant createdAt) {
         this.sessionId = sessionId;
         this.partNumber = partNumber;
-        this.presignedUrl = presignedUrl;
         this.etag = etag;
         this.size = size;
-        this.uploadedAt = uploadedAt;
+        this.createdAt = createdAt;
     }
 
-    /** Private 전체 생성자 (DB 조회용 - id 포함) */
-    private CompletedPartJpaEntity(
-            Long id,
-            String sessionId,
-            Integer partNumber,
-            String presignedUrl,
-            String etag,
-            Long size,
-            Instant uploadedAt,
-            Instant createdAt,
-            Instant updatedAt) {
-        super(createdAt, updatedAt);
-        this.id = id;
-        this.sessionId = sessionId;
-        this.partNumber = partNumber;
-        this.presignedUrl = presignedUrl;
-        this.etag = etag;
-        this.size = size;
-        this.uploadedAt = uploadedAt;
+    public static CompletedPartJpaEntity create(
+            String sessionId, int partNumber, String etag, long size, Instant createdAt) {
+        return new CompletedPartJpaEntity(sessionId, partNumber, etag, size, createdAt);
     }
-
-    /**
-     * 신규 Entity 생성 팩토리 메서드 (id 자동 생성).
-     *
-     * @return CompletedPartJpaEntity
-     */
-    public static CompletedPartJpaEntity of(
-            String sessionId,
-            Integer partNumber,
-            String presignedUrl,
-            String etag,
-            Long size,
-            Instant uploadedAt,
-            Instant createdAt,
-            Instant updatedAt) {
-        return new CompletedPartJpaEntity(
-                sessionId, partNumber, presignedUrl, etag, size, uploadedAt, createdAt, updatedAt);
-    }
-
-    /**
-     * 기존 Entity 복원 팩토리 메서드 (id 포함).
-     *
-     * @return CompletedPartJpaEntity
-     */
-    public static CompletedPartJpaEntity reconstitute(
-            Long id,
-            String sessionId,
-            Integer partNumber,
-            String presignedUrl,
-            String etag,
-            Long size,
-            Instant uploadedAt,
-            Instant createdAt,
-            Instant updatedAt) {
-        return new CompletedPartJpaEntity(
-                id,
-                sessionId,
-                partNumber,
-                presignedUrl,
-                etag,
-                size,
-                uploadedAt,
-                createdAt,
-                updatedAt);
-    }
-
-    // ==================== Getter ====================
 
     public Long getId() {
         return id;
@@ -151,23 +56,19 @@ public class CompletedPartJpaEntity extends BaseAuditEntity {
         return sessionId;
     }
 
-    public Integer getPartNumber() {
+    public int getPartNumber() {
         return partNumber;
-    }
-
-    public String getPresignedUrl() {
-        return presignedUrl;
     }
 
     public String getEtag() {
         return etag;
     }
 
-    public Long getSize() {
+    public long getSize() {
         return size;
     }
 
-    public Instant getUploadedAt() {
-        return uploadedAt;
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 }

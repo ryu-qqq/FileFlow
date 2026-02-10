@@ -1,59 +1,40 @@
-# ===============================================
-# Persistence Redis Adapter Configuration
-# ===============================================
+# ============================================================
+# Redis Layer 공통 설정
+# ============================================================
+# 환경별 설정은 redis-{profile}.yml 참조
+# - redis-local.yml: 로컬 개발 환경
+# - redis-prod.yml: 운영 환경
+# ============================================================
 
-# Common Redis Settings (applies to all profiles)
 spring:
-  # Exclude Redisson Spring Boot Starter auto-configuration
-  # We use custom RedissonConfig instead
+  # Exclude Redisson auto-configuration (커스텀 RedissonConfig 사용)
   autoconfigure:
     exclude:
       - org.redisson.spring.starter.RedissonAutoConfigurationV2
 
   data:
     redis:
+      # Command Timeout
       timeout: 3000ms
-      lettuce:
-        pool:
-          max-active: 16
-          max-idle: 8
-          min-idle: 4
-          max-wait: 3000ms
 
-# Enable Redisson by default (override in test profile)
+      # Client Name (모니터링용)
+      client-name: ${spring.application.name:fileflow}-${HOSTNAME:unknown}
+
+  # Redis Cache Settings
+  cache:
+    type: redis
+    redis:
+      # Default TTL (30분)
+      time-to-live: 1800000
+      # Key Prefix
+      key-prefix: "fileflow:cache::"
+      # Null 값 캐싱 허용 (캐시 펜싱 방지)
+      cache-null-values: true
+      # Prefix 사용
+      use-key-prefix: true
+
+# Redisson 공통 설정
 redisson:
   enabled: true
-
----
-# ===============================================
-# Production Profile
-# ===============================================
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-
----
-# ===============================================
-# Test Profile
-# ===============================================
-spring:
-  config:
-    activate:
-      on-profile: test
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password:
-
-# Disable Redisson in test environment (no Redis needed)
-redisson:
-  enabled: false
+  threads: 4
+  netty-threads: 4
