@@ -439,6 +439,11 @@ module "download_worker_service" {
       name  = "REDIS_PORT"
       value = tostring(local.redis_port)
     },
+    # S3 Configuration
+    {
+      name  = "S3_BUCKET"
+      value = data.aws_ssm_parameter.s3_bucket_name.value
+    },
     {
       name  = "SQS_EXTERNAL_DOWNLOAD_QUEUE_URL"
       value = data.aws_ssm_parameter.external_download_queue_url.value

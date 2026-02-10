@@ -108,6 +108,17 @@ data "aws_secretsmanager_secret_version" "rds" {
 }
 
 # ========================================
+# SQS Queue References (from SSM Parameters)
+# ========================================
+data "aws_ssm_parameter" "external_download_queue_url" {
+  name = "/${var.project_name}/sqs/external-download-queue-url"
+}
+
+data "aws_ssm_parameter" "file_processing_queue_url" {
+  name = "/${var.project_name}/sqs/file-processing-queue-url"
+}
+
+# ========================================
 # Monitoring Configuration (AMP)
 # ========================================
 data "aws_ssm_parameter" "amp_workspace_arn" {

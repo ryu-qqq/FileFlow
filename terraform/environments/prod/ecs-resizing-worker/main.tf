@@ -440,6 +440,11 @@ module "resizing_worker_service" {
       name  = "REDIS_PORT"
       value = tostring(local.redis_port)
     },
+    # S3 Configuration
+    {
+      name  = "S3_BUCKET"
+      value = data.aws_ssm_parameter.s3_bucket_name.value
+    },
     {
       name  = "SQS_FILE_PROCESSING_QUEUE_URL"
       value = data.aws_ssm_parameter.file_processing_queue_url.value

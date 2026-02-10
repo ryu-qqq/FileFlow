@@ -124,6 +124,13 @@ data "aws_secretsmanager_secret_version" "rds" {
 }
 
 # ========================================
+# S3 Bucket Reference (from SSM Parameters)
+# ========================================
+data "aws_ssm_parameter" "s3_bucket_name" {
+  name = "/${var.project_name}/s3/uploads-bucket-name"
+}
+
+# ========================================
 # SQS Queue References (from SSM Parameters)
 # ========================================
 data "aws_ssm_parameter" "file_processing_queue_url" {
