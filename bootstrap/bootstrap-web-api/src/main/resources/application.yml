@@ -1,38 +1,91 @@
 # ===============================================
 # FileFlow Web API Bootstrap Configuration
 # ===============================================
+# Spring Boot 3.5.x + Java 21
+# Bootstrap 모듈 - 실행 가능한 애플리케이션 설정
+#
+# 설정 분리 원칙:
+# - application.yml: 공통 인프라 설정 (Server, Jackson, Actuator)
+# - rest-api.yml: REST API 레이어 설정 (Security, OpenAPI)
+# - persistence.yml: 영속성 레이어 설정 (DataSource, JPA, Flyway)
+# - redis.yml: Redis 레이어 설정 (Cache, Redisson)
+# ===============================================
 
+# ===============================================
+# Server Configuration (Tomcat)
+# ===============================================
+server:
+  port: ${SERVER_PORT:8080}
+
+  # Proxy 헤더 처리 (로드밸런서, API Gateway 등)
+  forward-headers-strategy: framework
+
+  # Tomcat 서블릿 컨테이너 설정
+  tomcat:
+    threads:
+      min-spare: 10
+      max: 200
+
+    # 커넥션 설정
+    connection-timeout: 20s
+    keep-alive-timeout: 60s
+
+    # 큐 설정
+    accept-count: 100
+
+    # 최대 커넥션 수
+    max-connections: 8192
+
+  # Graceful Shutdown
+  shutdown: graceful
+
+# ===============================================
+# Spring Configuration
+# ===============================================
 spring:
   application:
     name: fileflow-api
 
+  # Profile 설정
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:prod}
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
-  # Graceful Shutdown - 요청 처리 완료 대기
-  lifecycle:
-    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:30s}
-
-  # Exclude Redisson auto-configuration (use custom RedissonConfig)
-  autoconfigure:
-    exclude:
-      - org.redisson.spring.starter.RedissonAutoConfigurationV2
-
+  # ===============================================
+  # Config Import (각 모듈의 설정 파일 로드)
+  # ===============================================
   config:
     import:
       - classpath:rest-api.yml
       - classpath:persistence.yml
       - classpath:redis.yml
-      - classpath:s3.yml
-      - classpath:sqs-publish.yml
+      - classpath:redis-consumer.yml
+      - optional:classpath:s3.yml
+      - optional:classpath:sqs-publish.yml
+      - optional:classpath:http-client.yml
 
-# Enable Redisson for Redis operations
-redisson:
-  enabled: ${REDISSON_ENABLED:true}
+  # Graceful Shutdown - 요청 처리 완료 대기
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:30s}
 
-server:
-  port: ${SERVER_PORT:8080}
-  shutdown: graceful
+  # ===============================================
+  # Jackson (JSON 직렬화/역직렬화)
+  # ===============================================
+  jackson:
+    # 날짜/시간 포맷 (ISO 8601)
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+    time-zone: Asia/Seoul
+
+    # Serialization 설정
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+      FAIL_ON_EMPTY_BEANS: false
+
+    # Deserialization 설정
+    deserialization:
+      FAIL_ON_UNKNOWN_PROPERTIES: false
+
+    # Default Property Inclusion
+    default-property-inclusion: non_null
 
 # ===============================================
 # Observability Configuration (SDK)
@@ -67,20 +120,15 @@ security:
 # AuthHub SDK Configuration
 # ===============================================
 authhub:
-  # AuthHub 서버 URL
   base-url: ${AUTHHUB_BASE_URL:https://auth.example.com}
-  # 서비스 토큰 (M2M 통신용)
   service-token: ${AUTHHUB_SERVICE_TOKEN:}
-  # 타임아웃 설정
   timeout:
     connect: 5s
     read: 30s
-  # 재시도 설정
   retry:
     enabled: true
     max-attempts: 3
     delay: 1s
-  # 엔드포인트 자동 동기화 (비활성화 - 필요시 활성화)
   endpoint-sync:
     enabled: false
 
@@ -92,31 +140,34 @@ sentry:
   environment: ${SPRING_PROFILES_ACTIVE:local}
   release: ${APP_VERSION:unknown}
   server-name: ${HOSTNAME:unknown}
-  # Performance monitoring (트랜잭션 샘플링)
   traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.1}
-  # 민감 정보 전송 비활성화
   send-default-pii: false
-  # 무시할 예외 타입
   ignored-exceptions-for-type:
     - org.springframework.web.HttpRequestMethodNotSupportedException
     - org.springframework.web.servlet.NoHandlerFoundException
     - org.springframework.web.servlet.resource.NoResourceFoundException
-  # 로그 연동
   logging:
     minimum-event-level: error
     minimum-breadcrumb-level: info
 
+# ===============================================
+# Logging
+# ===============================================
 logging:
   level:
     root: INFO
     com.ryuqq.fileflow: ${LOG_LEVEL:DEBUG}
 
+# ===============================================
+# Management & Actuator (모니터링)
+# ===============================================
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics,prometheus
       base-path: /actuator
+
   endpoint:
     health:
       show-details: when_authorized
@@ -125,11 +176,10 @@ management:
     prometheus:
       enabled: true
 
-  # Prometheus 메트릭 태그 (서비스 구분용 - Critical!)
   metrics:
     tags:
       application: ${spring.application.name}
-      environment: ${SPRING_PROFILES_ACTIVE:prod}
+      environment: ${SPRING_PROFILES_ACTIVE:local}
     enable:
       hikaricp: true
       jvm: true
@@ -140,3 +190,11 @@ management:
         http.server.requests: true
       percentiles:
         http.server.requests: 0.5, 0.95, 0.99
+      slo:
+        http.server.requests: 100ms,500ms,1s,5s
+
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true

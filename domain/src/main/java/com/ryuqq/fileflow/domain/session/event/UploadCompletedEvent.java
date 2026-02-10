@@ -1,14 +1,11 @@
 package com.ryuqq.fileflow.domain.session.event;
 
-import java.time.Instant;
-
 import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.common.vo.AccessType;
+import java.time.Instant;
 
 /**
- * 업로드 완료 이벤트.
- * Single 또는 Multipart 세션이 완료되면 발행됩니다.
- * 이 이벤트를 수신하여 Asset을 생성합니다.
+ * 업로드 완료 이벤트. Single 또는 Multipart 세션이 완료되면 발행됩니다. 이 이벤트를 수신하여 Asset을 생성합니다.
  *
  * @param sessionId 완료된 세션의 ID
  * @param sessionType SINGLE 또는 MULTIPART
@@ -35,8 +32,8 @@ public record UploadCompletedEvent(
         String etag,
         String purpose,
         String source,
-        Instant occurredAt
-) implements DomainEvent {
+        Instant occurredAt)
+        implements DomainEvent {
 
     public static UploadCompletedEvent of(
             String sessionId,
@@ -50,11 +47,19 @@ public record UploadCompletedEvent(
             String etag,
             String purpose,
             String source,
-            Instant occurredAt
-    ) {
+            Instant occurredAt) {
         return new UploadCompletedEvent(
-                sessionId, sessionType, s3Key, bucket, accessType,
-                fileName, contentType, fileSize, etag, purpose, source, occurredAt
-        );
+                sessionId,
+                sessionType,
+                s3Key,
+                bucket,
+                accessType,
+                fileName,
+                contentType,
+                fileSize,
+                etag,
+                purpose,
+                source,
+                occurredAt);
     }
 }

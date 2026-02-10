@@ -13,7 +13,16 @@ plugins {
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
 }
 
+configurations {
+    asciidoctorExt
+}
+
 dependencies {
+    // ========================================
+    // REST Docs Asciidoctor Extension
+    // ========================================
+    asciidoctorExt libs.spring.restdocs.asciidoctor
+
     // ========================================
     // Core Dependencies
     // ========================================
@@ -102,6 +111,7 @@ test {
 }
 
 asciidoctor {
+    configurations 'asciidoctorExt'
     dependsOn test
 
     // snippetsDir이 존재하고 내용이 있을 때만 실행
@@ -109,15 +119,23 @@ asciidoctor {
         snippetsDir.exists() && snippetsDir.listFiles()?.length > 0
     }
 
-    // inputs.dir 제거 - 플러그인 기본 설정이 검증 에러 유발
-    // snippetsDir은 attributes로만 전달
-    attributes 'snippets': snippetsDir
+    sourceDir = file('src/docs/asciidoc')
+    sources {
+        include 'index.adoc'
+    }
 
     baseDirFollowsSourceFile()
 
-    sources {
-        include '**/index.adoc'
-    }
+    attributes(
+            'snippets': snippetsDir,
+            'source-highlighter': 'highlightjs',
+            'toc': 'left',
+            'toclevels': 3,
+            'sectlinks': true,
+            'sectnums': true,
+            'stylesdir': file('src/docs').absolutePath,
+            'stylesheet': 'custom-style.css'
+    )
 
     // 출력을 별도 디렉토리로 (jacoco 충돌 방지)
     outputDir = generatedDocsDir

@@ -1,26 +1,20 @@
 package com.ryuqq.fileflow.domain.asset.aggregate;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-
-import com.ryuqq.fileflow.domain.asset.event.AssetCreatedEvent;
 import com.ryuqq.fileflow.domain.asset.exception.AssetErrorCode;
 import com.ryuqq.fileflow.domain.asset.exception.AssetException;
 import com.ryuqq.fileflow.domain.asset.id.AssetId;
 import com.ryuqq.fileflow.domain.asset.vo.AssetOrigin;
 import com.ryuqq.fileflow.domain.asset.vo.FileInfo;
-import com.ryuqq.fileflow.domain.asset.vo.FileTypeMetadata;
-import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.common.vo.AccessType;
 import com.ryuqq.fileflow.domain.common.vo.StorageInfo;
+import java.time.Instant;
+import java.util.Objects;
 
 /**
  * Asset Aggregate Root.
  *
  * <p>S3에 저장된 파일을 표현합니다.
+ *
  * <p>업로드/다운로드가 완료된 후에만 생성됩니다 (존재 = 파일이 S3에 있다는 보장).
  */
 public class Asset {
@@ -28,73 +22,97 @@ public class Asset {
     private final AssetId id;
     private final StorageInfo storageInfo;
     private final FileInfo fileInfo;
-    private FileTypeMetadata fileTypeMetadata;
     private final AssetOrigin origin;
     private final String originId;
     private final String purpose;
     private final String source;
     private final Instant createdAt;
+    private Instant updatedAt;
     private Instant deletedAt;
 
-    private final List<DomainEvent> events = new ArrayList<>();
-
-    private Asset(AssetId id, StorageInfo storageInfo, FileInfo fileInfo,
-                  FileTypeMetadata fileTypeMetadata, AssetOrigin origin, String originId,
-                  String purpose, String source, Instant createdAt, Instant deletedAt) {
+    private Asset(
+            AssetId id,
+            StorageInfo storageInfo,
+            FileInfo fileInfo,
+            AssetOrigin origin,
+            String originId,
+            String purpose,
+            String source,
+            Instant createdAt,
+            Instant updatedAt,
+            Instant deletedAt) {
         this.id = id;
         this.storageInfo = storageInfo;
         this.fileInfo = fileInfo;
-        this.fileTypeMetadata = fileTypeMetadata;
         this.origin = origin;
         this.originId = originId;
         this.purpose = purpose;
         this.source = source;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.deletedAt = deletedAt;
     }
 
-    public static Asset forNew(AssetId id, StorageInfo storageInfo, FileInfo fileInfo,
-                                AssetOrigin origin, String originId,
-                                String purpose, String source, Instant now) {
-        Asset asset = new Asset(id, storageInfo, fileInfo, null, origin, originId,
-                purpose, source, now, null);
-        asset.registerEvent(AssetCreatedEvent.from(asset, now));
-        return asset;
+    public static Asset forNew(
+            AssetId id,
+            StorageInfo storageInfo,
+            FileInfo fileInfo,
+            AssetOrigin origin,
+            String originId,
+            String purpose,
+            String source,
+            Instant now) {
+        return new Asset(
+                id, storageInfo, fileInfo, origin, originId, purpose, source, now, now, null);
     }
 
-    public static Asset reconstitute(AssetId id, StorageInfo storageInfo, FileInfo fileInfo,
-                                      FileTypeMetadata fileTypeMetadata, AssetOrigin origin,
-                                      String originId, String purpose, String source,
-                                      Instant createdAt, Instant deletedAt) {
-        return new Asset(id, storageInfo, fileInfo, fileTypeMetadata, origin, originId,
-                purpose, source, createdAt, deletedAt);
+    public static Asset reconstitute(
+            AssetId id,
+            StorageInfo storageInfo,
+            FileInfo fileInfo,
+            AssetOrigin origin,
+            String originId,
+            String purpose,
+            String source,
+            Instant createdAt,
+            Instant updatedAt,
+            Instant deletedAt) {
+        return new Asset(
+                id,
+                storageInfo,
+                fileInfo,
+                origin,
+                originId,
+                purpose,
+                source,
+                createdAt,
+                updatedAt,
+                deletedAt);
     }
 
-    /**
-     * 파일 유형별 메타데이터를 업데이트합니다.
-     * 비동기 메타데이터 추출 완료 후 호출됩니다.
-     */
-    public void updateMetadata(FileTypeMetadata metadata) {
-        validateNotDeleted();
-        this.fileTypeMetadata = metadata;
-    }
-
-    /**
-     * 소프트 삭제 처리.
-     */
+    /** 소프트 삭제 처리. */
     public void delete(Instant now) {
         validateNotDeleted();
         this.deletedAt = now;
+        this.updatedAt = now;
     }
 
     public boolean isDeleted() {
         return deletedAt != null;
     }
 
-    // -- query methods (Law of Demeter 준수: VO 내부 필드 직접 노출) --
+    public boolean isImage() {
+        return fileInfo.contentType() != null && fileInfo.contentType().startsWith("image/");
+    }
+
+    // -- query methods --
 
     public AssetId id() {
         return id;
+    }
+
+    public String idValue() {
+        return id.value();
     }
 
     public StorageInfo storageInfo() {
@@ -137,10 +155,6 @@ public class Asset {
         return fileInfo.extension();
     }
 
-    public FileTypeMetadata fileTypeMetadata() {
-        return fileTypeMetadata;
-    }
-
     public AssetOrigin origin() {
         return origin;
     }
@@ -161,20 +175,12 @@ public class Asset {
         return createdAt;
     }
 
+    public Instant updatedAt() {
+        return updatedAt;
+    }
+
     public Instant deletedAt() {
         return deletedAt;
-    }
-
-    // -- event management --
-
-    protected void registerEvent(DomainEvent event) {
-        events.add(event);
-    }
-
-    public List<DomainEvent> pollEvents() {
-        List<DomainEvent> snapshot = Collections.unmodifiableList(new ArrayList<>(events));
-        events.clear();
-        return snapshot;
     }
 
     // -- invariant validation --

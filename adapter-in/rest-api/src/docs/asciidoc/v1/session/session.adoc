@@ -1,0 +1,171 @@
+[[session-api]]
+= 세션
+
+파일 업로드를 위한 세션 관리 API입니다. 단건 업로드(Single Upload)와 멀티파트 업로드(Multipart Upload)를 지원합니다.
+
+[[single-upload-session]]
+== 단건 업로드 세션
+
+소용량 파일의 단건 업로드를 위한 세션입니다. Presigned URL을 발급하여 클라이언트가 직접 S3에 업로드합니다.
+
+`/api/v1/sessions/single`
+
+[[single-upload-session-create]]
+=== POST 단건 업로드 세션 생성
+
+새로운 단건 업로드 세션을 생성하고 Presigned Upload URL을 발급합니다.
+
+include::{snippets}/create-single-upload-session-test/create-single-upload-session_success/http-request.adoc[]
+
+==== Request Fields
+include::{snippets}/create-single-upload-session-test/create-single-upload-session_success/request-fields.adoc[]
+
+==== Response
+include::{snippets}/create-single-upload-session-test/create-single-upload-session_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/create-single-upload-session-test/create-single-upload-session_success/response-fields.adoc[]
+
+[[single-upload-session-get]]
+=== GET 단건 업로드 세션 조회
+
+세션 ID로 단건 업로드 세션 상세 정보를 조회합니다.
+
+include::{snippets}/get-single-upload-session-test/get-single-upload-session_success/http-request.adoc[]
+
+==== Path Parameters
+include::{snippets}/get-single-upload-session-test/get-single-upload-session_success/path-parameters.adoc[]
+
+==== Response
+include::{snippets}/get-single-upload-session-test/get-single-upload-session_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/get-single-upload-session-test/get-single-upload-session_success/response-fields.adoc[]
+
+[[single-upload-session-complete]]
+=== POST 단건 업로드 완료
+
+클라이언트가 S3 업로드를 완료한 후 세션을 완료 처리합니다. 완료 시 Asset이 비동기로 생성됩니다.
+
+include::{snippets}/complete-single-upload-session-test/complete-single-upload-session_success/http-request.adoc[]
+
+==== Path Parameters
+include::{snippets}/complete-single-upload-session-test/complete-single-upload-session_success/path-parameters.adoc[]
+
+==== Request Fields
+include::{snippets}/complete-single-upload-session-test/complete-single-upload-session_success/request-fields.adoc[]
+
+==== Response
+include::{snippets}/complete-single-upload-session-test/complete-single-upload-session_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/complete-single-upload-session-test/complete-single-upload-session_success/response-fields.adoc[]
+
+[[multipart-upload-session]]
+== 멀티파트 업로드 세션
+
+대용량 파일의 멀티파트 업로드를 위한 세션입니다. S3 Multipart Upload를 활용하여 파트 단위로 업로드합니다.
+
+`/api/v1/sessions/multipart`
+
+[[multipart-upload-session-create]]
+=== POST 멀티파트 업로드 세션 생성
+
+새로운 멀티파트 업로드 세션을 생성합니다. S3에 Multipart Upload를 초기화합니다.
+
+include::{snippets}/create-multipart-upload-session-test/create-multipart-upload-session_success/http-request.adoc[]
+
+==== Request Fields
+include::{snippets}/create-multipart-upload-session-test/create-multipart-upload-session_success/request-fields.adoc[]
+
+==== Response
+include::{snippets}/create-multipart-upload-session-test/create-multipart-upload-session_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/create-multipart-upload-session-test/create-multipart-upload-session_success/response-fields.adoc[]
+
+[[multipart-upload-session-get]]
+=== GET 멀티파트 업로드 세션 조회
+
+세션 ID로 멀티파트 업로드 세션 상세 정보를 조회합니다.
+
+include::{snippets}/get-multipart-upload-session-test/get-multipart-upload-session_success/http-request.adoc[]
+
+==== Path Parameters
+include::{snippets}/get-multipart-upload-session-test/get-multipart-upload-session_success/path-parameters.adoc[]
+
+==== Response
+include::{snippets}/get-multipart-upload-session-test/get-multipart-upload-session_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/get-multipart-upload-session-test/get-multipart-upload-session_success/response-fields.adoc[]
+
+[[multipart-upload-session-presigned-part-url]]
+=== GET 파트 Presigned URL 발급
+
+특정 파트 번호에 대한 Presigned Upload URL을 발급합니다.
+
+include::{snippets}/generate-presigned-part-url-test/generate-presigned-part-url_success/http-request.adoc[]
+
+==== Path Parameters
+include::{snippets}/generate-presigned-part-url-test/generate-presigned-part-url_success/path-parameters.adoc[]
+
+==== Response
+include::{snippets}/generate-presigned-part-url-test/generate-presigned-part-url_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/generate-presigned-part-url-test/generate-presigned-part-url_success/response-fields.adoc[]
+
+[[multipart-upload-session-add-part]]
+=== POST 완료된 파트 등록
+
+클라이언트가 파트 업로드를 완료한 후, 해당 파트 정보(partNumber, eTag)를 등록합니다.
+
+include::{snippets}/add-completed-part-test/add-completed-part_success/http-request.adoc[]
+
+==== Path Parameters
+include::{snippets}/add-completed-part-test/add-completed-part_success/path-parameters.adoc[]
+
+==== Request Fields
+include::{snippets}/add-completed-part-test/add-completed-part_success/request-fields.adoc[]
+
+==== Response
+include::{snippets}/add-completed-part-test/add-completed-part_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/add-completed-part-test/add-completed-part_success/response-fields.adoc[]
+
+[[multipart-upload-session-complete]]
+=== POST 멀티파트 업로드 완료
+
+모든 파트 업로드가 완료된 후 세션을 완료 처리합니다. S3에서 파트를 병합하고 Asset이 비동기로 생성됩니다.
+
+include::{snippets}/complete-multipart-upload-session-test/complete-multipart-upload-session_success/http-request.adoc[]
+
+==== Path Parameters
+include::{snippets}/complete-multipart-upload-session-test/complete-multipart-upload-session_success/path-parameters.adoc[]
+
+==== Request Fields
+include::{snippets}/complete-multipart-upload-session-test/complete-multipart-upload-session_success/request-fields.adoc[]
+
+==== Response
+include::{snippets}/complete-multipart-upload-session-test/complete-multipart-upload-session_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/complete-multipart-upload-session-test/complete-multipart-upload-session_success/response-fields.adoc[]
+
+[[multipart-upload-session-abort]]
+=== POST 멀티파트 업로드 중단
+
+진행 중인 멀티파트 업로드 세션을 중단합니다. S3의 미완료 Multipart Upload를 취소합니다.
+
+include::{snippets}/abort-multipart-upload-session-test/abort-multipart-upload-session_success/http-request.adoc[]
+
+==== Path Parameters
+include::{snippets}/abort-multipart-upload-session-test/abort-multipart-upload-session_success/path-parameters.adoc[]
+
+==== Response
+include::{snippets}/abort-multipart-upload-session-test/abort-multipart-upload-session_success/http-response.adoc[]
+
+==== Response Fields
+include::{snippets}/abort-multipart-upload-session-test/abort-multipart-upload-session_success/response-fields.adoc[]

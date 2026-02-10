@@ -1,21 +1,20 @@
 package com.ryuqq.fileflow.domain.session.service;
 
+import com.ryuqq.fileflow.domain.common.vo.AccessType;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-
-import com.ryuqq.fileflow.domain.common.vo.AccessType;
 
 /**
  * S3 경로 생성 도메인 서비스.
  *
  * <p>경로 패턴: {accessType}/{yyyy}/{MM}/{fileId}.{extension}
+ *
  * <p>예: public/2026/02/01936a5e-7c4a-7000-8000-000000000001.jpg
  */
 public class S3PathResolver {
 
-    private S3PathResolver() {
-    }
+    private S3PathResolver() {}
 
     /**
      * S3 객체 키를 생성합니다.
@@ -26,16 +25,21 @@ public class S3PathResolver {
      * @param now 현재 시각 (Instant.now() 직접 호출 금지)
      * @return S3 객체 키
      */
-    public static String resolve(AccessType accessType, String fileId, String extension, Instant now) {
+    public static String resolve(
+            AccessType accessType, String fileId, String extension, Instant now) {
         ZonedDateTime dateTime = now.atZone(ZoneOffset.UTC);
         String year = String.valueOf(dateTime.getYear());
         String month = String.format("%02d", dateTime.getMonthValue());
 
         return accessType.name().toLowerCase()
-                + "/" + year
-                + "/" + month
-                + "/" + fileId
-                + "." + extension;
+                + "/"
+                + year
+                + "/"
+                + month
+                + "/"
+                + fileId
+                + "."
+                + extension;
     }
 
     /**

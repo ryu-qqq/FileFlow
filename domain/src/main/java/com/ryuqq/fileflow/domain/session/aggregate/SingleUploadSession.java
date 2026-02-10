@@ -1,42 +1,54 @@
 package com.ryuqq.fileflow.domain.session.aggregate;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-
 import com.ryuqq.fileflow.domain.common.event.DomainEvent;
 import com.ryuqq.fileflow.domain.common.vo.AccessType;
 import com.ryuqq.fileflow.domain.session.event.UploadCompletedEvent;
 import com.ryuqq.fileflow.domain.session.exception.SessionErrorCode;
 import com.ryuqq.fileflow.domain.session.exception.SessionException;
 import com.ryuqq.fileflow.domain.session.id.SingleUploadSessionId;
+import com.ryuqq.fileflow.domain.session.vo.PresignedUrl;
 import com.ryuqq.fileflow.domain.session.vo.SingleSessionStatus;
+import com.ryuqq.fileflow.domain.session.vo.SingleUploadSessionUpdateData;
+import com.ryuqq.fileflow.domain.session.vo.UploadPurpose;
+import com.ryuqq.fileflow.domain.session.vo.UploadSource;
 import com.ryuqq.fileflow.domain.session.vo.UploadTarget;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * 단건 Presigned URL 업로드 세션.
  *
  * <p>라이프사이클: CREATED → COMPLETED | EXPIRED
+ *
  * <p>클라이언트가 presigned URL로 S3에 직접 업로드 후 complete 호출.
  */
 public class SingleUploadSession {
 
     private final SingleUploadSessionId id;
     private final UploadTarget uploadTarget;
-    private final String presignedUrl;
-    private final String purpose;
-    private final String source;
+    private final PresignedUrl presignedUrl;
+    private final UploadPurpose purpose;
+    private final UploadSource source;
     private SingleSessionStatus status;
     private final Instant expiresAt;
     private final Instant createdAt;
+    private Instant updatedAt;
 
     private final List<DomainEvent> events = new ArrayList<>();
 
-    private SingleUploadSession(SingleUploadSessionId id, UploadTarget uploadTarget,
-                                String presignedUrl, String purpose, String source,
-                                SingleSessionStatus status, Instant expiresAt, Instant createdAt) {
+    private SingleUploadSession(
+            SingleUploadSessionId id,
+            UploadTarget uploadTarget,
+            PresignedUrl presignedUrl,
+            UploadPurpose purpose,
+            UploadSource source,
+            SingleSessionStatus status,
+            Instant expiresAt,
+            Instant createdAt,
+            Instant updatedAt) {
         this.id = id;
         this.uploadTarget = uploadTarget;
         this.presignedUrl = presignedUrl;
@@ -45,45 +57,80 @@ public class SingleUploadSession {
         this.status = status;
         this.expiresAt = expiresAt;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public static SingleUploadSession forNew(SingleUploadSessionId id, UploadTarget uploadTarget,
-                                              String presignedUrl, String purpose, String source,
-                                              Instant expiresAt, Instant now) {
-        return new SingleUploadSession(id, uploadTarget, presignedUrl, purpose, source,
-                SingleSessionStatus.CREATED, expiresAt, now);
+    public static SingleUploadSession forNew(
+            SingleUploadSessionId id,
+            UploadTarget uploadTarget,
+            String presignedUrl,
+            String purpose,
+            String source,
+            Instant expiresAt,
+            Instant now) {
+        return new SingleUploadSession(
+                id,
+                uploadTarget,
+                PresignedUrl.of(presignedUrl),
+                UploadPurpose.of(purpose),
+                UploadSource.of(source),
+                SingleSessionStatus.CREATED,
+                expiresAt,
+                now,
+                now);
     }
 
-    public static SingleUploadSession reconstitute(SingleUploadSessionId id, UploadTarget uploadTarget,
-                                                    String presignedUrl, String purpose, String source,
-                                                    SingleSessionStatus status, Instant expiresAt,
-                                                    Instant createdAt) {
-        return new SingleUploadSession(id, uploadTarget, presignedUrl, purpose, source,
-                status, expiresAt, createdAt);
+    public static SingleUploadSession reconstitute(
+            SingleUploadSessionId id,
+            UploadTarget uploadTarget,
+            String presignedUrl,
+            String purpose,
+            String source,
+            SingleSessionStatus status,
+            Instant expiresAt,
+            Instant createdAt,
+            Instant updatedAt) {
+        return new SingleUploadSession(
+                id,
+                uploadTarget,
+                PresignedUrl.of(presignedUrl),
+                UploadPurpose.of(purpose),
+                UploadSource.of(source),
+                status,
+                expiresAt,
+                createdAt,
+                updatedAt);
     }
 
-    /**
-     * 업로드 완료 처리.
-     * S3 HeadObject로 검증된 fileSize, etag를 받아 이벤트를 발행합니다.
-     */
-    public void complete(long fileSize, String etag, Instant now) {
+    /** 업로드 완료 처리. S3 HeadObject로 검증된 업데이트 데이터를 받아 이벤트를 발행합니다. */
+    public void complete(SingleUploadSessionUpdateData updateData, Instant now) {
         validateNotCompleted();
         validateNotExpired(now);
 
         this.status = SingleSessionStatus.COMPLETED;
-        registerEvent(UploadCompletedEvent.of(
-                id.value(), "SINGLE",
-                uploadTarget.s3Key(), uploadTarget.bucket(), uploadTarget.accessType(),
-                uploadTarget.fileName(), uploadTarget.contentType(),
-                fileSize, etag, purpose, source, now
-        ));
+        this.updatedAt = now;
+        registerEvent(
+                UploadCompletedEvent.of(
+                        idValue(),
+                        "SINGLE",
+                        s3Key(),
+                        bucket(),
+                        accessType(),
+                        fileName(),
+                        contentType(),
+                        updateData.fileSize(),
+                        updateData.etag(),
+                        purposeValue(),
+                        sourceValue(),
+                        now));
     }
 
-    public void expire() {
+    public void expire(Instant now) {
         if (this.status == SingleSessionStatus.COMPLETED) {
             return;
         }
         this.status = SingleSessionStatus.EXPIRED;
+        this.updatedAt = now;
     }
 
     public boolean isExpired(Instant now) {
@@ -94,6 +141,10 @@ public class SingleUploadSession {
 
     public SingleUploadSessionId id() {
         return id;
+    }
+
+    public String idValue() {
+        return id.value();
     }
 
     public UploadTarget uploadTarget() {
@@ -120,16 +171,28 @@ public class SingleUploadSession {
         return uploadTarget.contentType();
     }
 
-    public String presignedUrl() {
+    public PresignedUrl presignedUrl() {
         return presignedUrl;
     }
 
-    public String purpose() {
+    public String presignedUrlValue() {
+        return presignedUrl.value();
+    }
+
+    public UploadPurpose purpose() {
         return purpose;
     }
 
-    public String source() {
+    public String purposeValue() {
+        return purpose.value();
+    }
+
+    public UploadSource source() {
         return source;
+    }
+
+    public String sourceValue() {
+        return source.value();
     }
 
     public SingleSessionStatus status() {
@@ -142,6 +205,10 @@ public class SingleUploadSession {
 
     public Instant createdAt() {
         return createdAt;
+    }
+
+    public Instant updatedAt() {
+        return updatedAt;
     }
 
     // -- event management --

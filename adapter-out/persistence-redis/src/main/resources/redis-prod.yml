@@ -1,0 +1,48 @@
+# ============================================================
+# Redis Layer 운영 환경 설정
+# ============================================================
+# 활성화: bootstrap의 application-prod.yml에서 import
+# ============================================================
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+
+      # SSL 설정 (AWS ElastiCache 등)
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+
+      lettuce:
+        pool:
+          # Pool Size 권장값: CPU cores * 2
+          max-active: 32
+          max-idle: 16
+          min-idle: 8
+          max-wait: 3000ms
+          time-between-eviction-runs: 30000ms
+
+        shutdown-timeout: 200ms
+
+redisson:
+  single-server-config:
+    address: "redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}"
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+
+    # Connection Pool (운영: 크게)
+    connection-pool-size: 32
+    connection-minimum-idle-size: 8
+    idle-connection-timeout: 10000
+    connect-timeout: 3000
+    timeout: 3000
+
+    # Retry Settings
+    retry-attempts: 3
+    retry-interval: 1500
+
+    # SSL
+    ssl-enable-endpoint-identification: ${REDIS_SSL_ENABLED:false}

@@ -3,7 +3,6 @@ package com.ryuqq.fileflow.domain.session.exception;
 import com.ryuqq.fileflow.domain.common.exception.ErrorCode;
 
 public enum SessionErrorCode implements ErrorCode {
-
     SESSION_NOT_FOUND("SESSION-001", 404, "세션을 찾을 수 없습니다"),
     SESSION_ALREADY_COMPLETED("SESSION-002", 409, "이미 완료된 세션입니다"),
     SESSION_EXPIRED("SESSION-003", 410, "만료된 세션입니다"),

@@ -96,7 +96,8 @@ def jacocoExcludes = [
         '**/Q*Entity*',           // QueryDSL 생성 클래스 (QSingleUploadSessionJpaEntity 등)
         '**/config/**',           // Config 클래스 (Spring 설정, 통합 테스트에서 검증)
         '**/config/properties/**', // Properties 클래스 (Spring Boot 설정)
-        '**/outbox/**'            // Outbox 클래스 (통합 테스트에서 검증)
+        '**/outbox/**',           // Outbox 클래스 (통합 테스트에서 검증)
+        '**/repository/**'        // Repository 클래스 (QueryDSL, 통합 테스트에서 검증)
 ]
 
 tasks.jacocoTestReport {

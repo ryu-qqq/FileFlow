@@ -12,12 +12,7 @@ import java.util.Objects;
  * @param extension 파일 확장자 (예: "jpg")
  */
 public record FileInfo(
-        String fileName,
-        long fileSize,
-        String contentType,
-        String etag,
-        String extension
-) {
+        String fileName, long fileSize, String contentType, String etag, String extension) {
 
     public FileInfo {
         Objects.requireNonNull(fileName, "fileName must not be null");
@@ -29,8 +24,8 @@ public record FileInfo(
         }
     }
 
-    public static FileInfo of(String fileName, long fileSize, String contentType,
-                               String etag, String extension) {
+    public static FileInfo of(
+            String fileName, long fileSize, String contentType, String etag, String extension) {
         return new FileInfo(fileName, fileSize, contentType, etag, extension);
     }
 }

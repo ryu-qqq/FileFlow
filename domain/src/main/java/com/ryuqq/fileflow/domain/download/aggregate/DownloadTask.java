@@ -1,23 +1,26 @@
 package com.ryuqq.fileflow.domain.download.aggregate;
 
+import com.ryuqq.fileflow.domain.common.event.DomainEvent;
+import com.ryuqq.fileflow.domain.common.vo.StorageInfo;
+import com.ryuqq.fileflow.domain.download.exception.DownloadErrorCode;
+import com.ryuqq.fileflow.domain.download.exception.DownloadException;
+import com.ryuqq.fileflow.domain.download.id.DownloadTaskId;
+import com.ryuqq.fileflow.domain.download.vo.CallbackInfo;
+import com.ryuqq.fileflow.domain.download.vo.DownloadTaskStatus;
+import com.ryuqq.fileflow.domain.download.vo.DownloadedFileInfo;
+import com.ryuqq.fileflow.domain.download.vo.RetryPolicy;
+import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import com.ryuqq.fileflow.domain.common.event.DomainEvent;
-import com.ryuqq.fileflow.domain.common.vo.AccessType;
-import com.ryuqq.fileflow.domain.download.event.DownloadCompletedEvent;
-import com.ryuqq.fileflow.domain.download.exception.DownloadErrorCode;
-import com.ryuqq.fileflow.domain.download.exception.DownloadException;
-import com.ryuqq.fileflow.domain.download.id.DownloadTaskId;
-import com.ryuqq.fileflow.domain.download.vo.DownloadTaskStatus;
-
 /**
  * 외부 다운로드 작업 Aggregate Root.
  *
  * <p>외부 URL에서 파일을 가져와 S3에 저장하는 비동기 작업을 표현합니다.
+ *
  * <p>라이프사이클: QUEUED → DOWNLOADING → COMPLETED | FAILED → QUEUED (재시도)
  */
 public class DownloadTask {
@@ -25,103 +28,137 @@ public class DownloadTask {
     private static final int DEFAULT_MAX_RETRIES = 3;
 
     private final DownloadTaskId id;
-    private final String sourceUrl;
-    private final String s3Key;
-    private final String bucket;
-    private final AccessType accessType;
+    private final SourceUrl sourceUrl;
+    private final StorageInfo storageInfo;
     private final String purpose;
     private final String source;
     private DownloadTaskStatus status;
-    private int retryCount;
-    private final int maxRetries;
-    private final String callbackUrl;
+    private RetryPolicy retryPolicy;
+    private final CallbackInfo callbackInfo;
     private String lastError;
     private final Instant createdAt;
+    private Instant updatedAt;
     private Instant startedAt;
     private Instant completedAt;
 
     private final List<DomainEvent> events = new ArrayList<>();
 
-    private DownloadTask(DownloadTaskId id, String sourceUrl, String s3Key, String bucket,
-                         AccessType accessType, String purpose, String source,
-                         DownloadTaskStatus status, int retryCount, int maxRetries,
-                         String callbackUrl, String lastError,
-                         Instant createdAt, Instant startedAt, Instant completedAt) {
+    private DownloadTask(
+            DownloadTaskId id,
+            SourceUrl sourceUrl,
+            StorageInfo storageInfo,
+            String purpose,
+            String source,
+            DownloadTaskStatus status,
+            RetryPolicy retryPolicy,
+            CallbackInfo callbackInfo,
+            String lastError,
+            Instant createdAt,
+            Instant updatedAt,
+            Instant startedAt,
+            Instant completedAt) {
         this.id = id;
         this.sourceUrl = sourceUrl;
-        this.s3Key = s3Key;
-        this.bucket = bucket;
-        this.accessType = accessType;
+        this.storageInfo = storageInfo;
         this.purpose = purpose;
         this.source = source;
         this.status = status;
-        this.retryCount = retryCount;
-        this.maxRetries = maxRetries;
-        this.callbackUrl = callbackUrl;
+        this.retryPolicy = retryPolicy;
+        this.callbackInfo = callbackInfo;
         this.lastError = lastError;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.startedAt = startedAt;
         this.completedAt = completedAt;
     }
 
-    public static DownloadTask forNew(DownloadTaskId id, String sourceUrl, String s3Key,
-                                       String bucket, AccessType accessType,
-                                       String purpose, String source,
-                                       String callbackUrl, Instant now) {
-        return new DownloadTask(id, sourceUrl, s3Key, bucket, accessType, purpose, source,
-                DownloadTaskStatus.QUEUED, 0, DEFAULT_MAX_RETRIES,
-                callbackUrl, null, now, null, null);
+    public static DownloadTask forNew(
+            DownloadTaskId id,
+            SourceUrl sourceUrl,
+            StorageInfo storageInfo,
+            String purpose,
+            String source,
+            CallbackInfo callbackInfo,
+            Instant now) {
+        return new DownloadTask(
+                id,
+                sourceUrl,
+                storageInfo,
+                purpose,
+                source,
+                DownloadTaskStatus.QUEUED,
+                RetryPolicy.ofDefault(DEFAULT_MAX_RETRIES),
+                callbackInfo,
+                null,
+                now,
+                now,
+                null,
+                null);
     }
 
-    public static DownloadTask reconstitute(DownloadTaskId id, String sourceUrl, String s3Key,
-                                             String bucket, AccessType accessType,
-                                             String purpose, String source,
-                                             DownloadTaskStatus status, int retryCount, int maxRetries,
-                                             String callbackUrl, String lastError,
-                                             Instant createdAt, Instant startedAt, Instant completedAt) {
-        return new DownloadTask(id, sourceUrl, s3Key, bucket, accessType, purpose, source,
-                status, retryCount, maxRetries, callbackUrl, lastError,
-                createdAt, startedAt, completedAt);
+    public static DownloadTask reconstitute(
+            DownloadTaskId id,
+            SourceUrl sourceUrl,
+            StorageInfo storageInfo,
+            String purpose,
+            String source,
+            DownloadTaskStatus status,
+            RetryPolicy retryPolicy,
+            CallbackInfo callbackInfo,
+            String lastError,
+            Instant createdAt,
+            Instant updatedAt,
+            Instant startedAt,
+            Instant completedAt) {
+        return new DownloadTask(
+                id,
+                sourceUrl,
+                storageInfo,
+                purpose,
+                source,
+                status,
+                retryPolicy,
+                callbackInfo,
+                lastError,
+                createdAt,
+                updatedAt,
+                startedAt,
+                completedAt);
     }
 
-    /**
-     * 다운로드 시작.
-     */
+    /** 다운로드 시작. */
     public void start(Instant now) {
         if (this.status != DownloadTaskStatus.QUEUED) {
-            throw new DownloadException(DownloadErrorCode.INVALID_DOWNLOAD_STATUS,
+            throw new DownloadException(
+                    DownloadErrorCode.INVALID_DOWNLOAD_STATUS,
                     "Cannot start download in status: " + this.status);
         }
         this.status = DownloadTaskStatus.DOWNLOADING;
         this.startedAt = now;
+        this.updatedAt = now;
     }
 
-    /**
-     * 다운로드 완료 처리.
-     */
-    public void complete(String fileName, String contentType, long fileSize, String etag, Instant now) {
+    /** 다운로드 완료 처리. */
+    public void complete(DownloadedFileInfo fileInfo) {
+        Instant now = fileInfo.completedAt();
         if (this.status != DownloadTaskStatus.DOWNLOADING) {
-            throw new DownloadException(DownloadErrorCode.INVALID_DOWNLOAD_STATUS,
+            throw new DownloadException(
+                    DownloadErrorCode.INVALID_DOWNLOAD_STATUS,
                     "Cannot complete download in status: " + this.status);
         }
         this.status = DownloadTaskStatus.COMPLETED;
         this.completedAt = now;
+        this.updatedAt = now;
         this.lastError = null;
-
-        registerEvent(DownloadCompletedEvent.of(
-                id.value(), s3Key, bucket, accessType,
-                fileName, contentType, fileSize, etag, purpose, source, now
-        ));
     }
 
-    /**
-     * 다운로드 실패 처리. 재시도 가능하면 QUEUED로 복원.
-     */
+    /** 다운로드 실패 처리. 재시도 가능하면 QUEUED로 복원. */
     public void fail(String errorMessage, Instant now) {
         this.lastError = errorMessage;
-        this.retryCount++;
+        this.retryPolicy = retryPolicy.increment();
+        this.updatedAt = now;
 
-        if (this.retryCount >= this.maxRetries) {
+        if (this.retryPolicy.isExhausted()) {
             this.status = DownloadTaskStatus.FAILED;
             this.completedAt = now;
         } else {
@@ -131,11 +168,11 @@ public class DownloadTask {
     }
 
     public boolean canRetry() {
-        return retryCount < maxRetries;
+        return retryPolicy.canRetry();
     }
 
     public boolean hasCallback() {
-        return callbackUrl != null && !callbackUrl.isBlank();
+        return callbackInfo.hasCallback();
     }
 
     // -- query methods --
@@ -144,20 +181,32 @@ public class DownloadTask {
         return id;
     }
 
-    public String sourceUrl() {
+    public String idValue() {
+        return id.value();
+    }
+
+    public SourceUrl sourceUrl() {
         return sourceUrl;
     }
 
+    public String sourceUrlValue() {
+        return sourceUrl.value();
+    }
+
+    public StorageInfo storageInfo() {
+        return storageInfo;
+    }
+
     public String s3Key() {
-        return s3Key;
+        return storageInfo.s3Key();
     }
 
     public String bucket() {
-        return bucket;
+        return storageInfo.bucket();
     }
 
-    public AccessType accessType() {
-        return accessType;
+    public com.ryuqq.fileflow.domain.common.vo.AccessType accessType() {
+        return storageInfo.accessType();
     }
 
     public String purpose() {
@@ -172,16 +221,24 @@ public class DownloadTask {
         return status;
     }
 
+    public RetryPolicy retryPolicy() {
+        return retryPolicy;
+    }
+
     public int retryCount() {
-        return retryCount;
+        return retryPolicy.retryCount();
     }
 
     public int maxRetries() {
-        return maxRetries;
+        return retryPolicy.maxRetries();
+    }
+
+    public CallbackInfo callbackInfo() {
+        return callbackInfo;
     }
 
     public String callbackUrl() {
-        return callbackUrl;
+        return callbackInfo.callbackUrl();
     }
 
     public String lastError() {
@@ -190,6 +247,10 @@ public class DownloadTask {
 
     public Instant createdAt() {
         return createdAt;
+    }
+
+    public Instant updatedAt() {
+        return updatedAt;
     }
 
     public Instant startedAt() {

@@ -1,0 +1,35 @@
+# ============================================================
+# Download Worker 스테이지 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=stage
+# ============================================================
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:persistence.yml
+      - classpath:persistence-stage.yml
+      - classpath:redis.yml
+      - classpath:redis-stage.yml
+      - classpath:s3.yml
+      - classpath:s3-stage.yml
+      - classpath:sqs-consumer.yml
+      - classpath:sqs-consumer-stage.yml
+      - classpath:sqs-publish.yml
+      - classpath:sqs-publish-stage.yml
+      - classpath:http-client.yml
+      - classpath:http-client-stage.yml
+
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: INFO
+    io.awspring.cloud.sqs: INFO
+
+# Sentry (스테이지 - 비활성화)
+# Sentry는 prod에서만 활성화 (stage 로그가 운영과 섞이는 것 방지)
+sentry:
+  dsn: ""
