@@ -1,0 +1,22 @@
+# ============================================================
+# SQS Consumer Layer 공통 설정
+# ============================================================
+# 환경별 설정은 sqs-consumer-{profile}.yml 참조
+# - sqs-consumer-local.yml: 로컬 개발 환경 (LocalStack)
+# - sqs-consumer-prod.yml: 운영 환경
+# ============================================================
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+      sqs:
+        listener:
+          max-concurrent-messages: 10
+          max-messages-per-poll: 10
+
+logging:
+  level:
+    com.ryuqq.fileflow.adapter.in.sqs: INFO
+    io.awspring.cloud.sqs: INFO

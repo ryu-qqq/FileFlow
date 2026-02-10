@@ -1,0 +1,40 @@
+# ============================================================
+# Redis Layer 스테이징 환경 설정
+# ============================================================
+# 활성화: bootstrap의 application-stage.yml에서 import
+# ============================================================
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+          max-wait: 2000ms
+          time-between-eviction-runs: 30000ms
+
+        shutdown-timeout: 200ms
+
+redisson:
+  single-server-config:
+    address: "redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}"
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+
+    # Connection Pool (스테이징: 중간)
+    connection-pool-size: 16
+    connection-minimum-idle-size: 4
+    idle-connection-timeout: 10000
+    connect-timeout: 3000
+    timeout: 3000
+
+    # Retry Settings
+    retry-attempts: 3
+    retry-interval: 1500

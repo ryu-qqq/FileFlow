@@ -11,16 +11,19 @@ include 'application'
 // ========================================
 // Inbound Adapters (Driving) - {type}-in-{subject}-{middleware}
 include 'adapter-in:rest-api'
-include 'adapter-in:redis-listener'
-include 'adapter-in:sqs-listener'
+include 'adapter-in:scheduler'
+include 'adapter-in:redis-consumer'
+include 'adapter-in:sqs-consumer'
 
 // Outbound Adapters (Driven) - {purpose}-{technology}
 include 'adapter-out:persistence-mysql'
 include 'adapter-out:persistence-redis'
-include 'adapter-out:aws-s3'
-include 'adapter-out:aws-sqs'
-include 'adapter-out:http-client'
-include 'adapter-out:image-processor'
+include 'adapter-out:client'
+include 'adapter-out:client:id-client'
+include 'adapter-out:client:http-client'
+include 'adapter-out:client:sqs-publisher'
+include 'adapter-out:client:image-transform-client'
+include 'adapter-out:client:s3-client'
 
 // ========================================
 // Bootstrap Modules (Runnable Applications)
@@ -48,14 +51,17 @@ project(':domain').projectDir = file('domain')
 project(':application').projectDir = file('application')
 
 project(':adapter-in:rest-api').projectDir = file('adapter-in/rest-api')
-project(':adapter-in:redis-listener').projectDir = file('adapter-in/redis-listener')
-project(':adapter-in:sqs-listener').projectDir = file('adapter-in/sqs-listener')
+project(':adapter-in:scheduler').projectDir = file('adapter-in/scheduler')
+project(':adapter-in:redis-consumer').projectDir = file('adapter-in/redis-consumer')
+project(':adapter-in:sqs-consumer').projectDir = file('adapter-in/sqs-consumer')
 project(':adapter-out:persistence-mysql').projectDir = file('adapter-out/persistence-mysql')
 project(':adapter-out:persistence-redis').projectDir = file('adapter-out/persistence-redis')
-project(':adapter-out:aws-s3').projectDir = file('adapter-out/aws-s3')
-project(':adapter-out:aws-sqs').projectDir = file('adapter-out/aws-sqs')
-project(':adapter-out:http-client').projectDir = file('adapter-out/http-client')
-project(':adapter-out:image-processor').projectDir = file('adapter-out/image-processor')
+project(':adapter-out:client').projectDir = file('adapter-out/client')
+project(':adapter-out:client:id-client').projectDir = file('adapter-out/client/id-client')
+project(':adapter-out:client:http-client').projectDir = file('adapter-out/client/http-client')
+project(':adapter-out:client:sqs-publisher').projectDir = file('adapter-out/client/sqs-publisher')
+project(':adapter-out:client:image-transform-client').projectDir = file('adapter-out/client/image-transform-client')
+project(':adapter-out:client:s3-client').projectDir = file('adapter-out/client/s3-client')
 
 project(':bootstrap:bootstrap-web-api').projectDir = file('bootstrap/bootstrap-web-api')
 project(':bootstrap:bootstrap-scheduler').projectDir = file('bootstrap/bootstrap-scheduler')

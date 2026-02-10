@@ -2,419 +2,142 @@ package com.ryuqq.fileflow.adapter.out.persistence.session.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ryuqq.fileflow.adapter.out.persistence.session.CompletedPartJpaEntityFixture;
+import com.ryuqq.fileflow.adapter.out.persistence.session.MultipartUploadSessionJpaEntityFixture;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.CompletedPartJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.MultipartUploadSessionJpaEntity;
-import com.ryuqq.fileflow.domain.iam.vo.Organization;
-import com.ryuqq.fileflow.domain.iam.vo.OrganizationId;
-import com.ryuqq.fileflow.domain.iam.vo.Tenant;
-import com.ryuqq.fileflow.domain.iam.vo.TenantId;
-import com.ryuqq.fileflow.domain.iam.vo.UserContext;
-import com.ryuqq.fileflow.domain.iam.vo.UserRole;
-import com.ryuqq.fileflow.domain.session.aggregate.CompletedPart;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
-import com.ryuqq.fileflow.domain.session.vo.ContentType;
-import com.ryuqq.fileflow.domain.session.vo.ETag;
-import com.ryuqq.fileflow.domain.session.vo.ExpirationTime;
-import com.ryuqq.fileflow.domain.session.vo.FileName;
-import com.ryuqq.fileflow.domain.session.vo.FileSize;
-import com.ryuqq.fileflow.domain.session.vo.PartNumber;
-import com.ryuqq.fileflow.domain.session.vo.PartSize;
-import com.ryuqq.fileflow.domain.session.vo.PresignedUrl;
-import com.ryuqq.fileflow.domain.session.vo.S3Bucket;
-import com.ryuqq.fileflow.domain.session.vo.S3Key;
-import com.ryuqq.fileflow.domain.session.vo.S3UploadId;
-import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
-import com.ryuqq.fileflow.domain.session.vo.TotalParts;
-import com.ryuqq.fileflow.domain.session.vo.UploadSessionId;
-import java.time.Instant;
-import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
+import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSessionFixture;
+import com.ryuqq.fileflow.domain.session.vo.CompletedPart;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("unit")
 @DisplayName("MultipartUploadSessionJpaMapper 단위 테스트")
 class MultipartUploadSessionJpaMapperTest {
 
-    private MultipartUploadSessionJpaMapper mapper;
-
-    // 테스트용 UUIDv7 값 (실제 UUIDv7 형식)
-    private static final String TEST_TENANT_ID = TenantId.generate().value();
-    private static final String TEST_ORG_ID = OrganizationId.generate().value();
-
-    @BeforeEach
-    void setUp() {
-        mapper = new MultipartUploadSessionJpaMapper();
-    }
+    private final MultipartUploadSessionJpaMapper mapper = new MultipartUploadSessionJpaMapper();
 
     @Nested
-    @DisplayName("toEntity 테스트")
+    @DisplayName("toEntity 메서드 테스트")
     class ToEntityTest {
 
         @Test
-        @DisplayName("Domain을 Entity로 변환할 수 있다")
-        void toEntity_WithValidDomain_ShouldConvertToEntity() {
+        @DisplayName("도메인 객체를 JPA 엔티티로 변환합니다")
+        void toEntity_shouldMapAllFields() {
             // given
-            MultipartUploadSession domain = createDomain(SessionStatus.ACTIVE);
+            MultipartUploadSession domain = MultipartUploadSessionFixture.anInitiatedSession();
 
             // when
             MultipartUploadSessionJpaEntity entity = mapper.toEntity(domain);
 
             // then
-            assertThat(entity.getId()).isEqualTo(domain.getId().getValue());
-            assertThat(entity.getUserId()).isNull();
-            assertThat(entity.getOrganizationId()).isEqualTo(TEST_ORG_ID);
-            assertThat(entity.getOrganizationName()).isEqualTo("Test Org");
-            assertThat(entity.getOrganizationNamespace()).isEqualTo("setof");
-            assertThat(entity.getTenantId()).isEqualTo(TEST_TENANT_ID);
-            assertThat(entity.getTenantName()).isEqualTo("Connectly");
-            assertThat(entity.getUserRole()).isEqualTo("SELLER");
-            assertThat(entity.getEmail()).isEqualTo("seller@test.com");
-            assertThat(entity.getFileName()).isEqualTo("large-video.mp4");
-            assertThat(entity.getFileSize()).isEqualTo(500 * 1024 * 1024L);
-            assertThat(entity.getContentType()).isEqualTo("video/mp4");
-            assertThat(entity.getBucket()).isEqualTo("test-bucket");
-            assertThat(entity.getS3Key()).isEqualTo("uploads/large-video.mp4");
-            assertThat(entity.getS3UploadId()).isEqualTo("s3-upload-id-xyz");
-            assertThat(entity.getTotalParts()).isEqualTo(10);
-            assertThat(entity.getPartSize()).isEqualTo(50 * 1024 * 1024L);
-            assertThat(entity.getStatus()).isEqualTo(SessionStatus.ACTIVE);
-        }
-
-        @Test
-        @DisplayName("완료된 세션은 mergedEtag와 completedAt을 포함한다")
-        void toEntity_WithCompletedSession_ShouldIncludeMergedEtagAndCompletedAt() {
-            // given
-            MultipartUploadSession domain = createCompletedDomain();
-
-            // when
-            MultipartUploadSessionJpaEntity entity = mapper.toEntity(domain);
-
-            // then
-            assertThat(entity.getStatus()).isEqualTo(SessionStatus.COMPLETED);
-            assertThat(entity.getCompletedAt()).isNotNull();
+            assertThat(entity.getId()).isEqualTo(domain.idValue());
+            assertThat(entity.getS3Key()).isEqualTo(domain.s3Key());
+            assertThat(entity.getBucket()).isEqualTo(domain.bucket());
+            assertThat(entity.getAccessType()).isEqualTo(domain.accessType());
+            assertThat(entity.getFileName()).isEqualTo(domain.fileName());
+            assertThat(entity.getContentType()).isEqualTo(domain.contentType());
+            assertThat(entity.getUploadId()).isEqualTo(domain.uploadId());
+            assertThat(entity.getPartSize()).isEqualTo(domain.partSize());
+            assertThat(entity.getPurpose()).isEqualTo(domain.purposeValue());
+            assertThat(entity.getSource()).isEqualTo(domain.sourceValue());
+            assertThat(entity.getStatus()).isEqualTo(domain.status());
+            assertThat(entity.getExpiresAt()).isEqualTo(domain.expiresAt());
         }
     }
 
     @Nested
-    @DisplayName("toDomain 테스트")
+    @DisplayName("toDomain 메서드 테스트")
     class ToDomainTest {
 
         @Test
-        @DisplayName("Entity를 Domain으로 변환할 수 있다")
-        void toDomain_WithValidEntity_ShouldConvertToDomain() {
+        @DisplayName("JPA 엔티티와 파트 목록을 도메인 객체로 변환합니다")
+        void toDomain_shouldMapAllFields() {
             // given
-            MultipartUploadSessionJpaEntity entity = createEntity(SessionStatus.ACTIVE);
+            MultipartUploadSessionJpaEntity entity =
+                    MultipartUploadSessionJpaEntityFixture.anInitiatedEntity();
+            List<CompletedPartJpaEntity> parts = List.of();
 
             // when
-            MultipartUploadSession domain = mapper.toDomain(entity);
+            MultipartUploadSession domain = mapper.toDomain(entity, parts);
 
             // then
-            assertThat(domain.getId().getValue()).isEqualTo(entity.getId());
-            assertThat(domain.getFileNameValue()).isEqualTo(entity.getFileName());
-            assertThat(domain.getFileSizeValue()).isEqualTo(entity.getFileSize());
-            assertThat(domain.getContentTypeValue()).isEqualTo(entity.getContentType());
-            assertThat(domain.getBucketValue()).isEqualTo(entity.getBucket());
-            assertThat(domain.getS3KeyValue()).isEqualTo(entity.getS3Key());
-            assertThat(domain.getS3UploadIdValue()).isEqualTo(entity.getS3UploadId());
-            assertThat(domain.getTotalPartsValue()).isEqualTo(entity.getTotalParts());
-            assertThat(domain.getPartSizeValue()).isEqualTo(entity.getPartSize());
-            assertThat(domain.getStatus()).isEqualTo(entity.getStatus());
+            assertThat(domain.idValue()).isEqualTo(entity.getId());
+            assertThat(domain.uploadId()).isEqualTo(entity.getUploadId());
+            assertThat(domain.partSize()).isEqualTo(entity.getPartSize());
+            assertThat(domain.status()).isEqualTo(entity.getStatus());
+            assertThat(domain.completedParts()).isEmpty();
         }
 
         @Test
-        @DisplayName("UserContext가 올바르게 복원된다")
-        void toDomain_ShouldReconstructUserContext() {
+        @DisplayName("완료된 파트가 있는 경우 함께 변환합니다")
+        void toDomain_withParts_shouldIncludeCompletedParts() {
             // given
-            MultipartUploadSessionJpaEntity entity = createEntity(SessionStatus.ACTIVE);
+            MultipartUploadSessionJpaEntity entity =
+                    MultipartUploadSessionJpaEntityFixture.anInitiatedEntity();
+            List<CompletedPartJpaEntity> parts =
+                    List.of(
+                            CompletedPartJpaEntityFixture.aCompletedPartEntity(entity.getId(), 1),
+                            CompletedPartJpaEntityFixture.aCompletedPartEntity(entity.getId(), 2));
 
             // when
-            MultipartUploadSession domain = mapper.toDomain(entity);
+            MultipartUploadSession domain = mapper.toDomain(entity, parts);
 
             // then
-            UserContext userContext = domain.getUserContext();
-            // userId는 null이므로 null 체크
-            assertThat(userContext.userId()).isNull();
-            assertThat(entity.getUserId()).isNull();
-            // organizationId 값 비교
-            assertThat(userContext.organization().id().value())
-                    .isEqualTo(entity.getOrganizationId());
-            assertThat(userContext.organization().name()).isEqualTo(entity.getOrganizationName());
-            // tenantId 값 비교
-            assertThat(userContext.tenant().id().value()).isEqualTo(entity.getTenantId());
-            assertThat(userContext.tenant().name()).isEqualTo(entity.getTenantName());
-            assertThat(userContext.getRole().name()).isEqualTo(entity.getUserRole());
-            assertThat(userContext.email()).isEqualTo(entity.getEmail());
-        }
-
-        @Test
-        @DisplayName("버전 정보가 복원된다")
-        void toDomain_ShouldReconstructVersion() {
-            // given
-            MultipartUploadSessionJpaEntity entity = createEntityWithVersion(5L);
-
-            // when
-            MultipartUploadSession domain = mapper.toDomain(entity);
-
-            // then
-            assertThat(domain.getVersion()).isEqualTo(5L);
+            assertThat(domain.completedParts()).hasSize(2);
+            assertThat(domain.completedParts().get(0).partNumber()).isEqualTo(1);
+            assertThat(domain.completedParts().get(1).partNumber()).isEqualTo(2);
         }
     }
 
     @Nested
-    @DisplayName("toPartEntity 테스트")
-    class ToPartEntityTest {
+    @DisplayName("toPartEntities 메서드 테스트")
+    class ToPartEntitiesTest {
 
         @Test
-        @DisplayName("신규 CompletedPart를 Entity로 변환할 수 있다 (id 없음)")
-        void toPartEntity_WithNewPart_ShouldCreateEntityWithoutId() {
+        @DisplayName("도메인 파트 목록을 JPA 엔티티 목록으로 변환합니다")
+        void toPartEntities_shouldMapAllParts() {
             // given
-            String sessionId = UUID.randomUUID().toString();
-            CompletedPart domain = createCompletedPartWithoutId(sessionId);
+            String sessionId = "multipart-session-001";
+            List<CompletedPart> parts =
+                    List.of(
+                            CompletedPart.of(
+                                    1,
+                                    "etag-1",
+                                    5_242_880L,
+                                    MultipartUploadSessionJpaEntityFixture.defaultNow()),
+                            CompletedPart.of(
+                                    2,
+                                    "etag-2",
+                                    5_242_880L,
+                                    MultipartUploadSessionJpaEntityFixture.defaultNow()));
 
             // when
-            CompletedPartJpaEntity entity = mapper.toPartEntity(sessionId, domain);
+            List<CompletedPartJpaEntity> entities = mapper.toPartEntities(sessionId, parts);
 
             // then
-            assertThat(entity.getId()).isNull();
-            assertThat(entity.getSessionId()).isEqualTo(sessionId);
-            assertThat(entity.getPartNumber()).isEqualTo(1);
-            assertThat(entity.getPresignedUrl())
-                    .isEqualTo("https://presigned-url.s3.amazonaws.com/part1");
-            assertThat(entity.getEtag()).isEqualTo("\"etag-part-1\"");
-            assertThat(entity.getSize()).isEqualTo(5 * 1024 * 1024L);
+            assertThat(entities).hasSize(2);
+            assertThat(entities.get(0).getSessionId()).isEqualTo(sessionId);
+            assertThat(entities.get(0).getPartNumber()).isEqualTo(1);
+            assertThat(entities.get(0).getEtag()).isEqualTo("etag-1");
+            assertThat(entities.get(1).getPartNumber()).isEqualTo(2);
         }
 
         @Test
-        @DisplayName("기존 CompletedPart를 Entity로 변환할 수 있다 (id 있음)")
-        void toPartEntity_WithExistingPart_ShouldCreateEntityWithId() {
+        @DisplayName("빈 파트 목록일 때 빈 엔티티 목록을 반환합니다")
+        void toPartEntities_emptyParts_shouldReturnEmptyList() {
             // given
-            String sessionId = UUID.randomUUID().toString();
-            CompletedPart domain = createCompletedPartWithId(sessionId, 123L);
+            String sessionId = "multipart-session-001";
 
             // when
-            CompletedPartJpaEntity entity = mapper.toPartEntity(sessionId, domain);
+            List<CompletedPartJpaEntity> entities = mapper.toPartEntities(sessionId, List.of());
 
             // then
-            assertThat(entity.getId()).isEqualTo(123L);
-            assertThat(entity.getSessionId()).isEqualTo(sessionId);
+            assertThat(entities).isEmpty();
         }
-    }
-
-    @Nested
-    @DisplayName("toCompletedPart 테스트")
-    class ToCompletedPartTest {
-
-        @Test
-        @DisplayName("Entity를 CompletedPart Domain으로 변환할 수 있다")
-        void toCompletedPart_WithValidEntity_ShouldConvertToDomain() {
-            // given
-            CompletedPartJpaEntity entity = createCompletedPartEntity();
-
-            // when
-            CompletedPart domain = mapper.toCompletedPart(entity);
-
-            // then
-            assertThat(domain.getId()).isEqualTo(entity.getId());
-            assertThat(domain.getSessionIdValue()).isEqualTo(entity.getSessionId());
-            assertThat(domain.getPartNumberValue()).isEqualTo(entity.getPartNumber());
-            assertThat(domain.getPresignedUrlValue()).isEqualTo(entity.getPresignedUrl());
-            assertThat(domain.getETagValue()).isEqualTo(entity.getEtag());
-            assertThat(domain.getSize()).isEqualTo(entity.getSize());
-            assertThat(domain.getUploadedAt()).isEqualTo(entity.getUploadedAt());
-        }
-
-        @Test
-        @DisplayName("완료된 Part의 isCompleted()는 true를 반환한다")
-        void toCompletedPart_WithCompletedPart_ShouldReturnIsCompletedTrue() {
-            // given
-            CompletedPartJpaEntity entity = createCompletedPartEntity();
-
-            // when
-            CompletedPart domain = mapper.toCompletedPart(entity);
-
-            // then
-            assertThat(domain.isCompleted()).isTrue();
-        }
-    }
-
-    @Nested
-    @DisplayName("양방향 변환 테스트")
-    class RoundTripTest {
-
-        @Test
-        @DisplayName("Domain → Entity → Domain 변환 시 데이터가 보존된다")
-        void roundTrip_ShouldPreserveData() {
-            // given
-            MultipartUploadSession original = createDomain(SessionStatus.ACTIVE);
-
-            // when
-            MultipartUploadSessionJpaEntity entity = mapper.toEntity(original);
-            MultipartUploadSession restored = mapper.toDomain(entity);
-
-            // then
-            assertThat(restored.getId().getValue()).isEqualTo(original.getId().getValue());
-            assertThat(restored.getFileNameValue()).isEqualTo(original.getFileNameValue());
-            assertThat(restored.getFileSizeValue()).isEqualTo(original.getFileSizeValue());
-            assertThat(restored.getContentTypeValue()).isEqualTo(original.getContentTypeValue());
-            assertThat(restored.getBucketValue()).isEqualTo(original.getBucketValue());
-            assertThat(restored.getS3KeyValue()).isEqualTo(original.getS3KeyValue());
-            assertThat(restored.getS3UploadIdValue()).isEqualTo(original.getS3UploadIdValue());
-            assertThat(restored.getTotalPartsValue()).isEqualTo(original.getTotalPartsValue());
-            assertThat(restored.getPartSizeValue()).isEqualTo(original.getPartSizeValue());
-            assertThat(restored.getStatus()).isEqualTo(original.getStatus());
-        }
-    }
-
-    // ==================== Helper Methods ====================
-
-    private MultipartUploadSession createDomain(SessionStatus status) {
-        Tenant tenant = Tenant.of(TenantId.of(TEST_TENANT_ID), "Connectly");
-        Organization organization =
-                Organization.of(
-                        OrganizationId.of(TEST_ORG_ID), "Test Org", "setof", UserRole.SELLER);
-        UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
-
-        return MultipartUploadSession.reconstitute(
-                UploadSessionId.of(UUID.randomUUID()),
-                userContext,
-                FileName.of("large-video.mp4"),
-                FileSize.of(500 * 1024 * 1024L),
-                ContentType.of("video/mp4"),
-                S3Bucket.of("test-bucket"),
-                S3Key.of("uploads/large-video.mp4"),
-                S3UploadId.of("s3-upload-id-xyz"),
-                TotalParts.of(10),
-                PartSize.of(50 * 1024 * 1024L),
-                ExpirationTime.of(Instant.now().plus(java.time.Duration.ofHours(24))),
-                Instant.now(),
-                status,
-                null,
-                0L);
-    }
-
-    private MultipartUploadSession createCompletedDomain() {
-        Tenant tenant = Tenant.of(TenantId.of(TEST_TENANT_ID), "Connectly");
-        Organization organization =
-                Organization.of(
-                        OrganizationId.of(TEST_ORG_ID), "Test Org", "setof", UserRole.SELLER);
-        UserContext userContext = UserContext.of(tenant, organization, "seller@test.com", null);
-
-        return MultipartUploadSession.reconstitute(
-                UploadSessionId.of(UUID.randomUUID()),
-                userContext,
-                FileName.of("large-video.mp4"),
-                FileSize.of(500 * 1024 * 1024L),
-                ContentType.of("video/mp4"),
-                S3Bucket.of("test-bucket"),
-                S3Key.of("uploads/large-video.mp4"),
-                S3UploadId.of("s3-upload-id-xyz"),
-                TotalParts.of(10),
-                PartSize.of(50 * 1024 * 1024L),
-                ExpirationTime.of(Instant.now().plus(java.time.Duration.ofHours(24))),
-                Instant.now(),
-                SessionStatus.COMPLETED,
-                Instant.now(),
-                1L);
-    }
-
-    private MultipartUploadSessionJpaEntity createEntity(SessionStatus status) {
-        Instant now = Instant.now();
-        Instant expiresAt = now.plus(java.time.Duration.ofHours(24));
-
-        return MultipartUploadSessionJpaEntity.of(
-                UUID.randomUUID().toString(),
-                null,
-                TEST_ORG_ID,
-                "Test Org",
-                "setof",
-                TEST_TENANT_ID,
-                "Connectly",
-                "SELLER",
-                "seller@test.com",
-                "large-video.mp4",
-                500 * 1024 * 1024L,
-                "video/mp4",
-                "test-bucket",
-                "uploads/large-video.mp4",
-                "s3-upload-id-xyz",
-                10,
-                50 * 1024 * 1024L,
-                expiresAt,
-                status,
-                null,
-                null,
-                0L,
-                now,
-                now);
-    }
-
-    private MultipartUploadSessionJpaEntity createEntityWithVersion(Long version) {
-        Instant now = Instant.now();
-        Instant expiresAt = now.plus(java.time.Duration.ofHours(24));
-
-        return MultipartUploadSessionJpaEntity.of(
-                UUID.randomUUID().toString(),
-                null,
-                TEST_ORG_ID,
-                "Test Org",
-                "setof",
-                TEST_TENANT_ID,
-                "Connectly",
-                "SELLER",
-                "seller@test.com",
-                "large-video.mp4",
-                500 * 1024 * 1024L,
-                "video/mp4",
-                "test-bucket",
-                "uploads/large-video.mp4",
-                "s3-upload-id-xyz",
-                10,
-                50 * 1024 * 1024L,
-                expiresAt,
-                SessionStatus.ACTIVE,
-                null,
-                null,
-                version,
-                now,
-                now);
-    }
-
-    private CompletedPart createCompletedPartWithoutId(String sessionId) {
-        return CompletedPart.of(
-                null,
-                UploadSessionId.of(sessionId),
-                PartNumber.of(1),
-                PresignedUrl.of("https://presigned-url.s3.amazonaws.com/part1"),
-                ETag.of("\"etag-part-1\""),
-                5 * 1024 * 1024L,
-                Instant.now());
-    }
-
-    private CompletedPart createCompletedPartWithId(String sessionId, Long id) {
-        return CompletedPart.of(
-                id,
-                UploadSessionId.of(sessionId),
-                PartNumber.of(1),
-                PresignedUrl.of("https://presigned-url.s3.amazonaws.com/part1"),
-                ETag.of("\"etag-part-1\""),
-                5 * 1024 * 1024L,
-                Instant.now());
-    }
-
-    private CompletedPartJpaEntity createCompletedPartEntity() {
-        Instant now = Instant.now();
-        Instant uploadedAt = now.minus(java.time.Duration.ofMinutes(5));
-
-        return CompletedPartJpaEntity.reconstitute(
-                123L,
-                UUID.randomUUID().toString(),
-                1,
-                "https://presigned-url.s3.amazonaws.com/part1",
-                "\"etag-part-1\"",
-                5 * 1024 * 1024L,
-                uploadedAt,
-                now,
-                now);
     }
 }

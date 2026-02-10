@@ -1,0 +1,31 @@
+// ========================================
+// Adapter-Out: S3 Client
+// ========================================
+// PresignedUploadClient, MultipartUploadClient, FileStorageUploadClient 구현체
+// Technology: AWS SDK v2 S3 + S3 Presigner
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Spring Context (@Component, @Value)
+    implementation libs.spring.context
+
+    // AWS SDK v2 - S3 (S3Client + S3Presigner 포함)
+    implementation platform(libs.aws.bom)
+    implementation libs.aws.s3
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.bundles.testing.basic
+}

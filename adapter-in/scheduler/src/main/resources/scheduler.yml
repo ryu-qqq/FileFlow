@@ -1,0 +1,35 @@
+# ============================================================
+# Scheduler Adapter 공통 설정
+# ============================================================
+# 환경별 설정은 scheduler-{profile}.yml 참조
+# - scheduler-local.yml: 로컬 개발 환경
+# - scheduler-stage.yml: 스테이징 환경
+# - scheduler-prod.yml: 운영 환경
+# ============================================================
+
+# ============================================================
+# Scheduler Job 설정
+# ============================================================
+scheduler:
+  jobs:
+    # 다운로드 좀비 태스크 복구 스케줄러
+    download-zombie-recovery:
+      enabled: true
+      # Cron: 5분마다 (환경별 오버라이드 가능)
+      cron: "0 */5 * * * *"
+      timezone: Asia/Seoul
+      # 배치 크기
+      batch-size: 100
+      # 타임아웃 기준 (QUEUED 상태에서 N초 경과 시 재큐잉)
+      timeout-seconds: 300
+
+    # 변환 좀비 요청 복구 스케줄러
+    transform-zombie-recovery:
+      enabled: true
+      # Cron: 5분마다 (환경별 오버라이드 가능)
+      cron: "0 */5 * * * *"
+      timezone: Asia/Seoul
+      # 배치 크기
+      batch-size: 100
+      # 타임아웃 기준 (QUEUED 상태에서 N초 경과 시 재큐잉)
+      timeout-seconds: 300

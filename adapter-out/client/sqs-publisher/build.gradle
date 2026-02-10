@@ -1,0 +1,30 @@
+// ========================================
+// Adapter-Out: SQS Publisher
+// ========================================
+// DownloadQueueClient 구현체
+// Technology: Spring Cloud AWS SQS
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Spring Cloud AWS SQS
+    implementation libs.spring.cloud.aws.sqs
+
+    // JSON Processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.bundles.testing.basic
+}

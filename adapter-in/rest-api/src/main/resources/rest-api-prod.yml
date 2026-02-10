@@ -1,10 +1,8 @@
 # ===============================================
 # REST API Adapter Configuration - Production Profile
 # ===============================================
-spring:
-  config:
-    activate:
-      on-profile: prod
+# 활성화: bootstrap의 application-prod.yml에서 import
+# ===============================================
 
 # API Settings for Production
 api:
@@ -37,3 +35,16 @@ security:
     secure: true
     http-only: true
     same-site: strict
+
+  # Service Token 인증 (서버 간 내부 통신)
+  # SSM: /fileflow/prod/security/service-token-secret
+  service-token:
+    enabled: true
+    secret: ${SECURITY_SERVICE_TOKEN_SECRET:}
+
+# Springdoc 비활성화 (운영)
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false

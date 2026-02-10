@@ -16,19 +16,19 @@ package com.ryuqq.fileflow.domain.common.vo;
  * <p><strong>구현 예시:</strong>
  *
  * <pre>{@code
- * public record ProductCacheKey(Long productId) implements CacheKey {
+ * public record SessionCacheKey(String sessionId) implements CacheKey {
  *
- *     private static final String PREFIX = "cache:product:";
+ *     private static final String PREFIX = "cache:session:";
  *
- *     public ProductCacheKey {
- *         if (productId == null || productId <= 0) {
- *             throw new IllegalArgumentException("productId must be positive");
+ *     public SessionCacheKey {
+ *         if (sessionId == null || sessionId.isBlank()) {
+ *             throw new IllegalArgumentException("sessionId must not be blank");
  *         }
  *     }
  *
  *     @Override
  *     public String value() {
- *         return PREFIX + productId;
+ *         return PREFIX + sessionId;
  *     }
  * }
  * }</pre>
@@ -36,14 +36,13 @@ package com.ryuqq.fileflow.domain.common.vo;
  * <p><strong>사용 예시:</strong>
  *
  * <pre>{@code
- * ProductCacheKey cacheKey = new ProductCacheKey(productId);
- * cachePort.get(cacheKey, Product.class);
- * cachePort.put(cacheKey, product, Duration.ofMinutes(30));
+ * SessionCacheKey cacheKey = new SessionCacheKey(sessionId);
+ * cachePort.set(cacheKey, sessionData, Duration.ofMinutes(30));
  * }</pre>
  *
  * @author Development Team
  * @since 1.0.0
- * @see com.ryuqq.application.common.port.out.CachePort
+ * @see LockKey
  */
 public interface CacheKey {
 
@@ -55,15 +54,13 @@ public interface CacheKey {
      * <pre>
      * cache:{domain}:{id}
      * cache:{domain}:{entity}:{id}
-     * cache:{domain}:{entity}:{id}:{sub-entity}:{sub-id}
      * </pre>
      *
      * <p><strong>예시:</strong>
      *
      * <ul>
-     *   <li>{@code cache:product:123}
-     *   <li>{@code cache:user:profile:456}
-     *   <li>{@code cache:order:item:789:stock:123}
+     *   <li>{@code cache:session:abc123}
+     *   <li>{@code cache:asset:uuid-456}
      * </ul>
      *
      * @return Redis에서 사용할 Cache Key 문자열

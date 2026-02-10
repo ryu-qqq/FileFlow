@@ -8,10 +8,9 @@ package com.ryuqq.fileflow.domain.common.vo;
  * <p><strong>사용 예시:</strong>
  *
  * <pre>{@code
- * OrderCriteria criteria = new OrderCriteria(
- *     memberId,
+ * AssetSearchCriteria criteria = new AssetSearchCriteria(
  *     dateRange,
- *     OrderSortKey.ORDER_DATE,
+ *     AssetSortKey.CREATED_AT,
  *     SortDirection.DESC,  // 최신순
  *     pageRequest
  * );
@@ -33,7 +32,7 @@ public enum SortDirection {
      *   <li>문자: A → Z
      * </ul>
      */
-    ASC,
+    ASC("오름차순"),
 
     /**
      * 내림차순 (Descending)
@@ -46,7 +45,22 @@ public enum SortDirection {
      *   <li>문자: Z → A
      * </ul>
      */
-    DESC;
+    DESC("내림차순");
+
+    private final String displayName;
+
+    SortDirection(String displayName) {
+        this.displayName = displayName;
+    }
+
+    /**
+     * 한글 표시명 반환
+     *
+     * @return 표시명
+     */
+    public String displayName() {
+        return displayName;
+    }
 
     /**
      * 기본 정렬 방향 (내림차순)
@@ -82,18 +96,6 @@ public enum SortDirection {
      */
     public SortDirection reverse() {
         return this == ASC ? DESC : ASC;
-    }
-
-    /**
-     * 화면 표시용 이름 반환
-     *
-     * @return 한글 표시 이름
-     */
-    public String displayName() {
-        return switch (this) {
-            case ASC -> "오름차순";
-            case DESC -> "내림차순";
-        };
     }
 
     /**
