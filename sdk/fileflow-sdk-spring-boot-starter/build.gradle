@@ -3,38 +3,54 @@ plugins {
     id 'maven-publish'
 }
 
-description = 'FileFlow SDK Spring Boot Starter - Auto-configuration for FileFlow SDK'
+group = 'com.ryuqq.fileflow'
+version = '1.0.2'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
 
 dependencies {
-    // SDK Core
+    // Core SDK
     api project(':sdk:fileflow-sdk-core')
 
-    // Spring Boot Auto-Configuration
-    implementation 'org.springframework.boot:spring-boot-autoconfigure'
-    annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    // Spring Boot
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
 
-    // Optional: Spring Security integration
-    compileOnly 'org.springframework.security:spring-security-core'
+    // Annotation Processor for configuration metadata
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-web'
 }
 
-// JitPack Publishing Configuration
+test {
+    useJUnitPlatform()
+}
+
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        maven(MavenPublication) {
             from components.java
 
-            groupId = 'com.github.ryu-qqq.fileflow'
-            artifactId = 'fileflow-sdk-spring-boot-starter'
-            version = project.version
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
 
             pom {
                 name = 'FileFlow SDK Spring Boot Starter'
                 description = 'Spring Boot auto-configuration for FileFlow SDK'
-                url = 'https://github.com/ryu-qqq/fileflow'
+                url = 'https://github.com/ryu-qqq/FileFlow'
 
                 licenses {
                     license {
@@ -45,22 +61,11 @@ publishing {
 
                 developers {
                     developer {
-                        id = 'ryu-qqq'
+                        id = 'ryuqq'
                         name = 'Sangwon Ryu'
                     }
                 }
             }
         }
     }
-}
-
-// Source/Javadoc JAR for JitPack
-java {
-    withSourcesJar()
-    withJavadocJar()
-}
-
-tasks.named('javadoc') {
-    options.encoding = 'UTF-8'
-    options.addStringOption('Xdoclint:none', '-quiet')
 }

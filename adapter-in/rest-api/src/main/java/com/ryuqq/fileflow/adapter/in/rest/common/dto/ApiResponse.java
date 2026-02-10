@@ -1,71 +1,36 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.dto;
 
-import java.time.LocalDateTime;
+import com.ryuqq.fileflow.adapter.in.rest.common.util.DateTimeFormatUtils;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
+import org.slf4j.MDC;
 
 /**
- * ApiResponse - 표준 API 성공 응답 래퍼.
- *
- * <p>모든 REST API 성공 응답의 일관된 형식을 제공합니다.
- *
- * <p><strong>사용 예시:</strong>
- *
- * <pre>{@code
- * // 데이터가 있는 성공 응답
- * ApiResponse<UserDto> response = ApiResponse.ofSuccess(userDto);
- *
- * // 데이터가 없는 성공 응답
- * ApiResponse<Void> response = ApiResponse.ofSuccess();
- * }</pre>
- *
- * <p><strong>응답 형식:</strong>
- *
- * <pre>{@code
- * {
- *   "success": true,
- *   "data": { ... },
- *   "timestamp": "2025-10-23T10:30:00",
- *   "requestId": "req-123456"
- * }
- * }</pre>
- *
- * <p><strong>에러 응답:</strong> 에러 응답은 GlobalExceptionHandler에서 RFC 7807 ProblemDetail 형식으로 처리됩니다.
+ * 표준 API 성공 응답 래퍼.
  *
  * @param <T> 응답 데이터 타입
- * @author ryu-qqq
- * @since 2025-10-23
  */
-public record ApiResponse<T>(boolean success, T data, LocalDateTime timestamp, String requestId) {
+@Schema(description = "표준 API 성공 응답")
+public record ApiResponse<T>(
+        @Schema(description = "응답 데이터", nullable = true) T data,
+        @Schema(description = "응답 시간 (ISO 8601 형식)", example = "2025-01-23T10:30:00+09:00")
+                String timestamp,
+        @Schema(description = "요청 ID", example = "550e8400-e29b-41d4-a716-446655440000")
+                String requestId) {
 
-    /**
-     * 성공 응답 생성.
-     *
-     * @param data 응답 데이터
-     * @param <T> 데이터 타입
-     * @return 성공 ApiResponse
-     */
-    public static <T> ApiResponse<T> ofSuccess(T data) {
-        return new ApiResponse<>(true, data, LocalDateTime.now(), generateRequestId());
+    public static <T> ApiResponse<T> of(T data) {
+        return new ApiResponse<>(data, DateTimeFormatUtils.nowIso8601(), generateRequestId());
     }
 
-    /**
-     * 성공 응답 생성 (데이터 없음).
-     *
-     * @param <T> 데이터 타입
-     * @return 성공 ApiResponse
-     */
-    public static <T> ApiResponse<T> ofSuccess() {
-        return ofSuccess(null);
+    public static <T> ApiResponse<T> of() {
+        return of(null);
     }
 
-    /**
-     * Request ID 생성.
-     *
-     * <p>실제 운영 환경에서는 MDC나 분산 추적 시스템의 Trace ID를 사용하는 것이 좋습니다.
-     *
-     * @return Request ID
-     */
     private static String generateRequestId() {
-        // TODO: MDC or Distributed Tracing ID 사용 권장
-        return "req-" + System.currentTimeMillis();
+        String traceId = MDC.get("traceId");
+        if (traceId != null && !traceId.isBlank()) {
+            return traceId;
+        }
+        return UUID.randomUUID().toString();
     }
 }

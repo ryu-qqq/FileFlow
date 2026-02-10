@@ -1,0 +1,14 @@
+# ============================================================
+# Redis Consumer Layer 공통 설정
+# ============================================================
+# Redis keyspace notification을 통한 세션 만료 이벤트 수신
+# ============================================================
+
+fileflow:
+  redis:
+    consumer:
+      session-expiration-key-prefix: "session:expiration:"
+
+logging:
+  level:
+    com.ryuqq.fileflow.adapter.in.redis: INFO

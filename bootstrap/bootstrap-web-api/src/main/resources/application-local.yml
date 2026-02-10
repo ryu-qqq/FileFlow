@@ -1,0 +1,38 @@
+# ===============================================
+# Application Configuration - Local Environment
+# ===============================================
+# 로컬 개발 환경 전용 설정
+# 공통 설정은 application.yml 참조
+# ===============================================
+
+server:
+  tomcat:
+    threads:
+      max: 50
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:rest-api.yml
+      - classpath:rest-api-local.yml
+      - classpath:persistence.yml
+      - classpath:persistence-local.yml
+      - classpath:redis.yml
+      - classpath:redis-local.yml
+      - classpath:redis-consumer.yml
+      - classpath:redis-consumer-local.yml
+      - optional:classpath:s3.yml
+      - optional:classpath:s3-local.yml
+      - optional:classpath:sqs-publish.yml
+      - optional:classpath:sqs-publish-local.yml
+      - optional:classpath:http-client.yml
+      - optional:classpath:http-client-local.yml
+
+# ===============================================
+# Sentry Configuration (Disabled for Local)
+# ===============================================
+sentry:
+  dsn: ""

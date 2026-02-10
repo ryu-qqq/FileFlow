@@ -1,11 +1,13 @@
 package com.ryuqq.fileflow.domain.asset.exception;
 
-import com.ryuqq.fileflow.domain.common.exception.DomainException;
+import java.util.Map;
 
-/** FileAsset을 찾을 수 없을 때 발생하는 예외. */
-public class AssetNotFoundException extends DomainException {
+public class AssetNotFoundException extends AssetException {
 
     public AssetNotFoundException(String assetId) {
-        super(AssetErrorCode.ASSET_NOT_FOUND, "Asset ID: " + assetId);
+        super(
+                AssetErrorCode.ASSET_NOT_FOUND,
+                "파일을 찾을 수 없습니다. assetId: " + assetId,
+                Map.of("assetId", assetId != null ? assetId : "null"));
     }
 }

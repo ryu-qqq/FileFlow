@@ -1,0 +1,35 @@
+# ============================================================
+# Scheduler Application 스테이지 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=stage
+# ============================================================
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:persistence.yml
+      - classpath:persistence-stage.yml
+      - classpath:redis.yml
+      - classpath:redis-stage.yml
+      - classpath:scheduler.yml
+      - classpath:scheduler-stage.yml
+      - optional:classpath:s3.yml
+      - optional:classpath:s3-stage.yml
+      - optional:classpath:sqs-publish.yml
+      - optional:classpath:sqs-publish-stage.yml
+      - optional:classpath:http-client.yml
+      - optional:classpath:http-client-stage.yml
+
+logging:
+  level:
+    root: INFO
+    com.ryuqq.fileflow: INFO
+    org.hibernate.SQL: DEBUG
+
+# Sentry (스테이지 - 비활성화)
+# Sentry는 prod에서만 활성화 (stage 로그가 운영과 섞이는 것 방지)
+sentry:
+  dsn: ""

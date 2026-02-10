@@ -1,0 +1,23 @@
+# ============================================================
+# Scheduler Adapter 로컬 개발 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=local
+# ============================================================
+
+scheduler:
+  jobs:
+    download-zombie-recovery:
+      # 로컬: 1분마다 (빠른 테스트)
+      cron: "0 */1 * * * *"
+      # 로컬: 작은 배치
+      batch-size: 10
+      # 로컬: 짧은 타임아웃
+      timeout-seconds: 60
+
+    transform-zombie-recovery:
+      # 로컬: 1분마다 (빠른 테스트)
+      cron: "0 */1 * * * *"
+      # 로컬: 작은 배치
+      batch-size: 10
+      # 로컬: 짧은 타임아웃
+      timeout-seconds: 60

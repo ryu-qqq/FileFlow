@@ -1,189 +1,112 @@
 package com.ryuqq.fileflow.adapter.out.persistence.session.entity;
 
 import com.ryuqq.fileflow.adapter.out.persistence.common.entity.BaseAuditEntity;
-import com.ryuqq.fileflow.domain.session.vo.SessionStatus;
+import com.ryuqq.fileflow.domain.common.vo.AccessType;
+import com.ryuqq.fileflow.domain.session.vo.SingleSessionStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import java.time.Instant;
 
-/**
- * SingleUploadSession JPA Entity.
- *
- * <p>단일 파일 업로드 세션 정보를 저장합니다.
- */
 @Entity
 @Table(name = "single_upload_session")
 public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
 
     @Id
-    @Column(name = "id", nullable = false, updatable = false, length = 36)
+    @Column(name = "id", length = 36)
     private String id;
 
-    @Column(name = "idempotency_key", nullable = false, length = 36)
-    private String idempotencyKey;
+    @Column(name = "s3_key", length = 512, nullable = false)
+    private String s3Key;
 
-    @Column(name = "user_id", length = 36)
-    private String userId;
-
-    @Column(name = "organization_id", nullable = false, length = 36)
-    private String organizationId;
-
-    @Column(name = "organization_name", nullable = false, length = 100)
-    private String organizationName;
-
-    @Column(name = "organization_namespace", nullable = false, length = 50)
-    private String organizationNamespace;
-
-    @Column(name = "tenant_id", nullable = false, length = 36)
-    private String tenantId;
-
-    @Column(name = "tenant_name", nullable = false, length = 50)
-    private String tenantName;
-
-    @Column(name = "user_role", nullable = false, length = 20)
-    private String userRole;
-
-    @Column(name = "email", length = 255)
-    private String email;
-
-    @Column(name = "file_name", nullable = false, length = 255)
-    private String fileName;
-
-    @Column(name = "file_size", nullable = false)
-    private Long fileSize;
-
-    @Column(name = "content_type", nullable = false, length = 100)
-    private String contentType;
-
-    @Column(name = "bucket", nullable = false, length = 63)
+    @Column(name = "bucket", length = 100, nullable = false)
     private String bucket;
 
-    @Column(name = "s3_key", nullable = false, length = 1024)
-    private String s3Key;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "access_type", length = 20, nullable = false)
+    private AccessType accessType;
+
+    @Column(name = "file_name", length = 255, nullable = false)
+    private String fileName;
+
+    @Column(name = "content_type", length = 100, nullable = false)
+    private String contentType;
+
+    @Column(name = "presigned_url", columnDefinition = "TEXT", nullable = false)
+    private String presignedUrl;
+
+    @Column(name = "purpose", length = 100, nullable = false)
+    private String purpose;
+
+    @Column(name = "source", length = 100, nullable = false)
+    private String source;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    private SingleSessionStatus status;
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(name = "status", nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
-    private SessionStatus status;
-
-    @Column(name = "presigned_url", length = 2048)
-    private String presignedUrl;
-
-    @Column(name = "etag", length = 64)
-    private String etag;
-
-    @Column(name = "completed_at")
-    private Instant completedAt;
-
-    @Version
-    @Column(name = "version", nullable = false)
-    private Long version;
-
-    protected SingleUploadSessionJpaEntity() {
-        super();
-    }
+    protected SingleUploadSessionJpaEntity() {}
 
     private SingleUploadSessionJpaEntity(
             String id,
-            String idempotencyKey,
-            String userId,
-            String organizationId,
-            String organizationName,
-            String organizationNamespace,
-            String tenantId,
-            String tenantName,
-            String userRole,
-            String email,
-            String fileName,
-            Long fileSize,
-            String contentType,
-            String bucket,
             String s3Key,
-            Instant expiresAt,
-            SessionStatus status,
+            String bucket,
+            AccessType accessType,
+            String fileName,
+            String contentType,
             String presignedUrl,
-            String etag,
-            Instant completedAt,
-            Long version,
+            String purpose,
+            String source,
+            SingleSessionStatus status,
+            Instant expiresAt,
             Instant createdAt,
             Instant updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
-        this.idempotencyKey = idempotencyKey;
-        this.userId = userId;
-        this.organizationId = organizationId;
-        this.organizationName = organizationName;
-        this.organizationNamespace = organizationNamespace;
-        this.tenantId = tenantId;
-        this.tenantName = tenantName;
-        this.userRole = userRole;
-        this.email = email;
-        this.fileName = fileName;
-        this.fileSize = fileSize;
-        this.contentType = contentType;
-        this.bucket = bucket;
         this.s3Key = s3Key;
-        this.expiresAt = expiresAt;
-        this.status = status;
+        this.bucket = bucket;
+        this.accessType = accessType;
+        this.fileName = fileName;
+        this.contentType = contentType;
         this.presignedUrl = presignedUrl;
-        this.etag = etag;
-        this.completedAt = completedAt;
-        this.version = version;
+        this.purpose = purpose;
+        this.source = source;
+        this.status = status;
+        this.expiresAt = expiresAt;
     }
 
-    public static SingleUploadSessionJpaEntity of(
+    public static SingleUploadSessionJpaEntity create(
             String id,
-            String idempotencyKey,
-            String userId,
-            String organizationId,
-            String organizationName,
-            String organizationNamespace,
-            String tenantId,
-            String tenantName,
-            String userRole,
-            String email,
-            String fileName,
-            Long fileSize,
-            String contentType,
-            String bucket,
             String s3Key,
-            Instant expiresAt,
-            SessionStatus status,
+            String bucket,
+            AccessType accessType,
+            String fileName,
+            String contentType,
             String presignedUrl,
-            String etag,
-            Instant completedAt,
-            Long version,
+            String purpose,
+            String source,
+            SingleSessionStatus status,
+            Instant expiresAt,
             Instant createdAt,
             Instant updatedAt) {
         return new SingleUploadSessionJpaEntity(
                 id,
-                idempotencyKey,
-                userId,
-                organizationId,
-                organizationName,
-                organizationNamespace,
-                tenantId,
-                tenantName,
-                userRole,
-                email,
-                fileName,
-                fileSize,
-                contentType,
-                bucket,
                 s3Key,
-                expiresAt,
-                status,
+                bucket,
+                accessType,
+                fileName,
+                contentType,
                 presignedUrl,
-                etag,
-                completedAt,
-                version,
+                purpose,
+                source,
+                status,
+                expiresAt,
                 createdAt,
                 updatedAt);
     }
@@ -192,83 +115,43 @@ public class SingleUploadSessionJpaEntity extends BaseAuditEntity {
         return id;
     }
 
-    public String getIdempotencyKey() {
-        return idempotencyKey;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public String getOrganizationId() {
-        return organizationId;
-    }
-
-    public String getOrganizationName() {
-        return organizationName;
-    }
-
-    public String getOrganizationNamespace() {
-        return organizationNamespace;
-    }
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public String getTenantName() {
-        return tenantName;
-    }
-
-    public String getUserRole() {
-        return userRole;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public Long getFileSize() {
-        return fileSize;
-    }
-
-    public String getContentType() {
-        return contentType;
+    public String getS3Key() {
+        return s3Key;
     }
 
     public String getBucket() {
         return bucket;
     }
 
-    public String getS3Key() {
-        return s3Key;
+    public AccessType getAccessType() {
+        return accessType;
     }
 
-    public Instant getExpiresAt() {
-        return expiresAt;
+    public String getFileName() {
+        return fileName;
     }
 
-    public SessionStatus getStatus() {
-        return status;
+    public String getContentType() {
+        return contentType;
     }
 
     public String getPresignedUrl() {
         return presignedUrl;
     }
 
-    public String getEtag() {
-        return etag;
+    public String getPurpose() {
+        return purpose;
     }
 
-    public Instant getCompletedAt() {
-        return completedAt;
+    public String getSource() {
+        return source;
     }
 
-    public Long getVersion() {
-        return version;
+    public SingleSessionStatus getStatus() {
+        return status;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
     }
 }
