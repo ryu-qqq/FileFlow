@@ -119,6 +119,13 @@ data "aws_ssm_parameter" "file_processing_queue_url" {
 }
 
 # ========================================
+# S3 Bucket Reference (from SSM Parameters)
+# ========================================
+data "aws_ssm_parameter" "s3_bucket_name" {
+  name = "/${var.project_name}/s3/uploads-bucket-name"
+}
+
+# ========================================
 # Monitoring Configuration (AMP)
 # ========================================
 data "aws_ssm_parameter" "amp_workspace_arn" {
