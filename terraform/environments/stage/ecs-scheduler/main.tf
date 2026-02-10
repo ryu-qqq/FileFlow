@@ -419,6 +419,20 @@ module "scheduler_service" {
       name  = "REDIS_PORT"
       value = tostring(local.redis_port)
     },
+    # S3 Configuration
+    {
+      name  = "S3_BUCKET"
+      value = data.aws_ssm_parameter.s3_bucket_name.value
+    },
+    # SQS Publisher Configuration
+    {
+      name  = "SQS_DOWNLOAD_QUEUE"
+      value = data.aws_ssm_parameter.external_download_queue_url.value
+    },
+    {
+      name  = "SQS_TRANSFORM_QUEUE"
+      value = data.aws_ssm_parameter.file_processing_queue_url.value
+    },
     # Sentry (Error Tracking)
     {
       name  = "SENTRY_DSN"
