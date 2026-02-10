@@ -18,6 +18,8 @@ spring:
       - classpath:s3-stage.yml
       - classpath:sqs-consumer.yml
       - classpath:sqs-consumer-stage.yml
+      - classpath:sqs-publish.yml
+      - classpath:sqs-publish-stage.yml
 
 logging:
   level:

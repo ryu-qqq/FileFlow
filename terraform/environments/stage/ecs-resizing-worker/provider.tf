@@ -132,6 +132,11 @@ data "aws_ssm_parameter" "file_processing_queue_arn" {
   name = "/${var.project_name}/sqs/file-processing-queue-arn"
 }
 
+# External Download Queue (for SQS Publisher - download queue)
+data "aws_ssm_parameter" "external_download_queue_url" {
+  name = "/${var.project_name}/sqs/external-download-queue-url"
+}
+
 # ========================================
 # Locals
 # ========================================
