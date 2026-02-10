@@ -132,6 +132,11 @@ data "aws_ssm_parameter" "external_download_queue_arn" {
   name = "/${var.project_name}/sqs/external-download-queue-arn"
 }
 
+# File Processing Queue (for SQS Publisher - transform queue)
+data "aws_ssm_parameter" "file_processing_queue_url" {
+  name = "/${var.project_name}/sqs/file-processing-queue-url"
+}
+
 # ========================================
 # Sentry Configuration (Error Tracking)
 # ========================================
