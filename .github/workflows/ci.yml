@@ -14,14 +14,14 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, stage]
     paths-ignore:
       - 'terraform/**'
       - '.github/workflows/terraform-*.yml'
       - '**.md'
       - 'docs/**'
   pull_request:
-    branches: [main]
+    branches: [main, stage]
     paths-ignore:
       - 'terraform/**'
       - '.github/workflows/terraform-*.yml'
