@@ -35,11 +35,18 @@ dependencies {
     testImplementation testFixtures(project(':application'))
 
     // ========================================
+    // Adapter TestFixtures (JPA Entity Fixtures)
+    // ========================================
+    testImplementation testFixtures(project(':adapter-out:persistence-mysql'))
+
+    // ========================================
     // Spring Boot Test
     // ========================================
     testImplementation libs.spring.boot.starter.test
     testImplementation libs.spring.boot.starter.web
     testImplementation libs.spring.boot.starter.data.jpa
+    testImplementation libs.spring.boot.starter.data.redis
+    testImplementation libs.spring.boot.starter.security
 
     // ========================================
     // TestContainers
@@ -72,6 +79,17 @@ dependencies {
     // ========================================
     testImplementation platform(libs.aws.bom)
     testImplementation libs.aws.s3
+
+    // ========================================
+    // Redisson (for DistributedLockAdapter)
+    // ========================================
+    testImplementation libs.redisson
+    testImplementation project(':adapter-out:persistence-redis')
+
+    // ========================================
+    // Adapter-In Modules (Non-HTTP Entry Points)
+    // ========================================
+    testImplementation project(':adapter-in:redis-consumer')
 }
 
 test {

@@ -1,43 +1,122 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.controller;
 
-import com.ryuqq.fileflow.adapter.in.rest.auth.paths.ApiPaths;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.core.io.ClassPathResource;
+import java.io.IOException;
 import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * API Documentation Controller
+ * API 문서 접근 및 Swagger UI 서빙 Controller.
  *
- * <p>Spring REST Docs로 생성된 API 문서를 제공합니다.
+ * <p>모든 문서 경로를 {@code /api/v1/market} 하위로 통합하여 API Gateway 라우팅 패턴과 일치시킵니다.
  *
- * <p>빌드 시 asciidoctor 태스크가 생성한 HTML 문서를 static resource로 제공합니다.
+ * <p><strong>접근 경로:</strong>
  *
- * @author development-team
+ * <ul>
+ *   <li>{@code /api/v1/market/docs} - REST Docs 메인 페이지
+ *   <li>{@code /api/v1/market/swagger} - Swagger UI
+ *   <li>{@code /api/v1/market/api-docs} - OpenAPI JSON (springdoc)
+ * </ul>
+ *
+ * @author ryu-qqq
  * @since 1.0.0
  */
-@Tag(name = "API Documentation", description = "API 문서 조회")
-@RestController
-public class ApiDocsController {
+@Controller
+public class ApiDocsController implements WebMvcConfigurer {
+
+    private static final String DOCS_BASE = "/api/v1/market";
+    private static final String SWAGGER_UI_WEBJAR_PATTERN =
+            "classpath*:META-INF/resources/webjars/swagger-ui/*/index.html";
 
     /**
-     * API 문서 페이지 제공
+     * REST Docs 메인 페이지로 리다이렉트.
      *
-     * <p>Spring REST Docs로 생성된 index.html을 반환합니다.
-     *
-     * @return API 문서 HTML
+     * @return 리다이렉트 경로
      */
-    @Operation(summary = "API 문서 조회", description = "Spring REST Docs로 생성된 API 문서를 반환합니다.")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "문서 조회 성공")})
-    @GetMapping(value = ApiPaths.Docs.BASE, produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<Resource> getApiDocs() {
-        Resource resource = new ClassPathResource("static/docs/index.html");
-        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(resource);
+    @GetMapping(DOCS_BASE + "/docs")
+    public String redirectToRestDocs() {
+        return "redirect:" + DOCS_BASE + "/docs/index.html";
+    }
+
+    /**
+     * Swagger UI 페이지로 리다이렉트.
+     *
+     * <p>springdoc의 기본 redirect는 {@code /swagger-ui/index.html}로 이동하여 Gateway 라우팅 범위를 벗어나므로, {@code
+     * /api/v1/market/swagger-ui/} 하위로 직접 서빙합니다.
+     *
+     * @return 리다이렉트 경로
+     */
+    @GetMapping(DOCS_BASE + "/swagger")
+    public String redirectToSwagger() {
+        return "redirect:" + DOCS_BASE + "/swagger-ui/index.html?url=" + DOCS_BASE + "/api-docs";
+    }
+
+    /**
+     * Swagger UI 초기화 스크립트.
+     *
+     * <p>Webjar에 포함된 기본 {@code swagger-initializer.js}를 오버라이드하여 이 서버의 OpenAPI 스펙 경로를 주입합니다.
+     *
+     * @return swagger-initializer.js 내용
+     */
+    @GetMapping(
+            value = DOCS_BASE + "/swagger-ui/swagger-initializer.js",
+            produces = "application/javascript")
+    @ResponseBody
+    public String swaggerInitializer() {
+        return "window.onload = function() {\n"
+                + "  window.ui = SwaggerUIBundle({\n"
+                + "    url: \""
+                + DOCS_BASE
+                + "/api-docs\",\n"
+                + "    dom_id: '#swagger-ui',\n"
+                + "    deepLinking: true,\n"
+                + "    presets: [\n"
+                + "      SwaggerUIBundle.presets.apis,\n"
+                + "      SwaggerUIStandalonePreset\n"
+                + "    ],\n"
+                + "    plugins: [\n"
+                + "      SwaggerUIBundle.plugins.DownloadUrl\n"
+                + "    ],\n"
+                + "    layout: \"StandaloneLayout\",\n"
+                + "    operationsSorter: \"method\",\n"
+                + "    tagsSorter: \"alpha\",\n"
+                + "    tryItOutEnabled: true,\n"
+                + "    displayRequestDuration: true\n"
+                + "  });\n"
+                + "};\n";
+    }
+
+    /**
+     * Swagger UI 정적 리소스 핸들러.
+     *
+     * <p>swagger-ui webjar의 리소스를 {@code /api/v1/market/swagger-ui/} 경로에서 서빙합니다. webjar 내부의 버전 디렉토리는
+     * classpath 스캔으로 자동 감지합니다.
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String swaggerUiLocation = findSwaggerUiResourceLocation();
+        if (swaggerUiLocation != null) {
+            registry.addResourceHandler(DOCS_BASE + "/swagger-ui/**")
+                    .addResourceLocations(swaggerUiLocation);
+        }
+    }
+
+    private String findSwaggerUiResourceLocation() {
+        try {
+            PathMatchingResourcePatternResolver resolver =
+                    new PathMatchingResourcePatternResolver();
+            Resource[] resources = resolver.getResources(SWAGGER_UI_WEBJAR_PATTERN);
+            if (resources.length > 0) {
+                String url = resources[0].getURL().toString();
+                return url.substring(0, url.lastIndexOf("index.html"));
+            }
+        } catch (IOException ignored) {
+            // Swagger UI webjar not on classpath
+        }
+        return null;
     }
 }

@@ -12,9 +12,9 @@ import java.time.ZoneId;
  * <p><strong>사용 시나리오:</strong>
  *
  * <ul>
- *   <li>어드민 주문 조회: 주문일 범위 필터
- *   <li>회원 가입일 기준 조회
- *   <li>정산 기간 조회
+ *   <li>어드민 파일 조회: 업로드일 범위 필터
+ *   <li>다운로드 작업 기간 조회
+ *   <li>Asset 생성일 기준 조회
  * </ul>
  *
  * <p><strong>사용 예시:</strong>
@@ -28,13 +28,6 @@ import java.time.ZoneId;
  *
  * // 이번 달
  * DateRange thisMonth = DateRange.thisMonth();
- *
- * // Criteria에서 사용
- * OrderCriteria criteria = new OrderCriteria(
- *     memberId,
- *     DateRange.lastDays(30),
- *     ...
- * );
  * }</pre>
  *
  * @param startDate 시작일 (포함, nullable - null이면 제한 없음)
@@ -149,8 +142,6 @@ public record DateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate == null) {
             return null;
         }
-        // LocalDateTime을 거치지 않고 직접 Instant로 변환
-        // endDate의 다음날 00:00:00에서 1나노초 빼서 23:59:59.999999999 표현
         return endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().minusNanos(1);
     }
 

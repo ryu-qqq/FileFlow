@@ -1,0 +1,11 @@
+# ============================================================
+# SQS Publisher Layer 스테이징 환경 설정
+# ============================================================
+# 활성화: bootstrap의 application-stage.yml에서 import
+# ============================================================
+
+fileflow:
+  sqs:
+    download-queue: ${SQS_DOWNLOAD_QUEUE:fileflow-stage-download-queue}
+    transform-queue: ${SQS_TRANSFORM_QUEUE:fileflow-stage-transform-queue}
+    region: ${AWS_REGION:ap-northeast-2}

@@ -1,13 +1,12 @@
 package com.ryuqq.fileflow.adapter.in.rest.common.dto;
 
-import com.ryuqq.fileflow.application.common.dto.response.SliceResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * SliceApiResponse - 슬라이스 조회 REST API 응답 DTO (Cursor 기반)
  *
- * <p>REST API Layer 전용 응답 DTO로, Application Layer의 SliceResponse를 변환하여 사용합니다.
+ * <p>REST API Layer 전용 응답 DTO입니다.
  *
  * <p><strong>Cursor 기반 페이지네이션:</strong>
  *
@@ -37,59 +36,35 @@ import java.util.function.Function;
  * @author windsurf
  * @since 1.0.0
  */
-public record SliceApiResponse<T>(List<T> content, int size, boolean hasNext, String nextCursor) {
+@Schema(description = "슬라이스 조회 응답 (Cursor 기반)")
+public record SliceApiResponse<T>(
+        @Schema(description = "현재 슬라이스의 데이터 목록") List<T> content,
+        @Schema(description = "슬라이스 크기", example = "20") int size,
+        @Schema(description = "다음 슬라이스 존재 여부", example = "true") boolean hasNext,
+        @Schema(description = "다음 슬라이스 조회를 위한 커서", example = "xyz", nullable = true)
+                String nextCursor) {
 
     /** Compact Constructor - Defensive Copy */
     public SliceApiResponse {
-        content = List.copyOf(content); // Immutability 보장
+        content = content != null ? List.copyOf(content) : List.of();
     }
 
     /**
-     * Application Layer SliceResponse로부터 REST API SliceApiResponse 생성
+     * 개별 파라미터를 사용하여 SliceApiResponse 생성
      *
-     * <p>Application Layer의 SliceResponse를 Adapter-In Layer의 SliceApiResponse로 변환합니다.
-     *
-     * <p>콘텐츠는 그대로 전달되며, 각 컨트롤러에서 적절한 ApiResponse DTO로 변환해야 합니다.
+     * <p>REST API Layer에서 Domain Layer 의존 없이 응답을 생성합니다.
      *
      * @param <T> 콘텐츠 타입
-     * @param appSliceResponse Application Layer의 SliceResponse
+     * @param content 콘텐츠 목록
+     * @param size 슬라이스 크기
+     * @param hasNext 다음 슬라이스 존재 여부
+     * @param nextCursor 다음 슬라이스 조회를 위한 커서
      * @return REST API Layer의 SliceApiResponse
-     * @author windsurf
+     * @author development-team
      * @since 1.0.0
      */
-    public static <T> SliceApiResponse<T> from(SliceResponse<T> appSliceResponse) {
-
-        return new SliceApiResponse<>(
-                appSliceResponse.content(),
-                appSliceResponse.size(),
-                appSliceResponse.hasNext(),
-                appSliceResponse.nextCursor());
-    }
-
-    /**
-     * Application Layer SliceResponse로부터 REST API SliceApiResponse 생성 (매퍼 함수 적용)
-     *
-     * <p>Application Layer의 SliceResponse를 Adapter-In Layer의 SliceApiResponse로 변환하면서,
-     *
-     * <p>각 콘텐츠 항목을 매퍼 함수를 통해 ApiResponse DTO로 변환합니다.
-     *
-     * @param <S> Application Layer 콘텐츠 타입
-     * @param <T> REST API Layer 콘텐츠 타입
-     * @param appSliceResponse Application Layer의 SliceResponse
-     * @param mapper 콘텐츠 변환 함수 (Application Response → API Response)
-     * @return REST API Layer의 SliceApiResponse
-     * @author windsurf
-     * @since 1.0.0
-     */
-    public static <S, T> SliceApiResponse<T> from(
-            SliceResponse<S> appSliceResponse, Function<S, T> mapper) {
-
-        List<T> content = appSliceResponse.content().stream().map(mapper).toList();
-
-        return new SliceApiResponse<>(
-                content,
-                appSliceResponse.size(),
-                appSliceResponse.hasNext(),
-                appSliceResponse.nextCursor());
+    public static <T> SliceApiResponse<T> of(
+            List<T> content, int size, boolean hasNext, String nextCursor) {
+        return new SliceApiResponse<>(content, size, hasNext, nextCursor);
     }
 }

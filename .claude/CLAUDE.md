@@ -1,276 +1,119 @@
-# Spring Standards Project - Claude Code Configuration
+# setof-commerce - Claude Code Configuration
 
-이 프로젝트는 **Spring Boot 3.5.x + Java 21** 기반의 헥사고날 아키텍처 엔터프라이즈 표준 프로젝트입니다.
+이 프로젝트는 **SPRING_BOOT 3.5.x + JAVA 21** 기반의 **hexagonal-multimodule** 프로젝트입니다.
 
 ---
 
-## 개발 철학: Documentation-Driven Development
+## 🏗️ 아키텍처 개요
 
-이 프로젝트는 **문서 기반 개발 (Documentation-Driven Development)**을 채택합니다:
-
-### 핵심 개념
-
+```text
+│  DOMAIN          │  Domain Layer                    │
+│  APPLICATION     │  Application Layer               │
+│  ADAPTER_OUT     │  Adapter-Out Layer               │
+│  ADAPTER_IN      │  Adapter-In Layer                │
+│  BOOTSTRAP       │  Bootstrap Layer                 │
 ```
+
+**아키텍처 원칙**: DIP, SRP, OCP, ISP, CQRS, DDD
+
+---
+
+## 🧰 MCP 도구 사용법
+
+이 프로젝트의 코딩 컨벤션은 **Convention Hub DB**에서 관리됩니다.
+코드 작성 시 반드시 MCP 도구를 사용하여 규칙을 조회하세요.
+
+### 3-Phase 워크플로우
+
+```text
 ┌─────────────────────────────────────────────────────────────┐
-│  📚 Documentation-Driven Development                        │
+│  1️⃣ PLANNING PHASE                                          │
+│     planning_context(layers=[...])                          │
+│     → 레이어는 list_tech_stacks()로 먼저 조회                 │
 ├─────────────────────────────────────────────────────────────┤
-│  • 88개 코딩 컨벤션 문서가 설계를 강제                        │
-│  • 구현 + 테스트 동시 작성 (TDD 커밋 분리 불필요)             │
-│  • ArchUnit + Integration Test로 품질 보장                  │
-│  • 기존 코드 수정 시에만 TDD 적용                            │
+│  2️⃣ EXECUTION PHASE                                         │
+│     module_context(module_id=N, class_type="...")           │
+│     → 템플릿 + 규칙 기반 코드 생성                            │
+├─────────────────────────────────────────────────────────────┤
+│  3️⃣ VALIDATION PHASE                                        │
+│     validation_context(layers=[...])                        │
+│     → Zero-Tolerance + Checklist 검증                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 전략 분기
+### 사용 예시
 
-```
-기능 요청
-    ↓
-/plan "{기능명}"
-    ↓
-┌─────────────────────────────────────────┐
-│ 영향도 분석 (Serena MCP 검색)            │
-│   - 기존 코드 존재? → 수정 필요?         │
-└─────────────────────────────────────────┘
-    ↓                      ↓
-기존 코드 수정            신규 코드 생성
-    ↓                      ↓
-┌──────────┐          ┌──────────┐
-│   TDD    │          │ Doc-Driven│
-│ /kb/*/go │          │  /impl    │
-└──────────┘          └──────────┘
-```
+```python
+# 0. 먼저 레이어 목록 조회 (하드코딩 금지!)
+list_tech_stacks()
+# → layers: ["DOMAIN", "APPLICATION", "ADAPTER_OUT", "ADAPTER_IN", "BOOTSTRAP"]
 
-### 커밋 규칙 (단순화)
+# 1. 개발 계획 수립
+planning_context(layers=["DOMAIN", "APPLICATION"])
 
-| Prefix | 용도 | 예시 |
-|--------|------|------|
-| `feat:` | 기능 추가 (구현 + 테스트 포함) | `feat: 주문 취소 기능 구현` |
-| `fix:` | 버그 수정 | `fix: Email null 처리 누락 수정` |
-| `chore:` | 빌드/설정 변경 | `chore: Gradle 버전 업데이트` |
+# 2. 코드 생성
+module_context(module_id=1, class_type="AGGREGATE")
 
----
-
-## 개발 워크플로우
-
-### 1. 기능 기획 → 구현 전체 흐름
-
-```bash
-# 1️⃣ 요구사항 분석 + 구현 계획 수립
-/plan "주문 취소 기능"
-    ↓
-# 2️⃣ 영향도 분석 결과에 따라 자동 분기
-    ├─ 신규 생성 → /impl {layer} {feature}
-    └─ 기존 수정 → /kb/{layer}/go
-
-# 3️⃣ Layer별 순차 구현
-/impl domain order-cancel       # Domain Layer
-/impl application order-cancel  # Application Layer
-/impl persistence order-cancel  # Persistence Layer
-/impl rest-api order-cancel     # REST API Layer
-
-# 4️⃣ 전체 검증
-./gradlew test
-```
-
-### 2. /plan 커맨드
-
-**목적**: 요구사항 분석 → 영향도 분석 → 구현 전략 결정
-
-**실행 예시**:
-```bash
-/plan "주문 취소 기능"
-```
-
-**프로세스**:
-1. **요구사항 분석** (requirements-analyst Skill)
-   - 추상적 요구사항 → 구체적 비즈니스 규칙
-   - 질문을 통한 디테일 확보
-
-2. **영향도 분석** (layer-architect Skill)
-   - Serena MCP로 기존 코드 검색
-   - 수정 vs 신규 판단
-
-3. **구현 전략 결정**
-   - 🔧 기존 수정 → TDD (`/kb/*/go`)
-   - 🆕 신규 생성 → Doc-Driven (`/impl`)
-
-4. **Serena Memory 저장**
-   - `plan-{feature}` 이름으로 저장
-   - 오토컴팩팅 대비 컨텍스트 보존
-
-### 3. /impl 커맨드 (Doc-Driven 구현)
-
-**목적**: 문서 기반 신규 코드 생성 (구현 + 테스트 동시)
-
-**Layer별 명령어**:
-```bash
-/impl domain {feature}       # Aggregate, VO, Exception, Event
-/impl application {feature}  # UseCase, Service, DTO, Assembler
-/impl persistence {feature}  # Entity, Repository, Mapper, Adapter
-/impl rest-api {feature}     # Controller, Request/Response DTO
-```
-
-**특징**:
-- 구현 + 테스트 동시 작성
-- `feat:` 단일 커밋 (테스트 포함)
-- Zero-Tolerance 규칙 자동 준수
-- Plan memory 자동 업데이트
-
-### 4. /kb/*/go 커맨드 (TDD 수정)
-
-**목적**: 기존 코드 안전하게 수정
-
-**사용 시점**: `/plan` 분석 결과 기존 코드 수정이 필요한 경우
-
-**Layer별 명령어**:
-```bash
-/kb/domain/go       # Domain 기존 코드 TDD 수정
-/kb/application/go  # Application 기존 코드 TDD 수정
-/kb/persistence/go  # Persistence 기존 코드 TDD 수정
-/kb/rest-api/go     # REST API 기존 코드 TDD 수정
+# 3. 코드 검증
+validation_context(layers=["DOMAIN"])
 ```
 
 ---
 
-## Serena Memory 연동
+## 🚨 Zero-Tolerance 규칙
 
-### 컴팩팅 대응
+> ⚠️ **중요**: 규칙은 DB에서 조회하세요.
 
-```
-세션 1                          세션 2 (컴팩팅 후)
-────────                        ────────────────────
-/plan "기능A"                   "아까 작업 이어서"
-  ↓                               ↓
-write_memory("plan-A")          read_memory("plan-A")
-  ↓                               ↓
-/impl domain ...                컨텍스트 복구 ✅
-  ↓                               ↓
-⚠️ 오토컴팩팅                   /impl application ... 계속
+```python
+# Zero-Tolerance 규칙 조회 (레이어는 동적으로!)
+validation_context(layers=["DOMAIN", "APPLICATION", "ADAPTER_OUT", "ADAPTER_IN", "BOOTSTRAP"])
 ```
 
-### 작업 재개
+### 주요 규칙 (요약)
 
-```bash
-# 진행 중인 작업 확인
-"현재 진행 중인 작업 확인해줘"
+> 상세 규칙은 MCP `validation_context()` 또는 `get_rule()` 로 조회
 
-# 특정 작업 재개
-"주문 취소 작업 이어서 해줘"
-```
+MCP를 통해 최신 규칙을 동적으로 조회하세요.
+하드코딩된 규칙은 DB 변경 시 outdated 될 수 있습니다.
 
 ---
 
-## 📚 코딩 규칙 (docs/coding_convention/)
+## 📚 MCP Tools 목록
 
-### 레이어별 규칙 구조
-
-```
-docs/coding_convention/
-├── 00-project-setup/         # 프로젝트 설정
-├── 01-adapter-in-layer/      # REST API Layer
-├── 02-domain-layer/          # Domain Layer
-├── 03-application-layer/     # Application Layer
-├── 04-persistence-layer/     # Persistence Layer
-└── 05-testing/               # 테스트 규칙
-```
-
-**총 88개 규칙** - 구현 시 자동 참조됨
+| 분류 | Tool | 용도 |
+|------|------|------|
+| **워크플로우** | planning_context | 개발 계획 수립 |
+|  | module_context | 코드 생성 (템플릿 + 규칙) |
+|  | validation_context | 코드 검증 (Zero-Tolerance) |
+| **컨텍스트** | get_context | 빠른 컨텍스트 조회 |
+|  | get_rule | 규칙 상세 + 예시 |
+| **계층** | list_tech_stacks | 기술 스택 + 레이어 목록 |
+|  | get_architecture | 아키텍처 상세 |
+|  | get_layer_detail | 레이어 상세 |
 
 ---
 
-## 🏗️ 프로젝트 핵심 원칙
+## 🔧 설계 원칙
 
-### 1. 아키텍처 패턴
-- **헥사고날 아키텍처** (Ports & Adapters) - 의존성 역전
-- **도메인 주도 설계** (DDD) - Aggregate 중심 설계
-- **CQRS** - Command/Query 분리
+MCP 서버는 **순수 정보 브릿지**로 설계되었습니다:
 
-### 2. 코드 품질 규칙 (Zero-Tolerance)
-- **Lombok 금지** - Plain Java 사용 (Domain layer에서 특히 엄격)
-- **Law of Demeter** - Getter 체이닝 금지 (`order.getCustomer().getAddress()` ❌)
-- **Long FK 전략** - JPA 관계 어노테이션 금지, Long userId 사용
-- **Transaction 경계** - `@Transactional` 내 외부 API 호출 절대 금지
-
-### 3. Spring 프록시 제약사항 (중요!)
-⚠️ **다음 경우 `@Transactional`이 작동하지 않습니다:**
-- Private 메서드
-- Final 클래스/메서드
-- 같은 클래스 내부 호출 (`this.method()`)
+- MCP = 규칙/템플릿 전달 (Spring API → LLM)
+- **LLM은 규칙을 반드시 준수**하며 코드 생성
+- 규칙을 "판단"하지 않고 **100% 준수**
 
 ---
 
-## 🔧 자동화 시스템
+## ⚡ 빠른 시작
 
-### 1. Claude Skills
+```python
+# 1. 레이어 목록 조회
+layers = list_tech_stacks()  # → ["DOMAIN", "APPLICATION", ...]
 
-| Skill | 역할 | 활성화 시점 |
-|-------|------|------------|
-| `requirements-analyst` | 요구사항 분해 전문가 | `/plan` 실행 시 |
-| `layer-architect` | 레이어 매핑 + 영향도 분석 | `/plan` 실행 시 |
-| `domain-expert` | Domain Layer 규칙 | `/impl domain`, `/kb/domain` |
-| `application-expert` | Application Layer 규칙 | `/impl application`, `/kb/application` |
-| `persistence-expert` | Persistence Layer 규칙 | `/impl persistence`, `/kb/persistence` |
-| `rest-api-expert` | REST API Layer 규칙 | `/impl rest-api`, `/kb/rest-api` |
+# 2. Aggregate 생성 시
+planning_context(layers=["DOMAIN"])
+module_context(module_id=1, class_type="AGGREGATE")
+validation_context(layers=["DOMAIN"])
 
-### 2. Claude Commands
-
-| Command | 용도 |
-|---------|------|
-| `/plan "{기능}"` | 요구사항 분석 + 구현 계획 |
-| `/impl {layer} {feature}` | Doc-Driven 신규 구현 |
-| `/kb/{layer}/go` | TDD 기존 코드 수정 |
-| `/create-prd` | PRD 문서 생성 |
-
-### 3. ArchUnit Tests
-
-**위치**: 각 모듈의 `src/test/java/.../architecture/`
-
-- **아키텍처 규칙 자동 검증**: 레이어 의존성, 네이밍 규칙
-- **빌드 시 자동 실행**: 위반 시 빌드 실패
-
----
-
-## Layer별 Zero-Tolerance 규칙
-
-### Domain Layer
-- ✅ Lombok 금지
-- ✅ Law of Demeter (Getter 체이닝 금지)
-- ✅ Tell, Don't Ask (상태 묻지 말고 행동 요청)
-- ✅ Long FK 전략
-
-### Application Layer
-- ✅ Transaction 경계 (`@Transactional` 내 외부 API 금지)
-- ✅ CQRS 분리 (Command/Query UseCase 분리)
-- ✅ DTO는 Record
-- ✅ Assembler 사용
-
-### Persistence Layer
-- ✅ Long FK 전략 (JPA 관계 어노테이션 금지)
-- ✅ QueryDSL DTO Projection
-- ✅ Lombok 금지
-- ✅ Mapper 분리
-
-### REST API Layer
-- ✅ RESTful 설계
-- ✅ Request/Response DTO 분리
-- ✅ @Valid 필수
-- ✅ TestRestTemplate (MockMvc 금지)
-
----
-
-## 빠른 시작
-
-```bash
-# 1. 새 기능 구현
-/plan "회원 가입 기능"
-
-# 2. 승인 후 자동으로 /impl 시작
-[Y] 진행
-
-# 3. Layer별 순차 구현 (자동 연결)
-→ Domain → Application → Persistence → REST API
-
-# 4. 전체 검증
-./gradlew test
+# 3. UseCase 생성 시
+module_context(module_id=2, class_type="USE_CASE")
 ```

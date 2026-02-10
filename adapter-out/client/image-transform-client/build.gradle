@@ -1,0 +1,35 @@
+// ========================================
+// Adapter-Out: Image Transform Client
+// ========================================
+// ImageTransformClient 구현체
+// Technology: Scrimage (이미지 변환)
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    api project(':application')
+    api project(':domain')
+
+    // Spring Context (@Component)
+    implementation libs.spring.context
+
+    // Logging (AWS SDK 제거 후 전이 의존성 없어 직접 선언)
+    implementation libs.slf4j.api
+
+    // Scrimage - Image Processing Library
+    implementation libs.scrimage.core
+    implementation libs.scrimage.webp
+    implementation libs.scrimage.formats.extra
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.bundles.testing.basic
+}

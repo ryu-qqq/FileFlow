@@ -1,0 +1,29 @@
+# ============================================================
+# Resizing Worker 로컬 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=local
+# ============================================================
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:persistence.yml
+      - classpath:persistence-local.yml
+      - classpath:redis.yml
+      - classpath:redis-local.yml
+      - classpath:s3.yml
+      - classpath:s3-local.yml
+      - classpath:sqs-consumer.yml
+      - classpath:sqs-consumer-local.yml
+
+logging:
+  level:
+    com.ryuqq.fileflow: DEBUG
+    io.awspring.cloud.sqs: DEBUG
+
+# Sentry 비활성화 (로컬)
+sentry:
+  dsn: ""

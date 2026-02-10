@@ -1,0 +1,31 @@
+# ============================================================
+# Scheduler Application 로컬 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=local
+# ============================================================
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:persistence.yml
+      - classpath:persistence-local.yml
+      - classpath:redis.yml
+      - classpath:redis-local.yml
+      - classpath:scheduler-local.yml
+      - optional:classpath:s3.yml
+      - optional:classpath:sqs-publish.yml
+      - optional:classpath:sqs-publish-local.yml
+      - optional:classpath:http-client.yml
+      - optional:classpath:http-client-local.yml
+
+logging:
+  level:
+    com.ryuqq.fileflow: DEBUG
+    org.hibernate.SQL: DEBUG
+
+# Sentry 비활성화 (로컬)
+sentry:
+  dsn: ""

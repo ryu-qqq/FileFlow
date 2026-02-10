@@ -3,50 +3,16 @@ package com.ryuqq.fileflow.sdk.autoconfigure;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Configuration properties for FileFlow SDK.
- *
- * <p>Example configuration in application.yml:
- *
- * <pre>
- * fileflow:
- *   base-url: https://fileflow.example.com
- *   service-token: your-service-token
- *   connect-timeout: 5s
- *   read-timeout: 30s
- *   write-timeout: 30s
- *   log-requests: false
- *   async: false
- * </pre>
- */
 @ConfigurationProperties(prefix = "fileflow")
 public class FileFlowProperties {
 
-    /** Base URL of the FileFlow API. */
     private String baseUrl;
 
-    /**
-     * Service token for authentication. Used as a fallback when no ThreadLocal token is available.
-     */
+    private String serviceName;
+
     private String serviceToken;
 
-    /** Connection timeout. */
-    private Duration connectTimeout = Duration.ofSeconds(5);
-
-    /** Read timeout. */
-    private Duration readTimeout = Duration.ofSeconds(30);
-
-    /** Write timeout. */
-    private Duration writeTimeout = Duration.ofSeconds(30);
-
-    /** Whether to log HTTP requests. */
-    private boolean logRequests = false;
-
-    /**
-     * Whether to create an async client (WebClient-based) instead of sync client
-     * (RestClient-based).
-     */
-    private boolean async = false;
+    private final Timeout timeout = new Timeout();
 
     public String getBaseUrl() {
         return baseUrl;
@@ -54,6 +20,14 @@ public class FileFlowProperties {
 
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     public String getServiceToken() {
@@ -64,43 +38,30 @@ public class FileFlowProperties {
         this.serviceToken = serviceToken;
     }
 
-    public Duration getConnectTimeout() {
-        return connectTimeout;
+    public Timeout getTimeout() {
+        return timeout;
     }
 
-    public void setConnectTimeout(Duration connectTimeout) {
-        this.connectTimeout = connectTimeout;
-    }
+    public static class Timeout {
 
-    public Duration getReadTimeout() {
-        return readTimeout;
-    }
+        private Duration connect = Duration.ofSeconds(5);
 
-    public void setReadTimeout(Duration readTimeout) {
-        this.readTimeout = readTimeout;
-    }
+        private Duration read = Duration.ofSeconds(30);
 
-    public Duration getWriteTimeout() {
-        return writeTimeout;
-    }
+        public Duration getConnect() {
+            return connect;
+        }
 
-    public void setWriteTimeout(Duration writeTimeout) {
-        this.writeTimeout = writeTimeout;
-    }
+        public void setConnect(Duration connect) {
+            this.connect = connect;
+        }
 
-    public boolean isLogRequests() {
-        return logRequests;
-    }
+        public Duration getRead() {
+            return read;
+        }
 
-    public void setLogRequests(boolean logRequests) {
-        this.logRequests = logRequests;
-    }
-
-    public boolean isAsync() {
-        return async;
-    }
-
-    public void setAsync(boolean async) {
-        this.async = async;
+        public void setRead(Duration read) {
+            this.read = read;
+        }
     }
 }

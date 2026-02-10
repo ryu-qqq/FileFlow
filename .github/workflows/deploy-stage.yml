@@ -1,0 +1,262 @@
+# ============================================================================
+# FileFlow - Stage Deployment Pipeline
+# ============================================================================
+# stage 브랜치에 머지(push) 시 스테이지 환경에 자동 배포
+# dev → PR → stage (머지 시 자동 배포) → PR → main (prod 배포)
+#
+# 컴포넌트: web-api, download-worker, resizing-worker, scheduler (병렬 빌드/배포)
+# 인프라: ECS Fargate + Service Discovery (ALB 없음)
+# ============================================================================
+
+name: Deploy to Stage
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - stage
+    paths-ignore:
+      - 'terraform/**'
+      - '.github/workflows/terraform-*.yml'
+      - '**.md'
+      - 'docs/**'
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECS_CLUSTER: fileflow-cluster-stage
+
+jobs:
+  # ============================================================================
+  # 테스트 (공통 - 한 번만 실행)
+  # ============================================================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run tests
+        env:
+          SPRING_DATA_REDIS_HOST: localhost
+          SPRING_DATA_REDIS_PORT: 6379
+          CI: true
+        run: |
+          chmod +x gradlew
+          ./gradlew clean test -x jacocoTestCoverageVerification --no-daemon
+
+      - name: Generate REST Docs
+        run: |
+          ./gradlew :adapter-in:rest-api:asciidoctor :adapter-in:rest-api:copyDocs --no-daemon
+
+      - name: Upload REST Docs artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rest-docs
+          path: adapter-in/rest-api/build/generated-static/docs/
+          retention-days: 1
+
+  # ============================================================================
+  # 빌드 Jobs (병렬 실행)
+  # ============================================================================
+  build-web-api:
+    name: Build web-api (stage)
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      image-uri: ${{ steps.build-push.outputs.image-uri }}
+      image-tag: ${{ steps.build-push.outputs.image-tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Download REST Docs artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rest-docs
+          path: adapter-in/rest-api/build/generated-static/docs/
+
+      - name: Build bootJar with REST Docs
+        run: |
+          chmod +x gradlew
+          ./gradlew :bootstrap:bootstrap-web-api:bootJar -x test --no-daemon
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        id: build-push
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: fileflow-web-api-stage
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          IMAGE_TAG="web-api-stage-${{ github.run_number }}-${SHORT_SHA}"
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f bootstrap/bootstrap-web-api/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "image-tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  build-download-worker:
+    name: Build download-worker (stage)
+    needs: test
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
+    with:
+      ecr-repository: fileflow-download-worker-stage
+      component: download-worker-stage
+      dockerfile: bootstrap/bootstrap-download-worker/Dockerfile
+      gradle-task: ":bootstrap:bootstrap-download-worker:bootJar"
+      timeout-minutes: 30
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  build-scheduler:
+    name: Build scheduler (stage)
+    needs: test
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
+    with:
+      ecr-repository: fileflow-scheduler-stage
+      component: scheduler-stage
+      dockerfile: bootstrap/bootstrap-scheduler/Dockerfile
+      gradle-task: ":bootstrap:bootstrap-scheduler:bootJar"
+      timeout-minutes: 30
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  build-resizing-worker:
+    name: Build resizing-worker (stage)
+    needs: test
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-build-docker.yml@main
+    with:
+      ecr-repository: fileflow-resizing-worker-stage
+      component: resizing-worker-stage
+      dockerfile: bootstrap/bootstrap-resizing-worker/Dockerfile
+      gradle-task: ":bootstrap:bootstrap-resizing-worker:bootJar"
+      timeout-minutes: 30
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  # ============================================================================
+  # 배포 Jobs (병렬 실행)
+  # ============================================================================
+  deploy-web-api:
+    name: Deploy web-api (stage)
+    needs: build-web-api
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
+    with:
+      ecs-cluster: fileflow-cluster-stage
+      ecs-service: fileflow-web-api-stage
+      image-uri: ${{ needs.build-web-api.outputs.image-uri }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  deploy-download-worker:
+    name: Deploy download-worker (stage)
+    needs: build-download-worker
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
+    with:
+      ecs-cluster: fileflow-cluster-stage
+      ecs-service: fileflow-download-worker-stage
+      image-uri: ${{ needs.build-download-worker.outputs.image-uri }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  deploy-scheduler:
+    name: Deploy scheduler (stage)
+    needs: build-scheduler
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
+    with:
+      ecs-cluster: fileflow-cluster-stage
+      ecs-service: fileflow-scheduler-stage
+      image-uri: ${{ needs.build-scheduler.outputs.image-uri }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  deploy-resizing-worker:
+    name: Deploy resizing-worker (stage)
+    needs: build-resizing-worker
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-deploy-ecs.yml@main
+    with:
+      ecs-cluster: fileflow-cluster-stage
+      ecs-service: fileflow-resizing-worker-stage
+      image-uri: ${{ needs.build-resizing-worker.outputs.image-uri }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  # ============================================================================
+  # Terraform Image Tag 업데이트 (자동화)
+  # ============================================================================
+  update-terraform-tags:
+    name: Update Terraform Image Tags (Stage)
+    needs: [build-web-api, build-download-worker, build-scheduler, build-resizing-worker]
+    uses: ./.github/workflows/terraform-apply-stage.yml
+    with:
+      web-api-image-tag: ${{ needs.build-web-api.outputs.image-tag }}
+      download-worker-image-tag: ${{ needs.build-download-worker.outputs.image-tag }}
+      scheduler-image-tag: ${{ needs.build-scheduler.outputs.image-tag }}
+      resizing-worker-image-tag: ${{ needs.build-resizing-worker.outputs.image-tag }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+  # ============================================================================
+  # 배포 완료 알림 (Slack + GitHub Summary)
+  # ============================================================================
+  notify:
+    name: Deployment Notification
+    needs: [deploy-web-api, deploy-download-worker, deploy-scheduler, deploy-resizing-worker, update-terraform-tags]
+    if: always()
+    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-notify-slack.yml@main
+    with:
+      project-name: FileFlow
+      environment: stage
+      status: ${{ (needs.deploy-web-api.result == 'success' && needs.deploy-download-worker.result == 'success' && needs.deploy-scheduler.result == 'success' && needs.deploy-resizing-worker.result == 'success' && needs.update-terraform-tags.result == 'success') && 'success' || 'failure' }}
+      components: |
+        [
+          {"name": "web-api", "status": "${{ needs.deploy-web-api.result }}"},
+          {"name": "download-worker", "status": "${{ needs.deploy-download-worker.result }}"},
+          {"name": "scheduler", "status": "${{ needs.deploy-scheduler.result }}"},
+          {"name": "resizing-worker", "status": "${{ needs.deploy-resizing-worker.result }}"},
+          {"name": "terraform-tags", "status": "${{ needs.update-terraform-tags.result }}"}
+        ]
+      mention-on-failure: "@here"
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

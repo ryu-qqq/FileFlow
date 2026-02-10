@@ -1,0 +1,55 @@
+# ===============================================
+# Application Configuration - Production Environment
+# ===============================================
+# 운영 환경 전용 설정
+# 공통 설정은 application.yml 참조
+# ===============================================
+
+server:
+  tomcat:
+    threads:
+      max: 200
+
+  # Graceful Shutdown Timeout
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+# ===============================================
+# Config Import Override (환경별 설정 로드)
+# ===============================================
+spring:
+  config:
+    import:
+      - classpath:rest-api.yml
+      - classpath:rest-api-prod.yml
+      - classpath:persistence.yml
+      - classpath:persistence-prod.yml
+      - classpath:redis.yml
+      - classpath:redis-prod.yml
+      - classpath:redis-consumer.yml
+      - classpath:redis-consumer-prod.yml
+      - optional:classpath:s3.yml
+      - optional:classpath:s3-prod.yml
+      - optional:classpath:sqs-publish.yml
+      - optional:classpath:sqs-publish-prod.yml
+      - optional:classpath:http-client.yml
+      - optional:classpath:http-client-prod.yml
+
+# ===============================================
+# Sentry Configuration (Production Only)
+# ===============================================
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: production
+  send-default-pii: true
+  attach-stacktrace: true
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # 프로덕션: health, metrics, prometheus만 노출
+        include: health,metrics,prometheus

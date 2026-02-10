@@ -33,15 +33,6 @@ package com.ryuqq.fileflow.domain.common.vo;
  *
  * // ID 기반 커서
  * CursorPageRequest afterId = CursorPageRequest.afterId(lastId, 20);
- *
- * // Criteria에서 사용
- * OrderSearchCriteria criteria = new OrderSearchCriteria(
- *     memberId,
- *     dateRange,
- *     sortKey,
- *     sortDirection,
- *     CursorPageRequest.of(cursor, size)
- * );
  * }</pre>
  *
  * @param cursor 커서 값 (마지막 항목의 식별자, null이면 첫 페이지)
