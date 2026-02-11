@@ -96,8 +96,14 @@ data "aws_ssm_parameter" "private_subnets" {
 }
 
 # ========================================
-# RDS Configuration (MySQL - Shared Staging)
+# RDS Configuration (MySQL - Shared Staging via RDS Proxy)
 # ========================================
+
+# RDS Proxy endpoint from SSM Parameter Store
+data "aws_ssm_parameter" "rds_proxy_endpoint" {
+  name = "/shared/rds/staging-proxy-endpoint"
+}
+
 data "aws_secretsmanager_secret" "rds" {
   name = "setof-commerce/rds/staging-credentials"
 }
@@ -125,9 +131,10 @@ locals {
   private_subnets = split(",", data.aws_ssm_parameter.private_subnets.value)
 
   # RDS Configuration (MySQL - Shared Staging)
+  # Using RDS Proxy for connection pooling and failover resilience
   rds_credentials = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)
-  rds_host        = local.rds_credentials.host
-  rds_port        = tostring(local.rds_credentials.port)
+  rds_host        = data.aws_ssm_parameter.rds_proxy_endpoint.value
+  rds_port        = "3306"
   rds_dbname      = "fileflow"
   rds_username    = local.rds_credentials.username
 
