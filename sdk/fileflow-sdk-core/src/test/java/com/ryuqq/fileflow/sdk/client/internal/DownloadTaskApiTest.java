@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.sdk.client.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ryuqq.fileflow.sdk.FileFlowClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.sdk.api.DownloadTaskApi;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
 import com.ryuqq.fileflow.sdk.model.download.CreateDownloadTaskRequest;
@@ -18,26 +18,15 @@ import org.junit.jupiter.api.Test;
 
 class DownloadTaskApiTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private MockWebServer mockWebServer;
     private DownloadTaskApi api;
 
     @BeforeEach
     void setUp() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
-
-        String baseUrl = mockWebServer.url("/").toString();
-        if (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-        }
-
-        FileFlowClient client =
-                FileFlowClient.builder()
-                        .baseUrl(baseUrl)
-                        .serviceName("test-service")
-                        .serviceToken("test-token")
-                        .build();
-        api = client.downloadTask();
+        mockWebServer = ApiTestSupport.startMockServer();
+        api = ApiTestSupport.createClient(mockWebServer).downloadTask();
     }
 
     @AfterEach
@@ -47,7 +36,7 @@ class DownloadTaskApiTest {
 
     @Test
     @DisplayName("다운로드 태스크를 생성한다")
-    void createDownloadTask() throws InterruptedException {
+    void createDownloadTask() throws Exception {
         String responseBody =
                 """
                 {
@@ -100,14 +89,19 @@ class DownloadTaskApiTest {
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertThat(recordedRequest.getPath()).isEqualTo("/api/v1/download-tasks");
         assertThat(recordedRequest.getMethod()).isEqualTo("POST");
-        String body = recordedRequest.getBody().readUtf8();
-        assertThat(body).contains("https://external-cdn.com/image.jpg");
-        assertThat(body).contains("product-service");
+
+        CreateDownloadTaskRequest actualRequest =
+                OBJECT_MAPPER.readValue(
+                        recordedRequest.getBody().readUtf8(), CreateDownloadTaskRequest.class);
+        assertThat(actualRequest.sourceUrl()).isEqualTo(request.sourceUrl());
+        assertThat(actualRequest.s3Key()).isEqualTo(request.s3Key());
+        assertThat(actualRequest.bucket()).isEqualTo(request.bucket());
+        assertThat(actualRequest.source()).isEqualTo(request.source());
     }
 
     @Test
     @DisplayName("다운로드 태스크를 조회한다")
-    void getDownloadTask() {
+    void getDownloadTask() throws InterruptedException {
         String responseBody =
                 """
                 {
@@ -143,5 +137,9 @@ class DownloadTaskApiTest {
         assertThat(response.data().downloadTaskId()).isEqualTo("dt_abc123");
         assertThat(response.data().status()).isEqualTo("COMPLETED");
         assertThat(response.data().completedAt()).isEqualTo("2026-02-14T10:00:05+09:00");
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getPath()).isEqualTo("/api/v1/download-tasks/dt_abc123");
+        assertThat(recordedRequest.getMethod()).isEqualTo("GET");
     }
 }

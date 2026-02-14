@@ -2,7 +2,7 @@ package com.ryuqq.fileflow.sdk.client.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ryuqq.fileflow.sdk.FileFlowClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.sdk.api.TransformRequestApi;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
 import com.ryuqq.fileflow.sdk.model.transform.CreateTransformRequestRequest;
@@ -18,26 +18,15 @@ import org.junit.jupiter.api.Test;
 
 class TransformRequestApiTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private MockWebServer mockWebServer;
     private TransformRequestApi api;
 
     @BeforeEach
     void setUp() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
-
-        String baseUrl = mockWebServer.url("/").toString();
-        if (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-        }
-
-        FileFlowClient client =
-                FileFlowClient.builder()
-                        .baseUrl(baseUrl)
-                        .serviceName("test-service")
-                        .serviceToken("test-token")
-                        .build();
-        api = client.transformRequest();
+        mockWebServer = ApiTestSupport.startMockServer();
+        api = ApiTestSupport.createClient(mockWebServer).transformRequest();
     }
 
     @AfterEach
@@ -47,7 +36,7 @@ class TransformRequestApiTest {
 
     @Test
     @DisplayName("변환 요청을 생성한다")
-    void createTransformRequest() throws InterruptedException {
+    void createTransformRequest() throws Exception {
         String responseBody =
                 """
                 {
@@ -77,8 +66,7 @@ class TransformRequestApiTest {
                         .addHeader("Content-Type", "application/json"));
 
         CreateTransformRequestRequest request =
-                new CreateTransformRequestRequest(
-                        "asset_001", "RESIZE", 800, 600, 85, "webp");
+                new CreateTransformRequestRequest("asset_001", "RESIZE", 800, 600, 85, "webp");
 
         ApiResponse<TransformRequestResponse> response = api.create(request);
 
@@ -96,14 +84,18 @@ class TransformRequestApiTest {
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertThat(recordedRequest.getPath()).isEqualTo("/api/v1/transform-requests");
         assertThat(recordedRequest.getMethod()).isEqualTo("POST");
-        String body = recordedRequest.getBody().readUtf8();
-        assertThat(body).contains("asset_001");
-        assertThat(body).contains("RESIZE");
+
+        CreateTransformRequestRequest actualRequest =
+                OBJECT_MAPPER.readValue(
+                        recordedRequest.getBody().readUtf8(), CreateTransformRequestRequest.class);
+        assertThat(actualRequest.sourceAssetId()).isEqualTo(request.sourceAssetId());
+        assertThat(actualRequest.transformType()).isEqualTo(request.transformType());
+        assertThat(actualRequest.width()).isEqualTo(request.width());
     }
 
     @Test
     @DisplayName("변환 요청을 조회한다")
-    void getTransformRequest() {
+    void getTransformRequest() throws InterruptedException {
         String responseBody =
                 """
                 {
@@ -138,5 +130,9 @@ class TransformRequestApiTest {
         assertThat(response.data().status()).isEqualTo("COMPLETED");
         assertThat(response.data().resultAssetId()).isEqualTo("asset_002");
         assertThat(response.data().completedAt()).isEqualTo("2026-02-14T10:00:03+09:00");
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getPath()).isEqualTo("/api/v1/transform-requests/tr_abc123");
+        assertThat(recordedRequest.getMethod()).isEqualTo("GET");
     }
 }

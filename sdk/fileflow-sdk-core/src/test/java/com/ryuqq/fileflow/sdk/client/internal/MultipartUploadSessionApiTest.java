@@ -2,7 +2,6 @@ package com.ryuqq.fileflow.sdk.client.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ryuqq.fileflow.sdk.FileFlowClient;
 import com.ryuqq.fileflow.sdk.api.MultipartUploadSessionApi;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
 import com.ryuqq.fileflow.sdk.model.session.AddCompletedPartRequest;
@@ -26,21 +25,8 @@ class MultipartUploadSessionApiTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
-
-        String baseUrl = mockWebServer.url("/").toString();
-        if (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-        }
-
-        FileFlowClient client =
-                FileFlowClient.builder()
-                        .baseUrl(baseUrl)
-                        .serviceName("test-service")
-                        .serviceToken("test-token")
-                        .build();
-        api = client.multipartUploadSession();
+        mockWebServer = ApiTestSupport.startMockServer();
+        api = ApiTestSupport.createClient(mockWebServer).multipartUploadSession();
     }
 
     @AfterEach
@@ -81,7 +67,12 @@ class MultipartUploadSessionApiTest {
 
         CreateMultipartUploadSessionRequest request =
                 new CreateMultipartUploadSessionRequest(
-                        "large-file.zip", "application/zip", "PUBLIC", 5242880L, "BACKUP", "backup-service");
+                        "large-file.zip",
+                        "application/zip",
+                        "PUBLIC",
+                        5242880L,
+                        "BACKUP",
+                        "backup-service");
 
         ApiResponse<MultipartUploadSessionResponse> response = api.create(request);
 
@@ -100,7 +91,7 @@ class MultipartUploadSessionApiTest {
 
     @Test
     @DisplayName("멀티파트 업로드 세션을 조회한다")
-    void getSession() {
+    void getSession() throws InterruptedException {
         String responseBody =
                 """
                 {
@@ -139,6 +130,10 @@ class MultipartUploadSessionApiTest {
         assertThat(response.data().completedPartCount()).isEqualTo(2);
         assertThat(response.data().completedParts()).hasSize(2);
         assertThat(response.data().completedParts().get(0).partNumber()).isEqualTo(1);
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getPath()).isEqualTo("/api/v1/sessions/multipart/msess_123");
+        assertThat(recordedRequest.getMethod()).isEqualTo("GET");
     }
 
     @Test
@@ -182,8 +177,7 @@ class MultipartUploadSessionApiTest {
                         .setResponseCode(200)
                         .addHeader("Content-Type", "application/json"));
 
-        AddCompletedPartRequest request =
-                new AddCompletedPartRequest(3, "\"etag3\"", 5242880L);
+        AddCompletedPartRequest request = new AddCompletedPartRequest(3, "\"etag3\"", 5242880L);
 
         api.addCompletedPart("msess_123", request);
 
@@ -205,8 +199,7 @@ class MultipartUploadSessionApiTest {
                         .addHeader("Content-Type", "application/json"));
 
         CompleteMultipartUploadSessionRequest request =
-                new CompleteMultipartUploadSessionRequest(
-                        15728640L, "\"combined-etag\"");
+                new CompleteMultipartUploadSessionRequest(15728640L, "\"combined-etag\"");
 
         api.complete("msess_123", request);
 

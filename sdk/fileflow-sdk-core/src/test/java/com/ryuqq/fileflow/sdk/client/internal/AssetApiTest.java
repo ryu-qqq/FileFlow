@@ -1,8 +1,9 @@
 package com.ryuqq.fileflow.sdk.client.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ryuqq.fileflow.sdk.FileFlowClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.fileflow.sdk.api.AssetApi;
 import com.ryuqq.fileflow.sdk.model.asset.AssetMetadataResponse;
 import com.ryuqq.fileflow.sdk.model.asset.AssetResponse;
@@ -19,26 +20,15 @@ import org.junit.jupiter.api.Test;
 
 class AssetApiTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private MockWebServer mockWebServer;
     private AssetApi api;
 
     @BeforeEach
     void setUp() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
-
-        String baseUrl = mockWebServer.url("/").toString();
-        if (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-        }
-
-        FileFlowClient client =
-                FileFlowClient.builder()
-                        .baseUrl(baseUrl)
-                        .serviceName("test-service")
-                        .serviceToken("test-token")
-                        .build();
-        api = client.asset();
+        mockWebServer = ApiTestSupport.startMockServer();
+        api = ApiTestSupport.createClient(mockWebServer).asset();
     }
 
     @AfterEach
@@ -48,7 +38,7 @@ class AssetApiTest {
 
     @Test
     @DisplayName("S3에 이미 존재하는 파일을 Asset으로 등록한다")
-    void registerAsset() throws InterruptedException {
+    void registerAsset() throws Exception {
         String responseBody =
                 """
                 {
@@ -100,14 +90,54 @@ class AssetApiTest {
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertThat(recordedRequest.getPath()).isEqualTo("/api/v1/assets/register");
         assertThat(recordedRequest.getMethod()).isEqualTo("POST");
-        String body = recordedRequest.getBody().readUtf8();
-        assertThat(body).contains("public/2026/02/product-main.jpg");
-        assertThat(body).contains("fileflow-bucket");
+
+        RegisterAssetRequest actualRequest =
+                OBJECT_MAPPER.readValue(
+                        recordedRequest.getBody().readUtf8(), RegisterAssetRequest.class);
+        assertThat(actualRequest.s3Key()).isEqualTo(request.s3Key());
+        assertThat(actualRequest.bucket()).isEqualTo(request.bucket());
+        assertThat(actualRequest.accessType()).isEqualTo(request.accessType());
+        assertThat(actualRequest.purpose()).isEqualTo(request.purpose());
+        assertThat(actualRequest.source()).isEqualTo(request.source());
+    }
+
+    @Test
+    @DisplayName("s3Key가 null이면 IllegalArgumentException이 발생한다")
+    void registerAssetWithNullS3Key() {
+        assertThatThrownBy(
+                        () ->
+                                new RegisterAssetRequest(
+                                        null,
+                                        "bucket",
+                                        "PUBLIC",
+                                        "file.jpg",
+                                        "image/jpeg",
+                                        "PURPOSE",
+                                        "source"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("s3Key");
+    }
+
+    @Test
+    @DisplayName("bucket이 빈 문자열이면 IllegalArgumentException이 발생한다")
+    void registerAssetWithBlankBucket() {
+        assertThatThrownBy(
+                        () ->
+                                new RegisterAssetRequest(
+                                        "key",
+                                        "  ",
+                                        "PUBLIC",
+                                        "file.jpg",
+                                        "image/jpeg",
+                                        "PURPOSE",
+                                        "source"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("bucket");
     }
 
     @Test
     @DisplayName("Asset을 조회한다")
-    void getAsset() {
+    void getAsset() throws InterruptedException {
         String responseBody =
                 """
                 {
@@ -141,11 +171,15 @@ class AssetApiTest {
 
         assertThat(response.data().assetId()).isEqualTo("asset_abc123");
         assertThat(response.data().fileName()).isEqualTo("product-main.jpg");
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getPath()).isEqualTo("/api/v1/assets/asset_abc123");
+        assertThat(recordedRequest.getMethod()).isEqualTo("GET");
     }
 
     @Test
     @DisplayName("Asset 메타데이터를 조회한다")
-    void getAssetMetadata() {
+    void getAssetMetadata() throws InterruptedException {
         String responseBody =
                 """
                 {
@@ -173,6 +207,10 @@ class AssetApiTest {
         assertThat(response.data().assetId()).isEqualTo("asset_abc123");
         assertThat(response.data().width()).isEqualTo(1920);
         assertThat(response.data().height()).isEqualTo(1080);
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getPath()).isEqualTo("/api/v1/assets/asset_abc123/metadata");
+        assertThat(recordedRequest.getMethod()).isEqualTo("GET");
     }
 
     @Test

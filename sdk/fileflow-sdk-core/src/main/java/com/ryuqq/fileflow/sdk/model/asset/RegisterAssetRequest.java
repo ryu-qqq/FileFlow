@@ -10,4 +10,14 @@ public record RegisterAssetRequest(
         String fileName,
         String contentType,
         String purpose,
-        String source) {}
+        String source) {
+
+    public RegisterAssetRequest {
+        if (s3Key == null || s3Key.isBlank()) {
+            throw new IllegalArgumentException("s3Key must not be null or blank");
+        }
+        if (bucket == null || bucket.isBlank()) {
+            throw new IllegalArgumentException("bucket must not be null or blank");
+        }
+    }
+}
