@@ -170,10 +170,22 @@ api.abort(sessionId);
 
 ### Asset API
 
-업로드 완료된 파일 자산을 조회/삭제합니다.
+업로드 완료된 파일 자산을 조회/삭제하거나, S3에 이미 존재하는 파일을 자산으로 등록합니다.
 
 ```java
 AssetApi api = client.asset();
+
+// S3에 이미 존재하는 파일을 Asset으로 등록 (데이터 이동 없음)
+var registered = api.register(new RegisterAssetRequest(
+    "public/2026/02/product.jpg",  // s3Key (필수)
+    "fileflow-bucket",              // bucket (필수)
+    "PUBLIC",                       // accessType (PUBLIC | PRIVATE)
+    "product.jpg",                  // fileName
+    "image/jpeg",                   // contentType
+    "PRODUCT_IMAGE",                // purpose
+    "product-service"               // source
+));
+String assetId = registered.data().assetId();
 
 // 자산 조회
 var asset = api.get(assetId);
@@ -232,6 +244,201 @@ var response = api.create(new CreateTransformRequestRequest(
 var result = api.get(transformRequestId);
 // → status: PENDING → PROCESSING → COMPLETED / FAILED
 // → resultAssetId: 변환 완료 시 새 자산 ID
+```
+
+---
+
+## 상품 이미지 업로드 시나리오
+
+상품 등록 시 이미지 URL이 요청에 포함되는 경우, **URL의 유형에 따라 처리 방식이 다릅니다.**
+
+### 전체 흐름
+
+```
+상품 등록 요청 (이미지 URL 포함)
+    │
+    ├─ 케이스 1: 내부 S3 URL (presigned URL로 업로드된 파일)
+    │   → AssetApi.register() — 데이터 이동 없음, 즉시 처리
+    │
+    ├─ 케이스 2: 외부 도메인 URL (https://other-cdn.com/...)
+    │   → DownloadTaskApi.create() → FileFlow 서버가 비동기 다운로드
+    │
+    └─ 케이스 3: 프론트엔드 직접 업로드
+        → SingleUploadSessionApi → presigned URL 발급 → 업로드 → complete
+    │
+    ▼
+Asset 확보 (assetId) → 상품 데이터에 연결
+```
+
+### 케이스 1: S3에 이미 업로드된 파일 등록 (register)
+
+> **사용 시점**: 프론트엔드가 presigned URL로 S3에 업로드는 했지만 `complete()`를 호출하지 않은 경우,
+> 또는 이미 S3에 존재하는 파일을 Asset으로 등록하고 싶은 경우
+
+```java
+/**
+ * S3 URL에서 s3Key를 추출하여 Asset으로 등록한다.
+ * S3에서 다시 다운로드하지 않으므로 네트워크 비용이 들지 않는다.
+ */
+public String registerExistingS3File(String s3Url) {
+    String s3Key = extractS3Key(s3Url);
+    String bucket = extractBucket(s3Url);
+
+    var response = assetApi.register(new RegisterAssetRequest(
+            s3Key, bucket, "PUBLIC",
+            extractFileName(s3Key), guessContentType(s3Key),
+            "PRODUCT_IMAGE", "product-service"
+    ));
+
+    return response.data().assetId();
+}
+```
+
+**s3Key 추출 예시**:
+
+```java
+// https://fileflow-bucket.s3.ap-northeast-2.amazonaws.com/public/2026/02/image.jpg
+// → s3Key: public/2026/02/image.jpg
+// → bucket: fileflow-bucket
+
+private String extractS3Key(String s3Url) {
+    URI uri = URI.create(s3Url);
+    String path = uri.getPath();
+    return path.startsWith("/") ? path.substring(1) : path;
+}
+
+private String extractBucket(String s3Url) {
+    URI uri = URI.create(s3Url);
+    return uri.getHost().split("\\.")[0];
+}
+```
+
+### 케이스 2: 외부 도메인 URL 다운로드
+
+> **사용 시점**: 외부 이미지 서버 URL이 상품 등록 요청에 포함된 경우
+
+```java
+/**
+ * 외부 URL의 이미지를 FileFlow 서버가 비동기로 다운로드하여 S3에 저장한다.
+ * 완료 시 callback URL로 통지하거나 폴링으로 확인할 수 있다.
+ */
+public String downloadExternalImage(String externalUrl) {
+    var response = downloadTaskApi.create(new CreateDownloadTaskRequest(
+            externalUrl,                   // 다운로드할 외부 URL
+            null,                          // s3Key (null이면 자동 생성)
+            "fileflow-bucket",             // 저장할 S3 버킷
+            "PRIVATE",                     // 접근 타입
+            "PRODUCT_IMAGE",               // 용도
+            "product-service",             // 호출 서비스
+            "https://my-api.com/callback"  // 완료 시 콜백 URL (선택)
+    ));
+
+    return response.data().downloadTaskId();
+}
+
+// 비동기 완료 확인 (폴링 방식)
+public DownloadTaskResponse waitForCompletion(String taskId) {
+    while (true) {
+        var task = downloadTaskApi.get(taskId).data();
+        switch (task.status()) {
+            case "COMPLETED" -> { return task; }
+            case "FAILED"    -> throw new RuntimeException("다운로드 실패: " + task.lastError());
+            default          -> sleep(1000);  // PENDING, PROCESSING 상태면 대기
+        }
+    }
+}
+```
+
+### 케이스 3: 프론트엔드 직접 업로드 (presigned URL)
+
+> **사용 시점**: 프론트엔드가 이미지 파일을 직접 S3에 업로드하는 정상 흐름
+
+```java
+// Step 1: 백엔드 — 세션 생성 및 presigned URL 발급
+var session = singleUploadSessionApi.create(new CreateSingleUploadSessionRequest(
+        fileName, contentType, "PUBLIC", "PRODUCT_IMAGE", "product-service"
+));
+// 프론트에 내려줄 값: session.data().presignedUrl(), session.data().sessionId()
+
+// Step 2: 프론트엔드 — presigned URL로 S3에 PUT 업로드
+// const response = await fetch(presignedUrl, { method: 'PUT', body: file });
+// const etag = response.headers.get('ETag');
+
+// Step 3: 백엔드 — 업로드 완료 처리 (프론트가 etag, fileSize를 전달)
+singleUploadSessionApi.complete(sessionId,
+        new CompleteSingleUploadSessionRequest(fileSize, etag)
+);
+// 완료되면 자동으로 Asset 생성됨
+```
+
+### 통합 처리: 상품 서비스에서의 이미지 URL 분기
+
+```java
+@Service
+public class ProductImageService {
+
+    private final AssetApi assetApi;
+    private final DownloadTaskApi downloadTaskApi;
+
+    public ProductImageService(AssetApi assetApi, DownloadTaskApi downloadTaskApi) {
+        this.assetApi = assetApi;
+        this.downloadTaskApi = downloadTaskApi;
+    }
+
+    /**
+     * 상품 등록 시 이미지 URL을 받아서 적절한 방식으로 Asset을 확보한다.
+     */
+    public String processProductImage(String imageUrl) {
+        if (isInternalS3Url(imageUrl)) {
+            // 이미 S3에 존재 → register로 즉시 Asset 등록 (데이터 이동 없음)
+            String s3Key = extractS3Key(imageUrl);
+            String bucket = extractBucket(imageUrl);
+            var response = assetApi.register(new RegisterAssetRequest(
+                    s3Key, bucket, "PUBLIC",
+                    extractFileName(s3Key), guessContentType(s3Key),
+                    "PRODUCT_IMAGE", "product-service"
+            ));
+            return response.data().assetId();
+
+        } else {
+            // 외부 URL → DownloadTask로 비동기 다운로드
+            var response = downloadTaskApi.create(new CreateDownloadTaskRequest(
+                    imageUrl, null, "fileflow-bucket",
+                    "PRIVATE", "PRODUCT_IMAGE",
+                    "product-service", null
+            ));
+            return response.data().downloadTaskId();
+            // 비동기 처리: callback 또는 폴링으로 완료 확인 필요
+        }
+    }
+
+    private boolean isInternalS3Url(String url) {
+        return url.contains(".s3.") && url.contains("amazonaws.com");
+    }
+
+    private String extractS3Key(String s3Url) {
+        URI uri = URI.create(s3Url);
+        String path = uri.getPath();
+        return path.startsWith("/") ? path.substring(1) : path;
+    }
+
+    private String extractBucket(String s3Url) {
+        return URI.create(s3Url).getHost().split("\\.")[0];
+    }
+
+    private String extractFileName(String s3Key) {
+        int lastSlash = s3Key.lastIndexOf('/');
+        return lastSlash >= 0 ? s3Key.substring(lastSlash + 1) : s3Key;
+    }
+
+    private String guessContentType(String s3Key) {
+        if (s3Key.endsWith(".jpg") || s3Key.endsWith(".jpeg")) return "image/jpeg";
+        if (s3Key.endsWith(".png")) return "image/png";
+        if (s3Key.endsWith(".webp")) return "image/webp";
+        if (s3Key.endsWith(".gif")) return "image/gif";
+        return "application/octet-stream";
+    }
+}
 ```
 
 ---
