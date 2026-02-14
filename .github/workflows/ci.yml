@@ -92,6 +92,16 @@ jobs:
         run: ./gradlew verifyApplicationBoundaries --no-daemon
 
       # ----------------------------------------------------------------------
+      # Testcontainers Docker 설정
+      # ----------------------------------------------------------------------
+      - name: Configure Testcontainers
+        run: |
+          docker info
+          echo "docker.host=unix:///var/run/docker.sock" > ~/.testcontainers.properties
+          echo "ryuk.disabled=true" >> ~/.testcontainers.properties
+          cat ~/.testcontainers.properties
+
+      # ----------------------------------------------------------------------
       # 테스트 실행 (단위 + ArchUnit + 통합)
       # ----------------------------------------------------------------------
       - name: Run Tests
@@ -99,6 +109,7 @@ jobs:
           SPRING_DATA_REDIS_HOST: localhost
           SPRING_DATA_REDIS_PORT: 6379
           DOCKER_HOST: unix:///var/run/docker.sock
+          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
           CI: true
         run: ./gradlew test -x jacocoTestCoverageVerification --no-daemon
 
