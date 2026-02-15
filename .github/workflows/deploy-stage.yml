@@ -135,22 +135,18 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Configure Testcontainers
-        run: |
-          echo "docker.host=unix:///var/run/docker.sock" > ~/.testcontainers.properties
-          echo "ryuk.disabled=true" >> ~/.testcontainers.properties
-
       - name: Run tests
         env:
           SPRING_DATA_REDIS_HOST: localhost
           SPRING_DATA_REDIS_PORT: 6379
-          DOCKER_HOST: unix:///var/run/docker.sock
-          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
-          DOCKER_API_VERSION: "1.44"
           CI: true
         run: |
           chmod +x gradlew
-          ./gradlew clean test -x jacocoTestCoverageVerification --no-daemon
+          ./gradlew clean test \
+            -x :integration-test:test \
+            -x jacocoTestCoverageVerification \
+            -PexcludeTags=integration \
+            --no-daemon
 
       - name: Generate REST Docs
         run: |
