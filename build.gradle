@@ -49,6 +49,7 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom SpringBootPlugin.BOM_COORDINATES
+            mavenBom rootProject.libs.testcontainers.bom.get().toString()
         }
     }
 
