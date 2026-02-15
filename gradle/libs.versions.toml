@@ -169,6 +169,7 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
 testcontainers-junit = { module = "org.testcontainers:testcontainers-junit-jupiter", version.ref = "testcontainers" }
 testcontainers-mysql = { module = "org.testcontainers:testcontainers-mysql", version.ref = "testcontainers" }
 testcontainers-localstack = { module = "org.testcontainers:testcontainers-localstack", version.ref = "testcontainers" }
