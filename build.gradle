@@ -74,7 +74,11 @@ subprojects {
     // Test Configuration
     // ========================================
     tasks.named('test') {
-        useJUnitPlatform()
+        useJUnitPlatform {
+            if (project.hasProperty('excludeTags')) {
+                excludeTags project.property('excludeTags').split(',')
+            }
+        }
 
         // 특정 패턴으로 필터링 시 매칭되는 테스트가 없어도 빌드 실패하지 않음
         filter {
