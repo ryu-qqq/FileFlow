@@ -94,19 +94,14 @@ jobs:
       # ----------------------------------------------------------------------
       # Testcontainers Docker 설정
       # ----------------------------------------------------------------------
-      # 테스트 실행 (단위 + ArchUnit, Testcontainers 통합 테스트 제외)
+      # 테스트 실행 (단위 + ArchUnit + 통합)
       # ----------------------------------------------------------------------
       - name: Run Tests
         env:
           SPRING_DATA_REDIS_HOST: localhost
           SPRING_DATA_REDIS_PORT: 6379
           CI: true
-        run: >-
-          ./gradlew test
-          -x :integration-test:test
-          -x jacocoTestCoverageVerification
-          -PexcludeTags=integration
-          --no-daemon
+        run: ./gradlew test -x jacocoTestCoverageVerification --no-daemon
 
       # ----------------------------------------------------------------------
       # 테스트 리포트 업로드

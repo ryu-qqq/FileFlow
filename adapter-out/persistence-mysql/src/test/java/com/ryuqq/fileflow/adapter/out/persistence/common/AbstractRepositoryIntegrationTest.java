@@ -9,7 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.mysql.MySQLContainer;
 
 @DataJpaTest
 @Import(QueryDslConfig.class)
@@ -17,11 +17,11 @@ import org.testcontainers.containers.MySQLContainer;
 @Tag("integration")
 public abstract class AbstractRepositoryIntegrationTest {
 
-    static final MySQLContainer<?> MYSQL_CONTAINER;
+    static final MySQLContainer MYSQL_CONTAINER;
 
     static {
         MYSQL_CONTAINER =
-                new MySQLContainer<>("mysql:8.0")
+                new MySQLContainer("mysql:8.0")
                         .withDatabaseName("fileflow_test")
                         .withUsername("test")
                         .withPassword("test");

@@ -2,8 +2,8 @@ package com.ryuqq.fileflow.integration.test.common.container;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.localstack.LocalStackContainer;
+import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -24,8 +24,8 @@ public final class TestContainerConfig {
 
     // MySQL Container
     @SuppressWarnings("resource")
-    public static final MySQLContainer<?> MYSQL =
-            new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
+    public static final MySQLContainer MYSQL =
+            new MySQLContainer(DockerImageName.parse("mysql:8.0"))
                     .withDatabaseName("fileflow_test")
                     .withUsername("test")
                     .withPassword("test")
@@ -46,7 +46,7 @@ public final class TestContainerConfig {
     @SuppressWarnings("resource")
     public static final LocalStackContainer LOCALSTACK =
             new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.0"))
-                    .withServices(LocalStackContainer.Service.S3)
+                    .withServices("s3")
                     .withReuse(true);
 
     static {
@@ -73,9 +73,7 @@ public final class TestContainerConfig {
         registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
 
         // LocalStack S3
-        registry.add(
-                "spring.cloud.aws.s3.endpoint",
-                () -> LOCALSTACK.getEndpointOverride(LocalStackContainer.Service.S3).toString());
+        registry.add("spring.cloud.aws.s3.endpoint", () -> LOCALSTACK.getEndpoint().toString());
         registry.add("spring.cloud.aws.s3.region", () -> LOCALSTACK.getRegion());
         registry.add("spring.cloud.aws.credentials.access-key", () -> LOCALSTACK.getAccessKey());
         registry.add("spring.cloud.aws.credentials.secret-key", () -> LOCALSTACK.getSecretKey());
@@ -84,9 +82,7 @@ public final class TestContainerConfig {
         // S3 설정 (S3ClientProperties에서 사용하는 키)
         registry.add("fileflow.s3.bucket", () -> BUCKET_NAME);
         registry.add("fileflow.s3.region", () -> LOCALSTACK.getRegion());
-        registry.add(
-                "fileflow.s3.endpoint",
-                () -> LOCALSTACK.getEndpointOverride(LocalStackContainer.Service.S3).toString());
+        registry.add("fileflow.s3.endpoint", () -> LOCALSTACK.getEndpoint().toString());
 
         // Redisson 설정 (RedissonConfig에서 사용하는 키)
         registry.add(
@@ -97,8 +93,7 @@ public final class TestContainerConfig {
     private static void createTestBucket() {
         try (S3Client s3 =
                 S3Client.builder()
-                        .endpointOverride(
-                                LOCALSTACK.getEndpointOverride(LocalStackContainer.Service.S3))
+                        .endpointOverride(LOCALSTACK.getEndpoint())
                         .credentialsProvider(
                                 StaticCredentialsProvider.create(
                                         AwsBasicCredentials.create(

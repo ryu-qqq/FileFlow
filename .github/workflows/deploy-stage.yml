@@ -142,11 +142,7 @@ jobs:
           CI: true
         run: |
           chmod +x gradlew
-          ./gradlew clean test \
-            -x :integration-test:test \
-            -x jacocoTestCoverageVerification \
-            -PexcludeTags=integration \
-            --no-daemon
+          ./gradlew clean test -x jacocoTestCoverageVerification --no-daemon
 
       - name: Generate REST Docs
         run: |
