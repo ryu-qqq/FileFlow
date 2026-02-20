@@ -4,9 +4,11 @@ import com.ryuqq.fileflow.application.transform.port.in.command.StartTransformRe
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "aws.sqs.listener.file-processing-listener-enabled", havingValue = "true")
 public class TransformRequestSqsConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(TransformRequestSqsConsumer.class);
