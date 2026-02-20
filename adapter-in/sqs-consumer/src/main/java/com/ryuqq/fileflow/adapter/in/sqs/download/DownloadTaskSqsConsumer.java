@@ -8,7 +8,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "aws.sqs.listener.external-download-listener-enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "aws.sqs.listener.external-download-listener-enabled",
+        havingValue = "true")
 public class DownloadTaskSqsConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadTaskSqsConsumer.class);
