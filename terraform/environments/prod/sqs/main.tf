@@ -7,6 +7,13 @@
 # ========================================
 
 # ========================================
+# SNS Topics (for CloudWatch Alarm Actions)
+# ========================================
+data "aws_sns_topic" "warning" {
+  name = "${var.environment}-monitoring-warning"
+}
+
+# ========================================
 # Common Tags (for governance)
 # ========================================
 locals {
@@ -72,6 +79,8 @@ module "external_download_queue" {
   alarm_message_age_threshold      = 600  # Alert if message older than 10 minutes
   alarm_messages_visible_threshold = 1000  # Alert if queue depth exceeds 1000
   alarm_dlq_messages_threshold     = 1  # Alert on any DLQ message
+  alarm_actions                    = [data.aws_sns_topic.warning.arn]
+  alarm_ok_actions                 = [data.aws_sns_topic.warning.arn]
 
   # Required Tags
   environment = local.common_tags.environment
@@ -114,6 +123,8 @@ module "file_processing_queue" {
   alarm_message_age_threshold      = 900  # Alert if message older than 15 minutes
   alarm_messages_visible_threshold = 500  # Alert if queue depth exceeds 500
   alarm_dlq_messages_threshold     = 1  # Alert on any DLQ message
+  alarm_actions                    = [data.aws_sns_topic.warning.arn]
+  alarm_ok_actions                 = [data.aws_sns_topic.warning.arn]
 
   # Required Tags
   environment = local.common_tags.environment
