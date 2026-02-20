@@ -451,6 +451,15 @@ module "resizing_worker_service" {
       name  = "SQS_FILE_PROCESSING_DLQ_URL"
       value = data.aws_ssm_parameter.file_processing_dlq_url.value
     },
+    # SQS Publisher 환경변수 (sqs-publish-stage.yml에서 참조)
+    {
+      name  = "SQS_DOWNLOAD_QUEUE"
+      value = data.aws_ssm_parameter.external_download_queue_url.value
+    },
+    {
+      name  = "SQS_TRANSFORM_QUEUE"
+      value = data.aws_ssm_parameter.file_processing_queue_url.value
+    },
     {
       name  = "FILE_PROCESSING_LISTENER_ENABLED"
       value = "true"
