@@ -24,6 +24,7 @@ spring:
       - classpath:redis.yml
       - classpath:s3.yml
       - classpath:sqs-consumer.yml
+      - classpath:sqs-publish.yml
 
 # ===============================================
 # SQS Listener Configuration

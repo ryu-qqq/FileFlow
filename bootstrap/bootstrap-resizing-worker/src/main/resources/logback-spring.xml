@@ -43,7 +43,7 @@
     <!-- ============================================ -->
     <!-- Production Profile (prod, staging)          -->
     <!-- ============================================ -->
-    <springProfile name="prod,staging">
+    <springProfile name="prod,stage">
         <!-- Sentry Appender for Error Tracking -->
         <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
             <!-- DSN is configured in application.yml -->

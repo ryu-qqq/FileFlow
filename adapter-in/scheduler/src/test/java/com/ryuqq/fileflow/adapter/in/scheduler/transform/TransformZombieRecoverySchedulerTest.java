@@ -39,7 +39,8 @@ class TransformZombieRecoverySchedulerTest {
                 new SchedulerProperties.TransformZombieRecovery(
                         true, "0 */5 * * * *", "Asia/Seoul", BATCH_SIZE, TIMEOUT_SECONDS);
         SchedulerProperties.Jobs jobs =
-                new SchedulerProperties.Jobs(downloadConfig, transformConfig);
+                new SchedulerProperties.Jobs(
+                        downloadConfig, transformConfig, null, null, null, null);
         SchedulerProperties properties = new SchedulerProperties(jobs);
 
         sut = new TransformZombieRecoveryScheduler(useCase, properties);

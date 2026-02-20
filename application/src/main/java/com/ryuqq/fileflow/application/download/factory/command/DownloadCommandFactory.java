@@ -13,8 +13,10 @@ import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.asset.vo.AssetOrigin;
 import com.ryuqq.fileflow.domain.common.vo.StorageInfo;
 import com.ryuqq.fileflow.domain.download.aggregate.CallbackOutbox;
+import com.ryuqq.fileflow.domain.download.aggregate.DownloadQueueOutbox;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
 import com.ryuqq.fileflow.domain.download.id.CallbackOutboxId;
+import com.ryuqq.fileflow.domain.download.id.DownloadQueueOutboxId;
 import com.ryuqq.fileflow.domain.download.id.DownloadTaskId;
 import com.ryuqq.fileflow.domain.download.vo.CallbackInfo;
 import com.ryuqq.fileflow.domain.download.vo.DownloadedFileInfo;
@@ -116,6 +118,12 @@ public class DownloadCommandFactory {
         }
 
         return new DownloadFailureBundle(downloadTask, callbackOutbox);
+    }
+
+    public DownloadQueueOutbox createQueueOutbox(String downloadTaskId) {
+        String id = idGeneratorPort.generate();
+        Instant now = timeProvider.now();
+        return DownloadQueueOutbox.forNew(DownloadQueueOutboxId.of(id), downloadTaskId, now);
     }
 
     public CallbackOutbox createCallbackOutbox(
