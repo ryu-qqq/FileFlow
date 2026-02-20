@@ -225,8 +225,7 @@ class TransformRequestSqsConsumerTest {
             assertThatThrownBy(
                             () ->
                                     sut.consume(
-                                            "transform-request-metric-nack",
-                                            "scheduler-abc12345"))
+                                            "transform-request-metric-nack", "scheduler-abc12345"))
                     .isInstanceOf(RuntimeException.class);
 
             assertThat(
