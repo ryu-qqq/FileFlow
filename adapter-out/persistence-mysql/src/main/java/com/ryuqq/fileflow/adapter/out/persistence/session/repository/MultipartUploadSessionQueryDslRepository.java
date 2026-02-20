@@ -7,6 +7,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ryuqq.fileflow.adapter.out.persistence.session.condition.SessionConditionBuilder;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.CompletedPartJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.session.entity.MultipartUploadSessionJpaEntity;
+import com.ryuqq.fileflow.domain.session.vo.MultipartSessionStatus;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
@@ -37,6 +39,18 @@ public class MultipartUploadSessionQueryDslRepository {
                 .selectFrom(completedPartJpaEntity)
                 .where(conditionBuilder.completedPartSessionIdEq(sessionId))
                 .orderBy(completedPartJpaEntity.partNumber.asc())
+                .fetch();
+    }
+
+    public List<MultipartUploadSessionJpaEntity> findExpiredSessions(Instant now, int limit) {
+        return queryFactory
+                .selectFrom(multipartUploadSessionJpaEntity)
+                .where(
+                        multipartUploadSessionJpaEntity.status.in(
+                                MultipartSessionStatus.INITIATED, MultipartSessionStatus.UPLOADING),
+                        multipartUploadSessionJpaEntity.expiresAt.before(now))
+                .orderBy(multipartUploadSessionJpaEntity.expiresAt.asc())
+                .limit(limit)
                 .fetch();
     }
 }

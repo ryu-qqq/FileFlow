@@ -40,7 +40,7 @@ commonsPool2 = "2.12.0"
 junit = "5.10.2"
 assertj = "3.25.3"
 mockito = "5.11.0"
-testcontainers = "1.19.7"
+testcontainers = "2.0.3"
 restAssured = "5.4.0"
 restdocs = "3.0.1"
 wiremock = "3.4.2"
@@ -169,9 +169,10 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
-testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
-testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
-testcontainers-localstack = { module = "org.testcontainers:localstack", version.ref = "testcontainers" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+testcontainers-junit = { module = "org.testcontainers:testcontainers-junit-jupiter", version.ref = "testcontainers" }
+testcontainers-mysql = { module = "org.testcontainers:testcontainers-mysql", version.ref = "testcontainers" }
+testcontainers-localstack = { module = "org.testcontainers:testcontainers-localstack", version.ref = "testcontainers" }
 testcontainers-redis = { module = "com.redis:testcontainers-redis", version = "2.2.2" }
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "restAssured" }

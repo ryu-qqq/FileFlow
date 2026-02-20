@@ -23,6 +23,9 @@ spring:
       - classpath:http-client.yml
       - classpath:http-client-prod.yml
 
+  lifecycle:
+    timeout-per-shutdown-phase: 60s
+
 logging:
   level:
     root: INFO

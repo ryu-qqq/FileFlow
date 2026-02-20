@@ -1,6 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.download.entity;
 
-import com.ryuqq.fileflow.domain.download.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

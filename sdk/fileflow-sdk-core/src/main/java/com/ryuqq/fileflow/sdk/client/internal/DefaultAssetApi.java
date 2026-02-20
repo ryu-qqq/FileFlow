@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.ryuqq.fileflow.sdk.api.AssetApi;
 import com.ryuqq.fileflow.sdk.model.asset.AssetMetadataResponse;
 import com.ryuqq.fileflow.sdk.model.asset.AssetResponse;
+import com.ryuqq.fileflow.sdk.model.asset.RegisterAssetRequest;
 import com.ryuqq.fileflow.sdk.model.common.ApiResponse;
 import java.util.Map;
 
@@ -19,6 +20,11 @@ class DefaultAssetApi implements AssetApi {
 
     DefaultAssetApi(HttpClientSupport http) {
         this.http = http;
+    }
+
+    @Override
+    public ApiResponse<AssetResponse> register(RegisterAssetRequest request) {
+        return http.post(BASE_PATH + "/register", request, RESPONSE_TYPE);
     }
 
     @Override

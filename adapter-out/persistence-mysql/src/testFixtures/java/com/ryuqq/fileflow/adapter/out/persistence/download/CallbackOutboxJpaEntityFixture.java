@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.persistence.download;
 
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.CallbackOutboxJpaEntity;
-import com.ryuqq.fileflow.domain.download.vo.OutboxStatus;
+import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
 import java.time.Instant;
 
 public class CallbackOutboxJpaEntityFixture {

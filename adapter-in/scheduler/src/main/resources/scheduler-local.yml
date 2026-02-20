@@ -21,3 +21,23 @@ scheduler:
       batch-size: 10
       # 로컬: 짧은 타임아웃
       timeout-seconds: 60
+
+    download-queue-outbox:
+      # 로컬: 3초마다 (빠른 테스트)
+      cron: "*/3 * * * * *"
+      batch-size: 10
+
+    transform-queue-outbox:
+      # 로컬: 3초마다 (빠른 테스트)
+      cron: "*/3 * * * * *"
+      batch-size: 10
+
+    single-session-zombie-recovery:
+      # 로컬: 1분마다 (빠른 테스트)
+      cron: "0 */1 * * * *"
+      batch-size: 10
+
+    multipart-session-zombie-recovery:
+      # 로컬: 1분마다 (빠른 테스트)
+      cron: "0 */1 * * * *"
+      batch-size: 10

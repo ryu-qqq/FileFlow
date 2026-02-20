@@ -2,6 +2,9 @@ package com.ryuqq.fileflow.adapter.in.scheduler.aspect;
 
 import com.ryuqq.fileflow.adapter.in.scheduler.annotation.SchedulerJob;
 import com.ryuqq.fileflow.application.common.dto.result.SchedulerBatchProcessingResult;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import java.util.UUID;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Component;
  *   <li>작업 시작/종료 로깅
  *   <li>BatchProcessingResult 기반 요약 로깅
  *   <li>예외 발생 시 에러 로깅 (Sentry 자동 전송)
+ *   <li>Micrometer 메트릭 기록 (Timer, Counter)
  * </ul>
  */
 @Aspect
@@ -30,11 +34,18 @@ public class SchedulerLoggingAspect {
     private static final Logger log = LoggerFactory.getLogger(SchedulerLoggingAspect.class);
     private static final String TRACE_ID_KEY = "traceId";
 
+    private final MeterRegistry meterRegistry;
+
+    public SchedulerLoggingAspect(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
+
     @Around("@annotation(schedulerJob)")
     public Object around(ProceedingJoinPoint joinPoint, SchedulerJob schedulerJob)
             throws Throwable {
         String jobName = schedulerJob.value();
         String traceId = generateTraceId();
+        Timer.Sample sample = Timer.start(meterRegistry);
 
         MDC.put(TRACE_ID_KEY, traceId);
         try {
@@ -42,14 +53,39 @@ public class SchedulerLoggingAspect {
 
             Object result = joinPoint.proceed();
 
+            sample.stop(timer(jobName));
             logResult(jobName, result);
+            recordBatchMetrics(jobName, result);
 
             return result;
         } catch (Exception e) {
+            sample.stop(timer(jobName));
             log.error("[{}] 스케줄러 작업 실패 - error: {}", jobName, e.getMessage(), e);
             throw e;
         } finally {
             MDC.remove(TRACE_ID_KEY);
+        }
+    }
+
+    private Timer timer(String jobName) {
+        return Timer.builder("scheduler.job.duration")
+                .tag("job_name", jobName)
+                .register(meterRegistry);
+    }
+
+    private void recordBatchMetrics(String jobName, Object result) {
+        if (result instanceof SchedulerBatchProcessingResult batchResult
+                && batchResult.total() > 0) {
+            Counter.builder("scheduler.job.items")
+                    .tag("job_name", jobName)
+                    .tag("result", "success")
+                    .register(meterRegistry)
+                    .increment(batchResult.success());
+            Counter.builder("scheduler.job.items")
+                    .tag("job_name", jobName)
+                    .tag("result", "failed")
+                    .register(meterRegistry)
+                    .increment(batchResult.failed());
         }
     }
 

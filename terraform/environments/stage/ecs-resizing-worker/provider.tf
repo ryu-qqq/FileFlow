@@ -144,6 +144,17 @@ data "aws_ssm_parameter" "external_download_queue_url" {
 }
 
 # ========================================
+# S3 Bucket Reference (from SSM Parameters)
+# ========================================
+data "aws_ssm_parameter" "s3_bucket_name" {
+  name = "/${var.project_name}/s3/uploads-bucket-name"
+}
+
+data "aws_ssm_parameter" "external_download_queue_url" {
+  name = "/${var.project_name}/sqs/external-download-queue-url"
+}
+
+# ========================================
 # Locals
 # ========================================
 locals {
