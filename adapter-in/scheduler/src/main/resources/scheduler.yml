@@ -33,3 +33,39 @@ scheduler:
       batch-size: 100
       # 타임아웃 기준 (QUEUED 상태에서 N초 경과 시 재큐잉)
       timeout-seconds: 300
+
+    # 다운로드 큐 아웃박스 발행 스케줄러
+    download-queue-outbox:
+      enabled: true
+      # Cron: 5초마다 (환경별 오버라이드 가능)
+      cron: "*/5 * * * * *"
+      timezone: Asia/Seoul
+      # 배치 크기
+      batch-size: 100
+
+    # 변환 큐 아웃박스 발행 스케줄러
+    transform-queue-outbox:
+      enabled: true
+      # Cron: 5초마다 (환경별 오버라이드 가능)
+      cron: "*/5 * * * * *"
+      timezone: Asia/Seoul
+      # 배치 크기
+      batch-size: 100
+
+    # 단건 세션 좀비 복구 스케줄러
+    single-session-zombie-recovery:
+      enabled: true
+      # Cron: 5분마다 (환경별 오버라이드 가능)
+      cron: "0 */5 * * * *"
+      timezone: Asia/Seoul
+      # 배치 크기
+      batch-size: 100
+
+    # 멀티파트 세션 좀비 복구 스케줄러
+    multipart-session-zombie-recovery:
+      enabled: true
+      # Cron: 5분마다 (환경별 오버라이드 가능)
+      cron: "0 */5 * * * *"
+      timezone: Asia/Seoul
+      # 배치 크기
+      batch-size: 100

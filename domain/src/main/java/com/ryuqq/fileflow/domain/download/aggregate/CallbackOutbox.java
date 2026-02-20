@@ -1,7 +1,7 @@
 package com.ryuqq.fileflow.domain.download.aggregate;
 
+import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.download.id.CallbackOutboxId;
-import com.ryuqq.fileflow.domain.download.vo.OutboxStatus;
 import java.time.Instant;
 import java.util.Objects;
 

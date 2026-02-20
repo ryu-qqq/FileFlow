@@ -107,8 +107,14 @@ data "aws_ssm_parameter" "amp_remote_write_url" {
 }
 
 # ========================================
-# RDS Configuration (MySQL)
+# RDS Configuration (MySQL - Shared Staging via RDS Proxy)
 # ========================================
+
+# RDS Proxy endpoint from SSM Parameter Store
+data "aws_ssm_parameter" "rds_proxy_endpoint" {
+  name = "/shared/rds/staging-proxy-endpoint"
+}
+
 data "aws_secretsmanager_secret" "rds" {
   name = "setof-commerce/rds/staging-credentials"
 }
@@ -130,6 +136,33 @@ data "aws_ssm_parameter" "external_download_dlq_url" {
 
 data "aws_ssm_parameter" "external_download_queue_arn" {
   name = "/${var.project_name}/sqs/external-download-queue-arn"
+}
+
+# File Processing Queue (for SQS Publisher - transform queue)
+data "aws_ssm_parameter" "file_processing_queue_url" {
+  name = "/${var.project_name}/sqs/file-processing-queue-url"
+}
+
+# ========================================
+# S3 Bucket Reference (from SSM Parameters)
+# ========================================
+data "aws_ssm_parameter" "s3_bucket_name" {
+  name = "/${var.project_name}/s3/uploads-bucket-name"
+}
+
+data "aws_ssm_parameter" "file_processing_queue_url" {
+  name = "/${var.project_name}/sqs/file-processing-queue-url"
+}
+
+data "aws_ssm_parameter" "file_processing_queue_arn" {
+  name = "/${var.project_name}/sqs/file-processing-queue-arn"
+}
+
+# ========================================
+# SQS KMS Key Reference (for encrypted queues)
+# ========================================
+data "aws_kms_alias" "sqs" {
+  name = "alias/${var.project_name}-sqs-${var.environment}"
 }
 
 # ========================================
@@ -169,10 +202,10 @@ locals {
   private_subnets = split(",", data.aws_ssm_parameter.private_subnets.value)
 
   # RDS Configuration (MySQL)
-  # Stage uses direct RDS host from Secrets Manager (no RDS Proxy)
+  # Using RDS Proxy for connection pooling and failover resilience
   rds_credentials = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)
-  rds_host        = local.rds_credentials.host
-  rds_port        = tostring(local.rds_credentials.port)
+  rds_host        = data.aws_ssm_parameter.rds_proxy_endpoint.value
+  rds_port        = "3306"
   rds_dbname      = "fileflow"
   rds_username    = local.rds_credentials.username
 

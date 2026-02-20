@@ -36,6 +36,7 @@ dependencies {
     // Test Dependencies
     // ========================================
     testImplementation libs.spring.boot.starter.test
+    testImplementation testFixtures(project(':domain'))
 
     // ArchUnit for architecture validation
     testImplementation libs.archunit.junit5

@@ -17,3 +17,23 @@ scheduler:
       cron: "0 */5 * * * *"
       batch-size: 100
       timeout-seconds: 300
+
+    download-queue-outbox:
+      # 운영: 5초마다 (PENDING 아웃박스 빠른 처리)
+      cron: "*/5 * * * * *"
+      batch-size: 100
+
+    transform-queue-outbox:
+      # 운영: 5초마다 (PENDING 아웃박스 빠른 처리)
+      cron: "*/5 * * * * *"
+      batch-size: 100
+
+    single-session-zombie-recovery:
+      # 운영: 5분마다 (고아 단건 세션 정리)
+      cron: "0 */5 * * * *"
+      batch-size: 100
+
+    multipart-session-zombie-recovery:
+      # 운영: 5분마다 (고아 멀티파트 세션 정리)
+      cron: "0 */5 * * * *"
+      batch-size: 100

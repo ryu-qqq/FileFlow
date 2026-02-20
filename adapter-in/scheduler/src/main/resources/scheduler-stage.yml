@@ -17,3 +17,23 @@ scheduler:
       cron: "0 */3 * * * *"
       batch-size: 50
       timeout-seconds: 180
+
+    download-queue-outbox:
+      # 스테이징: 5초마다
+      cron: "*/5 * * * * *"
+      batch-size: 50
+
+    transform-queue-outbox:
+      # 스테이징: 5초마다
+      cron: "*/5 * * * * *"
+      batch-size: 50
+
+    single-session-zombie-recovery:
+      # 스테이징: 3분마다
+      cron: "0 */3 * * * *"
+      batch-size: 50
+
+    multipart-session-zombie-recovery:
+      # 스테이징: 3분마다
+      cron: "0 */3 * * * *"
+      batch-size: 50

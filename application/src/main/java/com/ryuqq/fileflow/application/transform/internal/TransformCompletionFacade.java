@@ -8,6 +8,7 @@ import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
 import com.ryuqq.fileflow.domain.transform.vo.ImageDimension;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class TransformCompletionFacade {
@@ -22,6 +23,7 @@ public class TransformCompletionFacade {
         this.transformCommandManager = transformCommandManager;
     }
 
+    @Transactional
     public void complete(TransformCompletionBundle bundle) {
         Asset resultAsset = bundle.resultAsset();
         TransformRequest request = bundle.request();
@@ -33,6 +35,7 @@ public class TransformCompletionFacade {
         transformCommandManager.persist(request);
     }
 
+    @Transactional
     public void fail(TransformFailureBundle bundle) {
         TransformRequest request = bundle.request();
 

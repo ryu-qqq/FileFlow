@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.transform.service.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -8,11 +9,14 @@ import com.ryuqq.fileflow.application.transform.assembler.TransformAssembler;
 import com.ryuqq.fileflow.application.transform.dto.command.CreateTransformRequestCommand;
 import com.ryuqq.fileflow.application.transform.dto.response.TransformRequestResponse;
 import com.ryuqq.fileflow.application.transform.factory.command.TransformCommandFactory;
-import com.ryuqq.fileflow.application.transform.manager.client.TransformQueueManager;
 import com.ryuqq.fileflow.application.transform.manager.command.TransformCommandManager;
+import com.ryuqq.fileflow.application.transform.manager.command.TransformQueueOutboxCommandManager;
 import com.ryuqq.fileflow.application.transform.validator.SourceAssetValidator;
+import com.ryuqq.fileflow.domain.transform.aggregate.TransformQueueOutbox;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequestFixture;
+import com.ryuqq.fileflow.domain.transform.id.TransformQueueOutboxId;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -31,7 +35,7 @@ class CreateTransformRequestServiceTest {
     @Mock private SourceAssetValidator sourceAssetValidator;
     @Mock private TransformCommandFactory transformCommandFactory;
     @Mock private TransformCommandManager transformCommandManager;
-    @Mock private TransformQueueManager transformQueueManager;
+    @Mock private TransformQueueOutboxCommandManager transformQueueOutboxCommandManager;
     @Mock private TransformAssembler transformAssembler;
 
     @Nested
@@ -39,13 +43,18 @@ class CreateTransformRequestServiceTest {
     class ExecuteTest {
 
         @Test
-        @DisplayName("유효한 커맨드로 변환 요청을 생성하고 응답을 반환한다")
-        void execute_ValidCommand_ReturnsResponse() {
+        @DisplayName("유효한 커맨드로 변환 요청을 생성하고 아웃박스에 기록한 후 응답을 반환한다")
+        void execute_ValidCommand_CreatesRequestAndOutboxAndReturnsResponse() {
             // given
             CreateTransformRequestCommand command =
                     new CreateTransformRequestCommand("asset-001", "RESIZE", 800, 600, null, null);
             String sourceContentType = "image/jpeg";
             TransformRequest transformRequest = TransformRequestFixture.aResizeRequest();
+            TransformQueueOutbox outbox =
+                    TransformQueueOutbox.forNew(
+                            TransformQueueOutboxId.of("outbox-001"),
+                            transformRequest.idValue(),
+                            Instant.now());
             TransformRequestResponse expectedResponse =
                     new TransformRequestResponse(
                             transformRequest.idValue(),
@@ -66,6 +75,8 @@ class CreateTransformRequestServiceTest {
                     .willReturn(sourceContentType);
             given(transformCommandFactory.createTransformRequest(command, sourceContentType))
                     .willReturn(transformRequest);
+            given(transformCommandFactory.createQueueOutbox(transformRequest.idValue()))
+                    .willReturn(outbox);
             given(transformAssembler.toResponse(transformRequest)).willReturn(expectedResponse);
 
             // when
@@ -78,7 +89,10 @@ class CreateTransformRequestServiceTest {
                     .should()
                     .createTransformRequest(command, sourceContentType);
             then(transformCommandManager).should().persist(transformRequest);
-            then(transformQueueManager).should().enqueue(transformRequest.idValue());
+            then(transformCommandFactory).should().createQueueOutbox(transformRequest.idValue());
+            then(transformQueueOutboxCommandManager)
+                    .should()
+                    .persist(any(TransformQueueOutbox.class));
             then(transformAssembler).should().toResponse(transformRequest);
         }
     }

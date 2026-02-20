@@ -13,7 +13,9 @@ import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.asset.id.AssetId;
 import com.ryuqq.fileflow.domain.asset.vo.AssetOrigin;
 import com.ryuqq.fileflow.domain.asset.vo.FileInfo;
+import com.ryuqq.fileflow.domain.transform.aggregate.TransformQueueOutbox;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
+import com.ryuqq.fileflow.domain.transform.id.TransformQueueOutboxId;
 import com.ryuqq.fileflow.domain.transform.id.TransformRequestId;
 import com.ryuqq.fileflow.domain.transform.vo.TransformParams;
 import com.ryuqq.fileflow.domain.transform.vo.TransformType;
@@ -51,6 +53,12 @@ public class TransformCommandFactory {
             TransformRequest request, ImageTransformResult result) {
         Instant failedAt = timeProvider.now();
         return new TransformFailureBundle(request, result.errorMessage(), failedAt);
+    }
+
+    public TransformQueueOutbox createQueueOutbox(String transformRequestId) {
+        String id = idGeneratorPort.generate();
+        Instant now = timeProvider.now();
+        return TransformQueueOutbox.forNew(TransformQueueOutboxId.of(id), transformRequestId, now);
     }
 
     public TransformRequest createTransformRequest(
