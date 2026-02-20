@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.transform.port.out.client.TransformQueueCl
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,9 +24,13 @@ public class TransformQueueSqsPublisher implements TransformQueueClient {
     @Override
     public void enqueue(String transformRequestId) {
         String queueName = properties.transformQueue();
-        log.info("변환 큐 발행: requestId={}, queue={}", transformRequestId, queueName);
+        String traceId = MDC.get("traceId");
+        log.info("변환 큐 발행: requestId={}, queue={}, traceId={}", transformRequestId, queueName, traceId);
 
-        sqsTemplate.send(queueName, transformRequestId);
+        sqsTemplate.send(to -> to
+                .queue(queueName)
+                .payload(transformRequestId)
+                .header("traceId", traceId != null ? traceId : ""));
 
         log.info("변환 큐 발행 완료: requestId={}", transformRequestId);
     }

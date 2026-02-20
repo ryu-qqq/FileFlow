@@ -8,7 +8,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,35 +34,45 @@ public class TransformRequestSqsConsumer {
     }
 
     @SqsListener("${fileflow.sqs.transform-queue}")
-    public void consume(String transformRequestId) {
-        log.info("변환 요청 메시지 수신: transformRequestId={}", transformRequestId);
-        Timer.Sample sample = Timer.start(meterRegistry);
+    public void consume(
+            @Payload String transformRequestId,
+            @Header(name = "traceId", required = false) String traceId) {
+        if (traceId != null && !traceId.isBlank()) {
+            MDC.put("traceId", traceId);
+        }
 
         try {
-            startTransformRequestUseCase.execute(transformRequestId);
-            stopTimer(sample);
-            incrementCounter("success");
-            log.info("변환 요청 시작 완료: transformRequestId={}", transformRequestId);
-        } catch (DomainException e) {
-            if (isNonRetryable(e)) {
+            log.info("변환 요청 메시지 수신: transformRequestId={}", transformRequestId);
+            Timer.Sample sample = Timer.start(meterRegistry);
+
+            try {
+                startTransformRequestUseCase.execute(transformRequestId);
                 stopTimer(sample);
-                incrementCounter("ack");
-                log.warn(
-                        "재시도 불필요 (ACK): transformRequestId={}, code={}",
-                        transformRequestId,
-                        e.code(),
-                        e);
-                return;
+                incrementCounter("success");
+                log.info("변환 요청 시작 완료: transformRequestId={}", transformRequestId);
+            } catch (DomainException e) {
+                if (isNonRetryable(e)) {
+                    stopTimer(sample);
+                    incrementCounter("ack");
+                    log.warn(
+                            "재시도 불필요 (ACK): transformRequestId={}, code={}",
+                            transformRequestId,
+                            e.code(),
+                            e);
+                    return;
+                }
+                stopTimer(sample);
+                incrementCounter("nack");
+                log.error("처리 실패 (NACK): transformRequestId={}", transformRequestId, e);
+                throw e;
+            } catch (Exception e) {
+                stopTimer(sample);
+                incrementCounter("nack");
+                log.error("처리 실패 (NACK): transformRequestId={}", transformRequestId, e);
+                throw e;
             }
-            stopTimer(sample);
-            incrementCounter("nack");
-            log.error("처리 실패 (NACK): transformRequestId={}", transformRequestId, e);
-            throw e;
-        } catch (Exception e) {
-            stopTimer(sample);
-            incrementCounter("nack");
-            log.error("처리 실패 (NACK): transformRequestId={}", transformRequestId, e);
-            throw e;
+        } finally {
+            MDC.remove("traceId");
         }
     }
 
