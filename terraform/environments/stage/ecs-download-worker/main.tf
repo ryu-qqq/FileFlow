@@ -482,7 +482,7 @@ module "download_worker_service" {
       name  = "S3_BUCKET"
       value = data.aws_ssm_parameter.s3_bucket_name.value
     },
-    # SQS Publisher 환경변수 (sqs-publish-stage.yml에서 참조)
+    # SQS Publisher Configuration
     {
       name  = "SQS_DOWNLOAD_QUEUE"
       value = data.aws_ssm_parameter.external_download_queue_url.value
