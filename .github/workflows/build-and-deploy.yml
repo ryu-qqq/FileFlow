@@ -5,7 +5,7 @@
 # 기존 600줄 → 약 150줄로 단순화
 # ============================================================================
 
-name: Build and Deploy to ECS
+name: Build and Deploy
 
 on:
   workflow_dispatch:  # 수동 트리거 허용

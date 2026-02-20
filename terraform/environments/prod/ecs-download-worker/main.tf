@@ -262,6 +262,43 @@ module "download_worker_task_role" {
         ]
       })
     }
+    sqs-publish-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "AllowSQSPublishToFileProcessingQueue"
+            Effect = "Allow"
+            Action = [
+              "sqs:SendMessage",
+              "sqs:GetQueueUrl",
+              "sqs:GetQueueAttributes"
+            ]
+            Resource = [
+              data.aws_ssm_parameter.file_processing_queue_arn.value
+            ]
+          }
+        ]
+      })
+    }
+    sqs-kms-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "AllowKMSForSQSEncryption"
+            Effect = "Allow"
+            Action = [
+              "kms:Decrypt",
+              "kms:GenerateDataKey"
+            ]
+            Resource = [
+              data.aws_kms_alias.sqs.target_key_arn
+            ]
+          }
+        ]
+      })
+    }
     s3-access = {
       policy = jsonencode({
         Version = "2012-10-17"
@@ -451,6 +488,15 @@ module "download_worker_service" {
     {
       name  = "SQS_EXTERNAL_DOWNLOAD_DLQ_URL"
       value = data.aws_ssm_parameter.external_download_dlq_url.value
+    },
+    # SQS Publisher Configuration
+    {
+      name  = "SQS_DOWNLOAD_QUEUE"
+      value = data.aws_ssm_parameter.external_download_queue_url.value
+    },
+    {
+      name  = "SQS_TRANSFORM_QUEUE"
+      value = data.aws_ssm_parameter.file_processing_queue_url.value
     },
     # Sentry (Error Tracking)
     {

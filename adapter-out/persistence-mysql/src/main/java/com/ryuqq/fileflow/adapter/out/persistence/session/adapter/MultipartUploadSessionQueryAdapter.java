@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.adapter.out.persistence.session.repository.MultipartUp
 import com.ryuqq.fileflow.application.session.port.out.query.MultipartUploadSessionQueryPort;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.id.MultipartUploadSessionId;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
@@ -33,5 +34,12 @@ public class MultipartUploadSessionQueryAdapter implements MultipartUploadSessio
                                     queryDslRepository.findCompletedPartsBySessionId(id.value());
                             return mapper.toDomain(entity, parts);
                         });
+    }
+
+    @Override
+    public List<MultipartUploadSession> findExpiredSessions(Instant now, int limit) {
+        return queryDslRepository.findExpiredSessions(now, limit).stream()
+                .map(entity -> mapper.toDomain(entity, List.of()))
+                .toList();
     }
 }

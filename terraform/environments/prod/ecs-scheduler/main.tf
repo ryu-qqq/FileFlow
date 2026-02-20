@@ -418,6 +418,11 @@ module "scheduler_service" {
       name  = "REDIS_PORT"
       value = tostring(local.redis_port)
     },
+    # S3 Configuration
+    {
+      name  = "S3_BUCKET"
+      value = data.aws_ssm_parameter.s3_bucket_name.value
+    },
     # SQS Configuration (Publisher)
     {
       name  = "SQS_DOWNLOAD_QUEUE"

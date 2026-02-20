@@ -144,6 +144,28 @@ data "aws_ssm_parameter" "file_processing_queue_url" {
 }
 
 # ========================================
+# S3 Bucket Reference (from SSM Parameters)
+# ========================================
+data "aws_ssm_parameter" "s3_bucket_name" {
+  name = "/${var.project_name}/s3/uploads-bucket-name"
+}
+
+data "aws_ssm_parameter" "file_processing_queue_url" {
+  name = "/${var.project_name}/sqs/file-processing-queue-url"
+}
+
+data "aws_ssm_parameter" "file_processing_queue_arn" {
+  name = "/${var.project_name}/sqs/file-processing-queue-arn"
+}
+
+# ========================================
+# SQS KMS Key Reference (for encrypted queues)
+# ========================================
+data "aws_kms_alias" "sqs" {
+  name = "alias/${var.project_name}-sqs-${var.environment}"
+}
+
+# ========================================
 # Sentry Configuration (Error Tracking)
 # ========================================
 data "aws_ssm_parameter" "sentry_dsn" {
