@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.download.service.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -8,11 +9,14 @@ import com.ryuqq.fileflow.application.download.assembler.DownloadAssembler;
 import com.ryuqq.fileflow.application.download.dto.command.CreateDownloadTaskCommand;
 import com.ryuqq.fileflow.application.download.dto.response.DownloadTaskResponse;
 import com.ryuqq.fileflow.application.download.factory.command.DownloadCommandFactory;
-import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
+import com.ryuqq.fileflow.application.download.manager.command.DownloadQueueOutboxCommandManager;
 import com.ryuqq.fileflow.domain.common.vo.AccessType;
+import com.ryuqq.fileflow.domain.download.aggregate.DownloadQueueOutbox;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTaskFixture;
+import com.ryuqq.fileflow.domain.download.id.DownloadQueueOutboxId;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -30,7 +34,7 @@ class CreateDownloadTaskServiceTest {
     @InjectMocks private CreateDownloadTaskService sut;
     @Mock private DownloadCommandFactory downloadCommandFactory;
     @Mock private DownloadCommandManager downloadCommandManager;
-    @Mock private DownloadQueueManager downloadQueueManager;
+    @Mock private DownloadQueueOutboxCommandManager downloadQueueOutboxCommandManager;
     @Mock private DownloadAssembler downloadAssembler;
 
     @Nested
@@ -38,8 +42,8 @@ class CreateDownloadTaskServiceTest {
     class ExecuteTest {
 
         @Test
-        @DisplayName("커맨드로 다운로드 태스크를 생성하고 큐에 등록한 후 응답을 반환한다")
-        void execute_ValidCommand_CreatesAndEnqueuesAndReturnsResponse() {
+        @DisplayName("커맨드로 다운로드 태스크를 생성하고 아웃박스에 기록한 후 응답을 반환한다")
+        void execute_ValidCommand_CreatesTaskAndOutboxAndReturnsResponse() {
             // given
             CreateDownloadTaskCommand command =
                     new CreateDownloadTaskCommand(
@@ -52,6 +56,11 @@ class CreateDownloadTaskServiceTest {
                             "https://callback.example.com/done");
 
             DownloadTask downloadTask = DownloadTaskFixture.aQueuedTask();
+            DownloadQueueOutbox outbox =
+                    DownloadQueueOutbox.forNew(
+                            DownloadQueueOutboxId.of("outbox-001"),
+                            downloadTask.idValue(),
+                            Instant.now());
             DownloadTaskResponse expectedResponse =
                     new DownloadTaskResponse(
                             downloadTask.idValue(),
@@ -71,6 +80,8 @@ class CreateDownloadTaskServiceTest {
                             downloadTask.completedAt());
 
             given(downloadCommandFactory.create(command)).willReturn(downloadTask);
+            given(downloadCommandFactory.createQueueOutbox(downloadTask.idValue()))
+                    .willReturn(outbox);
             given(downloadAssembler.toResponse(downloadTask)).willReturn(expectedResponse);
 
             // when
@@ -80,7 +91,10 @@ class CreateDownloadTaskServiceTest {
             assertThat(result).isEqualTo(expectedResponse);
             then(downloadCommandFactory).should().create(command);
             then(downloadCommandManager).should().persist(downloadTask);
-            then(downloadQueueManager).should().enqueue(downloadTask.idValue());
+            then(downloadCommandFactory).should().createQueueOutbox(downloadTask.idValue());
+            then(downloadQueueOutboxCommandManager)
+                    .should()
+                    .persist(any(DownloadQueueOutbox.class));
             then(downloadAssembler).should().toResponse(downloadTask);
         }
     }

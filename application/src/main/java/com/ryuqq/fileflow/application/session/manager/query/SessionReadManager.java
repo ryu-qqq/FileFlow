@@ -7,6 +7,8 @@ import com.ryuqq.fileflow.domain.session.aggregate.SingleUploadSession;
 import com.ryuqq.fileflow.domain.session.exception.SessionNotFoundException;
 import com.ryuqq.fileflow.domain.session.id.MultipartUploadSessionId;
 import com.ryuqq.fileflow.domain.session.id.SingleUploadSessionId;
+import java.time.Instant;
+import java.util.List;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,5 +37,15 @@ public class SessionReadManager {
         return multipartQueryPort
                 .findById(MultipartUploadSessionId.of(sessionId))
                 .orElseThrow(() -> new SessionNotFoundException(sessionId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SingleUploadSession> findExpiredSingleSessions(Instant now, int limit) {
+        return singleQueryPort.findExpiredSessions(now, limit);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MultipartUploadSession> findExpiredMultipartSessions(Instant now, int limit) {
+        return multipartQueryPort.findExpiredSessions(now, limit);
     }
 }
