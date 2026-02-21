@@ -25,12 +25,17 @@ public class TransformQueueSqsPublisher implements TransformQueueClient {
     public void enqueue(String transformRequestId) {
         String queueName = properties.transformQueue();
         String traceId = MDC.get("traceId");
-        log.info("변환 큐 발행: requestId={}, queue={}, traceId={}", transformRequestId, queueName, traceId);
+        log.info(
+                "변환 큐 발행: requestId={}, queue={}, traceId={}",
+                transformRequestId,
+                queueName,
+                traceId);
 
-        sqsTemplate.send(to -> to
-                .queue(queueName)
-                .payload(transformRequestId)
-                .header("traceId", traceId != null ? traceId : ""));
+        sqsTemplate.send(
+                to ->
+                        to.queue(queueName)
+                                .payload(transformRequestId)
+                                .header("traceId", traceId != null ? traceId : ""));
 
         log.info("변환 큐 발행 완료: requestId={}", transformRequestId);
     }

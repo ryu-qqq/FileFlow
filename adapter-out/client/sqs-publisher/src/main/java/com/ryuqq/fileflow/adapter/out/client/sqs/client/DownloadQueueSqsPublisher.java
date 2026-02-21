@@ -27,10 +27,11 @@ public class DownloadQueueSqsPublisher implements DownloadQueueClient {
         String traceId = MDC.get("traceId");
         log.info("다운로드 큐 발행: taskId={}, queue={}, traceId={}", downloadTaskId, queueName, traceId);
 
-        sqsTemplate.send(to -> to
-                .queue(queueName)
-                .payload(downloadTaskId)
-                .header("traceId", traceId != null ? traceId : ""));
+        sqsTemplate.send(
+                to ->
+                        to.queue(queueName)
+                                .payload(downloadTaskId)
+                                .header("traceId", traceId != null ? traceId : ""));
 
         log.info("다운로드 큐 발행 완료: taskId={}", downloadTaskId);
     }
