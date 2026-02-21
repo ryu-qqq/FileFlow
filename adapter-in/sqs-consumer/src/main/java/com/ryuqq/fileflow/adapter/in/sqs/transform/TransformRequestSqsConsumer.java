@@ -8,7 +8,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,28 +25,54 @@ public class TransformRequestSqsConsumer {
 
     private final StartTransformRequestUseCase startTransformRequestUseCase;
     private final MeterRegistry meterRegistry;
+    private final Timer durationTimer;
+    private final Counter successCounter;
+    private final Counter ackCounter;
+    private final Counter nackCounter;
 
     public TransformRequestSqsConsumer(
             StartTransformRequestUseCase startTransformRequestUseCase,
             MeterRegistry meterRegistry) {
         this.startTransformRequestUseCase = startTransformRequestUseCase;
         this.meterRegistry = meterRegistry;
+        this.durationTimer =
+                Timer.builder("sqs.consumer.duration")
+                        .tag("queue", QUEUE_TAG)
+                        .register(meterRegistry);
+        this.successCounter =
+                Counter.builder("sqs.consumer.messages")
+                        .tag("queue", QUEUE_TAG)
+                        .tag("result", "success")
+                        .register(meterRegistry);
+        this.ackCounter =
+                Counter.builder("sqs.consumer.messages")
+                        .tag("queue", QUEUE_TAG)
+                        .tag("result", "ack")
+                        .register(meterRegistry);
+        this.nackCounter =
+                Counter.builder("sqs.consumer.messages")
+                        .tag("queue", QUEUE_TAG)
+                        .tag("result", "nack")
+                        .register(meterRegistry);
     }
 
     @SqsListener("${fileflow.sqs.transform-queue}")
-    public void consume(String transformRequestId) {
-        log.info("변환 요청 메시지 수신: transformRequestId={}", transformRequestId);
-        Timer.Sample sample = Timer.start(meterRegistry);
+    public void consume(
+            @Payload String transformRequestId,
+            @Header(name = "traceId", required = false) String traceId) {
+        if (traceId != null && !traceId.isBlank()) {
+            MDC.put("traceId", traceId);
+        }
 
+        Timer.Sample sample = Timer.start(meterRegistry);
+        Counter resultCounter = successCounter;
         try {
+            log.info("변환 요청 메시지 수신: transformRequestId={}", transformRequestId);
             startTransformRequestUseCase.execute(transformRequestId);
-            stopTimer(sample);
-            incrementCounter("success");
             log.info("변환 요청 시작 완료: transformRequestId={}", transformRequestId);
         } catch (DomainException e) {
             if (isNonRetryable(e)) {
-                stopTimer(sample);
-                incrementCounter("ack");
+                resultCounter = ackCounter;
                 log.warn(
                         "재시도 불필요 (ACK): transformRequestId={}, code={}",
                         transformRequestId,
@@ -51,31 +80,18 @@ public class TransformRequestSqsConsumer {
                         e);
                 return;
             }
-            stopTimer(sample);
-            incrementCounter("nack");
+            resultCounter = nackCounter;
             log.error("처리 실패 (NACK): transformRequestId={}", transformRequestId, e);
             throw e;
         } catch (Exception e) {
-            stopTimer(sample);
-            incrementCounter("nack");
+            resultCounter = nackCounter;
             log.error("처리 실패 (NACK): transformRequestId={}", transformRequestId, e);
             throw e;
+        } finally {
+            sample.stop(durationTimer);
+            resultCounter.increment();
+            MDC.remove("traceId");
         }
-    }
-
-    private void stopTimer(Timer.Sample sample) {
-        sample.stop(
-                Timer.builder("sqs.consumer.duration")
-                        .tag("queue", QUEUE_TAG)
-                        .register(meterRegistry));
-    }
-
-    private void incrementCounter(String result) {
-        Counter.builder("sqs.consumer.messages")
-                .tag("queue", QUEUE_TAG)
-                .tag("result", result)
-                .register(meterRegistry)
-                .increment();
     }
 
     private boolean isNonRetryable(DomainException e) {

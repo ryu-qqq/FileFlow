@@ -41,10 +41,11 @@ public class ProcessDownloadQueueOutboxService implements ProcessDownloadQueueOu
         int success = 0;
         int failed = 0;
 
+        Instant now = Instant.now();
         for (DownloadQueueOutbox outbox : pending) {
             try {
                 downloadQueueManager.enqueue(outbox.downloadTaskId());
-                outbox.markSent(Instant.now());
+                outbox.markSent(now);
                 success++;
             } catch (Exception e) {
                 log.error(
@@ -52,7 +53,7 @@ public class ProcessDownloadQueueOutboxService implements ProcessDownloadQueueOu
                         outbox.idValue(),
                         outbox.downloadTaskId(),
                         e);
-                outbox.markFailed(e.getMessage(), Instant.now());
+                outbox.markFailed(e.getMessage(), now);
                 failed++;
             }
             outboxCommandManager.persist(outbox);
