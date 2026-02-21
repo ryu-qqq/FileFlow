@@ -41,10 +41,11 @@ public class ProcessTransformQueueOutboxService implements ProcessTransformQueue
         int success = 0;
         int failed = 0;
 
+        Instant now = Instant.now();
         for (TransformQueueOutbox outbox : pending) {
             try {
                 transformQueueManager.enqueue(outbox.transformRequestId());
-                outbox.markSent(Instant.now());
+                outbox.markSent(now);
                 success++;
             } catch (Exception e) {
                 log.error(
@@ -52,7 +53,7 @@ public class ProcessTransformQueueOutboxService implements ProcessTransformQueue
                         outbox.idValue(),
                         outbox.transformRequestId(),
                         e);
-                outbox.markFailed(e.getMessage(), Instant.now());
+                outbox.markFailed(e.getMessage(), now);
                 failed++;
             }
             outboxCommandManager.persist(outbox);
