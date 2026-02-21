@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.download.port.out.client.DownloadQueueClie
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,9 +24,14 @@ public class DownloadQueueSqsPublisher implements DownloadQueueClient {
     @Override
     public void enqueue(String downloadTaskId) {
         String queueName = properties.downloadQueue();
-        log.info("다운로드 큐 발행: taskId={}, queue={}", downloadTaskId, queueName);
+        String traceId = MDC.get("traceId");
+        log.info("다운로드 큐 발행: taskId={}, queue={}, traceId={}", downloadTaskId, queueName, traceId);
 
-        sqsTemplate.send(queueName, downloadTaskId);
+        sqsTemplate.send(
+                to ->
+                        to.queue(queueName)
+                                .payload(downloadTaskId)
+                                .header("traceId", traceId != null ? traceId : ""));
 
         log.info("다운로드 큐 발행 완료: taskId={}", downloadTaskId);
     }

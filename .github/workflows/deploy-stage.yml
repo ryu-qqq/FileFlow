@@ -345,35 +345,3 @@ jobs:
       resizing-worker-image-tag: ${{ needs.build-resizing-worker.outputs.image-tag || '' }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
-
-  # ============================================================================
-  # 배포 완료 알림 (Slack + GitHub Summary)
-  # ============================================================================
-  notify:
-    name: Deployment Notification
-    needs: [detect-changes, deploy-web-api, deploy-download-worker, deploy-scheduler, deploy-resizing-worker, update-terraform-tags]
-    if: always()
-    uses: ryu-qqq/Infrastructure/.github/workflows/reusable-notify-slack.yml@main
-    with:
-      project-name: FileFlow
-      environment: stage
-      status: |
-        ${{
-          (needs.deploy-web-api.result == 'success' || needs.deploy-web-api.result == 'skipped') &&
-          (needs.deploy-download-worker.result == 'success' || needs.deploy-download-worker.result == 'skipped') &&
-          (needs.deploy-scheduler.result == 'success' || needs.deploy-scheduler.result == 'skipped') &&
-          (needs.deploy-resizing-worker.result == 'success' || needs.deploy-resizing-worker.result == 'skipped') &&
-          (needs.update-terraform-tags.result == 'success' || needs.update-terraform-tags.result == 'skipped')
-          && 'success' || 'failure'
-        }}
-      components: |
-        [
-          {"name": "web-api", "status": "${{ needs.deploy-web-api.result }}"},
-          {"name": "download-worker", "status": "${{ needs.deploy-download-worker.result }}"},
-          {"name": "scheduler", "status": "${{ needs.deploy-scheduler.result }}"},
-          {"name": "resizing-worker", "status": "${{ needs.deploy-resizing-worker.result }}"},
-          {"name": "terraform-tags", "status": "${{ needs.update-terraform-tags.result }}"}
-        ]
-      mention-on-failure: "@here"
-    secrets:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

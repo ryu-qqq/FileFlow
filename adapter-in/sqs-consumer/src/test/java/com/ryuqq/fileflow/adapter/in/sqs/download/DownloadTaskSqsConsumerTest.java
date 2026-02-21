@@ -12,6 +12,7 @@ import com.ryuqq.fileflow.domain.common.exception.DomainExceptionFixture;
 import com.ryuqq.fileflow.domain.common.exception.ErrorCodeFixture;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +39,11 @@ class DownloadTaskSqsConsumerTest {
         sut = new DownloadTaskSqsConsumer(startDownloadTaskUseCase, meterRegistry);
     }
 
+    @AfterEach
+    void tearDown() {
+        MDC.clear();
+    }
+
     @Nested
     @DisplayName("consume 메서드")
     class ConsumeTest {
@@ -46,7 +53,7 @@ class DownloadTaskSqsConsumerTest {
         void consume_ValidDownloadTaskId_ExecutesUseCase() {
             String downloadTaskId = "download-task-001";
 
-            sut.consume(downloadTaskId);
+            sut.consume(downloadTaskId, "scheduler-abc12345");
 
             then(startDownloadTaskUseCase).should().execute(downloadTaskId);
         }
@@ -56,10 +63,31 @@ class DownloadTaskSqsConsumerTest {
         void consume_SuccessfulProcessing_UseCaseCalledOnce() {
             String downloadTaskId = "download-task-003";
 
-            sut.consume(downloadTaskId);
+            sut.consume(downloadTaskId, "scheduler-abc12345");
 
             then(startDownloadTaskUseCase).should().execute(downloadTaskId);
             then(startDownloadTaskUseCase).shouldHaveNoMoreInteractions();
+        }
+
+        @Test
+        @DisplayName("traceId가 null이어도 정상 처리된다")
+        void consume_NullTraceId_ProcessesSuccessfully() {
+            String downloadTaskId = "download-task-004";
+
+            sut.consume(downloadTaskId, null);
+
+            then(startDownloadTaskUseCase).should().execute(downloadTaskId);
+        }
+
+        @Test
+        @DisplayName("traceId가 전달되면 MDC에 설정된다")
+        void consume_WithTraceId_SetsMdc() {
+            String downloadTaskId = "download-task-005";
+
+            sut.consume(downloadTaskId, "scheduler-abc12345");
+
+            // MDC.remove("traceId")가 finally에서 호출되므로 처리 후에는 비어있어야 함
+            assertThat(MDC.get("traceId")).isNull();
         }
     }
 
@@ -77,7 +105,8 @@ class DownloadTaskSqsConsumerTest {
                     .given(startDownloadTaskUseCase)
                     .execute(downloadTaskId);
 
-            assertThatCode(() -> sut.consume(downloadTaskId)).doesNotThrowAnyException();
+            assertThatCode(() -> sut.consume(downloadTaskId, "scheduler-abc12345"))
+                    .doesNotThrowAnyException();
         }
 
         @Test
@@ -90,7 +119,8 @@ class DownloadTaskSqsConsumerTest {
                     .given(startDownloadTaskUseCase)
                     .execute(downloadTaskId);
 
-            assertThatCode(() -> sut.consume(downloadTaskId)).doesNotThrowAnyException();
+            assertThatCode(() -> sut.consume(downloadTaskId, "scheduler-abc12345"))
+                    .doesNotThrowAnyException();
         }
     }
 
@@ -108,7 +138,7 @@ class DownloadTaskSqsConsumerTest {
                     .given(startDownloadTaskUseCase)
                     .execute(downloadTaskId);
 
-            assertThatThrownBy(() -> sut.consume(downloadTaskId))
+            assertThatThrownBy(() -> sut.consume(downloadTaskId, "scheduler-abc12345"))
                     .isInstanceOf(DomainException.class);
         }
 
@@ -120,9 +150,23 @@ class DownloadTaskSqsConsumerTest {
                     .given(startDownloadTaskUseCase)
                     .execute(downloadTaskId);
 
-            assertThatThrownBy(() -> sut.consume(downloadTaskId))
+            assertThatThrownBy(() -> sut.consume(downloadTaskId, "scheduler-abc12345"))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage("다운로드 처리 실패");
+        }
+
+        @Test
+        @DisplayName("예외 발생 후에도 MDC가 정리된다")
+        void consume_ExceptionThrown_ClearsMdc() {
+            String downloadTaskId = "download-task-mdc-cleanup";
+            willThrow(new RuntimeException("fail"))
+                    .given(startDownloadTaskUseCase)
+                    .execute(downloadTaskId);
+
+            assertThatThrownBy(() -> sut.consume(downloadTaskId, "scheduler-abc12345"))
+                    .isInstanceOf(RuntimeException.class);
+
+            assertThat(MDC.get("traceId")).isNull();
         }
     }
 
@@ -133,7 +177,7 @@ class DownloadTaskSqsConsumerTest {
         @Test
         @DisplayName("성공 처리 시 success Counter와 duration Timer를 기록한다")
         void shouldRecordSuccessMetrics() {
-            sut.consume("download-task-metric-001");
+            sut.consume("download-task-metric-001", "scheduler-abc12345");
 
             assertThat(
                             meterRegistry
@@ -156,7 +200,7 @@ class DownloadTaskSqsConsumerTest {
                     .given(startDownloadTaskUseCase)
                     .execute("download-task-metric-ack");
 
-            sut.consume("download-task-metric-ack");
+            sut.consume("download-task-metric-ack", "scheduler-abc12345");
 
             assertThat(
                             meterRegistry
@@ -175,7 +219,7 @@ class DownloadTaskSqsConsumerTest {
                     .given(startDownloadTaskUseCase)
                     .execute("download-task-metric-nack");
 
-            assertThatThrownBy(() -> sut.consume("download-task-metric-nack"))
+            assertThatThrownBy(() -> sut.consume("download-task-metric-nack", "scheduler-abc12345"))
                     .isInstanceOf(RuntimeException.class);
 
             assertThat(
