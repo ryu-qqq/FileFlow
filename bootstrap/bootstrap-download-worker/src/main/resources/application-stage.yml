@@ -29,7 +29,12 @@ logging:
     com.ryuqq.fileflow: INFO
     io.awspring.cloud.sqs: INFO
 
-# Sentry (스테이지 - 비활성화)
-# Sentry는 prod에서만 활성화 (stage 로그가 운영과 섞이는 것 방지)
+# Sentry 활성화 (스테이지)
 sentry:
-  dsn: ""
+  dsn: ${SENTRY_DSN:}
+  environment: stage
+  send-default-pii: true
+  attach-stacktrace: true
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
