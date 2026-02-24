@@ -36,11 +36,16 @@ spring:
       - optional:classpath:http-client-stage.yml
 
 # ===============================================
-# Sentry Configuration (Stage - 비활성화)
+# Sentry Configuration (Stage)
 # ===============================================
-# Sentry는 prod에서만 활성화 (stage 로그가 운영과 섞이는 것 방지)
 sentry:
-  dsn: ""
+  dsn: ${SENTRY_DSN:}
+  environment: stage
+  send-default-pii: true
+  attach-stacktrace: true
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
 
 management:
   endpoints:
