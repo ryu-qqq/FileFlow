@@ -24,7 +24,7 @@ receivers:
           metrics_path: /actuator/prometheus
           metric_relabel_configs:
             - source_labels: [__name__]
-              regex: '(http_.*|jvm_.*|process_.*|system_.*|application_.*|business_.*|spring_.*)'
+              regex: '(http_.*|jvm_.*|process_.*|system_.*|application_.*|business_.*|spring_.*|hikaricp_.*|fileflow_.*)'
               action: keep
 
         # REMOVED: otel-collector self-scrape job
@@ -63,10 +63,10 @@ processors:
   resource:
     attributes:
       - key: environment
-        value: prod
+        value: ${ENVIRONMENT}
         action: upsert
       - key: cluster_name
-        value: fileflow-cluster-prod
+        value: ${CLUSTER_NAME}
         action: upsert
       - key: service_name
         value: web-api

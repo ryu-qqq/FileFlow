@@ -29,9 +29,6 @@ dependencies {
     // Configuration Processor
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-    // Observability (Custom Starter - Web, Logging, Metrics)
-    implementation libs.observability.starter
-
     // Sentry (Error Tracking)
     implementation libs.sentry.spring.boot
     implementation libs.sentry.logback
