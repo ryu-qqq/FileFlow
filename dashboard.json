@@ -15,11 +15,24 @@
         "current": { "text": "AMP-prod", "value": "AMP-prod" }
       },
       {
+        "name": "environment",
+        "type": "query",
+        "datasource": "$datasource",
+        "query": "label_values(up, environment)",
+        "includeAll": true,
+        "multi": false,
+        "current": { "text": "All", "value": "$__all" },
+        "refresh": 1,
+        "sort": 1
+      },
+      {
         "name": "job",
         "type": "query",
         "datasource": "$datasource",
         "query": "label_values(up, job)",
-        "current": { "text": "fileflow-metrics", "value": "fileflow-metrics" }
+        "regex": "/fileflow.*/",
+        "current": { "text": "fileflow-metrics", "value": "fileflow-metrics" },
+        "refresh": 1
       },
       {
         "name": "application",
@@ -36,7 +49,7 @@
         "label": "ECS Task ID",
         "type": "query",
         "datasource": "$datasource",
-        "query": "label_values(up{job=\"$job\"}, aws_ecs_task_id)",
+        "query": "label_values(up{job=\"$job\",environment=~\"$environment\"}, aws_ecs_task_id)",
         "regex": "/.+/",
         "includeAll": true,
         "multi": true,
@@ -60,7 +73,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(up{job=\"$job\"})",
+          "expr": "sum(up{job=\"$job\",environment=~\"$environment\"})",
           "legendFormat": "UP"
         }
       ],
@@ -89,7 +102,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "RPS"
         }
       ],
@@ -108,7 +121,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"$job\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_sum{job=\"$job\",environment=~\"$environment\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "Avg"
         }
       ],
@@ -138,7 +151,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"$job\"}[1m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[1m])))",
           "legendFormat": "P99"
         }
       ],
@@ -168,7 +181,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",status=~\"5..\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=\"$job\"}[1m])) * 100 or vector(0)",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\",status=~\"5..\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\"}[1m])) * 100 or vector(0)",
           "legendFormat": "Error %"
         }
       ],
@@ -198,7 +211,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "avg(jvm_memory_used_bytes{job=\"$job\",area=\"heap\"} / jvm_memory_max_bytes{job=\"$job\",area=\"heap\"}) * 100",
+          "expr": "avg(jvm_memory_used_bytes{job=\"$job\",environment=~\"$environment\",area=\"heap\"} / jvm_memory_max_bytes{job=\"$job\",environment=~\"$environment\",area=\"heap\"}) * 100",
           "legendFormat": "Heap %"
         }
       ],
@@ -236,11 +249,11 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "Total RPS"
         },
         {
-          "expr": "sum by (aws_ecs_task_id) (rate(http_server_requests_seconds_count{job=\"$job\"}[1m]))",
+          "expr": "sum by (aws_ecs_task_id) (rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "{{aws_ecs_task_id}}"
         }
       ],
@@ -256,15 +269,15 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"$job\"}[1m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[1m])))",
           "legendFormat": "P50"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"$job\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[1m])))",
           "legendFormat": "P95"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"$job\"}[1m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[1m])))",
           "legendFormat": "P99"
         }
       ],
@@ -288,7 +301,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(file_processing_success_total{job=\"$job\"}[5m])) / sum(rate(file_processing_total{job=\"$job\"}[5m])) * 100 or vector(100)",
+          "expr": "sum(rate(file_processing_success_total{job=\"$job\",environment=~\"$environment\"}[5m])) / sum(rate(file_processing_total{job=\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
           "legendFormat": "Success %"
         }
       ],
@@ -319,7 +332,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(external_download_success_total{job=\"$job\"}[5m])) / sum(rate(external_download_total{job=\"$job\"}[5m])) * 100 or vector(100)",
+          "expr": "sum(rate(external_download_success_total{job=\"$job\",environment=~\"$environment\"}[5m])) / sum(rate(external_download_total{job=\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
           "legendFormat": "Success %"
         }
       ],
@@ -350,7 +363,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(increase(file_processing_dlq_total{job=\"$job\"}[5m])) + sum(increase(external_download_dlq_total{job=\"$job\"}[5m])) or vector(0)",
+          "expr": "sum(increase(file_processing_dlq_total{job=\"$job\",environment=~\"$environment\"}[5m])) + sum(increase(external_download_dlq_total{job=\"$job\",environment=~\"$environment\"}[5m])) or vector(0)",
           "legendFormat": "DLQ"
         }
       ],
@@ -381,7 +394,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(increase(external_download_lock_skipped_total{job=\"$job\"}[5m])) or vector(0)",
+          "expr": "sum(increase(external_download_lock_skipped_total{job=\"$job\",environment=~\"$environment\"}[5m])) or vector(0)",
           "legendFormat": "Skipped"
         }
       ],
@@ -411,15 +424,15 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(file_processing_total{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(file_processing_total{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "Total"
         },
         {
-          "expr": "sum(rate(file_processing_success_total{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(file_processing_success_total{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "Success"
         },
         {
-          "expr": "sum(rate(file_processing_failure_total{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(file_processing_failure_total{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "Failure"
         }
       ],
@@ -439,15 +452,15 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(external_download_total{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(external_download_total{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "Total"
         },
         {
-          "expr": "sum(rate(external_download_success_total{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(external_download_success_total{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "Success"
         },
         {
-          "expr": "sum(rate(external_download_failure_total{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(external_download_failure_total{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "Failure"
         }
       ],
@@ -467,15 +480,15 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(file_processing_duration_seconds_bucket{job=\"$job\"}[5m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(file_processing_duration_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P50"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(file_processing_duration_seconds_bucket{job=\"$job\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(file_processing_duration_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P95"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(file_processing_duration_seconds_bucket{job=\"$job\"}[5m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(file_processing_duration_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P99"
         }
       ],
@@ -491,15 +504,15 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(external_download_duration_seconds_bucket{job=\"$job\"}[5m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(external_download_duration_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P50"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(external_download_duration_seconds_bucket{job=\"$job\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(external_download_duration_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P95"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(external_download_duration_seconds_bucket{job=\"$job\"}[5m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(external_download_duration_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P99"
         }
       ],
@@ -523,15 +536,15 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",status=~\"2..\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\",status=~\"2..\"}[1m]))",
           "legendFormat": "2xx Success"
         },
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",status=~\"4..\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\",status=~\"4..\"}[1m]))",
           "legendFormat": "4xx Client Error"
         },
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",status=~\"5..\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\",status=~\"5..\"}[1m]))",
           "legendFormat": "5xx Server Error"
         }
       ],
@@ -552,11 +565,11 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(file_processing_dlq_total{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(file_processing_dlq_total{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "File Processing DLQ"
         },
         {
-          "expr": "sum(rate(external_download_dlq_total{job=\"$job\"}[1m]))",
+          "expr": "sum(rate(external_download_dlq_total{job=\"$job\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "External Download DLQ"
         }
       ],
@@ -584,15 +597,15 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "hikaricp_connections_active{job=\"$job\"}",
+          "expr": "hikaricp_connections_active{job=\"$job\",environment=~\"$environment\"}",
           "legendFormat": "Active"
         },
         {
-          "expr": "hikaricp_connections_idle{job=\"$job\"}",
+          "expr": "hikaricp_connections_idle{job=\"$job\",environment=~\"$environment\"}",
           "legendFormat": "Idle"
         },
         {
-          "expr": "hikaricp_connections_pending{job=\"$job\"}",
+          "expr": "hikaricp_connections_pending{job=\"$job\",environment=~\"$environment\"}",
           "legendFormat": "Pending"
         }
       ],
@@ -608,7 +621,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "avg(hikaricp_connections_active{job=\"$job\"} / hikaricp_connections_max{job=\"$job\"}) * 100",
+          "expr": "avg(hikaricp_connections_active{job=\"$job\",environment=~\"$environment\"} / hikaricp_connections_max{job=\"$job\",environment=~\"$environment\"}) * 100",
           "legendFormat": "Usage %"
         }
       ],
@@ -639,7 +652,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "rate(hikaricp_connections_acquire_seconds_sum{job=\"$job\"}[1m]) / rate(hikaricp_connections_acquire_seconds_count{job=\"$job\"}[1m])",
+          "expr": "rate(hikaricp_connections_acquire_seconds_sum{job=\"$job\",environment=~\"$environment\"}[1m]) / rate(hikaricp_connections_acquire_seconds_count{job=\"$job\",environment=~\"$environment\"}[1m])",
           "legendFormat": "Avg Acquire Time"
         }
       ],
@@ -663,7 +676,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum by (job_name) (rate(scheduler_job_runs_total{job=\"$job\"}[5m]))",
+          "expr": "sum by (job_name) (rate(scheduler_job_runs_total{job=\"$job\",environment=~\"$environment\"}[5m]))",
           "legendFormat": "{{job_name}}"
         }
       ],
@@ -682,7 +695,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le, job_name) (rate(scheduler_job_duration_seconds_bucket{job=\"$job\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, job_name) (rate(scheduler_job_duration_seconds_bucket{job=\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "{{job_name}} P95"
         }
       ],
@@ -701,7 +714,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum(rate(scheduler_job_success_total{job=\"$job\"}[5m])) / sum(rate(scheduler_job_runs_total{job=\"$job\"}[5m])) * 100 or vector(100)",
+          "expr": "sum(rate(scheduler_job_success_total{job=\"$job\",environment=~\"$environment\"}[5m])) / sum(rate(scheduler_job_runs_total{job=\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
           "legendFormat": "Success %"
         }
       ],
@@ -732,7 +745,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum by (job_name) (rate(scheduler_job_items_processed_total{job=\"$job\"}[5m]))",
+          "expr": "sum by (job_name) (rate(scheduler_job_items_processed_total{job=\"$job\",environment=~\"$environment\"}[5m]))",
           "legendFormat": "{{job_name}}"
         }
       ],
@@ -756,7 +769,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"})",
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=\"$job\",environment=~\"$environment\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"})",
           "legendFormat": "{{aws_ecs_task_id}}"
         }
       ],
@@ -772,7 +785,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"}) / sum by (aws_ecs_task_id) (jvm_memory_max_bytes{job=\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"}) * 100",
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=\"$job\",environment=~\"$environment\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"}) / sum by (aws_ecs_task_id) (jvm_memory_max_bytes{job=\"$job\",environment=~\"$environment\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"}) * 100",
           "legendFormat": "{{aws_ecs_task_id}}"
         }
       ],
@@ -798,7 +811,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=\"$job\",area=\"nonheap\",aws_ecs_task_id=~\"$task_id\"})",
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=\"$job\",environment=~\"$environment\",area=\"nonheap\",aws_ecs_task_id=~\"$task_id\"})",
           "legendFormat": "{{aws_ecs_task_id}}"
         }
       ],
@@ -814,7 +827,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "jvm_threads_live_threads{job=\"$job\",aws_ecs_task_id=~\"$task_id\"}",
+          "expr": "jvm_threads_live_threads{job=\"$job\",environment=~\"$environment\",aws_ecs_task_id=~\"$task_id\"}",
           "legendFormat": "{{aws_ecs_task_id}}"
         }
       ],
@@ -830,7 +843,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_sum{job=\"$job\",aws_ecs_task_id=~\"$task_id\"}[5m]))",
+          "expr": "sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_sum{job=\"$job\",environment=~\"$environment\",aws_ecs_task_id=~\"$task_id\"}[5m]))",
           "legendFormat": "{{aws_ecs_task_id}}"
         }
       ],
@@ -846,7 +859,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_count{job=\"$job\",aws_ecs_task_id=~\"$task_id\"}[1m])) * 60",
+          "expr": "sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_count{job=\"$job\",environment=~\"$environment\",aws_ecs_task_id=~\"$task_id\"}[1m])) * 60",
           "legendFormat": "{{aws_ecs_task_id}}"
         }
       ],
@@ -871,7 +884,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "topk(10, sum by (uri) (rate(http_server_requests_seconds_count{job=\"$job\",uri!~\"/actuator.*\"}[1m])))",
+          "expr": "topk(10, sum by (uri) (rate(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\",uri!~\"/actuator.*\"}[1m])))",
           "legendFormat": "{{uri}}"
         }
       ],
@@ -891,7 +904,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "topk(10, histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"$job\",uri!~\"/actuator.*\"}[1m]))))",
+          "expr": "topk(10, histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"$job\",environment=~\"$environment\",uri!~\"/actuator.*\"}[1m]))))",
           "legendFormat": "{{uri}}"
         }
       ],
@@ -911,7 +924,7 @@
       "datasource": "$datasource",
       "targets": [
         {
-          "expr": "topk(20, sum by (uri, method, status) (increase(http_server_requests_seconds_count{job=\"$job\",uri!~\"/actuator.*\"}[5m])))",
+          "expr": "topk(20, sum by (uri, method, status) (increase(http_server_requests_seconds_count{job=\"$job\",environment=~\"$environment\",uri!~\"/actuator.*\"}[5m])))",
           "legendFormat": "{{method}} {{uri}} - {{status}}",
           "format": "table",
           "instant": true
