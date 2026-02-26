@@ -1,0 +1,3182 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "title": "\ud83d\udcca Overview",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum(up{job=~\"$job\",environment=~\"$environment\"})",
+          "legendFormat": "UP",
+          "refId": "A"
+        }
+      ],
+      "title": "Instances UP",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$job\",environment=~\"$environment\"}[1m]))",
+          "legendFormat": "RPS",
+          "refId": "A"
+        }
+      ],
+      "title": "Total RPS",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum(rate(http_server_requests_seconds_sum{job=~\"$job\",environment=~\"$environment\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=~\"$job\",environment=~\"$environment\"}[1m]))",
+          "legendFormat": "Avg",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Latency",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[1m])))",
+          "legendFormat": "P99",
+          "refId": "A"
+        }
+      ],
+      "title": "P99 Latency",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$job\",status=~\"5..\",environment=~\"$environment\"}[1m])) / sum(rate(http_server_requests_seconds_count{job=~\"$job\",environment=~\"$environment\"}[1m])) * 100 or vector(0)",
+          "legendFormat": "Error %",
+          "refId": "A"
+        }
+      ],
+      "title": "Error Rate %",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "avg(jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",environment=~\"$environment\"} / jvm_memory_max_bytes{job=~\"$job\",area=\"heap\",environment=~\"$environment\"}) * 100",
+          "legendFormat": "Heap %",
+          "refId": "A"
+        }
+      ],
+      "title": "Heap Usage %",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 500,
+      "title": "\ud83d\uddc4\ufe0f Database (HikariCP)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 6
+      },
+      "id": 40,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "hikaricp_connections_active{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Active",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "hikaricp_connections_idle{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Idle",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "hikaricp_connections_pending{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Pending",
+          "refId": "C"
+        }
+      ],
+      "title": "Connection Pool Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 6
+      },
+      "id": 41,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "avg(hikaricp_connections_active{job=~\"$job\",environment=~\"$environment\"} / hikaricp_connections_max{job=~\"$job\",environment=~\"$environment\"}) * 100",
+          "legendFormat": "Usage %",
+          "refId": "A"
+        }
+      ],
+      "title": "Pool Utilization %",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 6
+      },
+      "id": 42,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "rate(hikaricp_connections_acquire_seconds_sum{job=~\"$job\",environment=~\"$environment\"}[1m]) / rate(hikaricp_connections_acquire_seconds_count{job=~\"$job\",environment=~\"$environment\"}[1m])",
+          "legendFormat": "Avg Acquire Time",
+          "refId": "A"
+        }
+      ],
+      "title": "Connection Acquire Time",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 700,
+      "title": "\u2615 JVM Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 13
+      },
+      "id": 60,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "label_replace(sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}), \"short_id\", \"$1\", \"aws_ecs_task_id\", \"^(.{8}).*\")",
+          "legendFormat": "{{short_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Heap Memory Used",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 13
+      },
+      "id": 61,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "label_replace(sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}) / sum by (aws_ecs_task_id) (jvm_memory_max_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}) * 100, \"short_id\", \"$1\", \"aws_ecs_task_id\", \"^(.{8}).*\")",
+          "legendFormat": "{{short_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Heap Usage %",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 13
+      },
+      "id": 62,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "label_replace(sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"nonheap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}), \"short_id\", \"$1\", \"aws_ecs_task_id\", \"^(.{8}).*\")",
+          "legendFormat": "{{short_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Non-Heap Memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 13
+      },
+      "id": 63,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "label_replace(jvm_threads_live_threads{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}, \"short_id\", \"$1\", \"aws_ecs_task_id\", \"^(.{8}).*\")",
+          "legendFormat": "{{short_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Live Threads",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 64,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "label_replace(sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_sum{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}[5m])), \"short_id\", \"$1\", \"aws_ecs_task_id\", \"^(.{8}).*\")",
+          "legendFormat": "{{short_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "GC Pause Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 65,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "label_replace(sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_count{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}[1m])) * 60, \"short_id\", \"$1\", \"aws_ecs_task_id\", \"^(.{8}).*\")",
+          "legendFormat": "{{short_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "GC Count / min",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 200,
+      "title": "\ud83d\ude80 API - Traffic & Latency",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 26
+          },
+          "id": 10,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$job\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "Total RPS",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "label_replace(sum by (aws_ecs_task_id) (rate(http_server_requests_seconds_count{job=~\"$job\",environment=~\"$environment\"}[1m])), \"short_id\", \"$1\", \"aws_ecs_task_id\", \"^(.{8}).*\")",
+              "legendFormat": "{{short_id}}",
+              "refId": "B"
+            }
+          ],
+          "title": "Request Rate (RPS)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 26
+          },
+          "id": 11,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_requests_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[1m])))",
+              "legendFormat": "P50",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[1m])))",
+              "legendFormat": "P95",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[1m])))",
+              "legendFormat": "P99",
+              "refId": "C"
+            }
+          ],
+          "title": "Response Time (P50 / P95 / P99)",
+          "type": "timeseries"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 400,
+      "title": "\u26a0\ufe0f API - Errors & Status Codes",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "2xx Success"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "4xx Client Error"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "5xx Server Error"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 27
+          },
+          "id": 30,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$job\",status=~\"2..\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "2xx Success",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$job\",status=~\"4..\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "4xx Client Error",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$job\",status=~\"5..\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "5xx Server Error",
+              "refId": "C"
+            }
+          ],
+          "title": "HTTP Status Code Distribution",
+          "type": "timeseries"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 800,
+      "title": "\ud83d\udd17 API - Endpoints (by URI)",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "description": "API \uc5d4\ub4dc\ud3ec\uc778\ud2b8\ubcc4 \uc694\uccad \ucc98\ub9ac\ub7c9",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 28
+          },
+          "id": 70,
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "topk(10, sum by (uri) (rate(http_server_requests_seconds_count{job=~\"$job\",uri!~\"/actuator.*\",environment=~\"$environment\"}[1m])))",
+              "legendFormat": "{{uri}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Request Rate by Endpoint",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "description": "API \uc5d4\ub4dc\ud3ec\uc778\ud2b8\ubcc4 P95 \uc751\ub2f5\uc2dc\uac04",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 28
+          },
+          "id": 71,
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "topk(10, histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=~\"$job\",uri!~\"/actuator.*\",environment=~\"$environment\"}[1m]))))",
+              "legendFormat": "{{uri}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Latency P95 by Endpoint",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "description": "\uc5d4\ub4dc\ud3ec\uc778\ud2b8\ubcc4 \ud604\uc7ac \uc0c1\ud0dc \uc694\uc57d",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Status"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "from": 200,
+                          "result": {
+                            "color": "green"
+                          },
+                          "to": 299
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "from": 400,
+                          "result": {
+                            "color": "yellow"
+                          },
+                          "to": 499
+                        },
+                        "type": "range"
+                      },
+                      {
+                        "options": {
+                          "from": 500,
+                          "result": {
+                            "color": "red"
+                          },
+                          "to": 599
+                        },
+                        "type": "range"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 36
+          },
+          "id": 72,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "topk(20, sum by (uri, method, status) (increase(http_server_requests_seconds_count{job=~\"$job\",uri!~\"/actuator.*\",environment=~\"$environment\"}[5m])))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "{{method}} {{uri}} - {{status}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Endpoint Status Summary (5m)",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "Value": "Requests (5m)",
+                  "method": "Method",
+                  "status": "Status",
+                  "uri": "Endpoint"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 300,
+      "title": "\ud83d\udcc1 Worker - SQS Consumer",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 1,
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 95
+                  },
+                  {
+                    "color": "green",
+                    "value": 99
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 29
+          },
+          "id": 20,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "last"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "10.4.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",queue=\"download\",result=\"success\",environment=~\"$environment\"}[5m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",queue=\"download\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
+              "legendFormat": "Success %",
+              "refId": "A"
+            }
+          ],
+          "title": "SQS Download - Success Rate",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 1,
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 95
+                  },
+                  {
+                    "color": "green",
+                    "value": 99
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 29
+          },
+          "id": 21,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "last"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "10.4.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",queue=\"transform\",result=\"success\",environment=~\"$environment\"}[5m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",queue=\"transform\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
+              "legendFormat": "Success %",
+              "refId": "A"
+            }
+          ],
+          "title": "SQS Transform - Success Rate",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 29
+          },
+          "id": 22,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "last"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "10.4.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(increase(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[5m])) or vector(0)",
+              "legendFormat": "Nack",
+              "refId": "A"
+            }
+          ],
+          "title": "Nack Messages (5m)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 10
+                  },
+                  {
+                    "color": "orange",
+                    "value": 50
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 29
+          },
+          "id": 23,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "last"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "10.4.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(increase(sqs_consumer_messages_total{job=~\"$job\",result=\"ack\",environment=~\"$environment\"}[5m])) or vector(0)",
+              "legendFormat": "Ack",
+              "refId": "A"
+            }
+          ],
+          "title": "Ack (Non-Retryable) (5m)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "reqps"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Success"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Failure"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 33
+          },
+          "id": 24,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum by (queue) (rate(sqs_consumer_messages_total{job=~\"$job\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "{{queue}} Total",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum by (queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "{{queue}} Success",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum by (queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "{{queue}} Nack",
+              "refId": "C"
+            }
+          ],
+          "title": "SQS Processing Rate (by Queue)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "reqps"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Success"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Nack (Retry)"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 33
+          },
+          "id": 25,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "Success",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=\"ack\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "Ack (Non-Retryable)",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "Nack (Retry)",
+              "refId": "C"
+            }
+          ],
+          "title": "SQS Message Result Breakdown",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 41
+          },
+          "id": 26,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.50, sum by (le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"download\",environment=~\"$environment\"}[5m])))",
+              "legendFormat": "P50",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"download\",environment=~\"$environment\"}[5m])))",
+              "legendFormat": "P95",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.99, sum by (le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"download\",environment=~\"$environment\"}[5m])))",
+              "legendFormat": "P99",
+              "refId": "C"
+            }
+          ],
+          "title": "SQS Download Duration (P50/P95/P99)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 41
+          },
+          "id": 27,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.50, sum by (le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"transform\",environment=~\"$environment\"}[5m])))",
+              "legendFormat": "P50",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"transform\",environment=~\"$environment\"}[5m])))",
+              "legendFormat": "P95",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.99, sum by (le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"transform\",environment=~\"$environment\"}[5m])))",
+              "legendFormat": "P99",
+              "refId": "C"
+            }
+          ],
+          "title": "SQS Transform Duration (P50/P95/P99)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "fillOpacity": 20
+              },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 49
+          },
+          "id": 31,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum by (queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "{{queue}} Nack",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum by (queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"ack\",environment=~\"$environment\"}[1m]))",
+              "legendFormat": "{{queue}} Ack",
+              "refId": "B"
+            }
+          ],
+          "title": "SQS Error Rate (Nack / Ack)",
+          "type": "timeseries"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 900,
+      "title": "\ud83d\udce1 Worker - SQS Queue Depth (CloudWatch)",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Visible (DLQ)"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 30
+          },
+          "id": 80,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "QueueName": [
+                  "prod-monitoring-sqs-fileflow-external-download"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "ApproximateNumberOfMessagesVisible",
+              "metricQueryType": 0,
+              "namespace": "AWS/SQS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "A",
+              "region": "ap-northeast-2",
+              "statistic": "Average",
+              "legendFormat": "Visible (Main)"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "QueueName": [
+                  "prod-monitoring-sqs-fileflow-external-download-dlq"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "ApproximateNumberOfMessagesVisible",
+              "metricQueryType": 0,
+              "namespace": "AWS/SQS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "B",
+              "region": "ap-northeast-2",
+              "statistic": "Average",
+              "legendFormat": "Visible (DLQ)"
+            }
+          ],
+          "title": "Download Queue - Messages Visible",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Visible (DLQ)"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 30
+          },
+          "id": 81,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "QueueName": [
+                  "prod-fileflow-file-processing"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "ApproximateNumberOfMessagesVisible",
+              "metricQueryType": 0,
+              "namespace": "AWS/SQS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "A",
+              "region": "ap-northeast-2",
+              "statistic": "Average",
+              "legendFormat": "Visible (Main)"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "QueueName": [
+                  "prod-fileflow-file-processing-dlq"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "ApproximateNumberOfMessagesVisible",
+              "metricQueryType": 0,
+              "namespace": "AWS/SQS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "B",
+              "region": "ap-northeast-2",
+              "statistic": "Average",
+              "legendFormat": "Visible (DLQ)"
+            }
+          ],
+          "title": "File Processing Queue - Messages Visible",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "dashed+area"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 300
+                  },
+                  {
+                    "color": "red",
+                    "value": 600
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 38
+          },
+          "id": 82,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "QueueName": [
+                  "prod-monitoring-sqs-fileflow-external-download"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "ApproximateAgeOfOldestMessage",
+              "metricQueryType": 0,
+              "namespace": "AWS/SQS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "A",
+              "region": "ap-northeast-2",
+              "statistic": "Maximum"
+            }
+          ],
+          "title": "Download Queue - Message Age",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "dashed+area"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 300
+                  },
+                  {
+                    "color": "red",
+                    "value": 600
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 38
+          },
+          "id": 83,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "QueueName": [
+                  "prod-fileflow-file-processing"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "ApproximateAgeOfOldestMessage",
+              "metricQueryType": 0,
+              "namespace": "AWS/SQS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "A",
+              "region": "ap-northeast-2",
+              "statistic": "Maximum"
+            }
+          ],
+          "title": "File Processing Queue - Message Age",
+          "type": "timeseries"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 1000,
+      "title": "\ud83d\udda5\ufe0f Worker - ECS Resources (CloudWatch)",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "dashed+area"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 31
+          },
+          "id": 84,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "ClusterName": [
+                  "fileflow-cluster-prod"
+                ],
+                "ServiceName": [
+                  "fileflow-download-worker"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "CPUUtilization",
+              "metricQueryType": 0,
+              "namespace": "AWS/ECS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "A",
+              "region": "ap-northeast-2",
+              "statistic": "Average",
+              "legendFormat": "download-worker"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "ClusterName": [
+                  "fileflow-cluster-prod"
+                ],
+                "ServiceName": [
+                  "fileflow-resizing-worker"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "CPUUtilization",
+              "metricQueryType": 0,
+              "namespace": "AWS/ECS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "B",
+              "region": "ap-northeast-2",
+              "statistic": "Average",
+              "legendFormat": "resizing-worker"
+            }
+          ],
+          "title": "CPU Utilization",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "dashed+area"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 31
+          },
+          "id": 85,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "ClusterName": [
+                  "fileflow-cluster-prod"
+                ],
+                "ServiceName": [
+                  "fileflow-download-worker"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "MemoryUtilization",
+              "metricQueryType": 0,
+              "namespace": "AWS/ECS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "A",
+              "region": "ap-northeast-2",
+              "statistic": "Average",
+              "legendFormat": "download-worker"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "$cw_datasource"
+              },
+              "dimensions": {
+                "ClusterName": [
+                  "fileflow-cluster-prod"
+                ],
+                "ServiceName": [
+                  "fileflow-resizing-worker"
+                ]
+              },
+              "expression": "",
+              "id": "",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "MemoryUtilization",
+              "metricQueryType": 0,
+              "namespace": "AWS/ECS",
+              "period": "60",
+              "queryMode": "Metrics",
+              "refId": "B",
+              "region": "ap-northeast-2",
+              "statistic": "Average",
+              "legendFormat": "resizing-worker"
+            }
+          ],
+          "title": "Memory Utilization",
+          "type": "timeseries"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 600,
+      "title": "\ud83d\udcc5 Scheduler - Jobs",
+      "type": "row",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 32
+          },
+          "id": 50,
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum by (job_name) (rate(scheduler_job_duration_seconds_count{job=~\"$job\",environment=~\"$environment\"}[5m]))",
+              "legendFormat": "{{job_name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Scheduler Job Executions",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 32
+          },
+          "id": 51,
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "histogram_quantile(0.95, sum by (le, job_name) (rate(scheduler_job_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
+              "legendFormat": "{{job_name}} P95",
+              "refId": "A"
+            }
+          ],
+          "title": "Scheduler Job Duration",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red"
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 95
+                  },
+                  {
+                    "color": "green",
+                    "value": 99
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 12,
+            "x": 0,
+            "y": 40
+          },
+          "id": 52,
+          "options": {
+            "colorMode": "background",
+            "reduceOptions": {
+              "calcs": [
+                "last"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[5m])) / (sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[5m])) + sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"failed\",environment=~\"$environment\"}[5m]))) * 100 or vector(100)",
+              "legendFormat": "Success %",
+              "refId": "A"
+            }
+          ],
+          "title": "Scheduler Success Rate",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 12,
+            "x": 12,
+            "y": 40
+          },
+          "id": 53,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "ef4r3izgbak8wb"
+              },
+              "expr": "sum by (job_name, result) (rate(scheduler_job_items_total{job=~\"$job\",environment=~\"$environment\"}[5m]))",
+              "legendFormat": "{{job_name}} {{result}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Scheduler Items Processed",
+          "type": "timeseries"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "fileflow"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "stage",
+          "value": "stage"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Environment",
+        "multi": true,
+        "name": "environment",
+        "options": [],
+        "query": "label_values(up, environment)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "ef4r3izgbak8wb"
+        }
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "ef4r3izgbak8wb"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "job",
+        "options": [],
+        "query": "label_values(up, job)",
+        "refresh": 1,
+        "regex": "/fileflow.*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "ef4r3izgbak8wb"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "ECS Task ID",
+        "multi": true,
+        "name": "task_id",
+        "options": [],
+        "query": "label_values(up{job=~\"$job\"}, aws_ecs_task_id)",
+        "refresh": 2,
+        "regex": "/.+/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "CloudWatch",
+        "multi": false,
+        "name": "cw_datasource",
+        "options": [],
+        "query": "cloudwatch",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "FileFlow - Service Metrics",
+  "uid": "fileflow-service-metrics",
+  "version": 1,
+  "weekStart": ""
+}
