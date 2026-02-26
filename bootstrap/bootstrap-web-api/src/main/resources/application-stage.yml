@@ -41,7 +41,7 @@ spring:
 sentry:
   dsn: ${SENTRY_DSN:}
   environment: stage
-  send-default-pii: true
+  send-default-pii: false
   attach-stacktrace: true
   logging:
     minimum-event-level: error

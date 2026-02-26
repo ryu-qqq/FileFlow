@@ -52,6 +52,12 @@ public class BatchMetricAspect {
                     "error");
             metrics.incrementCounter(
                     metricName + "_total", "category", category, "outcome", "error");
+            metrics.incrementCounter(
+                    metricName + "_errors_total",
+                    "category",
+                    category,
+                    "exception",
+                    e.getClass().getSimpleName());
             throw e;
         }
     }

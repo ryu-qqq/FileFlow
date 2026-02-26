@@ -47,6 +47,7 @@
           ]
         },
         "options": {
+          "timeout": 30000,
           "response": {
             "response": {}
           }
