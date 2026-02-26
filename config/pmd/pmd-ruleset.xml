@@ -66,6 +66,9 @@
                              or contains(@SimpleName, 'Properties')
                              or contains(@SimpleName, 'Config')
                              or starts-with(@SimpleName, 'Q')
+                             or contains(@SimpleName, 'JpaEntity')
+                             or contains(@SimpleName, 'Endpoints')
+                             or starts-with(@SimpleName, 'Base')
                              or ancestor::ClassDeclaration[contains(@SimpleName, 'ApiPaths')]
                              ] | //RecordDeclaration"/>
         </properties>
@@ -76,6 +79,11 @@
         <priority>3</priority>
         <properties>
             <property name="minimum" value="30"/>
+            <!-- Controller는 UseCase + Mapper + DTO + Spring annotation으로 import가 많을 수 있음 -->
+            <property name="violationSuppressXPath"
+                      value="//ClassDeclaration[
+                             contains(@SimpleName, 'Controller')
+                             ]"/>
         </properties>
     </rule>
 
