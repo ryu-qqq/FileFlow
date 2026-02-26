@@ -666,22 +666,22 @@ S3 업로드 (KMS 필요):
 #### FileFlow S3 업로드 명령어
 
 ```bash
-KMS_KEY="arn:aws:kms:ap-northeast-2:646886795421:key/086b1677-614f-46ba-863e-23c215fb5010"
+KMS_KEY="arn:aws:kms:ap-northeast-2:${AWS_ACCOUNT_ID}:key/${KMS_KEY_ID}"
 
 aws s3 cp otel-config-api.yaml \
-  s3://prod-connectly/otel-config/fileflow-web-api/otel-config.yaml \
+  s3://${OTEL_CONFIG_BUCKET}/otel-config/fileflow-web-api/otel-config.yaml \
   --sse aws:kms --sse-kms-key-id "$KMS_KEY"
 
 aws s3 cp otel-config-scheduler.yaml \
-  s3://prod-connectly/otel-config/fileflow-scheduler/otel-config.yaml \
+  s3://${OTEL_CONFIG_BUCKET}/otel-config/fileflow-scheduler/otel-config.yaml \
   --sse aws:kms --sse-kms-key-id "$KMS_KEY"
 
 aws s3 cp otel-config-worker.yaml \
-  s3://prod-connectly/otel-config/fileflow-download-worker/otel-config.yaml \
+  s3://${OTEL_CONFIG_BUCKET}/otel-config/fileflow-download-worker/otel-config.yaml \
   --sse aws:kms --sse-kms-key-id "$KMS_KEY"
 
 aws s3 cp otel-config-resizing-worker.yaml \
-  s3://prod-connectly/otel-config/fileflow-resizing-worker/otel-config.yaml \
+  s3://${OTEL_CONFIG_BUCKET}/otel-config/fileflow-resizing-worker/otel-config.yaml \
   --sse aws:kms --sse-kms-key-id "$KMS_KEY"
 ```
 

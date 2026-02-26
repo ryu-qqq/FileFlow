@@ -1535,7 +1535,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "prod-monitoring-sqs-fileflow-external-download"
+              "$download_queue"
             ]
           },
           "expression": "",
@@ -1559,7 +1559,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "prod-monitoring-sqs-fileflow-external-download-dlq"
+              "$download_queue_dlq"
             ]
           },
           "expression": "",
@@ -1819,7 +1819,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "prod-monitoring-sqs-fileflow-external-download"
+              "$download_queue"
             ]
           },
           "expression": "",
@@ -2350,6 +2350,62 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "prod-monitoring-sqs-fileflow-external-download",
+          "value": "prod-monitoring-sqs-fileflow-external-download"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Download Queue",
+        "multi": false,
+        "name": "download_queue",
+        "options": [
+          {
+            "selected": true,
+            "text": "prod-monitoring-sqs-fileflow-external-download",
+            "value": "prod-monitoring-sqs-fileflow-external-download"
+          },
+          {
+            "selected": false,
+            "text": "stage-monitoring-sqs-fileflow-external-download",
+            "value": "stage-monitoring-sqs-fileflow-external-download"
+          }
+        ],
+        "query": "prod-monitoring-sqs-fileflow-external-download,stage-monitoring-sqs-fileflow-external-download",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "prod-monitoring-sqs-fileflow-external-download-dlq",
+          "value": "prod-monitoring-sqs-fileflow-external-download-dlq"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Download DLQ",
+        "multi": false,
+        "name": "download_queue_dlq",
+        "options": [
+          {
+            "selected": true,
+            "text": "prod-monitoring-sqs-fileflow-external-download-dlq",
+            "value": "prod-monitoring-sqs-fileflow-external-download-dlq"
+          },
+          {
+            "selected": false,
+            "text": "stage-monitoring-sqs-fileflow-external-download-dlq",
+            "value": "stage-monitoring-sqs-fileflow-external-download-dlq"
+          }
+        ],
+        "query": "prod-monitoring-sqs-fileflow-external-download-dlq,stage-monitoring-sqs-fileflow-external-download-dlq",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
       }
     ]
   },
