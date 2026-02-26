@@ -29,7 +29,8 @@ public class DownloadTaskJpaMapper {
                 domain.createdAt(),
                 domain.updatedAt(),
                 domain.startedAt(),
-                domain.completedAt());
+                domain.completedAt(),
+                domain.version());
     }
 
     public DownloadTask toDomain(DownloadTaskJpaEntity entity) {
@@ -46,6 +47,7 @@ public class DownloadTaskJpaMapper {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getStartedAt(),
-                entity.getCompletedAt());
+                entity.getCompletedAt(),
+                entity.getVersion());
     }
 }

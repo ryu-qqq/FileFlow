@@ -40,6 +40,7 @@ public class DownloadTask {
     private Instant updatedAt;
     private Instant startedAt;
     private Instant completedAt;
+    private long version;
 
     private final List<DomainEvent> events = new ArrayList<>();
 
@@ -56,7 +57,8 @@ public class DownloadTask {
             Instant createdAt,
             Instant updatedAt,
             Instant startedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         this.id = id;
         this.sourceUrl = sourceUrl;
         this.storageInfo = storageInfo;
@@ -70,6 +72,7 @@ public class DownloadTask {
         this.updatedAt = updatedAt;
         this.startedAt = startedAt;
         this.completedAt = completedAt;
+        this.version = version;
     }
 
     public static DownloadTask forNew(
@@ -93,7 +96,8 @@ public class DownloadTask {
                 now,
                 now,
                 null,
-                null);
+                null,
+                0L);
     }
 
     public static DownloadTask reconstitute(
@@ -109,7 +113,8 @@ public class DownloadTask {
             Instant createdAt,
             Instant updatedAt,
             Instant startedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         return new DownloadTask(
                 id,
                 sourceUrl,
@@ -123,7 +128,8 @@ public class DownloadTask {
                 createdAt,
                 updatedAt,
                 startedAt,
-                completedAt);
+                completedAt,
+                version);
     }
 
     /** 다운로드 시작. */
@@ -259,6 +265,14 @@ public class DownloadTask {
 
     public Instant completedAt() {
         return completedAt;
+    }
+
+    public long version() {
+        return version;
+    }
+
+    public void updateVersion(long version) {
+        this.version = version;
     }
 
     // -- event management --

@@ -36,6 +36,7 @@ public class TransformRequest {
     private final Instant createdAt;
     private Instant updatedAt;
     private Instant completedAt;
+    private long version;
 
     private final List<DomainEvent> events = new ArrayList<>();
 
@@ -50,7 +51,8 @@ public class TransformRequest {
             String lastError,
             Instant createdAt,
             Instant updatedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         this.id = id;
         this.sourceAssetId = sourceAssetId;
         this.sourceContentType = sourceContentType;
@@ -62,6 +64,7 @@ public class TransformRequest {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.completedAt = completedAt;
+        this.version = version;
     }
 
     /**
@@ -91,7 +94,8 @@ public class TransformRequest {
                 null,
                 now,
                 now,
-                null);
+                null,
+                0L);
     }
 
     public static TransformRequest reconstitute(
@@ -105,7 +109,8 @@ public class TransformRequest {
             String lastError,
             Instant createdAt,
             Instant updatedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         return new TransformRequest(
                 id,
                 sourceAssetId,
@@ -117,7 +122,8 @@ public class TransformRequest {
                 lastError,
                 createdAt,
                 updatedAt,
-                completedAt);
+                completedAt,
+                version);
     }
 
     /** 변환 처리 시작. */
@@ -211,6 +217,14 @@ public class TransformRequest {
 
     public Instant completedAt() {
         return completedAt;
+    }
+
+    public long version() {
+        return version;
+    }
+
+    public void updateVersion(long version) {
+        this.version = version;
     }
 
     // -- event management --

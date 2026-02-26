@@ -16,6 +16,7 @@ public class DownloadCommandManager {
 
     @Transactional
     public void persist(DownloadTask downloadTask) {
-        downloadTaskPersistencePort.persist(downloadTask);
+        long newVersion = downloadTaskPersistencePort.persist(downloadTask);
+        downloadTask.updateVersion(newVersion);
     }
 }

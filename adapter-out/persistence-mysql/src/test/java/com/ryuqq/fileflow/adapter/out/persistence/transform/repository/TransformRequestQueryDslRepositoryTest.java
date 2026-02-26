@@ -137,7 +137,8 @@ class TransformRequestQueryDslRepositoryTest extends AbstractRepositoryIntegrati
                             null,
                             TWO_HOURS_LATER,
                             TWO_HOURS_LATER,
-                            null);
+                            null,
+                            0L);
 
             var earlier =
                     TransformRequestJpaEntity.create(
@@ -155,7 +156,8 @@ class TransformRequestQueryDslRepositoryTest extends AbstractRepositoryIntegrati
                             null,
                             ONE_HOUR_LATER,
                             ONE_HOUR_LATER,
-                            null);
+                            null,
+                            0L);
 
             jpaRepository.save(later);
             jpaRepository.save(earlier);

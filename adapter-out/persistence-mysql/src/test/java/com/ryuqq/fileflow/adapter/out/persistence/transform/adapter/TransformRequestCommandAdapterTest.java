@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.transform.adapter;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -32,20 +33,22 @@ class TransformRequestCommandAdapterTest {
     class PersistTest {
 
         @Test
-        @DisplayName("도메인 객체를 엔티티로 변환하여 저장합니다")
-        void persist_shouldMapAndSave() {
+        @DisplayName("도메인 객체를 엔티티로 변환하여 저장하고 version을 반환합니다")
+        void persist_shouldMapAndSaveAndReturnVersion() {
             // given
             TransformRequest request = TransformRequestFixture.aResizeRequest();
             TransformRequestJpaEntity entity =
                     TransformRequestJpaEntityFixture.aQueuedResizeEntity();
             given(mapper.toEntity(request)).willReturn(entity);
+            given(jpaRepository.save(entity)).willReturn(entity);
 
             // when
-            commandAdapter.persist(request);
+            long version = commandAdapter.persist(request);
 
             // then
             then(mapper).should().toEntity(request);
             then(jpaRepository).should().save(entity);
+            assertThat(version).isEqualTo(entity.getVersion());
         }
     }
 }
