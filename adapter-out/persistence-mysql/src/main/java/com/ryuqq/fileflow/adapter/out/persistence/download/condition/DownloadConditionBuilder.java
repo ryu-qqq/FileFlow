@@ -11,17 +11,23 @@ import org.springframework.stereotype.Component;
 public class DownloadConditionBuilder {
 
     public BooleanExpression idEq(String id) {
-        if (id == null) return null;
+        if (id == null) {
+            return null;
+        }
         return downloadTaskJpaEntity.id.eq(id);
     }
 
     public BooleanExpression statusEq(DownloadTaskStatus status) {
-        if (status == null) return null;
+        if (status == null) {
+            return null;
+        }
         return downloadTaskJpaEntity.status.eq(status);
     }
 
     public BooleanExpression createdBefore(Instant createdBefore) {
-        if (createdBefore == null) return null;
+        if (createdBefore == null) {
+            return null;
+        }
         return downloadTaskJpaEntity.createdAt.before(createdBefore);
     }
 }

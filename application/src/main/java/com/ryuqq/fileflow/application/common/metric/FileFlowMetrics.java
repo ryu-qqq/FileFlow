@@ -29,12 +29,14 @@ public class FileFlowMetrics {
 
     public void stopTimer(Timer.Sample sample, String name, String... tags) {
         validateTags(tags);
-        Timer timer = timerCache.computeIfAbsent(
-                createCacheKey(name, tags),
-                k -> Timer.builder(PREFIX + name)
-                        .tags(tags)
-                        .publishPercentileHistogram()
-                        .register(meterRegistry));
+        Timer timer =
+                timerCache.computeIfAbsent(
+                        createCacheKey(name, tags),
+                        k ->
+                                Timer.builder(PREFIX + name)
+                                        .tags(tags)
+                                        .publishPercentileHistogram()
+                                        .register(meterRegistry));
         sample.stop(timer);
     }
 
@@ -55,9 +57,10 @@ public class FileFlowMetrics {
 
     public void recordDuration(String name, Duration duration, String... tags) {
         validateTags(tags);
-        Timer timer = timerCache.computeIfAbsent(
-                createCacheKey(name, tags),
-                k -> Timer.builder(PREFIX + name).tags(tags).register(meterRegistry));
+        Timer timer =
+                timerCache.computeIfAbsent(
+                        createCacheKey(name, tags),
+                        k -> Timer.builder(PREFIX + name).tags(tags).register(meterRegistry));
         timer.record(duration);
     }
 
@@ -74,7 +77,9 @@ public class FileFlowMetrics {
     private void validateTags(String... tags) {
         if (tags.length % 2 != 0) {
             throw new IllegalArgumentException(
-                    "Tags must be key-value pairs (even count), but got " + tags.length + " elements");
+                    "Tags must be key-value pairs (even count), but got "
+                            + tags.length
+                            + " elements");
         }
     }
 }

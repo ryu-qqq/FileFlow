@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 public class AssetConditionBuilder {
 
     public BooleanExpression assetIdEq(String id) {
-        if (id == null) return null;
+        if (id == null) {
+            return null;
+        }
         return assetJpaEntity.id.eq(id);
     }
 
@@ -19,7 +21,9 @@ public class AssetConditionBuilder {
     }
 
     public BooleanExpression metadataAssetIdEq(String assetId) {
-        if (assetId == null) return null;
+        if (assetId == null) {
+            return null;
+        }
         return assetMetadataJpaEntity.assetId.eq(assetId);
     }
 }
