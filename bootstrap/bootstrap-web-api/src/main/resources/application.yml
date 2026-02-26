@@ -88,27 +88,6 @@ spring:
     default-property-inclusion: non_null
 
 # ===============================================
-# Observability Configuration (SDK)
-# ===============================================
-observability:
-  service-name: ${spring.application.name}
-  http:
-    log-request-body: false
-    log-response-body: false
-    max-body-length: 2000
-    slow-request-threshold-ms: 3000
-    exclude-paths:
-      - /actuator/**
-      - /health
-      - /docs/**
-      - /swagger-ui/**
-      - /v3/api-docs/**
-  masking:
-    enabled: true
-  trace:
-    include-in-response: true
-
-# ===============================================
 # Security Configuration
 # ===============================================
 security:

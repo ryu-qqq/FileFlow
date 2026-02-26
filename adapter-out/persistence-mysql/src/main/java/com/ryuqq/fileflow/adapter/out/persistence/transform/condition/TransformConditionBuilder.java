@@ -11,17 +11,23 @@ import org.springframework.stereotype.Component;
 public class TransformConditionBuilder {
 
     public BooleanExpression idEq(String id) {
-        if (id == null) return null;
+        if (id == null) {
+            return null;
+        }
         return transformRequestJpaEntity.id.eq(id);
     }
 
     public BooleanExpression statusEq(TransformStatus status) {
-        if (status == null) return null;
+        if (status == null) {
+            return null;
+        }
         return transformRequestJpaEntity.status.eq(status);
     }
 
     public BooleanExpression createdBefore(Instant createdBefore) {
-        if (createdBefore == null) return null;
+        if (createdBefore == null) {
+            return null;
+        }
         return transformRequestJpaEntity.createdAt.before(createdBefore);
     }
 }

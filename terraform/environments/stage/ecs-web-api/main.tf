@@ -346,6 +346,20 @@ module "web_api_task_role" {
               "s3:GetObject"
             ]
             Resource = "arn:aws:s3:::prod-connectly/*"
+          },
+          {
+            Sid    = "KMSDecryptOtelConfig"
+            Effect = "Allow"
+            Action = [
+              "kms:Decrypt",
+              "kms:GenerateDataKey"
+            ]
+            Resource = "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.current.account_id}:key/*"
+            Condition = {
+              StringEquals = {
+                "kms:ViaService" = "s3.${var.aws_region}.amazonaws.com"
+              }
+            }
           }
         ]
       })
@@ -405,9 +419,9 @@ module "ecs_service" {
   security_group_ids = [module.ecs_security_group.security_group_id]
   assign_public_ip   = false
 
-  # Health Check Grace Period (Spring Boot startup: ~109s)
+  # Health Check Grace Period (Spring Boot startup: ~158s on stage)
   # Service Discovery 환경에서도 ECS container health check를 위해 유지
-  health_check_grace_period_seconds = 180
+  health_check_grace_period_seconds = 360
 
   # Container Environment Variables
   container_environment = [
@@ -443,7 +457,7 @@ module "ecs_service" {
   health_check_interval     = 30
   health_check_timeout      = 5
   health_check_retries      = 3
-  health_check_start_period = 120
+  health_check_start_period = 300
 
   # Logging
   log_configuration = {

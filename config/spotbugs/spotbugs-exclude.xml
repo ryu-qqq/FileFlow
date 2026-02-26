@@ -47,4 +47,25 @@
         <Class name="~.*Config"/>
         <Bug pattern="EI2"/>
     </Match>
+
+    <!-- ========================================
+         Spring DI 생성자 주입 패턴
+         Spring이 관리하는 싱글톤 Bean은 외부 변경 위험 없음
+         Service, Manager, Coordinator, Client, Controller, Aspect 등
+         ======================================== -->
+    <Match>
+        <Or>
+            <Class name="~.*Service"/>
+            <Class name="~.*Manager"/>
+            <Class name="~.*Coordinator"/>
+            <Class name="~.*Client"/>
+            <Class name="~.*Controller"/>
+            <Class name="~.*Aspect"/>
+            <Class name="~.*Facade"/>
+            <Class name="~.*Adapter"/>
+            <Class name="~.*Repository"/>
+            <Class name="~.*Publisher"/>
+        </Or>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
 </FindBugsFilter>

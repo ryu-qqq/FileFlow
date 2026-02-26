@@ -82,17 +82,6 @@ fileflow:
     consumer:
       session-expiration-key-prefix: "session:expiration:"
 
-# Observability 비활성화 (통합 테스트용)
-observability:
-  service-name: fileflow-integration-test
-  http:
-    log-request-body: false
-    log-response-body: false
-  masking:
-    enabled: false
-  trace:
-    include-in-response: false
-
 # Sentry 비활성화
 sentry:
   dsn: ""
