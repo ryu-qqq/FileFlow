@@ -1,0 +1,227 @@
+{
+  "name": "FileFlow Outbox Monitoring → Slack Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 300],
+      "id": "schedule-trigger-001",
+      "name": "Every 5 Minutes"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://web-api.connectly.local:8080/api/v1/monitoring/outbox-status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Service-Token",
+              "value": "{{$credentials.httpHeaderAuth.value}}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "startDate",
+              "value": "={{ $now.minus(1, 'day').format('yyyy-MM-dd') }}"
+            },
+            {
+              "name": "endDate",
+              "value": "={{ $now.format('yyyy-MM-dd') }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300],
+      "id": "http-request-001",
+      "name": "Fetch Outbox Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Connectly Service Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst data = response.data || response;\n\nconst download = data.download || {};\nconst transform = data.transform || {};\nconst checkedAt = data.checkedAt || 'N/A';\n\n// 임계값 설정\nconst PENDING_THRESHOLD = 100;\nconst FAILED_THRESHOLD = 0;\n\nconst hasPendingAlert = (download.pending || 0) > PENDING_THRESHOLD \n  || (transform.pending || 0) > PENDING_THRESHOLD;\nconst hasFailedAlert = (download.failed || 0) > FAILED_THRESHOLD \n  || (transform.failed || 0) > FAILED_THRESHOLD;\n\nconst needsAlert = hasPendingAlert || hasFailedAlert;\n\n// 알람 사유 생성\nconst reasons = [];\nif (download.pending > PENDING_THRESHOLD) reasons.push(`Download PENDING ${download.pending}건 (임계값: ${PENDING_THRESHOLD})`);\nif (transform.pending > PENDING_THRESHOLD) reasons.push(`Transform PENDING ${transform.pending}건 (임계값: ${PENDING_THRESHOLD})`);\nif (download.failed > FAILED_THRESHOLD) reasons.push(`Download FAILED ${download.failed}건`);\nif (transform.failed > FAILED_THRESHOLD) reasons.push(`Transform FAILED ${transform.failed}건`);\n\nreturn {\n  needsAlert,\n  reasons,\n  download,\n  transform,\n  checkedAt,\n  summary: {\n    downloadTotal: (download.pending || 0) + (download.sent || 0) + (download.failed || 0),\n    transformTotal: (transform.pending || 0) + (transform.sent || 0) + (transform.failed || 0)\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "id": "code-evaluate-001",
+      "name": "Evaluate Alert Conditions"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-needs-alert",
+              "leftValue": "={{ $json.needsAlert }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [920, 300],
+      "id": "if-needs-alert-001",
+      "name": "Needs Alert?"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "C0A8RU0UR4M"
+        },
+        "text": "=:warning: *FileFlow Outbox 모니터링 알람*\n\n:clock3: *조회 시각*: {{ $json.checkedAt }}\n\n:rotating_light: *알람 사유*:\n{{ $json.reasons.map(r => '• ' + r).join('\\n') }}\n\n---\n*Download Outbox*\n| 상태 | 건수 |\n|------|------|\n| :hourglass: PENDING | {{ $json.download.pending }} |\n| :white_check_mark: SENT | {{ $json.download.sent }} |\n| :x: FAILED | {{ $json.download.failed }} |\n\n*Transform Outbox*\n| 상태 | 건수 |\n|------|------|\n| :hourglass: PENDING | {{ $json.transform.pending }} |\n| :white_check_mark: SENT | {{ $json.transform.sent }} |\n| :x: FAILED | {{ $json.transform.failed }} |\n\n---\n:mag: 확인: `GET /api/v1/monitoring/outbox-status`",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1160, 240],
+      "id": "slack-alert-001",
+      "name": "Send Alert to Slack",
+      "credentials": {
+        "slackApi": {
+          "id": "JudHaRQYOjQVx9Xo",
+          "name": "n8n Automation Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "C0A8RU0UR4M"
+        },
+        "text": "=:large_green_circle: *FileFlow Outbox 정상*\n\n:clock3: {{ $json.checkedAt }}\n\n*Download*: PENDING {{ $json.download.pending }} / SENT {{ $json.download.sent }} / FAILED {{ $json.download.failed }}\n*Transform*: PENDING {{ $json.transform.pending }} / SENT {{ $json.transform.sent }} / FAILED {{ $json.transform.failed }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1160, 420],
+      "id": "slack-ok-001",
+      "name": "Send OK to Slack (Optional)",
+      "disabled": true,
+      "credentials": {
+        "slackApi": {
+          "id": "JudHaRQYOjQVx9Xo",
+          "name": "n8n Automation Bot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Outbox Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Outbox Status": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Alert Conditions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Alert Conditions": {
+      "main": [
+        [
+          {
+            "node": "Needs Alert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Alert?": {
+      "main": [
+        [
+          {
+            "node": "Send Alert to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send OK to Slack (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [
+    {
+      "name": "monitoring"
+    },
+    {
+      "name": "fileflow"
+    }
+  ]
+}
