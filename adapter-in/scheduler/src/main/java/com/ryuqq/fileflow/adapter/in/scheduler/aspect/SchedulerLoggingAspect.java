@@ -70,6 +70,7 @@ public class SchedulerLoggingAspect {
     private Timer timer(String jobName) {
         return Timer.builder("scheduler.job.duration")
                 .tag("job_name", jobName)
+                .publishPercentileHistogram()
                 .register(meterRegistry);
     }
 

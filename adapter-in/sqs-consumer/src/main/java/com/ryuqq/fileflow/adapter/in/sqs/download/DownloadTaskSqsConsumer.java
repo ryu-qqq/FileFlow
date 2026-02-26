@@ -37,6 +37,7 @@ public class DownloadTaskSqsConsumer {
         this.durationTimer =
                 Timer.builder("sqs.consumer.duration")
                         .tag("queue", QUEUE_TAG)
+                        .publishPercentileHistogram()
                         .register(meterRegistry);
         this.successCounter =
                 Counter.builder("sqs.consumer.messages")
