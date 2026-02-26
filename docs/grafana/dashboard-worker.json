@@ -2287,22 +2287,31 @@
             "$__all"
           ]
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "ef4r3izgbak8wb"
-        },
-        "definition": "",
         "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "job",
-        "options": [],
-        "query": "label_values(up{environment=~\"$environment\"}, job)",
-        "refresh": 2,
-        "regex": "/fileflow-(worker|resizing-worker)-metrics/",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "fileflow-worker-metrics",
+            "value": "fileflow-worker-metrics"
+          },
+          {
+            "selected": false,
+            "text": "fileflow-resizing-worker-metrics",
+            "value": "fileflow-resizing-worker-metrics"
+          }
+        ],
+        "query": "fileflow-worker-metrics,fileflow-resizing-worker-metrics",
+        "queryValue": "",
         "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
+        "type": "custom"
       },
       {
         "current": {
