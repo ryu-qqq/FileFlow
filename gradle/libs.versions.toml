@@ -71,11 +71,6 @@ logstashLogback = "7.4"
 micrometer = "1.12.4"
 
 # ========================================
-# Observability (Custom Starter)
-# ========================================
-observabilityStarter = "v1.1.1"
-
-# ========================================
 # AuthHub SDK
 # ========================================
 authhub = "v2.0.4"
@@ -202,11 +197,6 @@ slf4j-api = { module = "org.slf4j:slf4j-api" }
 logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logstashLogback" }
 micrometer-core = { module = "io.micrometer:micrometer-core" }
 micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
-
-# ========================================
-# Observability (Custom Starter from JitPack)
-# ========================================
-observability-starter = { module = "com.github.ryu-qqq.observability-spring-boot-starter:observability-client", version.ref = "observabilityStarter" }
 
 # ========================================
 # AuthHub SDK

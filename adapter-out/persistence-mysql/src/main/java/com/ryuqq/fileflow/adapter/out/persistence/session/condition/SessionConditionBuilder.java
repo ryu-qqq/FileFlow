@@ -11,17 +11,23 @@ import org.springframework.stereotype.Component;
 public class SessionConditionBuilder {
 
     public BooleanExpression singleSessionIdEq(String id) {
-        if (id == null) return null;
+        if (id == null) {
+            return null;
+        }
         return singleUploadSessionJpaEntity.id.eq(id);
     }
 
     public BooleanExpression multipartSessionIdEq(String id) {
-        if (id == null) return null;
+        if (id == null) {
+            return null;
+        }
         return multipartUploadSessionJpaEntity.id.eq(id);
     }
 
     public BooleanExpression completedPartSessionIdEq(String sessionId) {
-        if (sessionId == null) return null;
+        if (sessionId == null) {
+            return null;
+        }
         return completedPartJpaEntity.sessionId.eq(sessionId);
     }
 }

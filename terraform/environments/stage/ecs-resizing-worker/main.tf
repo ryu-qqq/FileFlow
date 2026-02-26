@@ -296,6 +296,20 @@ module "resizing_worker_task_role" {
               "s3:GetObject"
             ]
             Resource = "arn:aws:s3:::prod-connectly/otel-config/*"
+          },
+          {
+            Sid    = "KMSDecryptOtelConfig"
+            Effect = "Allow"
+            Action = [
+              "kms:Decrypt",
+              "kms:GenerateDataKey"
+            ]
+            Resource = "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.current.account_id}:key/*"
+            Condition = {
+              StringEquals = {
+                "kms:ViaService" = "s3.${var.aws_region}.amazonaws.com"
+              }
+            }
           }
         ]
       })

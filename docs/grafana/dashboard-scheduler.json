@@ -1,0 +1,959 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "title": "\ud83d\udcca Overview",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum(up{job=~\"$job\",environment=~\"$environment\"})",
+          "legendFormat": "UP",
+          "refId": "A"
+        }
+      ],
+      "title": "Instances UP",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum(rate(scheduler_job_duration_seconds_count{job=~\"$job\",environment=~\"$environment\"}[1m])) * 60",
+          "legendFormat": "Exec/min",
+          "refId": "A"
+        }
+      ],
+      "title": "Job Executions/min",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[5m])) / (sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[5m])) + sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"failed\",environment=~\"$environment\"}[5m]))) * 100 or vector(100)",
+          "legendFormat": "Success %",
+          "refId": "A"
+        }
+      ],
+      "title": "Scheduler Success %",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "avg(jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",environment=~\"$environment\"} / jvm_memory_max_bytes{job=~\"$job\",area=\"heap\",environment=~\"$environment\"}) * 100",
+          "legendFormat": "Heap %",
+          "refId": "A"
+        }
+      ],
+      "title": "Heap Usage %",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 600,
+      "title": "\ud83d\udcc5 Scheduler Jobs",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 50,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (job_name) (rate(scheduler_job_duration_seconds_count{job=~\"$job\",environment=~\"$environment\"}[5m]))",
+          "legendFormat": "{{job_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Scheduler Job Executions",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 51,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le, job_name) (rate(scheduler_job_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
+          "legendFormat": "{{job_name}} P95",
+          "refId": "A"
+        }
+      ],
+      "title": "Scheduler Job Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "yellow",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 52,
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[5m])) / (sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[5m])) + sum(rate(scheduler_job_items_total{job=~\"$job\",result=\"failed\",environment=~\"$environment\"}[5m]))) * 100 or vector(100)",
+          "legendFormat": "Success %",
+          "refId": "A"
+        }
+      ],
+      "title": "Scheduler Success Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 53,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (job_name, result) (rate(scheduler_job_items_total{job=~\"$job\",environment=~\"$environment\"}[5m]))",
+          "legendFormat": "{{job_name}} {{result}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Scheduler Items Processed",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 500,
+      "title": "\ud83d\uddc4\ufe0f Database (HikariCP)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 19
+      },
+      "id": 40,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "hikaricp_connections_active{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Active",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "hikaricp_connections_idle{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Idle",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "hikaricp_connections_pending{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Pending",
+          "refId": "C"
+        }
+      ],
+      "title": "Connection Pool Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 19
+      },
+      "id": 41,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "avg(hikaricp_connections_active{job=~\"$job\",environment=~\"$environment\"} / hikaricp_connections_max{job=~\"$job\",environment=~\"$environment\"}) * 100",
+          "legendFormat": "Usage %",
+          "refId": "A"
+        }
+      ],
+      "title": "Pool Utilization %",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 19
+      },
+      "id": 42,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "rate(hikaricp_connections_acquire_seconds_sum{job=~\"$job\",environment=~\"$environment\"}[1m]) / rate(hikaricp_connections_acquire_seconds_count{job=~\"$job\",environment=~\"$environment\"}[1m])",
+          "legendFormat": "Avg Acquire Time",
+          "refId": "A"
+        }
+      ],
+      "title": "Connection Acquire Time",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 700,
+      "title": "\u2615 JVM Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 26
+      },
+      "id": 60,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"})",
+          "legendFormat": "{{aws_ecs_task_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Heap Memory Used",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 26
+      },
+      "id": 61,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}) / sum by (aws_ecs_task_id) (jvm_memory_max_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}) * 100",
+          "legendFormat": "{{aws_ecs_task_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Heap Usage %",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 26
+      },
+      "id": 62,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"nonheap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"})",
+          "legendFormat": "{{aws_ecs_task_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Non-Heap Memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 26
+      },
+      "id": 63,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "jvm_threads_live_threads{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}",
+          "legendFormat": "{{aws_ecs_task_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Live Threads",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 64,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_sum{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}[5m]))",
+          "legendFormat": "{{aws_ecs_task_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "GC Pause Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 65,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_count{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}[1m])) * 60",
+          "legendFormat": "{{aws_ecs_task_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "GC Count / min",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "fileflow",
+    "scheduler"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "stage",
+          "value": "stage"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Environment",
+        "multi": true,
+        "name": "environment",
+        "options": [],
+        "query": "label_values(up, environment)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "ef4r3izgbak8wb"
+        }
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "fileflow-scheduler-metrics",
+          "value": "fileflow-scheduler-metrics"
+        },
+        "hide": 2,
+        "name": "job",
+        "options": [
+          {
+            "selected": true,
+            "text": "fileflow-scheduler-metrics",
+            "value": "fileflow-scheduler-metrics"
+          }
+        ],
+        "query": "fileflow-scheduler-metrics",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "ef4r3izgbak8wb"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "ECS Task ID",
+        "multi": true,
+        "name": "task_id",
+        "options": [],
+        "query": "label_values(up{job=~\"$job\"}, aws_ecs_task_id)",
+        "refresh": 2,
+        "regex": "/.+/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "FileFlow - Scheduler Metrics",
+  "uid": "fileflow-scheduler-metrics",
+  "version": 1,
+  "weekStart": ""
+}
