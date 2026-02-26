@@ -26,7 +26,8 @@ public class TransformRequestJpaMapper {
                 domain.params().quality(),
                 domain.createdAt(),
                 domain.updatedAt(),
-                domain.completedAt());
+                domain.completedAt(),
+                domain.version());
     }
 
     public TransformRequest toDomain(TransformRequestJpaEntity entity) {
@@ -46,6 +47,7 @@ public class TransformRequestJpaMapper {
                 entity.getLastError(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
-                entity.getCompletedAt());
+                entity.getCompletedAt(),
+                entity.getVersion());
     }
 }

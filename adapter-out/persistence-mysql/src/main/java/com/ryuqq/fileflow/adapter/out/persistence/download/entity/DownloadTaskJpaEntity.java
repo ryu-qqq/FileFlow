@@ -9,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 
 @Entity
@@ -60,6 +61,10 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     protected DownloadTaskJpaEntity() {}
 
     private DownloadTaskJpaEntity(
@@ -78,7 +83,8 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
             Instant createdAt,
             Instant updatedAt,
             Instant startedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         super(createdAt, updatedAt);
         this.id = id;
         this.sourceUrl = sourceUrl;
@@ -94,6 +100,7 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
         this.lastError = lastError;
         this.startedAt = startedAt;
         this.completedAt = completedAt;
+        this.version = version;
     }
 
     public static DownloadTaskJpaEntity create(
@@ -112,7 +119,8 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
             Instant createdAt,
             Instant updatedAt,
             Instant startedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         return new DownloadTaskJpaEntity(
                 id,
                 sourceUrl,
@@ -129,7 +137,8 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
                 createdAt,
                 updatedAt,
                 startedAt,
-                completedAt);
+                completedAt,
+                version);
     }
 
     public String getId() {
@@ -186,5 +195,9 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
 
     public Instant getCompletedAt() {
         return completedAt;
+    }
+
+    public long getVersion() {
+        return version;
     }
 }

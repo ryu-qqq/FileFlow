@@ -4,5 +4,5 @@ import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
 
 public interface DownloadTaskPersistencePort {
 
-    void persist(DownloadTask downloadTask);
+    long persist(DownloadTask downloadTask);
 }

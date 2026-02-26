@@ -137,7 +137,8 @@ class DownloadTaskQueryDslRepositoryTest extends AbstractRepositoryIntegrationTe
                             TWO_HOURS_LATER,
                             TWO_HOURS_LATER,
                             null,
-                            null);
+                            null,
+                            0L);
 
             var earlier =
                     DownloadTaskJpaEntity.create(
@@ -156,7 +157,8 @@ class DownloadTaskQueryDslRepositoryTest extends AbstractRepositoryIntegrationTe
                             ONE_HOUR_LATER,
                             ONE_HOUR_LATER,
                             null,
-                            null);
+                            null,
+                            0L);
 
             jpaRepository.save(later);
             jpaRepository.save(earlier);

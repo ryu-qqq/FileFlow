@@ -9,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 
 @Entity
@@ -57,6 +58,10 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     protected TransformRequestJpaEntity() {}
 
     private TransformRequestJpaEntity(
@@ -74,7 +79,8 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
             Integer quality,
             Instant createdAt,
             Instant updatedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         super(createdAt, updatedAt);
         this.id = id;
         this.sourceAssetId = sourceAssetId;
@@ -89,6 +95,7 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
         this.targetFormat = targetFormat;
         this.quality = quality;
         this.completedAt = completedAt;
+        this.version = version;
     }
 
     public static TransformRequestJpaEntity create(
@@ -106,7 +113,8 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
             Integer quality,
             Instant createdAt,
             Instant updatedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         return new TransformRequestJpaEntity(
                 id,
                 sourceAssetId,
@@ -122,7 +130,8 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
                 quality,
                 createdAt,
                 updatedAt,
-                completedAt);
+                completedAt,
+                version);
     }
 
     public String getId() {
@@ -175,5 +184,9 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
 
     public Instant getCompletedAt() {
         return completedAt;
+    }
+
+    public long getVersion() {
+        return version;
     }
 }
