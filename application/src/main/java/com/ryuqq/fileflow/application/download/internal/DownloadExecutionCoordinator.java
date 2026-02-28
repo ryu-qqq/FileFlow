@@ -42,25 +42,35 @@ public class DownloadExecutionCoordinator {
         downloadTask.start(context.changedAt());
         downloadCommandManager.persist(downloadTask);
 
-        FileDownloadResult result = fileTransferFacade.transfer(downloadTask);
+        try {
+            FileDownloadResult result = fileTransferFacade.transfer(downloadTask);
 
-        if (result.success()) {
-            DownloadCompletionBundle bundle =
-                    downloadCommandFactory.createCompletionBundle(downloadTask, result);
-            downloadCompletionFacade.completeDownload(bundle);
-            log.info("다운로드 완료: taskId={}", downloadTask.idValue());
-        } else {
-            DownloadFailureBundle failureBundle =
-                    downloadCommandFactory.createFailureBundle(downloadTask, result.errorMessage());
-            downloadCompletionFacade.failDownload(failureBundle);
-
-            if (failureBundle.canRetry()) {
-                downloadQueueManager.enqueue(downloadTask.idValue());
+            if (result.success()) {
+                DownloadCompletionBundle bundle =
+                        downloadCommandFactory.createCompletionBundle(downloadTask, result);
+                downloadCompletionFacade.completeDownload(bundle);
+                log.info("다운로드 완료: taskId={}", downloadTask.idValue());
+            } else {
+                failDownload(downloadTask, result.errorMessage());
             }
+        } catch (Exception e) {
             log.error(
-                    "다운로드 실패 처리: taskId={}, error={}",
-                    downloadTask.idValue(),
-                    result.errorMessage());
+                    "다운로드 중 예상치 못한 예외 발생: taskId={}", downloadTask.idValue(), e);
+            failDownload(downloadTask, e.getMessage());
         }
+    }
+
+    private void failDownload(DownloadTask downloadTask, String errorMessage) {
+        DownloadFailureBundle failureBundle =
+                downloadCommandFactory.createFailureBundle(downloadTask, errorMessage);
+        downloadCompletionFacade.failDownload(failureBundle);
+
+        if (failureBundle.canRetry()) {
+            downloadQueueManager.enqueue(downloadTask.idValue());
+        }
+        log.error(
+                "다운로드 실패 처리: taskId={}, error={}",
+                downloadTask.idValue(),
+                errorMessage);
     }
 }

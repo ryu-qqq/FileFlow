@@ -2,7 +2,10 @@ package com.ryuqq.fileflow.adapter.out.client.http.client;
 
 import com.ryuqq.fileflow.application.download.dto.response.RawDownloadedFile;
 import com.ryuqq.fileflow.application.download.port.out.client.FileDownloadClient;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,14 +27,14 @@ public class FileDownloadHttpClient implements FileDownloadClient {
     public RawDownloadedFile download(String sourceUrl) {
         log.info("HTTP 파일 다운로드 시작: sourceUrl={}", sourceUrl);
 
-        byte[] fileBytes =
-                restClient.get().uri(URI.create(sourceUrl)).retrieve().body(byte[].class);
+        URI safeUri = toEncodedUri(sourceUrl);
+        byte[] fileBytes = restClient.get().uri(safeUri).retrieve().body(byte[].class);
 
         if (fileBytes == null || fileBytes.length == 0) {
             throw new IllegalStateException("다운로드된 파일이 비어있습니다: " + sourceUrl);
         }
 
-        String fileName = extractFileName(sourceUrl);
+        String fileName = extractFileName(safeUri);
         String contentType = detectContentType(fileName);
 
         log.info("HTTP 파일 다운로드 완료: fileName={}, size={}", fileName, fileBytes.length);
@@ -39,8 +42,20 @@ public class FileDownloadHttpClient implements FileDownloadClient {
         return RawDownloadedFile.of(fileName, contentType, fileBytes);
     }
 
-    private String extractFileName(String url) {
-        String path = URI.create(url).getPath();
+    @SuppressWarnings("deprecation")
+    private URI toEncodedUri(String sourceUrl) {
+        try {
+            URL url = new URL(sourceUrl.strip());
+            return new URI(
+                    url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(),
+                    url.getPath(), url.getQuery(), url.getRef());
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new IllegalArgumentException("유효하지 않은 다운로드 URL: " + sourceUrl, e);
+        }
+    }
+
+    private String extractFileName(URI uri) {
+        String path = uri.getPath();
         int lastSlash = path.lastIndexOf('/');
         if (lastSlash >= 0 && lastSlash < path.length() - 1) {
             return path.substring(lastSlash + 1);
