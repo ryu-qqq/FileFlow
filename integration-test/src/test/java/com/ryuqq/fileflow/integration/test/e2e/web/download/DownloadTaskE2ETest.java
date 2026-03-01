@@ -190,8 +190,6 @@ class DownloadTaskE2ETest extends E2ETestBase {
             // given
             Map<String, Object> request =
                     Map.of(
-                            "s3Key", "downloads/image.jpg",
-                            "bucket", "fileflow-bucket",
                             "accessType", "PUBLIC",
                             "purpose", "PRODUCT_IMAGE",
                             "source", "commerce-api");
@@ -206,56 +204,12 @@ class DownloadTaskE2ETest extends E2ETestBase {
         }
 
         @Test
-        @DisplayName("C8-S04. s3Key 누락 시 400을 반환한다")
-        void shouldReturn400WhenS3KeyMissing() {
-            // given
-            Map<String, Object> request =
-                    Map.of(
-                            "sourceUrl", "https://example.com/image.jpg",
-                            "bucket", "fileflow-bucket",
-                            "accessType", "PUBLIC",
-                            "purpose", "PRODUCT_IMAGE",
-                            "source", "commerce-api");
-
-            // when & then
-            givenServiceAuth()
-                    .body(request)
-                    .when()
-                    .post(BASE_PATH)
-                    .then()
-                    .statusCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        @Test
-        @DisplayName("C8-S05. bucket 누락 시 400을 반환한다")
-        void shouldReturn400WhenBucketMissing() {
-            // given
-            Map<String, Object> request =
-                    Map.of(
-                            "sourceUrl", "https://example.com/image.jpg",
-                            "s3Key", "downloads/image.jpg",
-                            "accessType", "PUBLIC",
-                            "purpose", "PRODUCT_IMAGE",
-                            "source", "commerce-api");
-
-            // when & then
-            givenServiceAuth()
-                    .body(request)
-                    .when()
-                    .post(BASE_PATH)
-                    .then()
-                    .statusCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        @Test
-        @DisplayName("C8-S06. accessType 누락 시 400을 반환한다")
+        @DisplayName("C8-S04. accessType 누락 시 400을 반환한다")
         void shouldReturn400WhenAccessTypeMissing() {
             // given
             Map<String, Object> request =
                     Map.of(
                             "sourceUrl", "https://example.com/image.jpg",
-                            "s3Key", "downloads/image.jpg",
-                            "bucket", "fileflow-bucket",
                             "purpose", "PRODUCT_IMAGE",
                             "source", "commerce-api");
 
@@ -269,14 +223,12 @@ class DownloadTaskE2ETest extends E2ETestBase {
         }
 
         @Test
-        @DisplayName("C8-S07. purpose 누락 시 400을 반환한다")
+        @DisplayName("C8-S05. purpose 누락 시 400을 반환한다")
         void shouldReturn400WhenPurposeMissing() {
             // given
             Map<String, Object> request =
                     Map.of(
                             "sourceUrl", "https://example.com/image.jpg",
-                            "s3Key", "downloads/image.jpg",
-                            "bucket", "fileflow-bucket",
                             "accessType", "PUBLIC",
                             "source", "commerce-api");
 
@@ -290,14 +242,12 @@ class DownloadTaskE2ETest extends E2ETestBase {
         }
 
         @Test
-        @DisplayName("C8-S08. source 누락 시 400을 반환한다")
+        @DisplayName("C8-S06. source 누락 시 400을 반환한다")
         void shouldReturn400WhenSourceMissing() {
             // given
             Map<String, Object> request =
                     Map.of(
                             "sourceUrl", "https://example.com/image.jpg",
-                            "s3Key", "downloads/image.jpg",
-                            "bucket", "fileflow-bucket",
                             "accessType", "PUBLIC",
                             "purpose", "PRODUCT_IMAGE");
 
@@ -311,14 +261,12 @@ class DownloadTaskE2ETest extends E2ETestBase {
         }
 
         @Test
-        @DisplayName("C8-S09. 잘못된 sourceUrl 형식 전달 시 400을 반환한다")
+        @DisplayName("C8-S07. 잘못된 sourceUrl 형식 전달 시 400을 반환한다")
         void shouldReturn400WhenInvalidSourceUrlFormat() {
             // given
             Map<String, Object> request =
                     Map.of(
                             "sourceUrl", "not-a-url",
-                            "s3Key", "downloads/image.jpg",
-                            "bucket", "fileflow-bucket",
                             "accessType", "PUBLIC",
                             "purpose", "PRODUCT_IMAGE",
                             "source", "commerce-api");
@@ -334,13 +282,11 @@ class DownloadTaskE2ETest extends E2ETestBase {
         }
 
         @Test
-        @DisplayName("C8-S10. 잘못된 callbackUrl 형식 전달 시 400을 반환한다")
+        @DisplayName("C8-S08. 잘못된 callbackUrl 형식 전달 시 400을 반환한다")
         void shouldReturn400WhenInvalidCallbackUrlFormat() {
             // given
             Map<String, Object> request = new HashMap<>();
             request.put("sourceUrl", "https://example.com/image.jpg");
-            request.put("s3Key", "downloads/image.jpg");
-            request.put("bucket", "fileflow-bucket");
             request.put("accessType", "PUBLIC");
             request.put("purpose", "PRODUCT_IMAGE");
             request.put("source", "commerce-api");
@@ -395,8 +341,6 @@ class DownloadTaskE2ETest extends E2ETestBase {
     private Map<String, Object> createRequestWithCallback() {
         Map<String, Object> request = new HashMap<>();
         request.put("sourceUrl", "https://example.com/image.jpg");
-        request.put("s3Key", "downloads/2026/02/image.jpg");
-        request.put("bucket", "fileflow-bucket");
         request.put("accessType", "PUBLIC");
         request.put("purpose", "PRODUCT_IMAGE");
         request.put("source", "commerce-api");
@@ -407,8 +351,6 @@ class DownloadTaskE2ETest extends E2ETestBase {
     private Map<String, Object> createRequestWithoutCallback() {
         Map<String, Object> request = new HashMap<>();
         request.put("sourceUrl", "https://example.com/image.jpg");
-        request.put("s3Key", "downloads/image.jpg");
-        request.put("bucket", "fileflow-bucket");
         request.put("accessType", "PUBLIC");
         request.put("purpose", "PRODUCT_IMAGE");
         request.put("source", "commerce-api");
