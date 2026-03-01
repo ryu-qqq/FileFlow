@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.application.transform.dto.bundle.TransformFailureBundl
 import com.ryuqq.fileflow.application.transform.dto.result.ImageTransformResult;
 import com.ryuqq.fileflow.application.transform.factory.command.TransformCommandFactory;
 import com.ryuqq.fileflow.application.transform.manager.command.TransformCommandManager;
+import com.ryuqq.fileflow.application.transform.manager.query.TransformReadManager;
 import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.asset.aggregate.AssetFixture;
 import com.ryuqq.fileflow.domain.asset.vo.FileInfo;
@@ -36,6 +37,7 @@ class TransformExecutionCoordinatorTest {
     @Mock private TransformCommandFactory transformCommandFactory;
     @Mock private ImageTransformFacade imageTransformFacade;
     @Mock private TransformCommandManager transformCommandManager;
+    @Mock private TransformReadManager transformReadManager;
     @Mock private TransformCompletionFacade transformCompletionFacade;
 
     @Nested
@@ -53,6 +55,7 @@ class TransformExecutionCoordinatorTest {
                     new StatusChangeContext<>(request.idValue(), NOW);
             given(transformCommandFactory.createStartContext(request.idValue()))
                     .willReturn(startContext);
+            given(transformReadManager.getTransformRequest(request.idValue())).willReturn(request);
 
             FileInfo fileInfo =
                     FileInfo.of("resized.jpg", 2048L, "image/jpeg", "etag-resized", "jpg");
@@ -77,6 +80,7 @@ class TransformExecutionCoordinatorTest {
 
             // then
             then(transformCommandManager).should().persist(request);
+            then(transformReadManager).should().getTransformRequest(request.idValue());
             then(imageTransformFacade).should().transform(sourceAsset, request);
             then(transformCompletionFacade).should().complete(completionBundle);
         }
@@ -92,6 +96,7 @@ class TransformExecutionCoordinatorTest {
                     new StatusChangeContext<>(request.idValue(), NOW);
             given(transformCommandFactory.createStartContext(request.idValue()))
                     .willReturn(startContext);
+            given(transformReadManager.getTransformRequest(request.idValue())).willReturn(request);
 
             ImageTransformResult failureResult =
                     ImageTransformResult.failure("Image processing failed");

@@ -7,6 +7,7 @@ import com.ryuqq.fileflow.application.download.dto.response.FileDownloadResult;
 import com.ryuqq.fileflow.application.download.factory.command.DownloadCommandFactory;
 import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
+import com.ryuqq.fileflow.application.download.manager.query.DownloadReadManager;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
 import com.ryuqq.fileflow.domain.download.vo.DownloadTaskStatus;
 import java.time.Instant;
@@ -22,6 +23,7 @@ public class DownloadExecutionCoordinator {
     private final DownloadCommandFactory downloadCommandFactory;
     private final FileTransferFacade fileTransferFacade;
     private final DownloadCommandManager downloadCommandManager;
+    private final DownloadReadManager downloadReadManager;
     private final DownloadCompletionFacade downloadCompletionFacade;
     private final DownloadQueueManager downloadQueueManager;
 
@@ -29,11 +31,13 @@ public class DownloadExecutionCoordinator {
             DownloadCommandFactory downloadCommandFactory,
             FileTransferFacade fileTransferFacade,
             DownloadCommandManager downloadCommandManager,
+            DownloadReadManager downloadReadManager,
             DownloadCompletionFacade downloadCompletionFacade,
             DownloadQueueManager downloadQueueManager) {
         this.downloadCommandFactory = downloadCommandFactory;
         this.fileTransferFacade = fileTransferFacade;
         this.downloadCommandManager = downloadCommandManager;
+        this.downloadReadManager = downloadReadManager;
         this.downloadCompletionFacade = downloadCompletionFacade;
         this.downloadQueueManager = downloadQueueManager;
     }
@@ -44,6 +48,7 @@ public class DownloadExecutionCoordinator {
                     downloadCommandFactory.createStartContext(downloadTask.idValue());
             downloadTask.start(context.changedAt());
             downloadCommandManager.persist(downloadTask);
+            downloadTask = downloadReadManager.getDownloadTask(downloadTask.idValue());
 
             log.info(
                     "다운로드 시작 persist 완료: taskId={}, version={}",
@@ -80,8 +85,7 @@ public class DownloadExecutionCoordinator {
                 failDownload(downloadTask, result.errorMessage());
             }
         } catch (Exception e) {
-            log.error(
-                    "다운로드 중 예외 발생: taskId={}", downloadTask.idValue(), e);
+            log.error("다운로드 중 예외 발생: taskId={}", downloadTask.idValue(), e);
             safeFailDownload(downloadTask, e.getMessage());
         }
     }
@@ -106,10 +110,7 @@ public class DownloadExecutionCoordinator {
         if (failureBundle.canRetry()) {
             downloadQueueManager.enqueue(downloadTask.idValue());
         }
-        log.error(
-                "다운로드 실패 처리: taskId={}, error={}",
-                downloadTask.idValue(),
-                errorMessage);
+        log.error("다운로드 실패 처리: taskId={}, error={}", downloadTask.idValue(), errorMessage);
     }
 
     private void safeFailDownload(DownloadTask downloadTask, String errorMessage) {
@@ -121,15 +122,17 @@ public class DownloadExecutionCoordinator {
                     downloadTask.idValue(),
                     failEx);
             try {
-                if (downloadTask.status() != DownloadTaskStatus.FAILED
-                        && downloadTask.status() != DownloadTaskStatus.QUEUED) {
-                    downloadTask.fail(errorMessage, Instant.now());
+                DownloadTask freshTask =
+                        downloadReadManager.getDownloadTask(downloadTask.idValue());
+                if (freshTask.status() != DownloadTaskStatus.FAILED
+                        && freshTask.status() != DownloadTaskStatus.QUEUED) {
+                    freshTask.fail(errorMessage, Instant.now());
                 }
-                downloadCommandManager.persist(downloadTask);
+                downloadCommandManager.persist(freshTask);
                 log.info(
                         "직접 persist 성공: taskId={}, version={}",
-                        downloadTask.idValue(),
-                        downloadTask.version());
+                        freshTask.idValue(),
+                        freshTask.version());
             } catch (Exception lastResort) {
                 log.error(
                         "최종 persist도 실패, 태스크 DOWNLOADING 상태로 stuck 예상: taskId={}",

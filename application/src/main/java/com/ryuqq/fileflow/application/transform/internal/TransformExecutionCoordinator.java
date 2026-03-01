@@ -6,6 +6,7 @@ import com.ryuqq.fileflow.application.transform.dto.bundle.TransformFailureBundl
 import com.ryuqq.fileflow.application.transform.dto.result.ImageTransformResult;
 import com.ryuqq.fileflow.application.transform.factory.command.TransformCommandFactory;
 import com.ryuqq.fileflow.application.transform.manager.command.TransformCommandManager;
+import com.ryuqq.fileflow.application.transform.manager.query.TransformReadManager;
 import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
 import org.slf4j.Logger;
@@ -20,16 +21,19 @@ public class TransformExecutionCoordinator {
     private final TransformCommandFactory transformCommandFactory;
     private final ImageTransformFacade imageTransformFacade;
     private final TransformCommandManager transformCommandManager;
+    private final TransformReadManager transformReadManager;
     private final TransformCompletionFacade transformCompletionFacade;
 
     public TransformExecutionCoordinator(
             TransformCommandFactory transformCommandFactory,
             ImageTransformFacade imageTransformFacade,
             TransformCommandManager transformCommandManager,
+            TransformReadManager transformReadManager,
             TransformCompletionFacade transformCompletionFacade) {
         this.transformCommandFactory = transformCommandFactory;
         this.imageTransformFacade = imageTransformFacade;
         this.transformCommandManager = transformCommandManager;
+        this.transformReadManager = transformReadManager;
         this.transformCompletionFacade = transformCompletionFacade;
     }
 
@@ -38,6 +42,7 @@ public class TransformExecutionCoordinator {
                 transformCommandFactory.createStartContext(request.idValue());
         request.start(context.changedAt());
         transformCommandManager.persist(request);
+        request = transformReadManager.getTransformRequest(request.idValue());
 
         ImageTransformResult result = imageTransformFacade.transform(sourceAsset, request);
 
