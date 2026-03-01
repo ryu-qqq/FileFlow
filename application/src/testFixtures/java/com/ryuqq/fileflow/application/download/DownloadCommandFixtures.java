@@ -19,8 +19,6 @@ public final class DownloadCommandFixtures {
     public static CreateDownloadTaskCommand createCommand() {
         return new CreateDownloadTaskCommand(
                 "https://example.com/image.jpg",
-                "public/2026/02/download-001.jpg",
-                "test-bucket",
                 AccessType.PUBLIC,
                 "product-image",
                 "commerce-service",
@@ -30,20 +28,15 @@ public final class DownloadCommandFixtures {
     public static CreateDownloadTaskCommand createCommandWithoutCallback() {
         return new CreateDownloadTaskCommand(
                 "https://example.com/image.jpg",
-                "public/2026/02/download-002.jpg",
-                "test-bucket",
                 AccessType.PUBLIC,
                 "product-image",
                 "commerce-service",
                 null);
     }
 
-    public static CreateDownloadTaskCommand createCommand(
-            String sourceUrl, String s3Key, AccessType accessType) {
+    public static CreateDownloadTaskCommand createCommand(String sourceUrl, AccessType accessType) {
         return new CreateDownloadTaskCommand(
                 sourceUrl,
-                s3Key,
-                "test-bucket",
                 accessType,
                 "product-image",
                 "commerce-service",

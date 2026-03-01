@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.transform.manager.client;
 
+import com.ryuqq.fileflow.application.common.metric.annotation.OutboundClientMetric;
 import com.ryuqq.fileflow.application.common.port.out.client.FileStorageUploadClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ public class FileStorageUploadManager {
         this.fileStorageUploadClient = fileStorageUploadClient;
     }
 
+    @OutboundClientMetric(system = "S3", operation = "storage_upload")
     public String upload(String bucket, String s3Key, byte[] data, String contentType) {
         log.info("파일 스토리지 업로드 시작: bucket={}, s3Key={}, size={}", bucket, s3Key, data.length);
         String etag = fileStorageUploadClient.upload(bucket, s3Key, data, contentType);

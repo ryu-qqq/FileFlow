@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.session.service;
+package com.ryuqq.fileflow.domain.common.service;
 
 import com.ryuqq.fileflow.domain.common.vo.AccessType;
 import java.time.Instant;
@@ -21,7 +21,7 @@ public class S3PathResolver {
      *
      * @param accessType PUBLIC 또는 INTERNAL
      * @param fileId UUID v7 기반 파일 ID (Application에서 생성)
-     * @param extension 파일 확장자 (jpg, png, pdf 등)
+     * @param extension 파일 확장자 (jpg, png, pdf 등), null 또는 빈 문자열이면 확장자 없이 생성
      * @param now 현재 시각 (Instant.now() 직접 호출 금지)
      * @return S3 객체 키
      */
@@ -31,15 +31,10 @@ public class S3PathResolver {
         String year = String.valueOf(dateTime.getYear());
         String month = String.format("%02d", dateTime.getMonthValue());
 
-        return accessType.name().toLowerCase()
-                + "/"
-                + year
-                + "/"
-                + month
-                + "/"
-                + fileId
-                + "."
-                + extension;
+        String fileName =
+                (extension == null || extension.isBlank()) ? fileId : fileId + "." + extension;
+
+        return accessType.name().toLowerCase() + "/" + year + "/" + month + "/" + fileName;
     }
 
     /**

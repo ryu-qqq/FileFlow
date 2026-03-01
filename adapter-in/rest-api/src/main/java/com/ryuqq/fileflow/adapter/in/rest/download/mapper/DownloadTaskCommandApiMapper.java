@@ -27,8 +27,6 @@ public class DownloadTaskCommandApiMapper {
     public CreateDownloadTaskCommand toCommand(CreateDownloadTaskApiRequest request) {
         return new CreateDownloadTaskCommand(
                 request.sourceUrl(),
-                request.s3Key(),
-                request.bucket(),
                 request.accessType(),
                 request.purpose(),
                 request.source(),

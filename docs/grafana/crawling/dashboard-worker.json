@@ -112,12 +112,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "yellow",
+                "value": 0.1
+              },
+              {
+                "color": "green",
+                "value": 1
               }
             ]
           },
@@ -155,12 +159,14 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "msg/s",
+          "editorMode": "code",
+          "expr": "sum(rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\"}[1m])) * 60",
+          "legendFormat": "tasks/min",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "SQS Messages/sec",
+      "title": "Crawl Tasks/min",
       "type": "stat"
     },
     {
@@ -225,8 +231,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=~\"nack|ack\",environment=~\"$environment\"}[5m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(0)",
-          "legendFormat": "Error %",
+          "editorMode": "code",
+          "expr": "sum(rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[5m])) / sum(rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(0)",
+          "legendFormat": "error %",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -295,7 +303,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "avg(jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",environment=~\"$environment\"} / jvm_memory_max_bytes{job=~\"$job\",area=\"heap\",environment=~\"$environment\"}) * 100",
+          "expr": "sum(jvm_memory_used_bytes{job=~\"$job\",environment=~\"$environment\",area=\"heap\"}) / clamp_min(sum(jvm_memory_max_bytes{job=~\"$job\",environment=~\"$environment\",area=\"heap\"}), 1) * 100",
           "legendFormat": "Heap %",
           "refId": "A"
         }
@@ -312,7 +320,7 @@
         "y": 5
       },
       "id": 300,
-      "title": "\ud83d\udcc1 SQS Consumer Processing",
+      "title": "Crawl Task Processing",
       "type": "row"
     },
     {
@@ -335,7 +343,7 @@
               },
               {
                 "color": "yellow",
-                "value": 95
+                "value": 90
               },
               {
                 "color": "green",
@@ -377,12 +385,14 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",queue=\"download\",result=\"success\",environment=~\"$environment\"}[5m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",queue=\"download\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
-          "legendFormat": "Success %",
+          "editorMode": "code",
+          "expr": "sum(rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\",outcome=\"success\"}[5m])) / sum(rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
+          "legendFormat": "success %",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "SQS Download - Success Rate",
+      "title": "Crawl Task - Success Rate",
       "type": "stat"
     },
     {
@@ -405,7 +415,7 @@
               },
               {
                 "color": "yellow",
-                "value": 95
+                "value": 90
               },
               {
                 "color": "green",
@@ -447,12 +457,14 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",queue=\"transform\",result=\"success\",environment=~\"$environment\"}[5m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",queue=\"transform\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
-          "legendFormat": "Success %",
+          "editorMode": "code",
+          "expr": "sum(rate(crawlinghub_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"success\"}[5m])) / sum(rate(crawlinghub_outbound_client_total{job=~\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(100)",
+          "legendFormat": "success %",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "SQS Transform - Success Rate",
+      "title": "Outbound Client - Success Rate",
       "type": "stat"
     },
     {
@@ -473,11 +485,11 @@
               },
               {
                 "color": "yellow",
-                "value": 5
+                "value": 1
               },
               {
                 "color": "red",
-                "value": 20
+                "value": 10
               }
             ]
           },
@@ -515,12 +527,14 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(increase(sqs_consumer_messages_total{job=~\"$job\",result=~\"nack|ack\",environment=~\"$environment\"}[5m])) or vector(0)",
-          "legendFormat": "Errors",
+          "editorMode": "code",
+          "expr": "sum(increase(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[5m])) or vector(0)",
+          "legendFormat": "errors",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "Task Errors (5m)",
+      "title": "Crawl Task Errors (5m)",
       "type": "stat"
     },
     {
@@ -541,7 +555,7 @@
               },
               {
                 "color": "yellow",
-                "value": 3
+                "value": 1
               },
               {
                 "color": "red",
@@ -583,8 +597,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(increase(fileflow_outbound_client_errors_total{job=~\"$job\",environment=~\"$environment\"}[5m])) or vector(0)",
-          "legendFormat": "Outbound Errors",
+          "editorMode": "code",
+          "expr": "sum(increase(crawlinghub_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[5m])) or vector(0)",
+          "legendFormat": "errors",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -707,8 +723,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, queue) (rate(sqs_consumer_messages_total{job=~\"$job\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "{{queue}} Total",
+          "editorMode": "code",
+          "expr": "sum by (operation) (rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\"}[1m]))",
+          "legendFormat": "{{operation}} - total",
+          "range": true,
           "refId": "A"
         },
         {
@@ -716,8 +734,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "{{queue}} Success",
+          "editorMode": "code",
+          "expr": "sum by (operation) (rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\",outcome=\"success\"}[1m]))",
+          "legendFormat": "{{operation}} - success",
+          "range": true,
           "refId": "B"
         },
         {
@@ -725,12 +745,14 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "{{queue}} Nack",
+          "editorMode": "code",
+          "expr": "sum by (operation) (rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[1m]))",
+          "legendFormat": "{{operation}} - error",
+          "range": true,
           "refId": "C"
         }
       ],
-      "title": "SQS Processing Rate (by Queue)",
+      "title": "Crawl Task Rate (by Operation)",
       "type": "timeseries"
     },
     {
@@ -849,8 +871,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=\"success\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "Success",
+          "editorMode": "code",
+          "expr": "sum by (system) (rate(crawlinghub_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"success\"}[1m]))",
+          "legendFormat": "{{system}} - success",
+          "range": true,
           "refId": "A"
         },
         {
@@ -858,21 +882,14 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=\"ack\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "Ack (Non-Retryable)",
+          "editorMode": "code",
+          "expr": "sum by (system) (rate(crawlinghub_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[1m]))",
+          "legendFormat": "{{system}} - error",
+          "range": true,
           "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ef4r3izgbak8wb"
-          },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "Nack (Retry)",
-          "refId": "C"
         }
       ],
-      "title": "SQS Message Result Breakdown",
+      "title": "Outbound Client Rate (by System)",
       "type": "timeseries"
     },
     {
@@ -899,8 +916,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "histogram_quantile(0.50, sum by (job, le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"download\",environment=~\"$environment\"}[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(crawlinghub_crawl_task_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P50",
+          "range": true,
           "refId": "A"
         },
         {
@@ -908,8 +927,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "histogram_quantile(0.95, sum by (job, le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"download\",environment=~\"$environment\"}[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(crawlinghub_crawl_task_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P95",
+          "range": true,
           "refId": "B"
         },
         {
@@ -917,12 +938,14 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "histogram_quantile(0.99, sum by (job, le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"download\",environment=~\"$environment\"}[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(crawlinghub_crawl_task_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P99",
+          "range": true,
           "refId": "C"
         }
       ],
-      "title": "SQS Download Duration (P50/P95/P99)",
+      "title": "Crawl Task Duration (P50/P95/P99)",
       "type": "timeseries"
     },
     {
@@ -949,8 +972,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "histogram_quantile(0.50, sum by (job, le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"transform\",environment=~\"$environment\"}[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(crawlinghub_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P50",
+          "range": true,
           "refId": "A"
         },
         {
@@ -958,8 +983,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "histogram_quantile(0.95, sum by (job, le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"transform\",environment=~\"$environment\"}[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(crawlinghub_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P95",
+          "range": true,
           "refId": "B"
         },
         {
@@ -967,233 +994,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "histogram_quantile(0.99, sum by (job, le) (rate(sqs_consumer_duration_seconds_bucket{job=~\"$job\",queue=\"transform\",environment=~\"$environment\"}[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(crawlinghub_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
           "legendFormat": "P99",
-          "refId": "C"
-        }
-      ],
-      "title": "SQS Transform Duration (P50/P95/P99)",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 26
-      },
-      "id": 350,
-      "title": "\ud83c\udf10 Outbound Client (S3 / HTTP)",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ef4r3izgbak8wb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 27
-      },
-      "id": 50,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ef4r3izgbak8wb"
-          },
-          "expr": "sum by (system) (rate(fileflow_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"success\"}[1m]))",
-          "legendFormat": "success - {{system}}",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ef4r3izgbak8wb"
-          },
-          "expr": "sum by (system) (rate(fileflow_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[1m]))",
-          "legendFormat": "error - {{system}}",
-          "refId": "B"
-        }
-      ],
-      "title": "Outbound Client Rate (by System)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ef4r3izgbak8wb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 27
-      },
-      "id": 51,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ef4r3izgbak8wb"
-          },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(fileflow_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
-          "legendFormat": "P50",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ef4r3izgbak8wb"
-          },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(fileflow_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
-          "legendFormat": "P95",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ef4r3izgbak8wb"
-          },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(fileflow_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
-          "legendFormat": "P99",
+          "range": true,
           "refId": "C"
         }
       ],
@@ -1206,10 +1010,10 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 26
       },
       "id": 400,
-      "title": "\u26a0\ufe0f SQS Errors",
+      "title": "Errors",
       "type": "row"
     },
     {
@@ -1233,7 +1037,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 27
       },
       "id": 31,
       "targets": [
@@ -1242,8 +1046,10 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "{{queue}} Nack",
+          "editorMode": "code",
+          "expr": "sum by (operation) (rate(crawlinghub_crawl_task_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[1m]))",
+          "legendFormat": "crawl_task - {{operation}}",
+          "range": true,
           "refId": "A"
         },
         {
@@ -1251,21 +1057,14 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"ack\",environment=~\"$environment\"}[1m]))",
-          "legendFormat": "{{queue}} Ack",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ef4r3izgbak8wb"
-          },
-          "expr": "sum by (system) (rate(fileflow_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[1m]))",
+          "editorMode": "code",
+          "expr": "sum by (system) (rate(crawlinghub_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[1m]))",
           "legendFormat": "outbound - {{system}}",
-          "refId": "C"
+          "range": true,
+          "refId": "B"
         }
       ],
-      "title": "Error Rate (SQS / Outbound Client)",
+      "title": "Error Rate (Crawl Task / Outbound Client)",
       "type": "timeseries"
     },
     {
@@ -1274,7 +1073,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 35
       },
       "id": 500,
       "title": "\ud83d\uddc4\ufe0f Database (HikariCP)",
@@ -1295,7 +1094,7 @@
         "h": 6,
         "w": 8,
         "x": 0,
-        "y": 45
+        "y": 36
       },
       "id": 40,
       "targets": [
@@ -1363,7 +1162,7 @@
         "h": 6,
         "w": 8,
         "x": 8,
-        "y": 45
+        "y": 36
       },
       "id": 41,
       "options": {
@@ -1402,7 +1201,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 45
+        "y": 36
       },
       "id": 42,
       "targets": [
@@ -1425,7 +1224,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 42
       },
       "id": 700,
       "title": "\u2615 JVM Metrics",
@@ -1449,7 +1248,7 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 52
+        "y": 43
       },
       "id": 60,
       "targets": [
@@ -1458,7 +1257,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"})",
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",environment=~\"$environment\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"})",
           "legendFormat": "{{aws_ecs_task_id}}",
           "refId": "A"
         }
@@ -1497,7 +1296,7 @@
         "h": 6,
         "w": 6,
         "x": 6,
-        "y": 52
+        "y": 43
       },
       "id": 61,
       "targets": [
@@ -1506,7 +1305,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}) / sum by (job, aws_ecs_task_id) (jvm_memory_max_bytes{job=~\"$job\",area=\"heap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}) * 100",
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",environment=~\"$environment\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"}) / clamp_min(sum by (aws_ecs_task_id) (jvm_memory_max_bytes{job=~\"$job\",environment=~\"$environment\",area=\"heap\",aws_ecs_task_id=~\"$task_id\"}), 1) * 100",
           "legendFormat": "{{aws_ecs_task_id}}",
           "refId": "A"
         }
@@ -1532,7 +1331,7 @@
         "h": 6,
         "w": 6,
         "x": 12,
-        "y": 52
+        "y": 43
       },
       "id": 62,
       "targets": [
@@ -1541,7 +1340,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",area=\"nonheap\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"})",
+          "expr": "sum by (aws_ecs_task_id) (jvm_memory_used_bytes{job=~\"$job\",environment=~\"$environment\",area=\"nonheap\",aws_ecs_task_id=~\"$task_id\"})",
           "legendFormat": "{{aws_ecs_task_id}}",
           "refId": "A"
         }
@@ -1567,7 +1366,7 @@
         "h": 6,
         "w": 6,
         "x": 18,
-        "y": 52
+        "y": 43
       },
       "id": 63,
       "targets": [
@@ -1576,7 +1375,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "jvm_threads_live_threads{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}",
+          "expr": "jvm_threads_live_threads{job=~\"$job\",environment=~\"$environment\",aws_ecs_task_id=~\"$task_id\"}",
           "legendFormat": "{{aws_ecs_task_id}}",
           "refId": "A"
         }
@@ -1602,7 +1401,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 49
       },
       "id": 64,
       "targets": [
@@ -1611,7 +1410,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, aws_ecs_task_id) (rate(jvm_gc_pause_seconds_sum{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}[5m]))",
+          "expr": "sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_sum{job=~\"$job\",environment=~\"$environment\",aws_ecs_task_id=~\"$task_id\"}[5m]))",
           "legendFormat": "{{aws_ecs_task_id}}",
           "refId": "A"
         }
@@ -1637,7 +1436,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 49
       },
       "id": 65,
       "targets": [
@@ -1646,7 +1445,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum by (job, aws_ecs_task_id) (rate(jvm_gc_pause_seconds_count{job=~\"$job\",aws_ecs_task_id=~\"$task_id\",environment=~\"$environment\"}[1m])) * 60",
+          "expr": "sum by (aws_ecs_task_id) (rate(jvm_gc_pause_seconds_count{job=~\"$job\",environment=~\"$environment\",aws_ecs_task_id=~\"$task_id\"}[1m])) * 60",
           "legendFormat": "{{aws_ecs_task_id}}",
           "refId": "A"
         }
@@ -1660,7 +1459,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 55
       },
       "id": 900,
       "title": "\ud83d\udce1 SQS Queue Depth (CloudWatch)",
@@ -1746,7 +1545,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 65
+        "y": 56
       },
       "id": 80,
       "options": {
@@ -1769,7 +1568,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "$download_queue"
+              "stage-monitoring-sqs-crawlinghub-crawling-task"
             ]
           },
           "expression": "",
@@ -1784,7 +1583,7 @@
           "refId": "A",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "Visible (Main)"
+          "legendFormat": "Stage - Visible (Main)"
         },
         {
           "datasource": {
@@ -1793,7 +1592,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "$download_queue_dlq"
+              "stage-monitoring-sqs-crawlinghub-crawling-task-dlq"
             ]
           },
           "expression": "",
@@ -1808,10 +1607,58 @@
           "refId": "B",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "Visible (DLQ)"
+          "legendFormat": "Stage - Visible (DLQ)"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-crawlinghub-crawling-task"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateNumberOfMessagesVisible",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "C",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Visible (Main)"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-crawlinghub-crawling-task-dlq"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateNumberOfMessagesVisible",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "D",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Visible (DLQ)"
         }
       ],
-      "title": "Download Queue - Messages Visible",
+      "title": "Crawl Task Queue - Messages Visible",
       "type": "timeseries"
     },
     {
@@ -1894,7 +1741,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 65
+        "y": 56
       },
       "id": 81,
       "options": {
@@ -1917,7 +1764,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "prod-fileflow-file-processing"
+              "stage-monitoring-sqs-crawlinghub-product-sync"
             ]
           },
           "expression": "",
@@ -1932,7 +1779,7 @@
           "refId": "A",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "Visible (Main)"
+          "legendFormat": "Stage - Visible (Main)"
         },
         {
           "datasource": {
@@ -1941,7 +1788,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "prod-fileflow-file-processing-dlq"
+              "stage-monitoring-sqs-crawlinghub-product-sync-dlq"
             ]
           },
           "expression": "",
@@ -1956,10 +1803,58 @@
           "refId": "B",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "Visible (DLQ)"
+          "legendFormat": "Stage - Visible (DLQ)"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-crawlinghub-product-sync"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateNumberOfMessagesVisible",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "C",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Visible (Main)"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-crawlinghub-product-sync-dlq"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateNumberOfMessagesVisible",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "D",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Visible (DLQ)"
         }
       ],
-      "title": "File Processing Queue - Messages Visible",
+      "title": "Product Sync Queue - Messages Visible",
       "type": "timeseries"
     },
     {
@@ -2030,7 +1925,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 73
+        "y": 64
       },
       "id": 82,
       "options": {
@@ -2053,7 +1948,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "$download_queue"
+              "stage-monitoring-sqs-crawlinghub-crawling-task"
             ]
           },
           "expression": "",
@@ -2067,10 +1962,35 @@
           "queryMode": "Metrics",
           "refId": "A",
           "region": "ap-northeast-2",
-          "statistic": "Maximum"
+          "statistic": "Maximum",
+          "legendFormat": "Stage"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-crawlinghub-crawling-task"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateAgeOfOldestMessage",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "B",
+          "region": "ap-northeast-2",
+          "statistic": "Maximum",
+          "legendFormat": "Prod"
         }
       ],
-      "title": "Download Queue - Message Age",
+      "title": "Crawl Task Queue - Message Age",
       "type": "timeseries"
     },
     {
@@ -2141,7 +2061,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 73
+        "y": 64
       },
       "id": 83,
       "options": {
@@ -2164,7 +2084,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "prod-fileflow-file-processing"
+              "stage-monitoring-sqs-crawlinghub-product-sync"
             ]
           },
           "expression": "",
@@ -2178,10 +2098,35 @@
           "queryMode": "Metrics",
           "refId": "A",
           "region": "ap-northeast-2",
-          "statistic": "Maximum"
+          "statistic": "Maximum",
+          "legendFormat": "Stage"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-crawlinghub-product-sync"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateAgeOfOldestMessage",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "B",
+          "region": "ap-northeast-2",
+          "statistic": "Maximum",
+          "legendFormat": "Prod"
         }
       ],
-      "title": "File Processing Queue - Message Age",
+      "title": "Product Sync Queue - Message Age",
       "type": "timeseries"
     },
     {
@@ -2190,7 +2135,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 81
+        "y": 72
       },
       "id": 1000,
       "title": "\ud83d\udda5\ufe0f ECS Resources (CloudWatch)",
@@ -2264,7 +2209,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 82
+        "y": 73
       },
       "id": 84,
       "options": {
@@ -2287,10 +2232,10 @@
           },
           "dimensions": {
             "ClusterName": [
-              "fileflow-cluster-prod"
+              "crawlinghub-cluster-stage"
             ],
             "ServiceName": [
-              "fileflow-download-worker"
+              "crawlinghub-crawl-worker-stage"
             ]
           },
           "expression": "",
@@ -2305,7 +2250,7 @@
           "refId": "A",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "download-worker"
+          "legendFormat": "Stage - crawl-worker"
         },
         {
           "datasource": {
@@ -2314,10 +2259,10 @@
           },
           "dimensions": {
             "ClusterName": [
-              "fileflow-cluster-prod"
+              "crawlinghub-cluster-prod"
             ],
             "ServiceName": [
-              "fileflow-resizing-worker"
+              "crawlinghub-crawl-worker-prod"
             ]
           },
           "expression": "",
@@ -2332,7 +2277,7 @@
           "refId": "B",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "resizing-worker"
+          "legendFormat": "Prod - crawl-worker"
         }
       ],
       "title": "CPU Utilization",
@@ -2406,7 +2351,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 82
+        "y": 73
       },
       "id": 85,
       "options": {
@@ -2429,10 +2374,10 @@
           },
           "dimensions": {
             "ClusterName": [
-              "fileflow-cluster-prod"
+              "crawlinghub-cluster-stage"
             ],
             "ServiceName": [
-              "fileflow-download-worker"
+              "crawlinghub-crawl-worker-stage"
             ]
           },
           "expression": "",
@@ -2447,7 +2392,7 @@
           "refId": "A",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "download-worker"
+          "legendFormat": "Stage - crawl-worker"
         },
         {
           "datasource": {
@@ -2456,10 +2401,10 @@
           },
           "dimensions": {
             "ClusterName": [
-              "fileflow-cluster-prod"
+              "crawlinghub-cluster-prod"
             ],
             "ServiceName": [
-              "fileflow-resizing-worker"
+              "crawlinghub-crawl-worker-prod"
             ]
           },
           "expression": "",
@@ -2474,17 +2419,394 @@
           "refId": "B",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "resizing-worker"
+          "legendFormat": "Prod - crawl-worker"
         }
       ],
       "title": "Memory Utilization",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 81
+      },
+      "id": 1100,
+      "title": "\ud83e\udd16 UserAgent Pool",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "white",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Available"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Borrowed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cooldown"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Suspended"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 82
+      },
+      "id": 86,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "crawlinghub_useragent_pool_total{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Total",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "crawlinghub_useragent_pool_available{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Available",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "crawlinghub_useragent_pool_borrowed{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Borrowed",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "crawlinghub_useragent_pool_cooldown{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Cooldown",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "crawlinghub_useragent_pool_suspended{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Suspended",
+          "refId": "E"
+        }
+      ],
+      "title": "UserAgent Pool Status",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "green",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 82
+      },
+      "id": 87,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "crawlinghub_useragent_pool_available_rate{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Available Rate",
+          "refId": "A"
+        }
+      ],
+      "title": "UserAgent Pool Available Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 82
+      },
+      "id": 88,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "crawlinghub_useragent_pool_health_avg{job=~\"$job\",environment=~\"$environment\"}",
+          "legendFormat": "Health Score",
+          "refId": "A"
+        }
+      ],
+      "title": "UserAgent Pool Health Score",
+      "type": "stat"
     }
   ],
   "refresh": "10s",
   "schemaVersion": 39,
   "tags": [
-    "fileflow",
+    "crawlinghub",
     "worker"
   ],
   "templating": {
@@ -2492,24 +2814,30 @@
       {
         "current": {
           "selected": true,
-          "text": "stage",
-          "value": "stage"
+          "text": "All",
+          "value": "$__all"
         },
-        "hide": 0,
-        "includeAll": true,
-        "label": "Environment",
-        "multi": true,
-        "name": "environment",
-        "options": [],
-        "query": "label_values(up, environment)",
-        "refresh": 2,
-        "regex": "",
-        "sort": 1,
-        "type": "query",
         "datasource": {
           "type": "prometheus",
           "uid": "ef4r3izgbak8wb"
-        }
+        },
+        "definition": "label_values(up, environment)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "environment",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(up, environment)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "label": "Environment"
       },
       {
         "current": {
@@ -2533,16 +2861,11 @@
           },
           {
             "selected": false,
-            "text": "fileflow-worker-metrics",
-            "value": "fileflow-worker-metrics"
-          },
-          {
-            "selected": false,
-            "text": "fileflow-resizing-worker-metrics",
-            "value": "fileflow-resizing-worker-metrics"
+            "text": "crawlinghub-worker-metrics",
+            "value": "crawlinghub-worker-metrics"
           }
         ],
-        "query": "fileflow-worker-metrics,fileflow-resizing-worker-metrics",
+        "query": "crawlinghub-worker-metrics",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
@@ -2557,6 +2880,7 @@
           "type": "prometheus",
           "uid": "ef4r3izgbak8wb"
         },
+        "allValue": ".*",
         "definition": "",
         "hide": 0,
         "includeAll": true,
@@ -2564,7 +2888,7 @@
         "multi": true,
         "name": "task_id",
         "options": [],
-        "query": "label_values(up{job=~\"$job\"}, aws_ecs_task_id)",
+        "query": "label_values(up{job=~\"$job\", environment=~\"$environment\"}, aws_ecs_task_id)",
         "refresh": 2,
         "regex": "/.+/",
         "skipUrlSync": false,
@@ -2572,7 +2896,11 @@
         "type": "query"
       },
       {
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "CloudWatch-prod",
+          "value": "CloudWatch-prod"
+        },
         "hide": 0,
         "includeAll": false,
         "multi": false,
@@ -2584,62 +2912,6 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
-      },
-      {
-        "current": {
-          "selected": true,
-          "text": "prod-monitoring-sqs-fileflow-external-download",
-          "value": "prod-monitoring-sqs-fileflow-external-download"
-        },
-        "hide": 0,
-        "includeAll": false,
-        "label": "Download Queue",
-        "multi": false,
-        "name": "download_queue",
-        "options": [
-          {
-            "selected": true,
-            "text": "prod-monitoring-sqs-fileflow-external-download",
-            "value": "prod-monitoring-sqs-fileflow-external-download"
-          },
-          {
-            "selected": false,
-            "text": "stage-monitoring-sqs-fileflow-external-download",
-            "value": "stage-monitoring-sqs-fileflow-external-download"
-          }
-        ],
-        "query": "prod-monitoring-sqs-fileflow-external-download,stage-monitoring-sqs-fileflow-external-download",
-        "queryValue": "",
-        "skipUrlSync": false,
-        "type": "custom"
-      },
-      {
-        "current": {
-          "selected": true,
-          "text": "prod-monitoring-sqs-fileflow-external-download-dlq",
-          "value": "prod-monitoring-sqs-fileflow-external-download-dlq"
-        },
-        "hide": 0,
-        "includeAll": false,
-        "label": "Download DLQ",
-        "multi": false,
-        "name": "download_queue_dlq",
-        "options": [
-          {
-            "selected": true,
-            "text": "prod-monitoring-sqs-fileflow-external-download-dlq",
-            "value": "prod-monitoring-sqs-fileflow-external-download-dlq"
-          },
-          {
-            "selected": false,
-            "text": "stage-monitoring-sqs-fileflow-external-download-dlq",
-            "value": "stage-monitoring-sqs-fileflow-external-download-dlq"
-          }
-        ],
-        "query": "prod-monitoring-sqs-fileflow-external-download-dlq,stage-monitoring-sqs-fileflow-external-download-dlq",
-        "queryValue": "",
-        "skipUrlSync": false,
-        "type": "custom"
       }
     ]
   },
@@ -2649,8 +2921,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "FileFlow - Worker Metrics",
-  "uid": "fileflow-worker-metrics",
+  "title": "CrawlingHub Worker Metrics",
+  "uid": "crawlinghub-worker-metrics",
   "version": 1,
   "weekStart": ""
 }

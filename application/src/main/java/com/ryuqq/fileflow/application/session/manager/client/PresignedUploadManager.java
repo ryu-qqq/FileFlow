@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.session.manager.client;
 
+import com.ryuqq.fileflow.application.common.metric.annotation.OutboundClientMetric;
 import com.ryuqq.fileflow.application.session.port.out.client.PresignedUploadClient;
 import java.time.Duration;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ public class PresignedUploadManager {
         return presignedUploadClient.getBucket();
     }
 
+    @OutboundClientMetric(system = "S3", operation = "presigned_upload")
     public String generatePresignedUploadUrl(String s3Key, String contentType, Duration ttl) {
         return presignedUploadClient.generatePresignedUploadUrl(s3Key, contentType, ttl);
     }
