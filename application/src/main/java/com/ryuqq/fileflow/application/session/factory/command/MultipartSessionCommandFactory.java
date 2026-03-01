@@ -8,9 +8,9 @@ import com.ryuqq.fileflow.application.session.dto.bundle.MultipartSessionCreatio
 import com.ryuqq.fileflow.application.session.dto.command.AddCompletedPartCommand;
 import com.ryuqq.fileflow.application.session.dto.command.CompleteMultipartUploadSessionCommand;
 import com.ryuqq.fileflow.application.session.dto.command.CreateMultipartUploadSessionCommand;
+import com.ryuqq.fileflow.domain.common.service.S3PathResolver;
 import com.ryuqq.fileflow.domain.session.aggregate.MultipartUploadSession;
 import com.ryuqq.fileflow.domain.session.id.MultipartUploadSessionId;
-import com.ryuqq.fileflow.domain.session.service.S3PathResolver;
 import com.ryuqq.fileflow.domain.session.vo.CompletedPart;
 import com.ryuqq.fileflow.domain.session.vo.MultipartUploadSessionUpdateData;
 import com.ryuqq.fileflow.domain.session.vo.PartPresignedUrlSpec;

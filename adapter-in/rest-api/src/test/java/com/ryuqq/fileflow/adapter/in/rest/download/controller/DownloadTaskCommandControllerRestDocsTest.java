@@ -62,8 +62,6 @@ class DownloadTaskCommandControllerRestDocsTest extends RestDocsTestSupport {
                     .willReturn(
                             new CreateDownloadTaskCommand(
                                     request.sourceUrl(),
-                                    request.s3Key(),
-                                    request.bucket(),
                                     request.accessType(),
                                     request.purpose(),
                                     request.source(),
@@ -90,12 +88,6 @@ class DownloadTaskCommandControllerRestDocsTest extends RestDocsTestSupport {
                                             fieldWithPath("sourceUrl")
                                                     .type(JsonFieldType.STRING)
                                                     .description("다운로드 소스 URL"),
-                                            fieldWithPath("s3Key")
-                                                    .type(JsonFieldType.STRING)
-                                                    .description("저장할 S3 객체 키"),
-                                            fieldWithPath("bucket")
-                                                    .type(JsonFieldType.STRING)
-                                                    .description("S3 버킷명"),
                                             fieldWithPath("accessType")
                                                     .type(JsonFieldType.STRING)
                                                     .description(

@@ -4,8 +4,6 @@ import com.ryuqq.fileflow.domain.common.vo.AccessType;
 
 public record CreateDownloadTaskCommand(
         String sourceUrl,
-        String s3Key,
-        String bucket,
         AccessType accessType,
         String purpose,
         String source,

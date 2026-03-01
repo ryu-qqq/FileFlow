@@ -1,4 +1,4 @@
-package com.ryuqq.fileflow.domain.session.service;
+package com.ryuqq.fileflow.domain.common.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,6 +55,36 @@ class S3PathResolverTest {
             String path = S3PathResolver.resolve(AccessType.PUBLIC, "file-004", "pdf", now);
 
             assertThat(path).isEqualTo("public/2026/12/file-004.pdf");
+        }
+
+        @Test
+        @DisplayName("확장자가 null이면 파일ID만으로 경로를 생성한다")
+        void resolvesPathWithNullExtension() {
+            Instant now = Instant.parse("2026-03-01T10:30:00Z");
+
+            String path = S3PathResolver.resolve(AccessType.PUBLIC, "file-005", null, now);
+
+            assertThat(path).isEqualTo("public/2026/03/file-005");
+        }
+
+        @Test
+        @DisplayName("확장자가 빈 문자열이면 파일ID만으로 경로를 생성한다")
+        void resolvesPathWithEmptyExtension() {
+            Instant now = Instant.parse("2026-03-01T10:30:00Z");
+
+            String path = S3PathResolver.resolve(AccessType.PUBLIC, "file-006", "", now);
+
+            assertThat(path).isEqualTo("public/2026/03/file-006");
+        }
+
+        @Test
+        @DisplayName("확장자가 공백 문자열이면 파일ID만으로 경로를 생성한다")
+        void resolvesPathWithBlankExtension() {
+            Instant now = Instant.parse("2026-03-01T10:30:00Z");
+
+            String path = S3PathResolver.resolve(AccessType.PUBLIC, "file-007", "  ", now);
+
+            assertThat(path).isEqualTo("public/2026/03/file-007");
         }
     }
 

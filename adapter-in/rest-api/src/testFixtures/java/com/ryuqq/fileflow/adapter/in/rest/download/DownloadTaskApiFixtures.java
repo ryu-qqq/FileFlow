@@ -19,7 +19,7 @@ public final class DownloadTaskApiFixtures {
     // ===== 공통 상수 =====
     public static final String DOWNLOAD_TASK_ID = "dt_test_abc123";
     public static final String SOURCE_URL = "https://example.com/files/image.jpg";
-    public static final String S3_KEY = "downloads/2026/02/image.jpg";
+    public static final String S3_KEY = "public/2026/02/dt_test_abc123.jpg";
     public static final String BUCKET = "fileflow-bucket";
     public static final String PURPOSE = "PRODUCT_IMAGE";
     public static final String SOURCE = "commerce-api";
@@ -36,7 +36,7 @@ public final class DownloadTaskApiFixtures {
 
     public static CreateDownloadTaskApiRequest createDownloadTaskRequest() {
         return new CreateDownloadTaskApiRequest(
-                SOURCE_URL, S3_KEY, BUCKET, AccessType.PUBLIC, PURPOSE, SOURCE, CALLBACK_URL);
+                SOURCE_URL, AccessType.PUBLIC, PURPOSE, SOURCE, CALLBACK_URL);
     }
 
     // ===== Application Response Fixtures =====
