@@ -8,6 +8,8 @@ import com.ryuqq.fileflow.application.download.factory.command.DownloadCommandFa
 import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
+import com.ryuqq.fileflow.domain.download.vo.DownloadTaskStatus;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -37,13 +39,37 @@ public class DownloadExecutionCoordinator {
     }
 
     public void execute(DownloadTask downloadTask) {
-        StatusChangeContext<String> context =
-                downloadCommandFactory.createStartContext(downloadTask.idValue());
-        downloadTask.start(context.changedAt());
-        downloadCommandManager.persist(downloadTask);
+        if (downloadTask.status() == DownloadTaskStatus.QUEUED) {
+            StatusChangeContext<String> context =
+                    downloadCommandFactory.createStartContext(downloadTask.idValue());
+            downloadTask.start(context.changedAt());
+            downloadCommandManager.persist(downloadTask);
+
+            log.info(
+                    "다운로드 시작 persist 완료: taskId={}, version={}",
+                    downloadTask.idValue(),
+                    downloadTask.version());
+        } else if (downloadTask.status() == DownloadTaskStatus.DOWNLOADING) {
+            log.warn(
+                    "DOWNLOADING 상태 태스크 복구 시도: taskId={}, version={}",
+                    downloadTask.idValue(),
+                    downloadTask.version());
+        } else {
+            log.warn(
+                    "처리 불필요한 상태: taskId={}, status={}",
+                    downloadTask.idValue(),
+                    downloadTask.status());
+            return;
+        }
 
         try {
+            log.info("파일 전송 시작: taskId={}", downloadTask.idValue());
             FileDownloadResult result = fileTransferFacade.transfer(downloadTask);
+            log.info(
+                    "파일 전송 결과: taskId={}, success={}, error={}",
+                    downloadTask.idValue(),
+                    result.success(),
+                    result.errorMessage());
 
             if (result.success()) {
                 DownloadCompletionBundle bundle =
@@ -55,15 +81,27 @@ public class DownloadExecutionCoordinator {
             }
         } catch (Exception e) {
             log.error(
-                    "다운로드 중 예상치 못한 예외 발생: taskId={}", downloadTask.idValue(), e);
-            failDownload(downloadTask, e.getMessage());
+                    "다운로드 중 예외 발생: taskId={}", downloadTask.idValue(), e);
+            safeFailDownload(downloadTask, e.getMessage());
         }
     }
 
     private void failDownload(DownloadTask downloadTask, String errorMessage) {
         DownloadFailureBundle failureBundle =
                 downloadCommandFactory.createFailureBundle(downloadTask, errorMessage);
+
+        log.info(
+                "실패 persist 시작: taskId={}, version={}, status={}",
+                downloadTask.idValue(),
+                downloadTask.version(),
+                downloadTask.status());
+
         downloadCompletionFacade.failDownload(failureBundle);
+
+        log.info(
+                "실패 persist 완료: taskId={}, version={}",
+                downloadTask.idValue(),
+                downloadTask.version());
 
         if (failureBundle.canRetry()) {
             downloadQueueManager.enqueue(downloadTask.idValue());
@@ -72,5 +110,32 @@ public class DownloadExecutionCoordinator {
                 "다운로드 실패 처리: taskId={}, error={}",
                 downloadTask.idValue(),
                 errorMessage);
+    }
+
+    private void safeFailDownload(DownloadTask downloadTask, String errorMessage) {
+        try {
+            failDownload(downloadTask, errorMessage);
+        } catch (Exception failEx) {
+            log.error(
+                    "failDownload 자체도 실패, 직접 persist 시도: taskId={}",
+                    downloadTask.idValue(),
+                    failEx);
+            try {
+                if (downloadTask.status() != DownloadTaskStatus.FAILED
+                        && downloadTask.status() != DownloadTaskStatus.QUEUED) {
+                    downloadTask.fail(errorMessage, Instant.now());
+                }
+                downloadCommandManager.persist(downloadTask);
+                log.info(
+                        "직접 persist 성공: taskId={}, version={}",
+                        downloadTask.idValue(),
+                        downloadTask.version());
+            } catch (Exception lastResort) {
+                log.error(
+                        "최종 persist도 실패, 태스크 DOWNLOADING 상태로 stuck 예상: taskId={}",
+                        downloadTask.idValue(),
+                        lastResort);
+            }
+        }
     }
 }
