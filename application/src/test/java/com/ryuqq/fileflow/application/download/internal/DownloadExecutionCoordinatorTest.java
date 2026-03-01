@@ -11,6 +11,7 @@ import com.ryuqq.fileflow.application.download.dto.response.FileDownloadResult;
 import com.ryuqq.fileflow.application.download.factory.command.DownloadCommandFactory;
 import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
+import com.ryuqq.fileflow.application.download.manager.query.DownloadReadManager;
 import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.asset.aggregate.AssetFixture;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
@@ -34,6 +35,7 @@ class DownloadExecutionCoordinatorTest {
     @Mock private DownloadCommandFactory downloadCommandFactory;
     @Mock private FileTransferFacade fileTransferFacade;
     @Mock private DownloadCommandManager downloadCommandManager;
+    @Mock private DownloadReadManager downloadReadManager;
     @Mock private DownloadCompletionFacade downloadCompletionFacade;
     @Mock private DownloadQueueManager downloadQueueManager;
 
@@ -59,6 +61,8 @@ class DownloadExecutionCoordinatorTest {
 
             given(downloadCommandFactory.createStartContext(downloadTask.idValue()))
                     .willReturn(startContext);
+            given(downloadReadManager.getDownloadTask(downloadTask.idValue()))
+                    .willReturn(downloadTask);
             given(fileTransferFacade.transfer(downloadTask)).willReturn(successResult);
             given(downloadCommandFactory.createCompletionBundle(downloadTask, successResult))
                     .willReturn(completionBundle);
@@ -68,6 +72,7 @@ class DownloadExecutionCoordinatorTest {
 
             // then
             then(downloadCommandManager).should().persist(downloadTask);
+            then(downloadReadManager).should().getDownloadTask(downloadTask.idValue());
             then(fileTransferFacade).should().transfer(downloadTask);
             then(downloadCompletionFacade).should().completeDownload(completionBundle);
             then(downloadQueueManager).shouldHaveNoInteractions();
@@ -89,6 +94,8 @@ class DownloadExecutionCoordinatorTest {
 
             given(downloadCommandFactory.createStartContext(downloadTask.idValue()))
                     .willReturn(startContext);
+            given(downloadReadManager.getDownloadTask(downloadTask.idValue()))
+                    .willReturn(downloadTask);
             given(fileTransferFacade.transfer(downloadTask)).willReturn(failureResult);
             given(downloadCommandFactory.createFailureBundle(downloadTask, "Connection timeout"))
                     .willReturn(failureBundle);
@@ -118,6 +125,8 @@ class DownloadExecutionCoordinatorTest {
 
             given(downloadCommandFactory.createStartContext(downloadTask.idValue()))
                     .willReturn(startContext);
+            given(downloadReadManager.getDownloadTask(downloadTask.idValue()))
+                    .willReturn(downloadTask);
             given(fileTransferFacade.transfer(downloadTask)).willReturn(failureResult);
             given(downloadCommandFactory.createFailureBundle(downloadTask, "Connection timeout"))
                     .willReturn(failureBundle);
@@ -147,6 +156,8 @@ class DownloadExecutionCoordinatorTest {
 
             given(downloadCommandFactory.createStartContext(downloadTask.idValue()))
                     .willReturn(startContext);
+            given(downloadReadManager.getDownloadTask(downloadTask.idValue()))
+                    .willReturn(downloadTask);
             given(fileTransferFacade.transfer(downloadTask)).willReturn(successResult);
             given(downloadCommandFactory.createCompletionBundle(downloadTask, successResult))
                     .willReturn(completionBundle);
@@ -157,6 +168,7 @@ class DownloadExecutionCoordinatorTest {
             // then
             then(downloadCommandFactory).should().createStartContext(downloadTask.idValue());
             then(downloadCommandManager).should().persist(downloadTask);
+            then(downloadReadManager).should().getDownloadTask(downloadTask.idValue());
         }
     }
 }

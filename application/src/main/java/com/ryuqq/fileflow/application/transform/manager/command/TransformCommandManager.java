@@ -16,7 +16,6 @@ public class TransformCommandManager {
 
     @Transactional
     public void persist(TransformRequest transformRequest) {
-        long newVersion = persistencePort.persist(transformRequest);
-        transformRequest.updateVersion(newVersion);
+        persistencePort.persist(transformRequest);
     }
 }

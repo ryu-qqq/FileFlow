@@ -47,8 +47,13 @@ public class FileDownloadHttpClient implements FileDownloadClient {
         try {
             URL url = new URL(sourceUrl.strip());
             return new URI(
-                    url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(),
-                    url.getPath(), url.getQuery(), url.getRef());
+                    url.getProtocol(),
+                    url.getUserInfo(),
+                    url.getHost(),
+                    url.getPort(),
+                    url.getPath(),
+                    url.getQuery(),
+                    url.getRef());
         } catch (MalformedURLException | URISyntaxException e) {
             throw new IllegalArgumentException("유효하지 않은 다운로드 URL: " + sourceUrl, e);
         }
