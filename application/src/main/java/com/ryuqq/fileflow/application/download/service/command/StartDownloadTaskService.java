@@ -29,10 +29,9 @@ public class StartDownloadTaskService implements StartDownloadTaskUseCase {
         DownloadTask downloadTask = downloadTaskValidator.getExistingTask(downloadTaskId);
         DownloadTaskStatus currentStatus = downloadTask.status();
 
-        if (currentStatus == DownloadTaskStatus.COMPLETED
-                || currentStatus == DownloadTaskStatus.FAILED) {
+        if (currentStatus != DownloadTaskStatus.QUEUED) {
             log.warn(
-                    "이미 완료/실패 상태의 태스크, 처리 건너뜀: taskId={}, status={}",
+                    "QUEUED가 아닌 상태의 태스크, 처리 건너뜀: taskId={}, status={}",
                     downloadTaskId,
                     currentStatus);
             return;

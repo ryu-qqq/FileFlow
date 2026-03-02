@@ -99,6 +99,23 @@ class StartTransformRequestServiceTest {
         }
 
         @Test
+        @DisplayName("이미 PROCESSING 상태이면 처리를 건너뛴다")
+        void execute_AlreadyProcessing_Skips() {
+            // given
+            String transformRequestId = "transform-001";
+            TransformRequest request = TransformRequestFixture.aProcessingRequest();
+
+            given(transformExecutionValidator.getTransformRequest(transformRequestId))
+                    .willReturn(request);
+
+            // when
+            sut.execute(transformRequestId);
+
+            // then
+            then(transformExecutionCoordinator).should(never()).execute(any(), any());
+        }
+
+        @Test
         @DisplayName("소스 에셋 조회 실패 시 변환 요청을 FAILED로 마킹하고 예외를 던진다")
         void execute_SourceAssetNotFound_FailsRequestAndThrows() {
             // given
