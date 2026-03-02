@@ -58,8 +58,7 @@ class TransformExecutionCoordinatorTest {
                     new StatusChangeContext<>(request.idValue(), NOW);
             given(transformCommandFactory.createStartContext(request.idValue()))
                     .willReturn(startContext);
-            given(transformReadManager.getTransformRequest(request.idValue()))
-                    .willReturn(request);
+            given(transformReadManager.getTransformRequest(request.idValue())).willReturn(request);
 
             FileInfo fileInfo =
                     FileInfo.of("resized.jpg", 2048L, "image/jpeg", "etag-resized", "jpg");
@@ -99,8 +98,7 @@ class TransformExecutionCoordinatorTest {
                     new StatusChangeContext<>(request.idValue(), NOW);
             given(transformCommandFactory.createStartContext(request.idValue()))
                     .willReturn(startContext);
-            given(transformReadManager.getTransformRequest(request.idValue()))
-                    .willReturn(request);
+            given(transformReadManager.getTransformRequest(request.idValue())).willReturn(request);
 
             ImageTransformResult failureResult =
                     ImageTransformResult.failure("Image processing failed");
@@ -131,8 +129,7 @@ class TransformExecutionCoordinatorTest {
                     new StatusChangeContext<>(request.idValue(), NOW);
             given(transformCommandFactory.createStartContext(request.idValue()))
                     .willReturn(startContext);
-            given(transformReadManager.getTransformRequest(request.idValue()))
-                    .willReturn(request);
+            given(transformReadManager.getTransformRequest(request.idValue())).willReturn(request);
 
             FileInfo fileInfo =
                     FileInfo.of("resized.jpg", 2048L, "image/jpeg", "etag-resized", "jpg");
