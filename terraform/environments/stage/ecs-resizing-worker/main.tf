@@ -265,6 +265,24 @@ module "resizing_worker_task_role" {
         ]
       })
     }
+    sqs-kms-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "AllowKMSForSQSEncryption"
+            Effect = "Allow"
+            Action = [
+              "kms:Decrypt",
+              "kms:GenerateDataKey"
+            ]
+            Resource = [
+              data.aws_kms_alias.sqs.target_key_arn
+            ]
+          }
+        ]
+      })
+    }
     s3-access = {
       policy = jsonencode({
         Version = "2012-10-17"
