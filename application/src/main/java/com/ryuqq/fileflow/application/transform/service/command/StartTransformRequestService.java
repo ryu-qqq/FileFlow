@@ -63,15 +63,10 @@ public class StartTransformRequestService implements StartTransformRequestUseCas
                 request.fail(e.getMessage(), timeProvider.now());
                 transformCommandManager.persist(request);
                 log.warn(
-                        "변환 시작 전 실패 처리: requestId={}, error={}",
-                        request.idValue(),
-                        e.getMessage());
+                        "변환 시작 전 실패 처리: requestId={}, error={}", request.idValue(), e.getMessage());
             }
         } catch (Exception failEx) {
-            log.error(
-                    "변환 실패 처리 자체도 실패: requestId={}",
-                    request.idValue(),
-                    failEx);
+            log.error("변환 실패 처리 자체도 실패: requestId={}", request.idValue(), failEx);
         }
     }
 }

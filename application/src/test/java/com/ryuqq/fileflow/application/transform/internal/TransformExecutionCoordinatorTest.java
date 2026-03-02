@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.times;
 
 import com.ryuqq.fileflow.application.common.dto.command.StatusChangeContext;
 import com.ryuqq.fileflow.application.transform.dto.bundle.TransformCompletionBundle;
@@ -158,6 +159,64 @@ class TransformExecutionCoordinatorTest {
 
             // then
             then(transformCompletionFacade).should().fail(failureBundle);
+        }
+
+        @Test
+        @DisplayName("safeFailTransform도 실패 시 직접 persist를 시도한다")
+        void execute_SafeFailAlsoFails_DirectPersistAttempted() {
+            // given
+            TransformRequest request = TransformRequestFixture.aResizeRequest();
+            Asset sourceAsset = AssetFixture.anAsset();
+
+            StatusChangeContext<String> startContext =
+                    new StatusChangeContext<>(request.idValue(), NOW);
+            given(transformCommandFactory.createStartContext(request.idValue()))
+                    .willReturn(startContext);
+
+            given(imageTransformFacade.transform(sourceAsset, request))
+                    .willThrow(new RuntimeException("Transform crash"));
+
+            given(transformCommandFactory.createFailureBundle(any(), any()))
+                    .willThrow(new RuntimeException("Factory also fails"));
+
+            TransformRequest freshRequest = TransformRequestFixture.aProcessingRequest();
+            given(transformReadManager.getTransformRequest(request.idValue()))
+                    .willReturn(freshRequest);
+
+            // when
+            sut.execute(request, sourceAsset);
+
+            // then
+            then(transformReadManager).should().getTransformRequest(request.idValue());
+            then(transformCommandManager).should(times(2)).persist(any(TransformRequest.class));
+        }
+
+        @Test
+        @DisplayName("최종 persist까지 실패해도 예외를 던지지 않는다")
+        void execute_LastResortFails_DoesNotThrow() {
+            // given
+            TransformRequest request = TransformRequestFixture.aResizeRequest();
+            Asset sourceAsset = AssetFixture.anAsset();
+
+            StatusChangeContext<String> startContext =
+                    new StatusChangeContext<>(request.idValue(), NOW);
+            given(transformCommandFactory.createStartContext(request.idValue()))
+                    .willReturn(startContext);
+
+            given(imageTransformFacade.transform(sourceAsset, request))
+                    .willThrow(new RuntimeException("Transform crash"));
+
+            given(transformCommandFactory.createFailureBundle(any(), any()))
+                    .willThrow(new RuntimeException("Factory fails"));
+
+            given(transformReadManager.getTransformRequest(request.idValue()))
+                    .willThrow(new RuntimeException("Read also fails"));
+
+            // when - 예외 없이 완료되어야 함
+            sut.execute(request, sourceAsset);
+
+            // then - 예외가 발생하지 않으면 성공
+            then(transformReadManager).should().getTransformRequest(request.idValue());
         }
     }
 }
