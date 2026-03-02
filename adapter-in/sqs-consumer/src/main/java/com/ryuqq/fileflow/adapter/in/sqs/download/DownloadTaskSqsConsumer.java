@@ -82,9 +82,7 @@ public class DownloadTaskSqsConsumer {
         } catch (Exception e) {
             if (isOptimisticLockConflict(e)) {
                 resultCounter = ackCounter;
-                log.warn(
-                        "동시 처리 충돌 (ACK): downloadTaskId={}, 다른 스레드가 이미 처리 중",
-                        downloadTaskId);
+                log.warn("동시 처리 충돌 (ACK): downloadTaskId={}, 다른 스레드가 이미 처리 중", downloadTaskId);
                 return;
             }
             resultCounter = nackCounter;

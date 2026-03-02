@@ -161,9 +161,8 @@ class TransformRequestSqsConsumerTest {
     }
 
     /**
-     * Hibernate StaleObjectStateException은 sqs-consumer 모듈에 없으므로
-     * 클래스 이름 기반 감지를 테스트하기 위한 스텁.
-     * 실제 런타임에서는 JPA 모듈의 StaleObjectStateException이 cause chain에 포함됨.
+     * Hibernate StaleObjectStateException은 sqs-consumer 모듈에 없으므로 클래스 이름 기반 감지를 테스트하기 위한 스텁. 실제
+     * 런타임에서는 JPA 모듈의 StaleObjectStateException이 cause chain에 포함됨.
      */
     private static class ObjectOptimisticLockingFailureException extends RuntimeException {
         ObjectOptimisticLockingFailureException(String message) {

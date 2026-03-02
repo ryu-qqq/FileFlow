@@ -35,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DownloadCommandFactory 단위 테스트")
+@SuppressWarnings("PMD.ExcessiveImports")
 class DownloadCommandFactoryTest {
 
     private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");

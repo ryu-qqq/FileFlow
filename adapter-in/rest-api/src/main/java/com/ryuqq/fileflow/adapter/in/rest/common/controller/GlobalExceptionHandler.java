@@ -37,6 +37,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+@SuppressWarnings("PMD.ExcessiveImports")
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
