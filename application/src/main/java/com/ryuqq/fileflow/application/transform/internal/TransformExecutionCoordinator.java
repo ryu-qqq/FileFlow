@@ -46,16 +46,15 @@ public class TransformExecutionCoordinator {
         transformCommandManager.persist(request);
 
         log.info(
-                "변환 시작 persist 완료: requestId={}, version={}",
-                request.idValue(),
-                request.version());
+                "변환 시작 persist 완료: requestId={}, version={}", request.idValue(), request.version());
 
         try {
             ImageTransformResult result = imageTransformFacade.transform(sourceAsset, request);
 
             if (result.success()) {
                 TransformCompletionBundle bundle =
-                        transformCommandFactory.createCompletionBundle(result, request, sourceAsset);
+                        transformCommandFactory.createCompletionBundle(
+                                result, request, sourceAsset);
                 transformCompletionFacade.complete(bundle);
                 log.info(
                         "변환 완료: requestId={}, {}x{}",
@@ -84,10 +83,7 @@ public class TransformExecutionCoordinator {
                             request, ImageTransformResult.failure(errorMessage));
             transformCompletionFacade.fail(bundle);
         } catch (Exception failEx) {
-            log.error(
-                    "변환 실패 처리 자체도 실패, 직접 persist 시도: requestId={}",
-                    request.idValue(),
-                    failEx);
+            log.error("변환 실패 처리 자체도 실패, 직접 persist 시도: requestId={}", request.idValue(), failEx);
             try {
                 TransformRequest freshRequest =
                         transformReadManager.getTransformRequest(request.idValue());
