@@ -34,7 +34,7 @@ public class ErrorMapperRegistry {
     private final List<ErrorMapper> mappers;
 
     public ErrorMapperRegistry(List<ErrorMapper> mappers) {
-        this.mappers = mappers;
+        this.mappers = List.copyOf(mappers);
         log.info(
                 "ErrorMapperRegistry initialized with {} mappers: {}",
                 mappers.size(),
