@@ -1,7 +1,9 @@
 package com.ryuqq.fileflow.application.transform.internal;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 
 import com.ryuqq.fileflow.application.common.dto.command.StatusChangeContext;
 import com.ryuqq.fileflow.application.transform.dto.bundle.TransformCompletionBundle;
@@ -55,7 +57,6 @@ class TransformExecutionCoordinatorTest {
                     new StatusChangeContext<>(request.idValue(), NOW);
             given(transformCommandFactory.createStartContext(request.idValue()))
                     .willReturn(startContext);
-            given(transformReadManager.getTransformRequest(request.idValue())).willReturn(request);
 
             FileInfo fileInfo =
                     FileInfo.of("resized.jpg", 2048L, "image/jpeg", "etag-resized", "jpg");
@@ -80,7 +81,6 @@ class TransformExecutionCoordinatorTest {
 
             // then
             then(transformCommandManager).should().persist(request);
-            then(transformReadManager).should().getTransformRequest(request.idValue());
             then(imageTransformFacade).should().transform(sourceAsset, request);
             then(transformCompletionFacade).should().complete(completionBundle);
         }
@@ -96,7 +96,6 @@ class TransformExecutionCoordinatorTest {
                     new StatusChangeContext<>(request.idValue(), NOW);
             given(transformCommandFactory.createStartContext(request.idValue()))
                     .willReturn(startContext);
-            given(transformReadManager.getTransformRequest(request.idValue())).willReturn(request);
 
             ImageTransformResult failureResult =
                     ImageTransformResult.failure("Image processing failed");
@@ -113,6 +112,51 @@ class TransformExecutionCoordinatorTest {
             // then
             then(transformCommandManager).should().persist(request);
             then(imageTransformFacade).should().transform(sourceAsset, request);
+            then(transformCompletionFacade).should().fail(failureBundle);
+        }
+
+        @Test
+        @DisplayName("complete 중 예외 발생 시 safeFailTransform으로 처리한다")
+        void execute_CompleteThrowsException_SafeFailsTransform() {
+            // given
+            TransformRequest request = TransformRequestFixture.aResizeRequest();
+            Asset sourceAsset = AssetFixture.anAsset();
+
+            StatusChangeContext<String> startContext =
+                    new StatusChangeContext<>(request.idValue(), NOW);
+            given(transformCommandFactory.createStartContext(request.idValue()))
+                    .willReturn(startContext);
+
+            FileInfo fileInfo =
+                    FileInfo.of("resized.jpg", 2048L, "image/jpeg", "etag-resized", "jpg");
+            ImageDimension dimension = ImageDimension.of(800, 600);
+            ImageTransformResult successResult =
+                    ImageTransformResult.success(
+                            "result/resized.jpg", "fileflow-bucket", fileInfo, dimension);
+
+            given(imageTransformFacade.transform(sourceAsset, request)).willReturn(successResult);
+
+            Instant completedAt = NOW.plusSeconds(30);
+            Asset resultAsset = AssetFixture.anAssetWithId("result-001");
+            TransformCompletionBundle completionBundle =
+                    new TransformCompletionBundle(resultAsset, request, dimension, completedAt);
+            given(
+                            transformCommandFactory.createCompletionBundle(
+                                    successResult, request, sourceAsset))
+                    .willReturn(completionBundle);
+            willThrow(new RuntimeException("DB error"))
+                    .given(transformCompletionFacade)
+                    .complete(completionBundle);
+
+            TransformFailureBundle failureBundle =
+                    new TransformFailureBundle(request, "DB error", NOW);
+            given(transformCommandFactory.createFailureBundle(any(), any()))
+                    .willReturn(failureBundle);
+
+            // when
+            sut.execute(request, sourceAsset);
+
+            // then
             then(transformCompletionFacade).should().fail(failureBundle);
         }
     }
