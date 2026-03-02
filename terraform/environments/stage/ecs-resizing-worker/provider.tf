@@ -143,6 +143,11 @@ data "aws_ssm_parameter" "external_download_queue_url" {
   name = "/${var.project_name}/sqs/external-download-queue-url"
 }
 
+# SQS KMS Key Reference (for encrypted queues)
+data "aws_kms_alias" "sqs" {
+  name = "alias/${var.project_name}-sqs-${var.environment}"
+}
+
 # ========================================
 # S3 Bucket Reference (from SSM Parameters)
 # ========================================
