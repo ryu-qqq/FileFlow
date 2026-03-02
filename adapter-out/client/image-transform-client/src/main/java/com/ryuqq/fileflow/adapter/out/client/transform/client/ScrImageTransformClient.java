@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 public class ScrImageTransformClient implements ImageTransformClient {
 
     private static final Logger log = LoggerFactory.getLogger(ScrImageTransformClient.class);
+    private static final int MIN_RESAMPLE_DIMENSION = 5;
 
     @Override
     public ImageProcessingResult process(
@@ -52,12 +53,32 @@ public class ScrImageTransformClient implements ImageTransformClient {
 
     private TransformResult applyTransform(
             ImmutableImage source, TransformType type, TransformParams params) {
+        if (requiresResampling(type)) {
+            validateMinimumDimension(source, type);
+        }
         return switch (type) {
             case RESIZE -> resize(source, params);
             case CONVERT -> convert(source, params);
             case COMPRESS -> compress(source, params);
             case THUMBNAIL -> thumbnail(source, params);
         };
+    }
+
+    private boolean requiresResampling(TransformType type) {
+        return type == TransformType.RESIZE || type == TransformType.THUMBNAIL;
+    }
+
+    private void validateMinimumDimension(ImmutableImage source, TransformType type) {
+        if (source.width < MIN_RESAMPLE_DIMENSION || source.height < MIN_RESAMPLE_DIMENSION) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "이미지 크기가 리샘플링 최소 요건 미달: %dx%d (최소 %dx%d 필요, type=%s)",
+                            source.width,
+                            source.height,
+                            MIN_RESAMPLE_DIMENSION,
+                            MIN_RESAMPLE_DIMENSION,
+                            type));
+        }
     }
 
     private TransformResult resize(ImmutableImage source, TransformParams params) {
