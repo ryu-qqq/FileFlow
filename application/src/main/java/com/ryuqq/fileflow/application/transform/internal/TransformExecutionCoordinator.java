@@ -44,6 +44,7 @@ public class TransformExecutionCoordinator {
                 transformCommandFactory.createStartContext(request.idValue());
         request.start(context.changedAt());
         transformCommandManager.persist(request);
+        request = transformReadManager.getTransformRequest(request.idValue());
 
         log.info(
                 "변환 시작 persist 완료: requestId={}, version={}", request.idValue(), request.version());

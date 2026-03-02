@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -109,8 +110,7 @@ public class GlobalExceptionHandler {
                         "Validation failed for request",
                         VALIDATION_FAILED,
                         req);
-        assert res.getBody() != null;
-        res.getBody().setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
         log.warn("MethodArgumentNotValid: code={}, errors={}", VALIDATION_FAILED, errors);
         return res;
     }
@@ -132,8 +132,7 @@ public class GlobalExceptionHandler {
                         "Validation failed for request",
                         BINDING_FAILED,
                         req);
-        assert res.getBody() != null;
-        res.getBody().setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
         log.warn("BindException: code={}, errors={}", BINDING_FAILED, errors);
         return res;
     }
@@ -156,8 +155,7 @@ public class GlobalExceptionHandler {
                         "Validation failed for request",
                         CONSTRAINT_VIOLATION,
                         req);
-        assert res.getBody() != null;
-        res.getBody().setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
         log.warn("ConstraintViolation: code={}, errors={}", CONSTRAINT_VIOLATION, errors);
         return res;
     }
@@ -204,10 +202,8 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
         String name = Optional.of(ex.getName()).orElse("unknown");
         Object value = ex.getValue();
-        String required =
-                ex.getRequiredType() != null
-                        ? ex.getRequiredType().getSimpleName()
-                        : "required type";
+        Class<?> requiredType = ex.getRequiredType();
+        String required = requiredType != null ? requiredType.getSimpleName() : "required type";
         String msg =
                 "파라미터 '%s'의 값 '%s'는 %s 타입으로 변환할 수 없습니다"
                         .formatted(name, String.valueOf(value), required);
@@ -249,8 +245,7 @@ public class GlobalExceptionHandler {
                         "Validation failed for request",
                         METHOD_VALIDATION_FAILED,
                         req);
-        assert res.getBody() != null;
-        res.getBody().setProperty("errors", errors);
+        Objects.requireNonNull(res.getBody()).setProperty("errors", errors);
         log.warn("HandlerMethodValidation: code={}, errors={}", METHOD_VALIDATION_FAILED, errors);
         return res;
     }
@@ -397,9 +392,8 @@ public class GlobalExceptionHandler {
                         .orElseGet(() -> errorMapperRegistry.defaultMapping(ex));
 
         var res = build(mapped.status(), mapped.title(), mapped.detail(), ex.code(), req);
-        var pd = res.getBody();
+        var pd = Objects.requireNonNull(res.getBody());
 
-        assert pd != null;
         pd.setType(mapped.type());
         if (!ex.args().isEmpty()) {
             pd.setProperty("args", ex.args());
