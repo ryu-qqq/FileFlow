@@ -39,9 +39,9 @@ public class StartTransformRequestService implements StartTransformRequestUseCas
                 transformExecutionValidator.getTransformRequest(transformRequestId);
         TransformStatus currentStatus = request.status();
 
-        if (currentStatus == TransformStatus.COMPLETED || currentStatus == TransformStatus.FAILED) {
+        if (currentStatus != TransformStatus.QUEUED) {
             log.warn(
-                    "이미 완료/실패 상태의 변환 요청, 처리 건너뜀: requestId={}, status={}",
+                    "QUEUED가 아닌 상태의 변환 요청, 처리 건너뜀: requestId={}, status={}",
                     transformRequestId,
                     currentStatus);
             return;
