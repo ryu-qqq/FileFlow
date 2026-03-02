@@ -9,6 +9,8 @@ import com.ryuqq.fileflow.application.transform.manager.command.TransformCommand
 import com.ryuqq.fileflow.application.transform.manager.query.TransformReadManager;
 import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
+import com.ryuqq.fileflow.domain.transform.vo.TransformStatus;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -42,24 +44,68 @@ public class TransformExecutionCoordinator {
                 transformCommandFactory.createStartContext(request.idValue());
         request.start(context.changedAt());
         transformCommandManager.persist(request);
-        request = transformReadManager.getTransformRequest(request.idValue());
 
-        ImageTransformResult result = imageTransformFacade.transform(sourceAsset, request);
+        log.info(
+                "변환 시작 persist 완료: requestId={}, version={}",
+                request.idValue(),
+                request.version());
 
-        if (result.success()) {
-            TransformCompletionBundle bundle =
-                    transformCommandFactory.createCompletionBundle(result, request, sourceAsset);
-            transformCompletionFacade.complete(bundle);
-            log.info(
-                    "변환 완료: requestId={}, {}x{}",
-                    request.idValue(),
-                    result.dimension().width(),
-                    result.dimension().height());
-        } else {
+        try {
+            ImageTransformResult result = imageTransformFacade.transform(sourceAsset, request);
+
+            if (result.success()) {
+                TransformCompletionBundle bundle =
+                        transformCommandFactory.createCompletionBundle(result, request, sourceAsset);
+                transformCompletionFacade.complete(bundle);
+                log.info(
+                        "변환 완료: requestId={}, {}x{}",
+                        request.idValue(),
+                        result.dimension().width(),
+                        result.dimension().height());
+            } else {
+                TransformFailureBundle bundle =
+                        transformCommandFactory.createFailureBundle(request, result);
+                transformCompletionFacade.fail(bundle);
+                log.error(
+                        "변환 실패 처리: requestId={}, error={}",
+                        request.idValue(),
+                        result.errorMessage());
+            }
+        } catch (Exception e) {
+            log.error("변환 중 예외 발생: requestId={}", request.idValue(), e);
+            safeFailTransform(request, e.getMessage());
+        }
+    }
+
+    private void safeFailTransform(TransformRequest request, String errorMessage) {
+        try {
             TransformFailureBundle bundle =
-                    transformCommandFactory.createFailureBundle(request, result);
+                    transformCommandFactory.createFailureBundle(
+                            request, ImageTransformResult.failure(errorMessage));
             transformCompletionFacade.fail(bundle);
-            log.error("변환 실패 처리: requestId={}, error={}", request.idValue(), result.errorMessage());
+        } catch (Exception failEx) {
+            log.error(
+                    "변환 실패 처리 자체도 실패, 직접 persist 시도: requestId={}",
+                    request.idValue(),
+                    failEx);
+            try {
+                TransformRequest freshRequest =
+                        transformReadManager.getTransformRequest(request.idValue());
+                if (freshRequest.status() != TransformStatus.FAILED
+                        && freshRequest.status() != TransformStatus.COMPLETED) {
+                    freshRequest.fail(errorMessage, Instant.now());
+                    transformCommandManager.persist(freshRequest);
+                    log.info(
+                            "직접 persist 성공: requestId={}, version={}",
+                            freshRequest.idValue(),
+                            freshRequest.version());
+                }
+            } catch (Exception lastResort) {
+                log.error(
+                        "최종 persist도 실패, PROCESSING 상태로 stuck 예상: requestId={}",
+                        request.idValue(),
+                        lastResort);
+            }
         }
     }
 }

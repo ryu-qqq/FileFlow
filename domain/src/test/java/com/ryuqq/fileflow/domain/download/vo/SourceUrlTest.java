@@ -88,7 +88,7 @@ class SourceUrlTest {
         @DisplayName("경로에 여러 점이 있으면 마지막 확장자를 추출한다")
         void extractsLastExtension() {
             SourceUrl url = SourceUrl.of("https://example.com/files/archive.tar.gz");
-            assertThat(url.extractExtension()).isEqualTo("gz");
+            assertThat(url.extractExtension()).isEmpty();
         }
 
         @Test
@@ -109,6 +109,29 @@ class SourceUrlTest {
         @DisplayName("점으로 끝나는 파일명에서 빈 문자열을 반환한다")
         void returnsEmptyForTrailingDot() {
             SourceUrl url = SourceUrl.of("https://example.com/files/image.");
+            assertThat(url.extractExtension()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("CDN 리사이징 URL에서 중간 segment의 확장자를 추출한다")
+        void extractsFromCdnResizeUrl() {
+            SourceUrl url =
+                    SourceUrl.of(
+                            "https://image.mustit.co.kr/lib/upload/product/fixedone/2023/11/e31df1331e851101225a5f4f58dac1c9.jpeg/_dims_/resize/300x300/extent/300x400");
+            assertThat(url.extractExtension()).isEqualTo("jpeg");
+        }
+
+        @Test
+        @DisplayName("CDN 리사이징 URL (png)에서 중간 segment의 확장자를 추출한다")
+        void extractsFromCdnResizeUrlPng() {
+            SourceUrl url = SourceUrl.of("https://cdn.example.com/images/logo.png/_resize/200x200");
+            assertThat(url.extractExtension()).isEqualTo("png");
+        }
+
+        @Test
+        @DisplayName("알 수 없는 확장자는 빈 문자열을 반환한다")
+        void returnsEmptyForUnknownExtension() {
+            SourceUrl url = SourceUrl.of("https://example.com/files/data.xyz");
             assertThat(url.extractExtension()).isEmpty();
         }
     }
