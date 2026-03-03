@@ -155,6 +155,10 @@ data "aws_ssm_parameter" "s3_bucket_name" {
   name = "/${var.project_name}/s3/uploads-bucket-name"
 }
 
+data "aws_ssm_parameter" "s3_kms_key_arn" {
+  name = "/${var.project_name}/s3/kms-key-arn"
+}
+
 # ========================================
 # Locals
 # ========================================

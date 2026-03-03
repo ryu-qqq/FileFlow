@@ -8,3 +8,4 @@ fileflow:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION:ap-northeast-2}
+    kms-key-id: ${S3_KMS_KEY_ID:}

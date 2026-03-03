@@ -46,7 +46,7 @@ class MultipartUploadS3ClientTest {
     void setUp() {
         s3Client = mock(S3Client.class);
         s3Presigner = mock(S3Presigner.class);
-        properties = new S3ClientProperties(BUCKET, "ap-northeast-2", "");
+        properties = new S3ClientProperties(BUCKET, "ap-northeast-2", "", "");
         mapper = mock(MultipartUploadS3Mapper.class);
         sut = new MultipartUploadS3Client(s3Client, s3Presigner, properties, mapper);
     }

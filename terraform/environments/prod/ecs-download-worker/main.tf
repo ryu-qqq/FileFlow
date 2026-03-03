@@ -496,6 +496,10 @@ module "download_worker_service" {
       value = data.aws_ssm_parameter.s3_bucket_name.value
     },
     {
+      name  = "S3_KMS_KEY_ID"
+      value = data.aws_ssm_parameter.s3_kms_key_arn.value
+    },
+    {
       name  = "SQS_EXTERNAL_DOWNLOAD_QUEUE_URL"
       value = data.aws_ssm_parameter.external_download_queue_url.value
     },
