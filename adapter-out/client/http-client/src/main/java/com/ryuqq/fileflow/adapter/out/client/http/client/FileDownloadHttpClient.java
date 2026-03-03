@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.client.http.client;
 
 import com.ryuqq.fileflow.application.download.dto.response.RawDownloadedFile;
+import com.ryuqq.fileflow.application.download.exception.PermanentDownloadFailureException;
 import com.ryuqq.fileflow.application.download.port.out.client.FileDownloadClient;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 @Component
@@ -30,8 +32,14 @@ public class FileDownloadHttpClient implements FileDownloadClient {
         log.info("HTTP 파일 다운로드 시작: sourceUrl={}", sourceUrl);
 
         URI safeUri = toEncodedUri(sourceUrl);
-        ResponseEntity<byte[]> response =
-                restClient.get().uri(safeUri).retrieve().toEntity(byte[].class);
+
+        ResponseEntity<byte[]> response;
+        try {
+            response = restClient.get().uri(safeUri).retrieve().toEntity(byte[].class);
+        } catch (HttpClientErrorException e) {
+            throw new PermanentDownloadFailureException(
+                    "HTTP " + e.getStatusCode().value() + ": " + sourceUrl, e);
+        }
 
         byte[] fileBytes = response.getBody();
         if (fileBytes == null || fileBytes.length == 0) {
@@ -63,7 +71,7 @@ public class FileDownloadHttpClient implements FileDownloadClient {
                     url.getQuery(),
                     url.getRef());
         } catch (MalformedURLException | URISyntaxException e) {
-            throw new IllegalArgumentException("유효하지 않은 다운로드 URL: " + sourceUrl, e);
+            throw new PermanentDownloadFailureException("유효하지 않은 다운로드 URL: " + sourceUrl, e);
         }
     }
 
