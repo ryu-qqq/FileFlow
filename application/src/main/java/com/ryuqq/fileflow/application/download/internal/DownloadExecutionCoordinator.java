@@ -81,8 +81,10 @@ public class DownloadExecutionCoordinator {
                         downloadCommandFactory.createCompletionBundle(downloadTask, result);
                 downloadCompletionFacade.completeDownload(bundle);
                 log.info("다운로드 완료: taskId={}", downloadTask.idValue());
-            } else {
+            } else if (result.retryable()) {
                 failDownload(downloadTask, result.errorMessage());
+            } else {
+                failPermanently(downloadTask, result.errorMessage());
             }
         } catch (Exception e) {
             log.error("다운로드 중 예외 발생: taskId={}", downloadTask.idValue(), e);
@@ -111,6 +113,15 @@ public class DownloadExecutionCoordinator {
             downloadQueueManager.enqueue(downloadTask.idValue());
         }
         log.error("다운로드 실패 처리: taskId={}, error={}", downloadTask.idValue(), errorMessage);
+    }
+
+    private void failPermanently(DownloadTask downloadTask, String errorMessage) {
+        DownloadFailureBundle failureBundle =
+                downloadCommandFactory.createPermanentFailureBundle(downloadTask, errorMessage);
+
+        downloadCompletionFacade.failDownload(failureBundle);
+
+        log.warn("영구 실패 처리 (재시도 불가): taskId={}, error={}", downloadTask.idValue(), errorMessage);
     }
 
     private void safeFailDownload(DownloadTask downloadTask, String errorMessage) {

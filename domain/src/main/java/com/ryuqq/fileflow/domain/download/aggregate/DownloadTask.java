@@ -173,6 +173,14 @@ public class DownloadTask {
         }
     }
 
+    /** 영구 실패 처리. 재시도 없이 즉시 FAILED 상태로 전환. */
+    public void failPermanently(String errorMessage, Instant now) {
+        this.lastError = errorMessage;
+        this.status = DownloadTaskStatus.FAILED;
+        this.completedAt = now;
+        this.updatedAt = now;
+    }
+
     public boolean canRetry() {
         return retryPolicy.canRetry();
     }

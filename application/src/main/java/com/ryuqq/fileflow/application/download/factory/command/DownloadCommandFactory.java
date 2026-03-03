@@ -127,6 +127,23 @@ public class DownloadCommandFactory {
         return new DownloadFailureBundle(downloadTask, callbackOutbox);
     }
 
+    public DownloadFailureBundle createPermanentFailureBundle(
+            DownloadTask downloadTask, String errorMessage) {
+        Instant now = timeProvider.now();
+        downloadTask.failPermanently(errorMessage, now);
+
+        CallbackOutbox callbackOutbox = null;
+        if (downloadTask.hasCallback()) {
+            callbackOutbox =
+                    createCallbackOutbox(
+                            downloadTask.idValue(),
+                            downloadTask.callbackUrl(),
+                            downloadTask.status().name());
+        }
+
+        return new DownloadFailureBundle(downloadTask, callbackOutbox);
+    }
+
     public DownloadQueueOutbox createQueueOutbox(String downloadTaskId) {
         String id = idGeneratorPort.generate();
         Instant now = timeProvider.now();

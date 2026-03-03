@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.application.download.internal;
 
 import com.ryuqq.fileflow.application.download.dto.response.FileDownloadResult;
 import com.ryuqq.fileflow.application.download.dto.response.RawDownloadedFile;
+import com.ryuqq.fileflow.application.download.exception.PermanentDownloadFailureException;
 import com.ryuqq.fileflow.application.download.manager.client.FileDownloadManager;
 import com.ryuqq.fileflow.application.download.manager.client.FileStorageUploadManager;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
@@ -37,6 +38,13 @@ public class FileTransferFacade {
 
             return FileDownloadResult.success(
                     rawFile.fileName(), rawFile.contentType(), rawFile.fileSize(), etag);
+        } catch (PermanentDownloadFailureException e) {
+            log.warn(
+                    "파일 전송 영구 실패 (재시도 불가): taskId={}, sourceUrl={}, error={}",
+                    downloadTask.idValue(),
+                    downloadTask.sourceUrlValue(),
+                    e.getMessage());
+            return FileDownloadResult.permanentFailure(e.getMessage());
         } catch (Exception e) {
             log.error(
                     "파일 전송 실패: taskId={}, sourceUrl={}, error={}",
