@@ -132,7 +132,7 @@ module "fileflow_uploads" {
 variable "cors_allowed_origins" {
   description = "List of allowed origins for CORS"
   type        = list(string)
-  default     = ["https://*.connectly.com", "http://localhost:*"]
+  default     = ["https://*.connectly.com", "https://*.set-of.com", "http://localhost:*"]
 }
 
 # ============================================================================
@@ -204,6 +204,18 @@ resource "aws_ssm_parameter" "bucket_arn" {
 
   tags = {
     Name        = "${var.project_name}-s3-bucket-arn"
+    Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "s3_kms_key_arn" {
+  name        = "/${var.project_name}/s3/kms-key-arn"
+  description = "FileFlow S3 KMS key ARN"
+  type        = "String"
+  value       = aws_kms_key.s3.arn
+
+  tags = {
+    Name        = "${var.project_name}-s3-kms-key-arn"
     Environment = var.environment
   }
 }
