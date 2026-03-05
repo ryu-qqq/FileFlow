@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.ryuqq.fileflow.application.common.manager.StorageBucketManager;
+import com.ryuqq.fileflow.application.common.time.TimeProvider;
 import com.ryuqq.fileflow.application.transform.dto.result.ImageProcessingResult;
 import com.ryuqq.fileflow.application.transform.dto.result.ImageTransformResult;
 import com.ryuqq.fileflow.application.transform.manager.client.FileStorageDownloadManager;
@@ -15,12 +17,15 @@ import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.asset.aggregate.AssetFixture;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequestFixture;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,10 +34,26 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("ImageTransformFacade 단위 테스트")
 class ImageTransformFacadeTest {
 
-    @InjectMocks private ImageTransformFacade sut;
+    private static final Instant NOW = Instant.parse("2026-03-01T10:00:00Z");
+
     @Mock private FileStorageDownloadManager fileStorageDownloadManager;
     @Mock private ImageProcessingManager imageProcessingManager;
     @Mock private FileStorageUploadManager fileStorageUploadManager;
+    @Mock private StorageBucketManager storageBucketManager;
+
+    private ImageTransformFacade sut;
+
+    @BeforeEach
+    void setUp() {
+        TimeProvider timeProvider = new TimeProvider(Clock.fixed(NOW, ZoneOffset.UTC));
+        sut =
+                new ImageTransformFacade(
+                        fileStorageDownloadManager,
+                        imageProcessingManager,
+                        fileStorageUploadManager,
+                        storageBucketManager,
+                        timeProvider);
+    }
 
     @Nested
     @DisplayName("transform 메서드")
@@ -44,6 +65,7 @@ class ImageTransformFacadeTest {
             // given
             Asset sourceAsset = AssetFixture.anAsset();
             TransformRequest request = TransformRequestFixture.aResizeRequest();
+            String bucket = "test-bucket";
 
             byte[] sourceBytes = "source-image-bytes".getBytes();
             given(fileStorageDownloadManager.download(sourceAsset.bucket(), sourceAsset.s3Key()))
@@ -55,13 +77,12 @@ class ImageTransformFacadeTest {
             given(imageProcessingManager.process(sourceBytes, request.type(), request.params()))
                     .willReturn(processed);
 
+            given(storageBucketManager.getBucket()).willReturn(bucket);
+
             String expectedEtag = "\"etag-result\"";
             given(
                             fileStorageUploadManager.upload(
-                                    eq(sourceAsset.bucket()),
-                                    anyString(),
-                                    eq(processedBytes),
-                                    eq("image/png")))
+                                    eq(bucket), anyString(), eq(processedBytes), eq("image/png")))
                     .willReturn(expectedEtag);
 
             // when
@@ -69,9 +90,8 @@ class ImageTransformFacadeTest {
 
             // then
             assertThat(result.success()).isTrue();
-            assertThat(result.s3Key()).startsWith("transformed/resize/");
-            assertThat(result.s3Key()).endsWith(".png");
-            assertThat(result.bucket()).isEqualTo(sourceAsset.bucket());
+            assertThat(result.s3Key()).matches(".+/2026/03/.+\\.png");
+            assertThat(result.bucket()).isEqualTo(bucket);
             assertThat(result.fileInfo().contentType()).isEqualTo("image/png");
             assertThat(result.fileInfo().etag()).isEqualTo(expectedEtag);
             assertThat(result.dimension().width()).isEqualTo(800);

@@ -9,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 
 @Entity
@@ -54,8 +55,15 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
     @Column(name = "quality")
     private Integer quality;
 
+    @Column(name = "callback_url", columnDefinition = "TEXT")
+    private String callbackUrl;
+
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
 
     protected TransformRequestJpaEntity() {}
 
@@ -72,9 +80,11 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
             boolean maintainAspectRatio,
             String targetFormat,
             Integer quality,
+            String callbackUrl,
             Instant createdAt,
             Instant updatedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         super(createdAt, updatedAt);
         this.id = id;
         this.sourceAssetId = sourceAssetId;
@@ -88,7 +98,9 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
         this.maintainAspectRatio = maintainAspectRatio;
         this.targetFormat = targetFormat;
         this.quality = quality;
+        this.callbackUrl = callbackUrl;
         this.completedAt = completedAt;
+        this.version = version;
     }
 
     public static TransformRequestJpaEntity create(
@@ -104,9 +116,11 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
             boolean maintainAspectRatio,
             String targetFormat,
             Integer quality,
+            String callbackUrl,
             Instant createdAt,
             Instant updatedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         return new TransformRequestJpaEntity(
                 id,
                 sourceAssetId,
@@ -120,9 +134,11 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
                 maintainAspectRatio,
                 targetFormat,
                 quality,
+                callbackUrl,
                 createdAt,
                 updatedAt,
-                completedAt);
+                completedAt,
+                version);
     }
 
     public String getId() {
@@ -173,7 +189,15 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
         return quality;
     }
 
+    public String getCallbackUrl() {
+        return callbackUrl;
+    }
+
     public Instant getCompletedAt() {
         return completedAt;
+    }
+
+    public long getVersion() {
+        return version;
     }
 }

@@ -124,6 +124,53 @@ class TransformRequestSqsConsumerTest {
     }
 
     @Nested
+    @DisplayName("에러 분류 — Optimistic Lock (ACK)")
+    class OptimisticLockTest {
+
+        @Test
+        @DisplayName("OptimisticLockingFailureException 발생 시 예외를 삼키고 ACK 처리한다")
+        void consume_OptimisticLockConflict_AcknowledgesMessage() {
+            String transformRequestId = "transform-request-optlock";
+            willThrow(new ObjectOptimisticLockingFailureException("Row was updated or deleted"))
+                    .given(startTransformRequestUseCase)
+                    .execute(transformRequestId);
+
+            assertThatCode(() -> sut.consume(transformRequestId, "scheduler-abc12345"))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Optimistic Lock ACK 시 ack 메트릭이 기록된다")
+        void consume_OptimisticLock_RecordsAckMetric() {
+            String transformRequestId = "transform-request-optlock-metric";
+            willThrow(new ObjectOptimisticLockingFailureException("concurrent modification"))
+                    .given(startTransformRequestUseCase)
+                    .execute(transformRequestId);
+
+            sut.consume(transformRequestId, "scheduler-abc12345");
+
+            assertThat(
+                            meterRegistry
+                                    .find("sqs.consumer.messages")
+                                    .tag("queue", "transform")
+                                    .tag("result", "ack")
+                                    .counter()
+                                    .count())
+                    .isGreaterThanOrEqualTo(1.0);
+        }
+    }
+
+    /**
+     * Hibernate StaleObjectStateException은 sqs-consumer 모듈에 없으므로 클래스 이름 기반 감지를 테스트하기 위한 스텁. 실제
+     * 런타임에서는 JPA 모듈의 StaleObjectStateException이 cause chain에 포함됨.
+     */
+    private static class ObjectOptimisticLockingFailureException extends RuntimeException {
+        ObjectOptimisticLockingFailureException(String message) {
+            super(message);
+        }
+    }
+
+    @Nested
     @DisplayName("에러 분류 — Retryable (NACK)")
     class RetryableErrorTest {
 

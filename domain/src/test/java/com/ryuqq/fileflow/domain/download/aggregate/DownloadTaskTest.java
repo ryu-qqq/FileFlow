@@ -351,7 +351,8 @@ class DownloadTaskTest {
                             NOW,
                             NOW.plusSeconds(50),
                             NOW.plusSeconds(50),
-                            null);
+                            null,
+                            0L);
 
             assertThat(task.idValue()).isEqualTo("download-recon");
             assertThat(task.sourceUrlValue()).isEqualTo("https://example.com/file.pdf");

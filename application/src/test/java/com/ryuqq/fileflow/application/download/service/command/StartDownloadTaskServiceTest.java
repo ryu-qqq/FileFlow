@@ -1,7 +1,9 @@
 package com.ryuqq.fileflow.application.download.service.command;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 import com.ryuqq.fileflow.application.download.internal.DownloadExecutionCoordinator;
 import com.ryuqq.fileflow.application.download.validator.DownloadTaskValidator;
@@ -44,6 +46,22 @@ class StartDownloadTaskServiceTest {
             // then
             then(downloadTaskValidator).should().getExistingTask(downloadTaskId);
             then(downloadExecutionCoordinator).should().execute(downloadTask);
+        }
+
+        @Test
+        @DisplayName("QUEUED가 아닌 상태이면 처리를 건너뛴다")
+        void execute_NotQueued_Skips() {
+            // given
+            String downloadTaskId = "download-001";
+            DownloadTask downloadTask = DownloadTaskFixture.aDownloadingTask();
+
+            given(downloadTaskValidator.getExistingTask(downloadTaskId)).willReturn(downloadTask);
+
+            // when
+            sut.execute(downloadTaskId);
+
+            // then
+            then(downloadExecutionCoordinator).should(never()).execute(any());
         }
     }
 }

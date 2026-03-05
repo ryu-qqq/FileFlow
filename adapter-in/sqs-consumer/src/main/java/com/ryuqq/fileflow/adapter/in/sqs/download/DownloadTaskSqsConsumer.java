@@ -80,6 +80,11 @@ public class DownloadTaskSqsConsumer {
             log.error("처리 실패 (NACK): downloadTaskId={}", downloadTaskId, e);
             throw e;
         } catch (Exception e) {
+            if (isOptimisticLockConflict(e)) {
+                resultCounter = ackCounter;
+                log.warn("동시 처리 충돌 (ACK): downloadTaskId={}, 다른 스레드가 이미 처리 중", downloadTaskId);
+                return;
+            }
             resultCounter = nackCounter;
             log.error("처리 실패 (NACK): downloadTaskId={}", downloadTaskId, e);
             throw e;
@@ -93,5 +98,19 @@ public class DownloadTaskSqsConsumer {
     private boolean isNonRetryable(DomainException e) {
         int status = e.httpStatus();
         return status >= 400 && status < 500;
+    }
+
+    private boolean isOptimisticLockConflict(Exception e) {
+        Throwable cause = e;
+        while (cause != null) {
+            String name = cause.getClass().getSimpleName();
+            if ("StaleObjectStateException".equals(name)
+                    || "OptimisticLockingFailureException".equals(name)
+                    || "ObjectOptimisticLockingFailureException".equals(name)) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 }

@@ -9,4 +9,5 @@ public record CreateTransformRequestRequest(
         Integer width,
         Integer height,
         Integer quality,
-        String targetFormat) {}
+        String targetFormat,
+        String callbackUrl) {}

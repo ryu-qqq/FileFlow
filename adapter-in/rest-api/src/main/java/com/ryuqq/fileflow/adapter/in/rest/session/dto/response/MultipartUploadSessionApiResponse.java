@@ -28,6 +28,10 @@ public record MultipartUploadSessionApiResponse(
         @Schema(description = "생성 시각 (ISO 8601)", example = "2026-01-23T09:30:00+09:00")
                 String createdAt) {
 
+    public MultipartUploadSessionApiResponse {
+        completedParts = List.copyOf(completedParts);
+    }
+
     @Schema(description = "완료된 파트 정보")
     public record CompletedPartApiResponse(
             @Schema(description = "파트 번호", example = "1") int partNumber,

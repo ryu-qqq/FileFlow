@@ -67,7 +67,8 @@ class TransformRequestCommandControllerRestDocsTest extends RestDocsTestSupport 
                                     request.width(),
                                     request.height(),
                                     request.quality(),
-                                    request.targetFormat()));
+                                    request.targetFormat(),
+                                    request.callbackUrl()));
             given(createUseCase.execute(any(CreateTransformRequestCommand.class)))
                     .willReturn(TransformRequestApiFixtures.transformRequestResponse());
             given(queryMapper.toResponse(any(TransformRequestResponse.class)))
@@ -109,6 +110,10 @@ class TransformRequestCommandControllerRestDocsTest extends RestDocsTestSupport 
                                             fieldWithPath("targetFormat")
                                                     .type(JsonFieldType.STRING)
                                                     .description("변환 대상 포맷 (webp, png 등)")
+                                                    .optional(),
+                                            fieldWithPath("callbackUrl")
+                                                    .type(JsonFieldType.STRING)
+                                                    .description("변환 완료/실패 시 콜백 URL")
                                                     .optional()),
                                     responseFields(
                                             fieldWithPath("data.transformRequestId")

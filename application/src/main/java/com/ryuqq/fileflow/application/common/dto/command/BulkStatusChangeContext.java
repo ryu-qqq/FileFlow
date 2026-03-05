@@ -16,4 +16,9 @@ import java.util.List;
  * @author ryu-qqq
  * @since 1.1.0
  */
-public record BulkStatusChangeContext<ID>(List<ID> ids, Instant changedAt) {}
+public record BulkStatusChangeContext<ID>(List<ID> ids, Instant changedAt) {
+
+    public BulkStatusChangeContext {
+        ids = List.copyOf(ids);
+    }
+}

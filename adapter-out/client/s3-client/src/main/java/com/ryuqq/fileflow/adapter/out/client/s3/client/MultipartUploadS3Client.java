@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedUploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.model.UploadPartPresignRequest;
@@ -45,12 +46,19 @@ public class MultipartUploadS3Client implements MultipartUploadClient {
     public String createMultipartUpload(String s3Key, String contentType) {
         log.info("멀티파트 업로드 시작: s3Key={}, contentType={}", s3Key, contentType);
 
-        CreateMultipartUploadRequest request =
+        CreateMultipartUploadRequest.Builder requestBuilder =
                 CreateMultipartUploadRequest.builder()
                         .bucket(properties.bucket())
                         .key(s3Key)
-                        .contentType(contentType)
-                        .build();
+                        .contentType(contentType);
+
+        if (properties.isKmsEncryptionEnabled()) {
+            requestBuilder
+                    .serverSideEncryption(ServerSideEncryption.AWS_KMS)
+                    .ssekmsKeyId(properties.kmsKeyId());
+        }
+
+        CreateMultipartUploadRequest request = requestBuilder.build();
 
         CreateMultipartUploadResponse response = s3Client.createMultipartUpload(request);
         String uploadId = response.uploadId();

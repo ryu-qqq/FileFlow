@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.application.transform.internal;
 import com.ryuqq.fileflow.application.asset.manager.command.AssetCommandManager;
 import com.ryuqq.fileflow.application.transform.dto.bundle.TransformCompletionBundle;
 import com.ryuqq.fileflow.application.transform.dto.bundle.TransformFailureBundle;
+import com.ryuqq.fileflow.application.transform.manager.command.TransformCallbackOutboxCommandManager;
 import com.ryuqq.fileflow.application.transform.manager.command.TransformCommandManager;
 import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
@@ -15,12 +16,15 @@ public class TransformCompletionFacade {
 
     private final AssetCommandManager assetCommandManager;
     private final TransformCommandManager transformCommandManager;
+    private final TransformCallbackOutboxCommandManager transformCallbackOutboxCommandManager;
 
     public TransformCompletionFacade(
             AssetCommandManager assetCommandManager,
-            TransformCommandManager transformCommandManager) {
+            TransformCommandManager transformCommandManager,
+            TransformCallbackOutboxCommandManager transformCallbackOutboxCommandManager) {
         this.assetCommandManager = assetCommandManager;
         this.transformCommandManager = transformCommandManager;
+        this.transformCallbackOutboxCommandManager = transformCallbackOutboxCommandManager;
     }
 
     @Transactional
@@ -33,6 +37,10 @@ public class TransformCompletionFacade {
         request.complete(
                 resultAsset.id(), dimension.width(), dimension.height(), bundle.completedAt());
         transformCommandManager.persist(request);
+
+        if (bundle.hasCallback()) {
+            transformCallbackOutboxCommandManager.persist(bundle.callbackOutbox());
+        }
     }
 
     @Transactional
@@ -41,5 +49,9 @@ public class TransformCompletionFacade {
 
         request.fail(bundle.errorMessage(), bundle.failedAt());
         transformCommandManager.persist(request);
+
+        if (bundle.hasCallback()) {
+            transformCallbackOutboxCommandManager.persist(bundle.callbackOutbox());
+        }
     }
 }

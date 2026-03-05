@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.download.manager.client;
 
+import com.ryuqq.fileflow.application.common.metric.annotation.OutboundClientMetric;
 import com.ryuqq.fileflow.application.download.dto.response.RawDownloadedFile;
 import com.ryuqq.fileflow.application.download.port.out.client.FileDownloadClient;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ public class FileDownloadManager {
         this.fileDownloadClient = fileDownloadClient;
     }
 
+    @OutboundClientMetric(system = "HTTP", operation = "file_download")
     public RawDownloadedFile download(String sourceUrl) {
         log.info("파일 다운로드 시작: sourceUrl={}", sourceUrl);
         RawDownloadedFile result = fileDownloadClient.download(sourceUrl);

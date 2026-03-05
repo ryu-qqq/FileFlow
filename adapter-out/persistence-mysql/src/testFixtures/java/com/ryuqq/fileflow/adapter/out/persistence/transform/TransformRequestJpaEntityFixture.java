@@ -23,9 +23,11 @@ public class TransformRequestJpaEntityFixture {
                 true,
                 null,
                 null,
+                null,
                 DEFAULT_NOW,
                 DEFAULT_NOW,
-                null);
+                null,
+                0L);
     }
 
     public static TransformRequestJpaEntity aCompletedEntity() {
@@ -42,9 +44,11 @@ public class TransformRequestJpaEntityFixture {
                 true,
                 null,
                 null,
+                null,
                 DEFAULT_NOW,
                 DEFAULT_NOW.plusSeconds(30),
-                DEFAULT_NOW.plusSeconds(30));
+                DEFAULT_NOW.plusSeconds(30),
+                0L);
     }
 
     public static TransformRequestJpaEntity aConvertEntity() {
@@ -61,9 +65,11 @@ public class TransformRequestJpaEntityFixture {
                 false,
                 "webp",
                 null,
+                null,
                 DEFAULT_NOW,
                 DEFAULT_NOW,
-                null);
+                null,
+                0L);
     }
 
     public static TransformRequestJpaEntity anEntityWithStatus(TransformStatus status) {
@@ -80,9 +86,11 @@ public class TransformRequestJpaEntityFixture {
                 true,
                 null,
                 null,
+                null,
                 DEFAULT_NOW,
                 DEFAULT_NOW,
-                status == TransformStatus.COMPLETED ? DEFAULT_NOW.plusSeconds(30) : null);
+                status == TransformStatus.COMPLETED ? DEFAULT_NOW.plusSeconds(30) : null,
+                0L);
     }
 
     public static TransformRequestJpaEntity anEntityWithId(String id) {
@@ -99,9 +107,11 @@ public class TransformRequestJpaEntityFixture {
                 true,
                 null,
                 null,
+                null,
                 DEFAULT_NOW,
                 DEFAULT_NOW,
-                null);
+                null,
+                0L);
     }
 
     public static Instant defaultNow() {

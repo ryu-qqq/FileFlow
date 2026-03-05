@@ -225,12 +225,12 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[1m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",environment=~\"$environment\"}[1m])) * 100 or vector(0)",
-          "legendFormat": "Nack %",
+          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=~\"nack|ack\",environment=~\"$environment\"}[5m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(0)",
+          "legendFormat": "Error %",
           "refId": "A"
         }
       ],
-      "title": "Nack Rate %",
+      "title": "Task Error Rate %",
       "type": "stat"
     },
     {
@@ -473,11 +473,11 @@
               },
               {
                 "color": "yellow",
-                "value": 1
+                "value": 5
               },
               {
                 "color": "red",
-                "value": 10
+                "value": 20
               }
             ]
           },
@@ -515,12 +515,12 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(increase(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[5m])) or vector(0)",
-          "legendFormat": "Nack",
+          "expr": "sum(increase(sqs_consumer_messages_total{job=~\"$job\",result=~\"nack|ack\",environment=~\"$environment\"}[5m])) or vector(0)",
+          "legendFormat": "Errors",
           "refId": "A"
         }
       ],
-      "title": "Nack Messages (5m)",
+      "title": "Task Errors (5m)",
       "type": "stat"
     },
     {
@@ -541,11 +541,11 @@
               },
               {
                 "color": "yellow",
-                "value": 10
+                "value": 3
               },
               {
-                "color": "orange",
-                "value": 50
+                "color": "red",
+                "value": 10
               }
             ]
           },
@@ -583,12 +583,12 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(increase(sqs_consumer_messages_total{job=~\"$job\",result=\"ack\",environment=~\"$environment\"}[5m])) or vector(0)",
-          "legendFormat": "Ack",
+          "expr": "sum(increase(fileflow_outbound_client_errors_total{job=~\"$job\",environment=~\"$environment\"}[5m])) or vector(0)",
+          "legendFormat": "Outbound Errors",
           "refId": "A"
         }
       ],
-      "title": "Ack (Non-Retryable) (5m)",
+      "title": "Outbound Client Errors (5m)",
       "type": "stat"
     },
     {
@@ -983,6 +983,231 @@
         "x": 0,
         "y": 26
       },
+      "id": 350,
+      "title": "\ud83c\udf10 Outbound Client (S3 / HTTP)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "id": 50,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (system) (rate(fileflow_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"success\"}[1m]))",
+          "legendFormat": "success - {{system}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (system) (rate(fileflow_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[1m]))",
+          "legendFormat": "error - {{system}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Outbound Client Rate (by System)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ef4r3izgbak8wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "id": 51,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(fileflow_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fileflow_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
+          "legendFormat": "P95",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(fileflow_outbound_client_duration_seconds_bucket{job=~\"$job\",environment=~\"$environment\"}[5m])))",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "title": "Outbound Client Duration (P50/P95/P99)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 35
+      },
       "id": 400,
       "title": "\u26a0\ufe0f SQS Errors",
       "type": "row"
@@ -1008,7 +1233,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 36
       },
       "id": 31,
       "targets": [
@@ -1029,9 +1254,18 @@
           "expr": "sum by (job, queue) (rate(sqs_consumer_messages_total{job=~\"$job\",result=\"ack\",environment=~\"$environment\"}[1m]))",
           "legendFormat": "{{queue}} Ack",
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ef4r3izgbak8wb"
+          },
+          "expr": "sum by (system) (rate(fileflow_outbound_client_total{job=~\"$job\",environment=~\"$environment\",outcome=\"error\"}[1m]))",
+          "legendFormat": "outbound - {{system}}",
+          "refId": "C"
         }
       ],
-      "title": "SQS Error Rate (Nack / Ack)",
+      "title": "Error Rate (SQS / Outbound Client)",
       "type": "timeseries"
     },
     {
@@ -1040,7 +1274,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 44
       },
       "id": 500,
       "title": "\ud83d\uddc4\ufe0f Database (HikariCP)",
@@ -1061,7 +1295,7 @@
         "h": 6,
         "w": 8,
         "x": 0,
-        "y": 36
+        "y": 45
       },
       "id": 40,
       "targets": [
@@ -1129,7 +1363,7 @@
         "h": 6,
         "w": 8,
         "x": 8,
-        "y": 36
+        "y": 45
       },
       "id": 41,
       "options": {
@@ -1168,7 +1402,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 36
+        "y": 45
       },
       "id": 42,
       "targets": [
@@ -1191,7 +1425,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 51
       },
       "id": 700,
       "title": "\u2615 JVM Metrics",
@@ -1215,7 +1449,7 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 43
+        "y": 52
       },
       "id": 60,
       "targets": [
@@ -1263,7 +1497,7 @@
         "h": 6,
         "w": 6,
         "x": 6,
-        "y": 43
+        "y": 52
       },
       "id": 61,
       "targets": [
@@ -1298,7 +1532,7 @@
         "h": 6,
         "w": 6,
         "x": 12,
-        "y": 43
+        "y": 52
       },
       "id": 62,
       "targets": [
@@ -1333,7 +1567,7 @@
         "h": 6,
         "w": 6,
         "x": 18,
-        "y": 43
+        "y": 52
       },
       "id": 63,
       "targets": [
@@ -1368,7 +1602,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 49
+        "y": 58
       },
       "id": 64,
       "targets": [
@@ -1403,7 +1637,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 49
+        "y": 58
       },
       "id": 65,
       "targets": [
@@ -1426,7 +1660,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 55
+        "y": 64
       },
       "id": 900,
       "title": "\ud83d\udce1 SQS Queue Depth (CloudWatch)",
@@ -1512,7 +1746,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 56
+        "y": 65
       },
       "id": 80,
       "options": {
@@ -1660,7 +1894,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 56
+        "y": 65
       },
       "id": 81,
       "options": {
@@ -1796,7 +2030,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 64
+        "y": 73
       },
       "id": 82,
       "options": {
@@ -1907,7 +2141,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 64
+        "y": 73
       },
       "id": 83,
       "options": {
@@ -1956,7 +2190,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 81
       },
       "id": 1000,
       "title": "\ud83d\udda5\ufe0f ECS Resources (CloudWatch)",
@@ -2030,7 +2264,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 73
+        "y": 82
       },
       "id": 84,
       "options": {
@@ -2172,7 +2406,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 73
+        "y": 82
       },
       "id": 85,
       "options": {

@@ -88,6 +88,7 @@ public class DownloadTaskFixture {
                 DEFAULT_NOW,
                 DEFAULT_NOW.plusSeconds(10),
                 DEFAULT_NOW.plusSeconds(10),
-                null);
+                null,
+                0L);
     }
 }

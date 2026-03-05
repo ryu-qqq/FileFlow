@@ -34,7 +34,7 @@ public final class TransformRequestApiFixtures {
 
     public static CreateTransformRequestApiRequest createTransformRequestRequest() {
         return new CreateTransformRequestApiRequest(
-                SOURCE_ASSET_ID, TRANSFORM_TYPE, WIDTH, HEIGHT, QUALITY, TARGET_FORMAT);
+                SOURCE_ASSET_ID, TRANSFORM_TYPE, WIDTH, HEIGHT, QUALITY, TARGET_FORMAT, null);
     }
 
     // ===== Application Response Fixtures =====

@@ -265,6 +265,24 @@ module "resizing_worker_task_role" {
         ]
       })
     }
+    sqs-kms-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "AllowKMSForSQSEncryption"
+            Effect = "Allow"
+            Action = [
+              "kms:Decrypt",
+              "kms:GenerateDataKey"
+            ]
+            Resource = [
+              data.aws_kms_alias.sqs.target_key_arn
+            ]
+          }
+        ]
+      })
+    }
     s3-access = {
       policy = jsonencode({
         Version = "2012-10-17"
@@ -486,6 +504,10 @@ module "resizing_worker_service" {
     {
       name  = "S3_BUCKET"
       value = data.aws_ssm_parameter.s3_bucket_name.value
+    },
+    {
+      name  = "S3_KMS_KEY_ID"
+      value = data.aws_ssm_parameter.s3_kms_key_arn.value
     },
     # SQS Publisher Configuration
     {

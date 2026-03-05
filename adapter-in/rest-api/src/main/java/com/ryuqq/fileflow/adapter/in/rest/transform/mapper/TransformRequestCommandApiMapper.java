@@ -31,6 +31,7 @@ public class TransformRequestCommandApiMapper {
                 request.width(),
                 request.height(),
                 request.quality(),
-                request.targetFormat());
+                request.targetFormat(),
+                request.callbackUrl());
     }
 }

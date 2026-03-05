@@ -2,6 +2,7 @@ package com.ryuqq.fileflow.application.download.manager.client;
 
 import static org.mockito.BDDMockito.then;
 
+import com.ryuqq.fileflow.application.download.dto.response.CallbackPayload;
 import com.ryuqq.fileflow.application.download.port.out.client.CallbackNotificationClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,14 +30,21 @@ class CallbackNotificationManagerTest {
         void notify_DelegatesToClient() {
             // given
             String callbackUrl = "https://callback.example.com/done";
-            String downloadTaskId = "download-001";
-            String status = "COMPLETED";
+            CallbackPayload payload =
+                    CallbackPayload.ofCompleted(
+                            "download-001",
+                            "https://example.com/image.jpg",
+                            "public/2026/03/download-001.jpg",
+                            "fileflow-bucket",
+                            "download-001.jpg",
+                            "image/jpeg",
+                            1024);
 
             // when
-            sut.notify(callbackUrl, downloadTaskId, status);
+            sut.notify(callbackUrl, payload);
 
             // then
-            then(callbackNotificationClient).should().notify(callbackUrl, downloadTaskId, status);
+            then(callbackNotificationClient).should().notify(callbackUrl, payload);
         }
     }
 }

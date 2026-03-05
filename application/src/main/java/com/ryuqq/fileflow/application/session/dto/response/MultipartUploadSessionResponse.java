@@ -36,5 +36,9 @@ public record MultipartUploadSessionResponse(
         Instant expiresAt,
         Instant createdAt) {
 
+    public MultipartUploadSessionResponse {
+        completedParts = List.copyOf(completedParts);
+    }
+
     public record CompletedPartResponse(int partNumber, String etag, long size) {}
 }

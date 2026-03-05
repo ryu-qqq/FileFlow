@@ -16,6 +16,7 @@ public class CallbackOutboxJpaEntityFixture {
                 "COMPLETED",
                 OutboxStatus.PENDING,
                 0,
+                5,
                 null,
                 DEFAULT_NOW,
                 null);
@@ -29,6 +30,7 @@ public class CallbackOutboxJpaEntityFixture {
                 "COMPLETED",
                 OutboxStatus.SENT,
                 0,
+                5,
                 null,
                 DEFAULT_NOW,
                 DEFAULT_NOW.plusSeconds(5));

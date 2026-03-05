@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.application.transform.manager.client;
 
+import com.ryuqq.fileflow.application.common.metric.annotation.OutboundClientMetric;
 import com.ryuqq.fileflow.application.common.port.out.client.FileStorageDownloadClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ public class FileStorageDownloadManager {
         this.fileStorageDownloadClient = fileStorageDownloadClient;
     }
 
+    @OutboundClientMetric(system = "S3", operation = "storage_download")
     public byte[] download(String bucket, String s3Key) {
         log.info("파일 스토리지 다운로드 시작: bucket={}, s3Key={}", bucket, s3Key);
         byte[] data = fileStorageDownloadClient.download(bucket, s3Key);

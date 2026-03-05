@@ -125,6 +125,29 @@ class DownloadTaskSqsConsumerTest {
     }
 
     @Nested
+    @DisplayName("에러 분류 — Optimistic Lock (ACK)")
+    class OptimisticLockTest {
+
+        @Test
+        @DisplayName("OptimisticLockingFailureException 발생 시 예외를 삼키고 ACK 처리한다")
+        void consume_OptimisticLockConflict_AcknowledgesMessage() {
+            String downloadTaskId = "download-task-optlock";
+            willThrow(new ObjectOptimisticLockingFailureException("Row was updated or deleted"))
+                    .given(startDownloadTaskUseCase)
+                    .execute(downloadTaskId);
+
+            assertThatCode(() -> sut.consume(downloadTaskId, "scheduler-abc12345"))
+                    .doesNotThrowAnyException();
+        }
+    }
+
+    private static class ObjectOptimisticLockingFailureException extends RuntimeException {
+        ObjectOptimisticLockingFailureException(String message) {
+            super(message);
+        }
+    }
+
+    @Nested
     @DisplayName("에러 분류 — Retryable (NACK)")
     class RetryableErrorTest {
 

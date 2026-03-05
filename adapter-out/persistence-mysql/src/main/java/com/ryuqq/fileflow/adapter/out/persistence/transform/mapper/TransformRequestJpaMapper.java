@@ -24,9 +24,11 @@ public class TransformRequestJpaMapper {
                 domain.params().maintainAspectRatio(),
                 domain.params().targetFormat(),
                 domain.params().quality(),
+                domain.callbackUrl(),
                 domain.createdAt(),
                 domain.updatedAt(),
-                domain.completedAt());
+                domain.completedAt(),
+                domain.version());
     }
 
     public TransformRequest toDomain(TransformRequestJpaEntity entity) {
@@ -41,11 +43,13 @@ public class TransformRequestJpaMapper {
                         entity.isMaintainAspectRatio(),
                         entity.getTargetFormat(),
                         entity.getQuality()),
+                entity.getCallbackUrl(),
                 entity.getStatus(),
                 entity.getResultAssetId() != null ? AssetId.of(entity.getResultAssetId()) : null,
                 entity.getLastError(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
-                entity.getCompletedAt());
+                entity.getCompletedAt(),
+                entity.getVersion());
     }
 }

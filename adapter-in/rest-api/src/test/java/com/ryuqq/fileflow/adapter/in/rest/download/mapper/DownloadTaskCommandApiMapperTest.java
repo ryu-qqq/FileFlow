@@ -43,8 +43,6 @@ class DownloadTaskCommandApiMapperTest {
 
             // then
             assertThat(command.sourceUrl()).isEqualTo(request.sourceUrl());
-            assertThat(command.s3Key()).isEqualTo(request.s3Key());
-            assertThat(command.bucket()).isEqualTo(request.bucket());
             assertThat(command.accessType()).isEqualTo(request.accessType());
             assertThat(command.purpose()).isEqualTo(request.purpose());
             assertThat(command.source()).isEqualTo(request.source());

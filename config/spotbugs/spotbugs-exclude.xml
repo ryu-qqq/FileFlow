@@ -65,7 +65,45 @@
             <Class name="~.*Adapter"/>
             <Class name="~.*Repository"/>
             <Class name="~.*Publisher"/>
+            <Class name="~.*Consumer"/>
+            <Class name="~.*Filter"/>
+            <Class name="~.*Metrics"/>
+            <Class name="~.*Handler"/>
         </Or>
         <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- ========================================
+         Config 내부 클래스 (Properties 등)
+         Spring @ConfigurationProperties 바인딩 객체
+         ======================================== -->
+    <Match>
+        <Class name="~.*Config\$.*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <!-- ========================================
+         Application Bundle DTO
+         도메인 객체를 참조로 전달하는 단기 전송 객체
+         ======================================== -->
+    <Match>
+        <Class name="~.*Bundle"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <!-- ========================================
+         GlobalExceptionHandler NP false positive
+         build() 메서드가 항상 non-null body를 반환하므로
+         Objects.requireNonNull(res.getBody()) 호출은 안전함
+         ======================================== -->
+    <Match>
+        <Class name="~.*GlobalExceptionHandler"/>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
 </FindBugsFilter>
