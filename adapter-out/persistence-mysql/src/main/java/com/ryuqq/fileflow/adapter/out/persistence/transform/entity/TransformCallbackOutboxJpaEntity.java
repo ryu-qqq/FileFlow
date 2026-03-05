@@ -1,0 +1,136 @@
+package com.ryuqq.fileflow.adapter.out.persistence.transform.entity;
+
+import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.Instant;
+
+@Entity
+@Table(name = "transform_callback_outbox")
+public class TransformCallbackOutboxJpaEntity {
+
+    @Id
+    @Column(name = "id", length = 36)
+    private String id;
+
+    @Column(name = "transform_request_id", length = 36, nullable = false)
+    private String transformRequestId;
+
+    @Column(name = "callback_url", columnDefinition = "TEXT", nullable = false)
+    private String callbackUrl;
+
+    @Column(name = "task_status", length = 20, nullable = false)
+    private String taskStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "outbox_status", length = 20, nullable = false)
+    private OutboxStatus outboxStatus;
+
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount;
+
+    @Column(name = "max_retries", nullable = false)
+    private int maxRetries;
+
+    @Column(name = "last_error", columnDefinition = "TEXT")
+    private String lastError;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "processed_at")
+    private Instant processedAt;
+
+    protected TransformCallbackOutboxJpaEntity() {}
+
+    private TransformCallbackOutboxJpaEntity(
+            String id,
+            String transformRequestId,
+            String callbackUrl,
+            String taskStatus,
+            OutboxStatus outboxStatus,
+            int retryCount,
+            int maxRetries,
+            String lastError,
+            Instant createdAt,
+            Instant processedAt) {
+        this.id = id;
+        this.transformRequestId = transformRequestId;
+        this.callbackUrl = callbackUrl;
+        this.taskStatus = taskStatus;
+        this.outboxStatus = outboxStatus;
+        this.retryCount = retryCount;
+        this.maxRetries = maxRetries;
+        this.lastError = lastError;
+        this.createdAt = createdAt;
+        this.processedAt = processedAt;
+    }
+
+    public static TransformCallbackOutboxJpaEntity create(
+            String id,
+            String transformRequestId,
+            String callbackUrl,
+            String taskStatus,
+            OutboxStatus outboxStatus,
+            int retryCount,
+            int maxRetries,
+            String lastError,
+            Instant createdAt,
+            Instant processedAt) {
+        return new TransformCallbackOutboxJpaEntity(
+                id,
+                transformRequestId,
+                callbackUrl,
+                taskStatus,
+                outboxStatus,
+                retryCount,
+                maxRetries,
+                lastError,
+                createdAt,
+                processedAt);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getTransformRequestId() {
+        return transformRequestId;
+    }
+
+    public String getCallbackUrl() {
+        return callbackUrl;
+    }
+
+    public String getTaskStatus() {
+        return taskStatus;
+    }
+
+    public OutboxStatus getOutboxStatus() {
+        return outboxStatus;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public String getLastError() {
+        return lastError;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getProcessedAt() {
+        return processedAt;
+    }
+}

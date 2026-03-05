@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.then;
 import com.ryuqq.fileflow.application.asset.manager.command.AssetCommandManager;
 import com.ryuqq.fileflow.application.transform.dto.bundle.TransformCompletionBundle;
 import com.ryuqq.fileflow.application.transform.dto.bundle.TransformFailureBundle;
+import com.ryuqq.fileflow.application.transform.manager.command.TransformCallbackOutboxCommandManager;
 import com.ryuqq.fileflow.application.transform.manager.command.TransformCommandManager;
 import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.asset.aggregate.AssetFixture;
@@ -29,6 +30,7 @@ class TransformCompletionFacadeTest {
     @InjectMocks private TransformCompletionFacade sut;
     @Mock private AssetCommandManager assetCommandManager;
     @Mock private TransformCommandManager transformCommandManager;
+    @Mock private TransformCallbackOutboxCommandManager transformCallbackOutboxCommandManager;
 
     @Nested
     @DisplayName("complete 메서드")
@@ -44,7 +46,8 @@ class TransformCompletionFacadeTest {
             Instant completedAt = Instant.parse("2026-01-01T00:00:30Z");
 
             TransformCompletionBundle bundle =
-                    new TransformCompletionBundle(resultAsset, request, dimension, completedAt);
+                    new TransformCompletionBundle(
+                            resultAsset, request, dimension, completedAt, null);
 
             // when
             sut.complete(bundle);
@@ -67,7 +70,7 @@ class TransformCompletionFacadeTest {
             Instant failedAt = Instant.parse("2026-01-01T00:00:30Z");
 
             TransformFailureBundle bundle =
-                    new TransformFailureBundle(request, "Processing error", failedAt);
+                    new TransformFailureBundle(request, "Processing error", failedAt, null);
 
             // when
             sut.fail(bundle);

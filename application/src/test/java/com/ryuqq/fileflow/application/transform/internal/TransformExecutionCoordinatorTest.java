@@ -72,7 +72,8 @@ class TransformExecutionCoordinatorTest {
             Instant completedAt = NOW.plusSeconds(30);
             Asset resultAsset = AssetFixture.anAssetWithId("result-001");
             TransformCompletionBundle completionBundle =
-                    new TransformCompletionBundle(resultAsset, request, dimension, completedAt);
+                    new TransformCompletionBundle(
+                            resultAsset, request, dimension, completedAt, null);
             given(
                             transformCommandFactory.createCompletionBundle(
                                     successResult, request, sourceAsset))
@@ -105,7 +106,7 @@ class TransformExecutionCoordinatorTest {
             given(imageTransformFacade.transform(sourceAsset, request)).willReturn(failureResult);
 
             TransformFailureBundle failureBundle =
-                    new TransformFailureBundle(request, "Image processing failed", NOW);
+                    new TransformFailureBundle(request, "Image processing failed", NOW, null);
             given(transformCommandFactory.createFailureBundle(request, failureResult))
                     .willReturn(failureBundle);
 
@@ -143,7 +144,8 @@ class TransformExecutionCoordinatorTest {
             Instant completedAt = NOW.plusSeconds(30);
             Asset resultAsset = AssetFixture.anAssetWithId("result-001");
             TransformCompletionBundle completionBundle =
-                    new TransformCompletionBundle(resultAsset, request, dimension, completedAt);
+                    new TransformCompletionBundle(
+                            resultAsset, request, dimension, completedAt, null);
             given(
                             transformCommandFactory.createCompletionBundle(
                                     successResult, request, sourceAsset))
@@ -153,7 +155,7 @@ class TransformExecutionCoordinatorTest {
                     .complete(completionBundle);
 
             TransformFailureBundle failureBundle =
-                    new TransformFailureBundle(request, "DB error", NOW);
+                    new TransformFailureBundle(request, "DB error", NOW, null);
             given(transformCommandFactory.createFailureBundle(any(), any()))
                     .willReturn(failureBundle);
 

@@ -55,7 +55,7 @@ class TransformRequestSdkTest extends SdkTestBase {
 
             var request =
                     new CreateTransformRequestRequest(
-                            asset.getId(), "RESIZE", 800, 600, null, null);
+                            asset.getId(), "RESIZE", 800, 600, null, null, null);
 
             // when
             ApiResponse<TransformRequestResponse> response =
@@ -80,7 +80,7 @@ class TransformRequestSdkTest extends SdkTestBase {
 
             var request =
                     new CreateTransformRequestRequest(
-                            asset.getId(), "CONVERT", null, null, null, "webp");
+                            asset.getId(), "CONVERT", null, null, null, "webp", null);
 
             // when
             ApiResponse<TransformRequestResponse> response =
@@ -99,7 +99,7 @@ class TransformRequestSdkTest extends SdkTestBase {
 
             var request =
                     new CreateTransformRequestRequest(
-                            asset.getId(), "COMPRESS", null, null, 85, null);
+                            asset.getId(), "COMPRESS", null, null, 85, null, null);
 
             // when
             ApiResponse<TransformRequestResponse> response =
@@ -115,7 +115,7 @@ class TransformRequestSdkTest extends SdkTestBase {
         void shouldThrowNotFoundWhenAssetNotExists() {
             var request =
                     new CreateTransformRequestRequest(
-                            "non-existent", "RESIZE", 800, null, null, null);
+                            "non-existent", "RESIZE", 800, null, null, null, null);
 
             assertThatThrownBy(() -> client.transformRequest().create(request))
                     .isInstanceOf(FileFlowNotFoundException.class)
@@ -152,7 +152,7 @@ class TransformRequestSdkTest extends SdkTestBase {
 
             var request =
                     new CreateTransformRequestRequest(
-                            pdfAsset.getId(), "RESIZE", 800, null, null, null);
+                            pdfAsset.getId(), "RESIZE", 800, null, null, null, null);
 
             // when & then
             assertThatThrownBy(() -> client.transformRequest().create(request))
@@ -234,7 +234,7 @@ class TransformRequestSdkTest extends SdkTestBase {
             // Step 1: 변환 요청 생성
             var request =
                     new CreateTransformRequestRequest(
-                            asset.getId(), "RESIZE", 800, 600, null, null);
+                            asset.getId(), "RESIZE", 800, 600, null, null, null);
             ApiResponse<TransformRequestResponse> createResponse =
                     client.transformRequest().create(request);
             String transformRequestId = createResponse.data().transformRequestId();

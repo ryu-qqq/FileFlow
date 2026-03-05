@@ -66,7 +66,8 @@ class TransformRequestApiTest {
                         .addHeader("Content-Type", "application/json"));
 
         CreateTransformRequestRequest request =
-                new CreateTransformRequestRequest("asset_001", "RESIZE", 800, 600, 85, "webp");
+                new CreateTransformRequestRequest(
+                        "asset_001", "RESIZE", 800, 600, 85, "webp", null);
 
         ApiResponse<TransformRequestResponse> response = api.create(request);
 

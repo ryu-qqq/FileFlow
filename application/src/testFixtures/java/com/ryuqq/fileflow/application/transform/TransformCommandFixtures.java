@@ -16,23 +16,27 @@ public final class TransformCommandFixtures {
     // ===== CreateTransformRequestCommand Fixtures =====
 
     public static CreateTransformRequestCommand createResizeCommand() {
-        return new CreateTransformRequestCommand("asset-001", "RESIZE", 800, 600, null, null);
+        return new CreateTransformRequestCommand("asset-001", "RESIZE", 800, 600, null, null, null);
     }
 
     public static CreateTransformRequestCommand createConvertCommand() {
-        return new CreateTransformRequestCommand("asset-001", "CONVERT", null, null, null, "webp");
+        return new CreateTransformRequestCommand(
+                "asset-001", "CONVERT", null, null, null, "webp", null);
     }
 
     public static CreateTransformRequestCommand createCompressCommand() {
-        return new CreateTransformRequestCommand("asset-001", "COMPRESS", null, null, 80, null);
+        return new CreateTransformRequestCommand(
+                "asset-001", "COMPRESS", null, null, 80, null, null);
     }
 
     public static CreateTransformRequestCommand createThumbnailCommand() {
-        return new CreateTransformRequestCommand("asset-001", "THUMBNAIL", 150, 150, null, null);
+        return new CreateTransformRequestCommand(
+                "asset-001", "THUMBNAIL", 150, 150, null, null, null);
     }
 
     public static CreateTransformRequestCommand createResizeCommand(String sourceAssetId) {
-        return new CreateTransformRequestCommand(sourceAssetId, "RESIZE", 800, 600, null, null);
+        return new CreateTransformRequestCommand(
+                sourceAssetId, "RESIZE", 800, 600, null, null, null);
     }
 
     // ===== RecoverZombieTransformRequestCommand Fixtures =====
