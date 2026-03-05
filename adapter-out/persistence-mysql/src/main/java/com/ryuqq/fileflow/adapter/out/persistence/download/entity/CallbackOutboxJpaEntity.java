@@ -33,6 +33,9 @@ public class CallbackOutboxJpaEntity {
     @Column(name = "retry_count", nullable = false)
     private int retryCount;
 
+    @Column(name = "max_retries", nullable = false)
+    private int maxRetries;
+
     @Column(name = "last_error", columnDefinition = "TEXT")
     private String lastError;
 
@@ -51,6 +54,7 @@ public class CallbackOutboxJpaEntity {
             String taskStatus,
             OutboxStatus outboxStatus,
             int retryCount,
+            int maxRetries,
             String lastError,
             Instant createdAt,
             Instant processedAt) {
@@ -60,6 +64,7 @@ public class CallbackOutboxJpaEntity {
         this.taskStatus = taskStatus;
         this.outboxStatus = outboxStatus;
         this.retryCount = retryCount;
+        this.maxRetries = maxRetries;
         this.lastError = lastError;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
@@ -72,6 +77,7 @@ public class CallbackOutboxJpaEntity {
             String taskStatus,
             OutboxStatus outboxStatus,
             int retryCount,
+            int maxRetries,
             String lastError,
             Instant createdAt,
             Instant processedAt) {
@@ -82,6 +88,7 @@ public class CallbackOutboxJpaEntity {
                 taskStatus,
                 outboxStatus,
                 retryCount,
+                maxRetries,
                 lastError,
                 createdAt,
                 processedAt);
@@ -109,6 +116,10 @@ public class CallbackOutboxJpaEntity {
 
     public int getRetryCount() {
         return retryCount;
+    }
+
+    public int getMaxRetries() {
+        return maxRetries;
     }
 
     public String getLastError() {

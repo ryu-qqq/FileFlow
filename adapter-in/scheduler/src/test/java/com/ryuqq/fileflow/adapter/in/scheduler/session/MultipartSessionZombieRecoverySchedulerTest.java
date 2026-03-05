@@ -33,7 +33,7 @@ class MultipartSessionZombieRecoverySchedulerTest {
                 new SchedulerProperties.MultipartSessionZombieRecovery(
                         true, "0 */5 * * * *", "Asia/Seoul", BATCH_SIZE);
         SchedulerProperties.Jobs jobs =
-                new SchedulerProperties.Jobs(null, null, null, null, null, config);
+                new SchedulerProperties.Jobs(null, null, null, null, null, null, config);
         SchedulerProperties properties = new SchedulerProperties(jobs);
 
         sut = new MultipartSessionZombieRecoveryScheduler(useCase, properties);

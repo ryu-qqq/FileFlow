@@ -23,6 +23,11 @@ scheduler:
       cron: "*/5 * * * * *"
       batch-size: 100
 
+    callback-outbox:
+      # 운영: 10초마다 (콜백 알림은 다운로드보다 덜 긴급)
+      cron: "*/10 * * * * *"
+      batch-size: 50
+
     transform-queue-outbox:
       # 운영: 5초마다 (PENDING 아웃박스 빠른 처리)
       cron: "*/5 * * * * *"
