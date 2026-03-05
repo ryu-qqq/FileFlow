@@ -13,8 +13,10 @@ import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.asset.id.AssetId;
 import com.ryuqq.fileflow.domain.asset.vo.AssetOrigin;
 import com.ryuqq.fileflow.domain.asset.vo.FileInfo;
+import com.ryuqq.fileflow.domain.transform.aggregate.TransformCallbackOutbox;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformQueueOutbox;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
+import com.ryuqq.fileflow.domain.transform.id.TransformCallbackOutboxId;
 import com.ryuqq.fileflow.domain.transform.id.TransformQueueOutboxId;
 import com.ryuqq.fileflow.domain.transform.id.TransformRequestId;
 import com.ryuqq.fileflow.domain.transform.vo.TransformParams;
@@ -46,13 +48,28 @@ public class TransformCommandFactory {
             ImageTransformResult result, TransformRequest request, Asset sourceAsset) {
         Asset resultAsset = createResultAsset(result, request, sourceAsset);
         Instant completedAt = timeProvider.now();
-        return new TransformCompletionBundle(resultAsset, request, result.dimension(), completedAt);
+
+        TransformCallbackOutbox callbackOutbox = null;
+        if (request.hasCallback()) {
+            callbackOutbox =
+                    createCallbackOutbox(request.idValue(), request.callbackUrl(), "COMPLETED");
+        }
+
+        return new TransformCompletionBundle(
+                resultAsset, request, result.dimension(), completedAt, callbackOutbox);
     }
 
     public TransformFailureBundle createFailureBundle(
             TransformRequest request, ImageTransformResult result) {
         Instant failedAt = timeProvider.now();
-        return new TransformFailureBundle(request, result.errorMessage(), failedAt);
+
+        TransformCallbackOutbox callbackOutbox = null;
+        if (request.hasCallback()) {
+            callbackOutbox =
+                    createCallbackOutbox(request.idValue(), request.callbackUrl(), "FAILED");
+        }
+
+        return new TransformFailureBundle(request, result.errorMessage(), failedAt, callbackOutbox);
     }
 
     public TransformQueueOutbox createQueueOutbox(String transformRequestId) {
@@ -81,7 +98,16 @@ public class TransformCommandFactory {
                 sourceContentType,
                 type,
                 params,
+                command.callbackUrl(),
                 now);
+    }
+
+    public TransformCallbackOutbox createCallbackOutbox(
+            String transformRequestId, String callbackUrl, String taskStatus) {
+        String id = idGeneratorPort.generate();
+        Instant now = timeProvider.now();
+        return TransformCallbackOutbox.forNew(
+                TransformCallbackOutboxId.of(id), transformRequestId, callbackUrl, taskStatus, now);
     }
 
     private Asset createResultAsset(

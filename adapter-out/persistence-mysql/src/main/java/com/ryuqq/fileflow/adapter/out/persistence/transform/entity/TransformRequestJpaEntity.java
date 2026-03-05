@@ -55,6 +55,9 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
     @Column(name = "quality")
     private Integer quality;
 
+    @Column(name = "callback_url", columnDefinition = "TEXT")
+    private String callbackUrl;
+
     @Column(name = "completed_at")
     private Instant completedAt;
 
@@ -77,6 +80,7 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
             boolean maintainAspectRatio,
             String targetFormat,
             Integer quality,
+            String callbackUrl,
             Instant createdAt,
             Instant updatedAt,
             Instant completedAt,
@@ -94,6 +98,7 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
         this.maintainAspectRatio = maintainAspectRatio;
         this.targetFormat = targetFormat;
         this.quality = quality;
+        this.callbackUrl = callbackUrl;
         this.completedAt = completedAt;
         this.version = version;
     }
@@ -111,6 +116,7 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
             boolean maintainAspectRatio,
             String targetFormat,
             Integer quality,
+            String callbackUrl,
             Instant createdAt,
             Instant updatedAt,
             Instant completedAt,
@@ -128,6 +134,7 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
                 maintainAspectRatio,
                 targetFormat,
                 quality,
+                callbackUrl,
                 createdAt,
                 updatedAt,
                 completedAt,
@@ -180,6 +187,10 @@ public class TransformRequestJpaEntity extends BaseAuditEntity {
 
     public Integer getQuality() {
         return quality;
+    }
+
+    public String getCallbackUrl() {
+        return callbackUrl;
     }
 
     public Instant getCompletedAt() {

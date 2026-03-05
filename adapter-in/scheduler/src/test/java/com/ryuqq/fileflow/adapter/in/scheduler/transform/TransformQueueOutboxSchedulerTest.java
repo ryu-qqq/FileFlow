@@ -49,6 +49,7 @@ class TransformQueueOutboxSchedulerTest {
                         transformOutboxConfig,
                         null,
                         null,
+                        null,
                         null);
         SchedulerProperties properties = new SchedulerProperties(jobs);
 

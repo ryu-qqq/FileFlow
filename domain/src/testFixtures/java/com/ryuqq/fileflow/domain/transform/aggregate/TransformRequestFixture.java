@@ -17,6 +17,7 @@ public class TransformRequestFixture {
                 "image/jpeg",
                 TransformType.RESIZE,
                 TransformParams.forResize(800, 600, true),
+                null,
                 NOW);
     }
 
@@ -27,6 +28,7 @@ public class TransformRequestFixture {
                 "image/jpeg",
                 TransformType.CONVERT,
                 TransformParams.forConvert("webp"),
+                null,
                 NOW);
     }
 
@@ -37,6 +39,7 @@ public class TransformRequestFixture {
                 "image/png",
                 TransformType.COMPRESS,
                 TransformParams.forCompress(80),
+                null,
                 NOW);
     }
 
@@ -47,7 +50,25 @@ public class TransformRequestFixture {
                 "image/jpeg",
                 TransformType.THUMBNAIL,
                 TransformParams.forThumbnail(150, 150),
+                null,
                 NOW);
+    }
+
+    public static TransformRequest aResizeRequestWithCallback() {
+        return TransformRequest.forNew(
+                TransformRequestId.of("transform-cb-001"),
+                AssetId.of("asset-001"),
+                "image/jpeg",
+                TransformType.RESIZE,
+                TransformParams.forResize(800, 600, true),
+                "https://callback.example.com/transform-done",
+                NOW);
+    }
+
+    public static TransformRequest aProcessingRequestWithCallback() {
+        TransformRequest request = aResizeRequestWithCallback();
+        request.start(NOW.plusSeconds(10));
+        return request;
     }
 
     public static TransformRequest aProcessingRequest() {

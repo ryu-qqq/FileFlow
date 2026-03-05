@@ -47,7 +47,8 @@ class CreateTransformRequestServiceTest {
         void execute_ValidCommand_CreatesRequestAndOutboxAndReturnsResponse() {
             // given
             CreateTransformRequestCommand command =
-                    new CreateTransformRequestCommand("asset-001", "RESIZE", 800, 600, null, null);
+                    new CreateTransformRequestCommand(
+                            "asset-001", "RESIZE", 800, 600, null, null, null);
             String sourceContentType = "image/jpeg";
             TransformRequest transformRequest = TransformRequestFixture.aResizeRequest();
             TransformQueueOutbox outbox =

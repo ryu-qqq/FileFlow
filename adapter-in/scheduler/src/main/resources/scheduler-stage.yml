@@ -28,6 +28,11 @@ scheduler:
       cron: "*/10 * * * * *"
       batch-size: 30
 
+    transform-callback-outbox:
+      # 스테이징: 10초마다
+      cron: "*/10 * * * * *"
+      batch-size: 30
+
     transform-queue-outbox:
       # 스테이징: 5초마다
       cron: "*/5 * * * * *"

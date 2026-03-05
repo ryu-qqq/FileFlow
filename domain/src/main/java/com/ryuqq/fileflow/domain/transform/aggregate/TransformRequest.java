@@ -30,6 +30,7 @@ public class TransformRequest {
     private final String sourceContentType;
     private final TransformType type;
     private final TransformParams params;
+    private final String callbackUrl;
     private TransformStatus status;
     private AssetId resultAssetId;
     private String lastError;
@@ -46,6 +47,7 @@ public class TransformRequest {
             String sourceContentType,
             TransformType type,
             TransformParams params,
+            String callbackUrl,
             TransformStatus status,
             AssetId resultAssetId,
             String lastError,
@@ -58,6 +60,7 @@ public class TransformRequest {
         this.sourceContentType = sourceContentType;
         this.type = type;
         this.params = params;
+        this.callbackUrl = callbackUrl;
         this.status = status;
         this.resultAssetId = resultAssetId;
         this.lastError = lastError;
@@ -79,6 +82,7 @@ public class TransformRequest {
             String sourceContentType,
             TransformType type,
             TransformParams params,
+            String callbackUrl,
             Instant now) {
         validateImageContentType(sourceContentType);
         validateParamsForType(type, params);
@@ -89,6 +93,7 @@ public class TransformRequest {
                 sourceContentType,
                 type,
                 params,
+                callbackUrl,
                 TransformStatus.QUEUED,
                 null,
                 null,
@@ -104,6 +109,7 @@ public class TransformRequest {
             String sourceContentType,
             TransformType type,
             TransformParams params,
+            String callbackUrl,
             TransformStatus status,
             AssetId resultAssetId,
             String lastError,
@@ -117,6 +123,7 @@ public class TransformRequest {
                 sourceContentType,
                 type,
                 params,
+                callbackUrl,
                 status,
                 resultAssetId,
                 lastError,
@@ -189,6 +196,14 @@ public class TransformRequest {
 
     public TransformParams params() {
         return params;
+    }
+
+    public String callbackUrl() {
+        return callbackUrl;
+    }
+
+    public boolean hasCallback() {
+        return callbackUrl != null && !callbackUrl.isBlank();
     }
 
     public TransformStatus status() {
