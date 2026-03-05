@@ -33,7 +33,7 @@ class PresignedUploadS3ClientTest {
     @BeforeEach
     void setUp() {
         s3Presigner = mock(S3Presigner.class);
-        properties = new S3ClientProperties(BUCKET, "ap-northeast-2", "");
+        properties = new S3ClientProperties(BUCKET, "ap-northeast-2", "", "");
         sut = new PresignedUploadS3Client(s3Presigner, properties);
     }
 

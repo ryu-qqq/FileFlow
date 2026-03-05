@@ -58,7 +58,8 @@ class TransformCommandFactoryTest {
             given(idGeneratorPort.generate()).willReturn("transform-new-001");
 
             CreateTransformRequestCommand command =
-                    new CreateTransformRequestCommand("asset-001", "RESIZE", 800, 600, null, null);
+                    new CreateTransformRequestCommand(
+                            "asset-001", "RESIZE", 800, 600, null, null, null);
 
             // when
             TransformRequest result = sut.createTransformRequest(command, "image/jpeg");
@@ -82,7 +83,7 @@ class TransformCommandFactoryTest {
 
             CreateTransformRequestCommand command =
                     new CreateTransformRequestCommand(
-                            "asset-001", "CONVERT", null, null, null, "webp");
+                            "asset-001", "CONVERT", null, null, null, "webp", null);
 
             // when
             TransformRequest result = sut.createTransformRequest(command, "image/jpeg");
@@ -143,6 +144,38 @@ class TransformCommandFactoryTest {
             assertThat(bundle.request()).isEqualTo(request);
             assertThat(bundle.dimension()).isEqualTo(dimension);
             assertThat(bundle.completedAt()).isEqualTo(NOW);
+            assertThat(bundle.callbackOutbox()).isNull();
+        }
+
+        @Test
+        @DisplayName("콜백 URL이 있는 요청이면 callbackOutbox가 포함된다")
+        void createCompletionBundle_WithCallback_IncludesCallbackOutbox() {
+            // given
+            given(idGeneratorPort.generate()).willReturn("callback-outbox-001");
+            TransformRequest request = TransformRequestFixture.aProcessingRequestWithCallback();
+            Asset sourceAsset = AssetFixture.anAsset();
+            Asset resultAsset = AssetFixture.anAssetWithId("result-asset-002");
+
+            FileInfo fileInfo =
+                    FileInfo.of("resized.jpg", 2048L, "image/jpeg", "etag-resized", "jpg");
+            ImageDimension dimension = ImageDimension.of(800, 600);
+            ImageTransformResult result =
+                    ImageTransformResult.success(
+                            "result/resized.jpg", "fileflow-bucket", fileInfo, dimension);
+
+            given(assetCommandFactory.createAsset(org.mockito.ArgumentMatchers.any()))
+                    .willReturn(resultAsset);
+
+            // when
+            TransformCompletionBundle bundle =
+                    sut.createCompletionBundle(result, request, sourceAsset);
+
+            // then
+            assertThat(bundle.callbackOutbox()).isNotNull();
+            assertThat(bundle.callbackOutbox().transformRequestId()).isEqualTo(request.idValue());
+            assertThat(bundle.callbackOutbox().callbackUrl())
+                    .isEqualTo("https://callback.example.com/transform-done");
+            assertThat(bundle.callbackOutbox().taskStatus()).isEqualTo("COMPLETED");
         }
     }
 
@@ -164,6 +197,23 @@ class TransformCommandFactoryTest {
             assertThat(bundle.request()).isEqualTo(request);
             assertThat(bundle.errorMessage()).isEqualTo("Processing error");
             assertThat(bundle.failedAt()).isEqualTo(NOW);
+            assertThat(bundle.callbackOutbox()).isNull();
+        }
+
+        @Test
+        @DisplayName("콜백 URL이 있는 요청이면 callbackOutbox가 포함된다")
+        void createFailureBundle_WithCallback_IncludesCallbackOutbox() {
+            // given
+            given(idGeneratorPort.generate()).willReturn("callback-outbox-002");
+            TransformRequest request = TransformRequestFixture.aProcessingRequestWithCallback();
+            ImageTransformResult result = ImageTransformResult.failure("Processing error");
+
+            // when
+            TransformFailureBundle bundle = sut.createFailureBundle(request, result);
+
+            // then
+            assertThat(bundle.callbackOutbox()).isNotNull();
+            assertThat(bundle.callbackOutbox().taskStatus()).isEqualTo("FAILED");
         }
     }
 }

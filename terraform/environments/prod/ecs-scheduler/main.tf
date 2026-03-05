@@ -437,6 +437,10 @@ module "scheduler_service" {
       name  = "S3_BUCKET"
       value = data.aws_ssm_parameter.s3_bucket_name.value
     },
+    {
+      name  = "S3_KMS_KEY_ID"
+      value = data.aws_ssm_parameter.s3_kms_key_arn.value
+    },
     # SQS Configuration (Publisher)
     {
       name  = "SQS_DOWNLOAD_QUEUE"

@@ -48,8 +48,6 @@ class CreateDownloadTaskServiceTest {
             CreateDownloadTaskCommand command =
                     new CreateDownloadTaskCommand(
                             "https://example.com/image.jpg",
-                            "public/2026/02/download-001.jpg",
-                            "test-bucket",
                             AccessType.PUBLIC,
                             "product-image",
                             "commerce-service",

@@ -30,12 +30,14 @@ public class TransformRequest {
     private final String sourceContentType;
     private final TransformType type;
     private final TransformParams params;
+    private final String callbackUrl;
     private TransformStatus status;
     private AssetId resultAssetId;
     private String lastError;
     private final Instant createdAt;
     private Instant updatedAt;
     private Instant completedAt;
+    private long version;
 
     private final List<DomainEvent> events = new ArrayList<>();
 
@@ -45,23 +47,27 @@ public class TransformRequest {
             String sourceContentType,
             TransformType type,
             TransformParams params,
+            String callbackUrl,
             TransformStatus status,
             AssetId resultAssetId,
             String lastError,
             Instant createdAt,
             Instant updatedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         this.id = id;
         this.sourceAssetId = sourceAssetId;
         this.sourceContentType = sourceContentType;
         this.type = type;
         this.params = params;
+        this.callbackUrl = callbackUrl;
         this.status = status;
         this.resultAssetId = resultAssetId;
         this.lastError = lastError;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.completedAt = completedAt;
+        this.version = version;
     }
 
     /**
@@ -76,6 +82,7 @@ public class TransformRequest {
             String sourceContentType,
             TransformType type,
             TransformParams params,
+            String callbackUrl,
             Instant now) {
         validateImageContentType(sourceContentType);
         validateParamsForType(type, params);
@@ -86,12 +93,14 @@ public class TransformRequest {
                 sourceContentType,
                 type,
                 params,
+                callbackUrl,
                 TransformStatus.QUEUED,
                 null,
                 null,
                 now,
                 now,
-                null);
+                null,
+                0L);
     }
 
     public static TransformRequest reconstitute(
@@ -100,24 +109,28 @@ public class TransformRequest {
             String sourceContentType,
             TransformType type,
             TransformParams params,
+            String callbackUrl,
             TransformStatus status,
             AssetId resultAssetId,
             String lastError,
             Instant createdAt,
             Instant updatedAt,
-            Instant completedAt) {
+            Instant completedAt,
+            long version) {
         return new TransformRequest(
                 id,
                 sourceAssetId,
                 sourceContentType,
                 type,
                 params,
+                callbackUrl,
                 status,
                 resultAssetId,
                 lastError,
                 createdAt,
                 updatedAt,
-                completedAt);
+                completedAt,
+                version);
     }
 
     /** 변환 처리 시작. */
@@ -185,6 +198,14 @@ public class TransformRequest {
         return params;
     }
 
+    public String callbackUrl() {
+        return callbackUrl;
+    }
+
+    public boolean hasCallback() {
+        return callbackUrl != null && !callbackUrl.isBlank();
+    }
+
     public TransformStatus status() {
         return status;
     }
@@ -211,6 +232,14 @@ public class TransformRequest {
 
     public Instant completedAt() {
         return completedAt;
+    }
+
+    public long version() {
+        return version;
+    }
+
+    public void updateVersion(long version) {
+        this.version = version;
     }
 
     // -- event management --

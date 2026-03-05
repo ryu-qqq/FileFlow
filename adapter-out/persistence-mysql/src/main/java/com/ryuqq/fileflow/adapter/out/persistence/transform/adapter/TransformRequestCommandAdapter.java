@@ -20,8 +20,9 @@ public class TransformRequestCommandAdapter implements TransformRequestPersisten
     }
 
     @Override
-    public void persist(TransformRequest transformRequest) {
+    public long persist(TransformRequest transformRequest) {
         TransformRequestJpaEntity entity = mapper.toEntity(transformRequest);
-        jpaRepository.save(entity);
+        TransformRequestJpaEntity saved = jpaRepository.save(entity);
+        return saved.getVersion();
     }
 }

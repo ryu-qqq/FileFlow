@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.adapter.out.client.transform.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ryuqq.fileflow.application.transform.dto.result.ImageProcessingResult;
 import com.ryuqq.fileflow.application.transform.port.out.client.ImageTransformClient;
@@ -102,6 +103,50 @@ class ScrImageTransformClientTest {
         @DisplayName("성공: ImageTransformClient 인터페이스를 구현한다")
         void shouldImplementImageTransformClient() {
             assertThat(sut).isInstanceOf(ImageTransformClient.class);
+        }
+
+        @Test
+        @DisplayName("실패: RESIZE 시 소스 이미지가 5x5 미만이면 예외를 던진다")
+        void shouldThrowWhenResizeSourceTooSmall() throws IOException {
+            // given
+            byte[] tinyImageBytes = createTestImageBytes(1, 1);
+            TransformParams params = TransformParams.forResize(100, 100, false);
+
+            // when & then
+            assertThatThrownBy(() -> sut.process(tinyImageBytes, TransformType.RESIZE, params))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("리샘플링 최소 요건 미달")
+                    .hasMessageContaining("1x1");
+        }
+
+        @Test
+        @DisplayName("실패: THUMBNAIL 시 소스 이미지가 5x5 미만이면 예외를 던진다")
+        void shouldThrowWhenThumbnailSourceTooSmall() throws IOException {
+            // given
+            byte[] tinyImageBytes = createTestImageBytes(3, 3);
+            TransformParams params = TransformParams.forThumbnail(50, 50);
+
+            // when & then
+            assertThatThrownBy(() -> sut.process(tinyImageBytes, TransformType.THUMBNAIL, params))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("리샘플링 최소 요건 미달")
+                    .hasMessageContaining("3x3");
+        }
+
+        @Test
+        @DisplayName("성공: CONVERT 시 소스 이미지가 1x1이어도 정상 처리한다")
+        void shouldConvertEvenWithTinyImage() throws IOException {
+            // given
+            byte[] tinyImageBytes = createTestImageBytes(1, 1);
+            TransformParams params = TransformParams.forConvert("jpeg");
+
+            // when
+            ImageProcessingResult result =
+                    sut.process(tinyImageBytes, TransformType.CONVERT, params);
+
+            // then
+            assertThat(result.width()).isEqualTo(1);
+            assertThat(result.height()).isEqualTo(1);
         }
     }
 

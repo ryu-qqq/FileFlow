@@ -7,7 +7,10 @@ import com.ryuqq.fileflow.application.download.dto.response.FileDownloadResult;
 import com.ryuqq.fileflow.application.download.factory.command.DownloadCommandFactory;
 import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
+import com.ryuqq.fileflow.application.download.manager.query.DownloadReadManager;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
+import com.ryuqq.fileflow.domain.download.vo.DownloadTaskStatus;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -20,6 +23,7 @@ public class DownloadExecutionCoordinator {
     private final DownloadCommandFactory downloadCommandFactory;
     private final FileTransferFacade fileTransferFacade;
     private final DownloadCommandManager downloadCommandManager;
+    private final DownloadReadManager downloadReadManager;
     private final DownloadCompletionFacade downloadCompletionFacade;
     private final DownloadQueueManager downloadQueueManager;
 
@@ -27,40 +31,125 @@ public class DownloadExecutionCoordinator {
             DownloadCommandFactory downloadCommandFactory,
             FileTransferFacade fileTransferFacade,
             DownloadCommandManager downloadCommandManager,
+            DownloadReadManager downloadReadManager,
             DownloadCompletionFacade downloadCompletionFacade,
             DownloadQueueManager downloadQueueManager) {
         this.downloadCommandFactory = downloadCommandFactory;
         this.fileTransferFacade = fileTransferFacade;
         this.downloadCommandManager = downloadCommandManager;
+        this.downloadReadManager = downloadReadManager;
         this.downloadCompletionFacade = downloadCompletionFacade;
         this.downloadQueueManager = downloadQueueManager;
     }
 
     public void execute(DownloadTask downloadTask) {
-        StatusChangeContext<String> context =
-                downloadCommandFactory.createStartContext(downloadTask.idValue());
-        downloadTask.start(context.changedAt());
-        downloadCommandManager.persist(downloadTask);
+        if (downloadTask.status() == DownloadTaskStatus.QUEUED) {
+            StatusChangeContext<String> context =
+                    downloadCommandFactory.createStartContext(downloadTask.idValue());
+            downloadTask.start(context.changedAt());
+            downloadCommandManager.persist(downloadTask);
+            downloadTask = downloadReadManager.getDownloadTask(downloadTask.idValue());
 
-        FileDownloadResult result = fileTransferFacade.transfer(downloadTask);
-
-        if (result.success()) {
-            DownloadCompletionBundle bundle =
-                    downloadCommandFactory.createCompletionBundle(downloadTask, result);
-            downloadCompletionFacade.completeDownload(bundle);
-            log.info("다운로드 완료: taskId={}", downloadTask.idValue());
-        } else {
-            DownloadFailureBundle failureBundle =
-                    downloadCommandFactory.createFailureBundle(downloadTask, result.errorMessage());
-            downloadCompletionFacade.failDownload(failureBundle);
-
-            if (failureBundle.canRetry()) {
-                downloadQueueManager.enqueue(downloadTask.idValue());
-            }
-            log.error(
-                    "다운로드 실패 처리: taskId={}, error={}",
+            log.info(
+                    "다운로드 시작 persist 완료: taskId={}, version={}",
                     downloadTask.idValue(),
+                    downloadTask.version());
+        } else if (downloadTask.status() == DownloadTaskStatus.DOWNLOADING) {
+            log.warn(
+                    "DOWNLOADING 상태 태스크 복구 시도: taskId={}, version={}",
+                    downloadTask.idValue(),
+                    downloadTask.version());
+        } else {
+            log.warn(
+                    "처리 불필요한 상태: taskId={}, status={}",
+                    downloadTask.idValue(),
+                    downloadTask.status());
+            return;
+        }
+
+        try {
+            log.info("파일 전송 시작: taskId={}", downloadTask.idValue());
+            FileDownloadResult result = fileTransferFacade.transfer(downloadTask);
+            log.info(
+                    "파일 전송 결과: taskId={}, success={}, error={}",
+                    downloadTask.idValue(),
+                    result.success(),
                     result.errorMessage());
+
+            if (result.success()) {
+                DownloadCompletionBundle bundle =
+                        downloadCommandFactory.createCompletionBundle(downloadTask, result);
+                downloadCompletionFacade.completeDownload(bundle);
+                log.info("다운로드 완료: taskId={}", downloadTask.idValue());
+            } else if (result.retryable()) {
+                failDownload(downloadTask, result.errorMessage());
+            } else {
+                failPermanently(downloadTask, result.errorMessage());
+            }
+        } catch (Exception e) {
+            log.error("다운로드 중 예외 발생: taskId={}", downloadTask.idValue(), e);
+            safeFailDownload(downloadTask, e.getMessage());
+        }
+    }
+
+    private void failDownload(DownloadTask downloadTask, String errorMessage) {
+        DownloadFailureBundle failureBundle =
+                downloadCommandFactory.createFailureBundle(downloadTask, errorMessage);
+
+        log.info(
+                "실패 persist 시작: taskId={}, version={}, status={}",
+                downloadTask.idValue(),
+                downloadTask.version(),
+                downloadTask.status());
+
+        downloadCompletionFacade.failDownload(failureBundle);
+
+        log.info(
+                "실패 persist 완료: taskId={}, version={}",
+                downloadTask.idValue(),
+                downloadTask.version());
+
+        if (failureBundle.canRetry()) {
+            downloadQueueManager.enqueue(downloadTask.idValue());
+        }
+        log.error("다운로드 실패 처리: taskId={}, error={}", downloadTask.idValue(), errorMessage);
+    }
+
+    private void failPermanently(DownloadTask downloadTask, String errorMessage) {
+        DownloadFailureBundle failureBundle =
+                downloadCommandFactory.createPermanentFailureBundle(downloadTask, errorMessage);
+
+        downloadCompletionFacade.failDownload(failureBundle);
+
+        log.warn("영구 실패 처리 (재시도 불가): taskId={}, error={}", downloadTask.idValue(), errorMessage);
+    }
+
+    private void safeFailDownload(DownloadTask downloadTask, String errorMessage) {
+        try {
+            failDownload(downloadTask, errorMessage);
+        } catch (Exception failEx) {
+            log.error(
+                    "failDownload 자체도 실패, 직접 persist 시도: taskId={}",
+                    downloadTask.idValue(),
+                    failEx);
+            try {
+                DownloadTask freshTask =
+                        downloadReadManager.getDownloadTask(downloadTask.idValue());
+                if (freshTask.status() != DownloadTaskStatus.FAILED
+                        && freshTask.status() != DownloadTaskStatus.QUEUED) {
+                    freshTask.fail(errorMessage, Instant.now());
+                }
+                downloadCommandManager.persist(freshTask);
+                log.info(
+                        "직접 persist 성공: taskId={}, version={}",
+                        freshTask.idValue(),
+                        freshTask.version());
+            } catch (Exception lastResort) {
+                log.error(
+                        "최종 persist도 실패, 태스크 DOWNLOADING 상태로 stuck 예상: taskId={}",
+                        downloadTask.idValue(),
+                        lastResort);
+            }
         }
     }
 }

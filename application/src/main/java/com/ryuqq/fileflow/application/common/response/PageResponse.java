@@ -23,6 +23,10 @@ public record PageResponse<T>(
         boolean first,
         boolean last) {
 
+    public PageResponse {
+        content = List.copyOf(content);
+    }
+
     public static <T> PageResponse<T> of(
             List<T> content,
             int page,

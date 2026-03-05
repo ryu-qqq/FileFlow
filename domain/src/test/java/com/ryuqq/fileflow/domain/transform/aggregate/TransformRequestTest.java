@@ -34,6 +34,7 @@ class TransformRequestTest {
                             "image/jpeg",
                             TransformType.RESIZE,
                             TransformParams.forResize(800, 600, true),
+                            null,
                             NOW);
 
             assertThat(request.idValue()).isEqualTo("transform-001");
@@ -61,6 +62,7 @@ class TransformRequestTest {
                             "image/png",
                             TransformType.CONVERT,
                             TransformParams.forConvert("webp"),
+                            null,
                             NOW);
 
             assertThat(request.type()).isEqualTo(TransformType.CONVERT);
@@ -78,6 +80,7 @@ class TransformRequestTest {
                             "image/jpeg",
                             TransformType.COMPRESS,
                             TransformParams.forCompress(80),
+                            null,
                             NOW);
 
             assertThat(request.type()).isEqualTo(TransformType.COMPRESS);
@@ -95,6 +98,7 @@ class TransformRequestTest {
                             "image/jpeg",
                             TransformType.THUMBNAIL,
                             TransformParams.forThumbnail(150, 150),
+                            null,
                             NOW);
 
             assertThat(request.type()).isEqualTo(TransformType.THUMBNAIL);
@@ -115,6 +119,7 @@ class TransformRequestTest {
                                             "application/pdf",
                                             TransformType.RESIZE,
                                             TransformParams.forResize(800, 600, true),
+                                            null,
                                             NOW))
                     .isInstanceOf(TransformException.class)
                     .hasMessageContaining("application/pdf");
@@ -131,6 +136,7 @@ class TransformRequestTest {
                                             null,
                                             TransformType.RESIZE,
                                             TransformParams.forResize(800, 600, true),
+                                            null,
                                             NOW))
                     .isInstanceOf(TransformException.class);
         }
@@ -146,6 +152,7 @@ class TransformRequestTest {
                                             "image/jpeg",
                                             TransformType.RESIZE,
                                             new TransformParams(null, null, true, null, null),
+                                            null,
                                             NOW))
                     .isInstanceOf(TransformException.class)
                     .hasMessageContaining("width or height");
@@ -162,6 +169,7 @@ class TransformRequestTest {
                                             "image/jpeg",
                                             TransformType.CONVERT,
                                             new TransformParams(null, null, false, null, null),
+                                            null,
                                             NOW))
                     .isInstanceOf(TransformException.class)
                     .hasMessageContaining("targetFormat");
@@ -178,6 +186,7 @@ class TransformRequestTest {
                                             "image/jpeg",
                                             TransformType.COMPRESS,
                                             new TransformParams(null, null, false, null, null),
+                                            null,
                                             NOW))
                     .isInstanceOf(TransformException.class)
                     .hasMessageContaining("quality");
@@ -194,6 +203,7 @@ class TransformRequestTest {
                                             "image/jpeg",
                                             TransformType.THUMBNAIL,
                                             new TransformParams(null, 150, true, null, null),
+                                            null,
                                             NOW))
                     .isInstanceOf(TransformException.class)
                     .hasMessageContaining("width and height");
@@ -210,6 +220,7 @@ class TransformRequestTest {
                                             "image/jpeg",
                                             TransformType.THUMBNAIL,
                                             new TransformParams(150, null, true, null, null),
+                                            null,
                                             NOW))
                     .isInstanceOf(TransformException.class)
                     .hasMessageContaining("width and height");
@@ -356,6 +367,7 @@ class TransformRequestTest {
                             "image/jpeg",
                             TransformType.RESIZE,
                             TransformParams.forResize(800, 600, true),
+                            null,
                             NOW);
             TransformRequest request2 =
                     TransformRequest.forNew(
@@ -364,6 +376,7 @@ class TransformRequestTest {
                             "image/png",
                             TransformType.CONVERT,
                             TransformParams.forConvert("webp"),
+                            null,
                             NOW);
 
             assertThat(request1).isEqualTo(request2);

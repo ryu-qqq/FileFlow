@@ -16,6 +16,7 @@ public class CallbackOutboxJpaMapper {
                 domain.taskStatus(),
                 domain.outboxStatus(),
                 domain.retryCount(),
+                domain.maxRetries(),
                 domain.lastError(),
                 domain.createdAt(),
                 domain.processedAt());
@@ -29,6 +30,7 @@ public class CallbackOutboxJpaMapper {
                 entity.getTaskStatus(),
                 entity.getOutboxStatus(),
                 entity.getRetryCount(),
+                entity.getMaxRetries(),
                 entity.getLastError(),
                 entity.getCreatedAt(),
                 entity.getProcessedAt());

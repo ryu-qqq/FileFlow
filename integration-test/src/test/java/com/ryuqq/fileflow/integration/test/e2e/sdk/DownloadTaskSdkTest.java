@@ -46,8 +46,6 @@ class DownloadTaskSdkTest extends SdkTestBase {
             var request =
                     new CreateDownloadTaskRequest(
                             "https://example.com/image.jpg",
-                            "downloads/2026/02/image.jpg",
-                            "fileflow-bucket",
                             "PUBLIC",
                             "PRODUCT_IMAGE",
                             "commerce-api",
@@ -60,7 +58,8 @@ class DownloadTaskSdkTest extends SdkTestBase {
             DownloadTaskResponse task = response.data();
             assertThat(task.downloadTaskId()).isNotBlank();
             assertThat(task.sourceUrl()).isEqualTo("https://example.com/image.jpg");
-            assertThat(task.s3Key()).isEqualTo("downloads/2026/02/image.jpg");
+            assertThat(task.s3Key()).startsWith("public/");
+            assertThat(task.s3Key()).endsWith(".jpg");
             assertThat(task.status()).isEqualTo("QUEUED");
             assertThat(task.retryCount()).isZero();
             assertThat(task.maxRetries()).isEqualTo(3);
@@ -76,8 +75,6 @@ class DownloadTaskSdkTest extends SdkTestBase {
             var request =
                     new CreateDownloadTaskRequest(
                             "https://example.com/image.jpg",
-                            "downloads/image.jpg",
-                            "fileflow-bucket",
                             "PUBLIC",
                             "PRODUCT_IMAGE",
                             "commerce-api",
@@ -169,8 +166,6 @@ class DownloadTaskSdkTest extends SdkTestBase {
             var request =
                     new CreateDownloadTaskRequest(
                             "https://example.com/full-flow.jpg",
-                            "downloads/full-flow.jpg",
-                            "fileflow-bucket",
                             "PUBLIC",
                             "PRODUCT_IMAGE",
                             "commerce-api",

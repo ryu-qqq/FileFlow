@@ -18,6 +18,10 @@ import java.util.List;
 public record BatchProcessingResult<T>(
         int totalCount, int successCount, int failureCount, List<BatchItemResult<T>> results) {
 
+    public BatchProcessingResult {
+        results = List.copyOf(results);
+    }
+
     public static <T> BatchProcessingResult<T> from(List<BatchItemResult<T>> results) {
         int successCount = (int) results.stream().filter(r -> r.success()).count();
         int failureCount = results.size() - successCount;

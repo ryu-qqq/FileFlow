@@ -6,6 +6,7 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -36,14 +37,17 @@ public class PresignedUploadS3Client implements PresignedUploadClient {
                 contentType,
                 ttl);
 
+        PutObjectRequest putObjectRequest =
+                PutObjectRequest.builder()
+                        .bucket(properties.bucket())
+                        .key(s3Key)
+                        .contentType(contentType)
+                        .build();
+
         PutObjectPresignRequest presignRequest =
                 PutObjectPresignRequest.builder()
                         .signatureDuration(ttl)
-                        .putObjectRequest(
-                                put ->
-                                        put.bucket(properties.bucket())
-                                                .key(s3Key)
-                                                .contentType(contentType))
+                        .putObjectRequest(putObjectRequest)
                         .build();
 
         PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);

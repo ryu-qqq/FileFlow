@@ -1,5 +1,6 @@
 package com.ryuqq.fileflow.adapter.out.persistence.download.adapter;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -32,19 +33,21 @@ class DownloadTaskCommandAdapterTest {
     class PersistTest {
 
         @Test
-        @DisplayName("도메인 객체를 엔티티로 변환하여 저장합니다")
-        void persist_shouldMapAndSave() {
+        @DisplayName("도메인 객체를 엔티티로 변환하여 저장하고 version을 반환합니다")
+        void persist_shouldMapAndSaveAndReturnVersion() {
             // given
             DownloadTask task = DownloadTaskFixture.aQueuedTask();
             DownloadTaskJpaEntity entity = DownloadTaskJpaEntityFixture.aQueuedEntity();
             given(mapper.toEntity(task)).willReturn(entity);
+            given(jpaRepository.save(entity)).willReturn(entity);
 
             // when
-            commandAdapter.persist(task);
+            long version = commandAdapter.persist(task);
 
             // then
             then(mapper).should().toEntity(task);
             then(jpaRepository).should().save(entity);
+            assertThat(version).isEqualTo(entity.getVersion());
         }
     }
 }

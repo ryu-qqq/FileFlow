@@ -11,6 +11,12 @@ public record RawDownloadedFile(String fileName, String contentType, byte[] data
         if (data.length == 0) {
             throw new IllegalArgumentException("data must not be empty");
         }
+        data = data.clone();
+    }
+
+    @Override
+    public byte[] data() {
+        return data.clone();
     }
 
     public long fileSize() {

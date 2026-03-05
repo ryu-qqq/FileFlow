@@ -1,5 +1,7 @@
 package com.ryuqq.fileflow.application.transform.manager.command;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.ryuqq.fileflow.application.transform.port.out.command.TransformRequestPersistencePort;
@@ -27,16 +29,19 @@ class TransformCommandManagerTest {
     class PersistTest {
 
         @Test
-        @DisplayName("TransformRequest를 영속화 포트에 위임한다")
-        void persist_TransformRequest_DelegatesToPort() {
+        @DisplayName("TransformRequest를 영속화하고 version을 업데이트한다")
+        void persist_TransformRequest_DelegatesToPortAndUpdatesVersion() {
             // given
             TransformRequest transformRequest = TransformRequestFixture.aResizeRequest();
+            long expectedVersion = 1L;
+            given(persistencePort.persist(transformRequest)).willReturn(expectedVersion);
 
             // when
             sut.persist(transformRequest);
 
             // then
             then(persistencePort).should().persist(transformRequest);
+            assertThat(transformRequest.version()).isEqualTo(expectedVersion);
         }
     }
 }

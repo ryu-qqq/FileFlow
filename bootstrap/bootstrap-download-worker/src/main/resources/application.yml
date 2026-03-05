@@ -113,5 +113,12 @@ management:
     distribution:
       percentiles-histogram:
         http.server.requests: true
+        sqs.consumer.duration: true
+        fileflow.outbound.client.duration.seconds: true
       percentiles:
         http.server.requests: 0.5, 0.95, 0.99
+        sqs.consumer.duration: 0.5, 0.95, 0.99
+        fileflow.outbound.client.duration.seconds: 0.5, 0.95, 0.99
+      slo:
+        sqs.consumer.duration: 100ms,500ms,1s,5s,10s
+        fileflow.outbound.client.duration.seconds: 50ms,200ms,500ms,1s,5s

@@ -70,8 +70,6 @@ class DownloadTaskApiTest {
         CreateDownloadTaskRequest request =
                 new CreateDownloadTaskRequest(
                         "https://external-cdn.com/image.jpg",
-                        "products/images/image.jpg",
-                        "fileflow-bucket",
                         "PRIVATE",
                         "PRODUCT_IMAGE",
                         "product-service",
@@ -94,8 +92,7 @@ class DownloadTaskApiTest {
                 OBJECT_MAPPER.readValue(
                         recordedRequest.getBody().readUtf8(), CreateDownloadTaskRequest.class);
         assertThat(actualRequest.sourceUrl()).isEqualTo(request.sourceUrl());
-        assertThat(actualRequest.s3Key()).isEqualTo(request.s3Key());
-        assertThat(actualRequest.bucket()).isEqualTo(request.bucket());
+        assertThat(actualRequest.accessType()).isEqualTo(request.accessType());
         assertThat(actualRequest.source()).isEqualTo(request.source());
     }
 

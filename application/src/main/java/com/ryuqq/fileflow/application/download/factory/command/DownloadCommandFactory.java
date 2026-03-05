@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.application.download.factory.command;
 import com.ryuqq.fileflow.application.asset.dto.command.RegisterAssetCommand;
 import com.ryuqq.fileflow.application.asset.factory.command.AssetCommandFactory;
 import com.ryuqq.fileflow.application.common.dto.command.StatusChangeContext;
+import com.ryuqq.fileflow.application.common.manager.StorageBucketManager;
 import com.ryuqq.fileflow.application.common.port.out.IdGeneratorPort;
 import com.ryuqq.fileflow.application.common.time.TimeProvider;
 import com.ryuqq.fileflow.application.download.dto.bundle.DownloadCompletionBundle;
@@ -11,6 +12,7 @@ import com.ryuqq.fileflow.application.download.dto.command.CreateDownloadTaskCom
 import com.ryuqq.fileflow.application.download.dto.response.FileDownloadResult;
 import com.ryuqq.fileflow.domain.asset.aggregate.Asset;
 import com.ryuqq.fileflow.domain.asset.vo.AssetOrigin;
+import com.ryuqq.fileflow.domain.common.service.S3PathResolver;
 import com.ryuqq.fileflow.domain.common.vo.StorageInfo;
 import com.ryuqq.fileflow.domain.download.aggregate.CallbackOutbox;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadQueueOutbox;
@@ -21,7 +23,6 @@ import com.ryuqq.fileflow.domain.download.id.DownloadTaskId;
 import com.ryuqq.fileflow.domain.download.vo.CallbackInfo;
 import com.ryuqq.fileflow.domain.download.vo.DownloadedFileInfo;
 import com.ryuqq.fileflow.domain.download.vo.SourceUrl;
-import com.ryuqq.fileflow.domain.session.service.S3PathResolver;
 import java.time.Instant;
 import org.springframework.stereotype.Component;
 
@@ -31,24 +32,30 @@ public class DownloadCommandFactory {
     private final IdGeneratorPort idGeneratorPort;
     private final TimeProvider timeProvider;
     private final AssetCommandFactory assetCommandFactory;
+    private final StorageBucketManager storageBucketManager;
 
     public DownloadCommandFactory(
             IdGeneratorPort idGeneratorPort,
             TimeProvider timeProvider,
-            AssetCommandFactory assetCommandFactory) {
+            AssetCommandFactory assetCommandFactory,
+            StorageBucketManager storageBucketManager) {
         this.idGeneratorPort = idGeneratorPort;
         this.timeProvider = timeProvider;
         this.assetCommandFactory = assetCommandFactory;
+        this.storageBucketManager = storageBucketManager;
     }
 
     public DownloadTask create(CreateDownloadTaskCommand command) {
         Instant now = timeProvider.now();
         String id = idGeneratorPort.generate();
+        String extension = SourceUrl.of(command.sourceUrl()).extractExtension();
+        String s3Key = S3PathResolver.resolve(command.accessType(), id, extension, now);
+        String bucket = storageBucketManager.getBucket();
 
         return DownloadTask.forNew(
                 DownloadTaskId.of(id),
                 SourceUrl.of(command.sourceUrl()),
-                StorageInfo.of(command.bucket(), command.s3Key(), command.accessType()),
+                StorageInfo.of(bucket, s3Key, command.accessType()),
                 command.purpose(),
                 command.source(),
                 CallbackInfo.of(command.callbackUrl()),
@@ -110,6 +117,23 @@ public class DownloadCommandFactory {
 
         CallbackOutbox callbackOutbox = null;
         if (!downloadTask.canRetry() && downloadTask.hasCallback()) {
+            callbackOutbox =
+                    createCallbackOutbox(
+                            downloadTask.idValue(),
+                            downloadTask.callbackUrl(),
+                            downloadTask.status().name());
+        }
+
+        return new DownloadFailureBundle(downloadTask, callbackOutbox);
+    }
+
+    public DownloadFailureBundle createPermanentFailureBundle(
+            DownloadTask downloadTask, String errorMessage) {
+        Instant now = timeProvider.now();
+        downloadTask.failPermanently(errorMessage, now);
+
+        CallbackOutbox callbackOutbox = null;
+        if (downloadTask.hasCallback()) {
             callbackOutbox =
                     createCallbackOutbox(
                             downloadTask.idValue(),

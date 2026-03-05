@@ -18,6 +18,12 @@ public record ImageProcessingResult(
         if (height <= 0) {
             throw new IllegalArgumentException("height must be positive");
         }
+        data = data.clone();
+    }
+
+    @Override
+    public byte[] data() {
+        return data.clone();
     }
 
     public long fileSize() {

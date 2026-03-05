@@ -26,7 +26,8 @@ public class DownloadTaskJpaEntityFixture {
                 DEFAULT_NOW,
                 DEFAULT_NOW,
                 null,
-                null);
+                null,
+                0L);
     }
 
     public static DownloadTaskJpaEntity aDownloadingEntity() {
@@ -46,7 +47,8 @@ public class DownloadTaskJpaEntityFixture {
                 DEFAULT_NOW,
                 DEFAULT_NOW.plusSeconds(10),
                 DEFAULT_NOW.plusSeconds(10),
-                null);
+                null,
+                0L);
     }
 
     public static DownloadTaskJpaEntity aCompletedEntity() {
@@ -66,7 +68,8 @@ public class DownloadTaskJpaEntityFixture {
                 DEFAULT_NOW,
                 DEFAULT_NOW.plusSeconds(30),
                 DEFAULT_NOW.plusSeconds(10),
-                DEFAULT_NOW.plusSeconds(30));
+                DEFAULT_NOW.plusSeconds(30),
+                0L);
     }
 
     public static DownloadTaskJpaEntity anEntityWithId(String id) {
@@ -86,7 +89,8 @@ public class DownloadTaskJpaEntityFixture {
                 DEFAULT_NOW,
                 DEFAULT_NOW,
                 null,
-                null);
+                null,
+                0L);
     }
 
     public static DownloadTaskJpaEntity anEntityWithStatus(DownloadTaskStatus status) {
@@ -106,7 +110,8 @@ public class DownloadTaskJpaEntityFixture {
                 DEFAULT_NOW,
                 DEFAULT_NOW,
                 status == DownloadTaskStatus.DOWNLOADING ? DEFAULT_NOW : null,
-                status == DownloadTaskStatus.COMPLETED ? DEFAULT_NOW.plusSeconds(30) : null);
+                status == DownloadTaskStatus.COMPLETED ? DEFAULT_NOW.plusSeconds(30) : null,
+                0L);
     }
 
     public static DownloadTaskJpaEntity aFailedEntity(String lastError) {
@@ -126,7 +131,8 @@ public class DownloadTaskJpaEntityFixture {
                 DEFAULT_NOW,
                 DEFAULT_NOW.plusSeconds(60),
                 DEFAULT_NOW.plusSeconds(10),
-                null);
+                null,
+                0L);
     }
 
     public static DownloadTaskJpaEntity aQueuedEntityWithoutCallback() {
@@ -146,7 +152,8 @@ public class DownloadTaskJpaEntityFixture {
                 DEFAULT_NOW,
                 DEFAULT_NOW,
                 null,
-                null);
+                null,
+                0L);
     }
 
     public static Instant defaultNow() {

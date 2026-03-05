@@ -11,4 +11,9 @@ public record CreateTransformRequestApiRequest(
         @Schema(description = "목표 너비 (px)", example = "800", nullable = true) Integer width,
         @Schema(description = "목표 높이 (px)", example = "600", nullable = true) Integer height,
         @Schema(description = "품질 (1-100)", example = "85", nullable = true) Integer quality,
-        @Schema(description = "변환 대상 포맷", example = "webp", nullable = true) String targetFormat) {}
+        @Schema(description = "변환 대상 포맷", example = "webp", nullable = true) String targetFormat,
+        @Schema(
+                        description = "변환 완료/실패 시 콜백 URL (선택)",
+                        example = "https://example.com/callback",
+                        nullable = true)
+                String callbackUrl) {}

@@ -43,6 +43,24 @@ scheduler:
       # 배치 크기
       batch-size: 100
 
+    # 콜백 아웃박스 발행 스케줄러
+    callback-outbox:
+      enabled: true
+      # Cron: 10초마다 (환경별 오버라이드 가능)
+      cron: "*/10 * * * * *"
+      timezone: Asia/Seoul
+      # 배치 크기
+      batch-size: 50
+
+    # 변환 콜백 아웃박스 발행 스케줄러
+    transform-callback-outbox:
+      enabled: true
+      # Cron: 10초마다 (환경별 오버라이드 가능)
+      cron: "*/10 * * * * *"
+      timezone: Asia/Seoul
+      # 배치 크기
+      batch-size: 50
+
     # 변환 큐 아웃박스 발행 스케줄러
     transform-queue-outbox:
       enabled: true

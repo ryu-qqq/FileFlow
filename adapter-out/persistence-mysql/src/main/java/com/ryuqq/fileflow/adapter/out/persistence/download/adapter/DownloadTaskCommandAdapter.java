@@ -20,8 +20,9 @@ public class DownloadTaskCommandAdapter implements DownloadTaskPersistencePort {
     }
 
     @Override
-    public void persist(DownloadTask downloadTask) {
+    public long persist(DownloadTask downloadTask) {
         DownloadTaskJpaEntity entity = mapper.toEntity(downloadTask);
-        jpaRepository.save(entity);
+        DownloadTaskJpaEntity saved = jpaRepository.save(entity);
+        return saved.getVersion();
     }
 }
