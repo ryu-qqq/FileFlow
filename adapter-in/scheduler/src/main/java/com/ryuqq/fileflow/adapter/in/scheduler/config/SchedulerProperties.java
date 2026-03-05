@@ -22,6 +22,7 @@ public record SchedulerProperties(Jobs jobs) {
             TransformZombieRecovery transformZombieRecovery,
             DownloadQueueOutbox downloadQueueOutbox,
             TransformQueueOutbox transformQueueOutbox,
+            CallbackOutbox callbackOutbox,
             SingleSessionZombieRecovery singleSessionZombieRecovery,
             MultipartSessionZombieRecovery multipartSessionZombieRecovery) {}
 
@@ -36,6 +37,8 @@ public record SchedulerProperties(Jobs jobs) {
 
     public record TransformQueueOutbox(
             boolean enabled, String cron, String timezone, int batchSize) {}
+
+    public record CallbackOutbox(boolean enabled, String cron, String timezone, int batchSize) {}
 
     public record SingleSessionZombieRecovery(
             boolean enabled, String cron, String timezone, int batchSize) {}

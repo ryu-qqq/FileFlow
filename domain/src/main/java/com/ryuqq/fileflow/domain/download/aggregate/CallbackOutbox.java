@@ -14,12 +14,15 @@ import java.util.Objects;
  */
 public class CallbackOutbox {
 
+    private static final int DEFAULT_MAX_RETRIES = 5;
+
     private final CallbackOutboxId id;
     private final String downloadTaskId;
     private final String callbackUrl;
     private final String taskStatus;
     private OutboxStatus outboxStatus;
     private int retryCount;
+    private final int maxRetries;
     private String lastError;
     private final Instant createdAt;
     private Instant processedAt;
@@ -31,6 +34,7 @@ public class CallbackOutbox {
             String taskStatus,
             OutboxStatus outboxStatus,
             int retryCount,
+            int maxRetries,
             String lastError,
             Instant createdAt,
             Instant processedAt) {
@@ -40,6 +44,7 @@ public class CallbackOutbox {
         this.taskStatus = taskStatus;
         this.outboxStatus = outboxStatus;
         this.retryCount = retryCount;
+        this.maxRetries = maxRetries;
         this.lastError = lastError;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
@@ -58,6 +63,7 @@ public class CallbackOutbox {
                 taskStatus,
                 OutboxStatus.PENDING,
                 0,
+                DEFAULT_MAX_RETRIES,
                 null,
                 now,
                 null);
@@ -70,6 +76,7 @@ public class CallbackOutbox {
             String taskStatus,
             OutboxStatus outboxStatus,
             int retryCount,
+            int maxRetries,
             String lastError,
             Instant createdAt,
             Instant processedAt) {
@@ -80,6 +87,7 @@ public class CallbackOutbox {
                 taskStatus,
                 outboxStatus,
                 retryCount,
+                maxRetries,
                 lastError,
                 createdAt,
                 processedAt);
@@ -91,11 +99,22 @@ public class CallbackOutbox {
         this.processedAt = now;
     }
 
-    /** 콜백 전송 실패 처리. */
+    /** 재시도 가능한 실패 처리. retryCount < maxRetries면 PENDING 유지, 아니면 FAILED. */
     public void markFailed(String errorMessage, Instant now) {
-        this.outboxStatus = OutboxStatus.FAILED;
         this.lastError = errorMessage;
         this.retryCount++;
+        this.processedAt = now;
+
+        if (this.retryCount >= this.maxRetries) {
+            this.outboxStatus = OutboxStatus.FAILED;
+        }
+        // retryCount < maxRetries → PENDING 유지 → 다음 스케줄러에서 재시도
+    }
+
+    /** 재시도 불필요한 영구 실패 처리 (4xx 등). */
+    public void markFailedPermanently(String errorMessage, Instant now) {
+        this.lastError = errorMessage;
+        this.outboxStatus = OutboxStatus.FAILED;
         this.processedAt = now;
     }
 
@@ -127,6 +146,10 @@ public class CallbackOutbox {
 
     public int retryCount() {
         return retryCount;
+    }
+
+    public int maxRetries() {
+        return maxRetries;
     }
 
     public String lastError() {

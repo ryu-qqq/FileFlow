@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.ryuqq.fileflow.application.download.dto.response.CallbackPayload;
 import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,8 +39,15 @@ class CallbackNotificationHttpClientTest {
         void shouldSendPostRequestToCallbackUrl() {
             // given
             String callbackUrl = "https://example.com/webhook/download";
-            String downloadTaskId = "task-001";
-            String status = "COMPLETED";
+            CallbackPayload payload =
+                    CallbackPayload.ofCompleted(
+                            "task-001",
+                            "https://example.com/image.jpg",
+                            "public/2026/03/task-001.jpg",
+                            "fileflow-bucket",
+                            "task-001.jpg",
+                            "image/jpeg",
+                            1024);
 
             RestClient.RequestBodyUriSpec bodyUriSpec = mock(RestClient.RequestBodyUriSpec.class);
             RestClient.RequestBodySpec bodySpec =
@@ -52,7 +60,7 @@ class CallbackNotificationHttpClientTest {
             given(responseSpec.toBodilessEntity()).willReturn(ResponseEntity.ok().build());
 
             // when
-            sut.notify(callbackUrl, downloadTaskId, status);
+            sut.notify(callbackUrl, payload);
 
             // then
             verify(restClient).post();
@@ -64,6 +72,15 @@ class CallbackNotificationHttpClientTest {
         void shouldPropagateExceptionOnHttpFailure() {
             // given
             String callbackUrl = "https://example.com/webhook/download";
+            CallbackPayload payload =
+                    CallbackPayload.ofCompleted(
+                            "task-001",
+                            "https://example.com/image.jpg",
+                            "public/2026/03/task-001.jpg",
+                            "fileflow-bucket",
+                            "task-001.jpg",
+                            "image/jpeg",
+                            1024);
 
             RestClient.RequestBodyUriSpec bodyUriSpec = mock(RestClient.RequestBodyUriSpec.class);
 
@@ -72,7 +89,7 @@ class CallbackNotificationHttpClientTest {
                     .willThrow(new RestClientException("Connection refused"));
 
             // when & then
-            assertThatThrownBy(() -> sut.notify(callbackUrl, "task-001", "COMPLETED"))
+            assertThatThrownBy(() -> sut.notify(callbackUrl, payload))
                     .isInstanceOf(RestClientException.class)
                     .hasMessageContaining("Connection refused");
         }

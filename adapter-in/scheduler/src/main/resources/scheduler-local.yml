@@ -27,6 +27,11 @@ scheduler:
       cron: "*/3 * * * * *"
       batch-size: 10
 
+    callback-outbox:
+      # 로컬: 5초마다 (빠른 테스트)
+      cron: "*/5 * * * * *"
+      batch-size: 10
+
     transform-queue-outbox:
       # 로컬: 3초마다 (빠른 테스트)
       cron: "*/3 * * * * *"
