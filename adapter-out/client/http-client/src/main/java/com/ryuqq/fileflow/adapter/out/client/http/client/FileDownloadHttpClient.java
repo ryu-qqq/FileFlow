@@ -43,7 +43,7 @@ public class FileDownloadHttpClient implements FileDownloadClient {
 
         byte[] fileBytes = response.getBody();
         if (fileBytes == null || fileBytes.length == 0) {
-            throw new IllegalStateException("다운로드된 파일이 비어있습니다: " + sourceUrl);
+            throw new PermanentDownloadFailureException("다운로드된 파일이 비어있습니다: " + sourceUrl);
         }
 
         String fileName = extractFileName(safeUri);
@@ -76,11 +76,20 @@ public class FileDownloadHttpClient implements FileDownloadClient {
     }
 
     private String resolveContentType(ResponseEntity<byte[]> response, String fileName) {
-        MediaType mediaType = response.getHeaders().getContentType();
+        MediaType mediaType = parseContentTypeSafely(response);
         if (mediaType != null && !isGenericContentType(mediaType)) {
             return mediaType.getType() + "/" + mediaType.getSubtype();
         }
         return detectContentTypeFromFileName(fileName);
+    }
+
+    private MediaType parseContentTypeSafely(ResponseEntity<byte[]> response) {
+        try {
+            return response.getHeaders().getContentType();
+        } catch (Exception e) {
+            log.warn("Content-Type 헤더 파싱 실패, 파일명 기반 감지로 대체: {}", e.getMessage());
+            return null;
+        }
     }
 
     private boolean isGenericContentType(MediaType mediaType) {
