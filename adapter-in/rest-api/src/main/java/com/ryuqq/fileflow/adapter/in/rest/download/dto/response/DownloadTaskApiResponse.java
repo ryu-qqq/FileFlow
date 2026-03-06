@@ -26,6 +26,8 @@ public record DownloadTaskApiResponse(
                         description = "완료 콜백 URL",
                         example = "https://commerce-api.internal/callbacks/download")
                 String callbackUrl,
+        @Schema(description = "생성된 Asset ID (완료 시)", nullable = true, example = "ast_xyz789")
+                String assetId,
         @Schema(description = "마지막 에러 메시지", nullable = true) String lastError,
         @Schema(description = "생성 시각 (ISO 8601)", example = "2026-01-23T09:30:00+09:00")
                 String createdAt,

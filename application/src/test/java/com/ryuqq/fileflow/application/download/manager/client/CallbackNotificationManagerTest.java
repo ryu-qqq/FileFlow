@@ -33,6 +33,7 @@ class CallbackNotificationManagerTest {
             CallbackPayload payload =
                     CallbackPayload.ofCompleted(
                             "download-001",
+                            "asset-001",
                             "https://example.com/image.jpg",
                             "public/2026/03/download-001.jpg",
                             "fileflow-bucket",

@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.ryuqq.fileflow.application.download.dto.response.RawDownloadedFile;
+import com.ryuqq.fileflow.application.download.exception.PermanentDownloadFailureException;
 import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,7 +44,7 @@ class FileDownloadHttpClientTest {
             String sourceUrl = "https://cdn.example.com/images/abc123";
             byte[] fileBytes = "fake-image-data".getBytes();
 
-            setupRestClientMock(sourceUrl, fileBytes, MediaType.IMAGE_JPEG);
+            setupExchangeMock(fileBytes, MediaType.IMAGE_JPEG);
 
             // when
             RawDownloadedFile result = sut.download(sourceUrl);
@@ -60,7 +61,7 @@ class FileDownloadHttpClientTest {
                     "https://image.mustit.co.kr/lib/upload/product/fixedone/2023/11/abc.jpeg/_dims_/resize/300x300/extent/300x400";
             byte[] fileBytes = "jpeg-data".getBytes();
 
-            setupRestClientMock(sourceUrl, fileBytes, MediaType.IMAGE_JPEG);
+            setupExchangeMock(fileBytes, MediaType.IMAGE_JPEG);
 
             // when
             RawDownloadedFile result = sut.download(sourceUrl);
@@ -77,7 +78,7 @@ class FileDownloadHttpClientTest {
             String sourceUrl = "https://example.com/images/photo.jpg";
             byte[] fileBytes = "fake-image-data".getBytes();
 
-            setupRestClientMock(sourceUrl, fileBytes, MediaType.APPLICATION_OCTET_STREAM);
+            setupExchangeMock(fileBytes, MediaType.APPLICATION_OCTET_STREAM);
 
             // when
             RawDownloadedFile result = sut.download(sourceUrl);
@@ -94,7 +95,7 @@ class FileDownloadHttpClientTest {
             String sourceUrl = "https://example.com/images/logo.png";
             byte[] fileBytes = "png-data".getBytes();
 
-            setupRestClientMock(sourceUrl, fileBytes, null);
+            setupExchangeMock(fileBytes, null);
 
             // when
             RawDownloadedFile result = sut.download(sourceUrl);
@@ -110,7 +111,7 @@ class FileDownloadHttpClientTest {
             String sourceUrl = "https://example.com/files/data";
             byte[] fileBytes = "binary-data".getBytes();
 
-            setupRestClientMock(sourceUrl, fileBytes, null);
+            setupExchangeMock(fileBytes, null);
 
             // when
             RawDownloadedFile result = sut.download(sourceUrl);
@@ -120,26 +121,41 @@ class FileDownloadHttpClientTest {
         }
 
         @Test
+        @DisplayName("성공: 잘못된 Content-Type 헤더면 파일명 기반 감지로 대체한다")
+        void shouldFallbackToFileNameWhenContentTypeHeaderIsInvalid() {
+            // given
+            String sourceUrl = "https://example.com/images/photo.jpg";
+            byte[] fileBytes = "jpeg-data".getBytes();
+
+            setupExchangeMockWithRawHeader(fileBytes, "binary");
+
+            // when
+            RawDownloadedFile result = sut.download(sourceUrl);
+
+            // then
+            assertThat(result.contentType()).isEqualTo("image/jpeg");
+        }
+
+        @Test
         @DisplayName("실패: 다운로드된 파일이 null이면 예외가 발생한다")
         void shouldThrowWhenDownloadedBytesAreNull() {
             // given
             String sourceUrl = "https://example.com/empty";
 
-            setupRestClientMock(sourceUrl, null, null);
+            setupExchangeMock(null, null);
 
             // when & then
             assertThatThrownBy(() -> sut.download(sourceUrl))
-                    .isInstanceOf(IllegalStateException.class)
+                    .isInstanceOf(PermanentDownloadFailureException.class)
                     .hasMessageContaining("비어있습니다");
         }
 
-        private void setupRestClientMock(
-                String sourceUrl, byte[] fileBytes, MediaType contentType) {
+        @SuppressWarnings("unchecked")
+        private void setupExchangeMock(byte[] fileBytes, MediaType contentType) {
             RestClient.RequestHeadersUriSpec<?> uriSpec =
                     mock(RestClient.RequestHeadersUriSpec.class);
             RestClient.RequestHeadersSpec<?> headersSpec =
                     mock(RestClient.RequestHeadersSpec.class);
-            RestClient.ResponseSpec responseSpec = mock(RestClient.ResponseSpec.class);
 
             HttpHeaders headers = new HttpHeaders();
             if (contentType != null) {
@@ -152,8 +168,26 @@ class FileDownloadHttpClientTest {
             given(restClient.get()).willReturn((RestClient.RequestHeadersUriSpec) uriSpec);
             given(uriSpec.uri(any(URI.class)))
                     .willReturn((RestClient.RequestHeadersSpec) headersSpec);
-            given(headersSpec.retrieve()).willReturn(responseSpec);
-            given(responseSpec.toEntity(byte[].class)).willReturn(responseEntity);
+            given(headersSpec.exchange(any())).willReturn(responseEntity);
+        }
+
+        @SuppressWarnings("unchecked")
+        private void setupExchangeMockWithRawHeader(byte[] fileBytes, String rawContentType) {
+            RestClient.RequestHeadersUriSpec<?> uriSpec =
+                    mock(RestClient.RequestHeadersUriSpec.class);
+            RestClient.RequestHeadersSpec<?> headersSpec =
+                    mock(RestClient.RequestHeadersSpec.class);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Content-Type", rawContentType);
+
+            ResponseEntity<byte[]> responseEntity =
+                    new ResponseEntity<>(fileBytes, headers, HttpStatusCode.valueOf(200));
+
+            given(restClient.get()).willReturn((RestClient.RequestHeadersUriSpec) uriSpec);
+            given(uriSpec.uri(any(URI.class)))
+                    .willReturn((RestClient.RequestHeadersSpec) headersSpec);
+            given(headersSpec.exchange(any())).willReturn(responseEntity);
         }
     }
 }

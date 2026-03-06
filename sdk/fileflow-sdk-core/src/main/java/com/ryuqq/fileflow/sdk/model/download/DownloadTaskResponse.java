@@ -15,6 +15,7 @@ public record DownloadTaskResponse(
         int retryCount,
         int maxRetries,
         String callbackUrl,
+        String assetId,
         String lastError,
         String createdAt,
         String startedAt,

@@ -37,6 +37,7 @@ public final class DownloadResponseFixtures {
                 3,
                 "https://callback.example.com/done",
                 null,
+                null,
                 NOW,
                 null,
                 null);
@@ -55,6 +56,7 @@ public final class DownloadResponseFixtures {
                 0,
                 3,
                 "https://callback.example.com/done",
+                "asset-" + downloadTaskId,
                 null,
                 NOW,
                 NOW.plusSeconds(10),

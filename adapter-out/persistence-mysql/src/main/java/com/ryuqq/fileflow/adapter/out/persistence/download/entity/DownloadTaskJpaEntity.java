@@ -52,6 +52,9 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
     @Column(name = "callback_url", columnDefinition = "TEXT")
     private String callbackUrl;
 
+    @Column(name = "asset_id", length = 36)
+    private String assetId;
+
     @Column(name = "last_error", columnDefinition = "TEXT")
     private String lastError;
 
@@ -79,6 +82,7 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
             int retryCount,
             int maxRetries,
             String callbackUrl,
+            String assetId,
             String lastError,
             Instant createdAt,
             Instant updatedAt,
@@ -97,6 +101,7 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
         this.retryCount = retryCount;
         this.maxRetries = maxRetries;
         this.callbackUrl = callbackUrl;
+        this.assetId = assetId;
         this.lastError = lastError;
         this.startedAt = startedAt;
         this.completedAt = completedAt;
@@ -115,6 +120,7 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
             int retryCount,
             int maxRetries,
             String callbackUrl,
+            String assetId,
             String lastError,
             Instant createdAt,
             Instant updatedAt,
@@ -133,6 +139,7 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
                 retryCount,
                 maxRetries,
                 callbackUrl,
+                assetId,
                 lastError,
                 createdAt,
                 updatedAt,
@@ -183,6 +190,10 @@ public class DownloadTaskJpaEntity extends BaseAuditEntity {
 
     public String getCallbackUrl() {
         return callbackUrl;
+    }
+
+    public String getAssetId() {
+        return assetId;
     }
 
     public String getLastError() {

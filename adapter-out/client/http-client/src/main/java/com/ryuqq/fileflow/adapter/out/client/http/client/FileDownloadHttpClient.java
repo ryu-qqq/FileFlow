@@ -10,11 +10,13 @@ import java.net.URL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 @Component
 public class FileDownloadHttpClient implements FileDownloadClient {
@@ -33,17 +35,29 @@ public class FileDownloadHttpClient implements FileDownloadClient {
 
         URI safeUri = toEncodedUri(sourceUrl);
 
-        ResponseEntity<byte[]> response;
-        try {
-            response = restClient.get().uri(safeUri).retrieve().toEntity(byte[].class);
-        } catch (HttpClientErrorException e) {
-            throw new PermanentDownloadFailureException(
-                    "HTTP " + e.getStatusCode().value() + ": " + sourceUrl, e);
-        }
+        ResponseEntity<byte[]> response =
+                restClient
+                        .get()
+                        .uri(safeUri)
+                        .exchange(
+                                (request, clientResponse) -> {
+                                    HttpStatusCode status = clientResponse.getStatusCode();
+                                    if (status.is4xxClientError()) {
+                                        throw new PermanentDownloadFailureException(
+                                                "HTTP " + status.value() + ": " + sourceUrl);
+                                    }
+                                    if (status.isError()) {
+                                        throw new RestClientException(
+                                                "HTTP " + status.value() + ": " + sourceUrl);
+                                    }
+                                    byte[] body = clientResponse.getBody().readAllBytes();
+                                    HttpHeaders headers = clientResponse.getHeaders();
+                                    return new ResponseEntity<>(body, headers, status);
+                                });
 
         byte[] fileBytes = response.getBody();
         if (fileBytes == null || fileBytes.length == 0) {
-            throw new IllegalStateException("다운로드된 파일이 비어있습니다: " + sourceUrl);
+            throw new PermanentDownloadFailureException("다운로드된 파일이 비어있습니다: " + sourceUrl);
         }
 
         String fileName = extractFileName(safeUri);
@@ -76,11 +90,20 @@ public class FileDownloadHttpClient implements FileDownloadClient {
     }
 
     private String resolveContentType(ResponseEntity<byte[]> response, String fileName) {
-        MediaType mediaType = response.getHeaders().getContentType();
+        MediaType mediaType = parseContentTypeSafely(response);
         if (mediaType != null && !isGenericContentType(mediaType)) {
             return mediaType.getType() + "/" + mediaType.getSubtype();
         }
         return detectContentTypeFromFileName(fileName);
+    }
+
+    private MediaType parseContentTypeSafely(ResponseEntity<byte[]> response) {
+        try {
+            return response.getHeaders().getContentType();
+        } catch (Exception e) {
+            log.warn("Content-Type 헤더 파싱 실패, 파일명 기반 감지로 대체: {}", e.getMessage());
+            return null;
+        }
     }
 
     private boolean isGenericContentType(MediaType mediaType) {
