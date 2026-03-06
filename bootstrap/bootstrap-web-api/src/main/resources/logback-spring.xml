@@ -48,10 +48,9 @@
     <springProfile name="prod,stage">
         <!-- Sentry Appender for Error Tracking -->
         <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
-            <!-- DSN is configured in application.yml -->
-            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-                <level>ERROR</level>
-            </filter>
+            <dsn>${SENTRY_DSN}</dsn>
+            <minimumEventLevel>ERROR</minimumEventLevel>
+            <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>
         </appender>
 
         <!-- JSON Structured Logging -->

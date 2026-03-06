@@ -347,6 +347,7 @@ class DownloadTaskTest {
                             DownloadTaskStatus.DOWNLOADING,
                             RetryPolicy.of(2, 5),
                             CallbackInfo.of("https://callback.example.com/done"),
+                            null,
                             "previous timeout",
                             NOW,
                             NOW.plusSeconds(50),

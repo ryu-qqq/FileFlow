@@ -35,6 +35,7 @@ public class DownloadTask {
     private DownloadTaskStatus status;
     private RetryPolicy retryPolicy;
     private final CallbackInfo callbackInfo;
+    private String assetId;
     private String lastError;
     private final Instant createdAt;
     private Instant updatedAt;
@@ -53,6 +54,7 @@ public class DownloadTask {
             DownloadTaskStatus status,
             RetryPolicy retryPolicy,
             CallbackInfo callbackInfo,
+            String assetId,
             String lastError,
             Instant createdAt,
             Instant updatedAt,
@@ -67,6 +69,7 @@ public class DownloadTask {
         this.status = status;
         this.retryPolicy = retryPolicy;
         this.callbackInfo = callbackInfo;
+        this.assetId = assetId;
         this.lastError = lastError;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -93,6 +96,7 @@ public class DownloadTask {
                 RetryPolicy.ofDefault(DEFAULT_MAX_RETRIES),
                 callbackInfo,
                 null,
+                null,
                 now,
                 now,
                 null,
@@ -109,6 +113,7 @@ public class DownloadTask {
             DownloadTaskStatus status,
             RetryPolicy retryPolicy,
             CallbackInfo callbackInfo,
+            String assetId,
             String lastError,
             Instant createdAt,
             Instant updatedAt,
@@ -124,6 +129,7 @@ public class DownloadTask {
                 status,
                 retryPolicy,
                 callbackInfo,
+                assetId,
                 lastError,
                 createdAt,
                 updatedAt,
@@ -142,6 +148,11 @@ public class DownloadTask {
         this.status = DownloadTaskStatus.DOWNLOADING;
         this.startedAt = now;
         this.updatedAt = now;
+    }
+
+    /** 다운로드 완료 시 생성된 Asset ID를 연결한다. */
+    public void assignAsset(String assetId) {
+        this.assetId = assetId;
     }
 
     /** 다운로드 완료 처리. */
@@ -253,6 +264,10 @@ public class DownloadTask {
 
     public String callbackUrl() {
         return callbackInfo.callbackUrl();
+    }
+
+    public String assetId() {
+        return assetId;
     }
 
     public String lastError() {

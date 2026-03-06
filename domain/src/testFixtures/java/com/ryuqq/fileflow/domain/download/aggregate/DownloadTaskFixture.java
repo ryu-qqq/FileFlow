@@ -84,6 +84,7 @@ public class DownloadTaskFixture {
                 DownloadTaskStatus.DOWNLOADING,
                 RetryPolicy.of(1, 3),
                 CallbackInfo.of("https://callback.example.com/done"),
+                null,
                 "previous error",
                 DEFAULT_NOW,
                 DEFAULT_NOW.plusSeconds(10),

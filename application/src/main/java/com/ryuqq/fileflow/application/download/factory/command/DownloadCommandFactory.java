@@ -97,6 +97,7 @@ public class DownloadCommandFactory {
                         downloadTask.source());
 
         Asset asset = assetCommandFactory.createAsset(assetCommand);
+        downloadTask.assignAsset(asset.idValue());
 
         CallbackOutbox callbackOutbox = null;
         if (downloadTask.hasCallback()) {
