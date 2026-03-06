@@ -105,6 +105,10 @@ class DownloadTaskQueryControllerRestDocsTest extends RestDocsTestSupport {
                                                     .type(JsonFieldType.STRING)
                                                     .description("완료 콜백 URL")
                                                     .optional(),
+                                            fieldWithPath("data.assetId")
+                                                    .type(JsonFieldType.STRING)
+                                                    .description("생성된 Asset ID (완료 시)")
+                                                    .optional(),
                                             fieldWithPath("data.lastError")
                                                     .type(JsonFieldType.STRING)
                                                     .description("마지막 에러 메시지")

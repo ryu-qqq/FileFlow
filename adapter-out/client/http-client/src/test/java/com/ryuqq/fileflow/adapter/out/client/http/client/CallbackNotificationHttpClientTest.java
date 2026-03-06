@@ -42,6 +42,7 @@ class CallbackNotificationHttpClientTest {
             CallbackPayload payload =
                     CallbackPayload.ofCompleted(
                             "task-001",
+                            "asset-001",
                             "https://example.com/image.jpg",
                             "public/2026/03/task-001.jpg",
                             "fileflow-bucket",
@@ -75,6 +76,7 @@ class CallbackNotificationHttpClientTest {
             CallbackPayload payload =
                     CallbackPayload.ofCompleted(
                             "task-001",
+                            "asset-001",
                             "https://example.com/image.jpg",
                             "public/2026/03/task-001.jpg",
                             "fileflow-bucket",
