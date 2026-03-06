@@ -50,6 +50,7 @@ class GetDownloadTaskServiceTest {
                             downloadTask.retryCount(),
                             downloadTask.maxRetries(),
                             downloadTask.callbackUrl(),
+                            downloadTask.assetId(),
                             downloadTask.lastError(),
                             downloadTask.createdAt(),
                             downloadTask.startedAt(),

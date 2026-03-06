@@ -88,6 +88,7 @@ public class ProcessCallbackOutboxService implements ProcessCallbackOutboxUseCas
         if ("COMPLETED".equals(outbox.taskStatus())) {
             return CallbackPayload.ofCompleted(
                     task.idValue(),
+                    task.assetId(),
                     task.sourceUrlValue(),
                     task.s3Key(),
                     task.bucket(),

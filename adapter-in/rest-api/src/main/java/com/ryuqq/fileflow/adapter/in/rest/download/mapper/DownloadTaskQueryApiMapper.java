@@ -38,6 +38,7 @@ public class DownloadTaskQueryApiMapper {
                 response.retryCount(),
                 response.maxRetries(),
                 response.callbackUrl(),
+                response.assetId(),
                 response.lastError(),
                 DateTimeFormatUtils.formatIso8601(response.createdAt()),
                 DateTimeFormatUtils.formatIso8601(response.startedAt()),
