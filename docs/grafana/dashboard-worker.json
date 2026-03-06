@@ -30,7 +30,7 @@
         "y": 0
       },
       "id": 100,
-      "title": "\ud83d\udcca Overview",
+      "title": "📊 Overview",
       "type": "row"
     },
     {
@@ -225,7 +225,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=~\"nack|ack\",environment=~\"$environment\"}[5m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(0)",
+          "expr": "sum(rate(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[5m])) / sum(rate(sqs_consumer_messages_total{job=~\"$job\",environment=~\"$environment\"}[5m])) * 100 or vector(0)",
           "legendFormat": "Error %",
           "refId": "A"
         }
@@ -312,7 +312,7 @@
         "y": 5
       },
       "id": 300,
-      "title": "\ud83d\udcc1 SQS Consumer Processing",
+      "title": "📁 SQS Consumer Processing",
       "type": "row"
     },
     {
@@ -515,7 +515,7 @@
             "type": "prometheus",
             "uid": "ef4r3izgbak8wb"
           },
-          "expr": "sum(increase(sqs_consumer_messages_total{job=~\"$job\",result=~\"nack|ack\",environment=~\"$environment\"}[5m])) or vector(0)",
+          "expr": "sum(increase(sqs_consumer_messages_total{job=~\"$job\",result=\"nack\",environment=~\"$environment\"}[5m])) or vector(0)",
           "legendFormat": "Errors",
           "refId": "A"
         }
@@ -984,7 +984,7 @@
         "y": 26
       },
       "id": 350,
-      "title": "\ud83c\udf10 Outbound Client (S3 / HTTP)",
+      "title": "🌐 Outbound Client (S3 / HTTP)",
       "type": "row"
     },
     {
@@ -1209,7 +1209,7 @@
         "y": 35
       },
       "id": 400,
-      "title": "\u26a0\ufe0f SQS Errors",
+      "title": "⚠️ SQS Errors",
       "type": "row"
     },
     {
@@ -1277,7 +1277,7 @@
         "y": 44
       },
       "id": 500,
-      "title": "\ud83d\uddc4\ufe0f Database (HikariCP)",
+      "title": "🗄️ Database (HikariCP)",
       "type": "row"
     },
     {
@@ -1428,7 +1428,7 @@
         "y": 51
       },
       "id": 700,
-      "title": "\u2615 JVM Metrics",
+      "title": "☕ JVM Metrics",
       "type": "row"
     },
     {
@@ -1663,7 +1663,7 @@
         "y": 64
       },
       "id": 900,
-      "title": "\ud83d\udce1 SQS Queue Depth (CloudWatch)",
+      "title": "📡 SQS Queue Depth (CloudWatch)",
       "type": "row"
     },
     {
@@ -1769,7 +1769,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "$download_queue"
+              "stage-monitoring-sqs-fileflow-external-download"
             ]
           },
           "expression": "",
@@ -1784,7 +1784,7 @@
           "refId": "A",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "Visible (Main)"
+          "legendFormat": "Stage - Visible (Main)"
         },
         {
           "datasource": {
@@ -1793,7 +1793,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "$download_queue_dlq"
+              "stage-monitoring-sqs-fileflow-external-download-dlq"
             ]
           },
           "expression": "",
@@ -1808,7 +1808,55 @@
           "refId": "B",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "Visible (DLQ)"
+          "legendFormat": "Stage - Visible (DLQ)"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-fileflow-external-download"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateNumberOfMessagesVisible",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "C",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Visible (Main)"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-fileflow-external-download-dlq"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateNumberOfMessagesVisible",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "D",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Visible (DLQ)"
         }
       ],
       "title": "Download Queue - Messages Visible",
@@ -1917,7 +1965,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "prod-fileflow-file-processing"
+              "stage-fileflow-file-processing"
             ]
           },
           "expression": "",
@@ -1932,7 +1980,55 @@
           "refId": "A",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "Visible (Main)"
+          "legendFormat": "Stage - Visible (Main)"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "stage-fileflow-file-processing-dlq"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateNumberOfMessagesVisible",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "B",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Stage - Visible (DLQ)"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-fileflow-file-processing"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateNumberOfMessagesVisible",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "C",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Visible (Main)"
         },
         {
           "datasource": {
@@ -1953,10 +2049,10 @@
           "namespace": "AWS/SQS",
           "period": "60",
           "queryMode": "Metrics",
-          "refId": "B",
+          "refId": "D",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "Visible (DLQ)"
+          "legendFormat": "Prod - Visible (DLQ)"
         }
       ],
       "title": "File Processing Queue - Messages Visible",
@@ -2053,7 +2149,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "$download_queue"
+              "stage-monitoring-sqs-fileflow-external-download"
             ]
           },
           "expression": "",
@@ -2067,7 +2163,32 @@
           "queryMode": "Metrics",
           "refId": "A",
           "region": "ap-northeast-2",
-          "statistic": "Maximum"
+          "statistic": "Maximum",
+          "legendFormat": "Stage - Oldest Message Age"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-monitoring-sqs-fileflow-external-download"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateAgeOfOldestMessage",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "B",
+          "region": "ap-northeast-2",
+          "statistic": "Maximum",
+          "legendFormat": "Prod - Oldest Message Age"
         }
       ],
       "title": "Download Queue - Message Age",
@@ -2164,7 +2285,7 @@
           },
           "dimensions": {
             "QueueName": [
-              "prod-fileflow-file-processing"
+              "stage-fileflow-file-processing"
             ]
           },
           "expression": "",
@@ -2178,7 +2299,32 @@
           "queryMode": "Metrics",
           "refId": "A",
           "region": "ap-northeast-2",
-          "statistic": "Maximum"
+          "statistic": "Maximum",
+          "legendFormat": "Stage - Oldest Message Age"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "QueueName": [
+              "prod-fileflow-file-processing"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "ApproximateAgeOfOldestMessage",
+          "metricQueryType": 0,
+          "namespace": "AWS/SQS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "B",
+          "region": "ap-northeast-2",
+          "statistic": "Maximum",
+          "legendFormat": "Prod - Oldest Message Age"
         }
       ],
       "title": "File Processing Queue - Message Age",
@@ -2193,7 +2339,7 @@
         "y": 81
       },
       "id": 1000,
-      "title": "\ud83d\udda5\ufe0f ECS Resources (CloudWatch)",
+      "title": "🖥️ ECS Resources (CloudWatch)",
       "type": "row"
     },
     {
@@ -2287,10 +2433,10 @@
           },
           "dimensions": {
             "ClusterName": [
-              "fileflow-cluster-prod"
+              "fileflow-cluster-stage"
             ],
             "ServiceName": [
-              "fileflow-download-worker"
+              "fileflow-download-worker-stage"
             ]
           },
           "expression": "",
@@ -2305,7 +2451,7 @@
           "refId": "A",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "download-worker"
+          "legendFormat": "Stage - Download Worker"
         },
         {
           "datasource": {
@@ -2314,10 +2460,10 @@
           },
           "dimensions": {
             "ClusterName": [
-              "fileflow-cluster-prod"
+              "fileflow-cluster-stage"
             ],
             "ServiceName": [
-              "fileflow-resizing-worker"
+              "fileflow-resizing-worker-stage"
             ]
           },
           "expression": "",
@@ -2332,7 +2478,61 @@
           "refId": "B",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "resizing-worker"
+          "legendFormat": "Stage - Resizing Worker"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "ClusterName": [
+              "fileflow-cluster-prod"
+            ],
+            "ServiceName": [
+              "fileflow-download-worker-prod"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "CPUUtilization",
+          "metricQueryType": 0,
+          "namespace": "AWS/ECS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "C",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Download Worker"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "ClusterName": [
+              "fileflow-cluster-prod"
+            ],
+            "ServiceName": [
+              "fileflow-resizing-worker-prod"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "CPUUtilization",
+          "metricQueryType": 0,
+          "namespace": "AWS/ECS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "D",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Resizing Worker"
         }
       ],
       "title": "CPU Utilization",
@@ -2429,10 +2629,10 @@
           },
           "dimensions": {
             "ClusterName": [
-              "fileflow-cluster-prod"
+              "fileflow-cluster-stage"
             ],
             "ServiceName": [
-              "fileflow-download-worker"
+              "fileflow-download-worker-stage"
             ]
           },
           "expression": "",
@@ -2447,7 +2647,7 @@
           "refId": "A",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "download-worker"
+          "legendFormat": "Stage - Download Worker"
         },
         {
           "datasource": {
@@ -2456,10 +2656,10 @@
           },
           "dimensions": {
             "ClusterName": [
-              "fileflow-cluster-prod"
+              "fileflow-cluster-stage"
             ],
             "ServiceName": [
-              "fileflow-resizing-worker"
+              "fileflow-resizing-worker-stage"
             ]
           },
           "expression": "",
@@ -2474,7 +2674,61 @@
           "refId": "B",
           "region": "ap-northeast-2",
           "statistic": "Average",
-          "legendFormat": "resizing-worker"
+          "legendFormat": "Stage - Resizing Worker"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "ClusterName": [
+              "fileflow-cluster-prod"
+            ],
+            "ServiceName": [
+              "fileflow-download-worker-prod"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "MemoryUtilization",
+          "metricQueryType": 0,
+          "namespace": "AWS/ECS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "C",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Download Worker"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "$cw_datasource"
+          },
+          "dimensions": {
+            "ClusterName": [
+              "fileflow-cluster-prod"
+            ],
+            "ServiceName": [
+              "fileflow-resizing-worker-prod"
+            ]
+          },
+          "expression": "",
+          "id": "",
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "MemoryUtilization",
+          "metricQueryType": 0,
+          "namespace": "AWS/ECS",
+          "period": "60",
+          "queryMode": "Metrics",
+          "refId": "D",
+          "region": "ap-northeast-2",
+          "statistic": "Average",
+          "legendFormat": "Prod - Resizing Worker"
         }
       ],
       "title": "Memory Utilization",
@@ -2492,8 +2746,8 @@
       {
         "current": {
           "selected": true,
-          "text": "stage",
-          "value": "stage"
+          "text": "All",
+          "value": "$__all"
         },
         "hide": 0,
         "includeAll": true,
@@ -2501,7 +2755,11 @@
         "multi": true,
         "name": "environment",
         "options": [],
-        "query": "label_values(up, environment)",
+        "query": {
+          "qryType": 1,
+          "query": "label_values(up, environment)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
         "refresh": 2,
         "regex": "",
         "sort": 1,
@@ -2509,7 +2767,8 @@
         "datasource": {
           "type": "prometheus",
           "uid": "ef4r3izgbak8wb"
-        }
+        },
+        "definition": "label_values(up, environment)"
       },
       {
         "current": {
@@ -2564,15 +2823,20 @@
         "multi": true,
         "name": "task_id",
         "options": [],
-        "query": "label_values(up{job=~\"$job\"}, aws_ecs_task_id)",
+        "query": "label_values(up{job=~\"$job\", environment=~\"$environment\"}, aws_ecs_task_id)",
         "refresh": 2,
         "regex": "/.+/",
         "skipUrlSync": false,
         "sort": 0,
-        "type": "query"
+        "type": "query",
+        "allValue": ".*"
       },
       {
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "CloudWatch-prod",
+          "value": "CloudWatch-prod"
+        },
         "hide": 0,
         "includeAll": false,
         "multi": false,
@@ -2584,62 +2848,6 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
-      },
-      {
-        "current": {
-          "selected": true,
-          "text": "prod-monitoring-sqs-fileflow-external-download",
-          "value": "prod-monitoring-sqs-fileflow-external-download"
-        },
-        "hide": 0,
-        "includeAll": false,
-        "label": "Download Queue",
-        "multi": false,
-        "name": "download_queue",
-        "options": [
-          {
-            "selected": true,
-            "text": "prod-monitoring-sqs-fileflow-external-download",
-            "value": "prod-monitoring-sqs-fileflow-external-download"
-          },
-          {
-            "selected": false,
-            "text": "stage-monitoring-sqs-fileflow-external-download",
-            "value": "stage-monitoring-sqs-fileflow-external-download"
-          }
-        ],
-        "query": "prod-monitoring-sqs-fileflow-external-download,stage-monitoring-sqs-fileflow-external-download",
-        "queryValue": "",
-        "skipUrlSync": false,
-        "type": "custom"
-      },
-      {
-        "current": {
-          "selected": true,
-          "text": "prod-monitoring-sqs-fileflow-external-download-dlq",
-          "value": "prod-monitoring-sqs-fileflow-external-download-dlq"
-        },
-        "hide": 0,
-        "includeAll": false,
-        "label": "Download DLQ",
-        "multi": false,
-        "name": "download_queue_dlq",
-        "options": [
-          {
-            "selected": true,
-            "text": "prod-monitoring-sqs-fileflow-external-download-dlq",
-            "value": "prod-monitoring-sqs-fileflow-external-download-dlq"
-          },
-          {
-            "selected": false,
-            "text": "stage-monitoring-sqs-fileflow-external-download-dlq",
-            "value": "stage-monitoring-sqs-fileflow-external-download-dlq"
-          }
-        ],
-        "query": "prod-monitoring-sqs-fileflow-external-download-dlq,stage-monitoring-sqs-fileflow-external-download-dlq",
-        "queryValue": "",
-        "skipUrlSync": false,
-        "type": "custom"
       }
     ]
   },
@@ -2649,8 +2857,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "FileFlow - Worker Metrics",
-  "uid": "fileflow-worker-metrics",
-  "version": 1,
+  "title": "FileFlow Worker Dashboard",
+  "uid": null,
+  "version": 0,
   "weekStart": ""
 }
