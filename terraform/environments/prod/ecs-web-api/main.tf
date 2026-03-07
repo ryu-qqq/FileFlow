@@ -273,6 +273,26 @@ module "web_api_task_role" {
   })
 
   custom_inline_policies = {
+    s3-upload-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "S3PresignedUrlAccess"
+            Effect = "Allow"
+            Action = [
+              "s3:GetObject",
+              "s3:PutObject",
+              "s3:ListBucket"
+            ]
+            Resource = [
+              "arn:aws:s3:::fileflow-*",
+              "arn:aws:s3:::fileflow-*/*"
+            ]
+          }
+        ]
+      })
+    }
     eventbridge-access = {
       policy = jsonencode({
         Version = "2012-10-17"
