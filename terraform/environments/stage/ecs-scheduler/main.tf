@@ -290,6 +290,42 @@ module "scheduler_task_role" {
         ]
       })
     }
+    sqs-publish-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "AllowSQSPublishForScheduler"
+            Effect = "Allow"
+            Action = [
+              "sqs:SendMessage",
+              "sqs:GetQueueUrl",
+              "sqs:GetQueueAttributes"
+            ]
+            Resource = [
+              data.aws_ssm_parameter.external_download_queue_arn.value,
+              data.aws_ssm_parameter.file_processing_queue_arn.value
+            ]
+          }
+        ]
+      })
+    }
+    sqs-kms-access = {
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Sid    = "AllowKMSForSQSEncryption"
+            Effect = "Allow"
+            Action = [
+              "kms:Decrypt",
+              "kms:GenerateDataKey"
+            ]
+            Resource = [data.aws_ssm_parameter.sqs_kms_key_arn.value]
+          }
+        ]
+      })
+    }
     adot-amp-access = {
       policy = jsonencode({
         Version = "2012-10-17"
