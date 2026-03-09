@@ -1,15 +1,11 @@
 package com.ryuqq.fileflow.adapter.in.sqs.download;
 
-import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
 import com.ryuqq.fileflow.application.download.port.in.command.StartDownloadTaskUseCase;
 import com.ryuqq.fileflow.domain.common.exception.DomainException;
-import com.ryuqq.fileflow.domain.download.exception.DownloadErrorCode;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import java.time.Instant;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -26,15 +22,8 @@ public class DownloadTaskSqsConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadTaskSqsConsumer.class);
     private static final String QUEUE_TAG = "download";
-    private static final Set<String> CORRUPTED_ERROR_CODES =
-            Set.of(
-                    DownloadErrorCode.INVALID_SOURCE_URL.getCode(),
-                    DownloadErrorCode.INVALID_CALLBACK_URL.getCode(),
-                    DownloadErrorCode.INVALID_DOWNLOADED_FILE.getCode(),
-                    DownloadErrorCode.INVALID_DOWNLOAD_STATUS.getCode());
 
     private final StartDownloadTaskUseCase startDownloadTaskUseCase;
-    private final DownloadCommandManager downloadCommandManager;
     private final MeterRegistry meterRegistry;
     private final Timer durationTimer;
     private final Counter successCounter;
@@ -42,11 +31,8 @@ public class DownloadTaskSqsConsumer {
     private final Counter nackCounter;
 
     public DownloadTaskSqsConsumer(
-            StartDownloadTaskUseCase startDownloadTaskUseCase,
-            DownloadCommandManager downloadCommandManager,
-            MeterRegistry meterRegistry) {
+            StartDownloadTaskUseCase startDownloadTaskUseCase, MeterRegistry meterRegistry) {
         this.startDownloadTaskUseCase = startDownloadTaskUseCase;
-        this.downloadCommandManager = downloadCommandManager;
         this.meterRegistry = meterRegistry;
         this.durationTimer =
                 Timer.builder("sqs.consumer.duration")
@@ -86,9 +72,6 @@ public class DownloadTaskSqsConsumer {
             log.info("다운로드 작업 시작 완료: downloadTaskId={}", downloadTaskId);
         } catch (DomainException e) {
             if (isNonRetryable(e)) {
-                if (isCorruptedDataError(e)) {
-                    markFailedIfCorrupted(downloadTaskId, e);
-                }
                 resultCounter = ackCounter;
                 log.warn("재시도 불필요 (ACK): downloadTaskId={}, code={}", downloadTaskId, e.code(), e);
                 return;
@@ -110,19 +93,6 @@ public class DownloadTaskSqsConsumer {
             resultCounter.increment();
             MDC.remove("traceId");
         }
-    }
-
-    private void markFailedIfCorrupted(String downloadTaskId, DomainException e) {
-        downloadCommandManager.markFailedById(
-                downloadTaskId, "corrupted data: " + e.getMessage(), Instant.now());
-        log.warn(
-                "corrupted 태스크 FAILED 처리 완료: downloadTaskId={}, reason={}",
-                downloadTaskId,
-                e.getMessage());
-    }
-
-    private boolean isCorruptedDataError(DomainException e) {
-        return CORRUPTED_ERROR_CODES.contains(e.code());
     }
 
     private boolean isNonRetryable(DomainException e) {

@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 
-import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
 import com.ryuqq.fileflow.application.download.port.in.command.StartDownloadTaskUseCase;
 import com.ryuqq.fileflow.domain.common.exception.DomainException;
 import com.ryuqq.fileflow.domain.common.exception.DomainExceptionFixture;
@@ -33,14 +32,11 @@ class DownloadTaskSqsConsumerTest {
     private DownloadTaskSqsConsumer sut;
 
     @Mock private StartDownloadTaskUseCase startDownloadTaskUseCase;
-    @Mock private DownloadCommandManager downloadCommandManager;
 
     @BeforeEach
     void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        sut =
-                new DownloadTaskSqsConsumer(
-                        startDownloadTaskUseCase, downloadCommandManager, meterRegistry);
+        sut = new DownloadTaskSqsConsumer(startDownloadTaskUseCase, meterRegistry);
     }
 
     @AfterEach
