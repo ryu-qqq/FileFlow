@@ -49,6 +49,48 @@ class SourceUrlTest {
             assertThatThrownBy(() -> SourceUrl.of("ftp://example.com/file"))
                     .isInstanceOf(DownloadException.class);
         }
+
+        @Test
+        @DisplayName("localhost URL은 SSRF 방어로 DownloadException이 발생한다")
+        void localhostUrlThrows() {
+            assertThatThrownBy(() -> SourceUrl.of("http://localhost/secret"))
+                    .isInstanceOf(DownloadException.class);
+        }
+
+        @Test
+        @DisplayName("127.0.0.1 URL은 SSRF 방어로 DownloadException이 발생한다")
+        void loopbackIpThrows() {
+            assertThatThrownBy(() -> SourceUrl.of("http://127.0.0.1/secret"))
+                    .isInstanceOf(DownloadException.class);
+        }
+
+        @Test
+        @DisplayName("169.254.169.254 메타데이터 URL은 SSRF 방어로 DownloadException이 발생한다")
+        void cloudMetadataIpThrows() {
+            assertThatThrownBy(() -> SourceUrl.of("http://169.254.169.254/latest/meta-data"))
+                    .isInstanceOf(DownloadException.class);
+        }
+
+        @Test
+        @DisplayName("10.x.x.x 사설 IP URL은 SSRF 방어로 DownloadException이 발생한다")
+        void privateIp10Throws() {
+            assertThatThrownBy(() -> SourceUrl.of("http://10.0.0.1/internal"))
+                    .isInstanceOf(DownloadException.class);
+        }
+
+        @Test
+        @DisplayName("192.168.x.x 사설 IP URL은 SSRF 방어로 DownloadException이 발생한다")
+        void privateIp192Throws() {
+            assertThatThrownBy(() -> SourceUrl.of("http://192.168.1.1/internal"))
+                    .isInstanceOf(DownloadException.class);
+        }
+
+        @Test
+        @DisplayName("172.16-31.x.x 사설 IP URL은 SSRF 방어로 DownloadException이 발생한다")
+        void privateIp172Throws() {
+            assertThatThrownBy(() -> SourceUrl.of("http://172.16.0.1/internal"))
+                    .isInstanceOf(DownloadException.class);
+        }
     }
 
     @Nested
