@@ -2,8 +2,10 @@ package com.ryuqq.fileflow.domain.download.vo;
 
 import com.ryuqq.fileflow.domain.download.exception.DownloadErrorCode;
 import com.ryuqq.fileflow.domain.download.exception.DownloadException;
+import java.net.URI;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public record SourceUrl(String value) {
 
@@ -12,6 +14,13 @@ public record SourceUrl(String value) {
                     "jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "tiff", "tif", "ico", "avif",
                     "heic", "pdf", "json", "xml", "zip", "txt", "html", "htm", "css", "js", "mp4",
                     "mp3");
+
+    private static final Pattern PRIVATE_IP_PATTERN =
+            Pattern.compile(
+                    "^(127\\.|10\\.|172\\.(1[6-9]|2\\d|3[01])\\.|192\\.168\\.|169\\.254\\.|0\\.)");
+
+    private static final Set<String> BLOCKED_HOSTS =
+            Set.of("localhost", "metadata.google.internal", "[::1]");
 
     public SourceUrl {
         Objects.requireNonNull(value, "sourceUrl must not be null");
@@ -23,6 +32,28 @@ public record SourceUrl(String value) {
             throw new DownloadException(
                     DownloadErrorCode.INVALID_SOURCE_URL,
                     "sourceUrl must start with http:// or https://: " + value);
+        }
+        validateNotInternalAddress(value);
+    }
+
+    private static void validateNotInternalAddress(String url) {
+        try {
+            URI uri = URI.create(url);
+            String host = uri.getHost();
+            if (host == null) {
+                throw new DownloadException(
+                        DownloadErrorCode.INVALID_SOURCE_URL,
+                        "sourceUrl has no valid host: " + url);
+            }
+            String lowerHost = host.toLowerCase();
+            if (BLOCKED_HOSTS.contains(lowerHost) || PRIVATE_IP_PATTERN.matcher(lowerHost).find()) {
+                throw new DownloadException(
+                        DownloadErrorCode.INVALID_SOURCE_URL,
+                        "sourceUrl must not point to internal addresses: " + url);
+            }
+        } catch (IllegalArgumentException e) {
+            throw new DownloadException(
+                    DownloadErrorCode.INVALID_SOURCE_URL, "sourceUrl is not a valid URI: " + url);
         }
     }
 

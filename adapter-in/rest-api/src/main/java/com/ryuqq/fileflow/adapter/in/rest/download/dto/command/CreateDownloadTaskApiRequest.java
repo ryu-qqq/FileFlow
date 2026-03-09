@@ -4,11 +4,15 @@ import com.ryuqq.fileflow.domain.common.vo.AccessType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 @Schema(description = "다운로드 작업 생성 요청")
 public record CreateDownloadTaskApiRequest(
         @Schema(description = "다운로드 소스 URL", example = "https://example.com/files/image.jpg")
                 @NotBlank
+                @Pattern(
+                        regexp = "^https?://.*",
+                        message = "sourceUrl must start with http:// or https://")
                 String sourceUrl,
         @Schema(description = "접근 유형", example = "PUBLIC") @NotNull AccessType accessType,
         @Schema(description = "파일 용도", example = "PRODUCT_IMAGE") @NotBlank String purpose,
