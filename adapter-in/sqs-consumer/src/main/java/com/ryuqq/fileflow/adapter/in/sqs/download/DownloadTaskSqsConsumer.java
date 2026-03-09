@@ -111,8 +111,7 @@ public class DownloadTaskSqsConsumer {
                     downloadTaskId,
                     e.getMessage());
         } catch (Exception failEx) {
-            log.error(
-                    "corrupted 태스크 FAILED 처리 실패: downloadTaskId={}", downloadTaskId, failEx);
+            log.error("corrupted 태스크 FAILED 처리 실패: downloadTaskId={}", downloadTaskId, failEx);
         }
     }
 
