@@ -1,11 +1,13 @@
 package com.ryuqq.fileflow.adapter.in.sqs.download;
 
+import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
 import com.ryuqq.fileflow.application.download.port.in.command.StartDownloadTaskUseCase;
 import com.ryuqq.fileflow.domain.common.exception.DomainException;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -24,6 +26,7 @@ public class DownloadTaskSqsConsumer {
     private static final String QUEUE_TAG = "download";
 
     private final StartDownloadTaskUseCase startDownloadTaskUseCase;
+    private final DownloadCommandManager downloadCommandManager;
     private final MeterRegistry meterRegistry;
     private final Timer durationTimer;
     private final Counter successCounter;
@@ -31,8 +34,11 @@ public class DownloadTaskSqsConsumer {
     private final Counter nackCounter;
 
     public DownloadTaskSqsConsumer(
-            StartDownloadTaskUseCase startDownloadTaskUseCase, MeterRegistry meterRegistry) {
+            StartDownloadTaskUseCase startDownloadTaskUseCase,
+            DownloadCommandManager downloadCommandManager,
+            MeterRegistry meterRegistry) {
         this.startDownloadTaskUseCase = startDownloadTaskUseCase;
+        this.downloadCommandManager = downloadCommandManager;
         this.meterRegistry = meterRegistry;
         this.durationTimer =
                 Timer.builder("sqs.consumer.duration")
@@ -73,6 +79,7 @@ public class DownloadTaskSqsConsumer {
         } catch (DomainException e) {
             if (isNonRetryable(e)) {
                 resultCounter = ackCounter;
+                markFailedIfCorrupted(downloadTaskId, e);
                 log.warn("재시도 불필요 (ACK): downloadTaskId={}, code={}", downloadTaskId, e.code(), e);
                 return;
             }
@@ -92,6 +99,20 @@ public class DownloadTaskSqsConsumer {
             sample.stop(durationTimer);
             resultCounter.increment();
             MDC.remove("traceId");
+        }
+    }
+
+    private void markFailedIfCorrupted(String downloadTaskId, DomainException e) {
+        try {
+            downloadCommandManager.markFailedById(
+                    downloadTaskId, "corrupted data: " + e.getMessage(), Instant.now());
+            log.warn(
+                    "corrupted 태스크 FAILED 처리 완료: downloadTaskId={}, reason={}",
+                    downloadTaskId,
+                    e.getMessage());
+        } catch (Exception failEx) {
+            log.error(
+                    "corrupted 태스크 FAILED 처리 실패: downloadTaskId={}", downloadTaskId, failEx);
         }
     }
 
