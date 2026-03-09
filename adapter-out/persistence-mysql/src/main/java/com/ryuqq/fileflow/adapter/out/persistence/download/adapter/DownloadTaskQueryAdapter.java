@@ -2,7 +2,6 @@ package com.ryuqq.fileflow.adapter.out.persistence.download.adapter;
 
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.DownloadTaskJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.download.mapper.DownloadTaskJpaMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.download.repository.DownloadTaskJpaRepository;
 import com.ryuqq.fileflow.adapter.out.persistence.download.repository.DownloadTaskQueryDslRepository;
 import com.ryuqq.fileflow.application.download.port.out.query.DownloadTaskQueryPort;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
@@ -22,15 +21,11 @@ public class DownloadTaskQueryAdapter implements DownloadTaskQueryPort {
     private static final Logger log = LoggerFactory.getLogger(DownloadTaskQueryAdapter.class);
 
     private final DownloadTaskQueryDslRepository queryDslRepository;
-    private final DownloadTaskJpaRepository jpaRepository;
     private final DownloadTaskJpaMapper mapper;
 
     public DownloadTaskQueryAdapter(
-            DownloadTaskQueryDslRepository queryDslRepository,
-            DownloadTaskJpaRepository jpaRepository,
-            DownloadTaskJpaMapper mapper) {
+            DownloadTaskQueryDslRepository queryDslRepository, DownloadTaskJpaMapper mapper) {
         this.queryDslRepository = queryDslRepository;
-        this.jpaRepository = jpaRepository;
         this.mapper = mapper;
     }
 
@@ -51,14 +46,9 @@ public class DownloadTaskQueryAdapter implements DownloadTaskQueryPort {
                 result.add(mapper.toDomain(entity));
             } catch (Exception e) {
                 log.error(
-                        "corrupted 데이터 감지, FAILED 처리: taskId={}, error={}",
+                        "corrupted 데이터 감지 (skip): taskId={}, error={}",
                         entity.getId(),
                         e.getMessage());
-                jpaRepository.updateStatusAndError(
-                        entity.getId(),
-                        DownloadTaskStatus.FAILED,
-                        "corrupted data: " + e.getMessage(),
-                        Instant.now());
             }
         }
         return result;
