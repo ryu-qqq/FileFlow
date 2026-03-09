@@ -72,8 +72,8 @@ class ProcessDownloadQueueOutboxServiceTest {
         }
 
         @Test
-        @DisplayName("발행 실패 시 FAILED로 마킹한다")
-        void execute_FailedEnqueue_MarksFailed() {
+        @DisplayName("발행 실패 시 retryCount가 증가하고 PENDING 상태를 유지한다 (재시도 대상)")
+        void execute_FailedEnqueue_StaysPendingForRetry() {
             DownloadQueueOutbox outbox =
                     DownloadQueueOutbox.forNew(
                             DownloadQueueOutboxId.of("outbox-001"), "download-001", NOW);
@@ -87,7 +87,8 @@ class ProcessDownloadQueueOutboxServiceTest {
             assertThat(result.total()).isEqualTo(1);
             assertThat(result.success()).isZero();
             assertThat(result.failed()).isEqualTo(1);
-            assertThat(outbox.status()).isEqualTo(OutboxStatus.FAILED);
+            assertThat(outbox.status()).isEqualTo(OutboxStatus.PENDING);
+            assertThat(outbox.retryCount()).isEqualTo(1);
             then(outboxCommandManager).should().persist(outbox);
         }
 
@@ -113,7 +114,8 @@ class ProcessDownloadQueueOutboxServiceTest {
             assertThat(result.success()).isEqualTo(1);
             assertThat(result.failed()).isEqualTo(1);
             assertThat(successOutbox.status()).isEqualTo(OutboxStatus.SENT);
-            assertThat(failOutbox.status()).isEqualTo(OutboxStatus.FAILED);
+            assertThat(failOutbox.status()).isEqualTo(OutboxStatus.PENDING);
+            assertThat(failOutbox.retryCount()).isEqualTo(1);
         }
     }
 }
