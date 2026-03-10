@@ -157,6 +157,35 @@ class ProcessCallbackOutboxServiceTest {
         }
 
         @Test
+        @DisplayName("bulkMarkSent 예외 발생 시 claimed 전체를 bulkMarkFailed 처리한다")
+        void execute_BulkMarkSentException_FallbackToFailed() {
+            CallbackOutbox outbox =
+                    CallbackOutbox.forNew(
+                            CallbackOutboxId.of("outbox-001"),
+                            "download-001",
+                            "https://callback.example.com/done",
+                            "COMPLETED",
+                            NOW);
+            DownloadTask task = DownloadTaskFixture.aCompletedTask();
+
+            given(callbackOutboxCommandManager.claimPendingMessages(10))
+                    .willReturn(List.of(outbox));
+            given(downloadReadManager.getDownloadTask("download-001")).willReturn(task);
+            willThrow(new RuntimeException("DB connection failed"))
+                    .given(callbackOutboxCommandManager)
+                    .bulkMarkSent(any(), any());
+
+            SchedulerBatchProcessingResult result = sut.execute(10);
+
+            assertThat(result.total()).isEqualTo(1);
+            assertThat(result.success()).isZero();
+            assertThat(result.failed()).isEqualTo(1);
+            then(callbackOutboxCommandManager)
+                    .should()
+                    .bulkMarkFailed(eq(List.of("outbox-001")), any());
+        }
+
+        @Test
         @DisplayName("여러 건 모두 성공하면 전체 success로 집계된다")
         void execute_MultipleSuccess_AllMarkedSent() {
             CallbackOutbox outbox1 =

@@ -42,6 +42,18 @@ scheduler:
       cron: "*/3 * * * * *"
       batch-size: 10
 
+    download-outbox-recovery:
+      # 로컬: 1분마다 (빠른 테스트)
+      cron: "0 */1 * * * *"
+      # 로컬: 짧은 기준 시간
+      stuck-minutes: 2
+
+    transform-outbox-recovery:
+      # 로컬: 1분마다 (빠른 테스트)
+      cron: "0 */1 * * * *"
+      # 로컬: 짧은 기준 시간
+      stuck-minutes: 2
+
     single-session-zombie-recovery:
       # 로컬: 1분마다 (빠른 테스트)
       cron: "0 */1 * * * *"

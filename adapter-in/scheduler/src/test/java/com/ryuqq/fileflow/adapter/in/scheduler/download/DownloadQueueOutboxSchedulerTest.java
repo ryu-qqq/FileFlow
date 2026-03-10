@@ -34,7 +34,8 @@ class DownloadQueueOutboxSchedulerTest {
                 new SchedulerProperties.DownloadQueueOutbox(
                         true, "*/10 * * * * *", "Asia/Seoul", BATCH_SIZE);
         SchedulerProperties.Jobs jobs =
-                new SchedulerProperties.Jobs(null, null, config, null, null, null, null, null);
+                new SchedulerProperties.Jobs(
+                        null, null, config, null, null, null, null, null, null, null);
         SchedulerProperties properties = new SchedulerProperties(jobs);
 
         sut = new DownloadQueueOutboxScheduler(useCase, properties);

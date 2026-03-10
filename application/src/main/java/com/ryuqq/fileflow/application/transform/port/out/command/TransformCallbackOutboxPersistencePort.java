@@ -11,4 +11,6 @@ public interface TransformCallbackOutboxPersistencePort {
     void bulkMarkSent(List<String> ids, Instant now);
 
     void bulkMarkFailed(List<String> ids, Instant now);
+
+    int recoverStuckProcessing(Instant cutoff);
 }

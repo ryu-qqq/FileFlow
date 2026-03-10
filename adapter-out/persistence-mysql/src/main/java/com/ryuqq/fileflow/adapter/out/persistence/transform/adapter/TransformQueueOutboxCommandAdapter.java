@@ -38,4 +38,9 @@ public class TransformQueueOutboxCommandAdapter implements TransformQueueOutboxP
         if (ids.isEmpty()) return;
         jpaRepository.bulkMarkFailed(ids, now);
     }
+
+    @Override
+    public int recoverStuckProcessing(Instant cutoff) {
+        return jpaRepository.recoverStuckProcessing(cutoff);
+    }
 }
