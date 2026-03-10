@@ -121,4 +121,52 @@ class DownloadQueueOutboxQueryAdapterTest {
             assertThat(result.failed()).isZero();
         }
     }
+
+    @Nested
+    @DisplayName("claimPendingMessages 메서드")
+    class ClaimPendingMessagesTest {
+
+        @Test
+        @DisplayName("claimed > 0이면 PROCESSING 상태 아웃박스를 반환한다")
+        void claimPendingMessages_Claimed_ReturnsProcessingOutboxes() {
+            DownloadQueueOutboxJpaEntity entity1 =
+                    DownloadQueueOutboxJpaEntity.create(
+                            "outbox-001", "download-001", OutboxStatus.PROCESSING, 0, null, NOW, null);
+            DownloadQueueOutboxJpaEntity entity2 =
+                    DownloadQueueOutboxJpaEntity.create(
+                            "outbox-002", "download-002", OutboxStatus.PROCESSING, 0, null, NOW, null);
+            DownloadQueueOutbox domain1 =
+                    DownloadQueueOutbox.forNew(
+                            DownloadQueueOutboxId.of("outbox-001"), "download-001", NOW);
+            DownloadQueueOutbox domain2 =
+                    DownloadQueueOutbox.forNew(
+                            DownloadQueueOutboxId.of("outbox-002"), "download-002", NOW);
+
+            given(jpaRepository.claimPending(
+                            ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
+                    .willReturn(2);
+            given(jpaRepository.findByStatus(OutboxStatus.PROCESSING))
+                    .willReturn(List.of(entity1, entity2));
+            given(mapper.toDomain(entity1)).willReturn(domain1);
+            given(mapper.toDomain(entity2)).willReturn(domain2);
+
+            List<DownloadQueueOutbox> result = sut.claimPendingMessages(100);
+
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).idValue()).isEqualTo("outbox-001");
+            assertThat(result.get(1).idValue()).isEqualTo("outbox-002");
+        }
+
+        @Test
+        @DisplayName("claimed == 0이면 빈 리스트를 반환한다")
+        void claimPendingMessages_NoClaimed_ReturnsEmpty() {
+            given(jpaRepository.claimPending(
+                            ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
+                    .willReturn(0);
+
+            List<DownloadQueueOutbox> result = sut.claimPendingMessages(100);
+
+            assertThat(result).isEmpty();
+        }
+    }
 }
