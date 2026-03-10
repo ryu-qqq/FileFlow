@@ -266,6 +266,7 @@ resource "aws_ssm_parameter" "sqs_kms_key_arn" {
   description = "FileFlow SQS KMS key ARN"
   type        = "String"
   value       = aws_kms_key.sqs.arn
+  overwrite   = true
 
   tags = {
     Name        = "${var.project_name}-sqs-kms-key-arn"
