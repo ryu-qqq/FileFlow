@@ -38,4 +38,9 @@ public class CallbackOutboxCommandAdapter implements CallbackOutboxPersistencePo
         if (ids.isEmpty()) return;
         jpaRepository.bulkMarkFailed(ids, now);
     }
+
+    @Override
+    public int recoverStuckProcessing(Instant cutoff) {
+        return jpaRepository.recoverStuckProcessing(cutoff);
+    }
 }

@@ -40,4 +40,9 @@ public class DownloadQueueOutboxCommandManager {
     public void bulkMarkFailed(List<String> ids, Instant now) {
         downloadQueueOutboxPersistencePort.bulkMarkFailed(ids, now);
     }
+
+    @Transactional
+    public int recoverStuckProcessing(Instant cutoff) {
+        return downloadQueueOutboxPersistencePort.recoverStuckProcessing(cutoff);
+    }
 }

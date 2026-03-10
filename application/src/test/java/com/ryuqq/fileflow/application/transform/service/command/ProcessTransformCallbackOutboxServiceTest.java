@@ -158,5 +158,34 @@ class ProcessTransformCallbackOutboxServiceTest {
                     .should()
                     .bulkMarkFailed(eq(List.of("outbox-004")), any());
         }
+
+        @Test
+        @DisplayName("bulkMarkSent 예외 발생 시 claimed 전체를 bulkMarkFailed 처리한다")
+        void execute_BulkMarkSentException_FallbackToFailed() {
+            TransformCallbackOutbox outbox =
+                    TransformCallbackOutbox.forNew(
+                            TransformCallbackOutboxId.of("outbox-001"),
+                            "transform-001",
+                            "https://callback.example.com/done",
+                            "COMPLETED",
+                            NOW);
+            TransformRequest request = TransformRequestFixture.aCompletedRequest();
+
+            given(transformCallbackOutboxCommandManager.claimPendingMessages(10))
+                    .willReturn(List.of(outbox));
+            given(transformReadManager.getTransformRequest("transform-001")).willReturn(request);
+            willThrow(new RuntimeException("DB connection failed"))
+                    .given(transformCallbackOutboxCommandManager)
+                    .bulkMarkSent(any(), any());
+
+            SchedulerBatchProcessingResult result = sut.execute(10);
+
+            assertThat(result.total()).isEqualTo(1);
+            assertThat(result.success()).isZero();
+            assertThat(result.failed()).isEqualTo(1);
+            then(transformCallbackOutboxCommandManager)
+                    .should()
+                    .bulkMarkFailed(eq(List.of("outbox-001")), any());
+        }
     }
 }

@@ -33,7 +33,8 @@ class SingleSessionZombieRecoverySchedulerTest {
                 new SchedulerProperties.SingleSessionZombieRecovery(
                         true, "0 */5 * * * *", "Asia/Seoul", BATCH_SIZE);
         SchedulerProperties.Jobs jobs =
-                new SchedulerProperties.Jobs(null, null, null, null, null, null, config, null);
+                new SchedulerProperties.Jobs(
+                        null, null, null, null, null, null, null, null, config, null);
         SchedulerProperties properties = new SchedulerProperties(jobs);
 
         sut = new SingleSessionZombieRecoveryScheduler(useCase, properties);
