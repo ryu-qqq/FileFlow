@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
         matchIfMissing = true)
 public class TransformQueueOutboxScheduler {
 
+    private static final int MAX_LOOPS = 10;
+
     private final ProcessTransformQueueOutboxUseCase processTransformQueueOutboxUseCase;
     private final SchedulerProperties.TransformQueueOutbox config;
 
@@ -31,6 +33,15 @@ public class TransformQueueOutboxScheduler {
             zone = "${scheduler.jobs.transform-queue-outbox.timezone}")
     @SchedulerJob("TransformQueueOutbox")
     public SchedulerBatchProcessingResult processOutbox() {
-        return processTransformQueueOutboxUseCase.execute(config.batchSize());
+        SchedulerBatchProcessingResult total = SchedulerBatchProcessingResult.empty();
+        for (int i = 0; i < MAX_LOOPS; i++) {
+            SchedulerBatchProcessingResult result =
+                    processTransformQueueOutboxUseCase.execute(config.batchSize());
+            total = total.merge(result);
+            if (result.total() < config.batchSize()) {
+                break;
+            }
+        }
+        return total;
     }
 }

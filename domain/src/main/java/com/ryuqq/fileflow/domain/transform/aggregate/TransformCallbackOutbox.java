@@ -102,10 +102,8 @@ public class TransformCallbackOutbox {
         this.lastError = errorMessage;
         this.retryCount++;
         this.processedAt = now;
-
-        if (this.retryCount >= this.maxRetries) {
-            this.outboxStatus = OutboxStatus.FAILED;
-        }
+        this.outboxStatus =
+                (this.retryCount >= this.maxRetries) ? OutboxStatus.FAILED : OutboxStatus.PENDING;
     }
 
     public void markFailedPermanently(String errorMessage, Instant now) {

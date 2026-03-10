@@ -82,4 +82,59 @@ class TransformCallbackOutboxQueryAdapterTest {
             assertThat(result).isEmpty();
         }
     }
+
+    @Nested
+    @DisplayName("claimPendingMessages 메서드")
+    class ClaimPendingMessagesTest {
+
+        @Test
+        @DisplayName("claimed > 0이면 PROCESSING 상태 아웃박스를 반환한다")
+        void claimPendingMessages_Claimed_ReturnsProcessingOutboxes() {
+            // given
+            TransformCallbackOutboxJpaEntity entity1 =
+                    TransformCallbackOutboxJpaEntityFixture.aPendingEntity();
+            TransformCallbackOutboxJpaEntity entity2 =
+                    TransformCallbackOutboxJpaEntityFixture.aSentEntity();
+            Instant now = TransformCallbackOutboxJpaEntityFixture.defaultNow();
+            TransformCallbackOutbox domain1 =
+                    TransformCallbackOutbox.forNew(
+                            TransformCallbackOutboxId.of("outbox-001"),
+                            "transform-001",
+                            "https://callback.example.com/transform-done",
+                            "COMPLETED",
+                            now);
+            TransformCallbackOutbox domain2 =
+                    TransformCallbackOutbox.forNew(
+                            TransformCallbackOutboxId.of("outbox-002"),
+                            "transform-002",
+                            "https://callback.example.com/transform-done",
+                            "COMPLETED",
+                            now);
+
+            given(jpaRepository.claimPending(eq(100), any(Instant.class))).willReturn(2);
+            given(jpaRepository.findByStatus(OutboxStatus.PROCESSING))
+                    .willReturn(List.of(entity1, entity2));
+            given(mapper.toDomain(entity1)).willReturn(domain1);
+            given(mapper.toDomain(entity2)).willReturn(domain2);
+
+            // when
+            List<TransformCallbackOutbox> result = queryAdapter.claimPendingMessages(100);
+
+            // then
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("claimed == 0이면 빈 리스트를 반환한다")
+        void claimPendingMessages_NoClaimed_ReturnsEmpty() {
+            // given
+            given(jpaRepository.claimPending(eq(100), any(Instant.class))).willReturn(0);
+
+            // when
+            List<TransformCallbackOutbox> result = queryAdapter.claimPendingMessages(100);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+    }
 }

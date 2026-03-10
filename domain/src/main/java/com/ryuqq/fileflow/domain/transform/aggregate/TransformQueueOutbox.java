@@ -65,16 +65,15 @@ public class TransformQueueOutbox {
         this.processedAt = now;
     }
 
-    /** SQS 발행 실패 처리. retryCount < maxRetries면 PENDING 유지, 아니면 FAILED. */
+    /** SQS 발행 실패 처리. retryCount < maxRetries면 PENDING 복귀(재시도), 아니면 FAILED. */
     public void markFailed(String errorMessage, Instant now) {
         this.lastError = errorMessage;
         this.retryCount++;
         this.processedAt = now;
-
-        if (this.retryCount >= DEFAULT_MAX_RETRIES) {
-            this.status = OutboxStatus.FAILED;
-        }
-        // retryCount < DEFAULT_MAX_RETRIES → PENDING 유지 → 다음 스케줄러에서 재시도
+        this.status =
+                (this.retryCount >= DEFAULT_MAX_RETRIES)
+                        ? OutboxStatus.FAILED
+                        : OutboxStatus.PENDING;
     }
 
     // -- query methods --
