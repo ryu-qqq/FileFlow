@@ -11,6 +11,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @see com.ryuqq.fileflow.adapter.in.scheduler.transform.TransformZombieRecoveryScheduler
  * @see com.ryuqq.fileflow.adapter.in.scheduler.download.DownloadQueueOutboxScheduler
  * @see com.ryuqq.fileflow.adapter.in.scheduler.transform.TransformQueueOutboxScheduler
+ * @see com.ryuqq.fileflow.adapter.in.scheduler.download.DownloadOutboxRecoveryScheduler
+ * @see com.ryuqq.fileflow.adapter.in.scheduler.transform.TransformOutboxRecoveryScheduler
  * @see com.ryuqq.fileflow.adapter.in.scheduler.session.SingleSessionZombieRecoveryScheduler
  * @see com.ryuqq.fileflow.adapter.in.scheduler.session.MultipartSessionZombieRecoveryScheduler
  */
@@ -24,6 +26,8 @@ public record SchedulerProperties(Jobs jobs) {
             TransformQueueOutbox transformQueueOutbox,
             CallbackOutbox callbackOutbox,
             TransformCallbackOutbox transformCallbackOutbox,
+            DownloadOutboxRecovery downloadOutboxRecovery,
+            TransformOutboxRecovery transformOutboxRecovery,
             SingleSessionZombieRecovery singleSessionZombieRecovery,
             MultipartSessionZombieRecovery multipartSessionZombieRecovery) {}
 
@@ -43,6 +47,12 @@ public record SchedulerProperties(Jobs jobs) {
 
     public record TransformCallbackOutbox(
             boolean enabled, String cron, String timezone, int batchSize) {}
+
+    public record DownloadOutboxRecovery(
+            boolean enabled, String cron, String timezone, int stuckMinutes) {}
+
+    public record TransformOutboxRecovery(
+            boolean enabled, String cron, String timezone, int stuckMinutes) {}
 
     public record SingleSessionZombieRecovery(
             boolean enabled, String cron, String timezone, int batchSize) {}

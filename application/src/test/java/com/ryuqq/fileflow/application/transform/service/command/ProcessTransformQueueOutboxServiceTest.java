@@ -92,5 +92,30 @@ class ProcessTransformQueueOutboxServiceTest {
             assertThat(result.failed()).isEqualTo(1);
             then(outboxCommandManager).should().bulkMarkFailed(eq(List.of("outbox-001")), any());
         }
+
+        @Test
+        @DisplayName("enqueueBatch 예외 발생 시 claimed 전체를 bulkMarkFailed 처리한다")
+        void execute_EnqueueException_BulkMarksFailedAll() {
+            TransformQueueOutbox outbox1 =
+                    TransformQueueOutbox.forNew(
+                            TransformQueueOutboxId.of("outbox-001"), "transform-001", NOW);
+            TransformQueueOutbox outbox2 =
+                    TransformQueueOutbox.forNew(
+                            TransformQueueOutboxId.of("outbox-002"), "transform-002", NOW);
+            given(outboxCommandManager.claimPendingMessages(100))
+                    .willReturn(List.of(outbox1, outbox2));
+            willThrow(new RuntimeException("SQS connection failed"))
+                    .given(transformQueueManager)
+                    .enqueueBatch(any());
+
+            SchedulerBatchProcessingResult result = sut.execute(100);
+
+            assertThat(result.total()).isEqualTo(2);
+            assertThat(result.success()).isZero();
+            assertThat(result.failed()).isEqualTo(2);
+            then(outboxCommandManager)
+                    .should()
+                    .bulkMarkFailed(eq(List.of("outbox-001", "outbox-002")), any());
+        }
     }
 }

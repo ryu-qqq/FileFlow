@@ -46,61 +46,81 @@ public class ProcessTransformCallbackOutboxService
             return SchedulerBatchProcessingResult.empty();
         }
 
-        ConcurrentLinkedQueue<String> successIds = new ConcurrentLinkedQueue<>();
-        ConcurrentLinkedQueue<String> failedIds = new ConcurrentLinkedQueue<>();
-        ConcurrentLinkedQueue<String> permanentFailedIds = new ConcurrentLinkedQueue<>();
+        List<String> claimedOutboxIds =
+                claimed.stream().map(TransformCallbackOutbox::idValue).toList();
 
-        List<CompletableFuture<Void>> futures =
-                claimed.stream()
-                        .map(
-                                outbox ->
-                                        CompletableFuture.runAsync(
-                                                () -> {
-                                                    try {
-                                                        TransformCallbackPayload payload =
-                                                                buildPayload(outbox);
-                                                        transformCallbackNotificationManager.notify(
-                                                                outbox.callbackUrl(), payload);
-                                                        successIds.add(outbox.idValue());
-                                                    } catch (PermanentCallbackFailureException e) {
-                                                        log.warn(
-                                                                "변환 콜백 영구 실패: outboxId={}, url={}",
-                                                                outbox.idValue(),
-                                                                outbox.callbackUrl(),
-                                                                e);
-                                                        permanentFailedIds.add(outbox.idValue());
-                                                    } catch (Exception e) {
-                                                        log.error(
-                                                                "변환 콜백 전송 실패: outboxId={}, url={}",
-                                                                outbox.idValue(),
-                                                                outbox.callbackUrl(),
-                                                                e);
-                                                        failedIds.add(outbox.idValue());
-                                                    }
-                                                }))
-                        .toList();
+        try {
+            ConcurrentLinkedQueue<String> successIds = new ConcurrentLinkedQueue<>();
+            ConcurrentLinkedQueue<String> failedIds = new ConcurrentLinkedQueue<>();
+            ConcurrentLinkedQueue<String> permanentFailedIds = new ConcurrentLinkedQueue<>();
 
-        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
-
-        Instant now = Instant.now();
-
-        transformCallbackOutboxCommandManager.bulkMarkSent(new ArrayList<>(successIds), now);
-        transformCallbackOutboxCommandManager.bulkMarkFailed(new ArrayList<>(failedIds), now);
-
-        for (String permFailedId : permanentFailedIds) {
-            TransformCallbackOutbox outbox =
+            List<CompletableFuture<Void>> futures =
                     claimed.stream()
-                            .filter(o -> o.idValue().equals(permFailedId))
-                            .findFirst()
-                            .orElse(null);
-            if (outbox != null) {
-                outbox.markFailedPermanently("Permanent callback failure (4xx)", now);
-                transformCallbackOutboxCommandManager.persist(outbox);
-            }
-        }
+                            .map(
+                                    outbox ->
+                                            CompletableFuture.runAsync(
+                                                    () -> {
+                                                        try {
+                                                            TransformCallbackPayload payload =
+                                                                    buildPayload(outbox);
+                                                            transformCallbackNotificationManager
+                                                                    .notify(
+                                                                            outbox.callbackUrl(),
+                                                                            payload);
+                                                            successIds.add(outbox.idValue());
+                                                        } catch (
+                                                                PermanentCallbackFailureException
+                                                                        e) {
+                                                            log.warn(
+                                                                    "변환 콜백 영구 실패: outboxId={},"
+                                                                            + " url={}",
+                                                                    outbox.idValue(),
+                                                                    outbox.callbackUrl(),
+                                                                    e);
+                                                            permanentFailedIds.add(
+                                                                    outbox.idValue());
+                                                        } catch (Exception e) {
+                                                            log.error(
+                                                                    "변환 콜백 전송 실패: outboxId={},"
+                                                                            + " url={}",
+                                                                    outbox.idValue(),
+                                                                    outbox.callbackUrl(),
+                                                                    e);
+                                                            failedIds.add(outbox.idValue());
+                                                        }
+                                                    }))
+                            .toList();
 
-        int totalFailed = failedIds.size() + permanentFailedIds.size();
-        return SchedulerBatchProcessingResult.of(claimed.size(), successIds.size(), totalFailed);
+            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
+            Instant now = Instant.now();
+
+            transformCallbackOutboxCommandManager.bulkMarkSent(new ArrayList<>(successIds), now);
+            transformCallbackOutboxCommandManager.bulkMarkFailed(new ArrayList<>(failedIds), now);
+
+            for (String permFailedId : permanentFailedIds) {
+                TransformCallbackOutbox outbox =
+                        claimed.stream()
+                                .filter(o -> o.idValue().equals(permFailedId))
+                                .findFirst()
+                                .orElse(null);
+                if (outbox != null) {
+                    outbox.markFailedPermanently("Permanent callback failure (4xx)", now);
+                    transformCallbackOutboxCommandManager.persist(outbox);
+                }
+            }
+
+            int totalFailed = failedIds.size() + permanentFailedIds.size();
+            return SchedulerBatchProcessingResult.of(
+                    claimed.size(), successIds.size(), totalFailed);
+        } catch (Exception e) {
+            log.error(
+                    "변환 콜백 배치 처리 중 예외 발생, PROCESSING → FAILED 복귀: count={}",
+                    claimedOutboxIds.size(),
+                    e);
+            transformCallbackOutboxCommandManager.bulkMarkFailed(claimedOutboxIds, Instant.now());
+            return SchedulerBatchProcessingResult.of(claimed.size(), 0, claimed.size());
+        }
     }
 
     private TransformCallbackPayload buildPayload(TransformCallbackOutbox outbox) {

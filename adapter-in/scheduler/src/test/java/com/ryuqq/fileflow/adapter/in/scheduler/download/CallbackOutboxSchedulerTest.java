@@ -34,7 +34,8 @@ class CallbackOutboxSchedulerTest {
                 new SchedulerProperties.CallbackOutbox(
                         true, "*/10 * * * * *", "Asia/Seoul", BATCH_SIZE);
         SchedulerProperties.Jobs jobs =
-                new SchedulerProperties.Jobs(null, null, null, null, config, null, null, null);
+                new SchedulerProperties.Jobs(
+                        null, null, null, null, config, null, null, null, null, null);
         SchedulerProperties properties = new SchedulerProperties(jobs);
 
         sut = new CallbackOutboxScheduler(useCase, properties);
