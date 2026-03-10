@@ -8,6 +8,12 @@
 # Config Import Override (환경별 설정 로드)
 # ===============================================
 spring:
+  # Scheduler Thread Pool (기본 1 → 4, outbox/callback 병렬 실행)
+  task:
+    scheduling:
+      pool:
+        size: 4
+
   config:
     import:
       - classpath:persistence.yml
