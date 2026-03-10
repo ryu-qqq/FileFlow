@@ -3,6 +3,7 @@ package com.ryuqq.fileflow.adapter.in.scheduler.transform;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 import com.ryuqq.fileflow.adapter.in.scheduler.config.SchedulerProperties;
 import com.ryuqq.fileflow.application.common.dto.result.SchedulerBatchProcessingResult;
@@ -29,28 +30,11 @@ class TransformQueueOutboxSchedulerTest {
 
     @BeforeEach
     void setUp() {
-        SchedulerProperties.DownloadZombieRecovery downloadConfig =
-                new SchedulerProperties.DownloadZombieRecovery(
-                        true, "0 */5 * * * *", "Asia/Seoul", 50, 180);
-        SchedulerProperties.TransformZombieRecovery transformConfig =
-                new SchedulerProperties.TransformZombieRecovery(
-                        true, "0 */5 * * * *", "Asia/Seoul", 50, 180);
-        SchedulerProperties.DownloadQueueOutbox downloadOutboxConfig =
-                new SchedulerProperties.DownloadQueueOutbox(
-                        true, "*/5 * * * * *", "Asia/Seoul", 100);
-        SchedulerProperties.TransformQueueOutbox transformOutboxConfig =
+        SchedulerProperties.TransformQueueOutbox config =
                 new SchedulerProperties.TransformQueueOutbox(
-                        true, "*/5 * * * * *", "Asia/Seoul", BATCH_SIZE);
+                        true, "*/10 * * * * *", "Asia/Seoul", BATCH_SIZE);
         SchedulerProperties.Jobs jobs =
-                new SchedulerProperties.Jobs(
-                        downloadConfig,
-                        transformConfig,
-                        downloadOutboxConfig,
-                        transformOutboxConfig,
-                        null,
-                        null,
-                        null,
-                        null);
+                new SchedulerProperties.Jobs(null, null, null, config, null, null, null, null);
         SchedulerProperties properties = new SchedulerProperties(jobs);
 
         sut = new TransformQueueOutboxScheduler(useCase, properties);
@@ -61,25 +45,71 @@ class TransformQueueOutboxSchedulerTest {
     class ProcessOutboxTest {
 
         @Test
-        @DisplayName("UseCase에 batchSize를 전달하여 실행한다")
-        void processOutbox_CallsUseCaseWithBatchSize() {
-            SchedulerBatchProcessingResult expected = SchedulerBatchProcessingResult.of(5, 4, 1);
-            given(useCase.execute(BATCH_SIZE)).willReturn(expected);
+        @DisplayName("빈 결과를 반환하면 즉시 종료한다")
+        void processOutbox_EmptyResult_StopsImmediately() {
+            // given
+            given(useCase.execute(BATCH_SIZE)).willReturn(SchedulerBatchProcessingResult.empty());
 
+            // when
             SchedulerBatchProcessingResult result = sut.processOutbox();
 
-            assertThat(result).isEqualTo(expected);
-            then(useCase).should().execute(BATCH_SIZE);
+            // then
+            assertThat(result.total()).isZero();
+            assertThat(result.success()).isZero();
+            assertThat(result.failed()).isZero();
+            then(useCase).should(times(1)).execute(BATCH_SIZE);
         }
 
         @Test
-        @DisplayName("처리 대상이 없으면 empty 결과를 반환한다")
-        void processOutbox_NoTargets_ReturnsEmpty() {
-            given(useCase.execute(BATCH_SIZE)).willReturn(SchedulerBatchProcessingResult.empty());
+        @DisplayName("batchSize 미만의 결과를 반환하면 1번만 호출하고 결과를 반환한다")
+        void processOutbox_PartialBatch_SingleCall() {
+            // given
+            SchedulerBatchProcessingResult expected = SchedulerBatchProcessingResult.of(50, 48, 2);
+            given(useCase.execute(BATCH_SIZE)).willReturn(expected);
 
+            // when
             SchedulerBatchProcessingResult result = sut.processOutbox();
 
-            assertThat(result.total()).isZero();
+            // then
+            assertThat(result.total()).isEqualTo(50);
+            assertThat(result.success()).isEqualTo(48);
+            assertThat(result.failed()).isEqualTo(2);
+            then(useCase).should(times(1)).execute(BATCH_SIZE);
+        }
+
+        @Test
+        @DisplayName("배치 처리 결과가 batchSize 이상이면 다음 배치를 계속 처리한다")
+        void processOutbox_FullBatch_ContinuesLoop() {
+            // given
+            given(useCase.execute(BATCH_SIZE))
+                    .willReturn(SchedulerBatchProcessingResult.of(BATCH_SIZE, BATCH_SIZE, 0))
+                    .willReturn(SchedulerBatchProcessingResult.of(30, 28, 2));
+
+            // when
+            SchedulerBatchProcessingResult result = sut.processOutbox();
+
+            // then
+            assertThat(result.total()).isEqualTo(130);
+            assertThat(result.success()).isEqualTo(128);
+            assertThat(result.failed()).isEqualTo(2);
+            then(useCase).should(times(2)).execute(BATCH_SIZE);
+        }
+
+        @Test
+        @DisplayName("MAX_LOOPS(10)에 도달하면 루프를 종료한다")
+        void processOutbox_MaxLoops_StopsAt10() {
+            // given
+            given(useCase.execute(BATCH_SIZE))
+                    .willReturn(SchedulerBatchProcessingResult.of(BATCH_SIZE, BATCH_SIZE, 0));
+
+            // when
+            SchedulerBatchProcessingResult result = sut.processOutbox();
+
+            // then
+            assertThat(result.total()).isEqualTo(BATCH_SIZE * 10);
+            assertThat(result.success()).isEqualTo(BATCH_SIZE * 10);
+            assertThat(result.failed()).isZero();
+            then(useCase).should(times(10)).execute(BATCH_SIZE);
         }
     }
 }

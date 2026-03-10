@@ -278,7 +278,7 @@ class DownloadTaskE2ETest extends E2ETestBase {
                     .post(BASE_PATH)
                     .then()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .body("code", equalTo("DOWNLOAD-005"));
+                    .body("code", equalTo("VALIDATION_FAILED"));
         }
 
         @Test

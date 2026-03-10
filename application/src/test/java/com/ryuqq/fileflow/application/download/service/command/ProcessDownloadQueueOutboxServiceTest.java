@@ -1,16 +1,15 @@
 package com.ryuqq.fileflow.application.download.service.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willDoNothing;
-import static org.mockito.BDDMockito.willThrow;
 
+import com.ryuqq.fileflow.application.common.dto.result.OutboxBatchSendResult;
 import com.ryuqq.fileflow.application.common.dto.result.SchedulerBatchProcessingResult;
 import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadQueueOutboxCommandManager;
-import com.ryuqq.fileflow.application.download.manager.query.DownloadQueueOutboxReadManager;
-import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadQueueOutbox;
 import com.ryuqq.fileflow.domain.download.id.DownloadQueueOutboxId;
 import java.time.Instant;
@@ -31,7 +30,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ProcessDownloadQueueOutboxServiceTest {
 
     @InjectMocks private ProcessDownloadQueueOutboxService sut;
-    @Mock private DownloadQueueOutboxReadManager outboxReadManager;
     @Mock private DownloadQueueOutboxCommandManager outboxCommandManager;
     @Mock private DownloadQueueManager downloadQueueManager;
 
@@ -44,7 +42,8 @@ class ProcessDownloadQueueOutboxServiceTest {
         @Test
         @DisplayName("PENDING 메시지가 없으면 empty 결과를 반환한다")
         void execute_NoPending_ReturnsEmpty() {
-            given(outboxReadManager.findPendingMessages(100)).willReturn(Collections.emptyList());
+            given(outboxCommandManager.claimPendingMessages(100))
+                    .willReturn(Collections.emptyList());
 
             SchedulerBatchProcessingResult result = sut.execute(100);
 
@@ -59,36 +58,39 @@ class ProcessDownloadQueueOutboxServiceTest {
             DownloadQueueOutbox outbox =
                     DownloadQueueOutbox.forNew(
                             DownloadQueueOutboxId.of("outbox-001"), "download-001", NOW);
-            given(outboxReadManager.findPendingMessages(100)).willReturn(List.of(outbox));
+            given(outboxCommandManager.claimPendingMessages(100)).willReturn(List.of(outbox));
+            given(downloadQueueManager.enqueueBatch(List.of("download-001")))
+                    .willReturn(OutboxBatchSendResult.allSuccess(List.of("download-001")));
 
             SchedulerBatchProcessingResult result = sut.execute(100);
 
             assertThat(result.total()).isEqualTo(1);
             assertThat(result.success()).isEqualTo(1);
             assertThat(result.failed()).isZero();
-            assertThat(outbox.status()).isEqualTo(OutboxStatus.SENT);
-            then(downloadQueueManager).should().enqueue("download-001");
-            then(outboxCommandManager).should().persist(outbox);
+            then(outboxCommandManager).should().bulkMarkSent(eq(List.of("outbox-001")), any());
         }
 
         @Test
-        @DisplayName("발행 실패 시 FAILED로 마킹한다")
-        void execute_FailedEnqueue_MarksFailed() {
+        @DisplayName("발행 실패 시 bulkMarkFailed가 호출된다")
+        void execute_FailedEnqueue_BulkMarksFailed() {
             DownloadQueueOutbox outbox =
                     DownloadQueueOutbox.forNew(
                             DownloadQueueOutboxId.of("outbox-001"), "download-001", NOW);
-            given(outboxReadManager.findPendingMessages(100)).willReturn(List.of(outbox));
-            willThrow(new RuntimeException("SQS error"))
-                    .given(downloadQueueManager)
-                    .enqueue("download-001");
+            given(outboxCommandManager.claimPendingMessages(100)).willReturn(List.of(outbox));
+            given(downloadQueueManager.enqueueBatch(List.of("download-001")))
+                    .willReturn(
+                            OutboxBatchSendResult.of(
+                                    List.of(),
+                                    List.of(
+                                            new OutboxBatchSendResult.FailedEntry(
+                                                    "download-001", "SQS error"))));
 
             SchedulerBatchProcessingResult result = sut.execute(100);
 
             assertThat(result.total()).isEqualTo(1);
             assertThat(result.success()).isZero();
             assertThat(result.failed()).isEqualTo(1);
-            assertThat(outbox.status()).isEqualTo(OutboxStatus.FAILED);
-            then(outboxCommandManager).should().persist(outbox);
+            then(outboxCommandManager).should().bulkMarkFailed(eq(List.of("outbox-001")), any());
         }
 
         @Test
@@ -100,20 +102,21 @@ class ProcessDownloadQueueOutboxServiceTest {
             DownloadQueueOutbox failOutbox =
                     DownloadQueueOutbox.forNew(
                             DownloadQueueOutboxId.of("outbox-002"), "download-002", NOW);
-            given(outboxReadManager.findPendingMessages(100))
+            given(outboxCommandManager.claimPendingMessages(100))
                     .willReturn(List.of(successOutbox, failOutbox));
-            willDoNothing().given(downloadQueueManager).enqueue("download-001");
-            willThrow(new RuntimeException("SQS error"))
-                    .given(downloadQueueManager)
-                    .enqueue("download-002");
+            given(downloadQueueManager.enqueueBatch(List.of("download-001", "download-002")))
+                    .willReturn(
+                            OutboxBatchSendResult.of(
+                                    List.of("download-001"),
+                                    List.of(
+                                            new OutboxBatchSendResult.FailedEntry(
+                                                    "download-002", "SQS error"))));
 
             SchedulerBatchProcessingResult result = sut.execute(100);
 
             assertThat(result.total()).isEqualTo(2);
             assertThat(result.success()).isEqualTo(1);
             assertThat(result.failed()).isEqualTo(1);
-            assertThat(successOutbox.status()).isEqualTo(OutboxStatus.SENT);
-            assertThat(failOutbox.status()).isEqualTo(OutboxStatus.FAILED);
         }
     }
 }

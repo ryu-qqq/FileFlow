@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
         matchIfMissing = true)
 public class TransformCallbackOutboxScheduler {
 
+    private static final int MAX_LOOPS = 10;
+
     private final ProcessTransformCallbackOutboxUseCase processTransformCallbackOutboxUseCase;
     private final SchedulerProperties.TransformCallbackOutbox config;
 
@@ -31,6 +33,15 @@ public class TransformCallbackOutboxScheduler {
             zone = "${scheduler.jobs.transform-callback-outbox.timezone}")
     @SchedulerJob("TransformCallbackOutbox")
     public SchedulerBatchProcessingResult processOutbox() {
-        return processTransformCallbackOutboxUseCase.execute(config.batchSize());
+        SchedulerBatchProcessingResult total = SchedulerBatchProcessingResult.empty();
+        for (int i = 0; i < MAX_LOOPS; i++) {
+            SchedulerBatchProcessingResult result =
+                    processTransformCallbackOutboxUseCase.execute(config.batchSize());
+            total = total.merge(result);
+            if (result.total() < config.batchSize()) {
+                break;
+            }
+        }
+        return total;
     }
 }

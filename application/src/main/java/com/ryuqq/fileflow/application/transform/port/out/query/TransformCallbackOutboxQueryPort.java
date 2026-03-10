@@ -6,4 +6,6 @@ import java.util.List;
 public interface TransformCallbackOutboxQueryPort {
 
     List<TransformCallbackOutbox> findPendingMessages(int limit);
+
+    List<TransformCallbackOutbox> claimPendingMessages(int limit);
 }
