@@ -131,10 +131,22 @@ class DownloadQueueOutboxQueryAdapterTest {
         void claimPendingMessages_Claimed_ReturnsProcessingOutboxes() {
             DownloadQueueOutboxJpaEntity entity1 =
                     DownloadQueueOutboxJpaEntity.create(
-                            "outbox-001", "download-001", OutboxStatus.PROCESSING, 0, null, NOW, null);
+                            "outbox-001",
+                            "download-001",
+                            OutboxStatus.PROCESSING,
+                            0,
+                            null,
+                            NOW,
+                            null);
             DownloadQueueOutboxJpaEntity entity2 =
                     DownloadQueueOutboxJpaEntity.create(
-                            "outbox-002", "download-002", OutboxStatus.PROCESSING, 0, null, NOW, null);
+                            "outbox-002",
+                            "download-002",
+                            OutboxStatus.PROCESSING,
+                            0,
+                            null,
+                            NOW,
+                            null);
             DownloadQueueOutbox domain1 =
                     DownloadQueueOutbox.forNew(
                             DownloadQueueOutboxId.of("outbox-001"), "download-001", NOW);
@@ -142,8 +154,9 @@ class DownloadQueueOutboxQueryAdapterTest {
                     DownloadQueueOutbox.forNew(
                             DownloadQueueOutboxId.of("outbox-002"), "download-002", NOW);
 
-            given(jpaRepository.claimPending(
-                            ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
+            given(
+                            jpaRepository.claimPending(
+                                    ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
                     .willReturn(2);
             given(jpaRepository.findByStatus(OutboxStatus.PROCESSING))
                     .willReturn(List.of(entity1, entity2));
@@ -160,8 +173,9 @@ class DownloadQueueOutboxQueryAdapterTest {
         @Test
         @DisplayName("claimed == 0이면 빈 리스트를 반환한다")
         void claimPendingMessages_NoClaimed_ReturnsEmpty() {
-            given(jpaRepository.claimPending(
-                            ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
+            given(
+                            jpaRepository.claimPending(
+                                    ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
                     .willReturn(0);
 
             List<DownloadQueueOutbox> result = sut.claimPendingMessages(100);
