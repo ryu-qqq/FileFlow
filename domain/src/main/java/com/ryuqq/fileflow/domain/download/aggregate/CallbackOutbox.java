@@ -99,16 +99,13 @@ public class CallbackOutbox {
         this.processedAt = now;
     }
 
-    /** 재시도 가능한 실패 처리. retryCount < maxRetries면 PENDING 유지, 아니면 FAILED. */
+    /** 재시도 가능한 실패 처리. retryCount < maxRetries면 PENDING 복귀(재시도), 아니면 FAILED. */
     public void markFailed(String errorMessage, Instant now) {
         this.lastError = errorMessage;
         this.retryCount++;
         this.processedAt = now;
-
-        if (this.retryCount >= this.maxRetries) {
-            this.outboxStatus = OutboxStatus.FAILED;
-        }
-        // retryCount < maxRetries → PENDING 유지 → 다음 스케줄러에서 재시도
+        this.outboxStatus =
+                (this.retryCount >= this.maxRetries) ? OutboxStatus.FAILED : OutboxStatus.PENDING;
     }
 
     /** 재시도 불필요한 영구 실패 처리 (4xx 등). */

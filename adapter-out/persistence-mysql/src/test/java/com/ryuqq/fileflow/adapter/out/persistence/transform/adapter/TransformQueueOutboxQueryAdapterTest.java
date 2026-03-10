@@ -127,4 +127,66 @@ class TransformQueueOutboxQueryAdapterTest {
             assertThat(result.failed()).isZero();
         }
     }
+
+    @Nested
+    @DisplayName("claimPendingMessages 메서드")
+    class ClaimPendingMessagesTest {
+
+        @Test
+        @DisplayName("claimed > 0이면 PROCESSING 상태 아웃박스를 반환한다")
+        void claimPendingMessages_Claimed_ReturnsProcessingOutboxes() {
+            TransformQueueOutboxJpaEntity entity1 =
+                    TransformQueueOutboxJpaEntity.create(
+                            "outbox-001",
+                            "transform-001",
+                            OutboxStatus.PROCESSING,
+                            0,
+                            null,
+                            NOW,
+                            null);
+            TransformQueueOutboxJpaEntity entity2 =
+                    TransformQueueOutboxJpaEntity.create(
+                            "outbox-002",
+                            "transform-002",
+                            OutboxStatus.PROCESSING,
+                            0,
+                            null,
+                            NOW,
+                            null);
+            TransformQueueOutbox domain1 =
+                    TransformQueueOutbox.forNew(
+                            TransformQueueOutboxId.of("outbox-001"), "transform-001", NOW);
+            TransformQueueOutbox domain2 =
+                    TransformQueueOutbox.forNew(
+                            TransformQueueOutboxId.of("outbox-002"), "transform-002", NOW);
+
+            given(
+                            jpaRepository.claimPending(
+                                    ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
+                    .willReturn(2);
+            given(jpaRepository.findByStatus(OutboxStatus.PROCESSING))
+                    .willReturn(List.of(entity1, entity2));
+            given(mapper.toDomain(entity1)).willReturn(domain1);
+            given(mapper.toDomain(entity2)).willReturn(domain2);
+
+            List<TransformQueueOutbox> result = sut.claimPendingMessages(100);
+
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).idValue()).isEqualTo("outbox-001");
+            assertThat(result.get(1).idValue()).isEqualTo("outbox-002");
+        }
+
+        @Test
+        @DisplayName("claimed == 0이면 빈 리스트를 반환한다")
+        void claimPendingMessages_NoClaimed_ReturnsEmpty() {
+            given(
+                            jpaRepository.claimPending(
+                                    ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
+                    .willReturn(0);
+
+            List<TransformQueueOutbox> result = sut.claimPendingMessages(100);
+
+            assertThat(result).isEmpty();
+        }
+    }
 }

@@ -10,9 +10,11 @@ import java.util.Objects;
  *
  * <p>변환 요청 생성 시 SQS 발행을 트랜잭션과 분리하기 위한 아웃박스 패턴 구현체입니다.
  *
- * <p>라이프사이클: PENDING -> SENT | FAILED
+ * <p>라이프사이클: PENDING -> SENT | FAILED (maxRetries 초과 시)
  */
 public class TransformQueueOutbox {
+
+    private static final int DEFAULT_MAX_RETRIES = 5;
 
     private final TransformQueueOutboxId id;
     private final String transformRequestId;
@@ -63,12 +65,15 @@ public class TransformQueueOutbox {
         this.processedAt = now;
     }
 
-    /** SQS 발행 실패 처리. */
+    /** SQS 발행 실패 처리. retryCount < maxRetries면 PENDING 복귀(재시도), 아니면 FAILED. */
     public void markFailed(String errorMessage, Instant now) {
-        this.status = OutboxStatus.FAILED;
         this.lastError = errorMessage;
         this.retryCount++;
         this.processedAt = now;
+        this.status =
+                (this.retryCount >= DEFAULT_MAX_RETRIES)
+                        ? OutboxStatus.FAILED
+                        : OutboxStatus.PENDING;
     }
 
     // -- query methods --

@@ -61,8 +61,8 @@ class DownloadQueueOutboxTest {
     class MarkFailedTest {
 
         @Test
-        @DisplayName("FAILED 상태로 전환되고 retryCount가 증가한다")
-        void markFailed_TransitionsToFailedAndIncrementsRetry() {
+        @DisplayName("maxRetries 미만이면 PENDING 상태를 유지하고 retryCount가 증가한다")
+        void markFailed_StaysPendingWhenBelowMaxRetries() {
             DownloadQueueOutbox outbox =
                     DownloadQueueOutbox.forNew(
                             DownloadQueueOutboxId.of("outbox-001"), "download-001", NOW);
@@ -70,10 +70,25 @@ class DownloadQueueOutboxTest {
 
             outbox.markFailed("SQS connection error", failedAt);
 
-            assertThat(outbox.status()).isEqualTo(OutboxStatus.FAILED);
+            assertThat(outbox.status()).isEqualTo(OutboxStatus.PENDING);
             assertThat(outbox.retryCount()).isEqualTo(1);
             assertThat(outbox.lastError()).isEqualTo("SQS connection error");
             assertThat(outbox.processedAt()).isEqualTo(failedAt);
+        }
+
+        @Test
+        @DisplayName("maxRetries 도달 시 FAILED 상태로 전환된다")
+        void markFailed_TransitionsToFailedWhenMaxRetriesReached() {
+            DownloadQueueOutbox outbox =
+                    DownloadQueueOutbox.forNew(
+                            DownloadQueueOutboxId.of("outbox-001"), "download-001", NOW);
+
+            for (int i = 0; i < 5; i++) {
+                outbox.markFailed("SQS error #" + (i + 1), NOW.plusSeconds(i + 1));
+            }
+
+            assertThat(outbox.status()).isEqualTo(OutboxStatus.FAILED);
+            assertThat(outbox.retryCount()).isEqualTo(5);
         }
     }
 

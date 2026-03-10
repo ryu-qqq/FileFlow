@@ -271,3 +271,15 @@ resource "aws_ssm_parameter" "file_processing_dlq_url" {
     Environment = var.environment
   }
 }
+
+resource "aws_ssm_parameter" "sqs_kms_key_arn" {
+  name        = "/${var.project_name}/sqs/kms-key-arn"
+  description = "FileFlow SQS KMS key ARN"
+  type        = "String"
+  value       = aws_kms_key.sqs.arn
+
+  tags = {
+    Name        = "${var.project_name}-sqs-kms-key-arn"
+    Environment = var.environment
+  }
+}

@@ -8,6 +8,18 @@
 # Config Import Override (환경별 설정 로드)
 # ===============================================
 spring:
+  # Scheduler Thread Pool (기본 1 → 4, outbox/callback 병렬 실행)
+  task:
+    scheduling:
+      pool:
+        size: 4
+
+  # Scheduler HikariCP (thread pool 4 대비 마진 확보)
+  datasource:
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 8
+
   config:
     import:
       - classpath:persistence.yml

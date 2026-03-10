@@ -11,7 +11,7 @@ spring:
         static: ${AWS_REGION:ap-northeast-2}
       sqs:
         listener:
-          max-concurrent-messages: ${SQS_MAX_CONCURRENT_MESSAGES:10}
+          max-concurrent-messages: ${SQS_MAX_CONCURRENT_MESSAGES:50}
           max-messages-per-poll: ${SQS_MAX_MESSAGES_PER_POLL:10}
 
 logging:
