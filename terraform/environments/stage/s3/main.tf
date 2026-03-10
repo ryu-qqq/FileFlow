@@ -23,10 +23,71 @@ locals {
 # ============================================================================
 # KMS Key for S3 Encryption
 # ============================================================================
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "kms_key_policy" {
+  # Root account full access (기본 정책 유지 필수)
+  statement {
+    sid    = "EnableIAMUserPermissions"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+
+  # CloudFront SSE-KMS access (기존 정책 유지)
+  statement {
+    sid    = "AllowCloudFrontServicePrincipalSSEKMS"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey*"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = ["arn:aws:cloudfront::646886795421:distribution/ESSYK8T91BBIT"]
+    }
+  }
+
+  # Shadow Traffic role KMS access
+  statement {
+    sid    = "AllowShadowTrafficKMSEncrypt"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::646886795421:role/setof-commerce-shadow-traffic-task-role-stage"]
+    }
+
+    actions = [
+      "kms:GenerateDataKey",
+      "kms:Decrypt"
+    ]
+
+    resources = ["*"]
+  }
+}
+
 resource "aws_kms_key" "s3" {
   description             = "KMS key for FileFlow S3 bucket encryption (stage)"
   deletion_window_in_days = 30
   enable_key_rotation     = true
+  policy                  = data.aws_iam_policy_document.kms_key_policy.json
 
   tags = {
     Name        = "${var.project_name}-s3-kms-${var.environment}"
