@@ -70,6 +70,24 @@ scheduler:
       # 배치 크기
       batch-size: 100
 
+    # 다운로드 Outbox PROCESSING 복구 스케줄러
+    download-outbox-recovery:
+      enabled: true
+      # Cron: 5분마다 (환경별 오버라이드 가능)
+      cron: "0 */5 * * * *"
+      timezone: Asia/Seoul
+      # PROCESSING 상태 유지 기준 시간 (분)
+      stuck-minutes: 5
+
+    # 변환 Outbox PROCESSING 복구 스케줄러
+    transform-outbox-recovery:
+      enabled: true
+      # Cron: 5분마다 (환경별 오버라이드 가능)
+      cron: "0 */5 * * * *"
+      timezone: Asia/Seoul
+      # PROCESSING 상태 유지 기준 시간 (분)
+      stuck-minutes: 5
+
     # 단건 세션 좀비 복구 스케줄러
     single-session-zombie-recovery:
       enabled: true

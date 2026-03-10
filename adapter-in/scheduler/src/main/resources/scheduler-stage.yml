@@ -38,6 +38,16 @@ scheduler:
       cron: "*/5 * * * * *"
       batch-size: 50
 
+    download-outbox-recovery:
+      # 스테이징: 3분마다
+      cron: "0 */3 * * * *"
+      stuck-minutes: 3
+
+    transform-outbox-recovery:
+      # 스테이징: 3분마다
+      cron: "0 */3 * * * *"
+      stuck-minutes: 3
+
     single-session-zombie-recovery:
       # 스테이징: 3분마다
       cron: "0 */3 * * * *"
