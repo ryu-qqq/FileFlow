@@ -5,6 +5,8 @@ import com.ryuqq.fileflow.adapter.out.persistence.download.mapper.CallbackOutbox
 import com.ryuqq.fileflow.adapter.out.persistence.download.repository.CallbackOutboxJpaRepository;
 import com.ryuqq.fileflow.application.download.port.out.command.CallbackOutboxPersistencePort;
 import com.ryuqq.fileflow.domain.download.aggregate.CallbackOutbox;
+import java.time.Instant;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,5 +25,17 @@ public class CallbackOutboxCommandAdapter implements CallbackOutboxPersistencePo
     public void persist(CallbackOutbox callbackOutbox) {
         CallbackOutboxJpaEntity entity = mapper.toEntity(callbackOutbox);
         jpaRepository.save(entity);
+    }
+
+    @Override
+    public void bulkMarkSent(List<String> ids, Instant now) {
+        if (ids.isEmpty()) return;
+        jpaRepository.bulkMarkSent(ids, now);
+    }
+
+    @Override
+    public void bulkMarkFailed(List<String> ids, Instant now) {
+        if (ids.isEmpty()) return;
+        jpaRepository.bulkMarkFailed(ids, now);
     }
 }

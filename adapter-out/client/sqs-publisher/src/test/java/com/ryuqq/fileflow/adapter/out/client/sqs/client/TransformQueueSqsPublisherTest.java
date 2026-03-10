@@ -18,12 +18,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Tag("unit")
 @DisplayName("TransformQueueSqsPublisher 단위 테스트")
 class TransformQueueSqsPublisherTest {
 
     private SqsTemplate sqsTemplate;
+    private SqsAsyncClient sqsAsyncClient;
     private SqsPublisherProperties properties;
     private TransformQueueSqsPublisher sut;
 
@@ -32,10 +34,11 @@ class TransformQueueSqsPublisherTest {
     @BeforeEach
     void setUp() {
         sqsTemplate = mock(SqsTemplate.class);
+        sqsAsyncClient = mock(SqsAsyncClient.class);
         properties = mock(SqsPublisherProperties.class);
         given(properties.transformQueue()).willReturn(QUEUE_NAME);
         given(sqsTemplate.send(any(Consumer.class))).willReturn(mock(SendResult.class));
-        sut = new TransformQueueSqsPublisher(sqsTemplate, properties);
+        sut = new TransformQueueSqsPublisher(sqsTemplate, sqsAsyncClient, properties);
     }
 
     @AfterEach

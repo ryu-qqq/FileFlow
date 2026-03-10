@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
         matchIfMissing = true)
 public class DownloadQueueOutboxScheduler {
 
+    private static final int MAX_LOOPS = 10;
+
     private final ProcessDownloadQueueOutboxUseCase processDownloadQueueOutboxUseCase;
     private final SchedulerProperties.DownloadQueueOutbox config;
 
@@ -31,6 +33,15 @@ public class DownloadQueueOutboxScheduler {
             zone = "${scheduler.jobs.download-queue-outbox.timezone}")
     @SchedulerJob("DownloadQueueOutbox")
     public SchedulerBatchProcessingResult processOutbox() {
-        return processDownloadQueueOutboxUseCase.execute(config.batchSize());
+        SchedulerBatchProcessingResult total = SchedulerBatchProcessingResult.empty();
+        for (int i = 0; i < MAX_LOOPS; i++) {
+            SchedulerBatchProcessingResult result =
+                    processDownloadQueueOutboxUseCase.execute(config.batchSize());
+            total = total.merge(result);
+            if (result.total() < config.batchSize()) {
+                break;
+            }
+        }
+        return total;
     }
 }

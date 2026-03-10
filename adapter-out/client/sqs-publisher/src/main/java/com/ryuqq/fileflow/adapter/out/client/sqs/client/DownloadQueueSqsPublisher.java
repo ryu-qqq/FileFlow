@@ -1,12 +1,25 @@
 package com.ryuqq.fileflow.adapter.out.client.sqs.client;
 
 import com.ryuqq.fileflow.adapter.out.client.sqs.config.SqsPublisherProperties;
+import com.ryuqq.fileflow.application.common.dto.result.OutboxBatchSendResult;
 import com.ryuqq.fileflow.application.download.port.out.client.DownloadQueueClient;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
+import software.amazon.awssdk.services.sqs.model.BatchResultErrorEntry;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchResponse;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchResultEntry;
 
 @Component
 public class DownloadQueueSqsPublisher implements DownloadQueueClient {
@@ -14,10 +27,17 @@ public class DownloadQueueSqsPublisher implements DownloadQueueClient {
     private static final Logger log = LoggerFactory.getLogger(DownloadQueueSqsPublisher.class);
 
     private final SqsTemplate sqsTemplate;
+    private final SqsAsyncClient sqsAsyncClient;
     private final SqsPublisherProperties properties;
 
-    public DownloadQueueSqsPublisher(SqsTemplate sqsTemplate, SqsPublisherProperties properties) {
+    private volatile String cachedQueueUrl;
+
+    public DownloadQueueSqsPublisher(
+            SqsTemplate sqsTemplate,
+            SqsAsyncClient sqsAsyncClient,
+            SqsPublisherProperties properties) {
         this.sqsTemplate = sqsTemplate;
+        this.sqsAsyncClient = sqsAsyncClient;
         this.properties = properties;
     }
 
@@ -34,5 +54,100 @@ public class DownloadQueueSqsPublisher implements DownloadQueueClient {
                                 .header("traceId", traceId != null ? traceId : ""));
 
         log.info("다운로드 큐 발행 완료: taskId={}", downloadTaskId);
+    }
+
+    @Override
+    public OutboxBatchSendResult enqueueBatch(List<String> downloadTaskIds) {
+        if (downloadTaskIds.isEmpty()) {
+            return OutboxBatchSendResult.allSuccess(List.of());
+        }
+
+        String queueUrl = getQueueUrl();
+        String traceId = MDC.get("traceId");
+
+        List<String> allSuccessIds = new ArrayList<>();
+        List<OutboxBatchSendResult.FailedEntry> allFailedEntries = new ArrayList<>();
+
+        List<List<String>> chunks = partition(downloadTaskIds, 10);
+
+        for (List<String> chunk : chunks) {
+            List<SendMessageBatchRequestEntry> entries = new ArrayList<>();
+            for (int i = 0; i < chunk.size(); i++) {
+                String taskId = chunk.get(i);
+                Map<String, MessageAttributeValue> attributes = new HashMap<>();
+                if (traceId != null && !traceId.isBlank()) {
+                    attributes.put(
+                            "traceId",
+                            MessageAttributeValue.builder()
+                                    .dataType("String")
+                                    .stringValue(traceId)
+                                    .build());
+                }
+                entries.add(
+                        SendMessageBatchRequestEntry.builder()
+                                .id(String.valueOf(i))
+                                .messageBody(taskId)
+                                .messageAttributes(attributes)
+                                .build());
+            }
+
+            try {
+                SendMessageBatchResponse response =
+                        sqsAsyncClient
+                                .sendMessageBatch(
+                                        SendMessageBatchRequest.builder()
+                                                .queueUrl(queueUrl)
+                                                .entries(entries)
+                                                .build())
+                                .join();
+
+                for (SendMessageBatchResultEntry success : response.successful()) {
+                    int idx = Integer.parseInt(success.id());
+                    allSuccessIds.add(chunk.get(idx));
+                }
+                for (BatchResultErrorEntry error : response.failed()) {
+                    int idx = Integer.parseInt(error.id());
+                    allFailedEntries.add(
+                            new OutboxBatchSendResult.FailedEntry(chunk.get(idx), error.message()));
+                }
+            } catch (Exception e) {
+                for (String taskId : chunk) {
+                    allFailedEntries.add(
+                            new OutboxBatchSendResult.FailedEntry(taskId, e.getMessage()));
+                }
+            }
+        }
+
+        log.info(
+                "다운로드 큐 배치 발행 완료: success={}, failed={}",
+                allSuccessIds.size(),
+                allFailedEntries.size());
+        return OutboxBatchSendResult.of(allSuccessIds, allFailedEntries);
+    }
+
+    private String getQueueUrl() {
+        if (cachedQueueUrl == null) {
+            cachedQueueUrl = resolveQueueUrl(properties.downloadQueue());
+        }
+        return cachedQueueUrl;
+    }
+
+    private String resolveQueueUrl(String queueName) {
+        try {
+            return sqsAsyncClient
+                    .getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build())
+                    .join()
+                    .queueUrl();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to resolve queue URL for: " + queueName, e);
+        }
+    }
+
+    private static <T> List<List<T>> partition(List<T> list, int size) {
+        List<List<T>> partitions = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += size) {
+            partitions.add(list.subList(i, Math.min(i + size, list.size())));
+        }
+        return partitions;
     }
 }

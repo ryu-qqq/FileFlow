@@ -25,4 +25,12 @@ public interface DownloadQueueOutboxQueryPort {
      * @return 상태별 카운트
      */
     OutboxStatusCount countGroupByStatus(DateRange dateRange);
+
+    /**
+     * PENDING 상태의 아웃박스 메시지를 원자적으로 선점(claim)하여 조회
+     *
+     * @param limit 최대 조회 수
+     * @return 선점된 PENDING 상태 아웃박스 목록
+     */
+    List<DownloadQueueOutbox> claimPendingMessages(int limit);
 }
