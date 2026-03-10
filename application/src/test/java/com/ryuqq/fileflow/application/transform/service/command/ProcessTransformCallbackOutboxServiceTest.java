@@ -12,7 +12,6 @@ import com.ryuqq.fileflow.application.download.exception.PermanentCallbackFailur
 import com.ryuqq.fileflow.application.transform.dto.response.TransformCallbackPayload;
 import com.ryuqq.fileflow.application.transform.manager.client.TransformCallbackNotificationManager;
 import com.ryuqq.fileflow.application.transform.manager.command.TransformCallbackOutboxCommandManager;
-import com.ryuqq.fileflow.application.transform.manager.query.TransformCallbackOutboxReadManager;
 import com.ryuqq.fileflow.application.transform.manager.query.TransformReadManager;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformCallbackOutbox;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformRequest;
@@ -35,7 +34,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ProcessTransformCallbackOutboxServiceTest {
 
     @InjectMocks private ProcessTransformCallbackOutboxService sut;
-    @Mock private TransformCallbackOutboxReadManager transformCallbackOutboxReadManager;
     @Mock private TransformCallbackOutboxCommandManager transformCallbackOutboxCommandManager;
     @Mock private TransformCallbackNotificationManager transformCallbackNotificationManager;
     @Mock private TransformReadManager transformReadManager;
@@ -49,20 +47,17 @@ class ProcessTransformCallbackOutboxServiceTest {
         @Test
         @DisplayName("PENDING 아웃박스가 없으면 empty 결과를 반환한다")
         void execute_NoPending_ReturnsEmpty() {
-            // given
-            given(transformCallbackOutboxReadManager.findPendingMessages(10)).willReturn(List.of());
+            given(transformCallbackOutboxCommandManager.claimPendingMessages(10))
+                    .willReturn(List.of());
 
-            // when
             SchedulerBatchProcessingResult result = sut.execute(10);
 
-            // then
             assertThat(result.total()).isZero();
         }
 
         @Test
-        @DisplayName("COMPLETED 상태 콜백 전송 성공 시 SENT로 마킹한다")
+        @DisplayName("COMPLETED 상태 콜백 전송 성공 시 bulkMarkSent가 호출된다")
         void execute_CompletedCallback_Success() {
-            // given
             TransformCallbackOutbox outbox =
                     TransformCallbackOutbox.forNew(
                             TransformCallbackOutboxId.of("outbox-001"),
@@ -72,14 +67,12 @@ class ProcessTransformCallbackOutboxServiceTest {
                             NOW);
             TransformRequest request = TransformRequestFixture.aCompletedRequest();
 
-            given(transformCallbackOutboxReadManager.findPendingMessages(10))
+            given(transformCallbackOutboxCommandManager.claimPendingMessages(10))
                     .willReturn(List.of(outbox));
             given(transformReadManager.getTransformRequest("transform-001")).willReturn(request);
 
-            // when
             SchedulerBatchProcessingResult result = sut.execute(10);
 
-            // then
             assertThat(result.total()).isEqualTo(1);
             assertThat(result.success()).isEqualTo(1);
             assertThat(result.failed()).isZero();
@@ -88,13 +81,14 @@ class ProcessTransformCallbackOutboxServiceTest {
                     .notify(
                             eq("https://callback.example.com/done"),
                             any(TransformCallbackPayload.class));
-            then(transformCallbackOutboxCommandManager).should().persist(outbox);
+            then(transformCallbackOutboxCommandManager)
+                    .should()
+                    .bulkMarkSent(eq(List.of("outbox-001")), any());
         }
 
         @Test
-        @DisplayName("FAILED 상태 콜백 전송 성공 시 SENT로 마킹한다")
+        @DisplayName("FAILED 상태 콜백 전송 성공 시 bulkMarkSent가 호출된다")
         void execute_FailedCallback_Success() {
-            // given
             TransformCallbackOutbox outbox =
                     TransformCallbackOutbox.forNew(
                             TransformCallbackOutboxId.of("outbox-002"),
@@ -104,21 +98,18 @@ class ProcessTransformCallbackOutboxServiceTest {
                             NOW);
             TransformRequest request = TransformRequestFixture.aFailedRequest();
 
-            given(transformCallbackOutboxReadManager.findPendingMessages(10))
+            given(transformCallbackOutboxCommandManager.claimPendingMessages(10))
                     .willReturn(List.of(outbox));
             given(transformReadManager.getTransformRequest("transform-002")).willReturn(request);
 
-            // when
             SchedulerBatchProcessingResult result = sut.execute(10);
 
-            // then
             assertThat(result.success()).isEqualTo(1);
         }
 
         @Test
         @DisplayName("PermanentCallbackFailureException 발생 시 영구 실패로 마킹한다")
         void execute_PermanentFailure_MarksFailedPermanently() {
-            // given
             TransformCallbackOutbox outbox =
                     TransformCallbackOutbox.forNew(
                             TransformCallbackOutboxId.of("outbox-003"),
@@ -128,25 +119,22 @@ class ProcessTransformCallbackOutboxServiceTest {
                             NOW);
             TransformRequest request = TransformRequestFixture.aCompletedRequest();
 
-            given(transformCallbackOutboxReadManager.findPendingMessages(10))
+            given(transformCallbackOutboxCommandManager.claimPendingMessages(10))
                     .willReturn(List.of(outbox));
             given(transformReadManager.getTransformRequest("transform-001")).willReturn(request);
             willThrow(new PermanentCallbackFailureException("404 Not Found"))
                     .given(transformCallbackNotificationManager)
                     .notify(any(), any());
 
-            // when
             SchedulerBatchProcessingResult result = sut.execute(10);
 
-            // then
             assertThat(result.failed()).isEqualTo(1);
             then(transformCallbackOutboxCommandManager).should().persist(outbox);
         }
 
         @Test
-        @DisplayName("일반 예외 발생 시 재시도 가능한 실패로 마킹한다")
-        void execute_GeneralException_MarksFailedWithRetry() {
-            // given
+        @DisplayName("일반 예외 발생 시 bulkMarkFailed가 호출된다")
+        void execute_GeneralException_BulkMarksFailed() {
             TransformCallbackOutbox outbox =
                     TransformCallbackOutbox.forNew(
                             TransformCallbackOutboxId.of("outbox-004"),
@@ -156,19 +144,19 @@ class ProcessTransformCallbackOutboxServiceTest {
                             NOW);
             TransformRequest request = TransformRequestFixture.aCompletedRequest();
 
-            given(transformCallbackOutboxReadManager.findPendingMessages(10))
+            given(transformCallbackOutboxCommandManager.claimPendingMessages(10))
                     .willReturn(List.of(outbox));
             given(transformReadManager.getTransformRequest("transform-001")).willReturn(request);
             willThrow(new RuntimeException("Connection refused"))
                     .given(transformCallbackNotificationManager)
                     .notify(any(), any());
 
-            // when
             SchedulerBatchProcessingResult result = sut.execute(10);
 
-            // then
             assertThat(result.failed()).isEqualTo(1);
-            then(transformCallbackOutboxCommandManager).should().persist(outbox);
+            then(transformCallbackOutboxCommandManager)
+                    .should()
+                    .bulkMarkFailed(eq(List.of("outbox-004")), any());
         }
     }
 }

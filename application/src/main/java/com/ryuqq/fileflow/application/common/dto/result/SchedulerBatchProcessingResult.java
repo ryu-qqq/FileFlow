@@ -22,4 +22,9 @@ public record SchedulerBatchProcessingResult(int total, int success, int failed)
     public boolean hasFailures() {
         return failed > 0;
     }
+
+    public SchedulerBatchProcessingResult merge(SchedulerBatchProcessingResult other) {
+        return new SchedulerBatchProcessingResult(
+                this.total + other.total, this.success + other.success, this.failed + other.failed);
+    }
 }

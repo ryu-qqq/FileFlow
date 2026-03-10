@@ -1,9 +1,9 @@
 package com.ryuqq.fileflow.application.download.service.command;
 
+import com.ryuqq.fileflow.application.common.dto.result.OutboxBatchSendResult;
 import com.ryuqq.fileflow.application.common.dto.result.SchedulerBatchProcessingResult;
 import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadQueueOutboxCommandManager;
-import com.ryuqq.fileflow.application.download.manager.query.DownloadQueueOutboxReadManager;
 import com.ryuqq.fileflow.application.download.port.in.command.ProcessDownloadQueueOutboxUseCase;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadQueueOutbox;
 import java.time.Instant;
@@ -18,47 +18,55 @@ public class ProcessDownloadQueueOutboxService implements ProcessDownloadQueueOu
     private static final Logger log =
             LoggerFactory.getLogger(ProcessDownloadQueueOutboxService.class);
 
-    private final DownloadQueueOutboxReadManager outboxReadManager;
     private final DownloadQueueOutboxCommandManager outboxCommandManager;
     private final DownloadQueueManager downloadQueueManager;
 
     public ProcessDownloadQueueOutboxService(
-            DownloadQueueOutboxReadManager outboxReadManager,
             DownloadQueueOutboxCommandManager outboxCommandManager,
             DownloadQueueManager downloadQueueManager) {
-        this.outboxReadManager = outboxReadManager;
         this.outboxCommandManager = outboxCommandManager;
         this.downloadQueueManager = downloadQueueManager;
     }
 
     @Override
     public SchedulerBatchProcessingResult execute(int batchSize) {
-        List<DownloadQueueOutbox> pending = outboxReadManager.findPendingMessages(batchSize);
-        if (pending.isEmpty()) {
+        List<DownloadQueueOutbox> claimed = outboxCommandManager.claimPendingMessages(batchSize);
+        if (claimed.isEmpty()) {
             return SchedulerBatchProcessingResult.empty();
         }
 
-        int success = 0;
-        int failed = 0;
+        List<String> taskIds = claimed.stream().map(DownloadQueueOutbox::downloadTaskId).toList();
+
+        OutboxBatchSendResult sendResult = downloadQueueManager.enqueueBatch(taskIds);
 
         Instant now = Instant.now();
-        for (DownloadQueueOutbox outbox : pending) {
-            try {
-                downloadQueueManager.enqueue(outbox.downloadTaskId());
-                outbox.markSent(now);
-                success++;
-            } catch (Exception e) {
-                log.error(
-                        "다운로드 큐 아웃박스 발행 실패: outboxId={}, downloadTaskId={}",
-                        outbox.idValue(),
-                        outbox.downloadTaskId(),
-                        e);
-                outbox.markFailed(e.getMessage(), now);
-                failed++;
-            }
-            outboxCommandManager.persist(outbox);
+
+        List<String> successOutboxIds =
+                claimed.stream()
+                        .filter(o -> sendResult.successIds().contains(o.downloadTaskId()))
+                        .map(DownloadQueueOutbox::idValue)
+                        .toList();
+        outboxCommandManager.bulkMarkSent(successOutboxIds, now);
+
+        List<String> failedOutboxIds =
+                claimed.stream()
+                        .filter(
+                                o ->
+                                        sendResult.failedEntries().stream()
+                                                .anyMatch(f -> f.id().equals(o.downloadTaskId())))
+                        .map(DownloadQueueOutbox::idValue)
+                        .toList();
+        outboxCommandManager.bulkMarkFailed(failedOutboxIds, now);
+
+        if (sendResult.hasFailures()) {
+            log.warn(
+                    "다운로드 큐 배치 발행 부분 실패: total={}, success={}, failed={}",
+                    claimed.size(),
+                    successOutboxIds.size(),
+                    failedOutboxIds.size());
         }
 
-        return SchedulerBatchProcessingResult.of(pending.size(), success, failed);
+        return SchedulerBatchProcessingResult.of(
+                claimed.size(), successOutboxIds.size(), failedOutboxIds.size());
     }
 }

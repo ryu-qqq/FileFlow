@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class TransformQueueOutboxQueryAdapter implements TransformQueueOutboxQueryPort {
@@ -43,6 +44,19 @@ public class TransformQueueOutboxQueryAdapter implements TransformQueueOutboxQue
 
         List<Object[]> rows = jpaRepository.countGroupByOutboxStatus(startInstant, endInstant);
         return toOutboxStatusCount(rows);
+    }
+
+    @Override
+    @Transactional
+    public List<TransformQueueOutbox> claimPendingMessages(int limit) {
+        Instant now = Instant.now();
+        int claimed = jpaRepository.claimPending(limit, now);
+        if (claimed == 0) {
+            return List.of();
+        }
+        return jpaRepository.findByStatus(OutboxStatus.PROCESSING).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     private OutboxStatusCount toOutboxStatusCount(List<Object[]> rows) {

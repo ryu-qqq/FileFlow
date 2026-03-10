@@ -1,15 +1,15 @@
 package com.ryuqq.fileflow.application.transform.service.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
 
+import com.ryuqq.fileflow.application.common.dto.result.OutboxBatchSendResult;
 import com.ryuqq.fileflow.application.common.dto.result.SchedulerBatchProcessingResult;
 import com.ryuqq.fileflow.application.transform.manager.client.TransformQueueManager;
 import com.ryuqq.fileflow.application.transform.manager.command.TransformQueueOutboxCommandManager;
-import com.ryuqq.fileflow.application.transform.manager.query.TransformQueueOutboxReadManager;
-import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformQueueOutbox;
 import com.ryuqq.fileflow.domain.transform.id.TransformQueueOutboxId;
 import java.time.Instant;
@@ -30,7 +30,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ProcessTransformQueueOutboxServiceTest {
 
     @InjectMocks private ProcessTransformQueueOutboxService sut;
-    @Mock private TransformQueueOutboxReadManager outboxReadManager;
     @Mock private TransformQueueOutboxCommandManager outboxCommandManager;
     @Mock private TransformQueueManager transformQueueManager;
 
@@ -43,7 +42,8 @@ class ProcessTransformQueueOutboxServiceTest {
         @Test
         @DisplayName("PENDING 메시지가 없으면 empty 결과를 반환한다")
         void execute_NoPending_ReturnsEmpty() {
-            given(outboxReadManager.findPendingMessages(100)).willReturn(Collections.emptyList());
+            given(outboxCommandManager.claimPendingMessages(100))
+                    .willReturn(Collections.emptyList());
 
             SchedulerBatchProcessingResult result = sut.execute(100);
 
@@ -58,37 +58,39 @@ class ProcessTransformQueueOutboxServiceTest {
             TransformQueueOutbox outbox =
                     TransformQueueOutbox.forNew(
                             TransformQueueOutboxId.of("outbox-001"), "transform-001", NOW);
-            given(outboxReadManager.findPendingMessages(100)).willReturn(List.of(outbox));
+            given(outboxCommandManager.claimPendingMessages(100)).willReturn(List.of(outbox));
+            given(transformQueueManager.enqueueBatch(List.of("transform-001")))
+                    .willReturn(OutboxBatchSendResult.allSuccess(List.of("transform-001")));
 
             SchedulerBatchProcessingResult result = sut.execute(100);
 
             assertThat(result.total()).isEqualTo(1);
             assertThat(result.success()).isEqualTo(1);
             assertThat(result.failed()).isZero();
-            assertThat(outbox.status()).isEqualTo(OutboxStatus.SENT);
-            then(transformQueueManager).should().enqueue("transform-001");
-            then(outboxCommandManager).should().persist(outbox);
+            then(outboxCommandManager).should().bulkMarkSent(eq(List.of("outbox-001")), any());
         }
 
         @Test
-        @DisplayName("발행 실패 시 retryCount가 증가하고 PENDING 상태를 유지한다 (재시도 대상)")
-        void execute_FailedEnqueue_StaysPendingForRetry() {
+        @DisplayName("발행 실패 시 bulkMarkFailed가 호출된다")
+        void execute_FailedEnqueue_BulkMarksFailed() {
             TransformQueueOutbox outbox =
                     TransformQueueOutbox.forNew(
                             TransformQueueOutboxId.of("outbox-001"), "transform-001", NOW);
-            given(outboxReadManager.findPendingMessages(100)).willReturn(List.of(outbox));
-            willThrow(new RuntimeException("SQS error"))
-                    .given(transformQueueManager)
-                    .enqueue("transform-001");
+            given(outboxCommandManager.claimPendingMessages(100)).willReturn(List.of(outbox));
+            given(transformQueueManager.enqueueBatch(List.of("transform-001")))
+                    .willReturn(
+                            OutboxBatchSendResult.of(
+                                    List.of(),
+                                    List.of(
+                                            new OutboxBatchSendResult.FailedEntry(
+                                                    "transform-001", "SQS error"))));
 
             SchedulerBatchProcessingResult result = sut.execute(100);
 
             assertThat(result.total()).isEqualTo(1);
             assertThat(result.success()).isZero();
             assertThat(result.failed()).isEqualTo(1);
-            assertThat(outbox.status()).isEqualTo(OutboxStatus.PENDING);
-            assertThat(outbox.retryCount()).isEqualTo(1);
-            then(outboxCommandManager).should().persist(outbox);
+            then(outboxCommandManager).should().bulkMarkFailed(eq(List.of("outbox-001")), any());
         }
     }
 }
