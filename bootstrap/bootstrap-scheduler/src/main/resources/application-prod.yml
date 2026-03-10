@@ -14,6 +14,12 @@ spring:
       pool:
         size: 4
 
+  # Scheduler HikariCP (thread pool 4 대비 마진 확보)
+  datasource:
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 8
+
   config:
     import:
       - classpath:persistence.yml
