@@ -12,10 +12,10 @@ spring:
     password: ${DB_PASSWORD}
 
     hikari:
-      # Pool Size (운영: CPU 기반)
-      # 공식: connections = (core_count * 2) + effective_spindle_count
-      maximum-pool-size: 20
-      minimum-idle: 10
+      # Pool Size (SQS concurrent 50 기반)
+      # concurrent 50 × DB점유율 30% = 15 avg, 피크 2배 마진 = 30
+      maximum-pool-size: 30
+      minimum-idle: 15
 
       # Timeout
       connection-timeout: 30000
