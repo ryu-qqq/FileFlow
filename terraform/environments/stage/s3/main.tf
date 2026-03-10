@@ -112,8 +112,8 @@ module "fileflow_uploads" {
   ]
 
   # CloudWatch Alarms
-  enable_cloudwatch_alarms    = true
-  alarm_bucket_size_threshold = 107374182400  # 100GB
+  enable_cloudwatch_alarms     = true
+  alarm_bucket_size_threshold  = 107374182400 # 100GB
   alarm_object_count_threshold = 1000000      # 1M objects
 
   # Required Tags (governance compliance)
@@ -124,6 +124,29 @@ module "fileflow_uploads" {
   cost_center  = local.common_tags.cost_center
   project      = local.common_tags.project
   data_class   = local.common_tags.data_class
+}
+
+# ============================================================================
+# S3 Bucket Policy (Cross-Service Access)
+# ============================================================================
+data "aws_iam_policy_document" "bucket_policy" {
+  statement {
+    sid    = "AllowShadowTrafficReportUpload"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::646886795421:role/setof-commerce-shadow-traffic-task-role-stage"]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["${module.fileflow_uploads.bucket_arn}/public/traffic/*"]
+  }
+}
+
+resource "aws_s3_bucket_policy" "fileflow_uploads" {
+  bucket = module.fileflow_uploads.bucket_id
+  policy = data.aws_iam_policy_document.bucket_policy.json
 }
 
 # ============================================================================
