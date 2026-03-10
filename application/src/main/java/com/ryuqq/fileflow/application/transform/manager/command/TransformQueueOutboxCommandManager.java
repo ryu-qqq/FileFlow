@@ -40,4 +40,9 @@ public class TransformQueueOutboxCommandManager {
     public void bulkMarkFailed(List<String> ids, Instant now) {
         transformQueueOutboxPersistencePort.bulkMarkFailed(ids, now);
     }
+
+    @Transactional
+    public int recoverStuckProcessing(Instant cutoff) {
+        return transformQueueOutboxPersistencePort.recoverStuckProcessing(cutoff);
+    }
 }

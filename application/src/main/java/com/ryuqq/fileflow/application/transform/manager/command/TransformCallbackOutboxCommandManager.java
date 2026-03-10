@@ -39,4 +39,9 @@ public class TransformCallbackOutboxCommandManager {
     public void bulkMarkFailed(List<String> ids, Instant now) {
         transformCallbackOutboxPersistencePort.bulkMarkFailed(ids, now);
     }
+
+    @Transactional
+    public int recoverStuckProcessing(Instant cutoff) {
+        return transformCallbackOutboxPersistencePort.recoverStuckProcessing(cutoff);
+    }
 }

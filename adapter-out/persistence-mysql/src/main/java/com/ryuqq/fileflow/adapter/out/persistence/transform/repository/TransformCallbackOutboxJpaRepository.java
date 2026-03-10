@@ -48,4 +48,12 @@ public interface TransformCallbackOutboxJpaRepository
                             + " THEN 'FAILED' ELSE 'PENDING' END WHERE id IN (:ids)",
             nativeQuery = true)
     int bulkMarkFailed(@Param("ids") List<String> ids, @Param("now") Instant now);
+
+    @Modifying
+    @Query(
+            value =
+                    "UPDATE transform_callback_outbox SET outbox_status = 'PENDING', processed_at ="
+                            + " NULL WHERE outbox_status = 'PROCESSING' AND processed_at < :cutoff",
+            nativeQuery = true)
+    int recoverStuckProcessing(@Param("cutoff") Instant cutoff);
 }

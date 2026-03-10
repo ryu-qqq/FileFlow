@@ -39,4 +39,9 @@ public class TransformCallbackOutboxCommandAdapter
         if (ids.isEmpty()) return;
         transformCallbackOutboxJpaRepository.bulkMarkFailed(ids, now);
     }
+
+    @Override
+    public int recoverStuckProcessing(Instant cutoff) {
+        return transformCallbackOutboxJpaRepository.recoverStuckProcessing(cutoff);
+    }
 }

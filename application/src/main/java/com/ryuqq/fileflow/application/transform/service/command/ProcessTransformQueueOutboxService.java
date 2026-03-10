@@ -35,40 +35,55 @@ public class ProcessTransformQueueOutboxService implements ProcessTransformQueue
             return SchedulerBatchProcessingResult.empty();
         }
 
-        List<String> requestIds =
-                claimed.stream().map(TransformQueueOutbox::transformRequestId).toList();
+        List<String> claimedOutboxIds =
+                claimed.stream().map(TransformQueueOutbox::idValue).toList();
 
-        OutboxBatchSendResult sendResult = transformQueueManager.enqueueBatch(requestIds);
+        try {
+            List<String> requestIds =
+                    claimed.stream().map(TransformQueueOutbox::transformRequestId).toList();
 
-        Instant now = Instant.now();
+            OutboxBatchSendResult sendResult = transformQueueManager.enqueueBatch(requestIds);
 
-        List<String> successOutboxIds =
-                claimed.stream()
-                        .filter(o -> sendResult.successIds().contains(o.transformRequestId()))
-                        .map(TransformQueueOutbox::idValue)
-                        .toList();
-        outboxCommandManager.bulkMarkSent(successOutboxIds, now);
+            Instant now = Instant.now();
 
-        List<String> failedOutboxIds =
-                claimed.stream()
-                        .filter(
-                                o ->
-                                        sendResult.failedEntries().stream()
-                                                .anyMatch(
-                                                        f -> f.id().equals(o.transformRequestId())))
-                        .map(TransformQueueOutbox::idValue)
-                        .toList();
-        outboxCommandManager.bulkMarkFailed(failedOutboxIds, now);
+            List<String> successOutboxIds =
+                    claimed.stream()
+                            .filter(o -> sendResult.successIds().contains(o.transformRequestId()))
+                            .map(TransformQueueOutbox::idValue)
+                            .toList();
+            outboxCommandManager.bulkMarkSent(successOutboxIds, now);
 
-        if (sendResult.hasFailures()) {
-            log.warn(
-                    "변환 큐 배치 발행 부분 실패: total={}, success={}, failed={}",
-                    claimed.size(),
-                    successOutboxIds.size(),
-                    failedOutboxIds.size());
+            List<String> failedOutboxIds =
+                    claimed.stream()
+                            .filter(
+                                    o ->
+                                            sendResult.failedEntries().stream()
+                                                    .anyMatch(
+                                                            f ->
+                                                                    f.id().equals(
+                                                                                    o
+                                                                                            .transformRequestId())))
+                            .map(TransformQueueOutbox::idValue)
+                            .toList();
+            outboxCommandManager.bulkMarkFailed(failedOutboxIds, now);
+
+            if (sendResult.hasFailures()) {
+                log.warn(
+                        "변환 큐 배치 발행 부분 실패: total={}, success={}, failed={}",
+                        claimed.size(),
+                        successOutboxIds.size(),
+                        failedOutboxIds.size());
+            }
+
+            return SchedulerBatchProcessingResult.of(
+                    claimed.size(), successOutboxIds.size(), failedOutboxIds.size());
+        } catch (Exception e) {
+            log.error(
+                    "변환 큐 배치 발행 중 예외 발생, PROCESSING → FAILED 복귀: count={}",
+                    claimedOutboxIds.size(),
+                    e);
+            outboxCommandManager.bulkMarkFailed(claimedOutboxIds, Instant.now());
+            return SchedulerBatchProcessingResult.of(claimed.size(), 0, claimed.size());
         }
-
-        return SchedulerBatchProcessingResult.of(
-                claimed.size(), successOutboxIds.size(), failedOutboxIds.size());
     }
 }
