@@ -92,15 +92,15 @@ class TransformCallbackOutboxCommandAdapterTest {
         @DisplayName("ids가 비어있지 않으면 JPA Repository에 위임한다")
         void bulkMarkFailed_NonEmpty_DelegatesToRepository() {
             List<String> ids = List.of("id-1", "id-2");
-            commandAdapter.bulkMarkFailed(ids, NOW);
+            commandAdapter.bulkMarkFailed(ids, NOW, "Callback failed");
 
-            then(jpaRepository).should().bulkMarkFailed(ids, NOW);
+            then(jpaRepository).should().bulkMarkFailed(ids, NOW, "Callback failed");
         }
 
         @Test
         @DisplayName("ids가 비어있으면 Repository를 호출하지 않는다")
         void bulkMarkFailed_Empty_DoesNotCallRepository() {
-            commandAdapter.bulkMarkFailed(List.of(), NOW);
+            commandAdapter.bulkMarkFailed(List.of(), NOW, "error");
 
             then(jpaRepository).shouldHaveNoInteractions();
         }

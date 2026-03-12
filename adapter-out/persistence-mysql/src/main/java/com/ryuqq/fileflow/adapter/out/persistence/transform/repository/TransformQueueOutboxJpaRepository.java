@@ -53,10 +53,13 @@ public interface TransformQueueOutboxJpaRepository
     @Query(
             value =
                     "UPDATE transform_queue_outbox SET retry_count = retry_count + 1, processed_at"
-                        + " = :now, outbox_status = CASE WHEN retry_count + 1 >= 5 THEN 'FAILED'"
-                        + " ELSE 'PENDING' END WHERE id IN (:ids)",
+                        + " = :now, last_error = :lastError, outbox_status = CASE WHEN retry_count +"
+                        + " 1 >= 5 THEN 'FAILED' ELSE 'PENDING' END WHERE id IN (:ids)",
             nativeQuery = true)
-    int bulkMarkFailed(@Param("ids") List<String> ids, @Param("now") Instant now);
+    int bulkMarkFailed(
+            @Param("ids") List<String> ids,
+            @Param("now") Instant now,
+            @Param("lastError") String lastError);
 
     @Modifying
     @Query(

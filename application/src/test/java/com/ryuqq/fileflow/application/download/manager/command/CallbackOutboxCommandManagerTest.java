@@ -98,9 +98,9 @@ class CallbackOutboxCommandManagerTest {
         void bulkMarkFailed_DelegatesToPersistencePort() {
             List<String> ids = List.of("outbox-003", "outbox-004");
 
-            sut.bulkMarkFailed(ids, NOW);
+            sut.bulkMarkFailed(ids, NOW, "Callback failed");
 
-            then(callbackOutboxPersistencePort).should().bulkMarkFailed(ids, NOW);
+            then(callbackOutboxPersistencePort).should().bulkMarkFailed(ids, NOW, "Callback failed");
         }
     }
 }

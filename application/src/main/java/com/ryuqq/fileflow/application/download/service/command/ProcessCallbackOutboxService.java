@@ -88,7 +88,8 @@ public class ProcessCallbackOutboxService implements ProcessCallbackOutboxUseCas
             Instant now = Instant.now();
 
             callbackOutboxCommandManager.bulkMarkSent(new ArrayList<>(successIds), now);
-            callbackOutboxCommandManager.bulkMarkFailed(new ArrayList<>(failedIds), now);
+            callbackOutboxCommandManager.bulkMarkFailed(
+                    new ArrayList<>(failedIds), now, "Callback notification failed");
 
             for (String permFailedId : permanentFailedIds) {
                 CallbackOutbox outbox =
@@ -110,7 +111,8 @@ public class ProcessCallbackOutboxService implements ProcessCallbackOutboxUseCas
                     "콜백 배치 처리 중 예외 발생, PROCESSING → FAILED 복귀: count={}",
                     claimedOutboxIds.size(),
                     e);
-            callbackOutboxCommandManager.bulkMarkFailed(claimedOutboxIds, Instant.now());
+            callbackOutboxCommandManager.bulkMarkFailed(
+                    claimedOutboxIds, Instant.now(), e.getMessage());
             return SchedulerBatchProcessingResult.of(claimed.size(), 0, claimed.size());
         }
     }

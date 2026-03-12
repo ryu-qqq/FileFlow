@@ -113,15 +113,15 @@ class DownloadQueueOutboxCommandAdapterTest {
         @DisplayName("ids가 비어있지 않으면 JPA Repository에 위임한다")
         void bulkMarkFailed_NonEmpty_DelegatesToRepository() {
             List<String> ids = List.of("id-1", "id-2");
-            sut.bulkMarkFailed(ids, NOW);
+            sut.bulkMarkFailed(ids, NOW, "SQS error");
 
-            then(jpaRepository).should().bulkMarkFailed(ids, NOW);
+            then(jpaRepository).should().bulkMarkFailed(ids, NOW, "SQS error");
         }
 
         @Test
         @DisplayName("ids가 비어있으면 Repository를 호출하지 않는다")
         void bulkMarkFailed_Empty_DoesNotCallRepository() {
-            sut.bulkMarkFailed(List.of(), NOW);
+            sut.bulkMarkFailed(List.of(), NOW, "error");
 
             then(jpaRepository).shouldHaveNoInteractions();
         }

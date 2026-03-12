@@ -10,7 +10,7 @@ public interface CallbackOutboxPersistencePort {
 
     void bulkMarkSent(List<String> ids, Instant now);
 
-    void bulkMarkFailed(List<String> ids, Instant now);
+    void bulkMarkFailed(List<String> ids, Instant now, String lastError);
 
     int recoverStuckProcessing(Instant cutoff);
 }

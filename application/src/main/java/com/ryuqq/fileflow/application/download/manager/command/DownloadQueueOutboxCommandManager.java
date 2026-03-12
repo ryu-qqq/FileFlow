@@ -37,8 +37,8 @@ public class DownloadQueueOutboxCommandManager {
     }
 
     @Transactional
-    public void bulkMarkFailed(List<String> ids, Instant now) {
-        downloadQueueOutboxPersistencePort.bulkMarkFailed(ids, now);
+    public void bulkMarkFailed(List<String> ids, Instant now, String lastError) {
+        downloadQueueOutboxPersistencePort.bulkMarkFailed(ids, now, lastError);
     }
 
     @Transactional

@@ -115,9 +115,9 @@ class DownloadQueueOutboxCommandManagerTest {
         void bulkMarkFailed_DelegatesToPersistencePort() {
             List<String> ids = List.of("outbox-003", "outbox-004");
 
-            sut.bulkMarkFailed(ids, NOW);
+            sut.bulkMarkFailed(ids, NOW, "SQS error");
 
-            then(downloadQueueOutboxPersistencePort).should().bulkMarkFailed(ids, NOW);
+            then(downloadQueueOutboxPersistencePort).should().bulkMarkFailed(ids, NOW, "SQS error");
         }
     }
 }

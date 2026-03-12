@@ -61,14 +61,21 @@ public class ProcessDownloadQueueOutboxService implements ProcessDownloadQueueOu
                                                             f -> f.id().equals(o.downloadTaskId())))
                             .map(DownloadQueueOutbox::idValue)
                             .toList();
-            outboxCommandManager.bulkMarkFailed(failedOutboxIds, now);
 
             if (sendResult.hasFailures()) {
+                String errorSummary =
+                        sendResult.failedEntries().stream()
+                                .map(OutboxBatchSendResult.FailedEntry::errorMessage)
+                                .distinct()
+                                .limit(3)
+                                .collect(java.util.stream.Collectors.joining("; "));
+                outboxCommandManager.bulkMarkFailed(failedOutboxIds, now, errorSummary);
                 log.warn(
-                        "다운로드 큐 배치 발행 부분 실패: total={}, success={}, failed={}",
+                        "다운로드 큐 배치 발행 부분 실패: total={}, success={}, failed={}, error={}",
                         claimed.size(),
                         successOutboxIds.size(),
-                        failedOutboxIds.size());
+                        failedOutboxIds.size(),
+                        errorSummary);
             }
 
             return SchedulerBatchProcessingResult.of(
@@ -78,7 +85,7 @@ public class ProcessDownloadQueueOutboxService implements ProcessDownloadQueueOu
                     "다운로드 큐 배치 발행 중 예외 발생, PROCESSING → FAILED 복귀: count={}",
                     claimedOutboxIds.size(),
                     e);
-            outboxCommandManager.bulkMarkFailed(claimedOutboxIds, Instant.now());
+            outboxCommandManager.bulkMarkFailed(claimedOutboxIds, Instant.now(), e.getMessage());
             return SchedulerBatchProcessingResult.of(claimed.size(), 0, claimed.size());
         }
     }

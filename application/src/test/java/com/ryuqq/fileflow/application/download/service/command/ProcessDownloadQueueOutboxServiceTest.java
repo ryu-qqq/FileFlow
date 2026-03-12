@@ -91,7 +91,9 @@ class ProcessDownloadQueueOutboxServiceTest {
             assertThat(result.total()).isEqualTo(1);
             assertThat(result.success()).isZero();
             assertThat(result.failed()).isEqualTo(1);
-            then(outboxCommandManager).should().bulkMarkFailed(eq(List.of("outbox-001")), any());
+            then(outboxCommandManager)
+                    .should()
+                    .bulkMarkFailed(eq(List.of("outbox-001")), any(), eq("SQS error"));
         }
 
         @Test
@@ -116,7 +118,10 @@ class ProcessDownloadQueueOutboxServiceTest {
             assertThat(result.failed()).isEqualTo(2);
             then(outboxCommandManager)
                     .should()
-                    .bulkMarkFailed(eq(List.of("outbox-001", "outbox-002")), any());
+                    .bulkMarkFailed(
+                            eq(List.of("outbox-001", "outbox-002")),
+                            any(),
+                            eq("SQS connection failed"));
         }
 
         @Test
