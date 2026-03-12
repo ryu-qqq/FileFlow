@@ -1,6 +1,7 @@
 package com.ryuqq.fileflow.application.download.service.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -9,12 +10,14 @@ import com.ryuqq.fileflow.application.download.assembler.DownloadAssembler;
 import com.ryuqq.fileflow.application.download.dto.command.CreateDownloadTaskCommand;
 import com.ryuqq.fileflow.application.download.dto.response.DownloadTaskResponse;
 import com.ryuqq.fileflow.application.download.factory.command.DownloadCommandFactory;
+import com.ryuqq.fileflow.application.download.manager.cache.DownloadUrlBlacklistManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadQueueOutboxCommandManager;
 import com.ryuqq.fileflow.domain.common.vo.AccessType;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadQueueOutbox;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTask;
 import com.ryuqq.fileflow.domain.download.aggregate.DownloadTaskFixture;
+import com.ryuqq.fileflow.domain.download.exception.DownloadException;
 import com.ryuqq.fileflow.domain.download.id.DownloadQueueOutboxId;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +39,7 @@ class CreateDownloadTaskServiceTest {
     @Mock private DownloadCommandManager downloadCommandManager;
     @Mock private DownloadQueueOutboxCommandManager downloadQueueOutboxCommandManager;
     @Mock private DownloadAssembler downloadAssembler;
+    @Mock private DownloadUrlBlacklistManager downloadUrlBlacklistManager;
 
     @Nested
     @DisplayName("execute 메서드")
@@ -78,6 +82,7 @@ class CreateDownloadTaskServiceTest {
                             downloadTask.startedAt(),
                             downloadTask.completedAt());
 
+            given(downloadUrlBlacklistManager.isBlacklisted(command.sourceUrl())).willReturn(false);
             given(downloadCommandFactory.create(command)).willReturn(downloadTask);
             given(downloadCommandFactory.createQueueOutbox(downloadTask.idValue()))
                     .willReturn(outbox);
@@ -95,6 +100,27 @@ class CreateDownloadTaskServiceTest {
                     .should()
                     .persist(any(DownloadQueueOutbox.class));
             then(downloadAssembler).should().toResponse(downloadTask);
+        }
+
+        @Test
+        @DisplayName("블랙리스트에 등록된 URL이면 DownloadException을 던진다")
+        void execute_BlacklistedUrl_ThrowsException() {
+            // given
+            CreateDownloadTaskCommand command =
+                    new CreateDownloadTaskCommand(
+                            "https://cdn.set-of.com/logo/setof-logo.png",
+                            AccessType.PUBLIC,
+                            "product-image",
+                            "commerce-service",
+                            null);
+
+            given(downloadUrlBlacklistManager.isBlacklisted(command.sourceUrl())).willReturn(true);
+
+            // when & then
+            assertThatThrownBy(() -> sut.execute(command)).isInstanceOf(DownloadException.class);
+
+            then(downloadCommandFactory).shouldHaveNoInteractions();
+            then(downloadCommandManager).shouldHaveNoInteractions();
         }
     }
 }
