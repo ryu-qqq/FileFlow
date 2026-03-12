@@ -5,6 +5,7 @@ import com.ryuqq.fileflow.application.download.dto.bundle.DownloadCompletionBund
 import com.ryuqq.fileflow.application.download.dto.bundle.DownloadFailureBundle;
 import com.ryuqq.fileflow.application.download.dto.response.FileDownloadResult;
 import com.ryuqq.fileflow.application.download.factory.command.DownloadCommandFactory;
+import com.ryuqq.fileflow.application.download.manager.cache.DownloadUrlBlacklistManager;
 import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
 import com.ryuqq.fileflow.application.download.manager.query.DownloadReadManager;
@@ -26,6 +27,7 @@ public class DownloadExecutionCoordinator {
     private final DownloadReadManager downloadReadManager;
     private final DownloadCompletionFacade downloadCompletionFacade;
     private final DownloadQueueManager downloadQueueManager;
+    private final DownloadUrlBlacklistManager downloadUrlBlacklistManager;
 
     public DownloadExecutionCoordinator(
             DownloadCommandFactory downloadCommandFactory,
@@ -33,13 +35,15 @@ public class DownloadExecutionCoordinator {
             DownloadCommandManager downloadCommandManager,
             DownloadReadManager downloadReadManager,
             DownloadCompletionFacade downloadCompletionFacade,
-            DownloadQueueManager downloadQueueManager) {
+            DownloadQueueManager downloadQueueManager,
+            DownloadUrlBlacklistManager downloadUrlBlacklistManager) {
         this.downloadCommandFactory = downloadCommandFactory;
         this.fileTransferFacade = fileTransferFacade;
         this.downloadCommandManager = downloadCommandManager;
         this.downloadReadManager = downloadReadManager;
         this.downloadCompletionFacade = downloadCompletionFacade;
         this.downloadQueueManager = downloadQueueManager;
+        this.downloadUrlBlacklistManager = downloadUrlBlacklistManager;
     }
 
     public void execute(DownloadTask downloadTask) {
@@ -120,6 +124,8 @@ public class DownloadExecutionCoordinator {
                 downloadCommandFactory.createPermanentFailureBundle(downloadTask, errorMessage);
 
         downloadCompletionFacade.failDownload(failureBundle);
+
+        downloadUrlBlacklistManager.registerBlacklist(downloadTask.sourceUrlValue(), errorMessage);
 
         log.warn("영구 실패 처리 (재시도 불가): taskId={}, error={}", downloadTask.idValue(), errorMessage);
     }
