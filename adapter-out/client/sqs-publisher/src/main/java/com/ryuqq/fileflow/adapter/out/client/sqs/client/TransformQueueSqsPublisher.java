@@ -136,14 +136,19 @@ public class TransformQueueSqsPublisher implements TransformQueueClient {
         return cachedQueueUrl;
     }
 
-    private String resolveQueueUrl(String queueName) {
+    private String resolveQueueUrl(String queueNameOrUrl) {
+        if (queueNameOrUrl.startsWith("https://")) {
+            return queueNameOrUrl;
+        }
         try {
             return sqsAsyncClient
-                    .getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build())
+                    .getQueueUrl(
+                            GetQueueUrlRequest.builder().queueName(queueNameOrUrl).build())
                     .join()
                     .queueUrl();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to resolve queue URL for: " + queueName, e);
+            throw new RuntimeException(
+                    "Failed to resolve queue URL for: " + queueNameOrUrl, e);
         }
     }
 
