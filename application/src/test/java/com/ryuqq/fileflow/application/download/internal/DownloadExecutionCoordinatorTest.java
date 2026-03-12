@@ -9,6 +9,7 @@ import com.ryuqq.fileflow.application.download.dto.bundle.DownloadCompletionBund
 import com.ryuqq.fileflow.application.download.dto.bundle.DownloadFailureBundle;
 import com.ryuqq.fileflow.application.download.dto.response.FileDownloadResult;
 import com.ryuqq.fileflow.application.download.factory.command.DownloadCommandFactory;
+import com.ryuqq.fileflow.application.download.manager.cache.DownloadUrlBlacklistManager;
 import com.ryuqq.fileflow.application.download.manager.client.DownloadQueueManager;
 import com.ryuqq.fileflow.application.download.manager.command.DownloadCommandManager;
 import com.ryuqq.fileflow.application.download.manager.query.DownloadReadManager;
@@ -38,6 +39,7 @@ class DownloadExecutionCoordinatorTest {
     @Mock private DownloadReadManager downloadReadManager;
     @Mock private DownloadCompletionFacade downloadCompletionFacade;
     @Mock private DownloadQueueManager downloadQueueManager;
+    @Mock private DownloadUrlBlacklistManager downloadUrlBlacklistManager;
 
     @Nested
     @DisplayName("execute 메서드")
@@ -136,6 +138,45 @@ class DownloadExecutionCoordinatorTest {
 
             // then
             then(downloadCompletionFacade).should().failDownload(failureBundle);
+            then(downloadQueueManager).should(never()).enqueue(downloadTask.idValue());
+        }
+
+        @Test
+        @DisplayName("영구 실패 시 블랙리스트에 등록한다")
+        void execute_PermanentFailure_RegistersBlacklist() {
+            // given
+            DownloadTask downloadTask = DownloadTaskFixture.aQueuedTask();
+            Instant startTime = Instant.parse("2026-01-01T00:00:10Z");
+            StatusChangeContext<String> startContext =
+                    new StatusChangeContext<>(downloadTask.idValue(), startTime);
+
+            FileDownloadResult permanentResult =
+                    FileDownloadResult.permanentFailure(
+                            "HTTP 403: https://cdn.example.com/img.jpg");
+
+            DownloadTask failedTask = DownloadTaskFixture.aFailedTask();
+            DownloadFailureBundle failureBundle = new DownloadFailureBundle(failedTask, null);
+
+            given(downloadCommandFactory.createStartContext(downloadTask.idValue()))
+                    .willReturn(startContext);
+            given(downloadReadManager.getDownloadTask(downloadTask.idValue()))
+                    .willReturn(downloadTask);
+            given(fileTransferFacade.transfer(downloadTask)).willReturn(permanentResult);
+            given(
+                            downloadCommandFactory.createPermanentFailureBundle(
+                                    downloadTask, "HTTP 403: https://cdn.example.com/img.jpg"))
+                    .willReturn(failureBundle);
+
+            // when
+            sut.execute(downloadTask);
+
+            // then
+            then(downloadCompletionFacade).should().failDownload(failureBundle);
+            then(downloadUrlBlacklistManager)
+                    .should()
+                    .registerBlacklist(
+                            downloadTask.sourceUrlValue(),
+                            "HTTP 403: https://cdn.example.com/img.jpg");
             then(downloadQueueManager).should(never()).enqueue(downloadTask.idValue());
         }
 
