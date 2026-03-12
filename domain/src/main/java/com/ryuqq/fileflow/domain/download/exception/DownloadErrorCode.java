@@ -9,7 +9,8 @@ public enum DownloadErrorCode implements ErrorCode {
     INVALID_DOWNLOAD_STATUS("DOWNLOAD-004", 400, "유효하지 않은 다운로드 상태입니다"),
     INVALID_SOURCE_URL("DOWNLOAD-005", 400, "유효하지 않은 소스 URL입니다"),
     INVALID_CALLBACK_URL("DOWNLOAD-006", 400, "유효하지 않은 콜백 URL입니다"),
-    INVALID_DOWNLOADED_FILE("DOWNLOAD-007", 400, "유효하지 않은 다운로드 파일 정보입니다");
+    INVALID_DOWNLOADED_FILE("DOWNLOAD-007", 400, "유효하지 않은 다운로드 파일 정보입니다"),
+    SOURCE_URL_BLACKLISTED("DOWNLOAD-008", 422, "영구 실패로 블랙리스트에 등록된 URL입니다");
 
     private final String code;
     private final int httpStatus;
