@@ -37,8 +37,8 @@ public class TransformQueueOutboxCommandManager {
     }
 
     @Transactional
-    public void bulkMarkFailed(List<String> ids, Instant now) {
-        transformQueueOutboxPersistencePort.bulkMarkFailed(ids, now);
+    public void bulkMarkFailed(List<String> ids, Instant now, String lastError) {
+        transformQueueOutboxPersistencePort.bulkMarkFailed(ids, now, lastError);
     }
 
     @Transactional

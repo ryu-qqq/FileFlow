@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git commit)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/ryu-qqq/Documents/ryu-qqq/FileFlow && ./gradlew spotlessApply spotlessCheck pmdMain pmdTest checkstyleMain checkstyleTest 2>&1 | tail -5 | grep -q 'BUILD SUCCESSFUL' && echo '' || echo 'BLOCK: Static analysis failed. Run ./gradlew spotlessApply and fix PMD/Checkstyle violations before committing.'"
+          }
+        ]
+      }
+    ]
+  }
+}

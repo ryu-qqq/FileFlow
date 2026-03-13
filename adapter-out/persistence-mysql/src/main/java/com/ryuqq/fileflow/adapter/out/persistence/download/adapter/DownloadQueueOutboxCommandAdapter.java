@@ -34,9 +34,9 @@ public class DownloadQueueOutboxCommandAdapter implements DownloadQueueOutboxPer
     }
 
     @Override
-    public void bulkMarkFailed(List<String> ids, Instant now) {
+    public void bulkMarkFailed(List<String> ids, Instant now, String lastError) {
         if (ids.isEmpty()) return;
-        jpaRepository.bulkMarkFailed(ids, now);
+        jpaRepository.bulkMarkFailed(ids, now, lastError);
     }
 
     @Override

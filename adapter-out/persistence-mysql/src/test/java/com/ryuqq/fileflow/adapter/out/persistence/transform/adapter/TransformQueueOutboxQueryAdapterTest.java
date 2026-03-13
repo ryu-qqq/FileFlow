@@ -5,7 +5,7 @@ import static org.mockito.BDDMockito.given;
 
 import com.ryuqq.fileflow.adapter.out.persistence.transform.entity.TransformQueueOutboxJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.transform.mapper.TransformQueueOutboxJpaMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.transform.repository.TransformQueueOutboxJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.transform.repository.TransformQueueOutboxQueryDslRepository;
 import com.ryuqq.fileflow.domain.common.vo.DateRange;
 import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.common.vo.OutboxStatusCount;
@@ -30,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class TransformQueueOutboxQueryAdapterTest {
 
     @InjectMocks private TransformQueueOutboxQueryAdapter sut;
-    @Mock private TransformQueueOutboxJpaRepository jpaRepository;
+    @Mock private TransformQueueOutboxQueryDslRepository queryDslRepository;
     @Mock private TransformQueueOutboxJpaMapper mapper;
 
     private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
@@ -55,10 +55,7 @@ class TransformQueueOutboxQueryAdapterTest {
                     TransformQueueOutbox.forNew(
                             TransformQueueOutboxId.of("outbox-001"), "transform-001", NOW);
 
-            given(
-                            jpaRepository.findByOutboxStatusOrderByCreatedAtAsc(
-                                    ArgumentMatchers.eq(OutboxStatus.PENDING),
-                                    ArgumentMatchers.any()))
+            given(queryDslRepository.findPendingOrderByCreatedAtAsc(10))
                     .willReturn(List.of(entity));
             given(mapper.toDomain(entity)).willReturn(domain);
 
@@ -71,11 +68,7 @@ class TransformQueueOutboxQueryAdapterTest {
         @Test
         @DisplayName("PENDING 메시지가 없으면 빈 리스트를 반환한다")
         void findPendingMessages_NoPending_ReturnsEmpty() {
-            given(
-                            jpaRepository.findByOutboxStatusOrderByCreatedAtAsc(
-                                    ArgumentMatchers.eq(OutboxStatus.PENDING),
-                                    ArgumentMatchers.any()))
-                    .willReturn(List.of());
+            given(queryDslRepository.findPendingOrderByCreatedAtAsc(10)).willReturn(List.of());
 
             List<TransformQueueOutbox> result = sut.findPendingMessages(10);
 
@@ -88,20 +81,16 @@ class TransformQueueOutboxQueryAdapterTest {
     class CountGroupByStatusTest {
 
         @Test
-        @DisplayName("GROUP BY 결과를 OutboxStatusCount로 변환하여 반환한다")
+        @DisplayName("QueryDSL 결과를 OutboxStatusCount로 반환한다")
         void countGroupByStatus_ReturnsOutboxStatusCount() {
             DateRange dateRange =
                     DateRange.of(LocalDate.of(2026, 2, 19), LocalDate.of(2026, 2, 20));
-            List<Object[]> rows =
-                    List.of(
-                            new Object[] {OutboxStatus.PENDING, 3L},
-                            new Object[] {OutboxStatus.SENT, 80L},
-                            new Object[] {OutboxStatus.FAILED, 1L});
+            OutboxStatusCount expected = new OutboxStatusCount(3L, 80L, 1L);
             given(
-                            jpaRepository.countGroupByOutboxStatus(
+                            queryDslRepository.countGroupByOutboxStatus(
                                     ArgumentMatchers.any(Instant.class),
                                     ArgumentMatchers.any(Instant.class)))
-                    .willReturn(rows);
+                    .willReturn(expected);
 
             OutboxStatusCount result = sut.countGroupByStatus(dateRange);
 
@@ -115,10 +104,10 @@ class TransformQueueOutboxQueryAdapterTest {
         void countGroupByStatus_NoData_ReturnsZeroCounts() {
             DateRange dateRange = DateRange.lastDays(1);
             given(
-                            jpaRepository.countGroupByOutboxStatus(
+                            queryDslRepository.countGroupByOutboxStatus(
                                     ArgumentMatchers.any(Instant.class),
                                     ArgumentMatchers.any(Instant.class)))
-                    .willReturn(List.of());
+                    .willReturn(new OutboxStatusCount(0L, 0L, 0L));
 
             OutboxStatusCount result = sut.countGroupByStatus(dateRange);
 
@@ -161,10 +150,10 @@ class TransformQueueOutboxQueryAdapterTest {
                             TransformQueueOutboxId.of("outbox-002"), "transform-002", NOW);
 
             given(
-                            jpaRepository.claimPending(
+                            queryDslRepository.claimPending(
                                     ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
                     .willReturn(2);
-            given(jpaRepository.findByStatus(OutboxStatus.PROCESSING))
+            given(queryDslRepository.findByStatusWithLock(OutboxStatus.PROCESSING))
                     .willReturn(List.of(entity1, entity2));
             given(mapper.toDomain(entity1)).willReturn(domain1);
             given(mapper.toDomain(entity2)).willReturn(domain2);
@@ -180,7 +169,7 @@ class TransformQueueOutboxQueryAdapterTest {
         @DisplayName("claimed == 0이면 빈 리스트를 반환한다")
         void claimPendingMessages_NoClaimed_ReturnsEmpty() {
             given(
-                            jpaRepository.claimPending(
+                            queryDslRepository.claimPending(
                                     ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
                     .willReturn(0);
 

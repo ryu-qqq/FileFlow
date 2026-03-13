@@ -153,7 +153,8 @@ class ProcessCallbackOutboxServiceTest {
             assertThat(result.failed()).isEqualTo(1);
             then(callbackOutboxCommandManager)
                     .should()
-                    .bulkMarkFailed(eq(List.of("outbox-004")), any());
+                    .bulkMarkFailed(
+                            eq(List.of("outbox-004")), any(), eq("Callback notification failed"));
         }
 
         @Test
@@ -182,7 +183,7 @@ class ProcessCallbackOutboxServiceTest {
             assertThat(result.failed()).isEqualTo(1);
             then(callbackOutboxCommandManager)
                     .should()
-                    .bulkMarkFailed(eq(List.of("outbox-001")), any());
+                    .bulkMarkFailed(eq(List.of("outbox-001")), any(), eq("DB connection failed"));
         }
 
         @Test

@@ -36,8 +36,8 @@ public class TransformCallbackOutboxCommandManager {
     }
 
     @Transactional
-    public void bulkMarkFailed(List<String> ids, Instant now) {
-        transformCallbackOutboxPersistencePort.bulkMarkFailed(ids, now);
+    public void bulkMarkFailed(List<String> ids, Instant now, String lastError) {
+        transformCallbackOutboxPersistencePort.bulkMarkFailed(ids, now, lastError);
     }
 
     @Transactional

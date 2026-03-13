@@ -96,7 +96,8 @@ public class ProcessTransformCallbackOutboxService
             Instant now = Instant.now();
 
             transformCallbackOutboxCommandManager.bulkMarkSent(new ArrayList<>(successIds), now);
-            transformCallbackOutboxCommandManager.bulkMarkFailed(new ArrayList<>(failedIds), now);
+            transformCallbackOutboxCommandManager.bulkMarkFailed(
+                    new ArrayList<>(failedIds), now, "Callback notification failed");
 
             for (String permFailedId : permanentFailedIds) {
                 TransformCallbackOutbox outbox =
@@ -118,7 +119,8 @@ public class ProcessTransformCallbackOutboxService
                     "변환 콜백 배치 처리 중 예외 발생, PROCESSING → FAILED 복귀: count={}",
                     claimedOutboxIds.size(),
                     e);
-            transformCallbackOutboxCommandManager.bulkMarkFailed(claimedOutboxIds, Instant.now());
+            transformCallbackOutboxCommandManager.bulkMarkFailed(
+                    claimedOutboxIds, Instant.now(), e.getMessage());
             return SchedulerBatchProcessingResult.of(claimed.size(), 0, claimed.size());
         }
     }

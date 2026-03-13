@@ -66,6 +66,10 @@ local-dev/.env.aws
 local-dev/.env.aws.*
 local-dev/test-files/
 
+# Sensitive files (DB credentials, bastion info)
+.claude/commands/db.md
+local-dev/docs/BASTION_SETUP.md
+
 # Terraform
 **/.terraform/
 *.tfstate

@@ -35,9 +35,9 @@ public class TransformCallbackOutboxCommandAdapter
     }
 
     @Override
-    public void bulkMarkFailed(List<String> ids, Instant now) {
+    public void bulkMarkFailed(List<String> ids, Instant now, String lastError) {
         if (ids.isEmpty()) return;
-        transformCallbackOutboxJpaRepository.bulkMarkFailed(ids, now);
+        transformCallbackOutboxJpaRepository.bulkMarkFailed(ids, now, lastError);
     }
 
     @Override

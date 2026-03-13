@@ -99,9 +99,11 @@ class TransformCallbackOutboxCommandManagerTest {
         void bulkMarkFailed_DelegatesToPersistencePort() {
             List<String> ids = List.of("outbox-003");
 
-            sut.bulkMarkFailed(ids, NOW);
+            sut.bulkMarkFailed(ids, NOW, "Callback failed");
 
-            then(transformCallbackOutboxPersistencePort).should().bulkMarkFailed(ids, NOW);
+            then(transformCallbackOutboxPersistencePort)
+                    .should()
+                    .bulkMarkFailed(ids, NOW, "Callback failed");
         }
     }
 }
