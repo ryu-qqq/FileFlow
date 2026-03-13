@@ -8,7 +8,7 @@ import static org.mockito.BDDMockito.given;
 import com.ryuqq.fileflow.adapter.out.persistence.transform.TransformCallbackOutboxJpaEntityFixture;
 import com.ryuqq.fileflow.adapter.out.persistence.transform.entity.TransformCallbackOutboxJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.transform.mapper.TransformCallbackOutboxJpaMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.transform.repository.TransformCallbackOutboxJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.transform.repository.TransformCallbackOutboxQueryDslRepository;
 import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.transform.aggregate.TransformCallbackOutbox;
 import com.ryuqq.fileflow.domain.transform.id.TransformCallbackOutboxId;
@@ -22,7 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageRequest;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -30,7 +29,7 @@ import org.springframework.data.domain.PageRequest;
 class TransformCallbackOutboxQueryAdapterTest {
 
     @InjectMocks private TransformCallbackOutboxQueryAdapter queryAdapter;
-    @Mock private TransformCallbackOutboxJpaRepository jpaRepository;
+    @Mock private TransformCallbackOutboxQueryDslRepository queryDslRepository;
     @Mock private TransformCallbackOutboxJpaMapper mapper;
 
     @Nested
@@ -52,9 +51,7 @@ class TransformCallbackOutboxQueryAdapterTest {
                             "COMPLETED",
                             now);
 
-            given(
-                            jpaRepository.findByOutboxStatusOrderByCreatedAtAsc(
-                                    eq(OutboxStatus.PENDING), any(PageRequest.class)))
+            given(queryDslRepository.findPendingOrderByCreatedAtAsc(10))
                     .willReturn(List.of(entity));
             given(mapper.toDomain(entity)).willReturn(domain);
 
@@ -70,10 +67,7 @@ class TransformCallbackOutboxQueryAdapterTest {
         @DisplayName("PENDING 상태의 아웃박스가 없으면 빈 목록을 반환합니다")
         void findPendingMessages_noPending_shouldReturnEmptyList() {
             // given
-            given(
-                            jpaRepository.findByOutboxStatusOrderByCreatedAtAsc(
-                                    eq(OutboxStatus.PENDING), any(PageRequest.class)))
-                    .willReturn(List.of());
+            given(queryDslRepository.findPendingOrderByCreatedAtAsc(10)).willReturn(List.of());
 
             // when
             List<TransformCallbackOutbox> result = queryAdapter.findPendingMessages(10);
@@ -111,8 +105,8 @@ class TransformCallbackOutboxQueryAdapterTest {
                             "COMPLETED",
                             now);
 
-            given(jpaRepository.claimPending(eq(100), any(Instant.class))).willReturn(2);
-            given(jpaRepository.findByStatus(OutboxStatus.PROCESSING))
+            given(queryDslRepository.claimPending(eq(100), any(Instant.class))).willReturn(2);
+            given(queryDslRepository.findByStatusWithLock(OutboxStatus.PROCESSING))
                     .willReturn(List.of(entity1, entity2));
             given(mapper.toDomain(entity1)).willReturn(domain1);
             given(mapper.toDomain(entity2)).willReturn(domain2);
@@ -128,7 +122,7 @@ class TransformCallbackOutboxQueryAdapterTest {
         @DisplayName("claimed == 0이면 빈 리스트를 반환한다")
         void claimPendingMessages_NoClaimed_ReturnsEmpty() {
             // given
-            given(jpaRepository.claimPending(eq(100), any(Instant.class))).willReturn(0);
+            given(queryDslRepository.claimPending(eq(100), any(Instant.class))).willReturn(0);
 
             // when
             List<TransformCallbackOutbox> result = queryAdapter.claimPendingMessages(100);

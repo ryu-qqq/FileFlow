@@ -5,7 +5,7 @@ import static org.mockito.BDDMockito.given;
 
 import com.ryuqq.fileflow.adapter.out.persistence.download.entity.DownloadQueueOutboxJpaEntity;
 import com.ryuqq.fileflow.adapter.out.persistence.download.mapper.DownloadQueueOutboxJpaMapper;
-import com.ryuqq.fileflow.adapter.out.persistence.download.repository.DownloadQueueOutboxJpaRepository;
+import com.ryuqq.fileflow.adapter.out.persistence.download.repository.DownloadQueueOutboxQueryDslRepository;
 import com.ryuqq.fileflow.domain.common.vo.DateRange;
 import com.ryuqq.fileflow.domain.common.vo.OutboxStatus;
 import com.ryuqq.fileflow.domain.common.vo.OutboxStatusCount;
@@ -30,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DownloadQueueOutboxQueryAdapterTest {
 
     @InjectMocks private DownloadQueueOutboxQueryAdapter sut;
-    @Mock private DownloadQueueOutboxJpaRepository jpaRepository;
+    @Mock private DownloadQueueOutboxQueryDslRepository queryDslRepository;
     @Mock private DownloadQueueOutboxJpaMapper mapper;
 
     private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
@@ -49,10 +49,7 @@ class DownloadQueueOutboxQueryAdapterTest {
                     DownloadQueueOutbox.forNew(
                             DownloadQueueOutboxId.of("outbox-001"), "download-001", NOW);
 
-            given(
-                            jpaRepository.findByOutboxStatusOrderByCreatedAtAsc(
-                                    ArgumentMatchers.eq(OutboxStatus.PENDING),
-                                    ArgumentMatchers.any()))
+            given(queryDslRepository.findPendingOrderByCreatedAtAsc(10))
                     .willReturn(List.of(entity));
             given(mapper.toDomain(entity)).willReturn(domain);
 
@@ -65,11 +62,7 @@ class DownloadQueueOutboxQueryAdapterTest {
         @Test
         @DisplayName("PENDING 메시지가 없으면 빈 리스트를 반환한다")
         void findPendingMessages_NoPending_ReturnsEmpty() {
-            given(
-                            jpaRepository.findByOutboxStatusOrderByCreatedAtAsc(
-                                    ArgumentMatchers.eq(OutboxStatus.PENDING),
-                                    ArgumentMatchers.any()))
-                    .willReturn(List.of());
+            given(queryDslRepository.findPendingOrderByCreatedAtAsc(10)).willReturn(List.of());
 
             List<DownloadQueueOutbox> result = sut.findPendingMessages(10);
 
@@ -82,20 +75,16 @@ class DownloadQueueOutboxQueryAdapterTest {
     class CountGroupByStatusTest {
 
         @Test
-        @DisplayName("GROUP BY 결과를 OutboxStatusCount로 변환하여 반환한다")
+        @DisplayName("QueryDSL 결과를 OutboxStatusCount로 반환한다")
         void countGroupByStatus_ReturnsOutboxStatusCount() {
             DateRange dateRange =
                     DateRange.of(LocalDate.of(2026, 2, 19), LocalDate.of(2026, 2, 20));
-            List<Object[]> rows =
-                    List.of(
-                            new Object[] {OutboxStatus.PENDING, 5L},
-                            new Object[] {OutboxStatus.SENT, 100L},
-                            new Object[] {OutboxStatus.FAILED, 2L});
+            OutboxStatusCount expected = new OutboxStatusCount(5L, 100L, 2L);
             given(
-                            jpaRepository.countGroupByOutboxStatus(
+                            queryDslRepository.countGroupByOutboxStatus(
                                     ArgumentMatchers.any(Instant.class),
                                     ArgumentMatchers.any(Instant.class)))
-                    .willReturn(rows);
+                    .willReturn(expected);
 
             OutboxStatusCount result = sut.countGroupByStatus(dateRange);
 
@@ -109,10 +98,10 @@ class DownloadQueueOutboxQueryAdapterTest {
         void countGroupByStatus_NoData_ReturnsZeroCounts() {
             DateRange dateRange = DateRange.lastDays(1);
             given(
-                            jpaRepository.countGroupByOutboxStatus(
+                            queryDslRepository.countGroupByOutboxStatus(
                                     ArgumentMatchers.any(Instant.class),
                                     ArgumentMatchers.any(Instant.class)))
-                    .willReturn(List.of());
+                    .willReturn(new OutboxStatusCount(0L, 0L, 0L));
 
             OutboxStatusCount result = sut.countGroupByStatus(dateRange);
 
@@ -155,10 +144,10 @@ class DownloadQueueOutboxQueryAdapterTest {
                             DownloadQueueOutboxId.of("outbox-002"), "download-002", NOW);
 
             given(
-                            jpaRepository.claimPending(
+                            queryDslRepository.claimPending(
                                     ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
                     .willReturn(2);
-            given(jpaRepository.findByStatus(OutboxStatus.PROCESSING))
+            given(queryDslRepository.findByStatusWithLock(OutboxStatus.PROCESSING))
                     .willReturn(List.of(entity1, entity2));
             given(mapper.toDomain(entity1)).willReturn(domain1);
             given(mapper.toDomain(entity2)).willReturn(domain2);
@@ -174,7 +163,7 @@ class DownloadQueueOutboxQueryAdapterTest {
         @DisplayName("claimed == 0이면 빈 리스트를 반환한다")
         void claimPendingMessages_NoClaimed_ReturnsEmpty() {
             given(
-                            jpaRepository.claimPending(
+                            queryDslRepository.claimPending(
                                     ArgumentMatchers.eq(100), ArgumentMatchers.any(Instant.class)))
                     .willReturn(0);
 

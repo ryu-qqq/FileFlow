@@ -101,7 +101,9 @@ class TransformCallbackOutboxCommandManagerTest {
 
             sut.bulkMarkFailed(ids, NOW, "Callback failed");
 
-            then(transformCallbackOutboxPersistencePort).should().bulkMarkFailed(ids, NOW, "Callback failed");
+            then(transformCallbackOutboxPersistencePort)
+                    .should()
+                    .bulkMarkFailed(ids, NOW, "Callback failed");
         }
     }
 }

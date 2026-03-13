@@ -100,7 +100,9 @@ class CallbackOutboxCommandManagerTest {
 
             sut.bulkMarkFailed(ids, NOW, "Callback failed");
 
-            then(callbackOutboxPersistencePort).should().bulkMarkFailed(ids, NOW, "Callback failed");
+            then(callbackOutboxPersistencePort)
+                    .should()
+                    .bulkMarkFailed(ids, NOW, "Callback failed");
         }
     }
 }

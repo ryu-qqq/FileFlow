@@ -138,13 +138,11 @@ public class DownloadQueueSqsPublisher implements DownloadQueueClient {
         }
         try {
             return sqsAsyncClient
-                    .getQueueUrl(
-                            GetQueueUrlRequest.builder().queueName(queueNameOrUrl).build())
+                    .getQueueUrl(GetQueueUrlRequest.builder().queueName(queueNameOrUrl).build())
                     .join()
                     .queueUrl();
         } catch (Exception e) {
-            throw new RuntimeException(
-                    "Failed to resolve queue URL for: " + queueNameOrUrl, e);
+            throw new RuntimeException("Failed to resolve queue URL for: " + queueNameOrUrl, e);
         }
     }
 

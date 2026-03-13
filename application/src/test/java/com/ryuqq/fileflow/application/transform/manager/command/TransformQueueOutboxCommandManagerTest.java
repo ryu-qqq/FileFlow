@@ -117,7 +117,9 @@ class TransformQueueOutboxCommandManagerTest {
 
             sut.bulkMarkFailed(ids, NOW, "SQS error");
 
-            then(transformQueueOutboxPersistencePort).should().bulkMarkFailed(ids, NOW, "SQS error");
+            then(transformQueueOutboxPersistencePort)
+                    .should()
+                    .bulkMarkFailed(ids, NOW, "SQS error");
         }
     }
 }
